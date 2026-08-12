@@ -10,6 +10,7 @@ Este repositório reúne os ativos de marca existentes, a arquitetura do negóci
 2. Abra [docs/ARQUITETURA.md](./docs/ARQUITETURA.md) para visualizar o negócio e os sistemas.
 3. Consulte [docs/ROADMAP.md](./docs/ROADMAP.md) para a ordem de execução.
 4. Inicie a Central Operacional seguindo [planejamento/README.md](./planejamento/README.md).
+5. Use [docs/GITHUB_E_AGENTES.md](./docs/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
 
 ## Estrutura
 
@@ -38,3 +39,6 @@ planejamento/         Central Operacional, API e dados iniciais
 
 O ERP será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos e dados financeiros. A Central Operacional será a fonte oficial do plano, das decisões, dos riscos e da coordenação entre agentes. O site público apresentará a marca e encaminhará o pedido ao ambiente transacional do ERP.
 
+## Direitos
+
+A publicação deste repositório não licencia a marca nem seus ativos. Consulte [NOTICE.md](./NOTICE.md).

@@ -1,0 +1,40 @@
+name: Defeito
+description: Registrar comportamento incorreto reproduzível.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Não inclua senhas, tokens, dados de cartão ou dados pessoais.
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado observado
+      description: O que aconteceu?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Como reproduzir
+      description: Informe passos mínimos, ambiente e frequência.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impacto
+      options: ["5 — crítico", "4 — alto", "3 — médio", "2 — baixo", "1 — mínimo"]
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: Links para logs, imagens ou arquivos sem informações sensíveis.

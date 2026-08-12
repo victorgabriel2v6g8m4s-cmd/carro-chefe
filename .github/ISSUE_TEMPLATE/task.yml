@@ -1,0 +1,48 @@
+name: Entrega técnica
+description: Propor uma entrega de código, dados, documentação ou infraestrutura.
+title: "[Task]: "
+labels: [task, triage]
+body:
+  - type: input
+    id: plan
+    attributes:
+      label: Tarefa ou solicitação no planejamento
+      description: Informe o ID da Central Operacional, quando existir.
+      placeholder: TASK-DEV-001 ou REQ-0001
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Agente responsável
+      placeholder: AG-DEV
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impacto
+      options: ["5 — crítico", "4 — alto", "3 — médio", "2 — baixo", "1 — mínimo"]
+    validations:
+      required: true
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgência
+      options: ["5 — imediata", "4 — alta", "3 — média", "2 — baixa", "1 — futura"]
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependências, riscos e aprovações
