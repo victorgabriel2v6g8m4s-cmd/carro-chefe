@@ -14,7 +14,6 @@ Thumbs.db
 # Dados mutáveis da Central Operacional
 planejamento/.runtime/
 .runtime/
-uploads/
 *.db
 *.db-wal
 *.db-shm
