@@ -93,14 +93,14 @@ Chats diferentes não devem depender da memória uns dos outros. Toda decisão �
 Há três acessos separados:
 
 1. **Git local:** o Gerenciador de Credenciais do sistema autentica a conta proprietária. Não copie essa credencial para arquivos ou mensagens.
-2. **Conector GitHub do Codex:** a GitHub App precisa receber acesso explícito ao repositório para realizar escritas, mesmo que o conteúdo público possa ser lido sem esse acesso.
+2. **Conector GitHub do Codex:** a instalação `152452798` reconhece este repositório e informa permissões de administração e escrita para a conta proprietária.
 3. **GitHub Actions:** os workflows recebem um `GITHUB_TOKEN` efêmero com permissão de leitura por padrão.
 
-Para liberar o repositório ao conector:
+Se o conector perder acesso ou voltar a responder “not found”:
 
 1. No GitHub, abra [a instalação atual do aplicativo](https://github.com/settings/installations/152452798) ou siga **Settings → Applications → Installed GitHub Apps**.
 2. Configure a aplicação usada pelo Codex/OpenAI.
-3. Em **Repository access**, inclua `victorgabriel2v6g8m4s-cmd/carro-chefe` e salve.
+3. Em **Repository access**, confirme `victorgabriel2v6g8m4s-cmd/carro-chefe` e salve.
 4. Se o Codex continuar retornando “not found”, desconecte e reconecte o GitHub nas configurações do aplicativo.
 5. Valide primeiro uma leitura da branch `main`; depois teste a criação de uma branch descartável, nunca um push direto na `main`.
 
@@ -110,7 +110,7 @@ Não crie um token pessoal de acesso amplo para “facilitar”. Se uma integra�
 
 Em 12 de agosto de 2026, o proprietário autorizou tornar o repositório público para disponibilizar os controles de branch no plano atual. Conteúdo, estratégia e ativos presentes no Git passam a ser visíveis e podem ser indexados; segredos, dados pessoais desnecessários, custos confidenciais e credenciais continuam proibidos.
 
-A `main` deve manter:
+A `main` foi configurada para manter:
 
 - pull request obrigatório;
 - CI obrigatório em Node.js 20 e 24;
