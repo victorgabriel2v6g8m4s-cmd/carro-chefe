@@ -1,0 +1,488 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id          String   @id
+  name        String
+  tagline     String
+  version     Int      @default(1)
+  stage       String
+  timezone    String
+  site        String
+  instagram   String
+  whatsapp    String
+  northStar   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pillars     Pillar[]
+  milestones  Milestone[]
+  agents      AgentDefinition[]
+  tasks       Task[]
+  decisions   Decision[]
+  risks       Risk[]
+  procurement ProcurementItem[]
+  notes       Note[]
+  intents     OperationalIntent[]
+  facts       BusinessFact[]
+}
+
+model Pillar {
+  id          String   @id
+  projectId   String
+  name        String
+  description String?
+  color       String?
+  order       Int      @default(0)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+}
+
+model Milestone {
+  id           String   @id
+  projectId    String
+  name         String
+  objective    String
+  status       String
+  exitCriteria String
+  order        Int      @default(0)
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks        Task[]
+}
+
+model AgentDefinition {
+  id          String   @id
+  projectId   String
+  name        String
+  role        String
+  mission     String
+  model       String?
+  enabled     Boolean  @default(true)
+  order       Int      @default(0)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  runs        AgentRun[]
+}
+
+model Task {
+  id                  String   @id
+  projectId           String
+  pillarId            String
+  milestoneId         String
+  ownerAgentId        String
+  title               String
+  impact              Int
+  urgency             Int
+  status              String
+  statusJustification String?
+  statusChangedAt     DateTime?
+  statusChangedBy     String?
+  acceptance          String
+  evidenceJson        String   @default("[]")
+  version             Int      @default(1)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pillar              Pillar   @relation(fields: [pillarId], references: [id])
+  milestone           Milestone @relation(fields: [milestoneId], references: [id])
+  owner               AgentDefinition @relation(fields: [ownerAgentId], references: [id])
+  dependsOn           TaskDependency[] @relation("TaskDependsOn")
+  dependents          TaskDependency[] @relation("TaskDependent")
+  transitions         TaskStatusTransition[]
+  runs                AgentRun[]
+  questions           AgentQuestion[]
+  changeRequests      ChangeRequest[]
+  auditEvents         AuditEvent[]
+  uploads             Upload[]
+
+  @@index([status])
+  @@index([ownerAgentId])
+  @@index([milestoneId])
+}
+
+model TaskDependency {
+  taskId       String
+  dependencyId String
+  task         Task   @relation("TaskDependsOn", fields: [taskId], references: [id], onDelete: Cascade)
+  dependency   Task   @relation("TaskDependent", fields: [dependencyId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, dependencyId])
+}
+
+model TaskStatusTransition {
+  id            String   @id @default(cuid())
+  taskId        String
+  fromStatus    String
+  toStatus      String
+  justification String
+  actor         String
+  evidenceJson  String   @default("[]")
+  createdAt     DateTime @default(now())
+  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+}
+
+model Decision {
+  id             String   @id
+  projectId      String
+  question       String
+  ownerAgentId   String
+  due            String?
+  status         String
+  recommendation String?
+  resolution     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Risk {
+  id          String   @id
+  projectId   String
+  title       String
+  ownerAgentId String
+  probability Int
+  impact       Int
+  status       String
+  mitigation   String
+  trigger      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProcurementItem {
+  id              String   @id
+  projectId       String
+  item            String
+  category        String
+  ownerAgentId    String
+  status          String
+  neededBy        String?
+  requirementsJson String  @default("[]")
+  budgetCeilingJson String?
+  recommendation String?
+  optionsJson     String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id        String   @id
+  projectId String
+  title     String
+  content   String
+  ownerAgentId String
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ChangeRequest {
+  id          String   @id
+  taskId      String?
+  actor       String
+  action      String
+  reason      String
+  payloadJson String
+  status      String   @default("pending")
+  reviewer    String?
+  reviewNote  String?
+  resultJson  String?
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  taskId      String?
+  actor       String
+  action      String
+  entityType  String
+  entityId    String
+  summary     String
+  beforeJson  String?
+  afterJson   String?
+  correlationId String?
+  createdAt   DateTime @default(now())
+  task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model UiState {
+  id             String   @id @default(cuid())
+  userId         String
+  scope          String
+  route          String
+  search         String   @default("")
+  hash           String   @default("")
+  scrollY        Int      @default(0)
+  sidebarOpen    Boolean  @default(true)
+  selectedTaskId String?
+  filtersJson    String   @default("{}")
+  version        Int      @default(1)
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, scope])
+}
+
+model AgentRun {
+  id               String   @id @default(cuid())
+  taskId           String
+  agentId          String
+  intentId         String?
+  provider         String   @default("manual")
+  externalThreadId String?
+  title            String
+  objective        String
+  status           String   @default("queued")
+  currentStep      String?
+  requestedBy      String
+  startedAt        DateTime?
+  lastHeartbeatAt  DateTime?
+  finishedAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agent            AgentDefinition @relation(fields: [agentId], references: [id])
+  intent           OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+  steps            AgentStep[]
+  messages         AgentMessage[]
+  questions        AgentQuestion[]
+  usage            UsageRecord[]
+  logs             AgentLog[]
+  uploads          Upload[]
+
+  @@index([status, createdAt])
+  @@index([intentId, createdAt])
+}
+
+model OperationalIntent {
+  id                 String   @id @default(cuid())
+  projectId          String
+  prompt             String
+  submittedBy        String
+  subject            String
+  summary            String
+  status             String   @default("queued")
+  classificationJson String
+  createdAt          DateTime @default(now())
+  startedAt          DateTime?
+  completedAt        DateTime?
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs               AgentRun[]
+  facts              BusinessFact[]
+  notification       Notification?
+  uploads            Upload[]
+
+  @@index([status, createdAt])
+}
+
+model BusinessFact {
+  id             String   @id @default(cuid())
+  projectId      String
+  key            String
+  value          String
+  verificationStatus String @default("pending_verification")
+  sourceIntentId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceIntent   OperationalIntent? @relation(fields: [sourceIntentId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, key])
+  @@index([sourceIntentId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  intentId  String?  @unique
+  type      String
+  title     String
+  message   String
+  route     String?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  intent    OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AgentStep {
+  id          String   @id @default(cuid())
+  runId       String
+  order       Int
+  title       String
+  description String?
+  status      String   @default("pending")
+  procedure   String?
+  result      String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime @default(now())
+  run         AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, order])
+}
+
+model AgentMessage {
+  id          String   @id @default(cuid())
+  runId       String
+  sender      String
+  kind        String
+  content     String
+  createdAt   DateTime @default(now())
+  run         AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, createdAt])
+}
+
+model AgentQuestion {
+  id            String   @id @default(cuid())
+  runId         String
+  taskId        String
+  askedBy       String
+  question      String
+  context       String
+  recommendation String?
+  optionsJson   String   @default("[]")
+  blocking      Boolean  @default(true)
+  status        String   @default("pending")
+  answer        String?
+  answeredBy    String?
+  answeredAt    DateTime?
+  acknowledgedAt DateTime?
+  createdAt     DateTime @default(now())
+  run           AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model UsageRecord {
+  id              String   @id @default(cuid())
+  runId           String
+  source          String
+  model           String?
+  inputTokens     Int?
+  cachedInputTokens Int?
+  outputTokens    Int?
+  reasoningTokens Int?
+  totalTokens     Int?
+  durationMs      Int?
+  costMicros      Int?
+  createdAt       DateTime @default(now())
+  run             AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, createdAt])
+}
+
+model AgentLog {
+  id        String   @id @default(cuid())
+  runId     String
+  sequence  Int
+  channel   String
+  eventType String
+  title     String?
+  content   String
+  createdAt DateTime @default(now())
+  run       AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, sequence])
+  @@index([runId, createdAt])
+}
+
+model Upload {
+  id           String   @id @default(cuid())
+  taskId       String?
+  runId        String?
+  intentId     String?
+  actor        String
+  originalName String
+  storageName  String   @unique
+  mimeType     String
+  sizeBytes    Int
+  sha256       String
+  createdAt    DateTime @default(now())
+  task         Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  run          AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  intent       OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+
+  @@index([taskId, createdAt])
+  @@index([runId, createdAt])
+  @@index([intentId, createdAt])
+}
+
+model WebhookEndpoint {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  eventsJson  String
+  secretRef   String
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deliveries  WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  endpointId  String
+  eventId     String
+  status      String   @default("pending")
+  attempt     Int      @default(0)
+  responseCode Int?
+  error       String?
+  createdAt   DateTime @default(now())
+  deliveredAt DateTime?
+  endpoint    WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+}
+
+model WebhookInbox {
+  id          String   @id @default(cuid())
+  provider    String
+  externalId  String
+  eventType   String
+  payloadJson String
+  signatureValid Boolean
+  status      String   @default("received")
+  receivedAt  DateTime @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, externalId])
+}
+
+model OutboxEvent {
+  id          String   @id @default(cuid())
+  topic       String
+  aggregateType String
+  aggregateId String
+  payloadJson String
+  status      String   @default("pending")
+  attempts    Int      @default(0)
+  availableAt DateTime @default(now())
+  processedAt DateTime?
+  lastError   String?
+  createdAt   DateTime @default(now())
+
+  @@index([status, availableAt])
+}
+
+model ImportBatch {
+  id          String   @id @default(cuid())
+  source      String
+  sourceHash  String
+  countsJson  String
+  importedAt  DateTime @default(now())
+}

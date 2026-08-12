@@ -2,11 +2,23 @@
 node_modules/
 coverage/
 dist/
+.vite/
+apps/*/dist/
+packages/database/generated/
+playwright-report/
+test-results/
+tools/windows-supervisor/bin/
 .DS_Store
 Thumbs.db
 
 # Dados mutáveis da Central Operacional
 planejamento/.runtime/
+.runtime/
+uploads/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
 
 # Configurações locais e segredos
 .env
@@ -18,4 +30,3 @@ planejamento/.runtime/
 *.tmp
 *.temp
 *.log
-

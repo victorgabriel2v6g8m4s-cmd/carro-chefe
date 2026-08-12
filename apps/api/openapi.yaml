@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: Carro Chefe — Central Operacional API
+  version: 1.0.0
+  description: Contratos para pessoas, agentes, ERP e automações. O acesso é somente local enquanto a autenticação de produção não estiver pronta.
+servers:
+  - url: http://127.0.0.1:4173/api/v1
+paths:
+  /bootstrap:
+    get:
+      summary: Retorna projeto, plano e visão operacional agregada
+      responses: { "200": { description: Estado atual } }
+  /tasks:
+    get:
+      summary: Lista tarefas com filtros opcionais
+      parameters:
+        - { in: query, name: status, schema: { type: string } }
+        - { in: query, name: owner, schema: { type: string } }
+        - { in: query, name: phase, schema: { type: string } }
+        - { in: query, name: q, schema: { type: string } }
+      responses: { "200": { description: Tarefas } }
+  /tasks/{taskId}:
+    get:
+      summary: Abre tarefa, dependências, transições, execuções, perguntas e arquivos
+      parameters: [ { $ref: "#/components/parameters/TaskId" } ]
+      responses: { "200": { description: Tarefa }, "404": { description: Não encontrada } }
+  /tasks/{taskId}/status-transitions:
+    post:
+      summary: Muda status com justificativa e controle otimista
+      parameters: [ { $ref: "#/components/parameters/TaskId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaskTransition" }
+      responses: { "200": { description: Transição registrada }, "409": { description: Versão desatualizada } }
+  /me/ui-state/{scope}:
+    get:
+      summary: Recupera o último ponto do usuário
+      parameters: [ { in: path, name: scope, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Estado da interface } }
+    put:
+      summary: Salva rota, filtros, scroll e menu
+      parameters: [ { in: path, name: scope, required: true, schema: { type: string } } ]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { "200": { description: Estado salvo } }
+  /agent-runs:
+    get:
+      summary: Lista execuções de agentes
+      responses: { "200": { description: Execuções } }
+    post:
+      summary: Cria uma execução vinculada à tarefa e ao agente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRun" }
+      responses: { "201": { description: Execução criada } }
+  /intents:
+    get:
+      summary: Lista comandos operacionais e o progresso agregado
+      responses: { "200": { description: Comandos } }
+    post:
+      summary: Classifica uma orientação em linguagem natural e despacha aos agentes responsáveis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string, minLength: 8 }
+                submittedBy: { type: string, default: proprietario }
+                attachmentIds: { type: array, maxItems: 12, items: { type: string } }
+      responses: { "201": { description: Comando registrado e execuções criadas } }
+  /intents/{intentId}:
+    get:
+      summary: Mostra fatos, agentes, passos e resultado de um comando
+      parameters: [ { in: path, name: intentId, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Comando detalhado } }
+  /notifications:
+    get:
+      summary: Lista notificações do proprietário
+      responses: { "200": { description: Notificações } }
+  /agent-runs/{runId}/claim:
+    post:
+      summary: Permite que um worker assuma atomicamente uma execução na fila
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "200": { description: Execução assumida }, "409": { description: Já assumida } }
+  /agent-runs/{runId}/steps:
+    post:
+      summary: Cria ou atualiza um passo do procedimento
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AgentStep" } } } }
+      responses: { "200": { description: Passo registrado } }
+  /agent-runs/{runId}/questions:
+    post:
+      summary: Faz uma pergunta contextual ao proprietário
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AgentQuestion" } } } }
+      responses: { "201": { description: Pergunta registrada } }
+  /agent-questions/{questionId}/answer:
+    post:
+      summary: Responde ao agente e devolve a execução à fila
+      parameters: [ { in: path, name: questionId, required: true, schema: { type: string } } ]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [answer, answeredBy], properties: { answer: { type: string }, answeredBy: { type: string } } } } } }
+      responses: { "200": { description: Resposta registrada } }
+  /agent-runs/{runId}/usage:
+    post:
+      summary: Registra uso medido ou explicitamente estimado
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { "200": { description: Uso registrado } }
+  /agent-runs/{runId}/logs:
+    get:
+      summary: Lista atividade e saÃ­da de terminal persistidas da execuÃ§Ã£o
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "200": { description: Logs ordenados por sequÃªncia } }
+    post:
+      summary: Registra um evento incremental emitido pelo runtime do agente
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "201": { description: Evento registrado e publicado por SSE } }
+  /uploads:
+    get:
+      summary: Lista evidências vinculadas
+      responses: { "200": { description: Arquivos } }
+    post:
+      summary: Envia evidência permitida de até 10 MB
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                taskId: { type: string }
+                runId: { type: string }
+                intentId: { type: string }
+                purpose: { enum: [intent-draft] }
+                actor: { type: string }
+      responses: { "201": { description: Evidência armazenada }, "415": { description: Tipo não permitido } }
+  /events:
+    get:
+      summary: Stream SSE; suporta Last-Event-ID
+      responses: { "200": { description: Fluxo text/event-stream } }
+  /integrations/{provider}/webhook:
+    post:
+      summary: Recebe evento externo com HMAC e idempotência
+      parameters:
+        - { in: path, name: provider, required: true, schema: { type: string } }
+        - { in: header, name: X-CarroChefe-Signature, required: true, schema: { type: string } }
+        - { in: header, name: X-Idempotency-Key, required: true, schema: { type: string } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { "202": { description: Evento aceito }, "401": { description: Assinatura inválida } }
+components:
+  parameters:
+    TaskId: { in: path, name: taskId, required: true, schema: { type: string } }
+    RunId: { in: path, name: runId, required: true, schema: { type: string } }
+  schemas:
+    TaskTransition:
+      type: object
+      required: [toStatus, justification, actor, expectedVersion]
+      properties:
+        toStatus: { enum: [backlog, ready, in_progress, blocked, review, done, cancelled] }
+        justification: { type: string, minLength: 8 }
+        actor: { type: string }
+        expectedVersion: { type: integer, minimum: 1 }
+        evidence: { type: array, items: { type: string }, default: [] }
+    CreateRun:
+      type: object
+      required: [taskId, agentId, title, objective, requestedBy]
+      properties:
+        taskId: { type: string }
+        agentId: { type: string }
+        title: { type: string }
+        objective: { type: string }
+        provider: { enum: [manual, codex-local], default: manual }
+        requestedBy: { type: string }
+    AgentStep:
+      type: object
+      required: [order, title]
+      properties:
+        order: { type: integer, minimum: 1 }
+        title: { type: string }
+        description: { type: [string, "null"] }
+        status: { enum: [pending, in_progress, completed, failed] }
+        procedure: { type: [string, "null"] }
+        result: { type: [string, "null"] }
+    AgentQuestion:
+      type: object
+      required: [askedBy, question, context]
+      properties:
+        askedBy: { type: string }
+        question: { type: string }
+        context: { type: string }
+        recommendation: { type: [string, "null"] }
+        options: { type: array, items: { type: string } }
+        blocking: { type: boolean, default: true }

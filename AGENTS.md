@@ -14,8 +14,8 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 ## 2. Fontes oficiais e precedência
 
 1. Este `AGENTS.md` define as regras gerais.
-2. `planejamento/data/plan.seed.json` inicia a fonte estruturada do planejamento.
-3. Em execução, `planejamento/.runtime/plan.json` é a fonte operacional mutável.
+2. `planejamento/data/plan.seed.json` é a origem versionada da primeira importação.
+3. Em execução, `.runtime/carro-chefe.db` (Prisma + SQLite) é a fonte operacional mutável do plano, histórico e coordenação dos agentes.
 4. `docs/` explica as decisões e a arquitetura em linguagem humana.
 5. `logos/`, `cardápio/` e `elementos gráficos/` são referências visuais; nunca sobrescreva os originais.
 6. O ERP escolhido será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro.
@@ -107,13 +107,15 @@ Protege identidade, embalagem, sinalização, ambiente, jornada e consistência 
 
 ## 7. Fluxo de trabalho obrigatório
 
-1. Ler `GET /api/plan`, a tarefa e suas dependências.
+1. Ler `GET /api/v1/bootstrap` ou `GET /api/v1/tasks/:taskId`, a tarefa e suas dependências.
 2. Verificar se há decisão pendente ou risco que impeça o trabalho.
-3. Produzir evidência: pesquisa, arquivo, teste, orçamento, foto ou relatório.
-4. Enviar a mudança por `POST /api/requests`; não editar o JSON operacional à mão.
-5. Anexar evidências por `POST /api/uploads` quando necessário.
-6. A Gestão aprova ou rejeita a requisição pela API/painel.
-7. Atualizar a tarefa somente com resultado verificável e registrar a conclusão.
+3. Criar ou assumir uma execução com `POST /api/v1/agent-runs` e registrar cada passo em `POST /api/v1/agent-runs/:runId/steps`.
+4. Registrar progresso e evidências na execução; nunca editar o SQLite, o seed ou os JSONs legados à mão.
+5. Se faltar uma decisão, perguntar por `POST /api/v1/agent-runs/:runId/questions` com contexto, recomendação e impacto. A resposta chega pelo registro da pergunta e recoloca a execução na fila.
+6. Reportar consumo apenas quando fornecido pelo runtime em `POST /api/v1/agent-runs/:runId/usage`; nunca estimar cota do plano sem dado oficial.
+7. Mudar status por `POST /api/v1/tasks/:taskId/status-transitions`, sempre com justificativa, versão esperada e evidência ao concluir.
+8. A Central mantém auditoria append-only e publica atualizações por `GET /api/v1/events` (SSE).
+9. Orientações do proprietário chegam por `POST /api/v1/intents`; cada agente deve trabalhar somente na execução criada para si e não reclassificar silenciosamente o comando.
 
 Mudanças permitidas pela fila: criar/editar tarefa, marco, decisão, risco, item de compra e nota. Exclusões permanentes não são suportadas; use status `cancelled` com justificativa para preservar auditoria.
 
@@ -138,7 +140,7 @@ Uma tarefa só passa para `done` quando:
 - o responsável e a data da mudança constam na auditoria;
 - não há segredo ou dado pessoal indevido no repositório.
 
-Para código, executar no mínimo `npm test` e `npm run check` em `planejamento/`. Para interfaces, verificar desktop e celular, navegação por teclado, contraste, estados vazios/erro e ausência de informações inventadas.
+Para código, executar no mínimo `npm test`, `npm run check` e `npm run build` na raiz. Para interfaces, verificar desktop e celular, navegação por teclado, contraste, estados vazios/erro e ausência de informações inventadas.
 
 ## 10. Pesquisa e compras
 

@@ -32,6 +32,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
+          cache: npm
 
       - name: Validate tracked files
         shell: bash
@@ -44,10 +45,41 @@ jobs:
             exit 1
           fi
 
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Prepare database
+        env:
+          DATABASE_URL: file:./.runtime/ci.db
+        run: |
+          mkdir -p .runtime
+          npm run db:deploy
+
       - name: Static checks
-        working-directory: planejamento
+        env:
+          DATABASE_URL: file:./.runtime/ci.db
         run: npm run check
 
       - name: Tests
-        working-directory: planejamento
+        env:
+          DATABASE_URL: file:./.runtime/ci.db
         run: npm test
+
+      - name: Production builds
+        env:
+          DATABASE_URL: file:./.runtime/ci.db
+        run: npm run build
+
+  windows-supervisor:
+    name: Windows Supervisor
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compile native supervisor
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1
+          if (-not (Test-Path tools/windows-supervisor/bin/CarroChefeSupervisor.exe)) { throw "Executável não foi gerado." }
