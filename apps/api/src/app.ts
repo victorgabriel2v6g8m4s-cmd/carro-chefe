@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
+import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { configureSqlite } from "@carro-chefe/database";
 import { ApiError } from "./lib/errors";
@@ -22,6 +23,12 @@ export async function buildApp() {
   await configureSqlite();
   await app.register(cors, { origin: process.env.NODE_ENV === "production" ? false : true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
+  await app.register(rateLimit, {
+    global: true,
+    max: process.env.NODE_ENV === "test" ? 100_000 : 600,
+    timeWindow: "1 minute",
+    errorResponseBuilder: (_request, context) => ({ statusCode: 429, error: "Muitas solicitações", message: `Limite excedido. Tente novamente em ${context.after}.` })
+  });
 
   app.removeContentTypeParser("application/json");
   app.addContentTypeParser("application/json", { parseAs: "string" }, (request, body, done) => {

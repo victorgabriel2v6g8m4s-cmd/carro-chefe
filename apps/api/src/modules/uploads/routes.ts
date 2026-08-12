@@ -18,7 +18,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     const query = request.query as { taskId?: string; runId?: string; intentId?: string };
     return prisma.upload.findMany({ where: { taskId: query.taskId || undefined, runId: query.runId || undefined, intentId: query.intentId || undefined }, orderBy: { createdAt: "desc" } });
   });
-  app.post("/api/v1/uploads", async (request, reply) => {
+  app.post("/api/v1/uploads", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const part = await request.file({ limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
     if (!part) throw new ApiError(400, "Envie um arquivo no campo file.");
     if (!allowedTypes.has(part.mimetype)) throw new ApiError(415, "Tipo de arquivo não permitido.");
@@ -47,7 +47,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     if (!upload) throw new ApiError(404, "Arquivo não encontrado.");
     return upload;
   });
-  app.get("/api/v1/uploads/:uploadId/content", async (request, reply) => {
+  app.get("/api/v1/uploads/:uploadId/content", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (request, reply) => {
     const upload = await prisma.upload.findUnique({ where: { id: (request.params as { uploadId: string }).uploadId } });
     if (!upload) throw new ApiError(404, "Arquivo não encontrado.");
     const target = path.join(uploadRoot, upload.storageName);
