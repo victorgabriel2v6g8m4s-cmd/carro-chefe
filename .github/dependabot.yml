@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /planejamento
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "09:00"
+      timezone: America/Campo_Grande
+    open-pull-requests-limit: 5
+    groups:
+      production-dependencies:
+        dependency-type: production
+        patterns: ["*"]
+      development-dependencies:
+        dependency-type: development
+        patterns: ["*"]
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "09:20"
+      timezone: America/Campo_Grande
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"

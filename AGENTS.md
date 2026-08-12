@@ -163,13 +163,17 @@ KPIs centrais: pedidos pagos, faturamento líquido, ticket médio, CMV, margem d
 
 - Preserve as pastas e ativos existentes.
 - Prefira mudanças pequenas, testáveis e documentadas.
+- Use uma branch por entrega e um único agente responsável por cada arquivo ou caminho de escrita.
+- A `main` é somente para integração; agentes não fazem push direto, merge ou publicação sem autorização explícita.
+- Pull requests começam como rascunho, passam pelo CI e usam merge por squash.
+- Subagentes são adequados para trabalho curto e independente; frentes longas de código usam chats/worktrees separados.
 - Não inclua `.runtime/`, uploads, `.env` ou segredos no Git.
 - O servidor local deve escutar `127.0.0.1` por padrão.
 - Em produção, exigir autenticação, HTTPS, limitação de requisições, armazenamento durável e backup.
 - Não faça push forçado nem reescreva histórico compartilhado.
 - Revise o escopo antes de versionar e publique somente arquivos confirmados do projeto.
+- Consulte `docs/GITHUB_E_AGENTES.md` para modelos, configuração dos agentes, credenciais e fluxo de colaboração.
 
 ## 13. Comunicação
 
 Relatórios devem começar por resultado, depois evidência, bloqueios, decisão necessária e próximo passo. Pesquisas precisam de links/fontes atuais. Hipóteses devem ser explicitamente rotuladas. Se uma ação depende do proprietário, formule uma pergunta concreta com recomendação e impacto.
-
