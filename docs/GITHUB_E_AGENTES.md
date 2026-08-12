@@ -35,6 +35,7 @@ flowchart LR
 - `.codex/agents/` define os agentes `gestao`, `development`, `marketing`, `midias`, `compras`, `operacoes`, `financas` e `marca`.
 - `AGENTS.md` contém missão, limites, responsabilidades, critérios de pronto e fluxo de aprovação.
 - `.github/workflows/ci.yml` testa a Central Operacional em Node.js 20 e 24.
+- `.github/workflows/codeql.yml` analisa vulnerabilidades em JavaScript a cada PR, push na `main` e semanalmente.
 - `.github/dependabot.yml` verifica semanalmente dependências npm e GitHub Actions.
 - templates de issue e pull request padronizam resultado, aceite, impacto, evidência e risco.
 - `CODEOWNERS` identifica o proprietário responsável pela aprovação final.
@@ -114,6 +115,7 @@ A `main` foi configurada para manter:
 
 - pull request obrigatório;
 - CI obrigatório em Node.js 20 e 24;
+- CodeQL obrigatório para JavaScript;
 - bloqueio de deleção e force push;
 - resolução obrigatória de conversas;
 - histórico linear;
