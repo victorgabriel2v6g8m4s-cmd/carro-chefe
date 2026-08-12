@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Central Operacional do Carro Chefe">
+    <title>Carro Chefe — Central Operacional</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Pular para o conteúdo</a>
+    <div class="shell">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <div class="brand">
+          <img src="/assets/logo-dark.png" alt="Carro Chefe — Sabor que lidera">
+          <div><strong>Central</strong><span>Operacional</span></div>
+        </div>
+        <nav id="main-nav">
+          <button class="nav-item is-active" data-view="overview" type="button"><span>01</span>Visão geral</button>
+          <button class="nav-item" data-view="roadmap" type="button"><span>02</span>Roteiro</button>
+          <button class="nav-item" data-view="tasks" type="button"><span>03</span>Tarefas</button>
+          <button class="nav-item" data-view="governance" type="button"><span>04</span>Decisões & riscos</button>
+          <button class="nav-item" data-view="procurement" type="button"><span>05</span>Compras</button>
+          <button class="nav-item" data-view="agents" type="button"><span>06</span>Agentes</button>
+          <button class="nav-item" data-view="requests" type="button"><span>07</span>Solicitações <em id="pending-badge">0</em></button>
+        </nav>
+        <div class="sidebar-note">
+          <span class="eyebrow">Princípio</span>
+          <p>O ERP registra as vendas. Esta central registra como o negócio evolui.</p>
+        </div>
+      </aside>
+
+      <main id="content">
+        <header class="topbar">
+          <button class="menu-button" id="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button>
+          <div>
+            <span class="eyebrow">Carro Chefe · Fundação</span>
+            <h1 id="view-title">Visão geral</h1>
+          </div>
+          <div class="top-actions">
+            <span class="sync-state" id="sync-state"><i></i>Plano carregado</span>
+            <button class="button secondary" data-open-dialog="upload-dialog" type="button">Enviar arquivo</button>
+            <button class="button primary" data-open-dialog="request-dialog" type="button">Nova solicitação</button>
+          </div>
+        </header>
+
+        <section class="view is-visible" id="view-overview" aria-labelledby="view-title">
+          <div class="hero">
+            <div class="hero-copy">
+              <span class="eyebrow">Sabor que lidera</span>
+              <h2>Da esquina para uma operação <em>memorável e mensurável.</em></h2>
+              <p>Produto autoral, parrilla à vista, identidade colonial e uma base de dados que conecta cada pedido à margem, ao estoque e à recompra.</p>
+              <div class="hero-actions">
+                <button class="button primary" data-go-view="roadmap" type="button">Ver caminho crítico</button>
+                <button class="text-button" data-go-view="tasks" type="button">Explorar tarefas →</button>
+              </div>
+            </div>
+            <div class="hero-seal" aria-hidden="true">
+              <img src="/assets/logo-dark.png" alt="">
+              <span>Fundação · v<strong id="plan-version">1</strong></span>
+            </div>
+          </div>
+
+          <div class="metrics" id="metrics"></div>
+
+          <div class="dashboard-grid">
+            <section class="panel panel-wide">
+              <div class="panel-head">
+                <div><span class="eyebrow">Sequência de liberação</span><h3>Portões do negócio</h3></div>
+                <button class="text-button" data-go-view="roadmap" type="button">Detalhar roteiro →</button>
+              </div>
+              <div class="gate-track" id="overview-gates"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><div><span class="eyebrow">Foco imediato</span><h3>Prioridade por impacto</h3></div></div>
+              <div id="priority-list" class="rank-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><div><span class="eyebrow">Atenção</span><h3>Decisões que destravam</h3></div></div>
+              <div id="decision-preview" class="decision-preview"></div>
+            </section>
+
+            <section class="panel panel-wide">
+              <div class="panel-head"><div><span class="eyebrow">Sistema operacional</span><h3>Como as peças se conectam</h3></div></div>
+              <div class="system-map" aria-label="Fluxo do negócio">
+                <div class="system-node"><span>01</span><strong>Atração</strong><small>rua · social · anúncios</small></div>
+                <b>→</b>
+                <div class="system-node"><span>02</span><strong>Escolha</strong><small>welcome · totem · balcão</small></div>
+                <b>→</b>
+                <div class="system-node active"><span>03</span><strong>ERP</strong><small>pedido · pagamento · estoque</small></div>
+                <b>→</b>
+                <div class="system-node"><span>04</span><strong>Parrilla</strong><small>produção · conferência</small></div>
+                <b>→</b>
+                <div class="system-node"><span>05</span><strong>Aprendizado</strong><small>margem · tempo · recompra</small></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-roadmap">
+          <div class="section-intro"><div><span class="eyebrow">Caminho crítico</span><h2>Avançar por evidência, não por ansiedade.</h2></div><p>Cada portão protege investimento e reduz retrabalho. Um marco só avança quando seus critérios de saída foram comprovados.</p></div>
+          <div class="roadmap" id="roadmap"></div>
+        </section>
+
+        <section class="view" id="view-tasks">
+          <div class="section-intro compact"><div><span class="eyebrow">Execução</span><h2>Trabalho priorizado</h2></div><p id="task-summary"></p></div>
+          <div class="filters" id="task-filters">
+            <label>Fase<select id="filter-phase"><option value="">Todas</option></select></label>
+            <label>Responsável<select id="filter-owner"><option value="">Todos</option></select></label>
+            <label>Status<select id="filter-status"><option value="">Todos</option></select></label>
+            <label>Buscar<input id="filter-search" type="search" placeholder="Título ou ID"></label>
+          </div>
+          <div class="task-layout">
+            <div class="task-table-wrap"><table class="task-table"><thead><tr><th>Tarefa</th><th>Fase</th><th>Responsável</th><th>Prioridade</th><th>Status</th><th></th></tr></thead><tbody id="task-table"></tbody></table></div>
+            <aside class="matrix-panel"><span class="eyebrow">Urgência × impacto</span><h3>Mapa de atenção</h3><div class="priority-matrix" id="priority-matrix" aria-label="Matriz de impacto e urgência"></div><div class="matrix-axis"><span>menos urgente</span><span>mais urgente →</span></div></aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-governance">
+          <div class="section-intro"><div><span class="eyebrow">Governança</span><h2>Decidir cedo. Mitigar antes.</h2></div><p>Decisões abertas bloqueiam entregas; riscos precisam de dono, gatilho e resposta preparada.</p></div>
+          <div class="governance-grid"><section><div class="subhead"><h3>Decisões abertas</h3><span id="decision-count"></span></div><div id="decision-list" class="stack"></div></section><section><div class="subhead"><h3>Registro de riscos</h3><span id="risk-count"></span></div><div id="risk-list" class="stack"></div></section></div>
+        </section>
+
+        <section class="view" id="view-procurement">
+          <div class="section-intro"><div><span class="eyebrow">Pesquisa & compras</span><h2>Mais em conta, entre o que atende.</h2></div><p>Preço é comparado junto de avaliação, garantia, assistência, prazo, frete e custo total de uso.</p></div>
+          <div class="procurement-principles"><div><strong>1</strong><span>Requisito eliminatório</span></div><div><strong>2</strong><span>Custo total normalizado</span></div><div><strong>3</strong><span>Avaliações confiáveis</span></div><div><strong>4</strong><span>Garantia e alternativa</span></div></div>
+          <div class="procurement-grid" id="procurement-list"></div>
+        </section>
+
+        <section class="view" id="view-agents">
+          <div class="section-intro"><div><span class="eyebrow">Equipe de agentes</span><h2>Especialistas com uma só fila de decisão.</h2></div><p>Cada entrega tem um responsável. Gestão coordena dependências e o proprietário mantém autoridade sobre gasto e exposição pública.</p></div>
+          <div class="agent-lead"><span>Autoridade final</span><strong>Proprietário</strong><b>↓</b><span>Coordenação</span><strong>AG-GESTAO</strong></div>
+          <div class="agent-grid" id="agent-list"></div>
+        </section>
+
+        <section class="view" id="view-requests">
+          <div class="section-intro"><div><span class="eyebrow">Fila de mudança</span><h2>Propor, revisar, registrar.</h2></div><p>Alterações só entram no plano após aprovação. Rejeições preservam a justificativa para evitar decisões invisíveis.</p></div>
+          <div class="request-toolbar"><div class="request-tabs"><button type="button" class="is-active" data-request-status="pending">Pendentes</button><button type="button" data-request-status="approved">Aprovadas</button><button type="button" data-request-status="rejected">Rejeitadas</button><button type="button" data-request-status="">Todas</button></div><button class="button primary" data-open-dialog="request-dialog" type="button">Nova solicitação</button></div>
+          <div id="request-list" class="request-list"></div>
+          <section class="upload-section"><div><span class="eyebrow">Evidências</span><h3>Arquivos enviados</h3></div><div id="upload-list" class="upload-list"></div></section>
+        </section>
+
+        <footer><span>Carro Chefe · Central Operacional</span><span id="updated-at"></span></footer>
+      </main>
+    </div>
+
+    <dialog id="request-dialog">
+      <form id="request-form">
+        <div class="dialog-head"><div><span class="eyebrow">Fila de mudança</span><h2>Nova solicitação</h2></div><button type="button" class="close-dialog" aria-label="Fechar">×</button></div>
+        <p class="dialog-help">A solicitação ficará pendente até a Gestão revisar. Escolha o tipo e preencha os campos em linguagem clara.</p>
+        <div class="form-grid">
+          <label>Solicitante<select name="actor" id="request-actor" required></select></label>
+          <label>Tipo<select name="kind" id="request-kind" required><option value="create_task">Criar tarefa</option><option value="update_task">Atualizar tarefa</option><option value="create_decision">Registrar decisão</option><option value="create_risk">Registrar risco</option><option value="create_procurement_item">Criar item de compra</option><option value="create_note">Adicionar nota</option></select></label>
+          <label class="span-2">Motivo<textarea name="reason" rows="2" required placeholder="Por que esta mudança é necessária?"></textarea></label>
+        </div>
+        <div id="dynamic-fields"></div>
+        <div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancelar</button><button type="submit" class="button primary">Enviar para revisão</button></div>
+        <p class="form-message" id="request-message" role="status"></p>
+      </form>
+    </dialog>
+
+    <dialog id="review-dialog">
+      <form id="review-form">
+        <div class="dialog-head"><div><span class="eyebrow">Revisão</span><h2 id="review-title">Revisar solicitação</h2></div><button type="button" class="close-dialog" aria-label="Fechar">×</button></div>
+        <input type="hidden" name="requestId"><input type="hidden" name="decision">
+        <label>Revisor<select name="reviewer" id="reviewer" required></select></label>
+        <label>Nota da revisão<textarea name="note" rows="4" placeholder="Explique condições, decisão ou motivo da rejeição."></textarea></label>
+        <div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancelar</button><button type="submit" class="button primary" id="review-submit">Confirmar</button></div>
+        <p class="form-message" id="review-message" role="status"></p>
+      </form>
+    </dialog>
+
+    <dialog id="upload-dialog">
+      <form id="upload-form">
+        <div class="dialog-head"><div><span class="eyebrow">Evidência</span><h2>Enviar arquivo</h2></div><button type="button" class="close-dialog" aria-label="Fechar">×</button></div>
+        <p class="dialog-help">Envie somente material necessário, sem senhas nem dados pessoais indevidos. Limite: 15 MB.</p>
+        <label>Responsável<select name="actor" id="upload-actor" required></select></label>
+        <label>Relacionar a uma tarefa (opcional)<select name="taskId" id="upload-task"><option value="">Sem vínculo</option></select></label>
+        <label>Arquivo<input name="file" type="file" required accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.txt,.md,.json,.xlsx,.docx,.pptx"></label>
+        <div class="dialog-actions"><button type="button" class="button secondary close-dialog">Cancelar</button><button type="submit" class="button primary">Enviar evidência</button></div>
+        <p class="form-message" id="upload-message" role="status"></p>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
+

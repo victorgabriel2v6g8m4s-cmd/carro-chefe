@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "project": "Carro Chefe",
+    "tagline": "Sabor que lidera",
+    "version": 1,
+    "updatedAt": "2026-08-12T18:00:00.000Z",
+    "timezone": "America/Campo_Grande",
+    "site": "carrochefe.com",
+    "instagram": "@carrochefe_cg",
+    "whatsapp": "+55 67 99204-6721",
+    "stage": "Fundação",
+    "northStar": "Pedidos pagos com experiência consistente, margem saudável e dados conciliáveis."
+  },
+  "pillars": [
+    { "id": "gestao", "name": "Gestão", "color": "gold", "objective": "Coordenar escopo, decisões, orçamento, riscos e caminho crítico." },
+    { "id": "produto", "name": "Produto", "color": "ember", "objective": "Transformar receitas em itens repetíveis, seguros e rentáveis." },
+    { "id": "operacoes", "name": "Operações", "color": "wood", "objective": "Desenhar fluxo, capacidade, qualidade e contingência do quiosque." },
+    { "id": "financas", "name": "Finanças & ERP", "color": "bronze", "objective": "Controlar caixa, CMV, preço e núcleo transacional." },
+    { "id": "development", "name": "Development & Data", "color": "parchment", "objective": "Entregar site, integrações, analytics e governança de dados." },
+    { "id": "marketing", "name": "Marketing", "color": "gold", "objective": "Gerar demanda local que converta em margem e recompra." },
+    { "id": "midias", "name": "Mídias", "color": "ember", "objective": "Construir desejo e consistência com ativos aprovados." },
+    { "id": "compras", "name": "Pesquisa & Compras", "color": "bronze", "objective": "Encontrar opções adequadas, econômicas e confiáveis." },
+    { "id": "marca", "name": "Marca & Experiência", "color": "parchment", "objective": "Preservar identidade e jornada física/digital." }
+  ],
+  "agents": [
+    { "id": "AG-GESTAO", "name": "Gestão", "mission": "Priorizar, aprovar, consolidar e escalar decisões.", "cadence": "diária" },
+    { "id": "AG-MARKETING", "name": "Marketing & Growth", "mission": "Planejar aquisição, funil, CRM e experimentos rentáveis.", "cadence": "semanal" },
+    { "id": "AG-MIDIAS", "name": "Mídias & Conteúdo", "mission": "Produzir e governar fotos, vídeos, textos e calendário.", "cadence": "semanal" },
+    { "id": "AG-DEV", "name": "Development & Data", "mission": "Construir experiências digitais, integrações e telemetria.", "cadence": "contínua" },
+    { "id": "AG-COMPRAS", "name": "Pesquisa & Compras", "mission": "Comparar custo total, avaliação, prazo, garantia e risco.", "cadence": "por requisição" },
+    { "id": "AG-OPERACOES", "name": "Operações & Qualidade", "mission": "Validar fluxo, segurança, capacidade e padrão do produto.", "cadence": "diária" },
+    { "id": "AG-FINANCAS", "name": "Finanças & ERP", "mission": "Modelar economia unitária e garantir dados transacionais.", "cadence": "semanal" },
+    { "id": "AG-MARCA", "name": "Marca & Experiência", "mission": "Proteger identidade, embalagem, ambiente e jornada.", "cadence": "por entrega" }
+  ],
+  "milestones": [
+    { "id": "G0", "name": "Fundação", "status": "in_progress", "objective": "Conceito, responsáveis e decisões críticas definidos.", "exitCriteria": "Decisões críticas registradas e escopo MVP confirmado." },
+    { "id": "G1", "name": "Viabilidade", "status": "pending", "objective": "Ponto, licenças, infraestrutura e orçamento viáveis.", "exitCriteria": "Checklist local, planta validada e custo por faixa." },
+    { "id": "G2", "name": "Produto rentável", "status": "pending", "objective": "Cardápio repetível com custo, preço e padrão.", "exitCriteria": "Fichas, fotos, tempos, alergênicos e margem aprovados." },
+    { "id": "G3", "name": "Sistemas e compras", "status": "pending", "objective": "ERP, canais, equipamentos e fornecedores operantes.", "exitCriteria": "Pedido completo testado e itens críticos entregues." },
+    { "id": "G4", "name": "Operação ensaiada", "status": "pending", "objective": "Equipe e fluxo funcionam sob carga e contingência.", "exitCriteria": "Dois ensaios sem falha crítica." },
+    { "id": "G5", "name": "Abertura controlada", "status": "pending", "objective": "Atender volume limitado, medir e corrigir.", "exitCriteria": "Três ciclos estáveis antes de ampliar mídia." },
+    { "id": "G6", "name": "Otimização 30 dias", "status": "pending", "objective": "Otimizar mix, margem, aquisição e recompra.", "exitCriteria": "DRE, engenharia de cardápio e plano do próximo ciclo." }
+  ],
+  "tasks": [
+    { "id": "TASK-GES-001", "title": "Confirmar escopo, responsáveis e teto de investimento", "pillar": "gestao", "phase": "G0", "owner": "AG-GESTAO", "impact": 5, "urgency": 5, "status": "ready", "dependencies": [], "acceptance": "Responsáveis, orçamento por faixa e autoridade de aprovação registrados.", "evidence": [] },
+    { "id": "TASK-MAR-001", "title": "Decidir arquitetura de nomes Carro‑Chefe e Paulistinha", "pillar": "marca", "phase": "G0", "owner": "AG-MARCA", "impact": 4, "urgency": 5, "status": "ready", "dependencies": [], "acceptance": "Nomenclatura aprovada para produto, capa, site e anúncios.", "evidence": [] },
+    { "id": "TASK-OPS-001", "title": "Levantar medidas e infraestrutura do ponto", "pillar": "operacoes", "phase": "G0", "owner": "AG-OPERACOES", "impact": 5, "urgency": 5, "status": "ready", "dependencies": [], "acceptance": "Planta medida com energia, água, esgoto, internet, ventilação, fluxo e fotos.", "evidence": [] },
+    { "id": "TASK-GES-002", "title": "Mapear licenças e exigências locais", "pillar": "gestao", "phase": "G1", "owner": "AG-GESTAO", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-OPS-001"], "acceptance": "Checklist validado com profissionais/órgãos e prazos responsáveis.", "evidence": [] },
+    { "id": "TASK-OPS-002", "title": "Desenhar layout sanitário e fluxo do quiosque", "pillar": "operacoes", "phase": "G1", "owner": "AG-OPERACOES", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-OPS-001", "TASK-GES-002"], "acceptance": "Fluxo de crus, prontos, equipe, fila, retirada, limpeza e resíduos validado.", "evidence": [] },
+    { "id": "TASK-FIN-001", "title": "Criar orçamento de implantação e reserva", "pillar": "financas", "phase": "G1", "owner": "AG-FINANCAS", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-OPS-001", "TASK-GES-002"], "acceptance": "CAPEX, OPEX inicial, contingência e cenários mínimo/base registrados.", "evidence": [] },
+    { "id": "TASK-PRO-001", "title": "Fechar gramaturas e receitas do cardápio MVP", "pillar": "produto", "phase": "G2", "owner": "AG-OPERACOES", "impact": 5, "urgency": 5, "status": "ready", "dependencies": ["TASK-MAR-001"], "acceptance": "Cada item possui ingredientes, quantidades, rendimento, perda e montagem.", "evidence": [] },
+    { "id": "TASK-PRO-002", "title": "Mapear alergênicos e contato cruzado", "pillar": "produto", "phase": "G2", "owner": "AG-OPERACOES", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-PRO-001"], "acceptance": "Matriz por produto revisada e texto de comunicação aprovado.", "evidence": [] },
+    { "id": "TASK-FIN-002", "title": "Calcular CMV, margem e preço por produto", "pillar": "financas", "phase": "G2", "owner": "AG-FINANCAS", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-PRO-001"], "acceptance": "Custo de receita/embalagem/taxas e preços por cenário aprovados.", "evidence": [] },
+    { "id": "TASK-PRO-003", "title": "Executar teste sensorial e operacional do MVP", "pillar": "produto", "phase": "G2", "owner": "AG-OPERACOES", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-PRO-001", "TASK-FIN-002"], "acceptance": "Receitas, tempo, aparência e feedback documentados com decisão por item.", "evidence": [] },
+    { "id": "TASK-MID-001", "title": "Fotografar produtos aprovados nos formatos do catálogo", "pillar": "midias", "phase": "G2", "owner": "AG-MIDIAS", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-PRO-003"], "acceptance": "Assets 1:1, 4:5, 9:16 e horizontal aprovados por Marca e Operações.", "evidence": [] },
+    { "id": "TASK-ERP-001", "title": "Criar matriz eliminatória e shortlist de ERP", "pillar": "financas", "phase": "G3", "owner": "AG-FINANCAS", "impact": 5, "urgency": 5, "status": "ready", "dependencies": [], "acceptance": "Três opções comparadas por fluxo, integração, suporte e custo total.", "evidence": [] },
+    { "id": "TASK-ERP-002", "title": "Executar prova de conceito do Chefão no ERP", "pillar": "financas", "phase": "G3", "owner": "AG-FINANCAS", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-ERP-001", "TASK-PRO-001"], "acceptance": "Pedido com modificadores, pagamento, KDS, estoque, fiscal e exportação demonstrado.", "evidence": [] },
+    { "id": "TASK-DAT-001", "title": "Aprovar dicionário de dados e eventos", "pillar": "development", "phase": "G3", "owner": "AG-DEV", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-ERP-002"], "acceptance": "IDs, eventos, PII, retenção, reconciliação e proprietários documentados.", "evidence": [] },
+    { "id": "TASK-DEV-001", "title": "Construir MVP acessível de /welcome", "pillar": "development", "phase": "G3", "owner": "AG-DEV", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-MAR-001", "TASK-MID-001"], "acceptance": "Página responsiva com CTAs, fallback sem 3D, analytics e metas de desempenho.", "evidence": [] },
+    { "id": "TASK-DEV-002", "title": "Homologar integração de /cardapio com ERP", "pillar": "development", "phase": "G3", "owner": "AG-DEV", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-ERP-002", "TASK-DAT-001"], "acceptance": "Embed seguro ou redirect funciona com sessão, mobile, analytics e fallback.", "evidence": [] },
+    { "id": "TASK-COM-001", "title": "Criar mapa mestre de compras por caminho crítico", "pillar": "compras", "phase": "G3", "owner": "AG-COMPRAS", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-OPS-002", "TASK-FIN-001"], "acceptance": "Itens, requisitos, quantidade, teto, prazo, dependências e comprador aprovados.", "evidence": [] },
+    { "id": "TASK-COM-002", "title": "Cotar equipamentos críticos com custo total", "pillar": "compras", "phase": "G3", "owner": "AG-COMPRAS", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-COM-001"], "acceptance": "Mínimo de três opções válidas por item com avaliações, garantia, prazo e risco.", "evidence": [] },
+    { "id": "TASK-COM-003", "title": "Homologar fornecedores primário e alternativo", "pillar": "compras", "phase": "G3", "owner": "AG-COMPRAS", "impact": 5, "urgency": 3, "status": "blocked", "dependencies": ["TASK-PRO-001", "TASK-FIN-002"], "acceptance": "Fornecedor A/B por insumo crítico com preço, qualidade, lote, prazo e contingência.", "evidence": [] },
+    { "id": "TASK-MAR-002", "title": "Finalizar etiqueta e testar QR code físico", "pillar": "marca", "phase": "G3", "owner": "AG-MARCA", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-MAR-001", "TASK-DEV-001"], "acceptance": "Prova testada em embalagens e aparelhos reais antes do lote.", "evidence": [] },
+    { "id": "TASK-OPS-003", "title": "Criar POPs e checklists operacionais", "pillar": "operacoes", "phase": "G4", "owner": "AG-OPERACOES", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-OPS-002", "TASK-PRO-001"], "acceptance": "Abertura, produção, limpeza, perda, fechamento e contingências treináveis.", "evidence": [] },
+    { "id": "TASK-OPS-004", "title": "Treinar equipe e matriz de substituição", "pillar": "operacoes", "phase": "G4", "owner": "AG-OPERACOES", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-OPS-003", "TASK-ERP-002"], "acceptance": "Três funções executam fluxo padrão e contingências com registro de competência.", "evidence": [] },
+    { "id": "TASK-OPS-005", "title": "Executar dois ensaios completos de pico", "pillar": "operacoes", "phase": "G4", "owner": "AG-OPERACOES", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-OPS-004", "TASK-DEV-002", "TASK-COM-002"], "acceptance": "Capacidade, gargalo, tempos, erros e plano de ação documentados sem falha crítica aberta.", "evidence": [] },
+    { "id": "TASK-MKT-001", "title": "Definir plano de lançamento, UTMs e limites de mídia", "pillar": "marketing", "phase": "G4", "owner": "AG-MARKETING", "impact": 4, "urgency": 4, "status": "blocked", "dependencies": ["TASK-FIN-002", "TASK-DAT-001", "TASK-OPS-005"], "acceptance": "Campanhas têm hipótese, orçamento, capacidade, conversão, margem e regra de pausa.", "evidence": [] },
+    { "id": "TASK-MID-002", "title": "Produzir banco de conteúdo de pré-abertura", "pillar": "midias", "phase": "G4", "owner": "AG-MIDIAS", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-MID-001", "TASK-MKT-001"], "acceptance": "Calendário e ativos aprovados com direitos, formatos e versões.", "evidence": [] },
+    { "id": "TASK-GES-003", "title": "Executar soft opening controlado", "pillar": "gestao", "phase": "G5", "owner": "AG-GESTAO", "impact": 5, "urgency": 5, "status": "blocked", "dependencies": ["TASK-OPS-005", "TASK-MKT-001", "TASK-MID-002"], "acceptance": "Ciclo limitado concluído com caixa/estoque conciliados e incidentes tratados.", "evidence": [] },
+    { "id": "TASK-DAT-002", "title": "Validar painel diário e conciliação", "pillar": "development", "phase": "G5", "owner": "AG-DEV", "impact": 5, "urgency": 4, "status": "blocked", "dependencies": ["TASK-GES-003"], "acceptance": "Pedidos, receita, tempos, ruptura e mídia reconciliados com fonte oficial.", "evidence": [] },
+    { "id": "TASK-PRO-004", "title": "Executar engenharia de cardápio de 30 dias", "pillar": "produto", "phase": "G6", "owner": "AG-FINANCAS", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-DAT-002"], "acceptance": "Itens classificados por popularidade/margem e decisões documentadas.", "evidence": [] },
+    { "id": "TASK-MKT-002", "title": "Otimizar aquisição e recompra por margem", "pillar": "marketing", "phase": "G6", "owner": "AG-MARKETING", "impact": 4, "urgency": 3, "status": "blocked", "dependencies": ["TASK-DAT-002", "TASK-PRO-004"], "acceptance": "Experimentos priorizados por margem incremental, capacidade e consentimento.", "evidence": [] }
+  ],
+  "decisions": [
+    { "id": "DEC-001", "question": "Qual é o papel de “Paulistinha” em relação a “Carro‑Chefe”?", "owner": "AG-GESTAO", "due": null, "status": "open", "recommendation": "Manter Carro‑Chefe como família principal e decidir se Paulistinha é item, apelido legado ou texto a remover.", "resolution": null },
+    { "id": "DEC-002", "question": "Qual ERP e adquirente atendem ao fluxo completo?", "owner": "AG-FINANCAS", "due": null, "status": "open", "recommendation": "Decidir somente após prova de conceito do Chefão.", "resolution": null },
+    { "id": "DEC-003", "question": "Os dois espetos do Chefão podem ser iguais e quais são os limites de adicionais?", "owner": "AG-OPERACOES", "due": null, "status": "open", "recommendation": "Permitir repetição se custo e produção suportarem; definir gramaturas antes do cadastro.", "resolution": null },
+    { "id": "DEC-004", "question": "O ERP permite incorporação segura em /cardapio?", "owner": "AG-DEV", "due": null, "status": "open", "recommendation": "Manter redirecionamento como fallback contratual e técnico.", "resolution": null },
+    { "id": "DEC-005", "question": "Qual é o endereço, a planta e a infraestrutura confirmada do ponto?", "owner": "AG-OPERACOES", "due": null, "status": "open", "recommendation": "Fazer levantamento presencial antes de dimensionar equipamentos.", "resolution": null },
+    { "id": "DEC-006", "question": "Qual é a data-alvo e o teto de investimento?", "owner": "AG-GESTAO", "due": null, "status": "open", "recommendation": "Definir após viabilidade e orçamento preliminar.", "resolution": null }
+  ],
+  "risks": [
+    { "id": "RISK-001", "title": "Ponto sem licenças ou infraestrutura suficiente", "owner": "AG-GESTAO", "probability": 3, "impact": 5, "status": "open", "mitigation": "Validar com especialistas e órgãos antes de compromissos irreversíveis.", "trigger": "Exigência incompatível, obra não prevista ou parecer negativo." },
+    { "id": "RISK-002", "title": "ERP não suportar modificadores e baixa de estoque", "owner": "AG-FINANCAS", "probability": 4, "impact": 5, "status": "open", "mitigation": "Prova de conceito com Chefão, canais e exportação antes de contratar.", "trigger": "Fornecedor não demonstra o fluxo real." },
+    { "id": "RISK-003", "title": "Demanda superar capacidade da parrilla", "owner": "AG-OPERACOES", "probability": 4, "impact": 5, "status": "open", "mitigation": "Ensaiar pico, definir limite e pausar mídia/itens quando necessário.", "trigger": "Tempo ou fila supera limite aprovado." },
+    { "id": "RISK-004", "title": "Preço sem ficha técnica comprometer margem", "owner": "AG-FINANCAS", "probability": 4, "impact": 5, "status": "open", "mitigation": "Aprovar custo completo e margem antes de publicar preço.", "trigger": "Item sem custo ou variação relevante do insumo." },
+    { "id": "RISK-005", "title": "Clima, fumaça ou calor tornarem a operação insegura", "owner": "AG-OPERACOES", "probability": 3, "impact": 5, "status": "open", "mitigation": "Projeto profissional, ancoragem, ventilação e protocolo climático.", "trigger": "Limite de vento/chuva/calor ou acúmulo de fumaça." },
+    { "id": "RISK-006", "title": "Integração do cardápio bloquear sessão ou rastreamento", "owner": "AG-DEV", "probability": 3, "impact": 4, "status": "open", "mitigation": "Homologar iframe/cabeçalhos e manter redirecionamento.", "trigger": "Falha mobile, cookie, CSP ou login." },
+    { "id": "RISK-007", "title": "Dados pessoais coletados sem necessidade ou controle", "owner": "AG-DEV", "probability": 3, "impact": 5, "status": "open", "mitigation": "Minimização, finalidade, consentimento, acesso e retenção documentados.", "trigger": "PII em analytics, logs ou exportações indevidas." },
+    { "id": "RISK-008", "title": "Fornecedor único causar ruptura", "owner": "AG-COMPRAS", "probability": 3, "impact": 4, "status": "open", "mitigation": "Homologar alternativas e calcular estoque de segurança.", "trigger": "Atraso, falta, queda de qualidade ou aumento abrupto." }
+  ],
+  "procurement": [
+    { "id": "BUY-001", "item": "ERP para alimentação com totem e pedido web", "category": "assinatura", "owner": "AG-COMPRAS", "status": "research", "neededBy": null, "requirements": ["modificadores complexos", "ficha técnica e estoque", "KDS ou impressão", "fiscal/financeiro", "API/exportação", "suporte"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-002", "item": "Parrilla/churrasqueira profissional", "category": "equipamento", "owner": "AG-COMPRAS", "status": "blocked", "neededBy": null, "requirements": ["capacidade definida por ensaio", "material próprio para uso", "limpeza", "assistência", "compatibilidade com ponto"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-003", "item": "Refrigeração e conservação", "category": "equipamento", "owner": "AG-COMPRAS", "status": "blocked", "neededBy": null, "requirements": ["volume calculado", "faixa de temperatura", "eficiência", "assistência", "dimensões"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-004", "item": "Totem de autoatendimento", "category": "tecnologia", "owner": "AG-COMPRAS", "status": "blocked", "neededBy": null, "requirements": ["compatível com ERP", "tela legível", "suporte seguro", "pagamento", "manutenção"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-005", "item": "Internet principal e contingência", "category": "assinatura", "owner": "AG-COMPRAS", "status": "research", "neededBy": null, "requirements": ["cobertura no endereço", "SLA", "backup por operadora distinta", "roteador", "custo total"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-006", "item": "Embalagens e etiquetas", "category": "consumível", "owner": "AG-COMPRAS", "status": "blocked", "neededBy": null, "requirements": ["adequação alimentar", "15 cm e 30 cm", "resistência", "QR legível", "tiragem piloto"], "budgetCeiling": null, "recommendation": null },
+    { "id": "BUY-007", "item": "Fornecedores de insumos críticos", "category": "insumo", "owner": "AG-COMPRAS", "status": "blocked", "neededBy": null, "requirements": ["qualidade padronizada", "rastreabilidade", "entrega", "preço normalizado", "fornecedor alternativo"], "budgetCeiling": null, "recommendation": null }
+  ],
+  "notes": [
+    { "id": "NOTE-001", "title": "Limites da fundação", "content": "Preços, datas, endereço, medidas, custos e fornecedores permanecem pendentes; não tratá-los como definidos.", "owner": "AG-GESTAO", "createdAt": "2026-08-12T18:00:00.000Z" }
+  ],
+  "history": [
+    { "at": "2026-08-12T18:00:00.000Z", "actor": "system", "action": "seed_created", "summary": "Fundação do planejamento criada a partir do briefing inicial." }
+  ]
+}
+

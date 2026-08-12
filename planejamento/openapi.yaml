@@ -1,0 +1,259 @@
+openapi: 3.1.0
+info:
+  title: Carro Chefe — Central Operacional
+  version: 0.1.0
+  description: >-
+    API local para consultar o plano, propor mudanças, revisar solicitações,
+    anexar evidências e ler a auditoria. Mudanças são aplicadas somente após aprovação.
+servers:
+  - url: http://127.0.0.1:4173
+    description: Ambiente local
+paths:
+  /api/health:
+    get:
+      summary: Verifica se a central está disponível
+      responses:
+        "200":
+          description: Serviço disponível
+  /api/schema:
+    get:
+      summary: Lista ações suportadas e o fluxo
+      responses:
+        "200":
+          description: Contrato resumido
+  /api/plan:
+    get:
+      summary: Lê o plano operacional atual
+      responses:
+        "200":
+          description: Plano completo
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/requests:
+    get:
+      summary: Lista solicitações
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: Lista de solicitações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChangeRequest"
+    post:
+      summary: Propõe uma mudança no plano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewChangeRequest"
+            examples:
+              createTask:
+                value:
+                  actor: AG-COMPRAS
+                  action: create_task
+                  reason: Registrar cotação necessária para o caminho crítico
+                  payload:
+                    title: Comparar três opções de refrigerador
+                    pillar: compras
+                    phase: G3
+                    owner: AG-COMPRAS
+                    impact: 5
+                    urgency: 4
+                    acceptance: Três opções válidas com custo total, avaliações, garantia, frete e prazo
+                    dependencies: [TASK-OPS-004]
+      responses:
+        "201":
+          description: Solicitação pendente criada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /api/requests/{requestId}/approve:
+    post:
+      summary: Aprova e aplica uma solicitação pendente
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Review"
+      responses:
+        "200":
+          description: Mudança aplicada, plano versionado e auditoria gravada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /api/requests/{requestId}/reject:
+    post:
+      summary: Rejeita uma solicitação e preserva a justificativa
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Review"
+      responses:
+        "200":
+          description: Solicitação rejeitada
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /api/audit:
+    get:
+      summary: Lê a trilha de auditoria
+      responses:
+        "200":
+          description: Eventos mais recentes primeiro
+  /api/uploads:
+    get:
+      summary: Lista metadados dos arquivos enviados
+      responses:
+        "200":
+          description: Lista de uploads e hashes
+    post:
+      summary: Envia um arquivo de evidência como corpo binário
+      parameters:
+        - in: query
+          name: filename
+          required: true
+          schema:
+            type: string
+            maxLength: 200
+        - in: query
+          name: actor
+          required: true
+          schema:
+            type: string
+            maxLength: 80
+        - in: query
+          name: taskId
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/pdf: {}
+          image/png: {}
+          image/jpeg: {}
+          image/webp: {}
+          text/csv: {}
+          text/plain: {}
+          text/markdown: {}
+          application/json: {}
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {}
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document: {}
+          application/vnd.openxmlformats-officedocument.presentationml.presentation: {}
+      responses:
+        "201":
+          description: Arquivo salvo com hash SHA-256 e metadados
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "413":
+          description: Arquivo acima do limite configurado
+  /api/uploads/{uploadId}:
+    get:
+      summary: Baixa uma evidência
+      parameters:
+        - in: path
+          name: uploadId
+          required: true
+          schema:
+            type: string
+            pattern: ^UP-[a-f0-9-]+$
+      responses:
+        "200":
+          description: Conteúdo do arquivo
+        "400":
+          $ref: "#/components/responses/ValidationError"
+components:
+  parameters:
+    RequestId:
+      in: path
+      name: requestId
+      required: true
+      schema:
+        type: string
+        pattern: ^REQ-\d+$
+  responses:
+    ValidationError:
+      description: Entrada inválida ou operação não permitida
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items: {}
+  schemas:
+    NewChangeRequest:
+      type: object
+      required: [actor, action, reason, payload]
+      properties:
+        actor:
+          type: string
+          maxLength: 80
+        action:
+          type: string
+          enum:
+            - create_task
+            - update_task
+            - create_decision
+            - update_decision
+            - create_risk
+            - update_risk
+            - create_procurement_item
+            - update_procurement_item
+            - update_milestone
+            - create_note
+        reason:
+          type: string
+          maxLength: 1000
+        payload:
+          type: object
+          description: Estrutura dependente da ação; consulte planejamento/README.md.
+    ChangeRequest:
+      allOf:
+        - $ref: "#/components/schemas/NewChangeRequest"
+        - type: object
+          required: [id, status, createdAt]
+          properties:
+            id:
+              type: string
+            status:
+              type: string
+              enum: [pending, approved, rejected]
+            createdAt:
+              type: string
+              format: date-time
+            reviewer:
+              type: [string, "null"]
+            reviewedAt:
+              type: [string, "null"]
+              format: date-time
+    Review:
+      type: object
+      required: [reviewer]
+      properties:
+        reviewer:
+          type: string
+          maxLength: 80
+        note:
+          type: [string, "null"]
+          maxLength: 1200
+
