@@ -26,7 +26,7 @@ async function safeProjectFile(input: string) {
 }
 
 export async function browserRoutes(app: FastifyInstance) {
-  app.get("/api/v1/files/preview", async (request) => {
+  app.get("/api/v1/files/preview", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request) => {
     const query = request.query as { path?: string };
     const file = await safeProjectFile(query.path ?? "");
     const extension = path.extname(file.real).toLowerCase();
@@ -36,7 +36,7 @@ export async function browserRoutes(app: FastifyInstance) {
     return { ...base, kind: "unsupported" };
   });
 
-  app.get("/api/v1/files/content", async (request, reply) => {
+  app.get("/api/v1/files/content", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (request, reply) => {
     const file = await safeProjectFile((request.query as { path?: string }).path ?? "");
     const mimeType = inlineTypes[path.extname(file.real).toLowerCase()];
     if (!mimeType) throw new ApiError(415, "Este tipo de arquivo não possui visualização inline.");
