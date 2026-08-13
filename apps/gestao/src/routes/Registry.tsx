@@ -8,13 +8,13 @@ const labels: Record<string, string> = { task_added: "Tarefa adicionada", task_r
 
 export function Registry() {
   const [params, setParams] = useSearchParams();
-  const [events, setEvents] = useState<any[]>([]);
-  useEffect(() => { api<any[]>("/api/v1/audit?limit=500").then(setEvents); }, []);
-  const q = (params.get("q") ?? "").toLocaleLowerCase("pt-BR");
-  const filtered = events.filter((item) => !q || `${item.action} ${item.entityType} ${item.entityId} ${item.summary} ${item.actor}`.toLocaleLowerCase("pt-BR").includes(q));
-  const updateSearch = (value: string) => { const next = new URLSearchParams(params); value ? next.set("q", value) : next.delete("q"); setParams(next, { replace: true }); };
-  return <div className="page-stack"><section className="intro"><span className="eyebrow">Auditoria append-only</span><h2>Registro de mudanças</h2><p>Tarefas e decisões adicionadas, resolvidas, canceladas ou enriquecidas permanecem consultáveis.</p></section>
-    <section className="panel search-panel"><label><span>Buscar no registro</span><input type="search" value={params.get("q") ?? ""} onChange={(event) => updateSearch(event.target.value)} placeholder="Ação, tarefa, decisão, agente ou justificativa" /></label><small>{filtered.length} evento(s)</small></section>
-    <section className="panel audit-register">{filtered.map((item) => <article key={item.id}><div><span className={`audit-kind audit-kind--${item.entityType}`}>{labels[item.action] || item.action}</span><time>{formatDate(item.createdAt)}</time></div><h3>{item.entityId}</h3><p><RichReferences text={item.summary} /></p><footer><span>{item.actor}</span>{item.taskId && <Link to={`/gestao/tarefas/${item.taskId}`}>Abrir tarefa →</Link>}{item.decisionId && <Link to={`/gestao/governanca#decision-${item.decisionId}`}>Abrir decisão →</Link>}</footer></article>)}</section>
+  const [result, setResult] = useState<any>({ items: [], page: 1, pageCount: 1, total: 0 });
+  const q = params.get("q") ?? "", page = Math.max(1, Number(params.get("page") ?? 1) || 1);
+  useEffect(() => { const timer = setTimeout(() => void api<any>(`/api/v1/audit?page=${page}&pageSize=25${q ? `&q=${encodeURIComponent(q)}` : ""}`).then(setResult), 180); return () => clearTimeout(timer); }, [page, q]);
+  const update = (next: { q?: string; page?: number }) => { const search = new URLSearchParams(params); if (next.q !== undefined) { next.q ? search.set("q", next.q) : search.delete("q"); search.set("page", "1"); } if (next.page !== undefined) search.set("page", String(next.page)); setParams(search, { replace: true }); };
+  return <div className="page-stack"><section className="intro"><span className="eyebrow">Auditoria append-only</span><h2>Registro de mudanças</h2><p>A consulta é paginada no banco para preservar desempenho conforme o histórico crescer.</p></section>
+    <section className="panel search-panel"><label><span>Buscar no registro</span><input type="search" value={q} onChange={(event) => update({ q: event.target.value })} placeholder="Ação, tarefa, decisão, agente ou justificativa" /></label><small>{result.total} evento(s)</small></section>
+    <section className="panel audit-register">{result.items.map((item: any) => <article key={item.id}><div><span className={`audit-kind audit-kind--${item.entityType}`}>{labels[item.action] || item.action}</span><time>{formatDate(item.createdAt)}</time></div><h3>{item.entityId}</h3><p><RichReferences text={item.summary} /></p><footer><span>{item.actor}</span>{item.taskId && <Link to={`/gestao/tarefas/${item.taskId}`}>Abrir tarefa →</Link>}{item.decisionId && <Link to={`/gestao/governanca#decision-${item.decisionId}`}>Abrir decisão →</Link>}</footer></article>)}</section>
+    <nav className="pagination" aria-label="Paginação do registro"><button disabled={page <= 1} onClick={() => update({ page: page - 1 })}>← Anterior</button><span>Página {page} de {result.pageCount}</span><button disabled={page >= result.pageCount} onClick={() => update({ page: page + 1 })}>Próxima →</button></nav>
   </div>;
 }

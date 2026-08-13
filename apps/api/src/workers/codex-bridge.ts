@@ -1,32 +1,16 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
-import { Codex, type ModelReasoningEffort, type ThreadEvent, type UserInput } from "@openai/codex-sdk";
+import { Codex, type ModelReasoningEffort, type ThreadEvent } from "@openai/codex-sdk";
 import { config } from "../config";
 import { holdWorkerPort } from "./singleton";
-import { buildRuntimeContract, shouldWriteFallbackReport } from "./agent-runtime-contract";
+import { shouldWriteFallbackReport } from "./agent-runtime-contract";
+import { buildRunPrompt, makeRuntimeInput } from "./runtime-prompt";
+import { runtimeApi as api } from "./runtime-api";
 
 const codex = new Codex();
-const apiBase = `http://127.0.0.1:${config.port}/api/v1`;
-const uploadRoot = path.join(config.projectRoot, ".runtime", "uploads");
 const workerLock = await holdWorkerPort(4174, "Bridge Codex");
 if (!workerLock) process.exit(0);
 let stopping = false;
 process.on("SIGINT", () => { stopping = true; });
 process.on("SIGTERM", () => { stopping = true; });
-
-async function api<T>(route: string, method = "GET", body?: unknown): Promise<T> {
-  const response = await fetch(`${apiBase}${route}`, {
-    method,
-    headers: { "Content-Type": "application/json", ...(config.agentApiKey ? { "X-Agent-Key": config.agentApiKey } : {}) },
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const details = Array.isArray(data.details) ? data.details.map((item: any) => `${item.path?.join(".") || "campo"}: ${item.message}`).join("; ") : data.details ? safeJson(data.details) : "";
-    throw new Error([data.error ?? `API ${response.status}`, details].filter(Boolean).join(" — "));
-  }
-  return data as T;
-}
 
 function compactTitle(title?: string) {
   if (!title) return undefined;
@@ -80,53 +64,42 @@ async function recordItem(runId: string, event: Extract<ThreadEvent, { type: "it
   if (item.type === "error") await observe(runId, "error", "item.error", item.message, "Erro do runtime");
 }
 
-function makeInput(run: any, prompt: string): string | UserInput[] {
-  const uploads = run.intent?.uploads ?? [];
-  if (!uploads.length) return prompt;
-  const imageInputs: UserInput[] = [];
-  const fileLines: string[] = [];
-  for (const upload of uploads) {
-    const localPath = path.join(uploadRoot, upload.storageName);
-    if (!localPath.startsWith(uploadRoot) || !existsSync(localPath)) continue;
-    if (["image/png", "image/jpeg", "image/webp"].includes(upload.mimeType)) imageInputs.push({ type: "local_image", path: localPath });
-    else fileLines.push(`- ${upload.originalName} (${upload.mimeType}): ${localPath}`);
-  }
-  const attachmentContext = fileLines.length ? `\n\nArquivos anexados disponíveis no workspace:\n${fileLines.join("\n")}` : "";
-  return [{ type: "text", text: `${prompt}${attachmentContext}` }, ...imageInputs];
-}
-
 async function handleRun(runId: string) {
   let run: any;
   try { run = await api<any>(`/agent-runs/${runId}/claim`, "POST", {}); }
   catch (error) { if (String(error).includes("fila")) return; throw error; }
 
   const allowedEfforts = new Set<ModelReasoningEffort>(["minimal", "low", "medium", "high", "xhigh"]);
-  const reasoningEffort: ModelReasoningEffort = allowedEfforts.has(run.agent.reasoningEffort) ? run.agent.reasoningEffort : "medium";
-  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: "workspace-write" as const, approvalPolicy: "never" as const,
-    networkAccessEnabled: true, webSearchMode: "live" as const, model: run.agent.model || undefined, modelReasoningEffort: reasoningEffort };
+  const selectedEffort = run.selectedReasoningEffort || run.agent.reasoningEffort;
+  const reasoningEffort: ModelReasoningEffort = allowedEfforts.has(selectedEffort) ? selectedEffort : "medium";
+  const programmingAgent = run.agent.id === "AG-DEV";
+  const needsLiveResearch = ["AG-COMPRAS", "AG-FINANCAS", "AG-MARKETING", "AG-MIDIAS"].includes(run.agent.id) || /\b(pesquis|verificar (?:site|fornecedor)|preço atual|requisito externo)\b/i.test(run.objective);
+  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: programmingAgent ? "workspace-write" as const : "read-only" as const, approvalPolicy: "never" as const,
+    networkAccessEnabled: needsLiveResearch, webSearchMode: needsLiveResearch ? "live" as const : "disabled" as const, model: run.selectedModel || run.agent.model || undefined, modelReasoningEffort: reasoningEffort };
   const thread = run.externalThreadId ? codex.resumeThread(run.externalThreadId, threadOptions) : codex.startThread(threadOptions);
   const intent = run.intentId ? await api<any>(`/intents/${run.intentId}`).catch(() => null) : null;
   const priorRuns = intent?.runs?.filter((item: any) => item.id !== run.id && ["succeeded", "failed"].includes(item.status)) ?? [];
   const handoffs: string[] = [];
-  for (const prior of priorRuns) {
+  for (const prior of priorRuns.slice(-4)) {
     const summary = prior.report?.summary || prior.messages?.at(-1)?.content;
     if (!summary) continue;
-    handoffs.push(`${prior.agent.name} (${prior.agentId}): ${summary}`);
+    handoffs.push(`${prior.agentId}: ${summary.slice(0, 1200)}`);
     await communicate(runId, prior.agentId, run.agent.id, "handoff", summary, run.intentId).catch(() => undefined);
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
-  const runtimeContract = buildRuntimeContract(apiBase, run.id, run.agent.id);
-  const prompt = latestAnswer
-    ? `O proprietário respondeu na Central Operacional à pergunta "${latestAnswer.question}": ${latestAnswer.answer}. Continue a tarefa do ponto em que parou. Registre passos, atualizações e novas perguntas na API da Central.${runtimeContract}`
-    : `Você é ${run.agent.name} (${run.agent.id}) no projeto Carro Chefe.\nObjetivo delegado: ${run.objective}\nTarefa: ${run.task.id} — ${run.task.title}.\nStatus atual: ${run.task.status}${run.task.statusJustification ? ` — ${run.task.statusJustification}` : ""}.\nCritério de aceite: ${run.task.acceptance}.\nEvidências já ligadas: ${run.task.evidenceJson || "[]"}.${handoffs.length ? `\n\nResultados recebidos de outros agentes envolvidos:\n${handoffs.join("\n")}` : ""}\nUse a Central Operacional em ${apiBase} para registrar passos, mensagens, relatório final e perguntas. Se precisar de decisão humana, registre a pergunta e encerre o turno aguardando resposta. Não compre, publique, faça deploy ou altere serviços externos sem autorização explícita. Execute o trabalho, valide e mantenha o escopo desta tarefa.${runtimeContract}`;
+  const prompt = buildRunPrompt(run, handoffs, latestAnswer);
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";
+  let lastHeartbeatAt = 0;
   try {
     await observe(runId, "system", "run.connected", "Bridge local conectado ao runtime do Codex.", "Execução iniciada");
-    const streamed = await thread.runStreamed(makeInput(run, prompt));
+    const streamed = await thread.runStreamed(makeRuntimeInput(run, prompt));
     for await (const event of streamed.events) {
-      await api(`/agent-runs/${runId}/heartbeat`, "POST", {});
+      if (Date.now() - lastHeartbeatAt >= 5_000) {
+        await api(`/agent-runs/${runId}/heartbeat`, "POST", {});
+        lastHeartbeatAt = Date.now();
+      }
       if (event.type === "thread.started") await api(`/agent-runs/${runId}`, "PATCH", { status: "running", currentStep: "Codex conectado à execução", externalThreadId: event.thread_id });
       if (event.type === "turn.started") await observe(runId, "system", "turn.started", "O Codex começou a processar o objetivo.", "Turno iniciado");
       if (["item.started", "item.updated", "item.completed"].includes(event.type)) await recordItem(runId, event as Extract<ThreadEvent, { type: "item.started" | "item.updated" | "item.completed" }>, commandOutputs);
@@ -193,12 +166,14 @@ const activeIntentIds = new Set<string>();
 const activeRuns = new Set<Promise<void>>();
 while (!stopping) {
   if (activeRuns.size < config.maxAgentConcurrency) {
-    const queued = await api<any[]>("/agent-runs?status=queued").catch(() => []);
+    const queued = await api<any[]>(`/agent-run-queue?status=queued&limit=${config.maxAgentConcurrency * 4}`).catch(() => []);
     const candidates = queued.filter((run) => run.provider === "codex-local" && !activeRunIds.has(run.id));
+    const pendingSpecialistIntents = new Set(candidates.filter((run) => run.purpose !== "management_review" && run.intentId).map((run) => run.intentId));
     const selected: any[] = [];
     const selectedIntentIds = new Set<string>();
     for (const next of candidates) {
       if (selected.length >= config.maxAgentConcurrency - activeRuns.size) break;
+      if (next.purpose === "management_review" && next.intentId && pendingSpecialistIntents.has(next.intentId)) continue;
       if (next.intentId && (activeIntentIds.has(next.intentId) || selectedIntentIds.has(next.intentId))) continue;
       selected.push(next);
       if (next.intentId) selectedIntentIds.add(next.intentId);

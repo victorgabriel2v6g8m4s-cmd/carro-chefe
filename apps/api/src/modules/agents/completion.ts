@@ -1,5 +1,6 @@
 import { prisma } from "@carro-chefe/database";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
+import { findNextRoadmapTask, nextStepNotification } from "../tasks/next-step";
 
 const terminalStatuses = new Set(["succeeded", "failed", "cancelled"]);
 
@@ -31,6 +32,12 @@ export async function finalizeAgentRun(runId: string) {
         afterJson: JSON.stringify({ status: updated.status, version: updated.version, runId }) } });
       await tx.agentCommunication.create({ data: { runId, intentId: run.intentId, sourceId: run.agentId, targetId: "PROPRIETARIO", kind: "result", status: "delivered", summary: reportSummary } });
       emitted.push(await appendEvent(tx, "task.status.changed", "task", run.taskId, { taskId: run.taskId, transition }));
+      const nextTask = await findNextRoadmapTask(tx, run.taskId);
+      if (nextTask) {
+        const suggestion = nextStepNotification(nextTask);
+        const notification = await tx.notification.create({ data: { userId: "owner", taskId: nextTask.id, ...suggestion } });
+        emitted.push(await appendEvent(tx, "roadmap.next-step.suggested", "task", nextTask.id, { notification, task: nextTask }));
+      }
     }
 
     const existingNotification = await tx.notification.findUnique({ where: { runId }, select: { type: true, message: true } });

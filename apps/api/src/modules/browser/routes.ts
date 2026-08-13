@@ -6,6 +6,8 @@ import { browserNavigationSchema } from "@carro-chefe/contracts";
 import { config } from "../../config";
 import { ApiError, parseJson } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
+import { z } from "zod";
+import { browserSnapshot, browserState, interactBrowser, navigateBrowser } from "./session";
 
 const blockedSegments = new Set([".git", ".runtime", "node_modules"]);
 const textExtensions = new Set([".txt", ".md", ".json", ".yaml", ".yml", ".ts", ".tsx", ".js", ".jsx", ".css", ".html", ".sql", ".prisma", ".csv"]);
@@ -26,6 +28,43 @@ async function safeProjectFile(input: string) {
 }
 
 export async function browserRoutes(app: FastifyInstance) {
+  app.get("/api/v1/browser/session/:sessionId/snapshot", { config: { rateLimit: { max: 90, timeWindow: "1 minute" } } }, async (request, reply) => {
+    const snapshot = await browserSnapshot((request.params as { sessionId: string }).sessionId);
+    reply.header("X-Browser-Url", encodeURIComponent(snapshot.url));
+    reply.header("X-Browser-Title", encodeURIComponent(snapshot.title));
+    return reply.type("image/jpeg").send(snapshot.image);
+  });
+
+  app.post("/api/v1/browser/session/:sessionId/navigate", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
+    const input = z.object({ url: z.string().trim().min(4).max(2_000) }).parse(request.body);
+    const snapshot = await navigateBrowser((request.params as { sessionId: string }).sessionId, input.url);
+    reply.header("X-Browser-Url", encodeURIComponent(snapshot.url));
+    reply.header("X-Browser-Title", encodeURIComponent(snapshot.title));
+    return reply.type("image/jpeg").send(snapshot.image);
+  });
+
+  app.post("/api/v1/browser/session/:sessionId/interact", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (request) => {
+    const input = z.object({ action: z.enum(["click", "click_text", "type", "back", "reload", "scroll"]), x: z.number().min(0).max(1440).optional(), y: z.number().min(0).max(900).optional(), deltaY: z.number().min(-4000).max(4000).optional(), text: z.string().max(2_000).optional(), selector: z.string().max(500).optional() }).parse(request.body);
+    const snapshot = await interactBrowser((request.params as { sessionId: string }).sessionId, input.action, input);
+    return { url: snapshot.url, title: snapshot.title };
+  });
+
+  app.get("/api/v1/agent-runs/:runId/browser-state", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request) => {
+    const { runId } = request.params as { runId: string };
+    if (!await prisma.agentRun.findUnique({ where: { id: runId }, select: { id: true } })) throw new ApiError(404, "Execução não encontrada.");
+    return browserState(`co-${runId}`);
+  });
+
+  app.post("/api/v1/agent-runs/:runId/browser-actions", { config: { rateLimit: { max: 90, timeWindow: "1 minute" } } }, async (request) => {
+    const { runId } = request.params as { runId: string };
+    const run = await prisma.agentRun.findUnique({ where: { id: runId }, include: { agent: { select: { browserEnabled: true } } } });
+    if (!run) throw new ApiError(404, "Execução não encontrada.");
+    if (!run.agent.browserEnabled) throw new ApiError(403, "Navegador desabilitado para este agente.");
+    const input = z.object({ action: z.enum(["click", "click_text", "type", "back", "reload", "scroll"]), x: z.number().min(0).max(1440).optional(), y: z.number().min(0).max(900).optional(), deltaY: z.number().min(-4000).max(4000).optional(), text: z.string().max(2_000).optional(), selector: z.string().max(500).optional() }).parse(request.body);
+    await interactBrowser(`co-${runId}`, input.action, input);
+    return browserState(`co-${runId}`);
+  });
+
   app.get("/api/v1/files/preview", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (request) => {
     const query = request.query as { path?: string };
     const file = await safeProjectFile(query.path ?? "");

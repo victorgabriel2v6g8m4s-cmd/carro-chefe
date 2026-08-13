@@ -75,7 +75,7 @@ Cada tarefa tem exatamente um agente responsável. Outros podem ser consultados,
 
 ### Agente Gestão — `AG-GESTAO`
 
-É o coordenador e guardião do plano. Prioriza backlog, aprova requisições, cobra critérios de aceite, mantém decisões, riscos, orçamento e dependências. Consolida o relatório semanal e escala bloqueios ao proprietário.
+É o coordenador e guardião do plano. Prioriza backlog, aprova requisições, cobra critérios de aceite, mantém decisões, riscos, orçamento e dependências. Monitora desempenho, falhas, consumo e handoffs dos demais agentes; toda intenção multidisciplinar termina em uma revisão da Gestão antes de ser consolidada. Decide conflitos de escopo e escala ao proprietário apenas o que exige autoridade humana. Não programa nem repete a análise técnica dos especialistas.
 
 ### Agente Marketing & Growth — `AG-MARKETING`
 
@@ -85,9 +85,13 @@ Define posicionamento, público, ofertas, funil, tráfego pago, CRM, campanhas, 
 
 Planeja e produz fotos, vídeos, roteiros, copies, stories, peças, cobertura de bastidores e biblioteca de ativos. Garante padrão visual, direitos de uso, legendas, versões e aprovação antes da publicação.
 
-### Agente Development & Data — `AG-DEV`
+### Agente Development — `AG-DEV`
 
-Cuida do `carrochefe.com`, `/welcome`, integração segura de `/cardapio`, analytics, contratos de dados, Central Operacional, acessibilidade, desempenho, testes, deploy e observabilidade. Não replica responsabilidades do ERP.
+É o único agente que implementa ou altera código. Cuida do `carrochefe.com`, `/welcome`, integração segura de `/cardapio`, Central Operacional, acessibilidade, desempenho, testes, CI, deploy e observabilidade. Implementa contratos definidos pelo AG-DADOS e não replica responsabilidades do ERP.
+
+### Agente Dados & Analytics — `AG-DADOS`
+
+Define contratos, eventos, qualidade, linhagem, privacidade, analytics e reconciliação dos dados. Valida se ERP, site e Central produzem informação consistente e suficiente. Pode especificar schemas, consultas e critérios técnicos, mas não edita código: implementações são entregues ao AG-DEV.
 
 ### Agente Pesquisa & Compras — `AG-COMPRAS`
 
@@ -104,6 +108,10 @@ Modela custos, CMV, margem, ponto de equilíbrio, caixa, centros de custo, plano
 ### Agente Marca & Experiência — `AG-MARCA`
 
 Protege identidade, embalagem, sinalização, ambiente, jornada e consistência do produto. Mantém o manual de marca e aprova derivados visuais junto à Gestão.
+
+Especialização é obrigatória: agentes de Gestão, Marketing, Mídias, Compras, Operações, Finanças, Marca e Dados não usam programação para concluir suas tarefas. Quando uma recomendação exigir software, o especialista registra requisitos e critério de aceite e faz handoff ao AG-DEV.
+
+O runtime seleciona o perfil por complexidade antes da execução: tarefas rotineiras usam raciocínio baixo; tarefas padrão, o perfil balanceado; tarefas complexas, raciocínio médio; e somente decisões críticas ou implementação técnica crítica podem usar raciocínio alto. O modelo e a justificativa escolhidos ficam gravados na execução. Leituras repetidas, inventários amplos do repositório e consultas de terminal sem hipótese explícita devem ser evitados.
 
 ## 7. Fluxo de trabalho obrigatório
 

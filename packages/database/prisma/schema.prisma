@@ -239,6 +239,8 @@ model AuditEvent {
 
   @@index([entityType, entityId, createdAt])
   @@index([decisionId, createdAt])
+  @@index([createdAt])
+  @@index([action, createdAt])
 }
 
 model UiState {
@@ -270,6 +272,11 @@ model AgentRun {
   status           String   @default("queued")
   currentStep      String?
   requestedBy      String
+  purpose          String   @default("execution")
+  complexity       String   @default("medium")
+  selectedModel    String?
+  selectedReasoningEffort String @default("medium")
+  routingReason    String?
   startedAt        DateTime?
   lastHeartbeatAt  DateTime?
   finishedAt       DateTime?
@@ -291,6 +298,7 @@ model AgentRun {
 
   @@index([status, createdAt])
   @@index([intentId, createdAt])
+  @@index([purpose, status, createdAt])
 }
 
 model OperationalIntent {

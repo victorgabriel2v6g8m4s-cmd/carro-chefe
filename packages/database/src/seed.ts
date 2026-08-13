@@ -68,24 +68,29 @@ async function run() {
         create: { id: milestone.id, projectId, name: milestone.name, objective: milestone.objective, status: milestone.status, exitCriteria: milestone.exitCriteria, order }
       });
     }
-    for (const [order, agent] of plan.agents.entries()) {
+    const dataAgent = { id: "AG-DADOS", name: "Dados & Analytics", mission: "Governar contratos, qualidade, privacidade, eventos, analytics e reconciliação dos dados." };
+    const configuredAgents = plan.agents.flatMap((agent: typeof dataAgent) => agent.id === "AG-DEV" ? [agent, dataAgent] : [agent]);
+    for (const [order, agent] of configuredAgents.entries()) {
+      const development = agent.id === "AG-DEV";
+      const name = development ? "Development" : agent.name;
+      const mission = development ? "Construir software, integrações, testes, deploy e observabilidade com escopo técnico explícito." : agent.mission;
       await tx.agentDefinition.upsert({
         where: { id: agent.id },
-        update: { name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order, reasoningEffort: "medium", browserEnabled: true },
-        create: { id: agent.id, projectId, name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order, reasoningEffort: "medium", browserEnabled: true }
+        update: { name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true },
+        create: { id: agent.id, projectId, name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true }
       });
     }
     for (const task of plan.tasks) {
       await tx.task.upsert({
         where: { id: task.id },
         update: {
-          title: task.title, pillarId: task.pillar, milestoneId: task.phase, ownerAgentId: task.owner,
+          title: task.title, pillarId: task.pillar, milestoneId: task.phase, ownerAgentId: task.id.startsWith("TASK-DAT-") ? "AG-DADOS" : task.owner,
           impact: task.impact, urgency: task.urgency, status: task.status, acceptance: task.acceptance,
           evidenceJson: JSON.stringify(task.evidence ?? [])
         },
         create: {
           id: task.id, projectId, title: task.title, pillarId: task.pillar, milestoneId: task.phase,
-          ownerAgentId: task.owner, impact: task.impact, urgency: task.urgency, status: task.status,
+          ownerAgentId: task.id.startsWith("TASK-DAT-") ? "AG-DADOS" : task.owner, impact: task.impact, urgency: task.urgency, status: task.status,
           acceptance: task.acceptance, evidenceJson: JSON.stringify(task.evidence ?? [])
         }
       });
