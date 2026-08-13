@@ -13,6 +13,8 @@ import { eventRoutes } from "./modules/events/routes";
 import { webhookRoutes } from "./modules/webhooks/routes";
 import { uploadRoutes } from "./modules/uploads/routes";
 import { intentRoutes } from "./modules/intents/routes";
+import { governanceRoutes } from "./modules/governance/routes";
+import { browserRoutes } from "./modules/browser/routes";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
@@ -40,7 +42,7 @@ export async function buildApp() {
   app.addHook("onSend", async (_request, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
     reply.header("Referrer-Policy", "no-referrer");
-    reply.header("X-Frame-Options", "DENY");
+    reply.header("X-Frame-Options", "SAMEORIGIN");
     reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   });
 
@@ -64,6 +66,8 @@ export async function buildApp() {
   await app.register(webhookRoutes);
   await app.register(uploadRoutes);
   await app.register(intentRoutes);
+  await app.register(governanceRoutes);
+  await app.register(browserRoutes);
 
   return app;
 }

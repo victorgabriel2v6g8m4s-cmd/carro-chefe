@@ -8,7 +8,8 @@ const nav = [
   ["/gestao/visao-geral", "Visão geral", "01"], ["/gestao/comandos", "Comandos", "02"],
   ["/gestao/roteiro", "Roteiro", "03"], ["/gestao/tarefas", "Tarefas", "04"],
   ["/gestao/agentes", "Agentes", "05"], ["/gestao/perguntas", "Perguntas", "06"],
-  ["/gestao/governanca", "Governança", "07"], ["/gestao/compras", "Compras", "08"]
+  ["/gestao/governanca", "Governança", "07"], ["/gestao/compras", "Compras", "08"],
+  ["/gestao/registro", "Registro", "09"], ["/gestao/navegador", "Navegador", "10"]
 ];
 
 export function Layout() {

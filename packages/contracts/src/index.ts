@@ -101,6 +101,49 @@ export const agentCommunicationSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
+export const decisionContextSchema = z.object({
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO"),
+  content: z.string().trim().min(3).max(12_000),
+  sourceUrl: z.string().trim().url().max(2_000).nullable().optional()
+});
+
+export const decisionStatusSchema = z.object({
+  status: z.enum(["pending", "in_review", "resolved", "cancelled"]),
+  resolution: z.string().trim().min(8).max(8_000),
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+});
+
+export const browserNavigationSchema = z.object({
+  actor: z.string().trim().min(2).max(80),
+  targetType: z.enum(["url", "file", "upload"]),
+  target: z.string().trim().min(1).max(2_000),
+  title: z.string().trim().max(180).nullable().optional(),
+  reason: z.string().trim().max(1_600).nullable().optional()
+});
+
+export const createTaskSchema = z.object({
+  id: z.string().trim().regex(/^TASK-[A-Z0-9-]+$/).max(80),
+  pillarId: z.string().trim().min(1).max(80),
+  milestoneId: z.string().trim().min(1).max(80),
+  ownerAgentId: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(5).max(240),
+  impact: z.number().int().min(1).max(5),
+  urgency: z.number().int().min(1).max(5),
+  status: z.enum(taskStatuses).default("backlog"),
+  acceptance: z.string().trim().min(8).max(4000),
+  dependencyIds: z.array(z.string().trim().min(1).max(80)).max(30).default([]),
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+});
+
+export const createDecisionSchema = z.object({
+  id: z.string().trim().regex(/^DEC-[A-Z0-9-]+$/).max(80),
+  question: z.string().trim().min(8).max(2000),
+  ownerAgentId: z.string().trim().min(1).max(80),
+  due: z.string().trim().max(80).nullable().optional(),
+  recommendation: z.string().trim().max(8000).nullable().optional(),
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+});
+
 export type TaskTransitionInput = z.infer<typeof taskTransitionSchema>;
 export type UiStateInput = z.infer<typeof uiStateSchema>;
 export type CreateRunInput = z.infer<typeof createRunSchema>;

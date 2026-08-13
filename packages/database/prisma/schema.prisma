@@ -62,6 +62,8 @@ model AgentDefinition {
   role        String
   mission     String
   model       String?
+  reasoningEffort String @default("medium")
+  browserEnabled Boolean @default(false)
   enabled     Boolean  @default(true)
   order       Int      @default(0)
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -99,6 +101,8 @@ model Task {
   changeRequests      ChangeRequest[]
   auditEvents         AuditEvent[]
   uploads             Upload[]
+  notifications       Notification[]
+  browserNavigations  BrowserNavigation[]
 
   @@index([status])
   @@index([ownerAgentId])
@@ -140,6 +144,21 @@ model Decision {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contexts       DecisionContext[]
+  uploads        Upload[]
+  auditEvents    AuditEvent[]
+}
+
+model DecisionContext {
+  id         String   @id @default(cuid())
+  decisionId String
+  actor      String
+  content    String
+  sourceUrl  String?
+  createdAt  DateTime @default(now())
+  decision   Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  @@index([decisionId, createdAt])
 }
 
 model Risk {
@@ -205,6 +224,7 @@ model ChangeRequest {
 model AuditEvent {
   id          String   @id @default(cuid())
   taskId      String?
+  decisionId  String?
   actor       String
   action      String
   entityType  String
@@ -215,8 +235,10 @@ model AuditEvent {
   correlationId String?
   createdAt   DateTime @default(now())
   task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  decision    Decision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
 
   @@index([entityType, entityId, createdAt])
+  @@index([decisionId, createdAt])
 }
 
 model UiState {
@@ -264,6 +286,8 @@ model AgentRun {
   report           AgentRunReport?
   communications   AgentCommunication[]
   uploads          Upload[]
+  notification     Notification?
+  browserNavigations BrowserNavigation[]
 
   @@index([status, createdAt])
   @@index([intentId, createdAt])
@@ -311,6 +335,8 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   intentId  String?  @unique
+  runId     String?  @unique
+  taskId    String?
   type      String
   title     String
   message   String
@@ -318,6 +344,8 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime @default(now())
   intent    OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+  run       AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  task      Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt, createdAt])
 }
@@ -447,6 +475,7 @@ model Upload {
   taskId       String?
   runId        String?
   intentId     String?
+  decisionId   String?
   actor        String
   originalName String
   storageName  String   @unique
@@ -457,10 +486,32 @@ model Upload {
   task         Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   run          AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
   intent       OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+  decision     Decision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
 
   @@index([taskId, createdAt])
   @@index([runId, createdAt])
   @@index([intentId, createdAt])
+  @@index([decisionId, createdAt])
+}
+
+model BrowserNavigation {
+  id         String   @id @default(cuid())
+  runId      String
+  taskId     String
+  actor      String
+  targetType String
+  target     String
+  title      String?
+  reason     String?
+  status     String   @default("requested")
+  resultJson String   @default("{}")
+  createdAt  DateTime @default(now())
+  openedAt   DateTime?
+  run        AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([runId, createdAt])
+  @@index([taskId, createdAt])
 }
 
 model WebhookEndpoint {

@@ -1,11 +1,31 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@carro-chefe/database";
-import { taskTransitionSchema } from "@carro-chefe/contracts";
+import { createTaskSchema, taskTransitionSchema } from "@carro-chefe/contracts";
 import { ApiError } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
-import { presentTask, taskInclude } from "../plan/service";
+import { presentTask, taskDetailInclude, taskInclude } from "../plan/service";
 
 export async function taskRoutes(app: FastifyInstance) {
+  app.post("/api/v1/tasks", async (request, reply) => {
+    const input = createTaskSchema.parse(request.body);
+    const [existing, pillar, milestone, owner, dependencies] = await Promise.all([
+      prisma.task.findUnique({ where: { id: input.id } }), prisma.pillar.findUnique({ where: { id: input.pillarId } }),
+      prisma.milestone.findUnique({ where: { id: input.milestoneId } }), prisma.agentDefinition.findUnique({ where: { id: input.ownerAgentId } }),
+      prisma.task.findMany({ where: { id: { in: input.dependencyIds } }, select: { id: true } })
+    ]);
+    if (existing) throw new ApiError(409, "Já existe uma tarefa com este ID.");
+    if (!pillar || !milestone || !owner || dependencies.length !== new Set(input.dependencyIds).size) throw new ApiError(400, "Pilar, marco, agente ou dependência inválida.");
+    const result = await prisma.$transaction(async (tx) => {
+      const task = await tx.task.create({ data: { id: input.id, projectId: "carro-chefe", pillarId: input.pillarId, milestoneId: input.milestoneId,
+        ownerAgentId: input.ownerAgentId, title: input.title, impact: input.impact, urgency: input.urgency, status: input.status, acceptance: input.acceptance } });
+      for (const dependencyId of new Set(input.dependencyIds)) await tx.taskDependency.create({ data: { taskId: task.id, dependencyId } });
+      await tx.auditEvent.create({ data: { taskId: task.id, actor: input.actor, action: "task_added", entityType: "task", entityId: task.id, summary: `Tarefa adicionada: ${task.title}`, afterJson: JSON.stringify(task) } });
+      const event = await appendEvent(tx, "task.created", "task", task.id, task); return { task, event };
+    });
+    broadcastEvent(result.event);
+    const task = await prisma.task.findUniqueOrThrow({ where: { id: result.task.id }, include: taskDetailInclude });
+    return reply.code(201).send(presentTask(task));
+  });
   app.get("/api/v1/tasks", async (request) => {
     const query = request.query as { status?: string; owner?: string; phase?: string; q?: string };
     const tasks = await prisma.task.findMany({ where: {
@@ -17,7 +37,7 @@ export async function taskRoutes(app: FastifyInstance) {
 
   app.get("/api/v1/tasks/:taskId", async (request) => {
     const { taskId } = request.params as { taskId: string };
-    const task = await prisma.task.findUnique({ where: { id: taskId }, include: taskInclude });
+    const task = await prisma.task.findUnique({ where: { id: taskId }, include: taskDetailInclude });
     if (!task) throw new ApiError(404, "Tarefa não encontrada.");
     return presentTask(task);
   });
@@ -41,7 +61,7 @@ export async function taskRoutes(app: FastifyInstance) {
       }});
       const transition = await tx.taskStatusTransition.create({ data: { taskId, fromStatus: current.status,
         toStatus: input.toStatus, justification: input.justification, actor: input.actor, evidenceJson: JSON.stringify(input.evidence) } });
-      await tx.auditEvent.create({ data: { taskId, actor: input.actor, action: "task_status_changed", entityType: "task",
+      await tx.auditEvent.create({ data: { taskId, actor: input.actor, action: input.toStatus === "done" ? "task_resolved" : input.toStatus === "cancelled" ? "task_cancelled" : "task_status_changed", entityType: "task",
         entityId: taskId, summary: `${current.status} → ${input.toStatus}: ${input.justification}`,
         beforeJson: JSON.stringify({ status: current.status, version: current.version }),
         afterJson: JSON.stringify({ status: updated.status, version: updated.version }) } });

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { Codex, type ThreadEvent, type UserInput } from "@openai/codex-sdk";
+import { Codex, type ModelReasoningEffort, type ThreadEvent, type UserInput } from "@openai/codex-sdk";
 import { config } from "../config";
 import { holdWorkerPort } from "./singleton";
 import { buildRuntimeContract, shouldWriteFallbackReport } from "./agent-runtime-contract";
@@ -100,9 +100,11 @@ async function handleRun(runId: string) {
   try { run = await api<any>(`/agent-runs/${runId}/claim`, "POST", {}); }
   catch (error) { if (String(error).includes("fila")) return; throw error; }
 
-  const thread = run.externalThreadId
-    ? codex.resumeThread(run.externalThreadId, { workingDirectory: config.projectRoot, sandboxMode: "workspace-write", approvalPolicy: "never", networkAccessEnabled: true })
-    : codex.startThread({ workingDirectory: config.projectRoot, sandboxMode: "workspace-write", approvalPolicy: "never", networkAccessEnabled: true, modelReasoningEffort: "high" });
+  const allowedEfforts = new Set<ModelReasoningEffort>(["minimal", "low", "medium", "high", "xhigh"]);
+  const reasoningEffort: ModelReasoningEffort = allowedEfforts.has(run.agent.reasoningEffort) ? run.agent.reasoningEffort : "medium";
+  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: "workspace-write" as const, approvalPolicy: "never" as const,
+    networkAccessEnabled: true, webSearchMode: "live" as const, model: run.agent.model || undefined, modelReasoningEffort: reasoningEffort };
+  const thread = run.externalThreadId ? codex.resumeThread(run.externalThreadId, threadOptions) : codex.startThread(threadOptions);
   const intent = run.intentId ? await api<any>(`/intents/${run.intentId}`).catch(() => null) : null;
   const priorRuns = intent?.runs?.filter((item: any) => item.id !== run.id && ["succeeded", "failed"].includes(item.status)) ?? [];
   const handoffs: string[] = [];
@@ -116,7 +118,7 @@ async function handleRun(runId: string) {
   const runtimeContract = buildRuntimeContract(apiBase, run.id, run.agent.id);
   const prompt = latestAnswer
     ? `O proprietário respondeu na Central Operacional à pergunta "${latestAnswer.question}": ${latestAnswer.answer}. Continue a tarefa do ponto em que parou. Registre passos, atualizações e novas perguntas na API da Central.${runtimeContract}`
-    : `Você é ${run.agent.name} (${run.agent.id}) no projeto Carro Chefe. Objetivo: ${run.objective}\nTarefa: ${run.task.id} — ${run.task.title}.${handoffs.length ? `\n\nResultados recebidos de outros agentes envolvidos:\n${handoffs.join("\n")}` : ""}\nUse a Central Operacional em ${apiBase} para registrar passos, mensagens, relatório final e perguntas. Se precisar de decisão humana, registre a pergunta e encerre o turno aguardando resposta. Não compre, publique, faça deploy ou altere serviços externos sem autorização explícita. Execute o trabalho, valide e mantenha o escopo desta tarefa.${runtimeContract}`;
+    : `Você é ${run.agent.name} (${run.agent.id}) no projeto Carro Chefe.\nObjetivo delegado: ${run.objective}\nTarefa: ${run.task.id} — ${run.task.title}.\nStatus atual: ${run.task.status}${run.task.statusJustification ? ` — ${run.task.statusJustification}` : ""}.\nCritério de aceite: ${run.task.acceptance}.\nEvidências já ligadas: ${run.task.evidenceJson || "[]"}.${handoffs.length ? `\n\nResultados recebidos de outros agentes envolvidos:\n${handoffs.join("\n")}` : ""}\nUse a Central Operacional em ${apiBase} para registrar passos, mensagens, relatório final e perguntas. Se precisar de decisão humana, registre a pergunta e encerre o turno aguardando resposta. Não compre, publique, faça deploy ou altere serviços externos sem autorização explícita. Execute o trabalho, valide e mantenha o escopo desta tarefa.${runtimeContract}`;
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";

@@ -13,8 +13,9 @@ export async function planRoutes(app: FastifyInstance) {
   app.get("/api/plan", getLegacyPlan);
   app.get("/api/v1/bootstrap", getBootstrap);
   app.get("/api/v1/audit", async (request) => {
-    const query = request.query as { taskId?: string; limit?: string };
-    return prisma.auditEvent.findMany({ where: query.taskId ? { taskId: query.taskId } : undefined,
+    const query = request.query as { taskId?: string; decisionId?: string; entityType?: string; action?: string; limit?: string };
+    return prisma.auditEvent.findMany({ where: { taskId: query.taskId || undefined, decisionId: query.decisionId || undefined,
+      entityType: query.entityType || undefined, action: query.action || undefined },
       orderBy: { createdAt: "desc" }, take: Math.min(Number(query.limit ?? 200), 500) });
   });
 }
