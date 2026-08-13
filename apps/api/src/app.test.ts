@@ -65,7 +65,8 @@ describe("Central Operacional API", () => {
     const bootstrap = await app.inject({ method: "GET", url: "/api/v1/bootstrap" });
     expect(bootstrap.statusCode).toBe(200);
     expect(bootstrap.json().tasks).toHaveLength(29);
-    expect(bootstrap.json().project.agents).toHaveLength(8);
+    expect(bootstrap.json().project.agents).toHaveLength(9);
+    expect(bootstrap.json().project.agents).toEqual(expect.arrayContaining([expect.objectContaining({ id: "AG-DADOS", name: "Dados & Analytics" })]));
   });
 
   it("exige justificativa, controla versão e registra transição", async () => {
@@ -162,6 +163,7 @@ describe("Central Operacional API", () => {
     expect(task.json().runs[0].communications).toEqual(expect.arrayContaining([expect.objectContaining({ sourceId: "AG-MARCA", targetId: "PROPRIETARIO", kind: "result" })]));
     const notifications = await app.inject({ method: "GET", url: "/api/v1/notifications?unread=true" });
     expect(notifications.json()).toEqual(expect.arrayContaining([expect.objectContaining({ runId: run.id, taskId: "TASK-MAR-001", type: "success", route: "/gestao/tarefas/TASK-MAR-001" })]));
+    expect(notifications.json()).toEqual(expect.arrayContaining([expect.objectContaining({ type: "next_step", title: "Próximo passo sugerido", route: expect.stringMatching(/^\/gestao\/tarefas\//) })]));
   });
 
   it("preserva contexto, anexo e auditoria de uma decisão", async () => {
@@ -209,7 +211,8 @@ describe("Central Operacional API", () => {
     const intent = created.json();
     expect(intent.uploads).toEqual(expect.arrayContaining([expect.objectContaining({ id: draft.json().id, originalName: "requisitos-erp.txt" })]));
     expect(intent.facts).toEqual(expect.arrayContaining([expect.objectContaining({ key: "erp.selected", value: "Bling", verificationStatus: "pending_verification" })]));
-    expect(intent.runs.map((run: any) => run.agentId).sort()).toEqual(["AG-DEV", "AG-FINANCAS"]);
+    expect(intent.runs.map((run: any) => run.agentId).sort()).toEqual(["AG-FINANCAS", "AG-GESTAO"]);
+    expect(intent.runs.find((run: any) => run.agentId === "AG-GESTAO")).toMatchObject({ purpose: "management_review" });
     for (const run of intent.runs) {
       const finished = await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "succeeded", currentStep: "Requisitos verificados no teste." } });
       expect(finished.statusCode).toBe(200);
@@ -219,6 +222,21 @@ describe("Central Operacional API", () => {
     expect(completed.json().facts[0].verificationStatus).toBe("reviewed");
     const notifications = await app.inject({ method: "GET", url: "/api/v1/notifications?unread=true" });
     expect(notifications.json()).toEqual(expect.arrayContaining([expect.objectContaining({ intentId: intent.id, route: `/gestao/comandos/${intent.id}` })]));
+  });
+
+  it("pagina e filtra a auditoria no banco", async () => {
+    const first = await app.inject({ method: "GET", url: "/api/v1/audit?page=1&pageSize=10&q=tarefa" });
+    expect(first.statusCode, first.body).toBe(200);
+    expect(first.json()).toMatchObject({ page: 1, pageSize: 10, total: expect.any(Number), pageCount: expect.any(Number) });
+    expect(first.json().items.length).toBeLessThanOrEqual(10);
+  });
+
+  it("impede programação por agente de negócio e escolhe perfil adaptativo", async () => {
+    const rejected = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-GES-001", agentId: "AG-GESTAO", title: "Implementar API", objective: "Editar código TypeScript e criar endpoint novo.", provider: "manual", requestedBy: "teste-ci" } });
+    expect(rejected.statusCode).toBe(422);
+    const accepted = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-DEV-001", agentId: "AG-DEV", title: "Implementar API", objective: "Editar código TypeScript e criar endpoint novo com testes.", provider: "manual", requestedBy: "teste-ci", complexity: "complex" } });
+    expect(accepted.statusCode, accepted.body).toBe(201);
+    expect(accepted.json()).toMatchObject({ selectedModel: "gpt-5.6-sol", selectedReasoningEffort: "medium", complexity: "complex" });
   });
 
   it("valida assinatura e idempotência dos webhooks", async () => {

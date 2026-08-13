@@ -27,6 +27,8 @@ export const createRunSchema = z.object({
   title: z.string().trim().min(3).max(180),
   objective: z.string().trim().min(10).max(4000),
   provider: z.enum(["manual", "codex-local"]).default("manual"),
+  purpose: z.enum(["execution", "management_review"]).default("execution"),
+  complexity: z.enum(["routine", "standard", "complex", "critical"]).optional(),
   requestedBy: z.string().trim().min(2).max(80).default("PROPRIETARIO")
 });
 

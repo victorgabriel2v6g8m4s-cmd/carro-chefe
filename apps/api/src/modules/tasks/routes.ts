@@ -4,6 +4,7 @@ import { createTaskSchema, taskTransitionSchema } from "@carro-chefe/contracts";
 import { ApiError } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
 import { presentTask, taskDetailInclude, taskInclude } from "../plan/service";
+import { findNextRoadmapTask, nextStepNotification } from "./next-step";
 
 export async function taskRoutes(app: FastifyInstance) {
   app.post("/api/v1/tasks", async (request, reply) => {
@@ -66,9 +67,18 @@ export async function taskRoutes(app: FastifyInstance) {
         beforeJson: JSON.stringify({ status: current.status, version: current.version }),
         afterJson: JSON.stringify({ status: updated.status, version: updated.version }) } });
       const event = await appendEvent(tx, "task.status.changed", "task", taskId, { taskId, transition });
-      return { updated, transition, event };
+      let suggestionEvent = null;
+      if (input.toStatus === "done") {
+        const nextTask = await findNextRoadmapTask(tx, taskId);
+        if (nextTask) {
+          const notification = await tx.notification.create({ data: { userId: "owner", taskId: nextTask.id, ...nextStepNotification(nextTask) } });
+          suggestionEvent = await appendEvent(tx, "roadmap.next-step.suggested", "task", nextTask.id, { notification, task: nextTask });
+        }
+      }
+      return { updated, transition, event, suggestionEvent };
     });
     broadcastEvent(result.event);
+    if (result.suggestionEvent) broadcastEvent(result.suggestionEvent);
     return { task: result.updated, transition: result.transition };
   });
 

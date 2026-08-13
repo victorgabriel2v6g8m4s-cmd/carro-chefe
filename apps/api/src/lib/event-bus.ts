@@ -10,6 +10,7 @@ export type OperationalEvent = {
 };
 
 class OperationalEventBus extends EventEmitter {
+  constructor() { super(); this.setMaxListeners(200); }
   publish(event: OperationalEvent) { this.emit("event", event); }
   subscribe(listener: (event: OperationalEvent) => void) {
     this.on("event", listener);

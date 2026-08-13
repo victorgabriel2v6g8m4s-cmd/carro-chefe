@@ -13,9 +13,16 @@ export async function planRoutes(app: FastifyInstance) {
   app.get("/api/plan", getLegacyPlan);
   app.get("/api/v1/bootstrap", getBootstrap);
   app.get("/api/v1/audit", async (request) => {
-    const query = request.query as { taskId?: string; decisionId?: string; entityType?: string; action?: string; limit?: string };
-    return prisma.auditEvent.findMany({ where: { taskId: query.taskId || undefined, decisionId: query.decisionId || undefined,
-      entityType: query.entityType || undefined, action: query.action || undefined },
-      orderBy: { createdAt: "desc" }, take: Math.min(Number(query.limit ?? 200), 500) });
+    const query = request.query as { taskId?: string; decisionId?: string; entityType?: string; action?: string; q?: string; page?: string; pageSize?: string };
+    const page = Math.max(1, Number(query.page ?? 1) || 1);
+    const pageSize = Math.max(10, Math.min(100, Number(query.pageSize ?? 25) || 25));
+    const where = { taskId: query.taskId || undefined, decisionId: query.decisionId || undefined,
+      entityType: query.entityType || undefined, action: query.action || undefined,
+      OR: query.q ? [{ action: { contains: query.q } }, { entityType: { contains: query.q } }, { entityId: { contains: query.q } }, { summary: { contains: query.q } }, { actor: { contains: query.q } }] : undefined };
+    const [items, total] = await Promise.all([
+      prisma.auditEvent.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * pageSize, take: pageSize }),
+      prisma.auditEvent.count({ where })
+    ]);
+    return { items, page, pageSize, total, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
   });
 }

@@ -6,6 +6,7 @@ import { appendEvent, broadcastEvent } from "../../lib/outbox";
 import { classifyIntent } from "./classifier";
 import { intentInclude, presentIntent } from "./service";
 import { config } from "../../config";
+import { selectRuntimeProfile } from "../agents/model-policy";
 
 export async function intentRoutes(app: FastifyInstance) {
   app.get("/api/v1/intents", async (request) => {
@@ -27,8 +28,12 @@ export async function intentRoutes(app: FastifyInstance) {
       throw new ApiError(400, "Um ou mais anexos não existem ou já pertencem a outro contexto.");
     }
     const classification = classifyIntent(input.prompt);
-    const candidates = await prisma.task.findMany({ where: { ownerAgentId: { in: classification.agentIds }, status: { notIn: ["done", "cancelled"] } }, orderBy: [{ impact: "desc" }, { urgency: "desc" }] });
-    const taskByAgent = Object.fromEntries(classification.agentIds.map((agentId) => [agentId, candidates.find((task) => task.id === classification.preferredTasks[agentId]) ?? candidates.find((task) => task.ownerAgentId === agentId)]));
+    const [candidates, agents] = await Promise.all([
+      prisma.task.findMany({ where: { ownerAgentId: { in: classification.agentIds }, status: { notIn: ["done", "cancelled"] } }, orderBy: [{ impact: "desc" }, { urgency: "desc" }] }),
+      prisma.agentDefinition.findMany({ where: { id: { in: classification.agentIds } } })
+    ]);
+    const managementTask = candidates.find((task) => task.ownerAgentId === "AG-GESTAO");
+    const taskByAgent = Object.fromEntries(classification.agentIds.map((agentId) => [agentId, candidates.find((task) => task.id === classification.preferredTasks[agentId]) ?? candidates.find((task) => task.ownerAgentId === agentId) ?? (agentId === "AG-GESTAO" ? managementTask : undefined)]));
     const missing = classification.agentIds.filter((agentId) => !taskByAgent[agentId]);
     if (missing.length) throw new ApiError(409, `Não há tarefa ativa para: ${missing.join(", ")}.`);
     const result = await prisma.$transaction(async (tx) => {
@@ -41,15 +46,19 @@ export async function intentRoutes(app: FastifyInstance) {
       }
       for (const agentId of classification.agentIds) {
         const task = taskByAgent[agentId]!;
+        const agent = agents.find((item) => item.id === agentId)!;
+        const profile = selectRuntimeProfile(agentId, classification.complexity, agent.model);
+        const purpose = agentId === "AG-GESTAO" && classification.specialistAgentIds.length ? "management_review" : "execution";
         const attachmentNote = attachments.length ? `\n\nAnexos fornecidos: ${attachments.map((item) => item.originalName).join(", ")}.` : "";
-        const run = await tx.agentRun.create({ data: { intentId: intent.id, taskId: task.id, agentId, provider: "codex-local", title: `${classification.subject} · ${agentId}`, objective: `${classification.summary}\n\nSolicitação original do proprietário: ${input.prompt}${attachmentNote}\n\nVerifique os requisitos do projeto, produza evidências, registre o procedimento e conclua com uma resposta objetiva. Não trate o dado informado como verificado antes da análise.`, requestedBy: input.submittedBy } });
+        const managementInstruction = purpose === "management_review" ? "Monitore as execuções especialistas, confronte os resultados com o roteiro e consolide a decisão central. Não programe nem repita a pesquisa dos especialistas." : "Atue somente na sua especialidade. Se for necessária programação fora do AG-DEV, faça uma recomendação técnica e encaminhe a implementação ao AG-DEV; não edite código.";
+        const run = await tx.agentRun.create({ data: { intentId: intent.id, taskId: task.id, agentId, provider: "codex-local", purpose, complexity: classification.complexity, selectedModel: profile.model, selectedReasoningEffort: profile.effort, routingReason: profile.reason, title: `${classification.subject} · ${agentId}`, objective: `${classification.summary}\n\nSolicitação original do proprietário: ${input.prompt}${attachmentNote}\n\n${managementInstruction}\nVerifique os requisitos do projeto, produza evidências, registre o procedimento e conclua com uma resposta objetiva. Não trate o dado informado como verificado antes da análise.`, requestedBy: input.submittedBy } });
         await tx.agentMessage.create({ data: { runId: run.id, sender: input.submittedBy, kind: "update", content: input.prompt } });
         await tx.agentCommunication.create({ data: { runId: run.id, intentId: intent.id, sourceId: input.submittedBy, targetId: agentId, kind: "delegation", status: "delivered", summary: classification.summary } });
       }
-      if (classification.agentIds.length > 1) {
-        for (let index = 1; index < classification.agentIds.length; index++) await tx.agentCommunication.create({ data: {
-          intentId: intent.id, sourceId: classification.agentIds[index - 1], targetId: classification.agentIds[index], kind: "coordination", status: "planned",
-          summary: `Cruzar conclusões de ${classification.agentIds[index - 1]} com ${classification.agentIds[index]} antes do resultado consolidado.`
+      if (classification.specialistAgentIds.length) {
+        for (const specialistId of classification.specialistAgentIds) await tx.agentCommunication.create({ data: {
+          intentId: intent.id, sourceId: specialistId, targetId: "AG-GESTAO", kind: "handoff", status: "planned",
+          summary: `Entregar a conclusão de ${specialistId} para decisão e monitoramento central da Gestão.`
         } });
       }
       await tx.auditEvent.create({ data: { actor: input.submittedBy, action: "operational_intent_created", entityType: "operational_intent", entityId: intent.id, summary: classification.summary } });
