@@ -1,10 +1,11 @@
 import path from "node:path";
 import { existsSync, promises as fs } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { chromium, type BrowserContext, type Page } from "playwright-core";
 import { config } from "../../config";
 import { ApiError } from "../../lib/errors";
 
-type Session = { context: BrowserContext; page: Page; updatedAt: number };
+type Session = { context: BrowserContext; page: Page; profile: string; updatedAt: number };
 const sessions = new Map<string, Session>();
 
 function executablePath() {
@@ -32,11 +33,11 @@ async function getSession(sessionId: string) {
   if (existing && !existing.page.isClosed()) { existing.updatedAt = Date.now(); return existing; }
   const browserPath = executablePath();
   if (!browserPath) throw new ApiError(503, "Chrome ou Edge não foi encontrado para iniciar a sessão integrada.");
-  const profile = path.join(config.projectRoot, ".runtime", "browser", sessionId.replace(/[^a-zA-Z0-9_-]/g, "_"));
+  const profile = path.join(config.projectRoot, ".runtime", "browser", randomUUID());
   await fs.mkdir(profile, { recursive: true });
   const context = await chromium.launchPersistentContext(profile, { executablePath: browserPath, headless: true, viewport: { width: 1440, height: 900 }, locale: "pt-BR" });
   const page = context.pages()[0] ?? await context.newPage();
-  const session = { context, page, updatedAt: Date.now() };
+  const session = { context, page, profile, updatedAt: Date.now() };
   sessions.set(sessionId, session);
   return session;
 }
@@ -81,5 +82,8 @@ export async function interactBrowser(sessionId: string, action: "click" | "clic
 
 setInterval(() => {
   const cutoff = Date.now() - 30 * 60_000;
-  for (const [id, session] of sessions) if (session.updatedAt < cutoff) { void session.context.close(); sessions.delete(id); }
+  for (const [id, session] of sessions) if (session.updatedAt < cutoff) {
+    void session.context.close().finally(() => fs.rm(session.profile, { recursive: true, force: true }));
+    sessions.delete(id);
+  }
 }, 5 * 60_000).unref();

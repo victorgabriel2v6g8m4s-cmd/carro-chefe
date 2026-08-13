@@ -12,7 +12,7 @@ export function IntegratedBrowser() {
   const [params, setParams] = useSearchParams();
   const runId = params.get("runId") ?? "owner";
   const sessionId = `co-${runId}`;
-  const initialAddress = params.get("url") ?? "http://127.0.0.1:4173/welcome";
+  const initialAddress = useRef(params.get("url") ?? "http://127.0.0.1:4173/welcome").current;
   const [address, setAddress] = useState(initialAddress);
   const [current, setCurrent] = useState(address);
   const [image, setImage] = useState("");
@@ -67,7 +67,7 @@ export function IntegratedBrowser() {
 
   return <div className="page-stack browser-page"><section className="intro"><span className="eyebrow">Sessão isolada e controlável</span><h2>Navegador integrado dos agentes</h2><p>A página é aberta pelo navegador do Supervisor e transmitida para a Central. Assim, sites HTTPS funcionam mesmo quando proíbem incorporação por iframe.</p></section>
     <section className="panel browser-toolbar"><form onSubmit={submit}><button type="button" onClick={() => void interact("back")} aria-label="Voltar">←</button><button type="button" onClick={() => void interact("reload")} aria-label="Recarregar">↻</button><input aria-label="Endereço" value={address} onChange={(event) => setAddress(event.target.value)} /><button className="button" disabled={busy}>Abrir</button></form>{notice && <p role="status">{notice}</p>}</section>
-    <section className="browser-workspace"><div className="browser-frame panel"><div className="browser-chrome"><i /><i /><i /><span>{current}</span><a href={current} target="_blank" rel="noreferrer">Abrir fora ↗</a></div><div className={`browser-stream ${busy ? "browser-stream--busy" : ""}`}>{image ? <img ref={imageRef} src={image} alt={`Captura interativa de ${current}`} onClick={clickFrame} /> : <p>Inicializando navegador…</p>}<div className="browser-scroll-controls"><button onClick={() => void interact("scroll", { deltaY: -650 })}>Subir</button><button onClick={() => void interact("scroll", { deltaY: 650 })}>Descer</button></div></div></div>
+    <section className="browser-workspace"><div className="browser-frame panel"><div className="browser-chrome"><i /><i /><i /><span>{current}</span></div><div className={`browser-stream ${busy ? "browser-stream--busy" : ""}`}>{image ? <img ref={imageRef} src={image} alt={`Captura interativa de ${current}`} onClick={clickFrame} /> : <p>Inicializando navegador…</p>}<div className="browser-scroll-controls"><button onClick={() => void interact("scroll", { deltaY: -650 })}>Subir</button><button onClick={() => void interact("scroll", { deltaY: 650 })}>Descer</button></div></div></div>
       <aside className="panel browser-history"><span className="eyebrow">Fluxo da execução</span><h3>Navegações pedidas</h3>{history.length ? history.map((item) => <button key={item.id} onClick={() => void navigate(targetFor(item))}><strong>{item.title || item.target}</strong><small>{item.actor} · {item.status}</small>{item.reason && <span>{item.reason}</span>}</button>) : <p className="muted">Nenhuma navegação foi pedida pelo agente.</p>}</aside>
     </section></div>;
 }
