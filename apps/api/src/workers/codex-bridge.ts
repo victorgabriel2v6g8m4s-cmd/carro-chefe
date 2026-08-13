@@ -3,6 +3,7 @@ import path from "node:path";
 import { Codex, type ThreadEvent, type UserInput } from "@openai/codex-sdk";
 import { config } from "../config";
 import { holdWorkerPort } from "./singleton";
+import { buildRuntimeContract, shouldWriteFallbackReport } from "./agent-runtime-contract";
 
 const codex = new Codex();
 const apiBase = `http://127.0.0.1:${config.port}/api/v1`;
@@ -112,9 +113,10 @@ async function handleRun(runId: string) {
     await communicate(runId, prior.agentId, run.agent.id, "handoff", summary, run.intentId).catch(() => undefined);
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
+  const runtimeContract = buildRuntimeContract(apiBase, run.id, run.agent.id);
   const prompt = latestAnswer
-    ? `O proprietário respondeu na Central Operacional à pergunta "${latestAnswer.question}": ${latestAnswer.answer}. Continue a tarefa do ponto em que parou. Registre passos, atualizações e novas perguntas na API da Central.`
-    : `Você é ${run.agent.name} (${run.agent.id}) no projeto Carro Chefe. Objetivo: ${run.objective}\nTarefa: ${run.task.id} — ${run.task.title}.${handoffs.length ? `\n\nResultados recebidos de outros agentes envolvidos:\n${handoffs.join("\n")}` : ""}\nUse a Central Operacional em ${apiBase} para registrar passos, mensagens, consumo, relatório final e perguntas. Registre comunicações relevantes a outro agente em POST /agent-runs/${run.id}/communications. Se precisar de decisão humana, POSTe em /agent-runs/${run.id}/questions e encerre o turno aguardando resposta. Não compre, publique, faça deploy ou altere serviços externos sem autorização explícita. Execute o trabalho, valide e mantenha o escopo desta tarefa.`;
+    ? `O proprietário respondeu na Central Operacional à pergunta "${latestAnswer.question}": ${latestAnswer.answer}. Continue a tarefa do ponto em que parou. Registre passos, atualizações e novas perguntas na API da Central.${runtimeContract}`
+    : `Você é ${run.agent.name} (${run.agent.id}) no projeto Carro Chefe. Objetivo: ${run.objective}\nTarefa: ${run.task.id} — ${run.task.title}.${handoffs.length ? `\n\nResultados recebidos de outros agentes envolvidos:\n${handoffs.join("\n")}` : ""}\nUse a Central Operacional em ${apiBase} para registrar passos, mensagens, relatório final e perguntas. Se precisar de decisão humana, registre a pergunta e encerre o turno aguardando resposta. Não compre, publique, faça deploy ou altere serviços externos sem autorização explícita. Execute o trabalho, valide e mantenha o escopo desta tarefa.${runtimeContract}`;
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";
@@ -127,12 +129,12 @@ async function handleRun(runId: string) {
       if (event.type === "turn.started") await observe(runId, "system", "turn.started", "O Codex começou a processar o objetivo.", "Turno iniciado");
       if (["item.started", "item.updated", "item.completed"].includes(event.type)) await recordItem(runId, event as Extract<ThreadEvent, { type: "item.started" | "item.updated" | "item.completed" }>, commandOutputs);
       if (event.type === "item.completed" && event.item.type === "todo_list") {
-        for (const [index, item] of event.item.items.entries()) await api(`/agent-runs/${runId}/steps`, "POST", { order: index + 1, title: item.text, status: item.completed ? "completed" : "pending" });
+        for (const [index, item] of event.item.items.entries()) await api(`/agent-runs/${runId}/steps`, "POST", { order: index + 1, title: item.text.slice(0, 180), status: item.completed ? "completed" : "pending" });
         await observe(runId, "activity", "todo.updated", event.item.items.map((item) => `${item.completed ? "✓" : "○"} ${item.text}`).join("\n"), "Plano de trabalho");
       }
       if (event.type === "item.completed" && event.item.type === "agent_message") {
         finalMessage = event.item.text;
-        await api(`/agent-runs/${runId}/messages`, "POST", { sender: run.agent.id, kind: "update", content: event.item.text });
+        await api(`/agent-runs/${runId}/messages`, "POST", { sender: run.agent.id, kind: "update", content: event.item.text.slice(0, 8000) });
       }
       if (event.type === "turn.completed") {
         await api(`/agent-runs/${runId}/usage`, "POST", { source: "runtime", inputTokens: event.usage.input_tokens, cachedInputTokens: event.usage.cached_input_tokens, outputTokens: event.usage.output_tokens, totalTokens: event.usage.input_tokens + event.usage.output_tokens });
@@ -145,18 +147,21 @@ async function handleRun(runId: string) {
     const pending = run.questions.some((question: any) => question.status === "pending");
     const completedSteps = run.steps.filter((step: any) => step.status === "completed");
     const failedSteps = run.steps.filter((step: any) => step.status === "failed");
-    await api(`/agent-runs/${runId}/report`, "POST", {
-      outcome: pending ? "waiting_input" : failedSteps.length ? "partial" : "succeeded",
-      summary: pending ? "O agente avançou até precisar de uma decisão do proprietário." : finalMessage || "O runtime encerrou a execução sem uma mensagem final detalhada.",
-      diagnosis: failedSteps.length ? "Um ou mais passos estruturados foram marcados como falha." : null,
-      successes: completedSteps.map((step: any) => step.result || `Passo concluído: ${step.title}`),
-      failures: failedSteps.map((step: any) => step.result || `Falha no passo: ${step.title}`),
-      recommendations: pending ? ["Responder à pergunta pendente para recolocar a execução na fila."] : failedSteps.length ? ["Corrigir os passos que falharam e reiniciar a partir do último sucesso."] : ["Revisar as evidências e, se o critério de aceite foi atendido, encaminhar a tarefa para revisão."],
-      evidence: [`${run.logs.length} evento(s) técnico(s) e ${run.steps.length} passo(s) preservados na Central.`],
-      generatedBy: run.agent.id
-    });
-    await communicate(runId, run.agent.id, "PROPRIETARIO", "result", pending ? "Execução aguardando resposta do proprietário." : finalMessage || "Execução encerrada; consulte o relatório detalhado.", run.intentId).catch(() => undefined);
-    await api(`/agent-runs/${runId}`, "PATCH", { status: pending ? "waiting_input" : failedSteps.length ? "failed" : "succeeded", currentStep: pending ? "Aguardando resposta do proprietário" : failedSteps.length ? "Execução encerrada com falhas em passos" : "Execução concluída" });
+    if (shouldWriteFallbackReport(run)) await api(`/agent-runs/${runId}/report`, "POST", {
+        outcome: pending ? "waiting_input" : failedSteps.length ? "partial" : "succeeded",
+        summary: pending ? "O agente avançou até precisar de uma decisão do proprietário." : finalMessage.slice(0, 8000) || "O runtime encerrou a execução sem uma mensagem final detalhada.",
+        diagnosis: failedSteps.length ? "Um ou mais passos estruturados foram marcados como falha." : null,
+        successes: completedSteps.map((step: any) => step.result || `Passo concluído: ${step.title}`),
+        failures: failedSteps.map((step: any) => step.result || `Falha no passo: ${step.title}`),
+        recommendations: pending ? ["Responder à pergunta pendente para recolocar a execução na fila."] : failedSteps.length ? ["Corrigir os passos que falharam e reiniciar a partir do último sucesso."] : ["Revisar as evidências e, se o critério de aceite foi atendido, encaminhar a tarefa para revisão."],
+        evidence: [`${run.logs.length} evento(s) técnico(s) e ${run.steps.length} passo(s) preservados na Central.`],
+        generatedBy: run.agent.id
+      });
+    const alreadyReportedToOwner = run.communications.some((item: any) => item.sourceId === run.agent.id && ["PROPRIETARIO", "proprietario", "owner"].includes(item.targetId) && item.kind === "result");
+    if (!alreadyReportedToOwner) await communicate(runId, run.agent.id, "PROPRIETARIO", "result", pending ? "Execução aguardando resposta do proprietário." : finalMessage || "Execução encerrada; consulte o relatório detalhado.", run.intentId).catch(() => undefined);
+    const reportedOutcome = run.report && !run.report.derived ? run.report.outcome : null;
+    const finalStatus = pending || reportedOutcome === "waiting_input" ? "waiting_input" : reportedOutcome === "cancelled" ? "cancelled" : failedSteps.length || ["partial", "failed"].includes(reportedOutcome) ? "failed" : "succeeded";
+    await api(`/agent-runs/${runId}`, "PATCH", { status: finalStatus, currentStep: finalStatus === "waiting_input" ? "Aguardando resposta do proprietário" : finalStatus === "failed" ? "Execução encerrada com resultados parciais ou falhas" : finalStatus === "cancelled" ? "Execução cancelada pelo runtime" : "Execução concluída" });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await observe(runId, "error", "run.failed", message, "Falha da execução");

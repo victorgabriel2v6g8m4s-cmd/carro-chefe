@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { buildRuntimeContract, shouldWriteFallbackReport } from "./workers/agent-runtime-contract";
 
 const root = path.resolve(import.meta.dirname, "../../..");
 const databasePath = path.join(root, ".runtime", `test-${process.pid}.db`);
@@ -40,6 +41,23 @@ afterAll(async () => {
 });
 
 describe("Central Operacional API", () => {
+  it("entrega ao agente um contrato compacto e preserva relatórios explícitos", () => {
+    const contract = buildRuntimeContract("http://127.0.0.1:4173/api/v1", "RUN-001", "AG-DEV");
+    expect(contract).toContain('/steps com {"order":1');
+    expect(contract).toContain("Não existe campo evidence no passo");
+    expect(contract).toContain("bytes UTF-8");
+    expect(contract).toContain("não envie usage");
+    expect(shouldWriteFallbackReport({})).toBe(true);
+    expect(shouldWriteFallbackReport({ report: { derived: true } })).toBe(true);
+    expect(shouldWriteFallbackReport({ report: { derived: false } })).toBe(false);
+  });
+
+  it("não transforma erro HTTP do parser em falha interna", async () => {
+    const malformed = await app.inject({ method: "POST", url: "/api/v1/agent-runs", headers: { "content-type": "application/json", "content-length": "999" }, payload: "{}" });
+    expect(malformed.statusCode).toBe(400);
+    expect(malformed.json()).toMatchObject({ code: "FST_ERR_CTP_INVALID_CONTENT_LENGTH" });
+  });
+
   it("inicializa o plano normalizado e informa a saúde", async () => {
     const health = await app.inject({ method: "GET", url: "/api/health" });
     expect(health.statusCode).toBe(200);
