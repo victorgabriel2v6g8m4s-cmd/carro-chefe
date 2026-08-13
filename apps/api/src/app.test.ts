@@ -88,6 +88,48 @@ describe("Central Operacional API", () => {
     expect(acknowledged.json().status).toBe("acknowledged");
   });
 
+  it("explica sucesso parcial, reconstrói a jornada e registra o fluxo entre agentes", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-GES-001", agentId: "AG-GESTAO", title: "Diagnóstico operacional", objective: "Validar relatório detalhado e comunicação direcional entre os agentes.", provider: "manual", requestedBy: "proprietario" } });
+    expect(created.statusCode, created.body).toBe(201);
+    const run = created.json();
+    const longTitle = `powershell -Command ${"verificar-campo ".repeat(45)}`;
+    expect(longTitle.length).toBeGreaterThan(500);
+    const command = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/logs`, payload: { channel: "terminal", eventType: "command.completed", title: longTitle, content: "[processo encerrado com código 0]" } });
+    expect(command.statusCode, command.body).toBe(201);
+    expect(command.json().title).toHaveLength(500);
+    const failed = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/logs`, payload: { channel: "error", eventType: "run.failed", title: "Falha da execução", content: "Entrada inválida." } });
+    expect(failed.statusCode).toBe(201);
+    await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "failed", currentStep: "Falha registrada pelo bridge" } });
+    const communication = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/communications`, payload: { sourceId: "AG-GESTAO", targetId: "AG-DEV", kind: "handoff", status: "delivered", summary: "Validar o contrato que rejeitou o registro.", metadata: { reason: "api-contract" } } });
+    expect(communication.statusCode, communication.body).toBe(201);
+    const detail = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${run.id}` });
+    expect(detail.json().report).toMatchObject({ outcome: "partial", diagnosis: expect.stringContaining("contrato da API"), derived: true });
+    expect(detail.json().report.successes).toEqual(expect.arrayContaining([expect.stringContaining("código de saída 0")]));
+    expect(detail.json().journey).toEqual(expect.arrayContaining([expect.objectContaining({ status: "completed" }), expect.objectContaining({ status: "failed" })]));
+    expect(detail.json().communications).toEqual(expect.arrayContaining([expect.objectContaining({ sourceId: "proprietario", targetId: "AG-GESTAO", kind: "delegation" }), expect.objectContaining({ sourceId: "AG-GESTAO", targetId: "AG-DEV", kind: "handoff" })]));
+  });
+
+  it("distingue falha total de sucesso parcial", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-DEV-001", agentId: "AG-DEV", title: "Runtime incompatível", objective: "Validar a classificação de uma execução sem passo concluído.", provider: "manual", requestedBy: "teste-ci" } });
+    const run = created.json();
+    await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/logs`, payload: { channel: "error", eventType: "run.failed", title: "Falha da execução", content: "gpt-5.6-sol requires a newer version of Codex" } });
+    await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "failed", currentStep: "Runtime incompatível" } });
+    const detail = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${run.id}` });
+    expect(detail.json().report).toMatchObject({ outcome: "failed", diagnosis: expect.stringContaining("mais antigo") });
+    expect(detail.json().report.recommendations).toEqual(expect.arrayContaining([expect.stringContaining("Atualizar o Codex")]));
+  });
+
+  it("persiste o output estruturado produzido pelo runtime", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-DEV-001", agentId: "AG-DEV", title: "Relatório do runtime", objective: "Validar o relatório final com sucessos, falhas e recomendações.", provider: "manual", requestedBy: "teste-ci" } });
+    const run = created.json();
+    const report = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/report`, payload: { outcome: "partial", summary: "A análise terminou parcialmente.", diagnosis: "Um endpoint externo ficou indisponível.", successes: ["Contrato local validado."], failures: ["Consulta externa falhou."], recommendations: ["Repetir a consulta externa."], evidence: ["Log 42."], generatedBy: "AG-DEV" } });
+    expect(report.statusCode, report.body).toBe(200);
+    expect(report.json()).toMatchObject({ outcome: "partial", successes: ["Contrato local validado."], failures: ["Consulta externa falhou."], recommendations: ["Repetir a consulta externa."] });
+    const detail = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${run.id}` });
+    expect(detail.json().report).toMatchObject({ generatedBy: "AG-DEV" });
+    expect(detail.json().report).not.toHaveProperty("derived");
+  });
+
   it("recebe evidência permitida e mantém o vínculo com a tarefa", async () => {
     const boundary = `----carrochefe${Date.now()}`;
     const body = Buffer.from([`--${boundary}\r\nContent-Disposition: form-data; name="taskId"\r\n\r\nTASK-GES-001\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="actor"\r\n\r\nteste-ci\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="evidencia.txt"\r\nContent-Type: text/plain\r\n\r\nValidação da evidência.\r\n`, `--${boundary}--\r\n`].join(""));

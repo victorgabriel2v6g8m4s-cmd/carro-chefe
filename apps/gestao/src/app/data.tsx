@@ -17,7 +17,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stream = new EventSource("/api/v1/events");
     const update = () => void refresh();
-    ["task.status.changed", "agent.run.created", "agent.run.updated", "agent.question.asked", "agent.answer.submitted", "agent.step.updated", "intent.created", "intent.started", "intent.completed", "intent.failed"].forEach((name) => stream.addEventListener(name, update));
+    ["task.status.changed", "agent.run.created", "agent.run.updated", "agent.question.asked", "agent.answer.submitted", "agent.step.updated", "agent.report.updated", "agent.communication.created", "intent.created", "intent.started", "intent.completed", "intent.failed"].forEach((name) => stream.addEventListener(name, update));
     return () => stream.close();
   }, [refresh]);
   return <DataContext.Provider value={{ data, loading, error, refresh }}>{children}</DataContext.Provider>;
