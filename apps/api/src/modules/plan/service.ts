@@ -12,13 +12,47 @@ export const taskInclude = {
   uploads: { orderBy: { createdAt: "desc" as const } }
 };
 
+export const taskDetailInclude = {
+  ...taskInclude,
+  auditEvents: { orderBy: { createdAt: "desc" as const }, take: 200 },
+  browserNavigations: { orderBy: { createdAt: "desc" as const }, take: 30 },
+  runs: {
+    orderBy: { createdAt: "desc" as const },
+    take: 20,
+    include: {
+      agent: true,
+      report: true,
+      communications: { orderBy: { createdAt: "asc" as const } },
+      steps: { orderBy: { order: "asc" as const } },
+      messages: { orderBy: { createdAt: "asc" as const }, take: 200 },
+      usage: { orderBy: { createdAt: "asc" as const } },
+      uploads: { orderBy: { createdAt: "desc" as const } }
+    }
+  }
+};
+
 export function presentTask(task: any) {
   return {
     ...task,
     evidence: parseJson(task.evidenceJson, []),
     dependencies: task.dependsOn?.map((item: any) => item.dependency) ?? [],
     evidenceJson: undefined,
-    dependsOn: undefined
+    dependsOn: undefined,
+    runs: task.runs?.map((run: any) => ({
+      ...run,
+      report: run.report ? {
+        ...run.report,
+        successes: parseJson(run.report.successesJson, []),
+        failures: parseJson(run.report.failuresJson, []),
+        recommendations: parseJson(run.report.recommendationsJson, []),
+        evidence: parseJson(run.report.evidenceJson, []),
+        successesJson: undefined,
+        failuresJson: undefined,
+        recommendationsJson: undefined,
+        evidenceJson: undefined
+      } : undefined,
+      communications: run.communications?.map((item: any) => ({ ...item, metadata: parseJson(item.metadataJson, {}), metadataJson: undefined }))
+    }))
   };
 }
 
@@ -28,7 +62,7 @@ export async function getBootstrap() {
       pillars: { orderBy: { order: "asc" } }, milestones: { orderBy: { order: "asc" } }, agents: { orderBy: { order: "asc" } }
     }}),
     prisma.task.findMany({ include: taskInclude, orderBy: [{ impact: "desc" }, { urgency: "desc" }] }),
-    prisma.decision.findMany({ orderBy: { id: "asc" } }),
+    prisma.decision.findMany({ include: { contexts: { orderBy: { createdAt: "desc" } }, uploads: { orderBy: { createdAt: "desc" } } }, orderBy: { id: "asc" } }),
     prisma.risk.findMany({ orderBy: [{ impact: "desc" }, { probability: "desc" }] }),
     prisma.procurementItem.findMany({ orderBy: { id: "asc" } }),
     prisma.agentRun.findMany({ include: { task: { select: { id: true, title: true } }, agent: true }, orderBy: { createdAt: "desc" }, take: 30 }),

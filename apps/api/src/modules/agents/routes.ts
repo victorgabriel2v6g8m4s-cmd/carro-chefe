@@ -6,12 +6,14 @@ import { ApiError, parseJson } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
 import { markIntentRunning, reconcileIntent } from "../intents/service";
 import { deriveJourney, deriveRunReport, presentReport } from "./diagnostics";
+import { finalizeAgentRun } from "./completion";
+import { repairMojibake } from "../../lib/text";
 
 const messageSchema = z.object({ sender: z.string().min(2).max(80), kind: z.enum(["update", "question", "answer", "decision", "error"]), content: z.string().min(1).max(8000) });
 const statusSchema = z.object({ status: z.enum(["queued", "running", "waiting_input", "succeeded", "failed", "cancelled"]), currentStep: z.string().max(500).nullable().optional(), externalThreadId: z.string().max(200).optional() });
 
 const runInclude = {
-  task: { select: { id: true, title: true, status: true } },
+  task: { select: { id: true, title: true, status: true, statusJustification: true, acceptance: true, evidenceJson: true } },
   agent: true,
   intent: { select: { id: true, subject: true, summary: true, status: true, uploads: { orderBy: { createdAt: "asc" as const } } } },
   steps: { orderBy: { order: "asc" as const } },
@@ -29,7 +31,7 @@ const runDetailInclude = {
 function presentRun(run: any) {
   return {
     ...run,
-    logs: run.logs ? [...run.logs].reverse() : undefined,
+    logs: run.logs ? [...run.logs].reverse().map((log: any) => ({ ...log, title: log.title ? repairMojibake(log.title) : log.title, content: repairMojibake(log.content) })) : undefined,
     questions: run.questions?.map((question: any) => ({ ...question, options: parseJson(question.optionsJson, []), optionsJson: undefined })),
     communications: run.communications?.map((item: any) => ({ ...item, metadata: parseJson(item.metadataJson, {}), metadataJson: undefined })),
     report: run.report ? presentReport(run.report) : run.logs ? deriveRunReport(run) : undefined,
@@ -45,6 +47,26 @@ async function requireRun(runId: string) {
 
 export async function agentRoutes(app: FastifyInstance) {
   app.get("/api/v1/agents", async () => prisma.agentDefinition.findMany({ orderBy: { order: "asc" } }));
+  app.get("/api/v1/agents/:agentId/stats", async (request) => {
+    const { agentId } = request.params as { agentId: string };
+    const agent = await prisma.agentDefinition.findUnique({ where: { id: agentId } });
+    if (!agent) throw new ApiError(404, "Agente não encontrado.");
+    const [runs, interactions, usage] = await Promise.all([
+      prisma.agentRun.findMany({ where: { agentId }, include: { report: true }, orderBy: { createdAt: "desc" }, take: 500 }),
+      prisma.agentCommunication.count({ where: { OR: [{ sourceId: agentId }, { targetId: agentId }] } }),
+      prisma.usageRecord.aggregate({ where: { run: { agentId } }, _avg: { totalTokens: true, durationMs: true }, _sum: { totalTokens: true } })
+    ]);
+    const terminal = runs.filter((run) => ["succeeded", "failed", "cancelled"].includes(run.status));
+    const succeeded = terminal.filter((run) => run.status === "succeeded" && run.report?.outcome === "succeeded").length;
+    const failed = terminal.filter((run) => run.status === "failed" || run.report?.outcome === "failed").length;
+    const partial = terminal.filter((run) => run.report?.outcome === "partial").length;
+    const measured = succeeded + failed + partial;
+    const successRate = measured ? Math.round((succeeded / measured) * 100) : null;
+    return { agent, interactions, runs: runs.length, terminalRuns: terminal.length, succeeded, failed, partial, successRate,
+      performance: successRate === null ? "Sem amostra suficiente" : successRate >= 85 ? "Excelente" : successRate >= 70 ? "Bom" : "Requer atenção",
+      usage: { totalTokens: usage._sum.totalTokens, averageTokens: Math.round(usage._avg.totalTokens ?? 0), averageDurationMs: Math.round(usage._avg.durationMs ?? 0) },
+      recentRuns: runs.slice(0, 8).map((run) => ({ id: run.id, taskId: run.taskId, title: run.title, status: run.status, outcome: run.report?.outcome, createdAt: run.createdAt })) };
+  });
   app.get("/api/v1/agent-runs", async (request) => {
     const query = request.query as { taskId?: string; status?: string };
     const runs = await prisma.agentRun.findMany({ where: { taskId: query.taskId || undefined, status: query.status || undefined }, include: runInclude, orderBy: { createdAt: "desc" } });
@@ -89,6 +111,7 @@ export async function agentRoutes(app: FastifyInstance) {
       finishedAt: ["succeeded", "failed", "cancelled"].includes(input.status) ? now : undefined } });
     const event = await prisma.outboxEvent.create({ data: { topic: "agent.run.updated", aggregateType: "agent_run", aggregateId: runId, payloadJson: JSON.stringify(run) } });
     broadcastEvent(event);
+    if (["succeeded", "failed", "cancelled"].includes(run.status)) await finalizeAgentRun(runId);
     const intentEvent = await reconcileIntent(run.intentId);
     if (intentEvent) broadcastEvent(intentEvent);
     return run;
@@ -126,6 +149,8 @@ export async function agentRoutes(app: FastifyInstance) {
     const report = await prisma.agentRunReport.upsert({ where: { runId }, update: data, create: { runId, ...data } });
     const event = await prisma.outboxEvent.create({ data: { topic: "agent.report.updated", aggregateType: "agent_run", aggregateId: runId, payloadJson: JSON.stringify(report) } });
     broadcastEvent(event);
+    const current = await prisma.agentRun.findUnique({ where: { id: runId }, select: { status: true } });
+    if (current && ["succeeded", "failed", "cancelled"].includes(current.status)) await finalizeAgentRun(runId);
     return presentReport(report);
   });
   app.post("/api/v1/agent-runs/:runId/communications", async (request, reply) => {
@@ -151,7 +176,8 @@ export async function agentRoutes(app: FastifyInstance) {
     await requireRun(runId);
     const afterSequence = Math.max(0, Number(query.afterSequence ?? 0) || 0);
     const limit = Math.max(1, Math.min(1000, Number(query.limit ?? 500) || 500));
-    return prisma.agentLog.findMany({ where: { runId, sequence: { gt: afterSequence } }, orderBy: { sequence: "asc" }, take: limit });
+    const logs = await prisma.agentLog.findMany({ where: { runId, sequence: { gt: afterSequence } }, orderBy: { sequence: "asc" }, take: limit });
+    return logs.map((log) => ({ ...log, title: log.title ? repairMojibake(log.title) : log.title, content: repairMojibake(log.content) }));
   });
   app.post("/api/v1/agent-runs/:runId/logs", async (request, reply) => {
     const { runId } = request.params as { runId: string };

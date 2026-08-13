@@ -114,9 +114,9 @@ paths:
       responses: { "200": { description: Uso registrado } }
   /agent-runs/{runId}/logs:
     get:
-      summary: Lista atividade e saÃ­da de terminal persistidas da execuÃ§Ã£o
+      summary: Lista atividade e saída de terminal persistidas da execução
       parameters: [ { $ref: "#/components/parameters/RunId" } ]
-      responses: { "200": { description: Logs ordenados por sequÃªncia } }
+      responses: { "200": { description: Logs ordenados por sequência } }
     post:
       summary: Registra um evento incremental emitido pelo runtime do agente
       parameters: [ { $ref: "#/components/parameters/RunId" } ]
@@ -140,6 +140,26 @@ paths:
         - { in: query, name: runId, schema: { type: string } }
         - { in: query, name: intentId, schema: { type: string } }
       responses: { "200": { description: Fluxo cronológico de comunicação } }
+  /agents/{agentId}/stats:
+    get:
+      summary: Calcula configurações, interações, sucesso, falha, desempenho e consumo do agente
+      parameters: [ { in: path, name: agentId, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Estatísticas do agente } }
+  /agent-runs/{runId}/browser-navigations:
+    post:
+      summary: Solicita que o navegador integrado abra uma URL, arquivo ou anexo ligado à execução
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "201": { description: Navegação registrada e publicada por SSE } }
+  /decisions/{decisionId}/context:
+    post:
+      summary: Acrescenta contexto e fonte sem reescrever o histórico da decisão
+      parameters: [ { in: path, name: decisionId, required: true, schema: { type: string } } ]
+      responses: { "201": { description: Informação preservada } }
+  /decisions/{decisionId}/status:
+    post:
+      summary: Resolve ou cancela uma decisão com justificativa auditável
+      parameters: [ { in: path, name: decisionId, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Decisão atualizada } }
   /uploads:
     get:
       summary: Lista evidências vinculadas
@@ -158,6 +178,7 @@ paths:
                 taskId: { type: string }
                 runId: { type: string }
                 intentId: { type: string }
+                decisionId: { type: string }
                 purpose: { enum: [intent-draft] }
                 actor: { type: string }
       responses: { "201": { description: Evidência armazenada }, "415": { description: Tipo não permitido } }

@@ -44,6 +44,7 @@
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "better-sqlite3": "^12.11.1",
+    "dompurify": "^3.4.13",
     "fastify": "^5.11.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

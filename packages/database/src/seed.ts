@@ -71,8 +71,8 @@ async function run() {
     for (const [order, agent] of plan.agents.entries()) {
       await tx.agentDefinition.upsert({
         where: { id: agent.id },
-        update: { name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order },
-        create: { id: agent.id, projectId, name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order }
+        update: { name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order, reasoningEffort: "medium", browserEnabled: true },
+        create: { id: agent.id, projectId, name: agent.name, role: agent.id.replace("AG-", "").toLowerCase(), mission: agent.mission, order, reasoningEffort: "medium", browserEnabled: true }
       });
     }
     for (const task of plan.tasks) {

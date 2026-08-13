@@ -15,6 +15,9 @@ import { Tasks } from "./routes/Tasks";
 import { api } from "./api/client";
 import { Commands } from "./routes/Commands";
 import { CommandDetail } from "./routes/CommandDetail";
+import { IntegratedBrowser } from "./routes/IntegratedBrowser";
+import { Registry } from "./routes/Registry";
+import { ResourceViewer } from "./routes/ResourceViewer";
 import "./styles.css";
 
 function Resume() {
@@ -40,6 +43,9 @@ const router = createBrowserRouter([
       { path: "perguntas", element: <Questions /> },
       { path: "governanca", element: <Governance /> },
       { path: "compras", element: <Procurement /> },
+      { path: "registro", element: <Registry /> },
+      { path: "navegador", element: <IntegratedBrowser /> },
+      { path: "visualizador", element: <ResourceViewer /> },
       { index: true, element: <Navigate replace to="visao-geral" /> },
       { path: "*", element: <section className="panel empty"><p>Página não encontrada.</p></section> }
     ]

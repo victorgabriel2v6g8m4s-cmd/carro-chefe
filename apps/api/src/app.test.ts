@@ -148,6 +148,44 @@ describe("Central Operacional API", () => {
     expect(detail.json().report).not.toHaveProperty("derived");
   });
 
+  it("conclui a tarefa, fixa o relatório e notifica quando a execução termina com sucesso", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-MAR-001", agentId: "AG-MARCA", title: "Concluir identidade", objective: "Validar a conclusão automática da tarefa a partir do relatório do agente.", provider: "manual", requestedBy: "teste-ci" } });
+    expect(created.statusCode, created.body).toBe(201);
+    const run = created.json();
+    const report = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/report`, payload: { outcome: "succeeded", summary: "Critério atendido e arquivos docs/MARCA.md e https://carrochefe.com validados.", successes: ["Critério de aceite validado."], failures: [], recommendations: ["Revisar a evidência antes de publicar."], evidence: [`/gestao/agentes/execucoes/${run.id}`], generatedBy: "AG-MARCA" } });
+    expect(report.statusCode, report.body).toBe(200);
+    const finished = await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "succeeded", currentStep: "Execução concluída" } });
+    expect(finished.statusCode, finished.body).toBe(200);
+    const task = await app.inject({ method: "GET", url: "/api/v1/tasks/TASK-MAR-001" });
+    expect(task.json()).toMatchObject({ status: "done", statusChangedBy: "AG-MARCA" });
+    expect(task.json().runs[0]).toMatchObject({ id: run.id, report: { outcome: "succeeded", generatedBy: "AG-MARCA" } });
+    expect(task.json().runs[0].communications).toEqual(expect.arrayContaining([expect.objectContaining({ sourceId: "AG-MARCA", targetId: "PROPRIETARIO", kind: "result" })]));
+    const notifications = await app.inject({ method: "GET", url: "/api/v1/notifications?unread=true" });
+    expect(notifications.json()).toEqual(expect.arrayContaining([expect.objectContaining({ runId: run.id, taskId: "TASK-MAR-001", type: "success", route: "/gestao/tarefas/TASK-MAR-001" })]));
+  });
+
+  it("preserva contexto, anexo e auditoria de uma decisão", async () => {
+    const bootstrap = (await app.inject({ method: "GET", url: "/api/v1/bootstrap" })).json();
+    const decisionId = bootstrap.decisions[0].id;
+    const context = await app.inject({ method: "POST", url: `/api/v1/decisions/${decisionId}/context`, payload: { actor: "teste-ci", content: "Parecer técnico adicional para antecipar a decisão.", sourceUrl: "https://example.com/fonte" } });
+    expect(context.statusCode, context.body).toBe(201);
+    const detail = await app.inject({ method: "GET", url: `/api/v1/decisions/${decisionId}` });
+    expect(detail.json().contexts).toEqual(expect.arrayContaining([expect.objectContaining({ content: expect.stringContaining("Parecer técnico") })]));
+    expect(detail.json().auditEvents).toEqual(expect.arrayContaining([expect.objectContaining({ action: "decision_context_added" })]));
+  });
+
+  it("registra navegação assistida e calcula métricas do agente", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-DEV-002", agentId: "AG-DEV", title: "Inspeção visual", objective: "Abrir a página local no navegador integrado para revisão visual.", provider: "manual", requestedBy: "teste-ci" } });
+    const run = created.json();
+    const navigation = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/browser-navigations`, payload: { actor: "AG-DEV", targetType: "url", target: "http://127.0.0.1:4173/gestao/tarefas", title: "Lista de tarefas", reason: "Validar a busca." } });
+    expect(navigation.statusCode, navigation.body).toBe(201);
+    const history = await app.inject({ method: "GET", url: `/api/v1/browser-navigations?runId=${run.id}` });
+    expect(history.json()).toEqual(expect.arrayContaining([expect.objectContaining({ targetType: "url", status: "requested" })]));
+    const stats = await app.inject({ method: "GET", url: "/api/v1/agents/AG-DEV/stats" });
+    expect(stats.statusCode, stats.body).toBe(200);
+    expect(stats.json()).toMatchObject({ agent: { id: "AG-DEV", browserEnabled: true }, interactions: expect.any(Number), performance: expect.any(String) });
+  });
+
   it("recebe evidência permitida e mantém o vínculo com a tarefa", async () => {
     const boundary = `----carrochefe${Date.now()}`;
     const body = Buffer.from([`--${boundary}\r\nContent-Disposition: form-data; name="taskId"\r\n\r\nTASK-GES-001\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="actor"\r\n\r\nteste-ci\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="evidencia.txt"\r\nContent-Type: text/plain\r\n\r\nValidação da evidência.\r\n`, `--${boundary}--\r\n`].join(""));
