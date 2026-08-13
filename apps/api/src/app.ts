@@ -48,6 +48,10 @@ export async function buildApp() {
     if (error instanceof ZodError) return reply.code(400).send({ error: "Entrada inválida.", details: error.issues });
     if (error instanceof ApiError) return reply.code(error.statusCode).send({ error: error.message, details: error.details });
     if ((error as any).code === "P2025") return reply.code(404).send({ error: "Registro não encontrado." });
+    const httpError = error as { statusCode?: number; message?: string; code?: string };
+    if (typeof httpError.statusCode === "number" && httpError.statusCode >= 400 && httpError.statusCode < 500) {
+      return reply.code(httpError.statusCode).send({ error: httpError.message, code: httpError.code });
+    }
     app.log.error(error);
     return reply.code(500).send({ error: "Erro interno." });
   });

@@ -44,6 +44,8 @@ Cada execução mantém dois níveis complementares de observabilidade:
 
 Se uma execução antiga não tiver relatório explícito, a API deriva um diagnóstico somente a partir de passos, mensagens e logs preservados. O campo `partial` distingue trabalho útil seguido de falha de uma falha total. Problemas ao registrar telemetria são tolerados pelo bridge e não podem encerrar a tarefa principal.
 
+O bridge injeta no prompt o contrato JSON compacto dos endpoints operacionais. Isso evita que cada agente precise pesquisar o código ou experimentar campos para registrar passos. Um relatório explícito produzido pelo agente é preservado; o bridge só cria o relatório de contingência quando ele estiver ausente ou for derivado do histórico. Erros HTTP 4xx mantêm o código e a mensagem originais em vez de aparecerem como erro interno genérico.
+
 Comunicações são registros direcionais append-only (`sourceId → targetId`) dos tipos delegação, coordenação, repasse, pergunta, resposta e resultado. O mapa na C.O. usa somente esses registros, sem inventar conversas. Execuções de um mesmo comando multiagente são processadas em sequência para que o resultado anterior possa ser repassado ao agente seguinte.
 
 ```text
