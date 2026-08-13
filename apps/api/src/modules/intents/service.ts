@@ -5,11 +5,17 @@ export const intentInclude = {
   facts: true,
   notification: true,
   uploads: { orderBy: { createdAt: "asc" as const } },
-  runs: { include: { agent: true, task: { select: { id: true, title: true, status: true } }, steps: { orderBy: { order: "asc" as const } }, messages: { orderBy: { createdAt: "asc" as const } }, questions: { orderBy: { createdAt: "desc" as const } }, usage: true }, orderBy: { createdAt: "asc" as const } }
+  communications: { orderBy: { createdAt: "asc" as const } },
+  runs: { include: { agent: true, task: { select: { id: true, title: true, status: true } }, report: true, steps: { orderBy: { order: "asc" as const } }, messages: { orderBy: { createdAt: "asc" as const } }, questions: { orderBy: { createdAt: "desc" as const } }, usage: true }, orderBy: { createdAt: "asc" as const } }
 };
 
 export function presentIntent(intent: any) {
-  return { ...intent, classification: JSON.parse(intent.classificationJson), classificationJson: undefined };
+  return { ...intent, classification: JSON.parse(intent.classificationJson), classificationJson: undefined,
+    communications: intent.communications?.map((item: any) => ({ ...item, metadata: JSON.parse(item.metadataJson), metadataJson: undefined })),
+    runs: intent.runs?.map((run: any) => ({ ...run, report: run.report ? { ...run.report,
+      successes: JSON.parse(run.report.successesJson), failures: JSON.parse(run.report.failuresJson),
+      recommendations: JSON.parse(run.report.recommendationsJson), evidence: JSON.parse(run.report.evidenceJson),
+      successesJson: undefined, failuresJson: undefined, recommendationsJson: undefined, evidenceJson: undefined } : null })) };
 }
 
 export async function markIntentRunning(intentId: string | null | undefined) {

@@ -2,7 +2,7 @@ export const statusLabels: Record<string, string> = {
   backlog: "Backlog", ready: "Pronta", in_progress: "Em andamento", blocked: "Bloqueada",
   review: "Em revisão", done: "Concluída", cancelled: "Cancelada", queued: "Na fila",
   running: "Executando", waiting_input: "Aguardando resposta", succeeded: "Concluída",
-  failed: "Falhou", pending: "Pendente", completed: "Concluído", acknowledged: "Recebida pelo agente",
+  failed: "Falhou", partial: "Sucesso parcial", pending: "Pendente", completed: "Concluído", acknowledged: "Recebida pelo agente",
   answered: "Respondida", open: "Aberta", monitoring: "Monitoramento", planned: "Planejada", researching: "Pesquisando",
   validating: "Validando"
 };

@@ -44,6 +44,13 @@ export async function intentRoutes(app: FastifyInstance) {
         const attachmentNote = attachments.length ? `\n\nAnexos fornecidos: ${attachments.map((item) => item.originalName).join(", ")}.` : "";
         const run = await tx.agentRun.create({ data: { intentId: intent.id, taskId: task.id, agentId, provider: "codex-local", title: `${classification.subject} · ${agentId}`, objective: `${classification.summary}\n\nSolicitação original do proprietário: ${input.prompt}${attachmentNote}\n\nVerifique os requisitos do projeto, produza evidências, registre o procedimento e conclua com uma resposta objetiva. Não trate o dado informado como verificado antes da análise.`, requestedBy: input.submittedBy } });
         await tx.agentMessage.create({ data: { runId: run.id, sender: input.submittedBy, kind: "update", content: input.prompt } });
+        await tx.agentCommunication.create({ data: { runId: run.id, intentId: intent.id, sourceId: input.submittedBy, targetId: agentId, kind: "delegation", status: "delivered", summary: classification.summary } });
+      }
+      if (classification.agentIds.length > 1) {
+        for (let index = 1; index < classification.agentIds.length; index++) await tx.agentCommunication.create({ data: {
+          intentId: intent.id, sourceId: classification.agentIds[index - 1], targetId: classification.agentIds[index], kind: "coordination", status: "planned",
+          summary: `Cruzar conclusões de ${classification.agentIds[index - 1]} com ${classification.agentIds[index]} antes do resultado consolidado.`
+        } });
       }
       await tx.auditEvent.create({ data: { actor: input.submittedBy, action: "operational_intent_created", entityType: "operational_intent", entityId: intent.id, summary: classification.summary } });
       const event = await appendEvent(tx, "intent.created", "operational_intent", intent.id, { intentId: intent.id, agents: classification.agentIds });

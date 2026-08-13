@@ -74,8 +74,31 @@ export const operationalIntentSchema = z.object({
 export const agentLogSchema = z.object({
   channel: z.enum(["activity", "terminal", "system", "error"]),
   eventType: z.string().trim().min(2).max(80),
-  title: z.string().trim().max(500).nullable().optional(),
+  // Comandos produzidos pelo SDK podem ser extensos. O título é apenas uma
+  // prévia visual; o conteúdo completo continua disponível no corpo do log.
+  title: z.string().trim().max(50_000).transform((value) => value.slice(0, 500)).nullable().optional(),
   content: z.string().max(50_000).default("")
+});
+
+export const agentReportSchema = z.object({
+  outcome: z.enum(["succeeded", "partial", "failed", "waiting_input", "cancelled"]),
+  summary: z.string().trim().min(5).max(8000),
+  diagnosis: z.string().trim().max(8000).nullable().optional(),
+  successes: z.array(z.string().trim().min(1).max(2000)).max(50).default([]),
+  failures: z.array(z.string().trim().min(1).max(2000)).max(50).default([]),
+  recommendations: z.array(z.string().trim().min(1).max(2000)).max(30).default([]),
+  evidence: z.array(z.string().trim().min(1).max(2000)).max(50).default([]),
+  generatedBy: z.string().trim().min(2).max(80)
+});
+
+export const agentCommunicationSchema = z.object({
+  sourceId: z.string().trim().min(2).max(80),
+  targetId: z.string().trim().min(2).max(80),
+  kind: z.enum(["delegation", "coordination", "handoff", "question", "answer", "result", "decision", "update"]),
+  status: z.enum(["planned", "delivered", "acknowledged", "failed"]).default("delivered"),
+  summary: z.string().trim().min(2).max(4000),
+  intentId: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).default({})
 });
 
 export type TaskTransitionInput = z.infer<typeof taskTransitionSchema>;

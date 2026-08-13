@@ -4,6 +4,7 @@ import { formatDate } from "@carro-chefe/ui";
 import { api, json } from "../api/client";
 import { useData } from "../app/data";
 import { StatusBadge } from "../components/StatusBadge";
+import { AgentFlowMap } from "../components/AgentFlowMap";
 
 const activeStatuses = new Set(["queued", "running", "waiting_input"]);
 
@@ -22,7 +23,15 @@ export function Agents() {
   const [objective, setObjective] = useState("");
   const [provider, setProvider] = useState("codex-local");
   const [feedback, setFeedback] = useState("");
+  const [communications, setCommunications] = useState<any[]>([]);
   useEffect(() => { api<any[]>("/api/v1/agents").then((items) => { setAgents(items); setAgentId((value) => value || items[0]?.id || ""); }); }, []);
+  useEffect(() => {
+    const loadCommunications = () => api<any[]>("/api/v1/agent-communications?limit=200").then(setCommunications);
+    void loadCommunications();
+    const events = new EventSource("/api/v1/events");
+    events.addEventListener("agent.communication.created", loadCommunications);
+    return () => events.close();
+  }, []);
   useEffect(() => {
     if (!data || !taskId || prefilledTask.current === taskId) return;
     const task = data.tasks.find((item) => item.id === taskId);
@@ -44,6 +53,7 @@ export function Agents() {
   }
   if (loading || !data) return <section className="panel loading">Carregando agentes…</section>;
   return <div className="page-stack"><section className="intro"><span className="eyebrow">Orquestração assistida</span><h2>Agentes ligados ao plano</h2><p>Acompanhe quem está em execução, abra o histórico e veja atividade, terminal, perguntas, resultados e consumo de cada trabalho.</p></section>
+    <AgentFlowMap agents={agents} communications={communications} />
     <section className="agent-grid">{agents.map((agent) => { const running = activeRuns.filter((run) => run.agentId === agent.id); return <article className="panel agent-card" key={agent.id}><small>{agent.id}</small><h3>{agent.name}</h3><p>{agent.mission}</p><span className={`agent-state ${running.length ? "is-running" : ""}`}><i /> {running.length ? `${running.length} em execução` : agent.enabled ? "Disponível" : "Desativado"}</span></article>; })}</section>
     <div className="content-grid agents-work"><div className="page-stack"><section className="panel"><div className="section-title"><div><span className="eyebrow">Agora</span><h3>Em execução</h3></div><span className="count-chip">{activeRuns.length}</span></div><RunList runs={activeRuns} empty="Nenhum agente está executando uma tarefa agora." /></section><section className="panel"><div className="section-title"><div><span className="eyebrow">Registro operacional</span><h3>Execuções anteriores</h3></div><span className="count-chip">{completedRuns.length}</span></div><RunList runs={completedRuns} empty="O histórico aparecerá após a primeira execução." /></section></div>
       <aside className="panel"><span className="eyebrow">Nova delegação</span><h3>Criar execução</h3><p className="muted">Ao escolher uma tarefa, a C.O. preenche o responsável, o título e o critério de sucesso.</p><form className="form-stack" onSubmit={submit}><label><span>Tarefa</span><select required value={taskId} onChange={(event) => { prefilledTask.current = null; setTaskId(event.target.value); }}><option value="">Selecione</option>{data.tasks.map((task) => <option key={task.id} value={task.id}>{task.id} · {task.title}</option>)}</select></label><label><span>Agente</span><select required value={agentId} onChange={(event) => setAgentId(event.target.value)}>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}</select></label><label><span>Título da execução</span><input required minLength={3} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex.: Pesquisar fornecedores da churrasqueira" /></label><label><span>Objetivo e critério de sucesso</span><textarea required minLength={10} value={objective} onChange={(event) => setObjective(event.target.value)} placeholder="Explique o resultado esperado, limites e o que precisa ser verificado." /></label><label><span>Executor</span><select value={provider} onChange={(event) => setProvider(event.target.value)}><option value="codex-local">Codex local (ponte)</option><option value="manual">Registro manual</option></select></label>{feedback && <p className="form-feedback" role="status">{feedback}</p>}<button className="button button--gold">Adicionar à fila</button></form></aside>

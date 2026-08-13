@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace CarroChefe.Supervisor
 {
@@ -23,6 +25,12 @@ namespace CarroChefe.Supervisor
         private static Mutex SingleInstance;
         private static NotifyIcon TrayIcon;
         private static bool NotificationsPrimed;
+        private static Icon BrandIcon;
+        private static Icon StatusIcon;
+        private static string CurrentState = "offline";
+        private static int ConsecutiveFailures;
+        private static DateTime LastChildErrorAt = DateTime.MinValue;
+        private static string StateFilePath;
 
         [STAThread]
         private static void Main(string[] args)
@@ -39,11 +47,13 @@ namespace CarroChefe.Supervisor
             ProjectRoot = FindProjectRoot(AppDomain.CurrentDomain.BaseDirectory);
             if (ProjectRoot == null) return;
             LogRoot = Path.Combine(ProjectRoot, ".runtime", "logs");
+            StateFilePath = Path.Combine(ProjectRoot, ".runtime", "supervisor-state.json");
             Directory.CreateDirectory(LogRoot);
             TrayIcon = new NotifyIcon();
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CarroChefe.ico");
-            TrayIcon.Icon = File.Exists(iconPath) ? new System.Drawing.Icon(iconPath) : System.Drawing.SystemIcons.Application;
-            TrayIcon.Text = "Carro Chefe — Central Operacional";
+            BrandIcon = File.Exists(iconPath) ? new Icon(iconPath) : SystemIcons.Application;
+            TrayIcon.Icon = BrandIcon;
+            SetState("starting", "iniciando os serviços");
             TrayIcon.Visible = true;
             ConfigureTrayMenu();
             AppDomain.CurrentDomain.ProcessExit += delegate { Shutdown(); };
@@ -56,12 +66,20 @@ namespace CarroChefe.Supervisor
                     if (!Paused && !ApiIsHealthy()) EnsureProcess("api", "npm run dev");
                     if (!Paused && ApiIsHealthy())
                     {
+                        ConsecutiveFailures = 0;
                         EnsureProcess("agents", "npm run bridge:codex");
                         EnsureProcess("webhooks", "npm run webhooks:dispatch");
                         CheckNotifications();
+                        if ((DateTime.UtcNow - LastChildErrorAt).TotalSeconds >= 15) SetState("online", "ligada");
+                    }
+                    else if (!Paused)
+                    {
+                        ConsecutiveFailures++;
+                        if (ConsecutiveFailures == 1) SetState("starting", "restabelecendo os serviços");
+                        else if (ConsecutiveFailures >= 6) SetState("error", "erro ao iniciar; consulte os logs");
                     }
                 }
-                catch (Exception error) { Log("supervisor", "Falha no ciclo: " + error); }
+                catch (Exception error) { Log("supervisor", "Falha no ciclo: " + error); SetState("error", "erro inesperado; consulte os logs"); }
                 for (int tick = 0; tick < 50 && !Stopping; tick++)
                 {
                     Thread.Sleep(100);
@@ -81,7 +99,7 @@ namespace CarroChefe.Supervisor
             {
                 Paused = true;
                 StopChildren();
-                TrayIcon.Text = "Carro Chefe — serviços interrompidos";
+                SetState("offline", "desligada");
                 ShowStatus("Supervisor interrompido", "API, agentes e webhooks foram encerrados. Use Reiniciar serviços para retomar.");
             };
             ToolStripMenuItem restart = new ToolStripMenuItem("Reiniciar serviços");
@@ -89,8 +107,9 @@ namespace CarroChefe.Supervisor
             {
                 Paused = true;
                 StopChildren();
+                ConsecutiveFailures = 0;
+                SetState("starting", "reiniciando os serviços");
                 Paused = false;
-                TrayIcon.Text = "Carro Chefe — Central Operacional";
                 ShowStatus("Supervisor reiniciando", "A Central Operacional, os agentes e os webhooks serão iniciados novamente.");
             };
             ToolStripMenuItem exit = new ToolStripMenuItem("Sair do supervisor");
@@ -104,6 +123,47 @@ namespace CarroChefe.Supervisor
             TrayIcon.ContextMenuStrip = menu;
             TrayIcon.DoubleClick += delegate { OpenCentral(); };
         }
+
+        private static void SetState(string state, string description)
+        {
+            if (TrayIcon == null || (CurrentState == state && StatusIcon != null)) return;
+            Color color = state == "online" ? Color.FromArgb(59, 157, 91) : state == "starting" ? Color.FromArgb(227, 139, 38) : state == "error" ? Color.FromArgb(204, 55, 55) : Color.FromArgb(132, 132, 132);
+            Icon next = CreateStatusIcon(color);
+            Icon previous = StatusIcon;
+            StatusIcon = next;
+            TrayIcon.Icon = next;
+            TrayIcon.Text = TruncateTooltip("Carro Chefe — " + description);
+            CurrentState = state;
+            try { File.WriteAllText(StateFilePath, "{\"status\":\"" + state + "\",\"description\":\"" + description.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\",\"updatedAt\":\"" + DateTime.UtcNow.ToString("o") + "\"}"); } catch { }
+            if (previous != null) previous.Dispose();
+        }
+
+        private static string TruncateTooltip(string value)
+        {
+            return value.Length <= 63 ? value : value.Substring(0, 63);
+        }
+
+        private static Icon CreateStatusIcon(Color statusColor)
+        {
+            Bitmap bitmap = new Bitmap(64, 64);
+            using (Graphics graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.Clear(Color.Transparent);
+                if (BrandIcon != null) graphics.DrawIcon(BrandIcon, new Rectangle(2, 2, 60, 60));
+                using (SolidBrush shadow = new SolidBrush(Color.FromArgb(210, 20, 16, 12))) graphics.FillEllipse(shadow, 38, 38, 25, 25);
+                using (SolidBrush brush = new SolidBrush(statusColor)) graphics.FillEllipse(brush, 42, 42, 18, 18);
+                using (Pen border = new Pen(Color.White, 2.4f)) graphics.DrawEllipse(border, 42, 42, 18, 18);
+            }
+            IntPtr handle = bitmap.GetHicon();
+            Icon icon = (Icon)Icon.FromHandle(handle).Clone();
+            DestroyIcon(handle);
+            bitmap.Dispose();
+            return icon;
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern bool DestroyIcon(IntPtr handle);
 
         private static void OpenCentral()
         {
@@ -148,7 +208,11 @@ namespace CarroChefe.Supervisor
         {
             Process current;
             if (Children.TryGetValue(name, out current) && current != null && !current.HasExited) return;
-            if (current != null && current.HasExited) Log(name, "Processo terminou com código " + current.ExitCode + "; reiniciando.");
+            if (current != null && current.HasExited)
+            {
+                Log(name, "Processo terminou com código " + current.ExitCode + "; reiniciando.");
+                if (current.ExitCode != 0) { LastChildErrorAt = DateTime.UtcNow; SetState("error", name + " encerrou com erro"); }
+            }
 
             ProcessStartInfo start = new ProcessStartInfo();
             start.FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe";
@@ -240,7 +304,9 @@ namespace CarroChefe.Supervisor
             Stopping = true;
             StopChildren();
             try { if (SingleInstance != null) SingleInstance.ReleaseMutex(); } catch { }
-            try { if (TrayIcon != null) { TrayIcon.Visible = false; TrayIcon.Dispose(); } } catch { }
+            try { if (TrayIcon != null) { SetState("offline", "desligada"); TrayIcon.Visible = false; TrayIcon.Dispose(); } } catch { }
+            try { if (StatusIcon != null) StatusIcon.Dispose(); } catch { }
+            try { if (BrandIcon != null) BrandIcon.Dispose(); } catch { }
         }
     }
 }

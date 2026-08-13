@@ -261,6 +261,8 @@ model AgentRun {
   questions        AgentQuestion[]
   usage            UsageRecord[]
   logs             AgentLog[]
+  report           AgentRunReport?
+  communications   AgentCommunication[]
   uploads          Upload[]
 
   @@index([status, createdAt])
@@ -283,6 +285,7 @@ model OperationalIntent {
   runs               AgentRun[]
   facts              BusinessFact[]
   notification       Notification?
+  communications     AgentCommunication[]
   uploads            Upload[]
 
   @@index([status, createdAt])
@@ -401,6 +404,42 @@ model AgentLog {
 
   @@unique([runId, sequence])
   @@index([runId, createdAt])
+}
+
+model AgentRunReport {
+  id                  String   @id @default(cuid())
+  runId               String   @unique
+  outcome             String
+  summary             String
+  diagnosis           String?
+  successesJson       String   @default("[]")
+  failuresJson        String   @default("[]")
+  recommendationsJson String   @default("[]")
+  evidenceJson        String   @default("[]")
+  generatedBy         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  run                 AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+model AgentCommunication {
+  id           String   @id @default(cuid())
+  runId        String?
+  intentId     String?
+  sourceId     String
+  targetId     String
+  kind         String
+  status       String   @default("delivered")
+  summary      String
+  metadataJson String   @default("{}")
+  createdAt    DateTime @default(now())
+  run          AgentRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+  intent       OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([sourceId, targetId, createdAt])
+  @@index([runId, createdAt])
+  @@index([intentId, createdAt])
 }
 
 model Upload {

@@ -121,6 +121,25 @@ paths:
       summary: Registra um evento incremental emitido pelo runtime do agente
       parameters: [ { $ref: "#/components/parameters/RunId" } ]
       responses: { "201": { description: Evento registrado e publicado por SSE } }
+  /agent-runs/{runId}/report:
+    post:
+      summary: Consolida resultado, diagnóstico, sucessos, falhas, evidências e próximos passos
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AgentRunReport" } } } }
+      responses: { "200": { description: Relatório criado ou atualizado } }
+  /agent-runs/{runId}/communications:
+    post:
+      summary: Registra fluxo direcional entre proprietário e agentes
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AgentCommunication" } } } }
+      responses: { "201": { description: Comunicação registrada e publicada por SSE } }
+  /agent-communications:
+    get:
+      summary: Lista comunicações para compor o mapa de fluxo
+      parameters:
+        - { in: query, name: runId, schema: { type: string } }
+        - { in: query, name: intentId, schema: { type: string } }
+      responses: { "200": { description: Fluxo cronológico de comunicação } }
   /uploads:
     get:
       summary: Lista evidências vinculadas
@@ -199,3 +218,26 @@ components:
         recommendation: { type: [string, "null"] }
         options: { type: array, items: { type: string } }
         blocking: { type: boolean, default: true }
+    AgentRunReport:
+      type: object
+      required: [outcome, summary, generatedBy]
+      properties:
+        outcome: { enum: [succeeded, partial, failed, waiting_input, cancelled] }
+        summary: { type: string }
+        diagnosis: { type: [string, "null"] }
+        successes: { type: array, items: { type: string } }
+        failures: { type: array, items: { type: string } }
+        recommendations: { type: array, items: { type: string } }
+        evidence: { type: array, items: { type: string } }
+        generatedBy: { type: string }
+    AgentCommunication:
+      type: object
+      required: [sourceId, targetId, kind, summary]
+      properties:
+        sourceId: { type: string }
+        targetId: { type: string }
+        kind: { enum: [delegation, coordination, handoff, question, answer, result, decision, update] }
+        status: { enum: [planned, delivered, acknowledged, failed] }
+        summary: { type: string }
+        intentId: { type: [string, "null"] }
+        metadata: { type: object }

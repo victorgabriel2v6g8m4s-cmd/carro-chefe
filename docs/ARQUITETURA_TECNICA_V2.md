@@ -37,6 +37,15 @@ packages/ui         Vocabulário visual e formatação compartilhada
 
 ## Central ↔ agentes
 
+Cada execução mantém dois níveis complementares de observabilidade:
+
+- o log técnico e o terminal preservam eventos brutos do runtime;
+- o relatório operacional consolida resultado, causa provável, sucessos, falhas, evidências e recomendação de continuidade.
+
+Se uma execução antiga não tiver relatório explícito, a API deriva um diagnóstico somente a partir de passos, mensagens e logs preservados. O campo `partial` distingue trabalho útil seguido de falha de uma falha total. Problemas ao registrar telemetria são tolerados pelo bridge e não podem encerrar a tarefa principal.
+
+Comunicações são registros direcionais append-only (`sourceId → targetId`) dos tipos delegação, coordenação, repasse, pergunta, resposta e resultado. O mapa na C.O. usa somente esses registros, sem inventar conversas. Execuções de um mesmo comando multiagente são processadas em sequência para que o resultado anterior possa ser repassado ao agente seguinte.
+
 ```text
 Proprietário → cria AgentRun na Central
 Bridge local → reivindica execução `queued`
@@ -88,6 +97,8 @@ O roteador não usa um modelo apenas para classificar frases, reduzindo custo e 
 - a API e os dois builds web;
 - a ponte local do Codex;
 - o dispatcher da outbox/webhooks.
+
+O ícone combina a logo com uma bolinha de estado: cinza para desligado, laranja para inicialização ou restabelecimento, verde para serviço saudável e vermelho para falha persistente/processo encerrado com erro. O mesmo estado é gravado em `.runtime/supervisor-state.json` para diagnóstico local; esse arquivo não é versionado.
 
 Também consulta notificações novas e mostra um balão nativo do Windows quando a Central não está aberta. Dentro da Central, a mesma conclusão aparece como popup minimalista via SSE. Os workers usam portas locais de trava para impedir instâncias duplicadas.
 
