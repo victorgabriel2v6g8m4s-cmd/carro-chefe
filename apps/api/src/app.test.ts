@@ -5,6 +5,7 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildRuntimeContract, shouldWriteFallbackReport } from "./workers/agent-runtime-contract";
+import { containsLikelyEncodingLoss, repairLegacyEncodingLoss } from "./lib/text";
 
 const root = path.resolve(import.meta.dirname, "../../..");
 const databasePath = path.join(root, ".runtime", `test-${process.pid}.db`);
@@ -45,7 +46,8 @@ describe("Central Operacional API", () => {
     const contract = buildRuntimeContract("http://127.0.0.1:4173/api/v1", "RUN-001", "AG-DEV");
     expect(contract).toContain('/steps com {"order":1');
     expect(contract).toContain("Não existe campo evidence no passo");
-    expect(contract).toContain("bytes UTF-8");
+    expect(contract).toContain("UTF8.GetBytes");
+    expect(contract).toContain("/artifacts");
     expect(contract).toContain("não envie usage");
     expect(shouldWriteFallbackReport({})).toBe(true);
     expect(shouldWriteFallbackReport({ report: { derived: true } })).toBe(true);
@@ -149,6 +151,14 @@ describe("Central Operacional API", () => {
     expect(detail.json().report).not.toHaveProperty("derived");
   });
 
+  it("repara registros legados e rejeita nova perda de codificação", async () => {
+    expect(repairLegacyEncodingLoss("O propriet?rio concluiu a an?lise t?cnica.")).toBe("O proprietário concluiu a análise técnica.");
+    expect(containsLikelyEncodingLoss({ summary: "N?o foi poss?vel concluir." })).toBe(true);
+    const rejected = await app.inject({ method: "POST", url: "/api/v1/intents", payload: { prompt: "N?o foi poss?vel criar o relat?rio técnico.", submittedBy: "teste-ci", attachmentIds: [] } });
+    expect(rejected.statusCode).toBe(400);
+    expect(rejected.json()).toMatchObject({ details: { code: "ENCODING_CORRUPTED" } });
+  });
+
   it("conclui a tarefa, fixa o relatório e notifica quando a execução termina com sucesso", async () => {
     const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-MAR-001", agentId: "AG-MARCA", title: "Concluir identidade", objective: "Validar a conclusão automática da tarefa a partir do relatório do agente.", provider: "manual", requestedBy: "teste-ci" } });
     expect(created.statusCode, created.body).toBe(201);
@@ -213,6 +223,13 @@ describe("Central Operacional API", () => {
     expect(intent.facts).toEqual(expect.arrayContaining([expect.objectContaining({ key: "erp.selected", value: "Bling", verificationStatus: "pending_verification" })]));
     expect(intent.runs.map((run: any) => run.agentId).sort()).toEqual(["AG-FINANCAS", "AG-GESTAO"]);
     expect(intent.runs.find((run: any) => run.agentId === "AG-GESTAO")).toMatchObject({ purpose: "management_review" });
+    const financeRun = intent.runs.find((run: any) => run.agentId === "AG-FINANCAS");
+    const asked = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${financeRun.id}/questions`, payload: { askedBy: "AG-FINANCAS", question: "Devemos adotar o ERP informado?", context: "A resposta orientará a análise de aderência.", recommendation: "Prosseguir como estudo preliminar.", options: [], blocking: true } });
+    await app.inject({ method: "POST", url: `/api/v1/agent-questions/${asked.json().id}/answer`, payload: { answer: "Sim, prossiga sem perguntar novamente.", answeredBy: "proprietario" } });
+    const managementRun = intent.runs.find((run: any) => run.agentId === "AG-GESTAO");
+    const context = await app.inject({ method: "GET", url: `/api/v1/intents/${intent.id}/runtime-context?runId=${managementRun.id}` });
+    expect(context.statusCode, context.body).toBe(200);
+    expect(context.json().ownerAnswers).toEqual(expect.arrayContaining([expect.objectContaining({ answer: "Sim, prossiga sem perguntar novamente." })]));
     for (const run of intent.runs) {
       const finished = await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "succeeded", currentStep: "Requisitos verificados no teste." } });
       expect(finished.statusCode).toBe(200);
@@ -222,6 +239,36 @@ describe("Central Operacional API", () => {
     expect(completed.json().facts[0].verificationStatus).toBe("reviewed");
     const notifications = await app.inject({ method: "GET", url: "/api/v1/notifications?unread=true" });
     expect(notifications.json()).toEqual(expect.arrayContaining([expect.objectContaining({ intentId: intent.id, route: `/gestao/comandos/${intent.id}` })]));
+  });
+
+  it("reabre um comando falho quando todas as execuções são corrigidas", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/intents", payload: { prompt: "Verifique o planejamento e gere um parecer de gestão.", submittedBy: "teste-ci", attachmentIds: [] } });
+    const intent = created.json();
+    for (const run of intent.runs) await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "failed", currentStep: "Falha simulada" } });
+    expect((await app.inject({ method: "GET", url: `/api/v1/intents/${intent.id}` })).json().status).toBe("failed");
+    for (const run of intent.runs) {
+      await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/report`, payload: { outcome: "succeeded", summary: "Execução corrigida com evidência válida.", successes: ["Parecer concluído."], failures: [], recommendations: [], evidence: ["evidência de teste"], generatedBy: run.agentId } });
+      await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${run.id}`, payload: { status: "succeeded", currentStep: "Correção concluída" } });
+    }
+    const corrected = (await app.inject({ method: "GET", url: `/api/v1/intents/${intent.id}` })).json();
+    expect(corrected).toMatchObject({ status: "completed", notification: { type: "completed", title: "Tarefa concluída" } });
+  });
+
+  it("registra um artefato produzido em output sem liberar outros caminhos", async () => {
+    const { mkdirSync, writeFileSync } = await import("node:fs");
+    const outputDirectory = path.join(root, "output", "test");
+    const artifactPath = path.join(outputDirectory, `artefato-${process.pid}.pdf`);
+    mkdirSync(outputDirectory, { recursive: true });
+    writeFileSync(artifactPath, "%PDF-1.4\n%%EOF\n", "utf8");
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-OPS-001", agentId: "AG-OPERACOES", title: "Produzir PDF conceitual", objective: "Criar PDF de planejamento em output.", provider: "manual", requestedBy: "teste-ci" } });
+    const run = created.json();
+    const registered = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/artifacts`, payload: { path: path.relative(root, artifactPath), title: "Estudo conceitual" } });
+    expect(registered.statusCode, registered.body).toBe(201);
+    uploadedStorageNames.push(registered.json().storageName);
+    expect(registered.json()).toMatchObject({ runId: run.id, intentId: null, mimeType: "application/pdf", viewerRoute: expect.stringContaining("/gestao/visualizador?uploadId=") });
+    const blocked = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/artifacts`, payload: { path: "README.md", title: "Arquivo fora da saída" } });
+    expect(blocked.statusCode).toBe(403);
+    rmSync(artifactPath, { force: true });
   });
 
   it("pagina e filtra a auditoria no banco", async () => {

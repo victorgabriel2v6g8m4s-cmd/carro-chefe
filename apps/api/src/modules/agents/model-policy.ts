@@ -4,6 +4,7 @@ const programmingSignals = /\b(código|programa(?:ção|r)|typescript|javascript
 const criticalSignals = /\b(segurança|produção|pagamento|fiscal|lgpd|migração|perda de dados|arquitetura|autenticação|vulnerabilidade)\b/i;
 const complexSignals = /\b(integração|análise completa|comparar|homologar|investigar|diagnosticar|estratégia|conciliação|otimiza(?:ção|r))\b/i;
 const routineSignals = /\b(resumir|registrar|revisar texto|organizar|listar|atualizar status|classificar|copy|legenda)\b/i;
+const artifactSignals = /\b(pdf|documento|docx|planilha|xlsx|apresenta(?:ção|ções)|slides?|arquivo final|imagem|vídeo|relatório diagramado|planta arquitetônica)\b/i;
 
 export const nonProgrammingAgents = new Set(["AG-GESTAO", "AG-MARKETING", "AG-MIDIAS", "AG-COMPRAS", "AG-OPERACOES", "AG-FINANCAS", "AG-MARCA"]);
 
@@ -16,6 +17,10 @@ export function assessComplexity(text: string, impact = 3, urgency = 3): Complex
 
 export function requiresProgramming(text: string) {
   return programmingSignals.test(text);
+}
+
+export function requiresArtifactWorkspace(text: string) {
+  return artifactSignals.test(text);
 }
 
 export function selectRuntimeProfile(agentId: string, complexity: Complexity, configuredModel?: string | null) {

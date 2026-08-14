@@ -1,4 +1,5 @@
 import { parseJson } from "../../lib/errors";
+import { repairLegacyEncodingLoss } from "../../lib/text";
 
 type RunLike = {
   status: string;
@@ -22,7 +23,11 @@ function friendlyFailure(raw: string) {
 
 export function presentReport(report: any) {
   if (!report) return null;
-  return { ...report, successes: parseJson<string[]>(report.successesJson, []), failures: parseJson<string[]>(report.failuresJson, []), recommendations: parseJson<string[]>(report.recommendationsJson, []), evidence: parseJson<string[]>(report.evidenceJson, []), successesJson: undefined, failuresJson: undefined, recommendationsJson: undefined, evidenceJson: undefined };
+  const repaired = (items: string[]) => items.map(repairLegacyEncodingLoss);
+  return { ...report, summary: repairLegacyEncodingLoss(report.summary), diagnosis: report.diagnosis ? repairLegacyEncodingLoss(report.diagnosis) : report.diagnosis,
+    successes: repaired(parseJson<string[]>(report.successesJson, [])), failures: repaired(parseJson<string[]>(report.failuresJson, [])),
+    recommendations: repaired(parseJson<string[]>(report.recommendationsJson, [])), evidence: repaired(parseJson<string[]>(report.evidenceJson, [])),
+    successesJson: undefined, failuresJson: undefined, recommendationsJson: undefined, evidenceJson: undefined };
 }
 
 export function deriveRunReport(run: RunLike) {

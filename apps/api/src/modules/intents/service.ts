@@ -1,5 +1,6 @@
 import { prisma } from "@carro-chefe/database";
 import { appendEvent } from "../../lib/outbox";
+import { repairLegacyEncodingLoss } from "../../lib/text";
 
 export const intentInclude = {
   facts: true,
@@ -10,11 +11,16 @@ export const intentInclude = {
 };
 
 export function presentIntent(intent: any) {
-  return { ...intent, classification: JSON.parse(intent.classificationJson), classificationJson: undefined,
-    communications: intent.communications?.map((item: any) => ({ ...item, metadata: JSON.parse(item.metadataJson), metadataJson: undefined })),
-    runs: intent.runs?.map((run: any) => ({ ...run, report: run.report ? { ...run.report,
-      successes: JSON.parse(run.report.successesJson), failures: JSON.parse(run.report.failuresJson),
-      recommendations: JSON.parse(run.report.recommendationsJson), evidence: JSON.parse(run.report.evidenceJson),
+  const repaired = (items: string[]) => items.map(repairLegacyEncodingLoss);
+  return { ...intent, prompt: repairLegacyEncodingLoss(intent.prompt), summary: repairLegacyEncodingLoss(intent.summary), classification: JSON.parse(intent.classificationJson), classificationJson: undefined,
+    communications: intent.communications?.map((item: any) => ({ ...item, summary: repairLegacyEncodingLoss(item.summary), metadata: JSON.parse(item.metadataJson), metadataJson: undefined })),
+    runs: intent.runs?.map((run: any) => ({ ...run, title: repairLegacyEncodingLoss(run.title), objective: repairLegacyEncodingLoss(run.objective), currentStep: run.currentStep ? repairLegacyEncodingLoss(run.currentStep) : run.currentStep,
+      steps: run.steps?.map((step: any) => ({ ...step, title: repairLegacyEncodingLoss(step.title), description: step.description ? repairLegacyEncodingLoss(step.description) : step.description, procedure: step.procedure ? repairLegacyEncodingLoss(step.procedure) : step.procedure, result: step.result ? repairLegacyEncodingLoss(step.result) : step.result })),
+      messages: run.messages?.map((message: any) => ({ ...message, content: repairLegacyEncodingLoss(message.content) })),
+      questions: run.questions?.map((question: any) => ({ ...question, question: repairLegacyEncodingLoss(question.question), context: repairLegacyEncodingLoss(question.context), recommendation: question.recommendation ? repairLegacyEncodingLoss(question.recommendation) : question.recommendation, answer: question.answer ? repairLegacyEncodingLoss(question.answer) : question.answer })),
+      report: run.report ? { ...run.report, summary: repairLegacyEncodingLoss(run.report.summary), diagnosis: run.report.diagnosis ? repairLegacyEncodingLoss(run.report.diagnosis) : run.report.diagnosis,
+      successes: repaired(JSON.parse(run.report.successesJson)), failures: repaired(JSON.parse(run.report.failuresJson)),
+      recommendations: repaired(JSON.parse(run.report.recommendationsJson)), evidence: repaired(JSON.parse(run.report.evidenceJson)),
       successesJson: undefined, failuresJson: undefined, recommendationsJson: undefined, evidenceJson: undefined } : null })) };
 }
 
@@ -31,11 +37,12 @@ export async function reconcileIntent(intentId: string | null | undefined) {
   if (!intentId) return null;
   return prisma.$transaction(async (tx) => {
     const intent = await tx.operationalIntent.findUnique({ where: { id: intentId }, include: { runs: true, facts: true } });
-    if (!intent || ["completed", "failed", "cancelled"].includes(intent.status) || !intent.runs.length) return null;
+    if (!intent || ["completed", "cancelled"].includes(intent.status) || !intent.runs.length) return null;
     const terminal = new Set(["succeeded", "failed", "cancelled"]);
     if (!intent.runs.every((run) => terminal.has(run.status))) return null;
     const succeeded = intent.runs.every((run) => run.status === "succeeded");
     const status = succeeded ? "completed" : "failed";
+    if (intent.status === status) return null;
     await tx.operationalIntent.update({ where: { id: intentId }, data: { status, completedAt: new Date() } });
     await tx.businessFact.updateMany({ where: { sourceIntentId: intentId }, data: { verificationStatus: succeeded ? "reviewed" : "verification_failed" } });
     if (intent.facts.some((fact) => fact.key === "erp.selected")) {

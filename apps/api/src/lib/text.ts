@@ -18,3 +18,36 @@ export function repairMojibake(value: string) {
   }
   return next;
 }
+
+const lostEncodingWords: Array<[RegExp, string]> = [
+  [/\bN\?o\b/g, "Não"], [/\bn\?o\b/g, "não"], [/\bPropriet\?rio\b/g, "Proprietário"], [/\bpropriet\?rio\b/g, "proprietário"],
+  [/\bAn\?lise\b/g, "Análise"], [/\ban\?lise\b/g, "análise"], [/\bEvid\?ncias?\b/g, "Evidências"], [/\bevid\?ncias?\b/g, "evidências"],
+  [/\bposs\?vel\b/g, "possível"], [/\bdispon\?veis\b/g, "disponíveis"], [/\bdispon\?vel\b/g, "disponível"], [/\bt\?cnicos\b/g, "técnicos"], [/\bt\?cnico\b/g, "técnico"], [/\bt\?cnicas\b/g, "técnicas"], [/\bt\?cnica\b/g, "técnica"],
+  [/\bexecu\?\?o\b/g, "execução"], [/\bconfigura\?\?o\b/g, "configuração"], [/\bvalida\?\?o\b/g, "validação"], [/\bprodu\?\?o\b/g, "produção"],
+  [/\bsolicita\?\?o\b/g, "solicitação"], [/\bcomunica\?\?o\b/g, "comunicação"], [/\batualiza\?\?o\b/g, "atualização"], [/\bopera\?\?o\b/g, "operação"],
+  [/\bmedi\?\?es\b/g, "medições"], [/\bmedi\?\?o\b/g, "medição"], [/\bacess\?vel\b/g, "acessível"], [/\bor\?amento\b/g, "orçamento"],
+  [/\bm\?dia\b/g, "mídia"], [/\bel\?tricos?\b/g, "elétricos"], [/\bel\?tricas?\b/g, "elétricas"], [/\bexaust\?o\b/g, "exaustão"],
+  [/\bdecis\?es\b/g, "decisões"], [/\bdecis\?o\b/g, "decisão"], [/\bconclu\?das\b/g, "concluídas"], [/\bconclu\?da\b/g, "concluída"], [/\bRelat\?rio\b/g, "Relatório"], [/\brelat\?rio\b/g, "relatório"],
+  [/\bc\?digo\b/g, "código"], [/\bpr\?ximo\b/g, "próximo"], [/\bap\?s\b/g, "após"], [/\bj\?\b/g, "já"], [/\b\?rea\b/g, "área"],
+  [/\b\?rvore\b/g, "árvore"], [/\b\?gua\b/g, "água"], [/\bH\?\b/g, "Há"], [/\bh\?\b/g, "há"], [/\bs\?o\b/g, "são"], [/\best\?\b/g, "está"],
+  [/\bp\?blicos\b/g, "públicos"], [/\bp\?blico\b/g, "público"], [/\bp\?blicas\b/g, "públicas"], [/\bp\?blica\b/g, "pública"], [/\baplic\?vel\b/g, "aplicável"], [/\brespons\?vel\b/g, "responsável"],
+  [/\bobrigat\?rias\b/g, "obrigatórias"], [/\bobrigat\?ria\b/g, "obrigatória"], [/\bdepend\?ncias\b/g, "dependências"], [/\bdepend\?ncia\b/g, "dependência"], [/\brefer\?ncias\b/g, "referências"], [/\brefer\?ncia\b/g, "referência"], [/\bconte\?do\b/g, "conteúdo"],
+  [/\blan\?amento\b/g, "lançamento"], [/\bfog\?o\b/g, "fogão"], [/\bbalc\?o\b/g, "balcão"], [/\bm\?os\b/g, "mãos"],
+  [/\butens\?lios\b/g, "utensílios"], [/\bsa\?da\b/g, "saída"], [/\bg\?s\b/g, "gás"], [/\bfam\?lia\b/g, "família"],
+  [/\bpe\?as\b/g, "peças"], [/\bM\?dias\b/g, "Mídias"], [/\bCard\?pio\b/g, "Cardápio"], [/\bcard\?pio\b/g, "cardápio"],
+  [/\bCarro\?Chefe\b/g, "Carro-Chefe"]
+];
+
+/** Repara somente padrões portugueses inequívocos; interrogações legítimas permanecem intactas. */
+export function repairLegacyEncodingLoss(value: string) {
+  let next = repairMojibake(value);
+  for (const [broken, repaired] of lostEncodingWords) next = next.replace(broken, repaired);
+  return next;
+}
+
+export function containsLikelyEncodingLoss(value: unknown): boolean {
+  if (typeof value === "string") return /(?:\bn\?o\b|propriet\?ri|execu\?\?o|an\?lise|evid\?ncia|t\?cnic|decis\?o|configura\?\?o|valida\?\?o|produ\?\?o|relat\?rio|or\?amento|card\?pio)/i.test(value);
+  if (Array.isArray(value)) return value.some(containsLikelyEncodingLoss);
+  if (value && typeof value === "object") return Object.values(value as Record<string, unknown>).some(containsLikelyEncodingLoss);
+  return false;
+}
