@@ -4,13 +4,18 @@
 
 | ID | Decisão | Por que bloqueia | Recomendação inicial |
 |---|---|---|---|
-| `DEC-001` | “Paulistinha” versus “Carro‑Chefe” | cardápio, anúncio e impressão | usar Carro‑Chefe como família; confirmar se Paulistinha permanece |
 | `DEC-002` | ERP e adquirente | catálogo, totem, dados e integração | prova de conceito com Chefão antes de contratar |
 | `DEC-003` | regras do Chefão | cadastro, custo e produção | definir repetição de espetos e quantidades |
 | `DEC-004` | escopo do embed em `/cardapio` | segurança/UX | exigir confirmação técnica; manter redirect como fallback |
 | `DEC-005` | local, medidas e infraestrutura | layout, licenças e equipamentos | levantamento presencial documentado |
 | `DEC-006` | data e orçamento de abertura | priorização e contratação | decidir após G1 e orçamento preliminar |
 | `DEC-007` | marca Catupiry/Seara no texto | compra e comunicação | usar marca só quando o item real e o acordo permitirem |
+
+## Decisões aprovadas
+
+| ID | Data | Decisão | Evidência e consequência |
+|---|---|---|---|
+| `DEC-001` | 13/08/2026 | **Carro Chefe** é a marca; **Carro‑Chefe** é a família/produto; “Paulistinha” fica apenas como alias legado interno | aprovação do proprietário na pergunta da execução `cmsroii6800qgv4tpkffdqygr`; na futura derivação da capa, usar `LANCHES • ESPETINHO • BEBIDAS`; site e anúncios não usam “Paulistinha” |
 
 ## Riscos prioritários
 
@@ -38,4 +43,3 @@ Uma decisão registra: contexto, opções, custos, riscos, evidências, recomend
 ## Processo de risco
 
 Cada risco tem proprietário, gatilho observável, mitigação preventiva e contingência. Se ocorrer, vira incidente/tarefa e preserva a relação com o risco original.
-

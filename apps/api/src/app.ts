@@ -17,6 +17,7 @@ import { governanceRoutes } from "./modules/governance/routes";
 import { browserRoutes } from "./modules/browser/routes";
 import { referenceRoutes } from "./modules/references/routes";
 import { managementRoutes } from "./modules/management/routes";
+import { knowledgeRoutes } from "./modules/knowledge/routes";
 import { containsLikelyEncodingLoss } from "./lib/text";
 
 declare module "fastify" {
@@ -79,6 +80,7 @@ export async function buildApp() {
   await app.register(browserRoutes);
   await app.register(referenceRoutes);
   await app.register(managementRoutes);
+  await app.register(knowledgeRoutes);
 
   return app;
 }

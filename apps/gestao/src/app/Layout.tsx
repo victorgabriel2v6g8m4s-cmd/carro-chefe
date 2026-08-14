@@ -9,7 +9,8 @@ const nav = [
   ["/gestao/roteiro", "Roteiro", "03"], ["/gestao/tarefas", "Tarefas", "04"],
   ["/gestao/agentes", "Agentes", "05"], ["/gestao/perguntas", "Perguntas", "06"],
   ["/gestao/governanca", "Governança", "07"], ["/gestao/compras", "Compras", "08"],
-  ["/gestao/registro", "Registro", "09"], ["/gestao/navegador", "Navegador", "10"]
+  ["/gestao/registro", "Registro", "09"], ["/gestao/conhecimento", "Memória", "10"],
+  ["/gestao/navegador", "Navegador", "11"]
 ];
 
 export function Layout() {

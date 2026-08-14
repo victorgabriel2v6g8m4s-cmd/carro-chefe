@@ -30,6 +30,7 @@ model Project {
   notes       Note[]
   intents     OperationalIntent[]
   facts       BusinessFact[]
+  knowledgeNodes KnowledgeNode[]
 }
 
 model Pillar {
@@ -305,6 +306,7 @@ model AgentRun {
   managementMessages ManagementMessage[]
   dispatchesSent     AgentDispatch[] @relation("DispatchSource")
   dispatchResults    AgentDispatch[] @relation("DispatchResult")
+  knowledgeNodes     KnowledgeNode[]
 
   @@index([status, createdAt])
   @@index([intentId, createdAt])
@@ -381,6 +383,7 @@ model OperationalIntent {
   project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   runs               AgentRun[]
   facts              BusinessFact[]
+  knowledgeNodes     KnowledgeNode[]
   notification       Notification?
   communications     AgentCommunication[]
   uploads            Upload[]
@@ -402,6 +405,52 @@ model BusinessFact {
 
   @@unique([projectId, key])
   @@index([sourceIntentId])
+}
+
+model KnowledgeNode {
+  id                 String   @id @default(cuid())
+  projectId          String
+  parentId           String?
+  sourceRunId        String?
+  sourceIntentId     String?
+  slug               String
+  name               String
+  path               String
+  kind               String   @default("branch")
+  value              String?
+  valueType          String   @default("text")
+  verificationStatus String   @default("informed")
+  referencesJson     String   @default("[]")
+  sourceType         String   @default("manual")
+  sourceId           String?
+  createdBy          String
+  status             String   @default("active")
+  version            Int      @default(1)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent             KnowledgeNode? @relation("KnowledgeTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children           KnowledgeNode[] @relation("KnowledgeTree")
+  sourceRun          AgentRun? @relation(fields: [sourceRunId], references: [id], onDelete: SetNull)
+  sourceIntent       OperationalIntent? @relation(fields: [sourceIntentId], references: [id], onDelete: SetNull)
+  attachments        KnowledgeNodeAttachment[]
+
+  @@unique([projectId, path])
+  @@index([parentId, status, name])
+  @@index([sourceRunId])
+  @@index([sourceIntentId])
+  @@index([status, updatedAt])
+}
+
+model KnowledgeNodeAttachment {
+  nodeId    String
+  uploadId  String
+  createdAt DateTime @default(now())
+  node      KnowledgeNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  upload    Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@id([nodeId, uploadId])
+  @@index([uploadId])
 }
 
 model Notification {
@@ -566,6 +615,7 @@ model Upload {
   decision     Decision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
   question     AgentQuestion? @relation(fields: [questionId], references: [id], onDelete: SetNull)
   managementMessage ManagementMessage? @relation(fields: [managementMessageId], references: [id], onDelete: SetNull)
+  knowledgeNodes KnowledgeNodeAttachment[]
 
   @@index([taskId, createdAt])
   @@index([runId, createdAt])

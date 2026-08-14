@@ -2,8 +2,10 @@ import { prisma } from "@carro-chefe/database";
 import { ApiError, parseJson } from "../../lib/errors";
 import { repairLegacyEncodingLoss } from "../../lib/text";
 import { deriveJourney, deriveRunReport, presentReport } from "./diagnostics";
+import { buildExecutionShortcuts } from "./shortcuts";
 
-export const runInclude = { task: { select: { id: true, title: true, status: true, statusJustification: true, acceptance: true, evidenceJson: true, impact: true, urgency: true } }, agent: true,
+export const runInclude = { task: { select: { id: true, title: true, status: true, statusJustification: true, acceptance: true, evidenceJson: true, impact: true, urgency: true,
+  ownerAgentId: true, pillarId: true, milestoneId: true } }, agent: true,
   intent: { select: { id: true, subject: true, summary: true, status: true, uploads: { orderBy: { createdAt: "asc" as const } } } },
   steps: { orderBy: { order: "asc" as const } }, messages: { orderBy: { createdAt: "asc" as const } },
   questions: { include: { uploads: { orderBy: { createdAt: "asc" as const } } }, orderBy: { createdAt: "desc" as const } },
@@ -13,6 +15,7 @@ export const runDetailInclude = { ...runInclude, report: true, communications: {
   dispatchesSent: { include: { targetAgent: true, resultRun: { include: { agent: true, report: true, messages: { orderBy: { createdAt: "desc" as const }, take: 1 } } } }, orderBy: { createdAt: "asc" as const } } };
 
 export function presentRun(run: any) {
+  const report = run.report ? presentReport(run.report) : run.logs ? deriveRunReport(run) : undefined;
   return { ...run, title: repairLegacyEncodingLoss(run.title), objective: repairLegacyEncodingLoss(run.objective), currentStep: run.currentStep ? repairLegacyEncodingLoss(run.currentStep) : run.currentStep,
     logs: run.logs ? [...run.logs].reverse().map((log: any) => ({ ...log, title: log.title ? repairLegacyEncodingLoss(log.title) : log.title, content: repairLegacyEncodingLoss(log.content) })) : undefined,
     steps: run.steps?.map((step: any) => ({ ...step, title: repairLegacyEncodingLoss(step.title), description: step.description ? repairLegacyEncodingLoss(step.description) : step.description, procedure: step.procedure ? repairLegacyEncodingLoss(step.procedure) : step.procedure, result: step.result ? repairLegacyEncodingLoss(step.result) : step.result })),
@@ -23,7 +26,7 @@ export function presentRun(run: any) {
     dispatchesSent: run.dispatchesSent?.map((item: any) => ({ ...item, dependencies: parseJson(item.dependenciesJson, []), onSuccess: parseJson(item.onSuccessJson, {}), context: parseJson(item.contextJson, {}), dependenciesJson: undefined, onSuccessJson: undefined, contextJson: undefined,
       resultRun: item.resultRun ? { ...item.resultRun, report: item.resultRun.report ? presentReport(item.resultRun.report) : null } : null })),
     managementConversation: run.managementConversation ? { ...run.managementConversation, messages: run.managementConversation.messages?.map((message: any) => ({ ...message, content: repairLegacyEncodingLoss(message.content), references: parseJson(message.referencesJson, []), referencesJson: undefined })) } : run.managementConversation,
-    report: run.report ? presentReport(run.report) : run.logs ? deriveRunReport(run) : undefined, journey: run.logs ? deriveJourney(run) : undefined };
+    report, shortcuts: buildExecutionShortcuts(run), journey: run.logs ? deriveJourney(run) : undefined };
 }
 
 export async function requireRun(runId: string) {

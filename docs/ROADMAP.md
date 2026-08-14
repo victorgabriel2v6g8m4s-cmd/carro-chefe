@@ -19,7 +19,7 @@ flowchart LR
 Objetivo: transformar a ideia em decisões controladas.
 
 - confirmar nome legal/comercial, responsáveis e orçamento-limite;
-- decidir o papel de “Paulistinha” no cardápio;
+- arquitetura de nomes aprovada: Carro Chefe como marca, Carro‑Chefe como família/produto e “Paulistinha” apenas como alias legado interno;
 - medir o ponto e registrar infraestrutura disponível;
 - congelar escopo do MVP do cardápio;
 - definir data-alvo somente depois da análise de licenças e obras;
@@ -123,4 +123,3 @@ O painel calcula a base como `impacto × urgência`. A nota não substitui julga
 ## Critério de mudança de fase
 
 Cada portão exige: evidências anexadas, decisões fechadas, riscos críticos com mitigação, orçamento atualizado, dependências satisfeitas e aprovação da Gestão/proprietário.
-

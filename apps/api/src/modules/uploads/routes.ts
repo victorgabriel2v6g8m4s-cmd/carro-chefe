@@ -35,8 +35,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     const decisionId = field(part.fields as any, "decisionId") || null;
     const purpose = field(part.fields as any, "purpose") || null;
     const actor = field(part.fields as any, "actor") || "proprietario";
-    const draftPurposes = new Set(["intent-draft", "question-answer-draft", "management-message-draft"]);
-    if (!taskId && !runId && !intentId && !decisionId && !draftPurposes.has(purpose ?? "")) throw new ApiError(400, "Vincule o arquivo a uma tarefa, execução, comando, decisão ou resposta.");
+    const draftPurposes = new Set(["intent-draft", "question-answer-draft", "management-message-draft", "knowledge-node-draft"]);
+    if (!taskId && !runId && !intentId && !decisionId && !draftPurposes.has(purpose ?? "")) throw new ApiError(400, "Vincule o arquivo a uma tarefa, execução, comando, decisão, resposta ou ramo da memória.");
     if (taskId && !await prisma.task.findUnique({ where: { id: taskId }, select: { id: true } })) throw new ApiError(400, "Tarefa inexistente.");
     if (runId && !await prisma.agentRun.findUnique({ where: { id: runId }, select: { id: true } })) throw new ApiError(400, "Execução inexistente.");
     if (intentId && !await prisma.operationalIntent.findUnique({ where: { id: intentId }, select: { id: true } })) throw new ApiError(400, "Comando inexistente.");

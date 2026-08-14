@@ -5,6 +5,7 @@ import { ApiError, parseJson } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
 import { requireRun } from "./run-presenter";
 import { resolveReferenceContext } from "../references/service";
+import { capturePromptKnowledge } from "../knowledge/service";
 
 function presentQuestion(question: any) {
   return { ...question, options: parseJson(question.optionsJson, []), answerReferences: parseJson(question.answerReferencesJson, []), optionsJson: undefined, answerReferencesJson: undefined };
@@ -58,6 +59,8 @@ export async function questionRoutes(app: FastifyInstance) {
       const question = await tx.agentQuestion.update({ where: { id: questionId }, data: { status: "answered", answer: input.answer,
         answerReferencesJson: JSON.stringify(references), answeredBy: input.answeredBy, answeredAt: new Date() } });
       if (input.attachmentIds.length) await tx.upload.updateMany({ where: { id: { in: input.attachmentIds } }, data: { questionId, taskId: current.taskId, runId: current.runId, intentId: run.intentId } });
+      await capturePromptKnowledge(tx, input.answer, { actor: input.answeredBy, sourceType: "prompt", sourceId: questionId,
+        sourceRunId: current.runId, sourceIntentId: run.intentId, attachmentIds: input.attachmentIds });
       await tx.agentMessage.create({ data: { runId: current.runId, sender: input.answeredBy, kind: "answer", content: input.answer } });
       await tx.agentCommunication.create({ data: { runId: current.runId, intentId: run.intentId, sourceId: input.answeredBy, targetId: current.askedBy,
         kind: "answer", status: "delivered", summary: input.answer, metadataJson: JSON.stringify({ attachmentIds: input.attachmentIds, references }) } });

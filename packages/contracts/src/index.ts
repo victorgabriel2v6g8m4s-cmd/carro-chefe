@@ -5,7 +5,7 @@ export const agentRunStatuses = ["queued", "running", "waiting_input", "waiting_
 
 export const scopedReferenceSchema = z.object({
   id: z.string().trim().min(1).max(240),
-  type: z.enum(["task", "decision", "risk", "procurement", "upload", "run", "file", "url"]),
+  type: z.enum(["task", "decision", "risk", "procurement", "upload", "run", "knowledge", "file", "url"]),
   label: z.string().trim().min(1).max(300),
   route: z.string().trim().max(2000).nullable().optional()
 });
@@ -90,6 +90,46 @@ export const agentDispatchSchema = z.object({
   dependencies: input.dependencies ?? input.dependences ?? [],
   onSuccess: input.onSuccess ?? input.onSucess ?? { unlock: [] }
 }));
+
+const knowledgeValueTypes = ["text", "address", "decision", "contact", "url", "number", "list"] as const;
+const knowledgeStatuses = ["informed", "pending_verification", "verified", "derived"] as const;
+
+export const createKnowledgeNodeSchema = z.object({
+  parentId: z.string().trim().min(1).nullable().default(null),
+  name: z.string().trim().min(2).max(160),
+  kind: z.enum(["branch", "fact"]).default("branch"),
+  value: z.string().trim().max(12_000).nullable().default(null),
+  valueType: z.enum(knowledgeValueTypes).default("text"),
+  verificationStatus: z.enum(knowledgeStatuses).default("informed"),
+  references: z.array(scopedReferenceSchema).max(30).default([]),
+  attachmentIds: z.array(z.string().trim().min(1)).max(12).default([]),
+  sourceRunId: z.string().trim().min(1).nullable().optional(),
+  sourceIntentId: z.string().trim().min(1).nullable().optional(),
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+}).superRefine((input, context) => {
+  if (input.kind === "fact" && !input.value) context.addIssue({ code: "custom", path: ["value"], message: "Informe o conteúdo deste fato." });
+});
+
+export const updateKnowledgeNodeSchema = z.object({
+  name: z.string().trim().min(2).max(160).optional(),
+  kind: z.enum(["branch", "fact"]).optional(),
+  value: z.string().trim().max(12_000).nullable().optional(),
+  valueType: z.enum(knowledgeValueTypes).optional(),
+  verificationStatus: z.enum(knowledgeStatuses).optional(),
+  references: z.array(scopedReferenceSchema).max(30).optional(),
+  attachmentIds: z.array(z.string().trim().min(1)).max(12).optional(),
+  expectedVersion: z.number().int().positive(),
+  actor: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+});
+
+export const captureKnowledgeSchema = z.object({
+  path: z.string().trim().min(2).max(500),
+  value: z.string().trim().min(1).max(12_000),
+  name: z.string().trim().min(2).max(160).optional(),
+  valueType: z.enum(knowledgeValueTypes).default("text"),
+  verificationStatus: z.enum(knowledgeStatuses).default("derived"),
+  actor: z.string().trim().min(2).max(80).optional()
+});
 
 export const usageSchema = z.object({
   source: z.enum(["runtime", "estimated", "manual", "unavailable"]),

@@ -51,7 +51,7 @@ Tokens iniciais para protótipos (validar antes de produção gráfica):
 - `parchment`: `#F3DFC0`
 - `ember`: `#B76317`
 
-Decisão pendente: a capa existente usa “Paulistinha”, enquanto a proposta usa “Carro‑Chefe”. Nenhum agente deve consolidar um termo ou reimprimir material até a Gestão decidir se “Paulistinha” é categoria, apelido, produto legado ou texto a remover.
+Decisão aprovada pelo proprietário em 13/08/2026: **Carro Chefe** (sem hífen) é a marca; **Carro‑Chefe** (com hífen) é a família/produto; **Paulistinha** deixa a comunicação pública e permanece apenas como alias legado interno. Na futura derivação da capa, substituir “Paulistinha” por “Lanches”, sem sobrescrever o original. Site e anúncios devem usar Carro Chefe para a marca e Carro‑Chefe para o produto.
 
 ## 5. Cardápio canônico inicial
 

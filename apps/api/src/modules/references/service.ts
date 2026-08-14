@@ -3,7 +3,7 @@ import { parseJson } from "../../lib/errors";
 
 export type ScopedReference = {
   id: string;
-  type: "task" | "decision" | "risk" | "procurement" | "upload" | "run" | "file" | "url";
+  type: "task" | "decision" | "risk" | "procurement" | "upload" | "run" | "knowledge" | "file" | "url";
   label: string;
   detail?: string;
   route?: string;
@@ -28,13 +28,14 @@ export async function getScopedReferences(taskId?: string, rawQuery = "", rawLim
   } }) : null;
 
   const ownerAgentId = task?.ownerAgentId;
-  const [tasks, decisions, risks, procurement, uploads, runs] = await Promise.all([
+  const [tasks, decisions, risks, procurement, uploads, runs, knowledge] = await Promise.all([
     task ? Promise.resolve([]) : prisma.task.findMany({ orderBy: { updatedAt: "desc" }, take: 60 }),
     prisma.decision.findMany({ where: ownerAgentId ? { ownerAgentId } : undefined, orderBy: { updatedAt: "desc" }, take: 40 }),
     prisma.risk.findMany({ where: ownerAgentId ? { ownerAgentId } : undefined, orderBy: { updatedAt: "desc" }, take: 40 }),
     prisma.procurementItem.findMany({ where: ownerAgentId ? { ownerAgentId } : undefined, orderBy: { updatedAt: "desc" }, take: 40 }),
     task ? Promise.resolve([]) : prisma.upload.findMany({ orderBy: { createdAt: "desc" }, take: 40 }),
-    task ? Promise.resolve([]) : prisma.agentRun.findMany({ orderBy: { createdAt: "desc" }, take: 30 })
+    task ? Promise.resolve([]) : prisma.agentRun.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
+    prisma.knowledgeNode.findMany({ where: { status: "active", kind: "fact" }, orderBy: { updatedAt: "desc" }, take: 60 })
   ]);
 
   const references: ScopedReference[] = [];
@@ -55,6 +56,8 @@ export async function getScopedReferences(taskId?: string, rawQuery = "", rawLim
   for (const item of procurement) references.push({ id: item.id, type: "procurement", label: item.item, detail: `Compra · ${item.status}`, route: "/gestao/compras" });
   references.push(...uploads.map(uploadReference));
   for (const run of runs) references.push({ id: run.id, type: "run", label: run.title, detail: `Execução · ${run.status}`, route: `/gestao/agentes/execucoes/${run.id}` });
+  for (const node of knowledge) references.push({ id: node.id, type: "knowledge", label: node.name,
+    detail: `${node.path} · ${node.value?.slice(0, 120) ?? "Ramo"}`, route: `/gestao/conhecimento?node=${encodeURIComponent(node.id)}` });
 
   return [...new Map(references.map((reference) => [`${reference.type}:${reference.id}`, reference])).values()]
     .filter((reference) => includesQuery(reference, query)).slice(0, limit);
@@ -64,7 +67,10 @@ export async function resolveReferenceContext(ids: string[], taskId?: string | n
   if (!ids.length) return [];
   const scoped = await getScopedReferences(taskId ?? undefined, "", 150);
   const project = taskId ? await getScopedReferences(undefined, "", 150) : [];
+  const knowledge = await prisma.knowledgeNode.findMany({ where: { id: { in: ids }, status: "active" } });
+  const knowledgeReferences: ScopedReference[] = knowledge.map((node) => ({ id: node.id, type: "knowledge", label: node.name,
+    detail: `${node.path} · ${node.value?.slice(0, 120) ?? "Ramo"}`, route: `/gestao/conhecimento?node=${encodeURIComponent(node.id)}` }));
   const selected = new Set(ids);
-  return [...new Map([...scoped, ...project].map((reference) => [`${reference.type}:${reference.id}`, reference])).values()]
+  return [...new Map([...scoped, ...project, ...knowledgeReferences].map((reference) => [`${reference.type}:${reference.id}`, reference])).values()]
     .filter((reference) => selected.has(reference.id)).map(({ id, type, label, detail, route }) => ({ id, type, label, detail, route }));
 }

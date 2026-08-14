@@ -10,6 +10,7 @@ import { RunOutcomeReport } from "../components/RunOutcomeReport";
 import { AgentInspector } from "../components/AgentInspector";
 import { QuestionResponseForm } from "../components/QuestionResponseForm";
 import { AnswerContext } from "../components/AnswerContext";
+import { ExecutionShortcuts } from "../components/ExecutionShortcuts";
 
 export function AgentRunDetail() {
   const { runId = "" } = useParams();
@@ -35,6 +36,7 @@ export function AgentRunDetail() {
     <section className="task-hero run-hero"><div><span className="eyebrow">{run.agent?.name} · {run.provider}</span><h2>{run.title}</h2><div className="task-meta"><StatusBadge status={run.status} />{run.taskId ? <span>Tarefa <Link to={`/gestao/tarefas/${run.taskId}`}>{run.taskId}</Link></span> : <span>Conversa com Gestão</span>}<span>Atualizado {formatDate(run.updatedAt)}</span></div></div></section>
     <section className="objective"><small>Objetivo da execução</small><strong>{run.objective}</strong>{run.currentStep && <span>Passo atual: {run.currentStep}</span>}</section>
     {run.report && <div className={`final-output final-output--${run.agentId === "AG-GESTAO" ? "management" : "agent"}`}><span className="final-output-label">FINAL · {run.agent?.name}</span><RunOutcomeReport report={run.report} /></div>}
+    <ExecutionShortcuts shortcuts={run.shortcuts ?? []} />
     {pending.map((question: any) => <section className="panel question-card question-card--pending" key={question.id}><span className="eyebrow">O agente precisa de você para continuar</span><h3>{question.question}</h3><p>{question.context}</p>{question.recommendation && <div className="recommendation"><small>Recomendação</small><strong>{question.recommendation}</strong></div>}<QuestionResponseForm questionId={question.id} taskId={question.taskId} suggestions={question.options ?? []} onAnswered={async () => { await Promise.all([load(), refresh()]); }} /></section>)}
     {run.questions.some((question: any) => question.status !== "pending" && (question.uploads?.length || question.answerReferences?.length)) && <section className="panel"><span className="eyebrow">Contexto acrescentado pelo proprietário</span>{run.questions.filter((question: any) => question.status !== "pending").map((question: any) => <details key={question.id} className="answered-context"><summary>{question.question}</summary><p>{question.answer}</p><AnswerContext question={question} /></details>)}</section>}
     {run.intent?.uploads?.length > 0 && <section className="run-attachments"><span>Anexos entregues ao agente</span>{run.intent.uploads.map((upload: any) => <Link key={upload.id} to={`/gestao/visualizador?uploadId=${encodeURIComponent(upload.id)}`}><strong>{upload.originalName}</strong><small>{Math.ceil(upload.sizeBytes / 1024)} KB</small></Link>)}</section>}

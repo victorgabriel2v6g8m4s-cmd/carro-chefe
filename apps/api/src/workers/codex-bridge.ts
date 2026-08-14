@@ -45,7 +45,9 @@ async function prepareArtifactHelpers(workingDirectory: string, runId: string) {
   await Promise.all([
     fs.writeFile(path.join(workingDirectory, "send.cmd"), `@echo off\r\nnode "${helper}" send ${runId} %*\r\n`, "utf8"),
     fs.writeFile(path.join(workingDirectory, "ask.cmd"), `@echo off\r\nnode "${helper}" question ${runId} %*\r\n`, "utf8"),
-    fs.writeFile(path.join(workingDirectory, "artifact.cmd"), `@echo off\r\nnode "${helper}" artifact ${runId} %*\r\n`, "utf8")
+    fs.writeFile(path.join(workingDirectory, "artifact.cmd"), `@echo off\r\nnode "${helper}" artifact ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "remember.cmd"), `@echo off\r\nnode "${helper}" remember ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "recall.cmd"), `@echo off\r\nnode "${helper}" recall ${runId} %*\r\n`, "utf8")
   ]);
 }
 
@@ -101,7 +103,9 @@ async function handleRun(runId: string) {
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
   const ownerAnswers = context?.ownerAnswers ?? [];
-  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, { mode: workspaceMode, workingDirectory, projectRoot: config.projectRoot });
+  const knowledgeQuery = `${run.title}\n${run.objective}\n${context?.prompt ?? ""}`.slice(0, 3500);
+  const knowledge = await api<any[]>(`/knowledge/context?limit=12&query=${encodeURIComponent(knowledgeQuery)}`).catch(() => []);
+  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, { mode: workspaceMode, workingDirectory, projectRoot: config.projectRoot }, knowledge);
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";

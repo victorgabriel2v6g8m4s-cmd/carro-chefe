@@ -12,8 +12,8 @@ function loadReferences(taskId?: string) {
   return referenceCache.get(key)!;
 }
 
-export function ReferenceComposer({ value, onChange, references, onReferencesChange, taskId, placeholder, disabled = false }:
-  { value: string; onChange: (value: string) => void; references: ScopedReference[]; onReferencesChange: (items: ScopedReference[]) => void; taskId?: string; placeholder?: string; disabled?: boolean }) {
+export function ReferenceComposer({ value, onChange, references, onReferencesChange, taskId, placeholder, disabled = false, required = true }:
+  { value: string; onChange: (value: string) => void; references: ScopedReference[]; onReferencesChange: (items: ScopedReference[]) => void; taskId?: string; placeholder?: string; disabled?: boolean; required?: boolean }) {
   const textarea = useRef<HTMLTextAreaElement>(null);
   const [available, setAvailable] = useState<ScopedReference[]>([]);
   const [mention, setMention] = useState<{ start: number; end: number; query: string } | null>(null);
@@ -47,9 +47,9 @@ export function ReferenceComposer({ value, onChange, references, onReferencesCha
 
   const suggestions = mention ? available.filter((item) => `${item.id} ${item.label}`.toLocaleLowerCase("pt-BR").includes(mention.query)).slice(0, 8) : [];
   return <div className="reference-composer">
-    <textarea ref={textarea} required minLength={2} disabled={disabled} value={value} onFocus={() => void ensureLoaded()} onChange={change} onKeyUp={(event) => updateMention(event.currentTarget.value, event.currentTarget.selectionStart)} placeholder={placeholder} />
+    <textarea ref={textarea} required={required} minLength={required ? 2 : undefined} disabled={disabled} value={value} onFocus={() => void ensureLoaded()} onChange={change} onKeyUp={(event) => updateMention(event.currentTarget.value, event.currentTarget.selectionStart)} placeholder={placeholder} />
     {mention && <div className="mention-menu" role="listbox" aria-label="Referências disponíveis">{suggestions.length ? suggestions.map((reference) => <button type="button" role="option" key={`${reference.type}-${reference.id}`} onMouseDown={(event) => event.preventDefault()} onClick={() => select(reference)}><small>@{reference.id} · {reference.type}</small><strong>{reference.label}</strong>{reference.detail && <span>{reference.detail}</span>}</button>) : <p>Nenhuma referência corresponde a “{mention.query}”.</p>}</div>}
-    <small className="composer-hint">Digite <b>@</b> para citar tarefas, decisões, riscos, compras, execuções e arquivos do escopo.</small>
+    <small className="composer-hint">Digite <b>@</b> para citar tarefas, decisões, memória, execuções e arquivos do escopo.</small>
     {references.length > 0 && <div className="selected-references">{references.map((reference) => <span key={`${reference.type}-${reference.id}`}><b>@{reference.id}</b>{reference.route && <Link to={reference.route}>abrir</Link>}<button type="button" aria-label={`Remover referência ${reference.id}`} onClick={() => onReferencesChange(references.filter((item) => item !== reference))}>×</button></span>)}</div>}
   </div>;
 }

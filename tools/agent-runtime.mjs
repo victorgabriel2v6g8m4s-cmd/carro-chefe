@@ -12,16 +12,16 @@ function list(name) {
   return (flag(name, "") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
 }
 
-async function request(route, body) {
-  const response = await fetch(`${base}${route}`, { method: "POST", headers: { "Content-Type": "application/json; charset=utf-8",
-    ...(process.env.AGENT_API_KEY ? { "X-Agent-Key": process.env.AGENT_API_KEY } : {}) }, body: JSON.stringify(body) });
+async function request(route, body, method = "POST") {
+  const response = await fetch(`${base}${route}`, { method, headers: { ...(body ? { "Content-Type": "application/json; charset=utf-8" } : {}),
+    ...(process.env.AGENT_API_KEY ? { "X-Agent-Key": process.env.AGENT_API_KEY } : {}) }, body: body ? JSON.stringify(body) : undefined });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error ?? `HTTP ${response.status}`);
   return data;
 }
 
 function usage() {
-  console.error("Uso: agent-runtime.mjs send|question|artifact <runId> ...");
+  console.error("Uso: agent-runtime.mjs send|question|artifact|remember|recall <runId> ...");
   process.exit(2);
 }
 
@@ -44,8 +44,17 @@ try {
     const [artifactPath] = args;
     if (!artifactPath) usage();
     result = await request(`/agent-runs/${encodeURIComponent(runId)}/artifacts`, { path: artifactPath, title: flag("--title") ?? undefined });
+  } else if (action === "remember") {
+    const [knowledgePath, value] = args;
+    if (!knowledgePath || !value) usage();
+    result = await request(`/agent-runs/${encodeURIComponent(runId)}/knowledge`, { path: knowledgePath, value,
+      name: flag("--name") ?? undefined, valueType: flag("--type", "text"), verificationStatus: args.includes("--verified") ? "verified" : "derived" });
+  } else if (action === "recall") {
+    const [knowledgePath] = args;
+    if (!knowledgePath) usage();
+    result = await request(`/knowledge/resolve?path=${encodeURIComponent(knowledgePath)}`, null, "GET");
   } else usage();
-  console.log(JSON.stringify({ ok: true, id: result.id, status: result.status, route: result.viewerRoute ?? result.contextRoute }));
+  console.log(JSON.stringify({ ok: true, id: result.id, path: result.path, value: result.value, status: result.status, route: result.route ?? result.viewerRoute ?? result.contextRoute }));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
