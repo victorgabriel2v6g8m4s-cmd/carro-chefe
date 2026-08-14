@@ -74,10 +74,11 @@ async function run() {
       const development = agent.id === "AG-DEV";
       const name = development ? "Development" : agent.name;
       const mission = development ? "Construir software, integrações, testes, deploy e observabilidade com escopo técnico explícito." : agent.mission;
+      const workspaceMode = development ? "project" : "artifacts";
       await tx.agentDefinition.upsert({
         where: { id: agent.id },
-        update: { name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true },
-        create: { id: agent.id, projectId, name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true }
+        update: { name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true, workspaceMode },
+        create: { id: agent.id, projectId, name, role: agent.id.replace("AG-", "").toLowerCase(), mission, order, reasoningEffort: "medium", browserEnabled: true, workspaceMode }
       });
     }
     for (const task of plan.tasks) {

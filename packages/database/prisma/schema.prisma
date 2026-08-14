@@ -64,11 +64,13 @@ model AgentDefinition {
   model       String?
   reasoningEffort String @default("medium")
   browserEnabled Boolean @default(false)
+  workspaceMode String   @default("read_only")
   enabled     Boolean  @default(true)
   order       Int      @default(0)
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks       Task[]
   runs        AgentRun[]
+  dispatches AgentDispatch[]
 }
 
 model Task {
@@ -262,9 +264,11 @@ model UiState {
 
 model AgentRun {
   id               String   @id @default(cuid())
-  taskId           String
+  taskId           String?
   agentId          String
   intentId         String?
+  managementConversationId String?
+  parentRunId      String?
   provider         String   @default("manual")
   externalThreadId String?
   title            String
@@ -282,9 +286,12 @@ model AgentRun {
   finishedAt       DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task             Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   agent            AgentDefinition @relation(fields: [agentId], references: [id])
   intent           OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
+  managementConversation ManagementConversation? @relation(fields: [managementConversationId], references: [id], onDelete: SetNull)
+  parentRun        AgentRun? @relation("RunDispatchTree", fields: [parentRunId], references: [id], onDelete: SetNull)
+  childRuns        AgentRun[] @relation("RunDispatchTree")
   steps            AgentStep[]
   messages         AgentMessage[]
   questions        AgentQuestion[]
@@ -295,10 +302,68 @@ model AgentRun {
   uploads          Upload[]
   notification     Notification?
   browserNavigations BrowserNavigation[]
+  managementMessages ManagementMessage[]
+  dispatchesSent     AgentDispatch[] @relation("DispatchSource")
+  dispatchResults    AgentDispatch[] @relation("DispatchResult")
 
   @@index([status, createdAt])
   @@index([intentId, createdAt])
+  @@index([managementConversationId, createdAt])
+  @@index([parentRunId, createdAt])
   @@index([purpose, status, createdAt])
+}
+
+model ManagementConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  ManagementMessage[]
+  runs      AgentRun[]
+
+  @@index([userId, status, updatedAt])
+}
+
+model ManagementMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  runId          String?
+  sender         String
+  content        String
+  referencesJson String   @default("[]")
+  createdAt      DateTime @default(now())
+  conversation   ManagementConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  run            AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  uploads        Upload[]
+
+  @@index([conversationId, createdAt])
+  @@index([runId, createdAt])
+}
+
+model AgentDispatch {
+  id                   String   @id @default(cuid())
+  sourceRunId          String
+  targetAgentId        String
+  resultRunId          String?
+  message              String
+  dataRef              String?
+  contextJson          String   @default("{}")
+  isRequiredToProceed  Boolean  @default(false)
+  dependenciesJson     String   @default("[]")
+  onSuccessJson        String   @default("{}")
+  status               String   @default("buffered")
+  createdAt            DateTime @default(now())
+  dispatchedAt         DateTime?
+  completedAt          DateTime?
+  sourceRun            AgentRun @relation("DispatchSource", fields: [sourceRunId], references: [id], onDelete: Cascade)
+  targetAgent          AgentDefinition @relation(fields: [targetAgentId], references: [id])
+  resultRun            AgentRun? @relation("DispatchResult", fields: [resultRunId], references: [id], onDelete: SetNull)
+
+  @@index([sourceRunId, status, createdAt])
+  @@index([resultRunId])
+  @@index([targetAgentId, status, createdAt])
 }
 
 model OperationalIntent {
@@ -399,12 +464,14 @@ model AgentQuestion {
   blocking      Boolean  @default(true)
   status        String   @default("pending")
   answer        String?
+  answerReferencesJson String @default("[]")
   answeredBy    String?
   answeredAt    DateTime?
   acknowledgedAt DateTime?
   createdAt     DateTime @default(now())
   run           AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploads       Upload[]
 
   @@index([status, createdAt])
 }
@@ -484,6 +551,8 @@ model Upload {
   runId        String?
   intentId     String?
   decisionId   String?
+  questionId   String?
+  managementMessageId String?
   actor        String
   originalName String
   storageName  String   @unique
@@ -495,11 +564,15 @@ model Upload {
   run          AgentRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
   intent       OperationalIntent? @relation(fields: [intentId], references: [id], onDelete: SetNull)
   decision     Decision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  question     AgentQuestion? @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  managementMessage ManagementMessage? @relation(fields: [managementMessageId], references: [id], onDelete: SetNull)
 
   @@index([taskId, createdAt])
   @@index([runId, createdAt])
   @@index([intentId, createdAt])
   @@index([decisionId, createdAt])
+  @@index([questionId, createdAt])
+  @@index([managementMessageId, createdAt])
 }
 
 model BrowserNavigation {

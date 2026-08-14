@@ -44,13 +44,13 @@ afterAll(async () => {
 describe("Central Operacional API", () => {
   it("entrega ao agente um contrato compacto e preserva relatórios explícitos", () => {
     const contract = buildRuntimeContract("http://127.0.0.1:4173/api/v1", "RUN-001", "AG-DEV");
-    expect(contract).toContain('/steps com {"order":1');
-    expect(contract).toContain("Não existe campo evidence no passo");
-    expect(contract).toContain("UTF8.GetBytes");
-    expect(contract).toContain("/artifacts");
-    expect(contract).toContain("não envie usage");
+    expect(contract).toContain("node tools/agent-runtime.mjs send RUN-001");
+    expect(contract).toContain("Não monte JSON");
+    expect(contract).toContain("artifact RUN-001");
+    expect(contract).toContain("registrados automaticamente pelo bridge");
     expect(shouldWriteFallbackReport({})).toBe(true);
     expect(shouldWriteFallbackReport({ report: { derived: true } })).toBe(true);
+    expect(shouldWriteFallbackReport({ report: { derived: false, generatedBy: "BRIDGE-CODEX" } })).toBe(true);
     expect(shouldWriteFallbackReport({ report: { derived: false } })).toBe(false);
   });
 
@@ -100,9 +100,15 @@ describe("Central Operacional API", () => {
     expect(runWithLogs.json().logs).toEqual(expect.arrayContaining([expect.objectContaining({ sequence: 1, channel: "terminal", content: "5 testes aprovados\n" })]));
     const asked = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/questions`, payload: { askedBy: "AG-GESTAO", question: "Qual alternativa devemos usar?", context: "A escolha altera o procedimento de validação.", recommendation: "Usar a alternativa A.", options: ["Alternativa A", "Alternativa B"], blocking: true } });
     expect(asked.statusCode).toBe(201);
-    const answer = await app.inject({ method: "POST", url: `/api/v1/agent-questions/${asked.json().id}/answer`, payload: { answer: "Alternativa A, conforme recomendado.", answeredBy: "proprietario" } });
+    const boundary = `----carrochefe-answer-${Date.now()}`;
+    const body = Buffer.from([`--${boundary}\r\nContent-Disposition: form-data; name="purpose"\r\n\r\nquestion-answer-draft\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="actor"\r\n\r\nproprietario\r\n`, `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="decisao.txt"\r\nContent-Type: text/plain\r\n\r\nContexto complementar.\r\n`, `--${boundary}--\r\n`].join(""));
+    const draft = await app.inject({ method: "POST", url: "/api/v1/uploads", payload: body, headers: { "content-type": `multipart/form-data; boundary=${boundary}`, "content-length": String(body.length) } });
+    expect(draft.statusCode, draft.body).toBe(201); uploadedStorageNames.push(draft.json().storageName);
+    const references = await app.inject({ method: "GET", url: "/api/v1/references?taskId=TASK-GES-001&limit=20" });
+    const selectedReference = references.json().find((item: any) => item.id === "TASK-GES-001");
+    const answer = await app.inject({ method: "POST", url: `/api/v1/agent-questions/${asked.json().id}/answer`, payload: { answer: "Alternativa A, conforme recomendado. @TASK-GES-001", answeredBy: "proprietario", attachmentIds: [draft.json().id], references: [selectedReference] } });
     expect(answer.statusCode).toBe(200);
-    expect(answer.json()).toMatchObject({ status: "answered", answeredBy: "proprietario" });
+    expect(answer.json()).toMatchObject({ status: "answered", answeredBy: "proprietario", answerReferences: [expect.objectContaining({ id: "TASK-GES-001" })], uploads: [expect.objectContaining({ id: draft.json().id })] });
     const claimed = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/claim`, payload: {} });
     expect(claimed.statusCode).toBe(200);
     const acknowledged = await app.inject({ method: "POST", url: `/api/v1/agent-questions/${asked.json().id}/acknowledge`, payload: {} });
@@ -149,6 +155,38 @@ describe("Central Operacional API", () => {
     const detail = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${run.id}` });
     expect(detail.json().report).toMatchObject({ generatedBy: "AG-DEV" });
     expect(detail.json().report).not.toHaveProperty("derived");
+  });
+
+  it("mantém conversa com a Gestão fora do roteiro de tarefas", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/management-conversations", payload: { userId: "owner", title: "Orientação estratégica" } });
+    expect(created.statusCode, created.body).toBe(201);
+    const conversation = created.json();
+    const sent = await app.inject({ method: "POST", url: `/api/v1/management-conversations/${conversation.id}/messages`, payload: { content: "Avalie a prioridade atual e consulte especialistas somente se necessário.", attachmentIds: [], references: [], submittedBy: "PROPRIETARIO" } });
+    expect(sent.statusCode, sent.body).toBe(201);
+    expect(sent.json().run).toMatchObject({ purpose: "management_chat", taskId: null, agentId: "AG-GESTAO", provider: "codex-local" });
+    const response = await app.inject({ method: "POST", url: `/api/v1/management-conversations/${conversation.id}/runtime-responses`, payload: { runId: sent.json().run.id, sender: "AG-GESTAO", content: "Prioridade revisada sem criar tarefa adicional." } });
+    expect(response.statusCode, response.body).toBe(201);
+    const detail = await app.inject({ method: "GET", url: `/api/v1/management-conversations/${conversation.id}` });
+    expect(detail.json().messages.map((item: any) => item.sender)).toEqual(["PROPRIETARIO", "AG-GESTAO"]);
+  });
+
+  it("acumula consultas e cria uma única execução por agente de destino", async () => {
+    const created = await app.inject({ method: "POST", url: "/api/v1/agent-runs", payload: { taskId: "TASK-GES-001", agentId: "AG-GESTAO", title: "Coordenar parecer de marketing", objective: "Consolidar duas dúvidas de marketing em um único parecer.", provider: "manual", requestedBy: "teste-ci" } });
+    const source = created.json();
+    const first = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${source.id}/send`, payload: { to: "AG-MARKETING", msg: "Validar o público prioritário.", data: "task/context/marketing/1", isRequiredToProceed: false, dependencies: ["TASK-GES-001"], onSuccess: { unlock: [] } } });
+    const second = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${source.id}/send`, payload: { to: "AG-MARKETING", msg: "Revisar o canal inicial.", isRequiredToProceed: true, dependences: ["TASK-GES-001"], onSucess: { unlock: [] } } });
+    expect(first.statusCode, first.body).toBe(201); expect(second.statusCode, second.body).toBe(201);
+    const flushed = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${source.id}/dispatches/flush`, payload: {} });
+    expect(flushed.json()).toMatchObject({ requiredPending: true });
+    expect(flushed.json().createdRuns).toHaveLength(1);
+    const dispatches = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${source.id}/dispatches` });
+    expect(new Set(dispatches.json().map((item: any) => item.resultRunId)).size).toBe(1);
+    const childId = flushed.json().createdRuns[0];
+    await app.inject({ method: "POST", url: `/api/v1/agent-runs/${childId}/report`, payload: { outcome: "succeeded", summary: "Parecer consolidado entregue.", successes: ["Duas dúvidas respondidas em lote."], failures: [], recommendations: [], evidence: [], generatedBy: "AG-MARKETING" } });
+    const completed = await app.inject({ method: "PATCH", url: `/api/v1/agent-runs/${childId}`, payload: { status: "succeeded", currentStep: "Parecer concluído" } });
+    expect(completed.statusCode, completed.body).toBe(200);
+    const resumed = await app.inject({ method: "GET", url: `/api/v1/agent-runs/${source.id}` });
+    expect(resumed.json()).toMatchObject({ status: "queued", currentStep: expect.stringContaining("retomando") });
   });
 
   it("repara registros legados e rejeita nova perda de codificação", async () => {
@@ -266,7 +304,7 @@ describe("Central Operacional API", () => {
     expect(registered.statusCode, registered.body).toBe(201);
     uploadedStorageNames.push(registered.json().storageName);
     expect(registered.json()).toMatchObject({ runId: run.id, intentId: null, mimeType: "application/pdf", viewerRoute: expect.stringContaining("/gestao/visualizador?uploadId=") });
-    const blocked = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/artifacts`, payload: { path: "README.md", title: "Arquivo fora da saída" } });
+    const blocked = await app.inject({ method: "POST", url: `/api/v1/agent-runs/${run.id}/artifacts`, payload: { path: path.join(root, "README.md"), title: "Arquivo fora da saída" } });
     expect(blocked.statusCode).toBe(403);
     rmSync(artifactPath, { force: true });
   });

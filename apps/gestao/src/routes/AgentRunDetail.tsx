@@ -1,19 +1,20 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatDate } from "@carro-chefe/ui";
-import { api, json } from "../api/client";
+import { api } from "../api/client";
 import { useData } from "../app/data";
 import { AgentLiveConsole } from "../components/AgentLiveConsole";
 import { StatusBadge } from "../components/StatusBadge";
 import { AgentFlowMap } from "../components/AgentFlowMap";
 import { RunOutcomeReport } from "../components/RunOutcomeReport";
 import { AgentInspector } from "../components/AgentInspector";
+import { QuestionResponseForm } from "../components/QuestionResponseForm";
+import { AnswerContext } from "../components/AnswerContext";
 
 export function AgentRunDetail() {
   const { runId = "" } = useParams();
   const { data, refresh } = useData();
   const [run, setRun] = useState<any>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [usageSummary, setUsageSummary] = useState<any>(null);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const load = () => Promise.all([api<any>(`/api/v1/agent-runs/${runId}`).then(setRun), api<any>("/api/v1/usage/summary").then(setUsageSummary)]);
@@ -25,17 +26,20 @@ export function AgentRunDetail() {
     return () => events.close();
   }, [runId]);
   const totals = useMemo(() => (run?.usage ?? []).reduce((sum: any, item: any) => ({ totalTokens: sum.totalTokens + (item.totalTokens ?? 0), durationMs: sum.durationMs + (item.durationMs ?? 0) }), { totalTokens: 0, durationMs: 0 }), [run]);
-  async function answer(event: FormEvent, id: string) { event.preventDefault(); await api(`/api/v1/agent-questions/${id}/answer`, json("POST", { answer: answers[id], answeredBy: "proprietario" })); await Promise.all([load(), refresh()]); }
   if (!run) return <section className="panel loading">Abrindo execução…</section>;
   const pending = run.questions.filter((question: any) => question.status === "pending");
+  const ownerUploads = (run.uploads ?? []).filter((upload: any) => ["proprietario", "PROPRIETARIO", "owner"].includes(upload.actor));
+  const agentUploads = (run.uploads ?? []).filter((upload: any) => !["proprietario", "PROPRIETARIO", "owner"].includes(upload.actor));
   return <div className="page-stack">
     <div className="breadcrumbs"><Link to="/gestao/agentes">Agentes</Link><span>/</span><span>{run.id}</span></div>
-    <section className="task-hero run-hero"><div><span className="eyebrow">{run.agent?.name} · {run.provider}</span><h2>{run.title}</h2><div className="task-meta"><StatusBadge status={run.status} /><span>Tarefa <Link to={`/gestao/tarefas/${run.taskId}`}>{run.taskId}</Link></span><span>Atualizado {formatDate(run.updatedAt)}</span></div></div></section>
+    <section className="task-hero run-hero"><div><span className="eyebrow">{run.agent?.name} · {run.provider}</span><h2>{run.title}</h2><div className="task-meta"><StatusBadge status={run.status} />{run.taskId ? <span>Tarefa <Link to={`/gestao/tarefas/${run.taskId}`}>{run.taskId}</Link></span> : <span>Conversa com Gestão</span>}<span>Atualizado {formatDate(run.updatedAt)}</span></div></div></section>
     <section className="objective"><small>Objetivo da execução</small><strong>{run.objective}</strong>{run.currentStep && <span>Passo atual: {run.currentStep}</span>}</section>
-    {pending.map((question: any) => <section className="panel question-card question-card--pending" key={question.id}><span className="eyebrow">O agente precisa de você para continuar</span><h3>{question.question}</h3><p>{question.context}</p>{question.recommendation && <div className="recommendation"><small>Recomendação</small><strong>{question.recommendation}</strong></div>}<form className="answer-form" onSubmit={(event) => answer(event, question.id)}><label><span>Sua resposta</span><textarea required value={answers[question.id] ?? ""} onChange={(event) => setAnswers((current) => ({ ...current, [question.id]: event.target.value }))} /></label><button className="button button--gold">Responder e devolver à fila</button></form></section>)}
+    {run.report && <div className={`final-output final-output--${run.agentId === "AG-GESTAO" ? "management" : "agent"}`}><span className="final-output-label">FINAL · {run.agent?.name}</span><RunOutcomeReport report={run.report} /></div>}
+    {pending.map((question: any) => <section className="panel question-card question-card--pending" key={question.id}><span className="eyebrow">O agente precisa de você para continuar</span><h3>{question.question}</h3><p>{question.context}</p>{question.recommendation && <div className="recommendation"><small>Recomendação</small><strong>{question.recommendation}</strong></div>}<QuestionResponseForm questionId={question.id} taskId={question.taskId} suggestions={question.options ?? []} onAnswered={async () => { await Promise.all([load(), refresh()]); }} /></section>)}
+    {run.questions.some((question: any) => question.status !== "pending" && (question.uploads?.length || question.answerReferences?.length)) && <section className="panel"><span className="eyebrow">Contexto acrescentado pelo proprietário</span>{run.questions.filter((question: any) => question.status !== "pending").map((question: any) => <details key={question.id} className="answered-context"><summary>{question.question}</summary><p>{question.answer}</p><AnswerContext question={question} /></details>)}</section>}
     {run.intent?.uploads?.length > 0 && <section className="run-attachments"><span>Anexos entregues ao agente</span>{run.intent.uploads.map((upload: any) => <Link key={upload.id} to={`/gestao/visualizador?uploadId=${encodeURIComponent(upload.id)}`}><strong>{upload.originalName}</strong><small>{Math.ceil(upload.sizeBytes / 1024)} KB</small></Link>)}</section>}
-    {run.uploads?.length > 0 && <section className="run-attachments"><span>Artefatos produzidos</span>{run.uploads.map((upload: any) => <Link key={upload.id} to={`/gestao/visualizador?uploadId=${encodeURIComponent(upload.id)}`}><strong>{upload.originalName}</strong><small>{Math.ceil(upload.sizeBytes / 1024)} KB · {upload.actor}</small></Link>)}</section>}
-    <RunOutcomeReport report={run.report} />
+    {ownerUploads.length > 0 && <section className="run-attachments"><span>Anexos acrescentados pelo proprietário</span>{ownerUploads.map((upload: any) => <Link key={upload.id} to={`/gestao/visualizador?uploadId=${encodeURIComponent(upload.id)}`}><strong>{upload.originalName}</strong><small>{Math.ceil(upload.sizeBytes / 1024)} KB</small></Link>)}</section>}
+    {agentUploads.length > 0 && <section className="run-attachments"><span>Artefatos produzidos</span>{agentUploads.map((upload: any) => <Link key={upload.id} to={`/gestao/visualizador?uploadId=${encodeURIComponent(upload.id)}`}><strong>{upload.originalName}</strong><small>{Math.ceil(upload.sizeBytes / 1024)} KB · {upload.actor}</small></Link>)}</section>}
     <AgentFlowMap agents={data?.project?.agents ?? [run.agent]} communications={run.communications ?? []} compact onAgentClick={setSelectedAgent} />
     <AgentLiveConsole logs={run.logs ?? []} live={["queued", "running", "waiting_input"].includes(run.status)} />
     <div className="run-layout">

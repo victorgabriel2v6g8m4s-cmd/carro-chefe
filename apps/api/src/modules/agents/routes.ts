@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@carro-chefe/database";
-import { agentCommunicationSchema, agentLogSchema, agentQuestionSchema, agentReportSchema, agentStepSchema, answerQuestionSchema, createRunSchema, usageSchema } from "@carro-chefe/contracts";
+import { agentCommunicationSchema, agentLogSchema, agentReportSchema, agentStepSchema, createRunSchema, usageSchema } from "@carro-chefe/contracts";
 import { z } from "zod";
 import { ApiError, parseJson } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
@@ -12,13 +12,17 @@ import { presentRun, requireRun, runInclude } from "./run-presenter";
 import { agentStatsRoutes } from "./stats-routes";
 import { runQueueRoutes } from "./run-queue-routes";
 import { repairMojibake } from "../../lib/text";
+import { questionRoutes } from "./question-routes";
+import { dispatchRoutes } from "./dispatch-routes";
 
 const messageSchema = z.object({ sender: z.string().min(2).max(80), kind: z.enum(["update", "question", "answer", "decision", "error"]), content: z.string().min(1).max(8000) });
-const statusSchema = z.object({ status: z.enum(["queued", "running", "waiting_input", "succeeded", "failed", "cancelled"]), currentStep: z.string().max(500).nullable().optional(), externalThreadId: z.string().max(200).optional() });
+const statusSchema = z.object({ status: z.enum(["queued", "running", "waiting_input", "waiting_dependency", "succeeded", "failed", "cancelled"]), currentStep: z.string().max(500).nullable().optional(), externalThreadId: z.string().max(200).optional() });
 
 export async function agentRoutes(app: FastifyInstance) {
   await agentStatsRoutes(app);
   await runQueueRoutes(app);
+  await questionRoutes(app);
+  await dispatchRoutes(app);
   app.get("/api/v1/agent-runs", async (request) => {
     const query = request.query as { taskId?: string; status?: string };
     const runs = await prisma.agentRun.findMany({ where: { taskId: query.taskId || undefined, status: query.status || undefined }, include: runInclude, orderBy: { createdAt: "desc" } });
@@ -26,17 +30,17 @@ export async function agentRoutes(app: FastifyInstance) {
   });
   app.post("/api/v1/agent-runs", async (request, reply) => {
     const input = createRunSchema.parse(request.body);
-    const [task, agent] = await Promise.all([prisma.task.findUnique({ where: { id: input.taskId } }), prisma.agentDefinition.findUnique({ where: { id: input.agentId } })]);
-    if (!task || !agent) throw new ApiError(400, "Tarefa ou agente inexistente.");
+    const [task, agent] = await Promise.all([input.taskId ? prisma.task.findUnique({ where: { id: input.taskId } }) : null, prisma.agentDefinition.findUnique({ where: { id: input.agentId } })]);
+    if ((!task && input.purpose !== "management_chat") || !agent) throw new ApiError(400, "Tarefa ou agente inexistente.");
     const scope = assertAgentScope(agent.id, `${input.title}\n${input.objective}`);
     if (!scope.allowed) throw new ApiError(422, scope.message!);
-    const complexity = input.complexity ?? assessComplexity(`${input.title}\n${input.objective}\n${task.acceptance}`, task.impact, task.urgency);
+    const complexity = input.complexity ?? assessComplexity(`${input.title}\n${input.objective}\n${task?.acceptance ?? ""}`, task?.impact, task?.urgency);
     const profile = selectRuntimeProfile(agent.id, complexity, agent.model);
     const result = await prisma.$transaction(async (tx) => {
       const run = await tx.agentRun.create({ data: { ...input, complexity, selectedModel: profile.model, selectedReasoningEffort: profile.effort, routingReason: profile.reason } });
       await tx.agentMessage.create({ data: { runId: run.id, sender: input.requestedBy, kind: "update", content: `Execução criada: ${input.objective}` } });
       await tx.agentCommunication.create({ data: { runId: run.id, sourceId: input.requestedBy, targetId: input.agentId, kind: "delegation", summary: input.title } });
-      await tx.auditEvent.create({ data: { taskId: task.id, actor: input.requestedBy, action: "agent_run_created", entityType: "agent_run", entityId: run.id, summary: input.title } });
+      await tx.auditEvent.create({ data: { taskId: task?.id, actor: input.requestedBy, action: "agent_run_created", entityType: "agent_run", entityId: run.id, summary: input.title } });
       const event = await appendEvent(tx, "agent.run.created", "agent_run", run.id, run);
       return { run, event };
     });
@@ -51,6 +55,7 @@ export async function agentRoutes(app: FastifyInstance) {
     const claimed = await prisma.agentRun.updateMany({ where: { id: runId, status: "queued" }, data: { status: "running", startedAt: now, lastHeartbeatAt: now } });
     if (!claimed.count) throw new ApiError(409, "A execução já foi assumida ou não está na fila.");
     const run = await requireRun(runId);
+    if (run.purpose === "consultation") await prisma.agentDispatch.updateMany({ where: { resultRunId: runId, status: "dispatched" }, data: { status: "running" } });
     const event = await prisma.outboxEvent.create({ data: { topic: "agent.run.claimed", aggregateType: "agent_run", aggregateId: runId, payloadJson: JSON.stringify(run) } });
     broadcastEvent(event);
     const intentEvent = await markIntentRunning(run.intentId);
@@ -148,60 +153,6 @@ export async function agentRoutes(app: FastifyInstance) {
     });
     broadcastEvent(result.event);
     return reply.code(201).send(result.log);
-  });
-  app.post("/api/v1/agent-runs/:runId/questions", async (request, reply) => {
-    const { runId } = request.params as { runId: string };
-    const run = await requireRun(runId);
-    const input = agentQuestionSchema.parse(request.body);
-    const result = await prisma.$transaction(async (tx) => {
-      const question = await tx.agentQuestion.create({ data: { runId, taskId: run.taskId, askedBy: input.askedBy,
-        question: input.question, context: input.context, recommendation: input.recommendation,
-        optionsJson: JSON.stringify(input.options), blocking: input.blocking } });
-      if (input.blocking) await tx.agentRun.update({ where: { id: runId }, data: { status: "waiting_input", lastHeartbeatAt: new Date() } });
-      await tx.agentMessage.create({ data: { runId, sender: input.askedBy, kind: "question", content: input.question } });
-      await tx.agentCommunication.create({ data: { runId, intentId: run.intentId, sourceId: input.askedBy, targetId: "PROPRIETARIO", kind: "question", status: "delivered", summary: input.question } });
-      await tx.notification.create({ data: { userId: "owner", type: "question", title: "Um agente precisa de você", message: input.question, route: `/gestao/agentes/execucoes/${runId}` } });
-      const event = await appendEvent(tx, "agent.question.asked", "agent_run", runId, question);
-      return { question, event };
-    });
-    broadcastEvent(result.event);
-    return reply.code(201).send({ ...result.question, options: input.options });
-  });
-  app.get("/api/v1/agent-questions", async (request) => {
-    const query = request.query as { status?: string; taskId?: string };
-    const questions = await prisma.agentQuestion.findMany({ where: { status: query.status || undefined, taskId: query.taskId || undefined },
-      include: { task: { select: { id: true, title: true } }, run: { select: { id: true, title: true, agent: true } } }, orderBy: { createdAt: "desc" } });
-    return questions.map((question) => ({ ...question, options: parseJson(question.optionsJson, []), optionsJson: undefined }));
-  });
-  app.post("/api/v1/agent-questions/:questionId/answer", async (request) => {
-    const { questionId } = request.params as { questionId: string };
-    const input = answerQuestionSchema.parse(request.body);
-    const current = await prisma.agentQuestion.findUnique({ where: { id: questionId } });
-    if (!current) throw new ApiError(404, "Pergunta não encontrada.");
-    if (current.status !== "pending") throw new ApiError(409, "Esta pergunta já foi respondida.");
-    const result = await prisma.$transaction(async (tx) => {
-      const question = await tx.agentQuestion.update({ where: { id: questionId }, data: { status: "answered", answer: input.answer, answeredBy: input.answeredBy, answeredAt: new Date() } });
-      await tx.agentMessage.create({ data: { runId: current.runId, sender: input.answeredBy, kind: "answer", content: input.answer } });
-      const run = await tx.agentRun.findUniqueOrThrow({ where: { id: current.runId }, select: { intentId: true } });
-      await tx.agentCommunication.create({ data: { runId: current.runId, intentId: run.intentId, sourceId: input.answeredBy, targetId: current.askedBy, kind: "answer", status: "delivered", summary: input.answer } });
-      await tx.agentRun.update({ where: { id: current.runId }, data: { status: "queued", lastHeartbeatAt: new Date() } });
-      await tx.notification.updateMany({ where: { userId: "owner", type: "question", route: `/gestao/agentes/execucoes/${current.runId}`, readAt: null }, data: { readAt: new Date() } });
-      await tx.auditEvent.create({ data: { taskId: current.taskId, actor: input.answeredBy, action: "agent_question_answered", entityType: "agent_question", entityId: questionId, summary: input.answer } });
-      const event = await appendEvent(tx, "agent.answer.submitted", "agent_run", current.runId, question);
-      return { question, event };
-    });
-    broadcastEvent(result.event);
-    return result.question;
-  });
-  app.post("/api/v1/agent-questions/:questionId/acknowledge", async (request) => {
-    const { questionId } = request.params as { questionId: string };
-    const current = await prisma.agentQuestion.findUnique({ where: { id: questionId } });
-    if (!current) throw new ApiError(404, "Pergunta não encontrada.");
-    if (current.status !== "answered") throw new ApiError(409, "A pergunta não está pronta para confirmação.");
-    const question = await prisma.agentQuestion.update({ where: { id: questionId }, data: { status: "acknowledged", acknowledgedAt: new Date() } });
-    const event = await prisma.outboxEvent.create({ data: { topic: "agent.answer.acknowledged", aggregateType: "agent_run", aggregateId: current.runId, payloadJson: JSON.stringify(question) } });
-    broadcastEvent(event);
-    return question;
   });
   app.post("/api/v1/agent-runs/:runId/usage", async (request) => {
     const { runId } = request.params as { runId: string };

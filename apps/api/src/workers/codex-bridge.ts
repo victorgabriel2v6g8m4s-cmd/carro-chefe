@@ -1,10 +1,11 @@
 import { Codex, type ModelReasoningEffort, type ThreadEvent } from "@openai/codex-sdk";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { config } from "../config";
 import { holdWorkerPort } from "./singleton";
 import { shouldWriteFallbackReport } from "./agent-runtime-contract";
 import { buildRunPrompt, makeRuntimeInput } from "./runtime-prompt";
 import { runtimeApi as api } from "./runtime-api";
-import { requiresArtifactWorkspace } from "../modules/agents/model-policy";
 
 const codex = new Codex();
 const workerLock = await holdWorkerPort(4174, "Bridge Codex");
@@ -37,6 +38,15 @@ async function communicate(runId: string, sourceId: string, targetId: string, ki
 function safeJson(value: unknown) {
   try { return JSON.stringify(value, null, 2); }
   catch { return String(value); }
+}
+
+async function prepareArtifactHelpers(workingDirectory: string, runId: string) {
+  const helper = "%~dp0..\\..\\..\\tools\\agent-runtime.mjs";
+  await Promise.all([
+    fs.writeFile(path.join(workingDirectory, "send.cmd"), `@echo off\r\nnode "${helper}" send ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "ask.cmd"), `@echo off\r\nnode "${helper}" question ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "artifact.cmd"), `@echo off\r\nnode "${helper}" artifact ${runId} %*\r\n`, "utf8")
+  ]);
 }
 
 async function recordItem(runId: string, event: Extract<ThreadEvent, { type: "item.started" | "item.updated" | "item.completed" }>, commandOutputs: Map<string, string>) {
@@ -73,10 +83,11 @@ async function handleRun(runId: string) {
   const allowedEfforts = new Set<ModelReasoningEffort>(["minimal", "low", "medium", "high", "xhigh"]);
   const selectedEffort = run.selectedReasoningEffort || run.agent.reasoningEffort;
   const reasoningEffort: ModelReasoningEffort = allowedEfforts.has(selectedEffort) ? selectedEffort : "medium";
-  const programmingAgent = run.agent.id === "AG-DEV";
-  const artifactAuthoring = requiresArtifactWorkspace(`${run.title}\n${run.objective}`);
+  const workspaceMode = run.agent.id === "AG-DEV" ? "project" as const : run.agent.workspaceMode === "artifacts" ? "artifacts" as const : "read_only" as const;
+  const workingDirectory = workspaceMode === "artifacts" ? path.join(config.projectRoot, "output", ".agent-workspaces", run.id) : config.projectRoot;
+  if (workspaceMode === "artifacts") { await fs.mkdir(workingDirectory, { recursive: true }); await prepareArtifactHelpers(workingDirectory, run.id); }
   const needsLiveResearch = ["AG-COMPRAS", "AG-FINANCAS", "AG-MARKETING", "AG-MIDIAS"].includes(run.agent.id) || /\b(pesquis|verificar (?:site|fornecedor)|preço atual|requisito externo)\b/i.test(run.objective);
-  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: programmingAgent || artifactAuthoring ? "workspace-write" as const : "read-only" as const, approvalPolicy: "never" as const,
+  const threadOptions = { workingDirectory, sandboxMode: workspaceMode === "read_only" ? "read-only" as const : "workspace-write" as const, approvalPolicy: "never" as const,
     networkAccessEnabled: needsLiveResearch, webSearchMode: needsLiveResearch ? "live" as const : "disabled" as const, model: run.selectedModel || run.agent.model || undefined, modelReasoningEffort: reasoningEffort };
   const thread = run.externalThreadId ? codex.resumeThread(run.externalThreadId, threadOptions) : codex.startThread(threadOptions);
   const context = run.intentId ? await api<any>(`/intents/${run.intentId}/runtime-context?runId=${run.id}`).catch(() => null) : null;
@@ -90,7 +101,7 @@ async function handleRun(runId: string) {
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
   const ownerAnswers = context?.ownerAnswers ?? [];
-  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, artifactAuthoring);
+  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, { mode: workspaceMode, workingDirectory, projectRoot: config.projectRoot });
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";
@@ -121,25 +132,29 @@ async function handleRun(runId: string) {
       if (event.type === "turn.failed" || event.type === "error") throw new Error(event.type === "error" ? event.message : event.error.message);
     }
     if (latestAnswer) await api(`/agent-questions/${latestAnswer.id}/acknowledge`, "POST", {});
+    const dispatchFlush = await api<any>(`/agent-runs/${runId}/dispatches/flush`, "POST", {});
     run = await api<any>(`/agent-runs/${runId}`);
     const pending = run.questions.some((question: any) => question.status === "pending");
+    const requiredPending = Boolean(dispatchFlush.requiredPending) || run.status === "waiting_dependency";
     const completedSteps = run.steps.filter((step: any) => step.status === "completed");
     const failedSteps = run.steps.filter((step: any) => step.status === "failed");
     if (shouldWriteFallbackReport(run)) await api(`/agent-runs/${runId}/report`, "POST", {
-        outcome: pending ? "waiting_input" : failedSteps.length ? "partial" : "succeeded",
-        summary: pending ? "O agente avançou até precisar de uma decisão do proprietário." : finalMessage.slice(0, 8000) || "O runtime encerrou a execução sem uma mensagem final detalhada.",
+        outcome: pending || requiredPending ? "waiting_input" : failedSteps.length ? "partial" : "succeeded",
+        summary: pending ? "O agente avançou até precisar de uma decisão do proprietário." : requiredPending ? "O agente consolidou as consultas e aguarda pareceres obrigatórios para continuar." : finalMessage.slice(0, 8000) || "O runtime encerrou a execução sem uma mensagem final detalhada.",
         diagnosis: failedSteps.length ? "Um ou mais passos estruturados foram marcados como falha." : null,
         successes: completedSteps.map((step: any) => step.result || `Passo concluído: ${step.title}`),
         failures: failedSteps.map((step: any) => step.result || `Falha no passo: ${step.title}`),
-        recommendations: pending ? ["Responder à pergunta pendente para recolocar a execução na fila."] : failedSteps.length ? ["Corrigir os passos que falharam e reiniciar a partir do último sucesso."] : ["Revisar as evidências e, se o critério de aceite foi atendido, encaminhar a tarefa para revisão."],
+        recommendations: pending ? ["Responder à pergunta pendente para recolocar a execução na fila."] : requiredPending ? ["Aguardar os pareceres consolidados; a Central retomará esta mesma execução automaticamente."] : failedSteps.length ? ["Corrigir os passos que falharam e reiniciar a partir do último sucesso."] : ["Revisar as evidências e, se o critério de aceite foi atendido, encaminhar a tarefa para revisão."],
         evidence: [`${run.logs.length} evento(s) técnico(s) e ${run.steps.length} passo(s) preservados na Central.`],
-        generatedBy: run.agent.id
+        generatedBy: "BRIDGE-CODEX"
       });
+    run = await api<any>(`/agent-runs/${runId}`);
     const alreadyReportedToOwner = run.communications.some((item: any) => item.sourceId === run.agent.id && ["PROPRIETARIO", "proprietario", "owner"].includes(item.targetId) && item.kind === "result");
-    if (!alreadyReportedToOwner) await communicate(runId, run.agent.id, "PROPRIETARIO", "result", pending ? "Execução aguardando resposta do proprietário." : finalMessage || "Execução encerrada; consulte o relatório detalhado.", run.intentId).catch(() => undefined);
+    if (run.purpose !== "consultation" && !alreadyReportedToOwner) await communicate(runId, run.agent.id, "PROPRIETARIO", "result", pending ? "Execução aguardando resposta do proprietário." : requiredPending ? "Execução aguardando parecer obrigatório de outro agente." : finalMessage || "Execução encerrada; consulte o relatório detalhado.", run.intentId).catch(() => undefined);
     const reportedOutcome = run.report && !run.report.derived ? run.report.outcome : null;
-    const finalStatus = pending || reportedOutcome === "waiting_input" ? "waiting_input" : reportedOutcome === "cancelled" ? "cancelled" : failedSteps.length || ["partial", "failed"].includes(reportedOutcome) ? "failed" : "succeeded";
-    await api(`/agent-runs/${runId}`, "PATCH", { status: finalStatus, currentStep: finalStatus === "waiting_input" ? "Aguardando resposta do proprietário" : finalStatus === "failed" ? "Execução encerrada com resultados parciais ou falhas" : finalStatus === "cancelled" ? "Execução cancelada pelo runtime" : "Execução concluída" });
+    const finalStatus = requiredPending ? "waiting_dependency" : pending || reportedOutcome === "waiting_input" ? "waiting_input" : reportedOutcome === "cancelled" ? "cancelled" : failedSteps.length || ["partial", "failed"].includes(reportedOutcome) ? "failed" : "succeeded";
+    if (run.managementConversationId && !["waiting_input", "waiting_dependency"].includes(finalStatus)) await api(`/management-conversations/${run.managementConversationId}/runtime-responses`, "POST", { runId, sender: run.agent.id, content: finalMessage || run.report?.summary || "A Gestão concluiu a análise; consulte o relatório da execução." });
+    await api(`/agent-runs/${runId}`, "PATCH", { status: finalStatus, currentStep: finalStatus === "waiting_dependency" ? "Aguardando parecer obrigatório de outro agente" : finalStatus === "waiting_input" ? "Aguardando resposta do proprietário" : finalStatus === "failed" ? "Execução encerrada com resultados parciais ou falhas" : finalStatus === "cancelled" ? "Execução cancelada pelo runtime" : "Execução concluída" });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await observe(runId, "error", "run.failed", message, "Falha da execução");
@@ -159,6 +174,7 @@ async function handleRun(runId: string) {
     }).catch(() => undefined);
     await communicate(runId, run?.agent?.id ?? "BRIDGE-CODEX", "PROPRIETARIO", "result", `Execução falhou: ${message}`, run?.intentId).catch(() => undefined);
     await api(`/agent-runs/${runId}/messages`, "POST", { sender: "BRIDGE-CODEX", kind: "error", content: message }).catch(() => undefined);
+    if (run?.managementConversationId) await api(`/management-conversations/${run.managementConversationId}/runtime-responses`, "POST", { runId, sender: "AG-GESTAO", content: `Não consegui concluir esta resposta: ${message}` }).catch(() => undefined);
     await api(`/agent-runs/${runId}`, "PATCH", { status: "failed", currentStep: "Falha registrada pelo bridge" }).catch(() => undefined);
   }
 }
