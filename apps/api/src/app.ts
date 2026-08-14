@@ -15,6 +15,7 @@ import { uploadRoutes } from "./modules/uploads/routes";
 import { intentRoutes } from "./modules/intents/routes";
 import { governanceRoutes } from "./modules/governance/routes";
 import { browserRoutes } from "./modules/browser/routes";
+import { containsLikelyEncodingLoss } from "./lib/text";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
@@ -44,6 +45,12 @@ export async function buildApp() {
     reply.header("Referrer-Policy", "no-referrer");
     reply.header("X-Frame-Options", "SAMEORIGIN");
     reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  });
+
+  app.addHook("preValidation", async (request) => {
+    if (containsLikelyEncodingLoss(request.body)) {
+      throw new ApiError(400, "Texto recebido com perda de codificação. Reenvie o JSON como UTF-8.", { code: "ENCODING_CORRUPTED" });
+    }
   });
 
   app.setErrorHandler((error, _request, reply) => {

@@ -19,6 +19,27 @@ export async function intentRoutes(app: FastifyInstance) {
     if (!intent) throw new ApiError(404, "Comando não encontrado.");
     return presentIntent(intent);
   });
+  app.get("/api/v1/intents/:intentId/runtime-context", async (request) => {
+    const { intentId } = request.params as { intentId: string };
+    const { runId } = request.query as { runId?: string };
+    const intent = await prisma.operationalIntent.findUnique({ where: { id: intentId }, select: {
+      id: true, prompt: true, summary: true,
+      facts: { select: { key: true, value: true, verificationStatus: true } },
+      runs: { where: runId ? { id: { not: runId } } : undefined, orderBy: { createdAt: "asc" }, select: {
+        id: true, agentId: true, status: true, report: { select: { outcome: true, summary: true } },
+        messages: { orderBy: { createdAt: "desc" }, take: 1, select: { content: true } },
+        questions: { where: { status: { in: ["answered", "acknowledged"] } }, orderBy: { answeredAt: "asc" }, select: { question: true, answer: true } }
+      } }
+    } });
+    if (!intent) throw new ApiError(404, "Comando não encontrado.");
+    return {
+      id: intent.id, prompt: intent.prompt, summary: intent.summary, facts: intent.facts,
+      ownerAnswers: intent.runs.flatMap((run) => run.questions).filter((item): item is { question: string; answer: string } => Boolean(item.answer)),
+      priorRuns: intent.runs.filter((run) => ["succeeded", "failed", "cancelled"].includes(run.status)).map((run) => ({
+        id: run.id, agentId: run.agentId, status: run.status, report: run.report, messages: run.messages
+      }))
+    };
+  });
   app.post("/api/v1/intents", async (request, reply) => {
     const input = operationalIntentSchema.parse(request.body);
     const attachments = input.attachmentIds.length

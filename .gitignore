@@ -26,6 +26,7 @@ planejamento/.runtime/
 *.local
 
 # Arquivos temporários
+tmp/
 *.tmp
 *.temp
 *.log

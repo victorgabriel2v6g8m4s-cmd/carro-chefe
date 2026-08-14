@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const tokenPattern = /(https?:\/\/[^\s<>"']+|\/api\/v1\/uploads\/[^\s/]+\/content|(?:[A-Za-z]:\\[^\r\n]+?|(?:apps|packages|docs|site|planejamento|logos|cardápio|elementos gráficos)[\\/][^\r\n]+?)\.(?:tsx?|jsx?|css|html?|md|json|ya?ml|sql|prisma|csv|png|jpe?g|webp|gif|svg|pdf|docx?|xlsx?))(?=$|[\s),;])/giu;
+const tokenPattern = /(https?:\/\/[^\s<>"']+|\/api\/v1\/uploads\/[^\s/]+\/content|(?:[A-Za-z]:\\[^\r\n]+?|(?:apps|packages|docs|site|planejamento|logos|cardápio|elementos gráficos|output)[\\/][^\r\n]+?)\.(?:tsx?|jsx?|css|html?|md|json|ya?ml|sql|prisma|csv|png|jpe?g|webp|gif|svg|pdf|docx?|xlsx?))(?=$|[\s),;])/giu;
 
 function labelForFile(value: string) {
   return value.split(/[\\/]/).filter(Boolean).at(-1) ?? value;

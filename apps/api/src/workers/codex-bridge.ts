@@ -4,6 +4,7 @@ import { holdWorkerPort } from "./singleton";
 import { shouldWriteFallbackReport } from "./agent-runtime-contract";
 import { buildRunPrompt, makeRuntimeInput } from "./runtime-prompt";
 import { runtimeApi as api } from "./runtime-api";
+import { requiresArtifactWorkspace } from "../modules/agents/model-policy";
 
 const codex = new Codex();
 const workerLock = await holdWorkerPort(4174, "Bridge Codex");
@@ -73,12 +74,13 @@ async function handleRun(runId: string) {
   const selectedEffort = run.selectedReasoningEffort || run.agent.reasoningEffort;
   const reasoningEffort: ModelReasoningEffort = allowedEfforts.has(selectedEffort) ? selectedEffort : "medium";
   const programmingAgent = run.agent.id === "AG-DEV";
+  const artifactAuthoring = requiresArtifactWorkspace(`${run.title}\n${run.objective}`);
   const needsLiveResearch = ["AG-COMPRAS", "AG-FINANCAS", "AG-MARKETING", "AG-MIDIAS"].includes(run.agent.id) || /\b(pesquis|verificar (?:site|fornecedor)|preço atual|requisito externo)\b/i.test(run.objective);
-  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: programmingAgent ? "workspace-write" as const : "read-only" as const, approvalPolicy: "never" as const,
+  const threadOptions = { workingDirectory: config.projectRoot, sandboxMode: programmingAgent || artifactAuthoring ? "workspace-write" as const : "read-only" as const, approvalPolicy: "never" as const,
     networkAccessEnabled: needsLiveResearch, webSearchMode: needsLiveResearch ? "live" as const : "disabled" as const, model: run.selectedModel || run.agent.model || undefined, modelReasoningEffort: reasoningEffort };
   const thread = run.externalThreadId ? codex.resumeThread(run.externalThreadId, threadOptions) : codex.startThread(threadOptions);
-  const intent = run.intentId ? await api<any>(`/intents/${run.intentId}`).catch(() => null) : null;
-  const priorRuns = intent?.runs?.filter((item: any) => item.id !== run.id && ["succeeded", "failed"].includes(item.status)) ?? [];
+  const context = run.intentId ? await api<any>(`/intents/${run.intentId}/runtime-context?runId=${run.id}`).catch(() => null) : null;
+  const priorRuns = context?.priorRuns ?? [];
   const handoffs: string[] = [];
   for (const prior of priorRuns.slice(-4)) {
     const summary = prior.report?.summary || prior.messages?.at(-1)?.content;
@@ -87,7 +89,8 @@ async function handleRun(runId: string) {
     await communicate(runId, prior.agentId, run.agent.id, "handoff", summary, run.intentId).catch(() => undefined);
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
-  const prompt = buildRunPrompt(run, handoffs, latestAnswer);
+  const ownerAnswers = context?.ownerAnswers ?? [];
+  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, artifactAuthoring);
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";
