@@ -104,8 +104,55 @@ paths:
     post:
       summary: Responde ao agente e devolve a execução à fila
       parameters: [ { in: path, name: questionId, required: true, schema: { type: string } } ]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [answer, answeredBy], properties: { answer: { type: string }, answeredBy: { type: string } } } } } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [answer], properties: { answer: { type: string }, answeredBy: { type: string }, attachmentIds: { type: array, maxItems: 12, items: { type: string } }, references: { type: array, maxItems: 30, items: { $ref: "#/components/schemas/ScopedReference" } } } } } } }
       responses: { "200": { description: Resposta registrada } }
+  /agent-runs/{runId}/send:
+    post:
+      summary: Acumula uma consulta curta para outro agente; a Central completa o contexto e a auditoria
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AgentDispatch" } } } }
+      responses: { "201": { description: Consulta armazenada para despacho em lote } }
+  /agent-runs/{runId}/dispatches:
+    get:
+      summary: Lista consultas e resultados vinculados à execução
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "200": { description: Consultas acumuladas } }
+  /agent-runs/{runId}/dispatches/flush:
+    post:
+      summary: Agrupa consultas por agente e cria uma única execução para cada destino
+      parameters: [ { $ref: "#/components/parameters/RunId" } ]
+      responses: { "200": { description: Execuções consolidadas criadas } }
+  /agent-dispatches/{dispatchId}/context:
+    get:
+      summary: Retorna o contexto compacto resolvido pela Central para uma consulta
+      parameters: [ { in: path, name: dispatchId, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Contexto, dependências e ações de sucesso } }
+  /references:
+    get:
+      summary: Lista referências selecionáveis com @ no projeto ou no escopo de uma tarefa
+      parameters:
+        - { in: query, name: taskId, schema: { type: string } }
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, maximum: 150 } }
+      responses: { "200": { description: Tarefas, decisões, riscos, compras, execuções e arquivos referenciáveis } }
+  /management-conversations:
+    get:
+      summary: Lista conversas contínuas do proprietário com a Gestão
+      responses: { "200": { description: Conversas e mensagens } }
+    post:
+      summary: Abre uma conversa que não cria tarefa no roteiro
+      responses: { "201": { description: Conversa criada } }
+  /management-conversations/{conversationId}:
+    get:
+      summary: Recupera mensagens, anexos, referências e execuções da conversa
+      parameters: [ { in: path, name: conversationId, required: true, schema: { type: string } } ]
+      responses: { "200": { description: Conversa completa } }
+  /management-conversations/{conversationId}/messages:
+    post:
+      summary: Envia mensagem à Gestão sem disparar uma tarefa
+      parameters: [ { in: path, name: conversationId, required: true, schema: { type: string } } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/ManagementMessage" } } } }
+      responses: { "201": { description: Mensagem registrada e execução de conversa enfileirada } }
   /agent-runs/{runId}/usage:
     post:
       summary: Registra uso medido ou explicitamente estimado
@@ -179,7 +226,7 @@ paths:
                 runId: { type: string }
                 intentId: { type: string }
                 decisionId: { type: string }
-                purpose: { enum: [intent-draft] }
+                purpose: { enum: [intent-draft, question-answer-draft, management-message-draft] }
                 actor: { type: string }
       responses: { "201": { description: Evidência armazenada }, "415": { description: Tipo não permitido } }
   /events:
@@ -211,13 +258,14 @@ components:
         evidence: { type: array, items: { type: string }, default: [] }
     CreateRun:
       type: object
-      required: [taskId, agentId, title, objective, requestedBy]
+      required: [agentId, title, objective, requestedBy]
       properties:
-        taskId: { type: string }
+        taskId: { type: [string, "null"], description: Obrigatória, exceto em management_chat }
         agentId: { type: string }
         title: { type: string }
         objective: { type: string }
         provider: { enum: [manual, codex-local], default: manual }
+        purpose: { enum: [execution, management_review, management_chat, consultation], default: execution }
         requestedBy: { type: string }
     AgentStep:
       type: object
@@ -262,3 +310,31 @@ components:
         summary: { type: string }
         intentId: { type: [string, "null"] }
         metadata: { type: object }
+    ScopedReference:
+      type: object
+      required: [id, type, label]
+      properties:
+        id: { type: string }
+        type: { enum: [task, decision, risk, procurement, upload, run, file, url] }
+        label: { type: string }
+        route: { type: [string, "null"] }
+    AgentDispatch:
+      type: object
+      required: [to, msg]
+      properties:
+        to: { type: string, example: AG-MARKETING }
+        msg: { type: string }
+        data: { type: [string, "null"], description: Ponteiro compacto de contexto }
+        isRequiredToProceed: { type: boolean, default: false }
+        dependencies: { type: array, items: { type: string } }
+        onSuccess:
+          type: object
+          properties: { unlock: { type: array, items: { type: string } } }
+    ManagementMessage:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string }
+        submittedBy: { type: string, default: PROPRIETARIO }
+        attachmentIds: { type: array, maxItems: 12, items: { type: string } }
+        references: { type: array, maxItems: 30, items: { $ref: "#/components/schemas/ScopedReference" } }

@@ -8,7 +8,7 @@ import { config } from "../../config";
 export async function planRoutes(app: FastifyInstance) {
   app.get("/api/health", async () => ({ status: "ok", service: "Carro Chefe Central Operacional", storage: "prisma-sqlite", time: new Date().toISOString() }));
   app.get("/api/schema", async () => ({ version: "v1", workflow: "consultar → executar → perguntar/responder → auditar", realtime: "SSE" }));
-  app.get("/api/v1", async () => ({ version: "v1", documentation: "/api/v1/openapi.yaml", health: "/api/health", bootstrap: "/api/v1/bootstrap", intents: "/api/v1/intents", notifications: "/api/v1/notifications", tasks: "/api/v1/tasks", runs: "/api/v1/agent-runs", questions: "/api/v1/agent-questions", uploads: "/api/v1/uploads", events: "/api/v1/events" }));
+  app.get("/api/v1", async () => ({ version: "v1", documentation: "/api/v1/openapi.yaml", health: "/api/health", bootstrap: "/api/v1/bootstrap", intents: "/api/v1/intents", managementConversations: "/api/v1/management-conversations", references: "/api/v1/references", notifications: "/api/v1/notifications", tasks: "/api/v1/tasks", runs: "/api/v1/agent-runs", questions: "/api/v1/agent-questions", uploads: "/api/v1/uploads", events: "/api/v1/events" }));
   app.get("/api/v1/openapi.yaml", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (_request, reply) => reply.type("application/yaml; charset=utf-8").send(await fs.readFile(path.join(config.projectRoot, "apps", "api", "openapi.yaml"), "utf8")));
   app.get("/api/plan", getLegacyPlan);
   app.get("/api/v1/bootstrap", getBootstrap);

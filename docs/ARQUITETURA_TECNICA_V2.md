@@ -48,6 +48,40 @@ O bridge injeta no prompt o contrato JSON compacto dos endpoints operacionais. I
 
 Comunicações são registros direcionais append-only (`sourceId → targetId`) dos tipos delegação, coordenação, repasse, pergunta, resposta e resultado. O mapa na C.O. usa somente esses registros, sem inventar conversas. Execuções de um mesmo comando multiagente são processadas em sequência para que o resultado anterior possa ser repassado ao agente seguinte.
 
+### Respostas enriquecidas e referências `@`
+
+Respostas do proprietário aceitam até 12 mídias/documentos e até 30 referências estruturadas. O endpoint `GET /api/v1/references?taskId=...` restringe as sugestões ao contexto útil da tarefa: tarefa atual, dependências, tarefas dependentes, execuções, evidências, arquivos e registros do mesmo responsável. A interface insere `@ID` no texto e salva também `{id,type,label,route}`; assim o vínculo continua válido mesmo quando o texto é resumido.
+
+Uploads começam como rascunhos sem vínculo (`question-answer-draft` ou `management-message-draft`) e são ligados à pergunta/conversa, execução e tarefa na mesma transação que grava a resposta. Um rascunho já ligado a outro contexto é rejeitado.
+
+### Conversa contínua com Gestão
+
+`ManagementConversation` e `ManagementMessage` mantêm um canal separado do roteiro. Enviar uma mensagem cria uma `AgentRun` de finalidade `management_chat`, com `taskId = null`; portanto a conversa não cria nem conclui tarefas. Quando há uma thread anterior, o bridge a retoma. A resposta FINAL de `AG-GESTAO` fica logo depois do prompt, com link para logs, passos, consumo e relatório da execução.
+
+O agente de Gestão pode consultar especialistas pelo mesmo protocolo de delegação abaixo. Se a consulta for obrigatória, a conversa aguarda o parecer e retoma a mesma thread; se for opcional, o resultado entra no contexto persistente das próximas interações.
+
+### Delegação compacta e em lote
+
+Agentes não montam mais corpos JSON extensos para progresso, passos, mensagens, consumo ou relatório de contingência; o bridge deriva esses registros dos eventos do runtime. A única chamada explícita comum é o helper:
+
+```text
+node tools/agent-runtime.mjs send RUN_ID AG-MARKETING "validar público" --data "task/context/marketing/3" --depends "TASK-X,DEC-Y" --unlock "TASK-Z"
+```
+
+`POST /api/v1/agent-runs/:runId/send` completa tarefa, intenção, ator, timestamps, referências resolvidas, comunicação e auditoria. Solicitações ficam em `AgentDispatch` e `dispatches/flush` cria uma única execução de consulta por agente de destino. `--required` coloca a origem em `waiting_dependency`; a conclusão do especialista a recoloca em `queued` no mesmo ponto. Sem `--required`, o solicitante não fica bloqueado.
+
+`onSuccess.unlock` só move automaticamente tarefas em `backlog` ou `blocked` para `ready`, com transição, justificativa e auditoria imutáveis.
+
+### Capacidade de escrita
+
+`AgentDefinition.workspaceMode` aplica o princípio do menor privilégio:
+
+- `project`: somente `AG-DEV`, com escrita no projeto;
+- `artifacts`: agentes de negócio recebem um diretório isolado em `output/.agent-workspaces/<runId>` e podem criar, editar ou excluir apenas ali;
+- `read_only`: nenhuma escrita local.
+
+O workspace isolado não é versionado. Arquivos finais são copiados para o armazenamento de uploads quando o agente executa `agent-runtime.mjs artifact`; a trilha guarda hash, autor, execução e rota de visualização.
+
 ```text
 Proprietário → cria AgentRun na Central
 Bridge local → reivindica execução `queued`

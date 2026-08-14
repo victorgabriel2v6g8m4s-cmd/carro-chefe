@@ -94,6 +94,8 @@ export async function browserRoutes(app: FastifyInstance) {
     const input = browserNavigationSchema.parse(request.body);
     const run = await prisma.agentRun.findUnique({ where: { id: runId }, include: { agent: { select: { browserEnabled: true } } } });
     if (!run) throw new ApiError(404, "Execução não encontrada.");
+    if (!run.taskId) throw new ApiError(422, "Registrar navegação exige uma tarefa vinculada; em conversas, use browser-state e browser-actions.");
+    const taskId = run.taskId;
     if (!run.agent.browserEnabled) throw new ApiError(403, "O navegador integrado está desabilitado para este agente.");
     if (input.targetType === "url") {
       let url: URL;
@@ -103,7 +105,7 @@ export async function browserRoutes(app: FastifyInstance) {
     if (input.targetType === "file") await safeProjectFile(input.target);
     if (input.targetType === "upload" && !await prisma.upload.findUnique({ where: { id: input.target } })) throw new ApiError(404, "Anexo não encontrado.");
     const result = await prisma.$transaction(async (tx) => {
-      const navigation = await tx.browserNavigation.create({ data: { runId, taskId: run.taskId, ...input } });
+      const navigation = await tx.browserNavigation.create({ data: { runId, taskId, ...input } });
       await tx.agentCommunication.create({ data: { runId, intentId: run.intentId, sourceId: input.actor, targetId: "PROPRIETARIO", kind: "update", summary: `Navegador: ${input.title || input.target}` } });
       const event = await appendEvent(tx, "browser.navigation.requested", "agent_run", runId, navigation);
       return { navigation, event };

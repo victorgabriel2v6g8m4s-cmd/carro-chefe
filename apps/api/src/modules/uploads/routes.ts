@@ -7,7 +7,9 @@ import { config } from "../../config";
 import { ApiError } from "../../lib/errors";
 import { z } from "zod";
 
-const allowedTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf", "text/plain", "text/csv", "application/json", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]);
+const allowedTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4", "video/webm", "audio/mpeg", "audio/wav", "audio/ogg",
+  "application/pdf", "text/plain", "text/csv", "application/json", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]);
 const uploadRoot = path.join(config.projectRoot, ".runtime", "uploads");
 const outputRoot = path.join(config.projectRoot, "output");
 
@@ -17,8 +19,9 @@ function field(fields: Record<string, any>, name: string) {
 
 export async function uploadRoutes(app: FastifyInstance) {
   app.get("/api/v1/uploads", async (request) => {
-    const query = request.query as { taskId?: string; runId?: string; intentId?: string; decisionId?: string };
-    return prisma.upload.findMany({ where: { taskId: query.taskId || undefined, runId: query.runId || undefined, intentId: query.intentId || undefined, decisionId: query.decisionId || undefined }, orderBy: { createdAt: "desc" } });
+    const query = request.query as { taskId?: string; runId?: string; intentId?: string; decisionId?: string; questionId?: string; managementMessageId?: string };
+    return prisma.upload.findMany({ where: { taskId: query.taskId || undefined, runId: query.runId || undefined, intentId: query.intentId || undefined,
+      decisionId: query.decisionId || undefined, questionId: query.questionId || undefined, managementMessageId: query.managementMessageId || undefined }, orderBy: { createdAt: "desc" } });
   });
   app.post("/api/v1/uploads", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const part = await request.file({ limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
@@ -32,7 +35,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     const decisionId = field(part.fields as any, "decisionId") || null;
     const purpose = field(part.fields as any, "purpose") || null;
     const actor = field(part.fields as any, "actor") || "proprietario";
-    if (!taskId && !runId && !intentId && !decisionId && purpose !== "intent-draft") throw new ApiError(400, "Vincule o arquivo a uma tarefa, execução, comando ou decisão.");
+    const draftPurposes = new Set(["intent-draft", "question-answer-draft", "management-message-draft"]);
+    if (!taskId && !runId && !intentId && !decisionId && !draftPurposes.has(purpose ?? "")) throw new ApiError(400, "Vincule o arquivo a uma tarefa, execução, comando, decisão ou resposta.");
     if (taskId && !await prisma.task.findUnique({ where: { id: taskId }, select: { id: true } })) throw new ApiError(400, "Tarefa inexistente.");
     if (runId && !await prisma.agentRun.findUnique({ where: { id: runId }, select: { id: true } })) throw new ApiError(400, "Execução inexistente.");
     if (intentId && !await prisma.operationalIntent.findUnique({ where: { id: intentId }, select: { id: true } })) throw new ApiError(400, "Comando inexistente.");
@@ -49,15 +53,17 @@ export async function uploadRoutes(app: FastifyInstance) {
   app.post("/api/v1/agent-runs/:runId/artifacts", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request, reply) => {
     const { runId } = request.params as { runId: string };
     const input = z.object({ path: z.string().trim().min(1).max(2_000), title: z.string().trim().min(2).max(180).optional() }).parse(request.body);
-    const run = await prisma.agentRun.findUnique({ where: { id: runId }, select: { id: true, taskId: true, intentId: true, agentId: true } });
+    const run = await prisma.agentRun.findUnique({ where: { id: runId }, select: { id: true, taskId: true, intentId: true, agentId: true, agent: { select: { workspaceMode: true } } } });
     if (!run) throw new ApiError(404, "Execução inexistente.");
-    const candidate = path.isAbsolute(input.path) ? path.resolve(input.path) : path.resolve(config.projectRoot, input.path);
+    const relativeRoot = run.agentId !== "AG-DEV" && run.agent.workspaceMode === "artifacts" ? path.join(outputRoot, ".agent-workspaces", runId) : config.projectRoot;
+    const projectRelativeOutput = input.path.replaceAll("\\", "/").startsWith("output/");
+    const candidate = path.isAbsolute(input.path) ? path.resolve(input.path) : path.resolve(projectRelativeOutput ? config.projectRoot : relativeRoot, input.path);
     const outputRelative = path.relative(outputRoot, candidate);
     if (outputRelative.startsWith("..") || path.isAbsolute(outputRelative)) throw new ApiError(403, "Artefatos de agentes devem estar dentro de output/.");
     const stat = await fs.stat(candidate).catch(() => null);
     if (!stat?.isFile()) throw new ApiError(404, "Artefato não encontrado.");
     const extension = path.extname(candidate).toLowerCase();
-    const mimeType = extension === ".pdf" ? "application/pdf" : extension === ".png" ? "image/png" : [".jpg", ".jpeg"].includes(extension) ? "image/jpeg" : extension === ".webp" ? "image/webp" : extension === ".txt" ? "text/plain" : extension === ".csv" ? "text/csv" : extension === ".json" ? "application/json" : null;
+    const mimeType = extension === ".pdf" ? "application/pdf" : extension === ".png" ? "image/png" : [".jpg", ".jpeg"].includes(extension) ? "image/jpeg" : extension === ".webp" ? "image/webp" : extension === ".gif" ? "image/gif" : extension === ".mp4" ? "video/mp4" : extension === ".webm" ? "video/webm" : extension === ".mp3" ? "audio/mpeg" : extension === ".wav" ? "audio/wav" : extension === ".ogg" ? "audio/ogg" : extension === ".txt" ? "text/plain" : extension === ".csv" ? "text/csv" : extension === ".json" ? "application/json" : null;
     if (!mimeType || !allowedTypes.has(mimeType)) throw new ApiError(415, "Tipo de artefato não permitido.");
     const buffer = await fs.readFile(candidate);
     if (buffer.length > 10 * 1024 * 1024) throw new ApiError(413, "O artefato excede 10 MB.");

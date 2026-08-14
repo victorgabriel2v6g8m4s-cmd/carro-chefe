@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 export const taskStatuses = ["backlog", "ready", "in_progress", "blocked", "review", "done", "cancelled"] as const;
-export const agentRunStatuses = ["queued", "running", "waiting_input", "succeeded", "failed", "cancelled"] as const;
+export const agentRunStatuses = ["queued", "running", "waiting_input", "waiting_dependency", "succeeded", "failed", "cancelled"] as const;
+
+export const scopedReferenceSchema = z.object({
+  id: z.string().trim().min(1).max(240),
+  type: z.enum(["task", "decision", "risk", "procurement", "upload", "run", "file", "url"]),
+  label: z.string().trim().min(1).max(300),
+  route: z.string().trim().max(2000).nullable().optional()
+});
 
 export const taskTransitionSchema = z.object({
   toStatus: z.enum(taskStatuses),
@@ -22,14 +29,16 @@ export const uiStateSchema = z.object({
 });
 
 export const createRunSchema = z.object({
-  taskId: z.string().min(1),
+  taskId: z.string().min(1).nullable().optional(),
   agentId: z.string().min(1),
   title: z.string().trim().min(3).max(180),
   objective: z.string().trim().min(10).max(4000),
   provider: z.enum(["manual", "codex-local"]).default("manual"),
-  purpose: z.enum(["execution", "management_review"]).default("execution"),
+  purpose: z.enum(["execution", "management_review", "management_chat", "consultation"]).default("execution"),
   complexity: z.enum(["routine", "standard", "complex", "critical"]).optional(),
   requestedBy: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+}).superRefine((input, context) => {
+  if (input.purpose !== "management_chat" && !input.taskId) context.addIssue({ code: "custom", path: ["taskId"], message: "A tarefa é obrigatória para esta finalidade." });
 });
 
 export const agentStepSchema = z.object({
@@ -47,13 +56,40 @@ export const agentQuestionSchema = z.object({
   recommendation: z.string().trim().max(2000).nullable().optional(),
   options: z.array(z.string().trim().min(1)).max(8).default([]),
   blocking: z.boolean().default(true),
-  askedBy: z.string().trim().min(2).max(80)
+  askedBy: z.string().trim().min(2).max(80).optional()
 });
 
 export const answerQuestionSchema = z.object({
   answer: z.string().trim().min(2).max(4000),
-  answeredBy: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+  answeredBy: z.string().trim().min(2).max(80).default("PROPRIETARIO"),
+  attachmentIds: z.array(z.string().trim().min(1)).max(12).default([]),
+  references: z.array(scopedReferenceSchema).max(30).default([])
 });
+
+export const managementMessageSchema = z.object({
+  content: z.string().trim().min(2).max(8000),
+  attachmentIds: z.array(z.string().trim().min(1)).max(12).default([]),
+  references: z.array(scopedReferenceSchema).max(30).default([]),
+  submittedBy: z.string().trim().min(2).max(80).default("PROPRIETARIO")
+});
+
+export const agentDispatchSchema = z.object({
+  to: z.string().trim().min(2).max(80),
+  msg: z.string().trim().min(3).max(4000),
+  data: z.string().trim().max(2000).nullable().optional(),
+  isRequiredToProceed: z.boolean().default(false),
+  dependencies: z.array(z.string().trim().min(1).max(240)).max(50).optional(),
+  dependences: z.array(z.string().trim().min(1).max(240)).max(50).optional(),
+  onSuccess: z.object({ unlock: z.array(z.string().trim().min(1).max(80)).max(20).default([]) }).optional(),
+  onSucess: z.object({ unlock: z.array(z.string().trim().min(1).max(80)).max(20).default([]) }).optional()
+}).transform((input) => ({
+  to: input.to,
+  msg: input.msg,
+  data: input.data ?? null,
+  isRequiredToProceed: input.isRequiredToProceed,
+  dependencies: input.dependencies ?? input.dependences ?? [],
+  onSuccess: input.onSuccess ?? input.onSucess ?? { unlock: [] }
+}));
 
 export const usageSchema = z.object({
   source: z.enum(["runtime", "estimated", "manual", "unavailable"]),

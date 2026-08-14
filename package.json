@@ -27,6 +27,7 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "bridge:codex": "tsx apps/api/src/workers/codex-bridge.ts",
+    "agent:runtime": "node tools/agent-runtime.mjs",
     "webhooks:dispatch": "tsx apps/api/src/workers/webhook-dispatcher.ts",
     "supervisor:build": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1",
     "supervisor:install": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -StartNow",
