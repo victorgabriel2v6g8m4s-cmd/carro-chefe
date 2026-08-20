@@ -41,7 +41,9 @@ CREATE INDEX "KnowledgeNode_sourceIntentId_idx" ON "KnowledgeNode"("sourceIntent
 CREATE INDEX "KnowledgeNode_status_updatedAt_idx" ON "KnowledgeNode"("status", "updatedAt");
 CREATE INDEX "KnowledgeNodeAttachment_uploadId_idx" ON "KnowledgeNodeAttachment"("uploadId");
 
-INSERT OR IGNORE INTO "KnowledgeNode" ("id", "projectId", "parentId", "slug", "name", "path", "kind", "createdBy", "sourceType", "updatedAt") VALUES
+INSERT OR IGNORE INTO "KnowledgeNode" ("id", "projectId", "parentId", "slug", "name", "path", "kind", "createdBy", "sourceType", "updatedAt")
+SELECT column1, column2, column3, column4, column5, column6, column7, column8, column9, column10
+FROM (VALUES
   ('KN-ROOT-ESTABELECIMENTO', 'carro-chefe', NULL, 'estabelecimento', 'Estabelecimento', 'estabelecimento', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-ROOT-PESSOAS', 'carro-chefe', NULL, 'pessoas', 'Pessoas', 'pessoas', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-ROOT-OPERACAO', 'carro-chefe', NULL, 'operacao', 'Operação', 'operacao', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
@@ -52,14 +54,20 @@ INSERT OR IGNORE INTO "KnowledgeNode" ("id", "projectId", "parentId", "slug", "n
   ('KN-ROOT-FINANCEIRO', 'carro-chefe', NULL, 'financeiro', 'Financeiro', 'financeiro', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-ROOT-FORNECEDORES', 'carro-chefe', NULL, 'fornecedores', 'Fornecedores', 'fornecedores', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-ROOT-DECISOES', 'carro-chefe', NULL, 'decisoes', 'Decisões', 'decisoes', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
-  ('KN-ROOT-ARQUIVOS', 'carro-chefe', NULL, 'arquivos', 'Arquivos', 'arquivos', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP);
+  ('KN-ROOT-ARQUIVOS', 'carro-chefe', NULL, 'arquivos', 'Arquivos', 'arquivos', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP)
+)
+WHERE EXISTS (SELECT 1 FROM "Project" WHERE "id" = 'carro-chefe');
 
-INSERT OR IGNORE INTO "KnowledgeNode" ("id", "projectId", "parentId", "slug", "name", "path", "kind", "createdBy", "sourceType", "updatedAt") VALUES
+INSERT OR IGNORE INTO "KnowledgeNode" ("id", "projectId", "parentId", "slug", "name", "path", "kind", "createdBy", "sourceType", "updatedAt")
+SELECT column1, column2, column3, column4, column5, column6, column7, column8, column9, column10
+FROM (VALUES
   ('KN-EST-ENDERECO', 'carro-chefe', 'KN-ROOT-ESTABELECIMENTO', 'endereco', 'Endereço', 'estabelecimento/endereco', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-PES-EQUIPE', 'carro-chefe', 'KN-ROOT-PESSOAS', 'equipe', 'Equipe', 'pessoas/equipe', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-OPE-COZINHA', 'carro-chefe', 'KN-ROOT-OPERACAO', 'cozinha', 'Cozinha', 'operacao/cozinha', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
   ('KN-SIS-ERP', 'carro-chefe', 'KN-ROOT-SISTEMAS', 'erp', 'ERP', 'sistemas/erp', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP),
-  ('KN-DEC-CAPTURADAS', 'carro-chefe', 'KN-ROOT-DECISOES', 'capturadas', 'Decisões capturadas', 'decisoes/capturadas', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP);
+  ('KN-DEC-CAPTURADAS', 'carro-chefe', 'KN-ROOT-DECISOES', 'capturadas', 'Decisões capturadas', 'decisoes/capturadas', 'branch', 'MIGRACAO', 'system', CURRENT_TIMESTAMP)
+)
+WHERE EXISTS (SELECT 1 FROM "Project" WHERE "id" = 'carro-chefe');
 
 INSERT OR IGNORE INTO "KnowledgeNode" (
   "id", "projectId", "parentId", "sourceIntentId", "slug", "name", "path", "kind", "value",
@@ -68,4 +76,6 @@ INSERT OR IGNORE INTO "KnowledgeNode" (
 SELECT
   'KN-BF-' || "id", "projectId", 'KN-SIS-ERP', "sourceIntentId", 'selecionado', 'ERP selecionado',
   'sistemas/erp/selecionado', 'fact', "value", 'text', "verificationStatus", 'legacy_fact', "id", 'MIGRACAO', CURRENT_TIMESTAMP
-FROM "BusinessFact" WHERE "key" = 'erp.selected';
+FROM "BusinessFact"
+WHERE "key" = 'erp.selected'
+  AND EXISTS (SELECT 1 FROM "KnowledgeNode" WHERE "id" = 'KN-SIS-ERP');

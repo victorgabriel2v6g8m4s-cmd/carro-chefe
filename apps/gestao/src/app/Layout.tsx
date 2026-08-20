@@ -3,14 +3,23 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { api, json } from "../api/client";
 import { useData } from "./data";
 import { NotificationCenter } from "../components/NotificationCenter";
+import { messages } from "../i18n";
+import type { UiState } from "../types";
 
-const nav = [
-  ["/gestao/visao-geral", "Visão geral", "01"], ["/gestao/comandos", "Comandos", "02"],
-  ["/gestao/roteiro", "Roteiro", "03"], ["/gestao/tarefas", "Tarefas", "04"],
-  ["/gestao/agentes", "Agentes", "05"], ["/gestao/perguntas", "Perguntas", "06"],
-  ["/gestao/governanca", "Governança", "07"], ["/gestao/compras", "Compras", "08"],
-  ["/gestao/registro", "Registro", "09"], ["/gestao/conhecimento", "Memória", "10"],
-  ["/gestao/navegador", "Navegador", "11"]
+type NavigationItem = { path: string; label: string; number: string; notification?: "questions" };
+
+const nav: NavigationItem[] = [
+  { path: "/gestao/visao-geral", label: messages.navigation.items.overview, number: "01" },
+  { path: "/gestao/comandos", label: messages.navigation.items.commands, number: "02" },
+  { path: "/gestao/roteiro", label: messages.navigation.items.roadmap, number: "03" },
+  { path: "/gestao/tarefas", label: messages.navigation.items.tasks, number: "04" },
+  { path: "/gestao/agentes", label: messages.navigation.items.agents, number: "05" },
+  { path: "/gestao/perguntas", label: messages.navigation.items.questions, number: "06", notification: "questions" },
+  { path: "/gestao/governanca", label: messages.navigation.items.governance, number: "07" },
+  { path: "/gestao/compras", label: messages.navigation.items.procurement, number: "08" },
+  { path: "/gestao/registro", label: messages.navigation.items.registry, number: "09" },
+  { path: "/gestao/conhecimento", label: messages.navigation.items.knowledge, number: "10" },
+  { path: "/gestao/navegador", label: messages.navigation.items.browser, number: "11" },
 ];
 
 export function Layout() {
@@ -29,9 +38,9 @@ export function Layout() {
   }, []);
 
   useEffect(() => {
-    api<any>("/api/v1/me/ui-state/gestao").then((state) => {
+    api<UiState>("/api/v1/me/ui-state/gestao").then((state) => {
       if (!state) return;
-      setSidebarOpen(innerWidth <= 820 ? false : state.sidebarOpen);
+      setSidebarOpen(innerWidth <= 820 ? false : (state.sidebarOpen ?? true));
       if (state.route === location.pathname && state.search === location.search && state.hash === location.hash) setTimeout(() => window.scrollTo(0, state.scrollY ?? 0), 50);
     }).catch(() => undefined);
   }, []);
@@ -74,19 +83,19 @@ export function Layout() {
 
   const closeMenu = () => { setSidebarOpen(false); trigger.current?.focus(); };
   return <div className={`shell ${sidebarOpen ? "shell--open" : "shell--closed"}`}>
-    <a className="skip-link" href="#main">Pular para o conteúdo</a>
-    <button ref={trigger} className="menu-trigger" onClick={() => setSidebarOpen(true)} aria-label="Abrir menu" aria-expanded={sidebarOpen} aria-controls="sidebar">☰ <span>Menu</span></button>
-    {sidebarOpen && <button className="backdrop" aria-label="Fechar menu" onClick={closeMenu} />}
-    <aside ref={sidebar} id="sidebar" className="sidebar" aria-label="Navegação principal" aria-hidden={!sidebarOpen} inert={!sidebarOpen ? true : undefined}>
-      <div className="brand"><img src="/assets/brand/logo-base.png" alt="Carro Chefe" /><div><strong>Central</strong><span>Operacional</span></div></div>
-      <button ref={closeButton} className="close-menu" onClick={closeMenu} aria-label="Fechar menu lateral">×</button>
-      <nav>{nav.map(([to, label, number]) => <NavLink key={to} to={to} onClick={() => { if (innerWidth <= 820) setSidebarOpen(false); }}><small>{number}</small><span>{label}</span>{label === "Perguntas" && !!data?.pendingQuestions && <b>{data.pendingQuestions}</b>}</NavLink>)}</nav>
-      <div className="sidebar-note"><small>Princípio</small><p>O ERP registra vendas. Esta central registra como o negócio evolui.</p></div>
+    <a className="skip-link" href="#main">{messages.navigation.skipToContent}</a>
+    <button ref={trigger} className="menu-trigger" onClick={() => setSidebarOpen(true)} aria-label={messages.navigation.openMenu} aria-expanded={sidebarOpen} aria-controls="sidebar">☰ <span>{messages.navigation.menu}</span></button>
+    {sidebarOpen && <button className="backdrop" aria-label={messages.navigation.closeMenu} onClick={closeMenu} />}
+    <aside ref={sidebar} id="sidebar" className="sidebar" aria-label={messages.navigation.ariaLabel} aria-hidden={!sidebarOpen} inert={!sidebarOpen ? true : undefined}>
+      <div className="brand"><img src="/assets/brand/logo-base.png" alt="Carro Chefe" /><div><strong>{messages.navigation.brandTitle}</strong><span>{messages.navigation.brandSubtitle}</span></div></div>
+      <button ref={closeButton} className="close-menu" onClick={closeMenu} aria-label={messages.navigation.closeMenu}>×</button>
+      <nav>{nav.map(({ path, label, number, notification }) => <NavLink key={path} to={path} onClick={() => { if (innerWidth <= 820) setSidebarOpen(false); }}><small>{number}</small><span>{label}</span>{notification === "questions" && !!data?.pendingQuestions && <b>{data.pendingQuestions}</b>}</NavLink>)}</nav>
+      <div className="sidebar-note"><small>{messages.navigation.principle}</small><p>{messages.navigation.sidebarNote}</p></div>
     </aside>
     <main id="main" aria-hidden={mobile && sidebarOpen} inert={mobile && sidebarOpen ? true : undefined}>
-      <header className="topbar"><div><small>Carro Chefe · {data?.project?.stage ?? "Carregando"}</small><h1>{nav.find(([to]) => location.pathname.startsWith(to))?.[1] ?? "Gestão"}</h1></div><div className="topbar-actions"><div className="live"><i /> Sincronizado</div><NotificationCenter /></div></header>
+      <header className="topbar"><div><small>Carro Chefe · {data?.project?.stage ?? messages.navigation.loadingStage}</small><h1>{nav.find(({ path }) => location.pathname.startsWith(path))?.label ?? messages.navigation.management}</h1></div><div className="topbar-actions"><div className="live"><i /> {messages.navigation.synchronized}</div><NotificationCenter /></div></header>
       <Outlet />
-      <footer>Carro Chefe · Central Operacional · SQLite sincronizado</footer>
+      <footer>{messages.navigation.operationalMemory}</footer>
     </main>
   </div>;
 }

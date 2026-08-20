@@ -668,6 +668,8 @@ model WebhookDelivery {
   createdAt   DateTime @default(now())
   deliveredAt DateTime?
   endpoint    WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@unique([endpointId, eventId])
 }
 
 model WebhookInbox {

@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026.08.20.1",
+  "runtimeBudgetChars": 6500,
+  "sources": [
+    {
+      "path": ".agent-policy/AGENTS.md",
+      "kind": "agents",
+      "sha256": "ae3ef9678d685123f74b43454cf83d613672100fc4a8d0f232b2a13ae1c2d81a"
+    },
+    {
+      "path": ".agent-policy/capsules.json",
+      "kind": "capsules",
+      "sha256": "cfeea2ca7f010b2dd7e9d06b0e428c20fd027140a9e0766b3144479c90ceef8d"
+    },
+    {
+      "path": ".codex/AGENTS.md",
+      "kind": "agents",
+      "sha256": "cfecc5535a67803623a36e63159de7bbd465f4795e129f4918c4b10c02dadaaa"
+    },
+    {
+      "path": ".github/AGENTS.md",
+      "kind": "agents",
+      "sha256": "c255dbb7610eaa6f18817c418d7f5647a8d60f02340edb1c7666a54b000a36c6"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "agents",
+      "sha256": "8d7fbe4e9ea6df0470d5bfe22e47af6b12fd91c5ded9b60390d8db24d722f5ab"
+    },
+    {
+      "path": "REGRAS.md",
+      "kind": "rules",
+      "sha256": "9c2ea852eb8bc17e65baa3caf82145900e7254481abf408e423b49a4ff5738d8"
+    },
+    {
+      "path": "apps/AGENTS.md",
+      "kind": "agents",
+      "sha256": "10c355b7e6460264267725bf557d9ba7bba6eef920752a4481e40c7d9643a31f"
+    },
+    {
+      "path": "apps/api/AGENTS.md",
+      "kind": "agents",
+      "sha256": "1191107b5ee8e492797748738ce2922904285e504c2f25f79f3a60851d008a0c"
+    },
+    {
+      "path": "apps/api/src/workers/AGENTS.md",
+      "kind": "agents",
+      "sha256": "0ad14f1ca3ba9fcec04ccec1a343fa27b0b266e0cf608c2c31342a35f9b0de59"
+    },
+    {
+      "path": "apps/gestao/AGENTS.md",
+      "kind": "agents",
+      "sha256": "a92e2e7676a937eef07ea8ebad1307a6b1584da16b17f8369b35d82be5e170ae"
+    },
+    {
+      "path": "apps/qr_manipulator/AGENTS.md",
+      "kind": "agents",
+      "sha256": "e9bbc0feea24867af3e4c5a378488e7acda260b08fb987d4984e42eb4068b9a6"
+    },
+    {
+      "path": "apps/site/AGENTS.md",
+      "kind": "agents",
+      "sha256": "1eac18526ef708270ab7f36b7f9a5e1bf50442971e8180ddaec1b63f491cd66a"
+    },
+    {
+      "path": "cardápio/AGENTS.md",
+      "kind": "agents",
+      "sha256": "152bcd5e7cc828f3a14800782397d5df799edd2b844c6fab883b0d195c7267e9"
+    },
+    {
+      "path": "docs/AGENTS.md",
+      "kind": "agents",
+      "sha256": "fe56fd1ae730461b9a88ab7f303f677e7c9f0580642a81e60bef512748253a50"
+    },
+    {
+      "path": "logos/AGENTS.md",
+      "kind": "agents",
+      "sha256": "a571f50393b7d93ebad1c9d06cbb67ba5d4a61e2becad6e84f62491d54f9fdcd"
+    },
+    {
+      "path": "mídias/AGENTS.md",
+      "kind": "agents",
+      "sha256": "a197a7b48b5b1dcda80bd4e28bc6577a1ca11f46923815f10f67a352e465802f"
+    },
+    {
+      "path": "packages/AGENTS.md",
+      "kind": "agents",
+      "sha256": "a06ba8f4b4552678c048782dd2e538404b6f782db82abc787d6bbd4d69c2588c"
+    },
+    {
+      "path": "packages/contracts/AGENTS.md",
+      "kind": "agents",
+      "sha256": "76a3a9dab0d8ced8f3b8c8e9e186a0913b717910f992e96df438f469717594cd"
+    },
+    {
+      "path": "packages/database/AGENTS.md",
+      "kind": "agents",
+      "sha256": "e3e57d99034ba71e51ad1170419feedff4c6fa628b9bd82f7709f8101543cd79"
+    },
+    {
+      "path": "packages/ui/AGENTS.md",
+      "kind": "agents",
+      "sha256": "6e2ae5058be7528574ba6ee6951b3d4172b11eb6dfcade9dbcdcf0d78fd3b1c5"
+    },
+    {
+      "path": "planejamento/AGENTS.md",
+      "kind": "agents",
+      "sha256": "1df3f0c54c985dcacd40a72bf0935c709e89b4baf4b330d2189d332f46c6b722"
+    },
+    {
+      "path": "site/AGENTS.md",
+      "kind": "agents",
+      "sha256": "eb0a85abd8da7d70a07bbe8c09b049d008643b79629311383e554072556fbebf"
+    },
+    {
+      "path": "tools/AGENTS.md",
+      "kind": "agents",
+      "sha256": "b4bd51a7b47dcf456eb5f6cba6fde8ca95b15beeaee4da7aae31728a9620e97d"
+    },
+    {
+      "path": "tools/agent-policy/AGENTS.md",
+      "kind": "agents",
+      "sha256": "8b2938963b60e58faf45932539fa76cff53c82a916329d45868acce0c2495688"
+    }
+  ],
+  "capsules": {
+    "global.authority": "REGRAS.md e a cadeia AGENTS.md raiz→região são obrigatórios. Esta cápsula é um índice compacto, não substitui as fontes: antes de alterar um caminho, leia a cadeia indicada e execute o preflight para esse caminho. Regra local pode restringir, nunca enfraquecer segurança, integridade ou qualidade.",
+    "global.architecture": "Mapeie owner e fluxo ponta a ponta antes de mudar. Preserve contratos, fonte única da verdade e dependência direcional. Prefira módulos pequenos, uma responsabilidade central, funções puras e reutilização real; evite god files, duplicação, any, magic values e abstração artificial.",
+    "global.security": "Trate entradas externas como não confiáveis; valide na fronteira, sanitize quando necessário e negue por padrão. Não exponha segredos ou dados pessoais em código, prompt, resposta ou logs. Operações críticas exigem autorização server-side, menor privilégio, idempotência/auditoria conforme risco e erros controlados.",
+    "global.delivery": "A entrega precisa de testes proporcionais, lint/typecheck/build aplicáveis, evidência, observabilidade e documentação/AGENTS atualizados quando a arquitetura mudar. Não esconda falhas. Não publique, compre, faça deploy ou altere serviço externo sem autorização explícita.",
+    "global.context": "Use o contexto já fornecido e buscas dirigidas; não faça inventário amplo nem despeje documentos, banco, terminal ou logs no prompt. Consulte fatos por caminho e relate somente novidades, evidências, riscos e próximo passo.",
+    "role.development": "Você é AG-DEV, único agente autorizado a implementar ou alterar código. Faça mudanças pequenas e testáveis, preserve contratos do ERP, rode o preflight do escopo antes de editar e execute npm run check, npm test e npm run build antes de concluir código.",
+    "role.business": "Você é agente de negócio. Não programe, não edite código/configuração e não use terminal para simular implementação. Produza análise, requisitos, evidências ou artefatos no workspace permitido e faça handoff ao AG-DEV quando software for necessário.",
+    "region.root": "Carro Chefe usa PT-BR, IDs estáveis e dados oficiais. Não invente preços, custos, datas, fornecedores ou métricas. Pedidos, pagamentos, estoque, fiscal e financeiro pertencem ao ERP; o site não duplica checkout nem armazena cartão.",
+    "region.apps": "Aplicações são orquestradores finos por domínio. UI, estado, API, validação, persistência, segurança, performance e observabilidade devem permanecer em módulos próprios e com contratos explícitos.",
+    "region.api": "A API Fastify valida params/query/body, limita payloads e listas, aplica autorização no servidor e retorna DTOs mínimos. Rotas orquestram; services executam casos de uso; Prisma fica isolado na persistência. Workers precisam de shutdown, heartbeat, idempotência e logs redigidos.",
+    "region.gestao": "A Central Operacional deve preservar auditoria append-only, estados previsíveis, acessibilidade e responsividade. Componentes React são finos; HTTP fica em serviços/hooks; textos visíveis e tokens visuais permanecem centralizados.",
+    "region.site": "O site público preserva a marca Carro Chefe e desempenho mobile. /cardapio apenas incorpora o ERP quando contrato e headers permitirem; caso contrário redireciona. Não coleta pagamento ou dado desnecessário.",
+    "region.qr": "QR codes usam URL validada, margem e contraste testáveis e derivados rastreáveis; nunca sobrescreva ativos de marca originais.",
+    "region.packages": "Pacotes expõem API pública mínima, não importam aplicações e evitam ciclos. Contratos são retrocompatíveis; UI é acessível e sem regra de negócio; database protege integridade e migrações seguras.",
+    "region.contracts": "Schemas Zod são a fonte versionada dos contratos e rejeitam/normalizam entrada nas fronteiras. Preserve IDs, compatibilidade e códigos de erro estáveis; não vaze modelos Prisma.",
+    "region.database": "Prisma/SQLite é persistência operacional local; ERP continua fonte transacional. Defina constraints, índices, política de delete e migração/rollback. Nunca edite banco, seed ou migração aplicada manualmente.",
+    "region.ui": "Componentes compartilhados são visuais, acessíveis, responsivos e orientados por tokens/variantes sem conhecimento de API, Prisma ou regra de negócio.",
+    "region.tools": "Ferramentas internas devem ser determinísticas, não interativas em CI, validar caminhos/entrada e falhar de modo seguro. Não imprimem segredos e não executam ação externa/destrutiva implicitamente.",
+    "region.github": "Workflows usam permissões mínimas, dependências pinadas, cache seguro e falham diante de política desatualizada, segredo rastreado ou quality gate quebrado.",
+    "region.codex": "Perfis Codex são estreitos e sempre fazem preflight, leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
+    "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos."
+  },
+  "agentCapsules": {
+    "AG-DEV": [
+      "role.development"
+    ],
+    "business": [
+      "role.business"
+    ]
+  },
+  "businessAgentIds": [
+    "AG-GESTAO",
+    "AG-MARKETING",
+    "AG-MIDIAS",
+    "AG-DADOS",
+    "AG-COMPRAS",
+    "AG-OPERACOES",
+    "AG-FINANCAS",
+    "AG-MARCA"
+  ],
+  "regions": {
+    ".": {
+      "inheritance": [
+        "."
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    ".agent-policy": {
+      "inheritance": [
+        ".",
+        ".agent-policy"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        ".agent-policy/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    ".codex": {
+      "inheritance": [
+        ".",
+        ".codex"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        ".codex/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.codex"
+      ]
+    },
+    ".github": {
+      "inheritance": [
+        ".",
+        ".github"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        ".github/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.github"
+      ]
+    },
+    "apps": {
+      "inheritance": [
+        ".",
+        "apps"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps"
+      ]
+    },
+    "apps/api": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/api"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/api/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.api"
+      ]
+    },
+    "apps/api/src/workers": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/api",
+        "apps/api/src/workers"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/api/AGENTS.md",
+        "apps/api/src/workers/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.api"
+      ]
+    },
+    "apps/gestao": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/gestao"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/gestao/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.gestao"
+      ]
+    },
+    "apps/qr_manipulator": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/qr_manipulator"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/qr_manipulator/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.qr"
+      ]
+    },
+    "apps/site": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/site"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/site/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.site"
+      ]
+    },
+    "cardápio": {
+      "inheritance": [
+        ".",
+        "cardápio"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "cardápio/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    "docs": {
+      "inheritance": [
+        ".",
+        "docs"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "docs/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.docs"
+      ]
+    },
+    "logos": {
+      "inheritance": [
+        ".",
+        "logos"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "logos/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    "mídias": {
+      "inheritance": [
+        ".",
+        "mídias"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "mídias/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    "packages": {
+      "inheritance": [
+        ".",
+        "packages"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "packages/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.packages"
+      ]
+    },
+    "packages/contracts": {
+      "inheritance": [
+        ".",
+        "packages",
+        "packages/contracts"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "packages/AGENTS.md",
+        "packages/contracts/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.packages",
+        "region.contracts"
+      ]
+    },
+    "packages/database": {
+      "inheritance": [
+        ".",
+        "packages",
+        "packages/database"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "packages/AGENTS.md",
+        "packages/database/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.packages",
+        "region.database"
+      ]
+    },
+    "packages/ui": {
+      "inheritance": [
+        ".",
+        "packages",
+        "packages/ui"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "packages/AGENTS.md",
+        "packages/ui/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.packages",
+        "region.ui"
+      ]
+    },
+    "planejamento": {
+      "inheritance": [
+        ".",
+        "planejamento"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "planejamento/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    "site": {
+      "inheritance": [
+        ".",
+        "site"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "site/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root"
+      ]
+    },
+    "tools": {
+      "inheritance": [
+        ".",
+        "tools"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "tools/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.tools"
+      ]
+    },
+    "tools/agent-policy": {
+      "inheritance": [
+        ".",
+        "tools",
+        "tools/agent-policy"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "tools/AGENTS.md",
+        "tools/agent-policy/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.tools"
+      ]
+    }
+  },
+  "manifestHash": "fbda328f6200d0750272d6da2cacfb2c917efc519e856db14053d3c54877c521"
+}
