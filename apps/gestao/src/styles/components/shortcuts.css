@@ -1,0 +1,12 @@
+.execution-shortcuts { display:grid; gap:.55rem; margin-top:-.45rem; padding:.8rem 1rem 1rem; border:1px solid #c4955860; border-top:0; border-radius:0 0 16px 16px; background:#fff9ed; }
+.execution-shortcuts>span { color:#796349; font-size:.68rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.execution-shortcuts>div { display:flex; flex-wrap:wrap; gap:.6rem; }
+.execution-shortcut { position:relative; display:grid; min-width:180px; max-width:290px; gap:.2rem; padding:.72rem 2.25rem .72rem .8rem; border:1px solid var(--line); border-radius:12px; color:var(--ink); background:#fffdf8; }
+.execution-shortcut small { color:#776653; font-size:.7rem; }
+.execution-shortcut>b { position:absolute; right:.8rem; top:50%; color:var(--gold); transform:translateY(-50%); }
+.execution-shortcut--primary { border-color:var(--gold); background:#f5e5c9; }
+
+.form-two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; }
+.icon-button { width:42px; height:42px; flex:0 0 auto; border:1px solid var(--line); border-radius:50%; background:#fffdf8; color:var(--ink); font-size:1.25rem; cursor:pointer; }
+.button--danger { border:1px solid #a84838; background:#fff4f0; color:#8d2f20; }
+.quick-create-panel { scroll-margin-top:1rem; border-color:var(--gold); box-shadow:0 14px 36px #c4955824; }

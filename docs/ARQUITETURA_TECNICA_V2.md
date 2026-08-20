@@ -162,7 +162,7 @@ Antes da publicação:
 
 ## Bloqueio de segurança para `/gestao`
 
-O servidor escuta somente `127.0.0.1` e recusa exposição externa enquanto `PRODUCTION_AUTH_READY` não estiver explícito. Esse sinalizador não implementa segurança; apenas evita publicação acidental. Antes de liberar `carrochefe.com/gestao`, implementar e testar:
+O servidor escuta somente em loopback e recusa incondicionalmente `HOST=0.0.0.0`, `HOST=::`, endereços de rede e domínios. Não existe flag capaz de afirmar que a autenticação está pronta ou contornar esse bloqueio. Antes de liberar `carrochefe.com/gestao`, será necessário implementar e testar autenticação server-side e então substituir conscientemente essa barreira por uma política verificável que inclua:
 
 - login OIDC/sessão segura e recuperação de acesso;
 - papéis de proprietário, gestor, colaborador e identidade de máquina;

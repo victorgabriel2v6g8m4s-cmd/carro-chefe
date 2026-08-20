@@ -1,8 +1,10 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { messages } from "../i18n";
+import type { ScopedReference } from "../types";
 
-export type ScopedReference = { id: string; type: string; label: string; detail?: string; route?: string };
+export type { ScopedReference } from "../types";
 
 const referenceCache = new Map<string, Promise<ScopedReference[]>>();
 
@@ -48,8 +50,8 @@ export function ReferenceComposer({ value, onChange, references, onReferencesCha
   const suggestions = mention ? available.filter((item) => `${item.id} ${item.label}`.toLocaleLowerCase("pt-BR").includes(mention.query)).slice(0, 8) : [];
   return <div className="reference-composer">
     <textarea ref={textarea} required={required} minLength={required ? 2 : undefined} disabled={disabled} value={value} onFocus={() => void ensureLoaded()} onChange={change} onKeyUp={(event) => updateMention(event.currentTarget.value, event.currentTarget.selectionStart)} placeholder={placeholder} />
-    {mention && <div className="mention-menu" role="listbox" aria-label="Referências disponíveis">{suggestions.length ? suggestions.map((reference) => <button type="button" role="option" key={`${reference.type}-${reference.id}`} onMouseDown={(event) => event.preventDefault()} onClick={() => select(reference)}><small>@{reference.id} · {reference.type}</small><strong>{reference.label}</strong>{reference.detail && <span>{reference.detail}</span>}</button>) : <p>Nenhuma referência corresponde a “{mention.query}”.</p>}</div>}
-    <small className="composer-hint">Digite <b>@</b> para citar tarefas, decisões, memória, execuções e arquivos do escopo.</small>
-    {references.length > 0 && <div className="selected-references">{references.map((reference) => <span key={`${reference.type}-${reference.id}`}><b>@{reference.id}</b>{reference.route && <Link to={reference.route}>abrir</Link>}<button type="button" aria-label={`Remover referência ${reference.id}`} onClick={() => onReferencesChange(references.filter((item) => item !== reference))}>×</button></span>)}</div>}
+    {mention && <div className="mention-menu" role="listbox" aria-label={messages.common.references.search}>{suggestions.length ? suggestions.map((reference) => <button type="button" role="option" key={`${reference.type}-${reference.id}`} onMouseDown={(event) => event.preventDefault()} onClick={() => select(reference)}><small>@{reference.id} · {reference.type}</small><strong>{reference.label}</strong>{reference.detail && <span>{reference.detail}</span>}</button>) : <p>{messages.common.references.noMatches}</p>}</div>}
+    <small className="composer-hint">{messages.common.references.search}</small>
+    {references.length > 0 && <div className="selected-references">{references.map((reference) => <span key={`${reference.type}-${reference.id}`}><b>@{reference.id}</b>{reference.route && <Link to={reference.route}>{messages.common.actions.open}</Link>}<button type="button" aria-label={`${messages.common.references.removeReference} ${reference.id}`} onClick={() => onReferencesChange(references.filter((item) => item !== reference))}>×</button></span>)}</div>}
   </div>;
 }

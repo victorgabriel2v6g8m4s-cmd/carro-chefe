@@ -13,13 +13,15 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 
 ## 2. Fontes oficiais e precedência
 
-1. Este `AGENTS.md` define as regras gerais.
-2. `planejamento/data/plan.seed.json` é a origem versionada da primeira importação.
-3. Em execução, `.runtime/carro-chefe.db` (Prisma + SQLite) é a fonte operacional mutável do plano, histórico e coordenação dos agentes.
-4. `docs/` explica as decisões e a arquitetura em linguagem humana.
-5. `logos/`, `cardápio/` e `elementos gráficos/` são referências visuais; nunca sobrescreva os originais.
-6. O ERP escolhido será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro.
-7. Se houver conflito entre documentação e dado transacional, sinalize a divergência; não invente uma conciliação.
+1. Leia integralmente `REGRAS.md`: ele define as diretrizes obrigatórias de arquitetura, segurança, dados, UX, testes e manutenção.
+2. Este `AGENTS.md` define as regras gerais do Carro Chefe; o `AGENTS.md` mais próximo do caminho trabalhado acrescenta regras locais sem enfraquecer `REGRAS.md`.
+3. Antes de alterar código, execute `npm run policy:preflight -- --agent AG-DEV --scope <região>`; outros agentes usam seu próprio ID e permanecem dentro da especialidade declarada.
+4. `planejamento/data/plan.seed.json` é a origem versionada da primeira importação.
+5. Em execução, `.runtime/carro-chefe.db` (Prisma + SQLite) é a fonte operacional mutável do plano, histórico e coordenação dos agentes.
+6. `docs/` explica as decisões e a arquitetura em linguagem humana.
+7. `logos/`, `cardápio/` e `elementos gráficos/` são referências visuais; nunca sobrescreva os originais.
+8. O ERP escolhido será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro.
+9. Se houver conflito entre documentação e dado transacional, sinalize a divergência; não invente uma conciliação.
 
 ## 3. Regras inegociáveis
 

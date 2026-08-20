@@ -10,6 +10,24 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../..");
 const runtimePlan = path.join(root, "planejamento", ".runtime", "plan.json");
 const seedPlan = path.join(root, "planejamento", "data", "plan.seed.json");
+const knowledgeRoots = [
+  { id: "KN-ROOT-ESTABELECIMENTO", slug: "estabelecimento", name: "Estabelecimento", path: "estabelecimento" },
+  { id: "KN-ROOT-PESSOAS", slug: "pessoas", name: "Pessoas", path: "pessoas" },
+  { id: "KN-ROOT-OPERACAO", slug: "operacao", name: "Operação", path: "operacao" },
+  { id: "KN-ROOT-CARDAPIO", slug: "cardapio", name: "Cardápio", path: "cardapio" },
+  { id: "KN-ROOT-SISTEMAS", slug: "sistemas", name: "Sistemas", path: "sistemas" },
+  { id: "KN-ROOT-MARCA", slug: "marca", name: "Marca", path: "marca" },
+  { id: "KN-ROOT-MARKETING", slug: "marketing", name: "Marketing", path: "marketing" },
+  { id: "KN-ROOT-FINANCEIRO", slug: "financeiro", name: "Financeiro", path: "financeiro" },
+  { id: "KN-ROOT-FORNECEDORES", slug: "fornecedores", name: "Fornecedores", path: "fornecedores" },
+  { id: "KN-ROOT-DECISOES", slug: "decisoes", name: "Decisões", path: "decisoes" },
+  { id: "KN-ROOT-ARQUIVOS", slug: "arquivos", name: "Arquivos", path: "arquivos" },
+  { id: "KN-EST-ENDERECO", parentId: "KN-ROOT-ESTABELECIMENTO", slug: "endereco", name: "Endereço", path: "estabelecimento/endereco" },
+  { id: "KN-PES-EQUIPE", parentId: "KN-ROOT-PESSOAS", slug: "equipe", name: "Equipe", path: "pessoas/equipe" },
+  { id: "KN-OPE-COZINHA", parentId: "KN-ROOT-OPERACAO", slug: "cozinha", name: "Cozinha", path: "operacao/cozinha" },
+  { id: "KN-SIS-ERP", parentId: "KN-ROOT-SISTEMAS", slug: "erp", name: "ERP", path: "sistemas/erp" },
+  { id: "KN-DEC-CAPTURADAS", parentId: "KN-ROOT-DECISOES", slug: "capturadas", name: "Decisões capturadas", path: "decisoes/capturadas" }
+] as const;
 
 async function exists(file: string) {
   try { await fs.access(file); return true; } catch { return false; }
@@ -53,6 +71,15 @@ async function run() {
         northStar: plan.meta.northStar
       }
     });
+
+    for (const node of knowledgeRoots) {
+      await tx.knowledgeNode.upsert({
+        where: { id: node.id },
+        update: { parentId: "parentId" in node ? node.parentId : null, slug: node.slug, name: node.name, path: node.path, status: "active" },
+        create: { id: node.id, projectId, parentId: "parentId" in node ? node.parentId : null, slug: node.slug, name: node.name,
+          path: node.path, kind: "branch", createdBy: "SEED", sourceType: "system" }
+      });
+    }
 
     for (const [order, pillar] of plan.pillars.entries()) {
       await tx.pillar.upsert({

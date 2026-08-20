@@ -1,14 +1,15 @@
 import { formatDate } from "@carro-chefe/ui";
+import type { Agent, AgentCommunication } from "../types";
 
 const ownerIds = new Set(["PROPRIETARIO", "proprietario", "owner"]);
 const kindLabels: Record<string, string> = { delegation: "delegou", coordination: "coordena", handoff: "entregou contexto", question: "perguntou", answer: "respondeu", result: "reportou resultado", decision: "decidiu", update: "atualizou" };
 
-function displayName(id: string, agents: any[]) {
+function displayName(id: string, agents: Agent[]) {
   if (ownerIds.has(id)) return "Proprietário";
   return agents.find((agent) => agent.id === id)?.name ?? id;
 }
 
-export function AgentFlowMap({ agents, communications, compact = false, onAgentClick }: { agents: any[]; communications: any[]; compact?: boolean; onAgentClick?: (agentId: string) => void }) {
+export function AgentFlowMap({ agents, communications, compact = false, onAgentClick }: { agents: Agent[]; communications: AgentCommunication[]; compact?: boolean; onAgentClick?: (agentId: string) => void }) {
   const normalizeId = (id: string) => ownerIds.has(id) ? "PROPRIETARIO" : id;
   const agentById = new Map(agents.map((agent) => [agent.id, agent]));
   const participantIds = new Set<string>(["PROPRIETARIO"]);

@@ -17,6 +17,7 @@ Protocolo operacional compacto (a Central completa vínculos, contexto, auditori
 
 Economia de contexto (obrigatória):
 - Comece pelo contexto já entregue. Não inventarie o repositório, não releia arquivos e não consulte schema/log/status já presentes no prompt.
+- A cápsula de política já foi validada por hash. Se você for AG-DEV e alterar o projeto, execute npm run policy:preflight -- --scope <caminho-alvo> antes da primeira edição; leia somente a cadeia de fontes indicada. Agentes de negócio não executam esse fluxo técnico nem programam.
 - Use terminal somente quando a entrega exigir arquivo ou código. Agentes não técnicos não programam e escrevem apenas no workspace isolado informado.
 - Prefira uma busca dirigida e um trecho pequeno. Evite dumps de arquivos, banco, rede ou logs.
 - Para pesquisa de negócio, use fontes primárias e devolva apenas fatos, links e ressalvas relevantes.

@@ -19,6 +19,7 @@ import { referenceRoutes } from "./modules/references/routes";
 import { managementRoutes } from "./modules/management/routes";
 import { knowledgeRoutes } from "./modules/knowledge/routes";
 import { containsLikelyEncodingLoss } from "./lib/text";
+import { corsOrigin, protectSensitiveMutation } from "./security";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
@@ -27,7 +28,7 @@ declare module "fastify" {
 export async function buildApp() {
   const app = Fastify({ logger: process.env.NODE_ENV !== "test", bodyLimit: 16 * 1024 * 1024 });
   await configureSqlite();
-  await app.register(cors, { origin: process.env.NODE_ENV === "production" ? false : true });
+  await app.register(cors, { origin: corsOrigin, credentials: false });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
   await app.register(rateLimit, {
     global: true,
@@ -50,6 +51,8 @@ export async function buildApp() {
     reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   });
 
+  app.addHook("onRequest", protectSensitiveMutation);
+
   app.addHook("preValidation", async (request) => {
     if (containsLikelyEncodingLoss(request.body)) {
       throw new ApiError(400, "Texto recebido com perda de codificação. Reenvie o JSON como UTF-8.", { code: "ENCODING_CORRUPTED" });
@@ -59,7 +62,7 @@ export async function buildApp() {
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ZodError) return reply.code(400).send({ error: "Entrada inválida.", details: error.issues });
     if (error instanceof ApiError) return reply.code(error.statusCode).send({ error: error.message, details: error.details });
-    if ((error as any).code === "P2025") return reply.code(404).send({ error: "Registro não encontrado." });
+    if ((error as { code?: string }).code === "P2025") return reply.code(404).send({ error: "Registro não encontrado." });
     const httpError = error as { statusCode?: number; message?: string; code?: string };
     if (typeof httpError.statusCode === "number" && httpError.statusCode >= 400 && httpError.statusCode < 500) {
       return reply.code(httpError.statusCode).send({ error: httpError.message, code: httpError.code });

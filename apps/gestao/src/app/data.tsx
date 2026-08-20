@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
+import type { Bootstrap } from "../types";
 
-export type Bootstrap = { project: any; tasks: any[]; decisions: any[]; risks: any[]; procurement: any[]; runs: any[]; pendingQuestions: number };
+export type { Bootstrap } from "../types";
 const DataContext = createContext<{ data: Bootstrap | null; loading: boolean; error: string | null; refresh: () => Promise<void> } | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
