@@ -2,7 +2,7 @@
 
 Estas instruções complementam o `AGENTS.md` da raiz para todo o conteúdo de `planejamento/`.
 
-- Leia `README.md`, `openapi.yaml` e `../docs/ARQUITETURA_TECNICA_V2.md` antes de alterar a API.
+- Leia `README.md`, `openapi.yaml` e `../docs/tecnologia/ARQUITETURA_TECNICA_V2.md` antes de alterar a API.
 - `data/plan.seed.json` é a fundação versionada; `../.runtime/carro-chefe.db` é o estado local mutável via Prisma.
 - `public/`, `server.js` e `lib/` são o legado preservado para comparação até a paridade da V2; novas funcionalidades entram em `../apps/` e `../packages/`.
 - Nunca edite o SQLite, `.runtime/plan.json`, requisições ou auditoria à mão.
