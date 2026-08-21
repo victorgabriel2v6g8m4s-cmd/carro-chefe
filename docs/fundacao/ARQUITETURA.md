@@ -170,4 +170,3 @@ flowchart LR
 - não há planta com medidas do quiosque;
 - licenças e regras municipais precisam de validação local;
 - nenhuma métrica de venda é real até o início da operação.
-
