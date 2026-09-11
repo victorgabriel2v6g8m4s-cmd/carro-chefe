@@ -79,3 +79,8 @@ Após 30 dias, classificar cada item por popularidade e margem, sem usar apenas 
 - nome do arquivo: `AAAA-MM-DD_produto_formato_versao_autor.ext`;
 - aprovação de Marca e Operações antes da publicação.
 
+## Referência fotográfica real — Chefão
+
+Em 11/09/2026 foi recebido um conjunto de **10 fotografias sem edição** do Chefão, cobrindo vistas frontais, três quartos, superior/lateral e variações de montagem com maior presença de molho cheddar. O catálogo, metadados, hashes e regras de preservação ficam em [`mídias/produtos/chefao/README.md`](../mídias/produtos/chefao/README.md).
+
+Essas imagens têm status `review`: servem como referência real de montagem e proporção, mas não constituem automaticamente o padrão publicitário aprovado. Originais devem permanecer imutáveis; qualquer ajuste de luz, recorte, fundo ou composição precisa ser salvo como derivado e passar por Marca/Marketing e Operações.
