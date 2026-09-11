@@ -1,6 +1,18 @@
 # Chefão — fotos originais de referência
 
-Este diretório reúne fotografias **sem edição** do produto real **Chefão** (`PROD-CHF-001`) recebidas em 11/09/2026 para referência de montagem, ficha técnica, materiais de cardápio e futuras peças de mídia.
+Este diretório **cataloga** fotografias sem edição do produto real **Chefão** (`PROD-CHF-001`) recebidas em 11/09/2026 para referência de montagem, ficha técnica, materiais de cardápio e futuras peças de mídia.
+
+> **Estado do acervo nesta branch:** a documentação, descrições, dimensões e hashes dos 10 JPEGs já estão versionados. Os binários originais devem ficar em `originais/`; enquanto eles não aparecerem nessa pasta, o acervo não deve ser considerado integralmente carregado no GitHub.
+
+## Leitura por agentes de IA
+
+Antes de abrir imagens, agentes podem consultar:
+
+- [`README_IA.md`](./README_IA.md): regra curta de uso por IA;
+- [`GUIA_IA.md`](./GUIA_IA.md): quando a descrição é suficiente e quando a inspeção visual é obrigatória;
+- [`CATALOGO_IA.json`](./CATALOGO_IA.json): descrição individual, avaliação, necessidade de edição, usos sugeridos, limitações e prioridade de cada foto.
+
+**Regra obrigatória:** para busca, inventário, referência e triagem preliminar, a descrição textual pode bastar. Para tarefas complexas ou visualmente sensíveis, **a IA DEVE abrir e inspecionar as imagens candidatas antes de utilizá-las**. Isso inclui edição, geração derivada, seleção final para Instagram/site/totem/cardápio/banner/anúncio, recorte, remoção de fundo, correção de cor, comparação fina, avaliação de fidelidade à ficha ou qualquer material destinado à publicação ou impressão.
 
 ## Governança do acervo
 
@@ -8,13 +20,13 @@ Este diretório reúne fotografias **sem edição** do produto real **Chefão** 
 - **Origem:** arquivos enviados pelo usuário nesta conversa.
 - **Autor/fotógrafo:** não informado.
 - **Direitos:** uso no projeto solicitado pelo usuário; confirmar titularidade/licença para publicação externa antes de usar em campanha.
-- **Edição:** nenhuma. Os JPEGs desta pasta devem permanecer como originais imutáveis; qualquer correção de luz, recorte, remoção de fundo, upscale ou composição deve ser salva em uma pasta de derivados.
+- **Edição:** nenhuma. Os JPEGs da pasta `originais/` devem permanecer imutáveis; qualquer correção de luz, recorte, remoção de fundo, upscale ou composição deve ser salva em uma pasta de derivados.
 - **Data no nome:** 2026-09-11 é a data de incorporação ao acervo. Os arquivos não possuem data EXIF de captura disponível.
 - **Aprovação:** requer revisão de Marca/Marketing e Operações antes de publicação, conforme `mídias/AGENTS.md`.
 
 ## Arquivos
 
-| Arquivo no repositório | Arquivo recebido | Ângulo / conteúdo | Dimensões | Tamanho | SHA-256 |
+| Arquivo esperado em `originais/` | Arquivo recebido | Ângulo / conteúdo | Dimensões | Tamanho | SHA-256 |
 | --- | --- | --- | ---: | ---: | --- |
 | `2026-09-11_produto-chefao-frontal-01_foto_v01_review.jpg` | `158156.jpg` | Frontal, recheio completo visível, exposição mais escura | 864×1536 | 66.984 B | `e3eb705b6dfc7fd6f31d033b4d9df59eb910822795dbc08ba3a0099181b96c6c` |
 | `2026-09-11_produto-chefao-frontal-02_foto_v01_review.jpg` | `158155.jpg` | Frontal, recheio completo visível | 864×1536 | 66.221 B | `4713c8a2b49d611c27ff7c505f78406b7fe4878b460424deb4f9ca1c3127f554` |
@@ -29,6 +41,8 @@ Este diretório reúne fotografias **sem edição** do produto real **Chefão** 
 
 ## Uso recomendado
 
-Este conjunto é útil como **registro real do produto e da montagem atual**, não como fotografia publicitária final. Ele permite comparar proporção do pão, exposição dos dois espetos, distribuição de cheddar, salada, cebola-roxa e batata palha, além de orientar futuras sessões com luz e enquadramento padronizados.
+O conjunto é valioso como **registro real do produto e da montagem atual**, mas não está pronto para publicação direta. Em geral, há subexposição, muito espaço vazio e necessidade de recorte/ajuste de luz e cor. O catálogo classifica cada arquivo e sugere aplicações possíveis.
 
-Para material final de cardápio/campanha, produzir derivados a partir destes originais e manter uma referência explícita ao arquivo-fonte. Não alterar nem sobrescrever os JPEGs desta pasta.
+A triagem documental indica `frontal-04` (`158152.jpg`) como melhor candidata frontal para tratamento e `tres-quartos-01` (`158154.jpg`) como melhor opção inicial para volume e redes sociais. Essa indicação **não autoriza uso automático**: antes da escolha final, a imagem deve ser aberta e avaliada visualmente.
+
+Para material final de cardápio/campanha, produzir derivados a partir dos originais e manter uma referência explícita ao arquivo-fonte. Não alterar nem sobrescrever os JPEGs originais.
