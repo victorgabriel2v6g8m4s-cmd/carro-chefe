@@ -1,0 +1,28 @@
+[Unit]
+Description=Carro Chefe web platform
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=carrochefe
+Group=carrochefe
+WorkingDirectory=/srv/carro-chefe/current
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=4173
+Environment=TRUST_PROXY=true
+Environment=PRODUCTION_AUTH_READY=false
+EnvironmentFile=/etc/carro-chefe/carro-chefe.env
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/carro-chefe/data /srv/carro-chefe/current/.runtime
+
+[Install]
+WantedBy=multi-user.target
