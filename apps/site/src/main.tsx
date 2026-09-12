@@ -1,4 +1,5 @@
-import { FormEvent, StrictMode, useEffect, useMemo, useRef, useState } from "react";
+import { StrictMode, useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import "./styles.css";
@@ -214,13 +215,25 @@ function formatPhone(value: string) {
 
 function AnalyticsChoice({ onChange }: { onChange: (value: AnalyticsConsent) => void }) {
   const [consent, setConsent] = useState<AnalyticsConsent>(() => getAnalyticsConsent());
-  if (consent !== "unknown") return null;
 
   const choose = (value: "granted" | "denied") => {
-    if (value === "granted") grantAnalytics(); else denyAnalytics();
+    const previous = getAnalyticsConsent();
+    if (value === "granted") {
+      if (previous !== "granted") grantAnalytics();
+      else localStorage.setItem(analyticsConsentKey, "granted");
+    } else {
+      denyAnalytics();
+    }
     setConsent(value);
     onChange(value);
+    // Se um fornecedor já tinha sido carregado, o reload garante revogação
+    // efetiva em vez de apenas parar nossos eventos customizados.
+    if (value === "denied" && previous === "granted") window.location.reload();
   };
+
+  if (consent !== "unknown") {
+    return <button type="button" className="analytics-preferences-button" onClick={() => setConsent("unknown")}>Preferências de analytics</button>;
+  }
 
   return <aside className="analytics-choice" aria-label="Preferência de analytics">
     <div><strong>Podemos usar analytics para entender como esta página é usada?</strong><p>Isso nos ajuda a melhorar a experiência. O cadastro funciona mesmo se você recusar.</p></div>
@@ -237,7 +250,7 @@ function SignupForm() {
   const [serverMessage, setServerMessage] = useState("");
   const started = useRef(false);
   const attribution = useMemo(() => getAttribution(), []);
-  const phoneInvalid = phoneTouched && phone.length > 0 && !isValidPhone(phone);
+  const phoneInvalid = phoneTouched && !isValidPhone(phone);
 
   const markStarted = () => {
     if (started.current) return;
@@ -245,7 +258,7 @@ function SignupForm() {
     trackOnce("form_start", { formPosition: "hero_inline", hasProductMedia: false });
   };
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (state === "loading") return;
     setPhoneTouched(true);
@@ -256,7 +269,7 @@ function SignupForm() {
     setServerMessage("");
     track("signup_submit", { ctaVariant: "prelaunch_primary_v1", formPosition: "hero_inline", hasProductMedia: false });
 
-    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const data = new FormData(event.currentTarget);
     try {
       const response = await fetch("/api/v1/public/prelaunch/signup", {
         method: "POST",
