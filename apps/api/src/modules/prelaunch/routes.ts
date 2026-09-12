@@ -64,9 +64,9 @@ export async function prelaunchRoutes(app: any) {
   }, async (request: any, reply: any) => {
     const input = signupSchema.parse(request.body);
 
-    // Honeypot: humanos não veem nem preenchem este campo. Respondemos sem
-    // persistir para não ensinar bots a contornar o mecanismo.
-    if (input.website.trim()) return reply.code(202).send({ status: "accepted" });
+    // Honeypot: para não ensinar automação a detectar a armadilha, simulamos
+    // a mesma resposta de sucesso sem persistir qualquer dado.
+    if (input.website.trim()) return reply.code(201).send({ status: "created" });
 
     const phoneNormalized = normalizeBrazilWhatsappPhone(input.phone);
     if (!phoneNormalized) {
@@ -93,8 +93,7 @@ export async function prelaunchRoutes(app: any) {
           firstSeenAt: resolveFirstSeenAt(input.firstSeenAt, now),
           signupAt: now,
           status: "active"
-        },
-        select: { id: true }
+        }
       });
       return reply.code(201).send({ status: "created" });
     } catch (error) {
