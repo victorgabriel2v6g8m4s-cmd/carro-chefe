@@ -70,6 +70,10 @@ function getAttribution(): Attribution {
   return attribution;
 }
 
+function isBannerVipCampaign(attribution: Attribution) {
+  return attribution.ccQr === "QR-001" && attribution.ccCampaign === "banner";
+}
+
 function getSessionId() {
   const stored = sessionStorage.getItem(sessionKey);
   if (stored) return stored;
@@ -250,6 +254,7 @@ function SignupForm() {
   const [serverMessage, setServerMessage] = useState("");
   const started = useRef(false);
   const attribution = useMemo(() => getAttribution(), []);
+  const bannerVip = isBannerVipCampaign(attribution);
   const phoneInvalid = phoneTouched && !isValidPhone(phone);
 
   const markStarted = () => {
@@ -321,14 +326,14 @@ function SignupForm() {
     return <div className="signup-result" role="status" aria-live="polite">
       <span className="result-mark" aria-hidden="true">✓</span>
       <h2>{duplicate ? "Você já está na Lista dos Primeiros." : "Você está dentro."}</h2>
-      <p>{duplicate ? "Esse WhatsApp já está confirmado. Quando houver novidade da inauguração, você continua dentro." : "Seu lugar na Lista dos Primeiros está confirmado."}</p>
-      {!duplicate && <ol className="progress-list"><li><strong>Cadastro confirmado</strong><span>✓</span></li><li><strong>A abertura será anunciada pelo WhatsApp</strong></li><li><strong>Seu benefício chegará próximo à inauguração</strong></li></ol>}
+      <p>{duplicate ? "Esse WhatsApp já está confirmado. Quando houver novidade da inauguração, você continua dentro." : bannerVip ? "Seu cadastro pela campanha do banner foi confirmado. Você terá acesso VIP a promoções, cupons e outros benefícios do Carro Chefe." : "Seu lugar na Lista dos Primeiros está confirmado."}</p>
+      {!duplicate && <ol className="progress-list"><li><strong>Cadastro confirmado</strong><span>✓</span></li><li><strong>A abertura será anunciada pelo WhatsApp</strong></li><li><strong>{bannerVip ? "Acesso VIP a promoções, cupons e outros benefícios" : "Seu benefício chegará próximo à inauguração"}</strong></li></ol>}
       <div className="post-signup-actions"><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>Acompanhar no Instagram</a></div>
     </div>;
   }
 
   return <form className="signup-form" onSubmit={submit} noValidate data-clarity-mask="true">
-    <div className="form-heading"><span>Lista dos Primeiros</span><h2>Saiba antes. Chegue primeiro.</h2><p>Novidades da inauguração e promoções pelo WhatsApp. Saia quando quiser.</p></div>
+    <div className="form-heading"><span>Lista dos Primeiros</span><h2>Saiba antes. Chegue primeiro.</h2><p>{bannerVip ? "Cadastre seu WhatsApp para receber novidades da inauguração e ter acesso VIP a promoções, cupons e outros benefícios. Saia quando quiser." : "Novidades da inauguração e promoções pelo WhatsApp. Saia quando quiser."}</p></div>
     <div className="field-group">
       <label htmlFor="whatsapp">Seu WhatsApp</label>
       <input id="whatsapp" name="whatsapp" type="tel" inputMode="tel" autoComplete="tel" placeholder="(67) 99204-6721" value={phone} aria-invalid={phoneInvalid || Boolean(serverMessage)} aria-describedby="phone-help phone-error" onFocus={markStarted} onBlur={() => setPhoneTouched(true)} onChange={(event) => { const next = formatPhone(event.target.value); setPhone(next); if (phoneTouched && isValidPhone(next)) setServerMessage(""); }} data-clarity-mask="true" />
@@ -337,7 +342,7 @@ function SignupForm() {
     </div>
     <label className={`consent-row${consentError ? " has-error" : ""}`}>
       <input type="checkbox" checked={consent} onFocus={markStarted} onChange={(event) => { setConsent(event.target.checked); if (event.target.checked) setConsentError(false); }} />
-      <span>Quero receber pelo WhatsApp novidades da inauguração e promoções do Carro Chefe. Posso cancelar quando quiser.</span>
+      <span>Quero receber pelo WhatsApp novidades da inauguração, promoções, cupons e outros benefícios do Carro Chefe. Posso cancelar quando quiser.</span>
     </label>
     {consentError && <p className="field-error consent-message" role="alert">Marque esta opção para confirmar que deseja receber as mensagens.</p>}
     <div className="honeypot" aria-hidden="true"><label htmlFor="website">Site</label><input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" /></div>
@@ -353,22 +358,23 @@ function BrandHeader() {
 
 function PrelaunchLanding() {
   const [, setAnalyticsConsent] = useState<AnalyticsConsent>(() => getAnalyticsConsent());
+  const attribution = useMemo(() => getAttribution(), []);
+  const bannerVip = isBannerVipCampaign(attribution);
 
   useEffect(() => {
     const consent = getAnalyticsConsent();
     if (consent === "granted") loadAnalyticsVendors();
-    const attribution = getAttribution();
     if (attribution.ccQr) trackOnce("qr_scan", { hasProductMedia: false });
     trackOnce("landing_view", { hasProductMedia: false });
-  }, []);
+  }, [attribution]);
 
   return <div className="prelaunch-shell"><a className="skip" href="#cadastro">Pular para o cadastro</a><BrandHeader />
     <main>
       <section className="prelaunch-hero">
-        <div className="hero-message"><span className="eyebrow">Pré-inauguração · Campo Grande</span><h1>O Carro Chefe<br /><em>está chegando.</em></h1><p className="hero-lead">Brasa, espeto e baguete em uma experiência feita para chamar atenção antes mesmo da primeira mordida.</p><p className="hero-promise">Entre para a <strong>Lista dos Primeiros</strong> e receba a abertura em primeira mão e um benefício especial de inauguração.</p><a className="hero-anchor" href="#cadastro" onClick={() => track("signup_cta_click", { ctaVariant: "prelaunch_anchor_v1", formPosition: "hero_inline", hasProductMedia: false })}>Entrar na Lista dos Primeiros <span aria-hidden="true">↓</span></a></div>
+        <div className="hero-message"><span className="eyebrow">Pré-inauguração · Campo Grande</span><h1>O Carro Chefe<br /><em>está chegando.</em></h1><p className="hero-lead">Brasa, espeto e baguete em uma experiência feita para chamar atenção antes mesmo da primeira mordida.</p><p className="hero-promise">{bannerVip ? <>Entre para a <strong>Lista dos Primeiros</strong>, receba a abertura em primeira mão e tenha <strong>acesso VIP a promoções, cupons e outros benefícios</strong>.</> : <>Entre para a <strong>Lista dos Primeiros</strong> e receba a abertura em primeira mão e um benefício especial de inauguração.</>}</p><a className="hero-anchor" href="#cadastro" onClick={() => track("signup_cta_click", { ctaVariant: "prelaunch_anchor_v1", formPosition: "hero_inline", hasProductMedia: false })}>Entrar na Lista dos Primeiros <span aria-hidden="true">↓</span></a></div>
         <div className="signup-panel" id="cadastro"><SignupForm /></div>
       </section>
-      <section className="expectation-strip" aria-label="O que você recebe"><div><span>01</span><strong>Abertura em primeira mão</strong><p>Você recebe o aviso pelo WhatsApp quando a inauguração estiver confirmada.</p></div><div><span>02</span><strong>Benefício de inauguração</strong><p>A Lista dos Primeiros receberá a condição especial quando a regra estiver definida e pronta para ser honrada.</p></div><div><span>03</span><strong>Bastidores da marca</strong><p>Acompanhe a preparação do Carro Chefe sem promessas, datas ou contagens artificiais.</p></div></section>
+      <section className="expectation-strip" aria-label="O que você recebe"><div><span>01</span><strong>Abertura em primeira mão</strong><p>Você recebe o aviso pelo WhatsApp quando a inauguração estiver confirmada.</p></div><div><span>02</span><strong>{bannerVip ? "Acesso VIP" : "Benefício de inauguração"}</strong><p>{bannerVip ? "Cadastros da campanha QR-001 terão acesso VIP a promoções, cupons e outros benefícios. Os detalhes de cada ação serão comunicados pelo Carro Chefe." : "A Lista dos Primeiros receberá a condição especial quando a regra estiver definida e pronta para ser honrada."}</p></div><div><span>03</span><strong>Bastidores da marca</strong><p>Acompanhe a preparação do Carro Chefe sem promessas, datas ou contagens artificiais.</p></div></section>
       <section className="brand-story"><div><span className="eyebrow">Sabor que lidera</span><h2>Brasa no centro.<br />Sem atalhos na promessa.</h2></div><p>O pré-lançamento existe para avisar quem quer chegar primeiro — sem pedido antecipado, sem data inventada e sem escassez artificial. Quando estiver pronto para abrir, você vai saber.</p></section>
       <section className="social-section"><span className="eyebrow">Enquanto a brasa acende</span><h2>Acompanhe os bastidores.</h2><p>O cadastro é a forma principal de receber a abertura. Se quiser ver o processo de perto, estamos também nas redes.</p><div><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>@carrochefe_cg</a><a href={whatsapp} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_click", { section: "social" })}>WhatsApp oficial</a></div></section>
     </main>
@@ -381,7 +387,7 @@ function Privacy() {
   useEffect(() => { trackOnce("privacy_open"); }, []);
   return <div className="legal-shell"><BrandHeader /><main className="legal-page"><span className="eyebrow">Versão operacional · pré-lançamento</span><h1>Aviso de Privacidade</h1><p className="legal-intro">Este aviso descreve a coleta usada na Lista dos Primeiros. O texto jurídico definitivo ainda passará por revisão antes de substituir esta versão operacional.</p>
     <section><h2>O que coletamos</h2><p>Para o cadastro, coletamos o número de WhatsApp informado, o aceite de comunicação, a versão deste aviso e, quando a visita veio de uma peça identificada, os códigos de campanha e QR. O primeiro nome não é obrigatório nesta etapa.</p></section>
-    <section><h2>Para que usamos</h2><p>O WhatsApp é usado para comunicar novidades da inauguração e promoções do Carro Chefe conforme o consentimento dado. Os códigos de campanha permitem entender qual peça física originou o cadastro.</p></section>
+    <section><h2>Para que usamos</h2><p>O WhatsApp é usado para comunicar novidades da inauguração, promoções, cupons e outros benefícios do Carro Chefe conforme o consentimento dado. Os códigos de campanha permitem entender qual peça física originou o cadastro e aplicar benefícios vinculados à campanha quando houver regra aprovada.</p></section>
     <section><h2>Analytics opcional</h2><p>Analytics não essencial só é ativado após sua escolha. Se você recusar, o cadastro continua funcionando. Eventos analíticos não recebem nome nem telefone; ferramentas externas configuradas para esta página também não devem receber esses dados.</p></section>
     <section><h2>Cancelamento e direitos</h2><p>Você pode pedir para deixar de receber mensagens pelo canal oficial de WhatsApp. Solicitações sobre acesso, correção ou eliminação de dados serão tratadas pelos canais oficiais do Carro Chefe, respeitando as obrigações legais aplicáveis.</p></section>
     <section><h2>Retenção e fornecedores</h2><p>Os dados serão mantidos somente pelo período necessário às finalidades informadas e às obrigações aplicáveis. Serviços de analytics, quando configurados e aceitos, podem atuar como fornecedores técnicos. Prazos definitivos, identificação jurídica completa do controlador e revisão de bases legais serão consolidados na versão jurídica final.</p></section>
