@@ -4,60 +4,90 @@
 
 Garantir que cada acesso originado de material físico possa ser associado à peça, campanha e variante correta, sem depender somente de métricas agregadas do site.
 
-O projeto já possui, na branch `qr-app`, um contrato first-party para rastreamento de QR Codes. Esta campanha deve reaproveitá-lo.
+O projeto já possui, na branch `qr-app`, um contrato first-party para rastreamento de QR Codes. Esta campanha reaproveita esse contrato.
 
-## 2. Parâmetros canônicos
+## 2. Identificação oficial desta campanha
+
+O proprietário confirmou em 2026-09-12 que o QR efetivamente usado no banner aponta para:
+
+```text
+https://carrochefe.com/?cc_qr=QR-001&cc_campaign=banner
+```
+
+Parâmetros oficiais:
+
+```text
+cc_qr=QR-001
+cc_campaign=banner
+cc_variant=null
+```
+
+`cc_variant` não está presente no QR homologado. A aplicação deve preservar isso como ausência de variante em vez de inventar um valor.
 
 ### `cc_qr`
 
 Identificador estável da peça/posição do QR.
 
-Exemplo:
+Para o banner atual:
 
 ```text
-QR-20260911-AV01
+QR-001
 ```
 
 ### `cc_campaign`
 
 Identificador legível da campanha.
 
-Para esta entrega:
+Para o banner atual:
 
 ```text
-pre_inauguracao
+banner
 ```
 
 ### `cc_variant`
 
-Identifica uma variação criativa, local, oferta ou experimento.
+Identifica uma variação criativa, local, oferta ou experimento quando essa distinção existir.
 
-Exemplo:
-
-```text
-banner_avenida_a
-```
-
-## 3. URL P0 recomendada
-
-Enquanto não existir redirector first-party:
+Nesta peça:
 
 ```text
-https://carrochefe.com/?cc_qr=QR-20260911-AV01&cc_campaign=pre_inauguracao&cc_variant=banner_avenida_a
+não informado
 ```
 
-O identificador final do banner deve ser registrado antes da impressão/publicação.
+Se uma próxima peça precisar ser comparada por versão criativa/local/oferta, ela deve receber `cc_variant` explícito antes da impressão.
+
+## 3. Benefício confirmado da campanha
+
+O proprietário confirmou que clientes que se cadastrarem por esta campanha terão **acesso VIP a promoções, cupons e outros benefícios**.
+
+A implementação pode comunicar essa promessa para acessos identificados por:
+
+```text
+cc_qr=QR-001
+cc_campaign=banner
+```
+
+Não foram definidos nesta confirmação:
+
+- percentual de desconto;
+- valor monetário do cupom;
+- produto gratuito específico;
+- data de validade;
+- quantidade limitada;
+- frequência dos benefícios.
+
+Esses detalhes não devem ser inventados. Cada ação futura precisa ter regra operacional real e comunicável antes de ser prometida.
 
 ## 4. Evento esperado
 
-Ao receber entrada com parâmetros `cc_*`, o site deve permitir o registro lógico de um evento equivalente a:
+Ao receber a entrada oficial, o site deve permitir o registro lógico de um evento equivalente a:
 
 ```json
 {
   "event": "qr_scan",
-  "qrId": "QR-20260911-AV01",
-  "campaign": "pre_inauguracao",
-  "variant": "banner_avenida_a",
+  "qrId": "QR-001",
+  "campaign": "banner",
+  "variant": null,
   "landingPath": "/"
 }
 ```
@@ -82,6 +112,16 @@ Quando o visitante se cadastrar, o lead pode guardar:
 - `firstSeenAt`.
 
 A origem inicial deve ser preservada mesmo que o usuário navegue por outras seções antes do cadastro.
+
+Para o QR atual, um novo lead criado nessa sessão deve ficar conceitualmente com:
+
+```text
+ccQr: QR-001
+ccCampaign: banner
+ccVariant: null
+```
+
+A deduplicação continua preservando first-touch. Portanto, a interface não deve afirmar que um lead duplicado foi originalmente adquirido pela campanha `banner` sem verificar essa origem.
 
 Se futuramente houver necessidade de comparar first-touch e last-touch, isso deve ser adicionado explicitamente; não alterar silenciosamente a semântica dos campos acima.
 
@@ -118,81 +158,80 @@ Benefícios:
 - testar landing/variante mantendo o material físico;
 - evitar URLs longas impressas no QR.
 
-## 7. Registro de peças
+## 7. Registro da peça atual
 
-No modelo ideal, cada QR deve possuir registro com:
-
-- ID estável;
-- campanha;
-- variante;
-- tipo de mídia;
-- localização/posição descritiva sem dados pessoais;
-- data de criação;
-- status (`draft`, `active`, `retired`);
-- destino atual;
-- versão do criativo;
-- referência ao manifesto gerado pelo QR Lab.
-
-Exemplo conceitual:
+Registro operacional confirmado:
 
 ```text
-ID: QR-20260911-AV01
-Campanha: pre_inauguracao
-Variante: banner_avenida_a
-Mídia: banner_externo
-Status: active
+ID: QR-001
+Campanha: banner
+Variante: não informada
+Mídia: banner vertical externo
+Status: homologado para uso
 Destino: /
+Benefício associado: acesso VIP a promoções, cupons e outros benefícios
 ```
+
+O banner de referência fornecido pelo proprietário apresenta a marca Carro Chefe, o Chefão de 30 cm, Instagram `@carrochefe_cg`, WhatsApp oficial e o QR Code da campanha.
 
 ## 8. Relação com UTMs
 
 UTMs podem coexistir para compatibilidade com ferramentas externas, mas não substituem o contrato `cc_*`.
 
-Se usadas:
+A peça atual não precisa receber UTMs retroativamente para funcionar, porque `cc_qr=QR-001` e `cc_campaign=banner` já são suficientes para a atribuição interna P0.
+
+Se novas peças usarem UTMs, o sistema interno deve continuar tratando `cc_qr` como identificador principal da peça.
+
+## 9. Homologação do QR físico
+
+O proprietário confirmou em 2026-09-12 que o QR foi homologado em:
+
+- Android;
+- iPhone;
+- rede móvel.
+
+Também foi confirmado o destino/identificador efetivamente usado:
 
 ```text
-utm_source=offline
-utm_medium=qr
-utm_campaign=pre_inauguracao
-utm_content=banner_avenida_a
+https://carrochefe.com/?cc_qr=QR-001&cc_campaign=banner
 ```
 
-O sistema interno deve continuar tratando `cc_qr` como identificador principal da peça.
+Itens ainda úteis em validações de campo futuras, especialmente se o banner for reposicionado ou reimpresso:
 
-## 9. Testes obrigatórios do QR físico
-
-Antes de colocar o banner em circulação:
-
-1. testar com pelo menos um Android;
-2. testar com pelo menos um iPhone;
-3. testar em rede móvel, não apenas Wi-Fi;
-4. testar à distância compatível com o uso real;
-5. testar iluminação noturna prevista;
-6. confirmar que o QR abre HTTPS sem alerta;
-7. confirmar parâmetros `cc_*` no destino;
-8. concluir cadastro e verificar atribuição;
-9. confirmar que nenhum dado pessoal aparece na URL;
-10. guardar registro do ID/variante efetivamente impressos.
+1. distância compatível com o uso real;
+2. iluminação noturna prevista;
+3. abertura HTTPS sem alerta;
+4. conclusão de cadastro com atribuição persistida;
+5. ausência de dados pessoais na URL.
 
 ## 10. Critérios de aceite
 
-A atribuição está pronta quando:
+Para a peça atual, estão confirmados:
 
-- toda peça física possui `cc_qr` único;
-- campanha e variante são conhecidas;
-- `qr_scan` pode ser distinguido de tráfego orgânico;
-- origem chega ao cadastro sem PII em analytics;
-- relatórios conseguem comparar QRs e variantes;
-- a convenção é compatível com `apps/qr_manipulator/TRACKING.md` da branch `qr-app`;
-- alterações futuras não exigem redefinir os IDs históricos.
+- `cc_qr` único conhecido: `QR-001`;
+- campanha conhecida: `banner`;
+- ausência intencional de `cc_variant`;
+- QR homologado em Android e iPhone;
+- QR homologado em rede móvel;
+- destino oficial registrado;
+- `qr_scan` distinguível de tráfego orgânico;
+- origem compatível com o contrato first-party do projeto.
+
+A implementação deve continuar garantindo:
+
+- origem chegando ao cadastro sem PII em analytics;
+- relatórios agrupáveis por QR/campanha;
+- IDs históricos sem mudança de significado;
+- nenhum vínculo nominal entre replay analítico e telefone.
 
 ## 11. Anti-padrões
 
 Não:
 
-- imprimir apenas `https://carrochefe.com` sem identificação;
-- reutilizar o mesmo `cc_qr` em peças que precisam ser comparadas;
+- mudar o significado de `QR-001` depois de impresso;
+- inventar `cc_variant` para a peça atual;
+- reutilizar `QR-001` em uma peça que precise ser distinguida desta;
 - colocar telefone, nome ou outros dados pessoais no QR;
-- mudar o significado de um ID depois de impresso;
 - usar número de scans como equivalente a número de pessoas ou vendas;
-- declarar venda atribuída sem conciliação futura com pedido pago do ERP.
+- declarar venda atribuída sem conciliação futura com pedido pago do ERP;
+- prometer percentual, valor de cupom, brinde ou limitação que ainda não tenha regra aprovada.
