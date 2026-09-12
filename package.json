@@ -32,7 +32,7 @@
     "webhooks:dispatch": "tsx apps/api/src/workers/webhook-dispatcher.ts",
     "supervisor:build": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1",
     "supervisor:install": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -StartNow",
-    "supervisor:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -Uninstall"
+    "supervisor:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/uninstall-startup.ps1"
   },
   "engines": {
     "node": ">=20"
