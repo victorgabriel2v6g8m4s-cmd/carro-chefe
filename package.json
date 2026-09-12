@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "tsx apps/api/src/server.ts",
+    "start": "tsx apps/api/src/server.ts",
     "dev:api": "tsx watch apps/api/src/server.ts",
     "dev:gestao": "vite --config apps/gestao/vite.config.ts",
     "dev:site": "vite --config apps/site/vite.config.ts",
@@ -31,7 +32,7 @@
     "webhooks:dispatch": "tsx apps/api/src/workers/webhook-dispatcher.ts",
     "supervisor:build": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1",
     "supervisor:install": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -StartNow",
-    "supervisor:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/uninstall-startup.ps1"
+    "supervisor:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -Uninstall"
   },
   "engines": {
     "node": ">=20"
