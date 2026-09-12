@@ -17,14 +17,20 @@ import { governanceRoutes } from "./modules/governance/routes";
 import { browserRoutes } from "./modules/browser/routes";
 import { referenceRoutes } from "./modules/references/routes";
 import { managementRoutes } from "./modules/management/routes";
+import { prelaunchRoutes } from "./modules/prelaunch/routes";
 import { containsLikelyEncodingLoss } from "./lib/text";
+import { config } from "./config";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
 }
 
 export async function buildApp() {
-  const app = Fastify({ logger: process.env.NODE_ENV !== "test", bodyLimit: 16 * 1024 * 1024 });
+  const app = Fastify({
+    logger: process.env.NODE_ENV !== "test",
+    bodyLimit: 16 * 1024 * 1024,
+    trustProxy: config.trustProxy
+  });
   await configureSqlite();
   await app.register(cors, { origin: process.env.NODE_ENV === "production" ? false : true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
@@ -44,7 +50,7 @@ export async function buildApp() {
 
   app.addHook("onSend", async (_request, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
-    reply.header("Referrer-Policy", "no-referrer");
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
     reply.header("X-Frame-Options", "SAMEORIGIN");
     reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   });
@@ -67,6 +73,7 @@ export async function buildApp() {
     return reply.code(500).send({ error: "Erro interno." });
   });
 
+  await app.register(prelaunchRoutes);
   await app.register(planRoutes);
   await app.register(taskRoutes);
   await app.register(uiStateRoutes);
