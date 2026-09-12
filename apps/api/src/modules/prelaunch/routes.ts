@@ -80,7 +80,7 @@ export async function prelaunchRoutes(app: any) {
     const attribution = cleanAttribution(input.attribution);
 
     try {
-      const lead = await prisma.prelaunchLead.create({
+      await prisma.prelaunchLead.create({
         data: {
           phoneNormalized,
           firstName: normalizeOptionalFirstName(input.firstName),
@@ -96,7 +96,7 @@ export async function prelaunchRoutes(app: any) {
         },
         select: { id: true }
       });
-      return reply.code(201).send({ status: "created", leadId: lead.id });
+      return reply.code(201).send({ status: "created" });
     } catch (error) {
       if ((error as { code?: string }).code === "P2002") return reply.send({ status: "duplicate" });
       throw error;
