@@ -6,7 +6,7 @@ Documentar o plano de aquisição e mensuração para o banner físico do Carro 
 
 A meta imediata é transformar curiosidade gerada na rua em uma base própria de interessados, sem antecipar pedido ou prometer uma data de abertura ainda não aprovada.
 
-Este diretório contém somente planejamento. A implementação pertence ao **AG-DEV**.
+O diretório nasceu como handoff de Marketing e agora também registra a implementação executada pelo **AG-DEV** na branch `dev/pre-lancamento-site`.
 
 ## Resultado esperado
 
@@ -30,7 +30,8 @@ Banner físico
 - [`PSICOLOGIA_UI.md`](./PSICOLOGIA_UI.md): pesquisa comportamental e de UX convertida em requisitos de hero, formulário, recompensa, prova social, escassez, consentimento, mídia, acessibilidade, performance e experimentos A/B.
 - [`ANALYTICS_PRIVACIDADE.md`](./ANALYTICS_PRIVACIDADE.md): eventos, KPIs, consentimento, LGPD, GA4/Clarity e relatórios.
 - [`QR_ATRIBUICAO.md`](./QR_ATRIBUICAO.md): contrato de rastreamento, origem de campanha, variantes e evolução do redirector first-party.
-- [`HANDOFF_DESENVOLVIMENTO.md`](./HANDOFF_DESENVOLVIMENTO.md): escopo objetivo para o agente que programará a entrega.
+- [`HANDOFF_DESENVOLVIMENTO.md`](./HANDOFF_DESENVOLVIMENTO.md): escopo objetivo entregue ao agente de desenvolvimento.
+- [`IMPLEMENTACAO_DEV.md`](./IMPLEMENTACAO_DEV.md): arquitetura implementada, backend, frontend, persistência, consentimento, segurança, decisões, limites, testes, relatórios e plano de migração para VPS/`carrochefe.com`.
 
 ## Decisões já tomadas
 
