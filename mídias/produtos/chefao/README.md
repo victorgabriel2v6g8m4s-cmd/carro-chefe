@@ -2,7 +2,7 @@
 
 Este diretório **cataloga** fotografias sem edição do produto real **Chefão** (`PROD-CHF-001`) recebidas em 11/09/2026 para referência de montagem, ficha técnica, materiais de cardápio e futuras peças de mídia.
 
-> **Estado do acervo nesta branch:** a documentação, descrições, dimensões e hashes dos 10 JPEGs já estão versionados. Os binários originais devem ficar em `originais/`; enquanto eles não aparecerem nessa pasta, o acervo não deve ser considerado integralmente carregado no GitHub.
+> **Estado do acervo:** a documentação, descrições, dimensões e hashes dos 10 JPEGs estão versionados. Em 14/09/2026 o proprietário decidiu que os binários não são necessários para a consolidação atual do repositório. Portanto, a ausência dos arquivos em `originais/` não bloqueia o uso deste catálogo como referência documental. Caso os JPEGs sejam adicionados futuramente, devem preservar os bytes recebidos e ser conferidos pelos hashes abaixo.
 
 ## Leitura por agentes de IA
 
@@ -20,7 +20,7 @@ Antes de abrir imagens, agentes podem consultar:
 - **Origem:** arquivos enviados pelo usuário nesta conversa.
 - **Autor/fotógrafo:** não informado.
 - **Direitos:** uso no projeto solicitado pelo usuário; confirmar titularidade/licença para publicação externa antes de usar em campanha.
-- **Edição:** nenhuma. Os JPEGs da pasta `originais/` devem permanecer imutáveis; qualquer correção de luz, recorte, remoção de fundo, upscale ou composição deve ser salva em uma pasta de derivados.
+- **Edição:** nenhuma. Se os JPEGs forem incorporados em `originais/`, devem permanecer imutáveis; qualquer correção de luz, recorte, remoção de fundo, upscale ou composição deve ser salva em uma pasta de derivados.
 - **Data no nome:** 2026-09-11 é a data de incorporação ao acervo. Os arquivos não possuem data EXIF de captura disponível.
 - **Aprovação:** requer revisão de Marca/Marketing e Operações antes de publicação, conforme `mídias/AGENTS.md`.
 
@@ -45,4 +45,4 @@ O conjunto é valioso como **registro real do produto e da montagem atual**, mas
 
 A triagem documental indica `frontal-04` (`158152.jpg`) como melhor candidata frontal para tratamento e `tres-quartos-01` (`158154.jpg`) como melhor opção inicial para volume e redes sociais. Essa indicação **não autoriza uso automático**: antes da escolha final, a imagem deve ser aberta e avaliada visualmente.
 
-Para material final de cardápio/campanha, produzir derivados a partir dos originais e manter uma referência explícita ao arquivo-fonte. Não alterar nem sobrescrever os JPEGs originais.
+Para material final de cardápio/campanha, produzir derivados a partir do arquivo-fonte real que estiver disponível e manter uma referência explícita à origem. Não alterar nem sobrescrever originais.

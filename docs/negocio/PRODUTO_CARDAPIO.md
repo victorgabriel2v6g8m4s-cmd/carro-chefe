@@ -81,6 +81,8 @@ Após 30 dias, classificar cada item por popularidade e margem, sem usar apenas 
 
 ## Referência fotográfica real — Chefão
 
-Em 11/09/2026 foi recebido um conjunto de **10 fotografias sem edição** do Chefão, cobrindo vistas frontais, três quartos, superior/lateral e variações de montagem com maior presença de molho cheddar. O catálogo, metadados, hashes e regras de preservação ficam em [`mídias/produtos/chefao/README.md`](../mídias/produtos/chefao/README.md).
+Em 11/09/2026 foi recebido um conjunto de **10 fotografias sem edição** do Chefão, cobrindo vistas frontais, três quartos, superior/lateral e variações de montagem com maior presença de molho cheddar. O catálogo, metadados, hashes e regras de preservação ficam em [`mídias/produtos/chefao/README.md`](../../mídias/produtos/chefao/README.md).
 
-Essas imagens têm status `review`: servem como referência real de montagem e proporção, mas não constituem automaticamente o padrão publicitário aprovado. Originais devem permanecer imutáveis; qualquer ajuste de luz, recorte, fundo ou composição precisa ser salvo como derivado e passar por Marca/Marketing e Operações.
+Em 14/09/2026 o proprietário decidiu que os 10 JPEGs não são requisito para a consolidação atual do repositório. A documentação pode permanecer como referência mesmo sem os binários versionados; caso sejam incorporados futuramente, devem ser preservados como originais e validados pelos hashes documentados.
+
+Essas imagens têm status `review`: servem como referência real de montagem e proporção, mas não constituem automaticamente o padrão publicitário aprovado. Originais e derivados efetivamente utilizados devem passar por inspeção visual e revisão de Marca/Marketing e Operações antes da publicação.
