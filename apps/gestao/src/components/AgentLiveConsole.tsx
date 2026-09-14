@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate } from "@carro-chefe/ui";
 import { RichReferences } from "./RichReferences";
+import type { AgentLog } from "../types";
 
-export function AgentLiveConsole({ logs, live }: { logs: any[]; live: boolean }) {
+export function AgentLiveConsole({ logs, live }: { logs: AgentLog[]; live: boolean }) {
   const [tab, setTab] = useState<"activity" | "terminal">("activity");
   const terminalRef = useRef<HTMLPreElement>(null);
   const activity = logs.filter((item) => item.channel !== "terminal");

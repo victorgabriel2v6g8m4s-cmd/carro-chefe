@@ -6,17 +6,20 @@ import { ApiError, parseJson } from "../../lib/errors";
 import { appendEvent, broadcastEvent } from "../../lib/outbox";
 import { assessComplexity, selectRuntimeProfile } from "../agents/model-policy";
 import { resolveReferenceContext } from "../references/service";
+import { capturePromptKnowledge } from "../knowledge/service";
+import { buildExecutionShortcuts } from "../agents/shortcuts";
 
 const createConversationSchema = z.object({ userId: z.string().trim().min(2).max(80).default("owner"), title: z.string().trim().min(2).max(180).default("Conversa com Gestão") });
 const runtimeResponseSchema = z.object({ runId: z.string().trim().min(1), content: z.string().trim().min(1).max(8000), sender: z.string().trim().min(2).max(80).default("AG-GESTAO") });
 
 function presentMessage(message: any) {
-  return { ...message, references: parseJson(message.referencesJson, []), referencesJson: undefined };
+  return { ...message, references: parseJson(message.referencesJson, []), referencesJson: undefined,
+    run: message.run ? { ...message.run, shortcuts: buildExecutionShortcuts(message.run) } : message.run };
 }
 
 function conversationInclude() {
   return {
-    messages: { include: { uploads: { orderBy: { createdAt: "asc" as const } }, run: { select: { id: true, status: true, currentStep: true, report: true } } }, orderBy: { createdAt: "asc" as const }, take: 100 },
+    messages: { include: { uploads: { orderBy: { createdAt: "asc" as const } }, run: { select: { id: true, agentId: true, taskId: true, purpose: true, status: true, currentStep: true, report: true } } }, orderBy: { createdAt: "asc" as const }, take: 100 },
     runs: { select: { id: true, status: true, currentStep: true, createdAt: true, updatedAt: true }, orderBy: { createdAt: "desc" as const }, take: 20 }
   };
 }
@@ -69,6 +72,8 @@ export async function managementRoutes(app: FastifyInstance) {
         selectedReasoningEffort: profile.effort, routingReason: profile.reason } });
       const message = await tx.managementMessage.create({ data: { conversationId, runId: run.id, sender: input.submittedBy, content: input.content, referencesJson: JSON.stringify(references) } });
       if (input.attachmentIds.length) await tx.upload.updateMany({ where: { id: { in: input.attachmentIds } }, data: { runId: run.id, managementMessageId: message.id } });
+      await capturePromptKnowledge(tx, input.content, { actor: input.submittedBy, sourceType: "prompt", sourceId: message.id,
+        sourceRunId: run.id, attachmentIds: input.attachmentIds });
       await tx.agentMessage.create({ data: { runId: run.id, sender: input.submittedBy, kind: "update", content: input.content } });
       await tx.agentCommunication.create({ data: { runId: run.id, sourceId: input.submittedBy, targetId: "AG-GESTAO", kind: "coordination", status: "delivered", summary: input.content,
         metadataJson: JSON.stringify({ conversationId, references, attachmentIds: input.attachmentIds }) } });
@@ -91,6 +96,7 @@ export async function managementRoutes(app: FastifyInstance) {
       const message = existing
         ? await tx.managementMessage.update({ where: { id: existing.id }, data: { content: input.content } })
         : await tx.managementMessage.create({ data: { conversationId, runId: input.runId, sender: input.sender, content: input.content } });
+      await capturePromptKnowledge(tx, input.content, { actor: input.sender, sourceType: "agent_output", sourceId: message.id, sourceRunId: input.runId });
       await tx.managementConversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
       const event = await appendEvent(tx, "management.response.created", "management_conversation", conversationId, { conversationId, runId: input.runId, messageId: message.id });
       return { message, event };

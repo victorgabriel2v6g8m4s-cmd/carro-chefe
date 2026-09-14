@@ -14,6 +14,7 @@ import { runQueueRoutes } from "./run-queue-routes";
 import { repairMojibake } from "../../lib/text";
 import { questionRoutes } from "./question-routes";
 import { dispatchRoutes } from "./dispatch-routes";
+import { capturePromptKnowledge } from "../knowledge/service";
 
 const messageSchema = z.object({ sender: z.string().min(2).max(80), kind: z.enum(["update", "question", "answer", "decision", "error"]), content: z.string().min(1).max(8000) });
 const statusSchema = z.object({ status: z.enum(["queued", "running", "waiting_input", "waiting_dependency", "succeeded", "failed", "cancelled"]), currentStep: z.string().max(500).nullable().optional(), externalThreadId: z.string().max(200).optional() });
@@ -38,6 +39,7 @@ export async function agentRoutes(app: FastifyInstance) {
     const profile = selectRuntimeProfile(agent.id, complexity, agent.model);
     const result = await prisma.$transaction(async (tx) => {
       const run = await tx.agentRun.create({ data: { ...input, complexity, selectedModel: profile.model, selectedReasoningEffort: profile.effort, routingReason: profile.reason } });
+      await capturePromptKnowledge(tx, input.objective, { actor: input.requestedBy, sourceType: "prompt", sourceId: run.id, sourceRunId: run.id });
       await tx.agentMessage.create({ data: { runId: run.id, sender: input.requestedBy, kind: "update", content: `Execução criada: ${input.objective}` } });
       await tx.agentCommunication.create({ data: { runId: run.id, sourceId: input.requestedBy, targetId: input.agentId, kind: "delegation", summary: input.title } });
       await tx.auditEvent.create({ data: { taskId: task?.id, actor: input.requestedBy, action: "agent_run_created", entityType: "agent_run", entityId: run.id, summary: input.title } });

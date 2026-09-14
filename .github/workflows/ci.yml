@@ -45,6 +45,9 @@ jobs:
             exit 1
           fi
 
+      - name: Validate agent policy manifest
+        run: npm run policy:check
+
       - name: Install locked dependencies
         run: npm ci
 

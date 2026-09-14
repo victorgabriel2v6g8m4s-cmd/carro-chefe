@@ -7,6 +7,7 @@ import { classifyIntent } from "./classifier";
 import { intentInclude, presentIntent } from "./service";
 import { config } from "../../config";
 import { selectRuntimeProfile } from "../agents/model-policy";
+import { capturePromptKnowledge } from "../knowledge/service";
 
 export async function intentRoutes(app: FastifyInstance) {
   app.get("/api/v1/intents", async (request) => {
@@ -60,6 +61,8 @@ export async function intentRoutes(app: FastifyInstance) {
     const result = await prisma.$transaction(async (tx) => {
       const intent = await tx.operationalIntent.create({ data: { projectId: "carro-chefe", prompt: input.prompt, submittedBy: input.submittedBy, subject: classification.subject, summary: classification.summary, classificationJson: JSON.stringify({ ...classification, taskByAgent: Object.fromEntries(Object.entries(taskByAgent).map(([agentId, task]: any) => [agentId, task.id])) }) } });
       if (input.attachmentIds.length) await tx.upload.updateMany({ where: { id: { in: input.attachmentIds }, taskId: null, runId: null, intentId: null }, data: { intentId: intent.id } });
+      await capturePromptKnowledge(tx, input.prompt, { actor: input.submittedBy, sourceType: "prompt", sourceId: intent.id,
+        sourceIntentId: intent.id, attachmentIds: input.attachmentIds });
       for (const fact of classification.facts) await tx.businessFact.upsert({ where: { projectId_key: { projectId: "carro-chefe", key: fact.key } }, update: { value: fact.value, verificationStatus: fact.verificationStatus, sourceIntentId: intent.id }, create: { projectId: "carro-chefe", sourceIntentId: intent.id, ...fact } });
       if (classification.facts.some((fact) => fact.key === "erp.selected")) {
         const erp = classification.facts.find((fact) => fact.key === "erp.selected")?.value;

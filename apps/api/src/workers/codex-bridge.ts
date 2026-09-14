@@ -5,8 +5,13 @@ import { config } from "../config";
 import { holdWorkerPort } from "./singleton";
 import { shouldWriteFallbackReport } from "./agent-runtime-contract";
 import { buildRunPrompt, makeRuntimeInput } from "./runtime-prompt";
+import { loadPolicyContext, loadPolicyManifest, policyAuditPayload } from "./policy-context";
 import { runtimeApi as api } from "./runtime-api";
 
+await loadPolicyManifest(config.projectRoot).catch((error) => {
+  console.error(`Bridge bloqueado pela política: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+});
 const codex = new Codex();
 const workerLock = await holdWorkerPort(4174, "Bridge Codex");
 if (!workerLock) process.exit(0);
@@ -45,7 +50,9 @@ async function prepareArtifactHelpers(workingDirectory: string, runId: string) {
   await Promise.all([
     fs.writeFile(path.join(workingDirectory, "send.cmd"), `@echo off\r\nnode "${helper}" send ${runId} %*\r\n`, "utf8"),
     fs.writeFile(path.join(workingDirectory, "ask.cmd"), `@echo off\r\nnode "${helper}" question ${runId} %*\r\n`, "utf8"),
-    fs.writeFile(path.join(workingDirectory, "artifact.cmd"), `@echo off\r\nnode "${helper}" artifact ${runId} %*\r\n`, "utf8")
+    fs.writeFile(path.join(workingDirectory, "artifact.cmd"), `@echo off\r\nnode "${helper}" artifact ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "remember.cmd"), `@echo off\r\nnode "${helper}" remember ${runId} %*\r\n`, "utf8"),
+    fs.writeFile(path.join(workingDirectory, "recall.cmd"), `@echo off\r\nnode "${helper}" recall ${runId} %*\r\n`, "utf8")
   ]);
 }
 
@@ -101,13 +108,24 @@ async function handleRun(runId: string) {
   }
   const latestAnswer = run.questions.find((question: any) => question.status === "answered" && !question.acknowledgedAt);
   const ownerAnswers = context?.ownerAnswers ?? [];
-  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, { mode: workspaceMode, workingDirectory, projectRoot: config.projectRoot });
+  const knowledgeQuery = `${run.title}\n${run.objective}\n${context?.prompt ?? ""}`.slice(0, 3500);
+  const knowledge = await api<any[]>(`/knowledge/context?limit=12&query=${encodeURIComponent(knowledgeQuery)}`).catch(() => []);
+  const policy = await loadPolicyContext(config.projectRoot, run.agent.id, `${run.title}\n${run.objective}`).catch(async (error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    await observe(runId, "error", "policy.preflight.failed", message, "Execução bloqueada pela política");
+    await api(`/agent-runs/${runId}/messages`, "POST", { sender: "BRIDGE-CODEX", kind: "error", content: `Preflight de política falhou: ${message}` }).catch(() => undefined);
+    await api(`/agent-runs/${runId}`, "PATCH", { status: "failed", currentStep: "Manifesto de política inválido ou desatualizado" }).catch(() => undefined);
+    return null;
+  });
+  if (!policy) return;
+  const prompt = buildRunPrompt(run, handoffs, latestAnswer, ownerAnswers, { mode: workspaceMode, workingDirectory, projectRoot: config.projectRoot }, knowledge, policy);
 
   const commandOutputs = new Map<string, string>();
   let finalMessage = "";
   let lastHeartbeatAt = 0;
   try {
     await observe(runId, "system", "run.connected", "Bridge local conectado ao runtime do Codex.", "Execução iniciada");
+    await observe(runId, "system", "policy.context.applied", JSON.stringify(policyAuditPayload(policy)), "Política obrigatória aplicada");
     const streamed = await thread.runStreamed(makeRuntimeInput(run, prompt));
     for await (const event of streamed.events) {
       if (Date.now() - lastHeartbeatAt >= 5_000) {

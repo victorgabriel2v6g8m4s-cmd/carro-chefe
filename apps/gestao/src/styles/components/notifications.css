@@ -1,0 +1,17 @@
+.notification-center { position:relative; }
+.notification-trigger { position:relative; display:grid; place-items:center; width:42px; height:42px; border:1px solid var(--line); border-radius:50%; background:rgba(255,255,255,.38); color:#4b3b2d; font-size:1.35rem; cursor:pointer; }
+.notification-trigger b { position:absolute; right:-3px; top:-4px; display:grid; place-items:center; min-width:19px; height:19px; padding:0 .3rem; border-radius:20px; background:var(--rust); color:white; font:700 .62rem Inter,sans-serif; }
+.notification-popover { position:absolute; z-index:60; right:0; top:50px; width:min(360px,calc(100vw - 2rem)); padding:.8rem; border:1px solid var(--line); background:#fbf3e7; box-shadow:var(--shadow); }
+.notification-popover>div { display:flex; justify-content:space-between; align-items:center; padding:.3rem .3rem .7rem; }
+.notification-popover button,.toast>button { border:0; background:transparent; font-size:1.3rem; cursor:pointer; }
+.notification-popover>a { display:grid; gap:.3rem; padding:.8rem .5rem; border-top:1px solid var(--line); }
+.notification-popover>a small { color:var(--rust); font-weight:700; }
+.notification-popover>a span,.notification-popover p { color:#685747; font-size:.78rem; line-height:1.45; }
+.toast { position:fixed; z-index:100; right:1.2rem; bottom:1.2rem; width:min(380px,calc(100vw - 2rem)); padding:1.1rem 2.6rem 1.1rem 1.2rem; color:#f9efdf; background:linear-gradient(145deg,#17100c,#302016); border:1px solid rgba(226,189,105,.5); box-shadow:0 22px 70px rgba(17,9,5,.35); animation:toast-in .24s ease-out; }
+.toast>button { position:absolute; right:.55rem; top:.45rem; color:#d8c6ae; }
+.toast>span { color:var(--gold-light); text-transform:uppercase; letter-spacing:.17em; font-size:.6rem; }
+.toast>strong { display:block; margin:.45rem 0; font:700 1.35rem "Cormorant Garamond",serif; }
+.toast>p { color:#cbbba7; font-size:.78rem; line-height:1.5; }
+.toast>a { color:var(--gold-light); font-size:.72rem; font-weight:700; }
+.toast-failed { border-color:#c1785d; }
+@keyframes toast-in { from { opacity:0; transform:translateY(14px); } }

@@ -18,12 +18,15 @@ import { CommandDetail } from "./routes/CommandDetail";
 import { IntegratedBrowser } from "./routes/IntegratedBrowser";
 import { Registry } from "./routes/Registry";
 import { ResourceViewer } from "./routes/ResourceViewer";
+import { Knowledge } from "./routes/Knowledge";
+import { messages } from "./i18n";
+import type { UiState } from "./types";
 import "./styles.css";
 
 function Resume() {
   const [target, setTarget] = useState<string | null>(null);
-  useEffect(() => { api<any>("/api/v1/me/ui-state/gestao").then((state) => setTarget(state?.route ? `${state.route}${state.search ?? ""}${state.hash ?? ""}` : "/gestao/visao-geral")).catch(() => setTarget("/gestao/visao-geral")); }, []);
-  return target ? <Navigate replace to={target} /> : <section className="panel loading">Retomando seu último ponto…</section>;
+  useEffect(() => { api<UiState>("/api/v1/me/ui-state/gestao").then((state) => setTarget(state.route ? `${state.route}${state.search ?? ""}${state.hash ?? ""}` : "/gestao/visao-geral")).catch(() => setTarget("/gestao/visao-geral")); }, []);
+  return target ? <Navigate replace to={target} /> : <section className="panel loading">{messages.common.states.loading}</section>;
 }
 
 const router = createBrowserRouter([
@@ -45,6 +48,7 @@ const router = createBrowserRouter([
       { path: "compras", element: <Procurement /> },
       { path: "registro", element: <Registry /> },
       { path: "navegador", element: <IntegratedBrowser /> },
+      { path: "conhecimento", element: <Knowledge /> },
       { path: "visualizador", element: <ResourceViewer /> },
       { index: true, element: <Navigate replace to="visao-geral" /> },
       { path: "*", element: <section className="panel empty"><p>Página não encontrada.</p></section> }
