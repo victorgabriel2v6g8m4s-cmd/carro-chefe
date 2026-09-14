@@ -66,7 +66,7 @@
     {
       "path": "cardápio/AGENTS.md",
       "kind": "agents",
-      "sha256": "152bcd5e7cc828f3a14800782397d5df799edd2b844c6fab883b0d195c7267e9"
+      "sha256": "adecb1aae4a13cd015a30a422adfe58c96dce85167afd21dee84f9e4cd53b7c6"
     },
     {
       "path": "docs/AGENTS.md",
@@ -76,12 +76,12 @@
     {
       "path": "logos/AGENTS.md",
       "kind": "agents",
-      "sha256": "a571f50393b7d93ebad1c9d06cbb67ba5d4a61e2becad6e84f62491d54f9fdcd"
+      "sha256": "d19d5c97d5d6899a57be011270647cefce9bbaf6dd90082ad0eec6d27508a34f"
     },
     {
       "path": "mídias/AGENTS.md",
       "kind": "agents",
-      "sha256": "a197a7b48b5b1dcda80bd4e28bc6577a1ca11f46923815f10f67a352e465802f"
+      "sha256": "3c406587f8c02519584bd4a8fdd35eb15dc48843eb15162824ddbe27999cebbb"
     },
     {
       "path": "packages/AGENTS.md",
@@ -106,12 +106,12 @@
     {
       "path": "planejamento/AGENTS.md",
       "kind": "agents",
-      "sha256": "1df3f0c54c985dcacd40a72bf0935c709e89b4baf4b330d2189d332f46c6b722"
+      "sha256": "4a9cea04f8d7b96a4d82de703d39592697701729aac08a6610e0e757c27bc1c5"
     },
     {
       "path": "site/AGENTS.md",
       "kind": "agents",
-      "sha256": "eb0a85abd8da7d70a07bbe8c09b049d008643b79629311383e554072556fbebf"
+      "sha256": "7ca90e4e89104b5b33bff077dc829d448024c447a1c1138dc3d436d6e9e6779d"
     },
     {
       "path": "tools/AGENTS.md",
@@ -626,5 +626,5 @@
       ]
     }
   },
-  "manifestHash": "fbda328f6200d0750272d6da2cacfb2c917efc519e856db14053d3c54877c521"
+  "manifestHash": "e3c19d25dd4cfeba9f71147001a18db73ada0a5b337f9e5a5d4e6bc396dc0a3e"
 }
