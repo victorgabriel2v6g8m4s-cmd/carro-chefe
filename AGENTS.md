@@ -182,7 +182,7 @@ KPIs centrais: pedidos pagos, faturamento líquido, ticket médio, CMV, margem d
 - Em produção, exigir autenticação, HTTPS, limitação de requisições, armazenamento durável e backup.
 - Não faça push forçado nem reescreva histórico compartilhado.
 - Revise o escopo antes de versionar e publique somente arquivos confirmados do projeto.
-- Consulte `docs/GITHUB_E_AGENTES.md` para modelos, configuração dos agentes, credenciais e fluxo de colaboração.
+- Consulte `docs/governanca/GITHUB_E_AGENTES.md` para modelos, configuração dos agentes, credenciais e fluxo de colaboração.
 
 ## 13. Comunicação
 

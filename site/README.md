@@ -13,5 +13,4 @@ Destino da futura experiência pública.
 
 Checkout próprio, armazenamento de cartão, duplicação manual do catálogo, gestão fiscal, estoque e produção. Esses domínios pertencem ao ERP.
 
-Antes de implementar, ler `../docs/ARQUITETURA.md`, `../docs/DADOS_ERP.md`, `../docs/MARCA.md` e `AGENTS.md`.
-
+Antes de implementar, ler `../docs/fundacao/ARQUITETURA.md`, `../docs/tecnologia/DADOS_ERP.md`, `../docs/negocio/MARCA.md` e `AGENTS.md`.

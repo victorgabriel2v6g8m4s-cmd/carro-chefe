@@ -1,0 +1,158 @@
+{
+  "produto": {
+    "id": "PROD-CHF-001",
+    "nome": "Chefão"
+  },
+  "data_incorporacao": "2026-09-11",
+  "status_geral": "review",
+  "origem": "fotos sem edição fornecidas pelo usuário ao projeto",
+  "politica_ia": {
+    "descricao_textual_pode_substituir_visualizacao_em_tarefas_simples": true,
+    "visualizacao_obrigatoria_em_tarefas_complexas": true,
+    "regra": "Para localização básica de arquivo, seleção preliminar por ângulo, inventário, referência de composição e tarefas textuais simples, a IA pode usar este catálogo sem abrir os JPEGs. Para edição, geração derivada, recorte final, remoção de fundo, avaliação de fidelidade do produto, design publicitário, escolha de imagem principal, comparação fina entre fotos, controle de qualidade visual ou qualquer decisão com impacto de publicação, a IA DEVE visualizar as imagens originais antes de utilizá-las.",
+    "originais_imutaveis": true
+  },
+  "direitos": {
+    "autor": "não informado",
+    "observacao": "Uso no projeto solicitado pelo usuário. Confirmar titularidade/licença antes de publicação externa."
+  },
+  "arquivos": [
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-frontal-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158156.jpg",
+      "descricao": "Vista frontal vertical do Chefão completo, centralizado e relativamente pequeno no quadro. Baguete inteira aparece horizontalmente; recheio com tomate, cebola-roxa, elementos verdes, batata palha e molho alaranjado é visível. Fundo preto domina a maior parte da imagem e a exposição do produto é baixa.",
+      "angulo": "frontal",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "baixa para publicação; útil como referência",
+      "edicao": "necessária e relativamente pesada: elevar exposição, corrigir balanço de branco, reduzir ruído, recortar grande área vazia e limpar pequenas distrações do fundo",
+      "usos_sugeridos": ["referência de montagem", "documentação interna", "comparação de proporções", "story somente após edição forte"],
+      "nao_recomendado": ["capa principal de produto", "totem sem tratamento", "anúncio pago sem nova edição"],
+      "prioridade": "baixa-média",
+      "sha256": "e3eb705b6dfc7fd6f31d033b4d9df59eb910822795dbc08ba3a0099181b96c6c"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-frontal-02_foto_v01_review.jpg",
+      "arquivo_recebido": "158155.jpg",
+      "descricao": "Vista frontal vertical do Chefão completo, centralizada, com recheio colorido visível ao longo da baguete. O produto ocupa pouco espaço do quadro e a cena está muito escura, com grande área preta ao redor.",
+      "angulo": "frontal",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "baixa para marketing; válida como registro",
+      "edicao": "necessária: clarear produto, recuperar detalhes, recortar, reduzir ruído e revisar cor do pão e do recheio",
+      "usos_sugeridos": ["referência interna", "documentação do produto", "apoio para ficha visual"],
+      "nao_recomendado": ["Instagram principal", "capa de produto", "totem"],
+      "prioridade": "baixa",
+      "sha256": "4713c8a2b49d611c27ff7c505f78406b7fe4878b460424deb4f9ca1c3127f554"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-tres-quartos-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158154.jpg",
+      "descricao": "Vista em três quartos do Chefão completo. O ângulo mostra melhor profundidade do pão e volume do recheio; tomate, cebola-roxa, elementos verdes, batata palha e molho ficam mais legíveis do que nas frontais mais escuras. Ainda há subexposição e muito fundo vazio.",
+      "angulo": "três quartos",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "média como base de edição; uma das melhores para mostrar volume",
+      "edicao": "necessária: aumentar exposição, controlar contraste, recortar, ajustar cor e limpar fundo",
+      "usos_sugeridos": ["Instagram/feed após edição", "carrossel de produto", "imagem secundária na página do Chefão", "story/reel thumbnail", "referência de volume para IA/3D"],
+      "nao_recomendado": ["uso cru em campanha", "totem sem tratamento"],
+      "prioridade": "alta entre os originais",
+      "sha256": "6db51743a2ace7ef48473e39df0b7443fe7bcacbbf2d84d1db3d040fb5e0a6e0"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-frontal-03_foto_v01_review.jpg",
+      "arquivo_recebido": "158153.jpg",
+      "descricao": "Vista frontal vertical do Chefão completo. O lanche está bem centralizado e horizontal, com recheio visível em toda a extensão, porém a fotografia está bastante escura e o produto ocupa pequena parte do quadro.",
+      "angulo": "frontal",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "baixa-média como referência; fraca para publicação direta",
+      "edicao": "necessária e forte: exposição, ruído, contraste local, recorte e limpeza de fundo",
+      "usos_sugeridos": ["referência frontal", "documentação da montagem", "comparação de simetria/comprimento"],
+      "nao_recomendado": ["capa de site", "totem", "feed principal"],
+      "prioridade": "baixa-média",
+      "sha256": "21f91d1b36bc9caa66d0b7b4db5c8b704421175d012a10532818ca3efd7b20a6"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-frontal-04_foto_v01_review.jpg",
+      "arquivo_recebido": "158152.jpg",
+      "descricao": "Vista frontal vertical e mais clara do Chefão completo. O pão ocupa boa largura do quadro e o recheio é o mais legível entre as frontais completas: tomate, cebola-roxa, elementos verdes, batata palha e molho alaranjado aparecem claramente. Fundo preto e composição simples.",
+      "angulo": "frontal",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "média; melhor candidata frontal do conjunto para tratamento",
+      "edicao": "necessária, mas viável: recorte 4:5 ou 1:1, ajuste de luz/cor, limpeza de migalhas e fundo, refinamento de contraste e nitidez",
+      "usos_sugeridos": ["capa de produto no site após edição", "Instagram/feed", "cardápio digital", "totem após tratamento", "material de apresentação", "referência oficial de montagem se Operações aprovar"],
+      "nao_recomendado": ["publicação crua"],
+      "prioridade": "muito alta entre os originais",
+      "sha256": "c9b113ed607fc9e485ba3d6ab2dbc83717c7ec9c4f576af170fd3a10d0fd00a7"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-superior-fechado-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158149.jpg",
+      "descricao": "Imagem horizontal mostrando principalmente o topo do pão fechado, com pouco ou nenhum recheio exposto. Útil para entender formato, comprimento e cortes da baguete, mas visualmente pouco apetitoso para comunicação comercial.",
+      "angulo": "superior/lateral com pão fechado",
+      "orientacao": "paisagem 1536x864",
+      "qualidade": "baixa para marketing; útil tecnicamente",
+      "edicao": "não vale priorizar para campanha; pode receber apenas recorte/luz se usada em documentação",
+      "usos_sugeridos": ["referência de formato do pão", "ficha técnica visual", "modelagem 3D", "comparação de proporção"],
+      "nao_recomendado": ["Instagram comercial", "capa de produto", "totem", "anúncio"],
+      "prioridade": "baixa para marketing; alta como referência geométrica",
+      "sha256": "c2a8fd9a689fabfd2f04e896b193bcd61c7ba618f6dfe80003830269141b30b5"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-superior-lateral-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158148.jpg",
+      "descricao": "Vista superior/lateral em retrato, com a baguete orientada verticalmente no quadro. O pão e uma faixa de recheio com molho cheddar são visíveis; a composição é incomum para publicidade, mas ajuda a entender largura, abertura e distribuição longitudinal do recheio.",
+      "angulo": "superior/lateral",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "média como referência; baixa como peça pronta",
+      "edicao": "necessária: considerar rotação, recorte, correção de exposição e cor",
+      "usos_sugeridos": ["referência de montagem", "ficha visual", "story experimental após rotação/edição", "apoio para mockup 3D"],
+      "nao_recomendado": ["capa de produto", "totem principal"],
+      "prioridade": "média como referência",
+      "sha256": "5bf0a51ce09dcd7332c8e467aa32ac0f9bbdb52368dfa9d8f88db8d0e32a0d0f"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-tres-quartos-molho-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158147.jpg",
+      "descricao": "Vista em três quartos de uma montagem em que o molho cheddar domina visualmente e poucos elementos de salada aparecem. Mostra bem o pão, os pedaços de carne e o molho, mas não representa com clareza todos os ingredientes esperados da ficha atual do Chefão.",
+      "angulo": "três quartos",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "média como referência de molho/volume; limitada como representação oficial",
+      "edicao": "necessária: exposição, cor, recorte e limpeza; antes de uso comercial confirmar se a montagem corresponde à ficha aprovada",
+      "usos_sugeridos": ["bastidores", "referência de aplicação de cheddar", "story após edição", "comparação de montagem"],
+      "nao_recomendado": ["capa oficial do Chefão sem validação", "cardápio se a montagem não corresponder à ficha"],
+      "prioridade": "média",
+      "sha256": "3fd9b42803939c027490cb33450177469b35ab3ab1960d1c2fbb836c513e9db0"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-tres-quartos-molho-02_foto_v01_review.jpg",
+      "arquivo_recebido": "158146.jpg",
+      "descricao": "Vista em três quartos muito próxima da foto anterior, com cheddar abundante, pão e carne aparentes. É uma alternativa de enquadramento, mas bastante escura e parcialmente redundante com 158147.jpg.",
+      "angulo": "três quartos",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "baixa-média; redundante",
+      "edicao": "necessária e forte; só vale tratar se o enquadramento for preferido ao de 158147.jpg",
+      "usos_sugeridos": ["backup de referência", "comparação de enquadramento", "bastidores"],
+      "nao_recomendado": ["capa", "totem", "anúncio como primeira escolha"],
+      "prioridade": "baixa",
+      "sha256": "f4f916747ce60244183fcedef60f304046d1c7c6653809beeae142cc7a61211b"
+    },
+    {
+      "arquivo": "originais/2026-09-11_produto-chefao-frontal-molho-01_foto_v01_review.jpg",
+      "arquivo_recebido": "158141.jpg",
+      "descricao": "Vista frontal vertical de montagem com cheddar bem evidente, carne e folhas visíveis, e uma gota de molho sobre o tecido abaixo do lanche. A iluminação é mais forte que nas outras fotos dessa mesma montagem, mas ainda há muito fundo preto e a composição parece menos completa que a versão com tomate, cebola-roxa e batata palha bem aparentes.",
+      "angulo": "frontal",
+      "orientacao": "retrato 864x1536",
+      "qualidade": "média como matéria-prima; razoável para edição temática de cheddar",
+      "edicao": "necessária: recorte, remoção/limpeza da gota e migalhas, ajuste de luz/cor e validação da montagem contra a ficha",
+      "usos_sugeridos": ["conteúdo focado em cheddar após edição", "story", "bastidores", "referência frontal alternativa"],
+      "nao_recomendado": ["capa oficial sem validação da montagem", "totem cru"],
+      "prioridade": "média",
+      "sha256": "938d4b49e8936f76e643ac98a7a52d8df539bbc48fe94361b20859db4a714024"
+    }
+  ],
+  "selecao_rapida": {
+    "melhor_frontal_para_editar": "originais/2026-09-11_produto-chefao-frontal-04_foto_v01_review.jpg",
+    "melhor_tres_quartos_para_editar": "originais/2026-09-11_produto-chefao-tres-quartos-01_foto_v01_review.jpg",
+    "melhor_para_geometria_do_pao": "originais/2026-09-11_produto-chefao-superior-fechado-01_foto_v01_review.jpg",
+    "mais_redundante": "originais/2026-09-11_produto-chefao-tres-quartos-molho-02_foto_v01_review.jpg",
+    "observacao": "A seleção é apenas triagem documental. Para uso final, a IA ou pessoa responsável DEVE abrir e inspecionar visualmente as imagens candidatas."
+  }
+}
