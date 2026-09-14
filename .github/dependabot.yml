@@ -8,6 +8,15 @@ updates:
       time: "09:00"
       timezone: America/Campo_Grande
     open-pull-requests-limit: 5
+    # O quality gate oficial ainda cobre Node 20 e Node 24.
+    # Não oferecer majors que já exigem Node >=22 enquanto Node 20 for suportado.
+    ignore:
+      - dependency-name: vitest
+        update-types:
+          - version-update:semver-major
+      - dependency-name: better-sqlite3
+        update-types:
+          - version-update:semver-major
     groups:
       production-dependencies:
         dependency-type: production
