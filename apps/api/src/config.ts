@@ -14,7 +14,7 @@ export function isLoopbackHost(host: string) {
 
 export function assertLoopbackBinding(host: string) {
   if (!isLoopbackHost(host)) {
-    throw new Error("Exposição externa bloqueada: mantenha a API em loopback e publique somente pelo reverse proxy controlado.");
+    throw new Error("Exposição externa bloqueada enquanto não existir autenticação server-side; mantenha a API em loopback e publique somente pelo reverse proxy controlado.");
   }
 }
 
