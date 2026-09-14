@@ -1,0 +1,1 @@
+Os arquivos JPEG desta coleção devem ser armazenados em `originais/` preservando os bytes recebidos. O README e o catálogo registram SHA-256 para checagem de integridade. Nenhum original deve ser sobrescrito por edição.
