@@ -101,14 +101,6 @@ export async function assertManifestCurrent(projectRoot) {
   const manifestPath = path.join(projectRoot, ".agent-policy", "manifest.json");
   const current = await fs.readFile(manifestPath, "utf8").catch(() => "");
   if (current !== expected) {
-    const generated = JSON.parse(expected);
-    const committed = current ? JSON.parse(current) : null;
-    console.error("POLICY_MANIFEST_DEBUG", JSON.stringify({
-      generatedHash: generated.manifestHash,
-      committedHash: committed?.manifestHash ?? null,
-      generatedSources: generated.sources,
-      committedSources: committed?.sources ?? []
-    }));
     throw new Error("Manifesto de política ausente ou desatualizado. Execute npm run policy:build e revise o diff.");
   }
   return JSON.parse(current);
