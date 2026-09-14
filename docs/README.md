@@ -53,3 +53,5 @@ docs/
 - nomes de arquivos permanecem em maiúsculas com `_` quando já fazem parte do vocabulário do projeto;
 - mudanças de estrutura precisam atualizar este índice e todas as referências encontradas no repositório;
 - documentos transacionais não substituem as fontes oficiais definidas em `AGENTS.md`.
+
+A partir da integração desta reorganização, os caminhos categorizados acima são os caminhos canônicos; branches posteriores devem atualizar referências antigas antes de serem integradas.
