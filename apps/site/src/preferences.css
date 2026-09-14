@@ -1,0 +1,18 @@
+.analytics-preferences-button {
+  position: fixed;
+  z-index: 70;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(226, 189, 126, 0.36);
+  color: #d8c2a0;
+  background: rgba(18, 12, 8, 0.94);
+  cursor: pointer;
+  font: 700 0.62rem/1 Arial, Helvetica, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+.analytics-preferences-button:hover { border-color: #e2bd7e; color: #f3dfc0; }

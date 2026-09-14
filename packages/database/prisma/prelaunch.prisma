@@ -1,0 +1,36 @@
+model PrelaunchLead {
+  id                   String   @id @default(cuid())
+  phoneNormalized      String   @unique
+  firstName            String?
+  marketingConsentAt   DateTime
+  consentVersion       String
+  privacyPolicyVersion String
+  ccQr                 String?
+  ccCampaign           String?
+  ccVariant            String?
+  firstSeenAt          DateTime
+  signupAt             DateTime
+  status               String   @default("active")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([ccCampaign, ccVariant])
+  @@index([status, signupAt])
+}
+
+model PrelaunchAnalyticsEvent {
+  id           String   @id @default(cuid())
+  sessionId    String
+  event        String
+  ccQr         String?
+  ccCampaign   String?
+  ccVariant    String?
+  path         String
+  metadataJson String   @default("{}")
+  requestId    String   @unique
+  createdAt    DateTime @default(now())
+
+  @@index([event, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([ccCampaign, ccVariant, createdAt])
+}

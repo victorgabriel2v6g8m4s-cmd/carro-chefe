@@ -11,5 +11,6 @@ export const config = {
   webhookSecret: process.env.WEBHOOK_SECRET ?? null,
   agentApiKey: process.env.AGENT_API_KEY ?? null,
   maxAgentConcurrency: Math.max(1, Math.min(6, Number(process.env.MAX_AGENT_CONCURRENCY ?? 3))),
-  productionAuthReady: process.env.PRODUCTION_AUTH_READY === "true"
+  productionAuthReady: process.env.PRODUCTION_AUTH_READY === "true",
+  trustProxy: process.env.TRUST_PROXY === "true"
 };

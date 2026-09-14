@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "tsx apps/api/src/server.ts",
+    "start": "tsx apps/api/src/server.ts",
     "dev:api": "tsx watch apps/api/src/server.ts",
     "dev:gestao": "vite --config apps/gestao/vite.config.ts",
     "dev:site": "vite --config apps/site/vite.config.ts",
