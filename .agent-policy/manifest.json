@@ -26,12 +26,12 @@
     {
       "path": "AGENTS.md",
       "kind": "agents",
-      "sha256": "8d7fbe4e9ea6df0470d5bfe22e47af6b12fd91c5ded9b60390d8db24d722f5ab"
+      "sha256": "4529b46ecdfd0e8962e4d2eaee87002d1565a7a05e1cc01e728179ad81607793"
     },
     {
       "path": "REGRAS.md",
       "kind": "rules",
-      "sha256": "9c2ea852eb8bc17e65baa3caf82145900e7254481abf408e423b49a4ff5738d8"
+      "sha256": "06b8958712b92d8d9ab9c607de9a283b07c2fadefb90b28d36ee1a20eefa350e"
     },
     {
       "path": "apps/AGENTS.md",
@@ -626,5 +626,5 @@
       ]
     }
   },
-  "manifestHash": "e3c19d25dd4cfeba9f71147001a18db73ada0a5b337f9e5a5d4e6bc396dc0a3e"
+  "manifestHash": "0dd2ab46abfc8a9304614a3345764e6ea77b81a9035afa8bac4494dd32bb6dc8"
 }
