@@ -52,3 +52,5 @@ a aparência do material influencia a decisão.
 Os originais desta pasta não devem ser sobrescritos por arquivos editados.
 Derivados devem ser armazenados separadamente e manter referência ao
 arquivo-fonte.
+
+A presença dos originais em `main` significa apenas que o acervo foi consolidado e inventariado. Ela não equivale a aprovação editorial ou autorização automática para publicação.
