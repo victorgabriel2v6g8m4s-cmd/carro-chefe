@@ -7,10 +7,11 @@ Este repositório reúne os ativos de marca existentes, a arquitetura do negóci
 ## Comece por aqui
 
 1. Leia [AGENTS.md](./AGENTS.md) para conhecer a missão, as regras e as responsabilidades.
-2. Abra [docs/ARQUITETURA.md](./docs/ARQUITETURA.md) para visualizar o negócio e os sistemas.
-3. Consulte [docs/ROADMAP.md](./docs/ROADMAP.md) para a ordem de execução.
-4. Inicie a plataforma seguindo [docs/ARQUITETURA_TECNICA_V2.md](./docs/ARQUITETURA_TECNICA_V2.md).
-5. Use [docs/GITHUB_E_AGENTES.md](./docs/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
+2. Abra o [índice da documentação](./docs/README.md) para navegar por categoria.
+3. Abra [docs/fundacao/ARQUITETURA.md](./docs/fundacao/ARQUITETURA.md) para visualizar o negócio e os sistemas.
+4. Consulte [docs/fundacao/ROADMAP.md](./docs/fundacao/ROADMAP.md) para a ordem de execução.
+5. Inicie a plataforma seguindo [docs/tecnologia/ARQUITETURA_TECNICA_V2.md](./docs/tecnologia/ARQUITETURA_TECNICA_V2.md).
+6. Use [docs/governanca/GITHUB_E_AGENTES.md](./docs/governanca/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
 
 ## Estrutura
 
@@ -23,7 +24,7 @@ cardápio/             Materiais atuais do cardápio
 elementos gráficos/  Elementos visuais originais
 logos/                Variações oficiais da marca
 mídias/               Destino de fotos e vídeos aprovados
-docs/                 Arquitetura e plano do negócio
+docs/                 Documentação organizada por categoria
 planejamento/         Dados iniciais e implementação legada preservada
 ```
 
