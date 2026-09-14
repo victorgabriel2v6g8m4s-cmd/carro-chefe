@@ -13,6 +13,27 @@ Os arquivos em `logos/`, `cardápio/` e `elementos gráficos/` formam uma identi
 
 O painel operacional criado deriva dessa linguagem sem alterar os arquivos originais.
 
+## Arquitetura de nomes aprovada
+
+Decisão do proprietário registrada na Central Operacional em 13/08/2026:
+
+- **Carro Chefe** (sem hífen): marca institucional, logotipo, assinatura de comunicação, domínio e perfis;
+- **Carro‑Chefe** (com hífen): família e produto herói, incluindo **Carro‑Chefe Simples** e **Carro‑Chefe com Cheddar**;
+- **Chefão**: produto de 30 cm da mesma arquitetura de portfólio;
+- **Lanches**: rótulo genérico de categoria para substituir “Paulistinha” na futura derivação da capa; não é novo nome de produto;
+- **Paulistinha**: alias legado interno para rastreabilidade, sem uso em capa, site, anúncios, catálogo ou comunicação ao cliente.
+
+Por aplicação:
+
+| Aplicação | Nomenclatura aprovada |
+|---|---|
+| Produto/cardápio | Carro‑Chefe Simples; Carro‑Chefe com Cheddar; Chefão |
+| Capa | `LANCHES • ESPETINHO • BEBIDAS`, substituindo apenas “Paulistinha” em um derivado versionado |
+| Site | Carro Chefe para a marca; Carro‑Chefe para o produto |
+| Anúncios | Carro Chefe como emissor; Carro‑Chefe como produto herói; não usar “Paulistinha” |
+
+O arquivo original `cardápio/Cardápio Capa.png` é imutável. A versão editada pela designer deve ser entregue como novo arquivo, com data, versão, origem e finalidade, e validada por Marca antes de impressão ou publicação.
+
 ## Paleta digital inicial
 
 | Token | Hex | Uso |
@@ -70,7 +91,7 @@ A etiqueta precisa priorizar: logo, URL/QR, Instagram e WhatsApp. QR deve aponta
 - excesso de fontes western;
 - distorção do medalhão ou recorte do chapéu/corda;
 - efeitos 3D que pareçam tecnologia fria ou atrasem o pedido;
-- comunicar “Paulistinha” como categoria definitiva antes da decisão de marca;
+- reintroduzir “Paulistinha” na comunicação pública ou tratar “Lanches” como nome de produto;
 - usar marca de fornecedor como ingrediente genérico.
 
 ## Pendências do manual definitivo
@@ -80,6 +101,4 @@ A etiqueta precisa priorizar: logo, URL/QR, Instagram e WhatsApp. QR deve aponta
 - cores Pantone/CMYK e acabamentos;
 - área de proteção, tamanho mínimo e usos incorretos;
 - tom de voz com exemplos aprovados;
-- arquitetura de nomes e decisão de “Paulistinha”;
 - templates para feed, stories, cardápio, etiqueta e placa.
-

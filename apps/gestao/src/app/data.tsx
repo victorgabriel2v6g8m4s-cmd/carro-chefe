@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
+import type { Bootstrap } from "../types";
 
-export type Bootstrap = { project: any; tasks: any[]; decisions: any[]; risks: any[]; procurement: any[]; runs: any[]; pendingQuestions: number };
+export type { Bootstrap } from "../types";
 const DataContext = createContext<{ data: Bootstrap | null; loading: boolean; error: string | null; refresh: () => Promise<void> } | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -21,7 +22,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       clearTimeout(refreshTimer.current);
       refreshTimer.current = setTimeout(() => void refresh(), 250);
     };
-    ["task.status.changed", "agent.run.created", "agent.run.updated", "agent.run.completed", "agent.run.attention", "agent.question.asked", "agent.answer.submitted", "agent.step.updated", "agent.report.updated", "agent.communication.created", "decision.context.added", "decision.status.changed", "intent.created", "intent.started", "intent.completed", "intent.failed"].forEach((name) => stream.addEventListener(name, update));
+    ["task.status.changed", "agent.run.created", "agent.run.updated", "agent.run.completed", "agent.run.attention", "agent.question.asked", "agent.answer.submitted", "agent.step.updated", "agent.report.updated", "agent.communication.created", "decision.context.added", "decision.status.changed", "intent.created", "intent.started", "intent.completed", "intent.failed", "knowledge.node.created", "knowledge.node.updated", "knowledge.node.archived", "knowledge.node.captured"].forEach((name) => stream.addEventListener(name, update));
     return () => { clearTimeout(refreshTimer.current); stream.close(); };
   }, [refresh]);
   return <DataContext.Provider value={{ data, loading, error, refresh }}>{children}</DataContext.Provider>;

@@ -17,9 +17,11 @@ import { governanceRoutes } from "./modules/governance/routes";
 import { browserRoutes } from "./modules/browser/routes";
 import { referenceRoutes } from "./modules/references/routes";
 import { managementRoutes } from "./modules/management/routes";
+import { knowledgeRoutes } from "./modules/knowledge/routes";
 import { prelaunchRoutes } from "./modules/prelaunch/routes";
 import { containsLikelyEncodingLoss } from "./lib/text";
 import { config } from "./config";
+import { corsOrigin, protectSensitiveMutation } from "./security";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
@@ -32,7 +34,7 @@ export async function buildApp() {
     trustProxy: config.trustProxy
   });
   await configureSqlite();
-  await app.register(cors, { origin: process.env.NODE_ENV === "production" ? false : true });
+  await app.register(cors, { origin: corsOrigin, credentials: false });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
   await app.register(rateLimit, {
     global: true,
@@ -50,10 +52,12 @@ export async function buildApp() {
 
   app.addHook("onSend", async (_request, reply) => {
     reply.header("X-Content-Type-Options", "nosniff");
-    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    reply.header("Referrer-Policy", "no-referrer");
     reply.header("X-Frame-Options", "SAMEORIGIN");
     reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   });
+
+  app.addHook("onRequest", protectSensitiveMutation);
 
   app.addHook("preValidation", async (request) => {
     if (containsLikelyEncodingLoss(request.body)) {
@@ -64,7 +68,7 @@ export async function buildApp() {
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ZodError) return reply.code(400).send({ error: "Entrada inválida.", details: error.issues });
     if (error instanceof ApiError) return reply.code(error.statusCode).send({ error: error.message, details: error.details });
-    if ((error as any).code === "P2025") return reply.code(404).send({ error: "Registro não encontrado." });
+    if ((error as { code?: string }).code === "P2025") return reply.code(404).send({ error: "Registro não encontrado." });
     const httpError = error as { statusCode?: number; message?: string; code?: string };
     if (typeof httpError.statusCode === "number" && httpError.statusCode >= 400 && httpError.statusCode < 500) {
       return reply.code(httpError.statusCode).send({ error: httpError.message, code: httpError.code });
@@ -86,6 +90,7 @@ export async function buildApp() {
   await app.register(browserRoutes);
   await app.register(referenceRoutes);
   await app.register(managementRoutes);
+  await app.register(knowledgeRoutes);
 
   return app;
 }

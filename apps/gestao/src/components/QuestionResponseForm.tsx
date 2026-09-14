@@ -2,9 +2,10 @@ import { useState, type FormEvent } from "react";
 import { api, json } from "../api/client";
 import { AttachmentPicker } from "./AttachmentPicker";
 import { ReferenceComposer, type ScopedReference } from "./ReferenceComposer";
+import type { Upload } from "../types";
 
 export function QuestionResponseForm({ questionId, taskId, onAnswered, initialValue = "", suggestions = [] }:
-  { questionId: string; taskId: string; onAnswered: () => Promise<void> | void; initialValue?: string; suggestions?: string[] }) {
+  { questionId: string; taskId?: string; onAnswered: () => Promise<void> | void; initialValue?: string; suggestions?: string[] }) {
   const [answer, setAnswer] = useState(initialValue);
   const [files, setFiles] = useState<File[]>([]);
   const [references, setReferences] = useState<ScopedReference[]>([]);
@@ -19,7 +20,7 @@ export function QuestionResponseForm({ questionId, taskId, onAnswered, initialVa
         setFeedback(`Enviando ${file.name}…`);
         const form = new FormData();
         form.append("purpose", "question-answer-draft"); form.append("actor", "proprietario"); form.append("file", file);
-        attachmentIds.push((await api<any>("/api/v1/uploads", { method: "POST", body: form })).id);
+        attachmentIds.push((await api<Pick<Upload, "id">>("/api/v1/uploads", { method: "POST", body: form })).id);
       }
       await api(`/api/v1/agent-questions/${questionId}/answer`, json("POST", { answer, answeredBy: "proprietario", attachmentIds, references }));
       setAnswer(""); setFiles([]); setReferences([]); await onAnswered();
