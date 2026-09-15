@@ -8,8 +8,14 @@
   },
   "operations": [
     {
-      "op": "structural.plan",
+      "op": "structural.assert_clean",
       "action": "sheet.insert_rows",
+      "sheet": "Custos Fixos",
+      "at": 12,
+      "count": 1
+    },
+    {
+      "op": "sheet.insert_rows",
       "sheet": "Custos Fixos",
       "at": 12,
       "count": 1
