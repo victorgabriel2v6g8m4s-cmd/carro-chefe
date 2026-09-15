@@ -1,0 +1,225 @@
+{
+  "columns": [
+    "ID",
+    "Item",
+    "Quantidade por pacote",
+    "Quantidade",
+    "Estimativa",
+    "Medida"
+  ],
+  "display_name": "estoque",
+  "name": "estoque",
+  "ref": "B4:G30",
+  "rows": [
+    [
+      5,
+      "Abacaxi",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      11,
+      "Açúcar",
+      1000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      6,
+      "Alface",
+      15,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      45,
+      "Alho",
+      1000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      35,
+      "Amstel 350",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      44,
+      "Arroz",
+      5000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      51,
+      "Azeitona Preta",
+      230,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      10,
+      "Bacon",
+      1000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      12,
+      "Barbecue",
+      3500,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      21,
+      "Batata Palha",
+      800,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      34,
+      "Brahma Chopp 350",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      24,
+      "Carvão",
+      4000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      1,
+      "Cebola Nacional",
+      1000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      8,
+      "Cebolinha e Salsa",
+      60,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      47,
+      "Cheddar",
+      5000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      28,
+      "Coca Cola 2,5",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      29,
+      "Coca Cola Lata 350",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      38,
+      "Coca Cola Zero 600",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      30,
+      "Coca Cola Zero Lata 350",
+      1,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      22,
+      "Creme de Leite",
+      200,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      41,
+      "Espetos Bovinos",
+      10,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      112,
+      "Espetos De Coração",
+      4,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      117,
+      "Espetos de Cupim",
+      1000,
+      null,
+      null,
+      "Gramas"
+    ],
+    [
+      114,
+      "Espetos de Queijo",
+      5,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      108,
+      "Espetos Formadora",
+      10,
+      null,
+      null,
+      "Unidades"
+    ],
+    [
+      109,
+      "Espetos Frango",
+      6,
+      null,
+      null,
+      "Unidades"
+    ]
+  ],
+  "sheet": "Estoque",
+  "totals_row_shown": false
+}

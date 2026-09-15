@@ -1,0 +1,11 @@
+,,,,,,,,,,,,,,,,,
+,Previsão de Vendas,,,,,Configurações da Precificação,,,,,,,Variáveis,,Métodos de Pagamento,,
+,,,,,,,,,,,,,,,,,
+,Máximo de vendas,Mínimo de vendas,Faturamento Alvo,Faturamento Mínimo,,Rateio de Custos Fixos,Despesas Variáveis,Margem Cat. A,Margem Cat. B,Margem Cat. C,C.F nos custos totais?,,Medidas,,Método,Desconto,Acréscimo
+,2880,1440,7150,5500,,2.8368055555555554,0.273,0.3,0.3,0.3,Não,,Unidades,,Pix,0,0
+,,,,,,,,,,,,,Quilos,,Dinheiro,0,0
+,,,,,,,,,,,,,Gramas,,Débito,0,0.0279
+,,,,,,,,,,,,,Litros,,Crédito,0,0.0599
+,,,,,,,,,,,,,ML,,Doação,0,1
+,,,,,,,,,,,,,Centímetros,,,,
+,,,,,,,,,,,,,Metros,,,,

@@ -1,0 +1,171 @@
+{
+  "columns": [
+    "Qtd. Vendida",
+    "ID",
+    "Item",
+    "Faturamento",
+    "Lucro Bruto",
+    "Lucro Líquido",
+    "Rateio de C.F"
+  ],
+  "display_name": "retorno",
+  "name": "retorno",
+  "ref": "B4:H21",
+  "rows": [
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(CaProdutos[ID], MATCH(retorno[[#This Row],[Item]], CaProdutos[Item], 0)), \"\")",
+      null,
+      "=IFERROR(INDEX(Precificação[Preço de Venda], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(INDEX(Precificação[Lucro Bruto], MATCH(retorno[[#This Row],[ID]], CaProdutos[ID], 0)) * retorno[[#This Row],[Qtd. Vendida]], \"\")",
+      "=IFERROR(retorno[[#This Row],[Lucro Bruto]] - (CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]] * retorno[[#This Row],[Qtd. Vendida]]), \"\")",
+      "=IF(retorno[[#This Row],[Lucro Líquido]] <> \"\", CFMensais[[#Totals], [Valor]] / retorno[[#Totals], [Qtd. Vendida]], \"\")"
+    ],
+    [
+      0,
+      null,
+      null,
+      0,
+      0,
+      0,
+      null
+    ]
+  ],
+  "sheet": "simulação pós-vendas",
+  "totals_row_shown": false
+}
