@@ -11,6 +11,9 @@ from .errors import RecipeError
 SUPPORTED_OPERATIONS = {
     "cell.set", "cell.clear", "formula.set", "formula.copy",
     "dependency.scan", "dependency.assert_clean",
+    "structural.plan", "structural.assert_clean",
+    "sheet.insert_rows", "sheet.delete_rows", "sheet.insert_columns", "sheet.delete_columns",
+    "range.move", "table.insert_column", "table.delete_column", "table.compact_rows",
     "table.rename", "table.rename_column",
     "table.append_rows", "table.upsert_rows", "table.update_rows", "table.delete_rows",
     "table.create", "table.resize", "table.drop", "table.add_column", "table.set_formula_column",
