@@ -90,16 +90,16 @@ class StructuralV3ATests(unittest.TestCase):
 
     def test_table_delete_column_when_dependencies_are_clean(self) -> None:
         operations = [
-            {"op": "cell.clear", "sheet": "Resumo", "cell": "A1"},
-            *self.pair("table.delete_column", table="Itens", column="ID"),
+            {"op": "cell.clear", "sheet": "Resumo", "cell": "A3"},
+            *self.pair("table.delete_column", table="Itens", column="Total"),
         ]
         execute_recipe(self.write_recipe(operations, "table-delete-col"), refresh_snapshot=False, repo_root=self.root)
         ctx = self.context()
         table = TableManager(ctx).find("Itens")
-        self.assertEqual(["Item", "Total"], table.columns)
+        self.assertEqual(["ID", "Item"], table.columns)
         self.assertEqual("B3:C6", table.ref)
-        self.assertEqual("Pão", ctx.read_cell("Dados", "B4"))
-        self.assertEqual("=SUM(Dados!C4:C6)", ctx.read_cell("Resumo", "A3"))
+        self.assertEqual("Pão", ctx.read_cell("Dados", "C4"))
+        self.assertEqual("=Dados!B6", ctx.read_cell("Resumo", "A2"))
 
     def test_table_delete_column_blocks_structured_dependency(self) -> None:
         recipe = self.write_recipe([
