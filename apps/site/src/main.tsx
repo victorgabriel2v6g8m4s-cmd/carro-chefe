@@ -1,222 +1,15 @@
-import { StrictMode, useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import { StrictMode, useEffect, useMemo, useState } from "react";
+import { SignupForm } from "./SignupForm";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "./styles.css";
+import { getAttribution, isBannerVipCampaign } from "./campaign";
+import { campaignContent } from "./campaign-content";
+import { getAnalyticsConsent, track, trackOnce, loadAnalyticsVendors, grantAnalytics, denyAnalytics } from "./analytics";
+import type { AnalyticsConsent } from "./analytics";
 
 const whatsapp = "https://wa.me/5567992046721";
 const instagram = "https://instagram.com/carrochefe_cg";
-const analyticsConsentKey = "carrochefe.analytics-consent.v1";
-const attributionKey = "carrochefe.prelaunch.attribution.v1";
-const sessionKey = "carrochefe.prelaunch.session.v1";
-const trackedOnceKey = "carrochefe.prelaunch.tracked.v1";
-const consentVersion = "prelaunch-whatsapp-v1";
-const privacyPolicyVersion = "prelaunch-privacy-v1";
-
-type AnalyticsConsent = "granted" | "denied" | "unknown";
-type SignupState = "idle" | "loading" | "success" | "duplicate" | "error";
-type Attribution = {
-  ccQr: string | null;
-  ccCampaign: string | null;
-  ccVariant: string | null;
-  firstSeenAt: string;
-};
-type EventName =
-  | "qr_scan"
-  | "landing_view"
-  | "signup_cta_click"
-  | "form_start"
-  | "signup_submit"
-  | "signup_success"
-  | "signup_duplicate"
-  | "signup_error"
-  | "reward_view"
-  | "instagram_click"
-  | "whatsapp_click"
-  | "privacy_open"
-  | "consent_analytics_granted";
-type EventMetadata = {
-  experiment?: string | null;
-  ctaVariant?: string | null;
-  formPosition?: string | null;
-  hasProductMedia?: boolean | null;
-  section?: "hero" | "reward" | "product_teaser" | "brand_story" | "social" | null;
-};
-type QueuedEvent = { event: EventName; metadata: EventMetadata };
-
-const pendingEvents: QueuedEvent[] = [];
-let vendorsLoaded = false;
-
-function sanitizeTrackingValue(value: string | null): string | null {
-  if (!value) return null;
-  const trimmed = value.trim().slice(0, 120);
-  return /^[A-Za-z0-9._:-]+$/.test(trimmed) ? trimmed : null;
-}
-
-function getAttribution(): Attribution {
-  const stored = sessionStorage.getItem(attributionKey);
-  if (stored) {
-    try { return JSON.parse(stored) as Attribution; } catch { sessionStorage.removeItem(attributionKey); }
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const attribution: Attribution = {
-    ccQr: sanitizeTrackingValue(params.get("cc_qr")),
-    ccCampaign: sanitizeTrackingValue(params.get("cc_campaign")),
-    ccVariant: sanitizeTrackingValue(params.get("cc_variant")),
-    firstSeenAt: new Date().toISOString()
-  };
-  sessionStorage.setItem(attributionKey, JSON.stringify(attribution));
-  return attribution;
-}
-
-function isBannerVipCampaign(attribution: Attribution) {
-  return attribution.ccQr === "QR-001" && attribution.ccCampaign === "banner";
-}
-
-function getSessionId() {
-  const stored = sessionStorage.getItem(sessionKey);
-  if (stored) return stored;
-  const id = crypto.randomUUID();
-  sessionStorage.setItem(sessionKey, id);
-  return id;
-}
-
-function getAnalyticsConsent(): AnalyticsConsent {
-  const stored = localStorage.getItem(analyticsConsentKey);
-  return stored === "granted" || stored === "denied" ? stored : "unknown";
-}
-
-function safeMetadata(metadata: EventMetadata = {}): EventMetadata {
-  return {
-    experiment: metadata.experiment ?? null,
-    ctaVariant: metadata.ctaVariant ?? null,
-    formPosition: metadata.formPosition ?? null,
-    hasProductMedia: metadata.hasProductMedia ?? false,
-    section: metadata.section ?? null
-  };
-}
-
-async function sendFirstPartyEvent(event: EventName, metadata: EventMetadata = {}) {
-  const attribution = getAttribution();
-  const body = {
-    sessionId: getSessionId(),
-    event,
-    path: window.location.pathname,
-    attribution: {
-      ccQr: attribution.ccQr,
-      ccCampaign: attribution.ccCampaign,
-      ccVariant: attribution.ccVariant
-    },
-    metadata: safeMetadata(metadata)
-  };
-
-  try {
-    await fetch("/api/v1/public/prelaunch/events", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      keepalive: true,
-      body: JSON.stringify(body)
-    });
-  } catch {
-    // Analytics nunca pode interromper o fluxo de cadastro.
-  }
-}
-
-function sendVendorEvent(event: EventName, metadata: EventMetadata = {}) {
-  const gtag = (window as any).gtag as undefined | ((...args: unknown[]) => void);
-  if (gtag) gtag("event", event, safeMetadata(metadata));
-  const clarity = (window as any).clarity as undefined | ((...args: unknown[]) => void);
-  if (clarity) clarity("event", event);
-}
-
-function track(event: EventName, metadata: EventMetadata = {}) {
-  const consent = getAnalyticsConsent();
-  if (consent === "denied") return;
-  if (consent === "unknown") {
-    pendingEvents.push({ event, metadata });
-    return;
-  }
-  void sendFirstPartyEvent(event, metadata);
-  sendVendorEvent(event, metadata);
-}
-
-function trackOnce(event: EventName, metadata: EventMetadata = {}) {
-  const stored = sessionStorage.getItem(trackedOnceKey);
-  const events = stored ? new Set(stored.split(",")) : new Set<string>();
-  if (events.has(event)) return;
-  events.add(event);
-  sessionStorage.setItem(trackedOnceKey, [...events].join(","));
-  track(event, metadata);
-}
-
-function loadAnalyticsVendors() {
-  if (vendorsLoaded) return;
-  vendorsLoaded = true;
-
-  const gaId = import.meta.env.VITE_GA4_ID?.trim();
-  if (gaId) {
-    (window as any).dataLayer = (window as any).dataLayer || [];
-    (window as any).gtag = function (...args: unknown[]) { (window as any).dataLayer.push(args); };
-    (window as any).gtag("js", new Date());
-    (window as any).gtag("config", gaId, { send_page_view: false, anonymize_ip: true });
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
-    document.head.appendChild(script);
-  }
-
-  const clarityId = import.meta.env.VITE_CLARITY_ID?.trim();
-  if (clarityId) {
-    (window as any).clarity = (window as any).clarity || function (...args: unknown[]) {
-      ((window as any).clarity.q = (window as any).clarity.q || []).push(args);
-    };
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `https://www.clarity.ms/tag/${encodeURIComponent(clarityId)}`;
-    document.head.appendChild(script);
-  }
-}
-
-function grantAnalytics() {
-  localStorage.setItem(analyticsConsentKey, "granted");
-  loadAnalyticsVendors();
-  void sendFirstPartyEvent("consent_analytics_granted");
-  sendVendorEvent("consent_analytics_granted");
-  for (const queued of pendingEvents.splice(0)) {
-    void sendFirstPartyEvent(queued.event, queued.metadata);
-    sendVendorEvent(queued.event, queued.metadata);
-  }
-}
-
-function denyAnalytics() {
-  localStorage.setItem(analyticsConsentKey, "denied");
-  pendingEvents.splice(0);
-}
-
-function normalizePhoneForValidation(value: string) {
-  const digits = value.replace(/\D/g, "");
-  return digits.startsWith("55") && (digits.length === 12 || digits.length === 13) ? digits.slice(2) : digits;
-}
-
-function isValidPhone(value: string) {
-  const national = normalizePhoneForValidation(value);
-  if (national.length !== 10 && national.length !== 11) return false;
-  if (/^(\d)\1+$/.test(national)) return false;
-  if (national.startsWith("0") || national.slice(2).startsWith("0")) return false;
-  return national.length !== 11 || national[2] === "9";
-}
-
-function formatPhone(value: string) {
-  let digits = value.replace(/\D/g, "");
-  if (digits.startsWith("55") && digits.length > 11) digits = digits.slice(2);
-  digits = digits.slice(0, 11);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
 function AnalyticsChoice({ onChange }: { onChange: (value: AnalyticsConsent) => void }) {
   const [consent, setConsent] = useState<AnalyticsConsent>(() => getAnalyticsConsent());
 
@@ -224,7 +17,6 @@ function AnalyticsChoice({ onChange }: { onChange: (value: AnalyticsConsent) => 
     const previous = getAnalyticsConsent();
     if (value === "granted") {
       if (previous !== "granted") grantAnalytics();
-      else localStorage.setItem(analyticsConsentKey, "granted");
     } else {
       denyAnalytics();
     }
@@ -236,154 +28,65 @@ function AnalyticsChoice({ onChange }: { onChange: (value: AnalyticsConsent) => 
   };
 
   if (consent !== "unknown") {
-    return <button type="button" className="analytics-preferences-button" onClick={() => setConsent("unknown")}>Preferências de analytics</button>;
+    return <button type="button" className="analytics-preferences-button" onClick={() => setConsent("unknown")}>Preferências de privacidade</button>;
   }
 
-  return <aside className="analytics-choice" aria-label="Preferência de analytics">
-    <div><strong>Podemos usar analytics para entender como esta página é usada?</strong><p>Isso nos ajuda a melhorar a experiência. O cadastro funciona mesmo se você recusar.</p></div>
-    <div className="analytics-actions"><button type="button" onClick={() => choose("granted")}>Aceitar analytics</button><button type="button" onClick={() => choose("denied")}>Recusar</button></div>
+  return <aside className="analytics-choice" aria-label="Preferências de privacidade">
+    <div><strong>Você escolhe como navegar.</strong><p>Podemos medir o uso da página para melhorá-la? Seu cadastro funciona com qualquer escolha.</p></div>
+    <div className="analytics-actions"><button type="button" onClick={() => choose("granted")}>Permitir medição</button><button type="button" onClick={() => choose("denied")}>Agora não</button></div>
   </aside>;
 }
 
-function SignupForm() {
-  const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [state, setState] = useState<SignupState>("idle");
-  const [phoneTouched, setPhoneTouched] = useState(false);
-  const [consentError, setConsentError] = useState(false);
-  const [serverMessage, setServerMessage] = useState("");
-  const started = useRef(false);
-  const attribution = useMemo(() => getAttribution(), []);
-  const bannerVip = isBannerVipCampaign(attribution);
-  const phoneInvalid = phoneTouched && !isValidPhone(phone);
-
-  const markStarted = () => {
-    if (started.current) return;
-    started.current = true;
-    trackOnce("form_start", { formPosition: "hero_inline", hasProductMedia: false });
-  };
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (state === "loading") return;
-    setPhoneTouched(true);
-    setConsentError(!consent);
-    if (!isValidPhone(phone) || !consent) return;
-
-    setState("loading");
-    setServerMessage("");
-    track("signup_submit", { ctaVariant: "prelaunch_primary_v1", formPosition: "hero_inline", hasProductMedia: false });
-
-    const data = new FormData(event.currentTarget);
-    try {
-      const response = await fetch("/api/v1/public/prelaunch/signup", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          phone,
-          firstName: null,
-          marketingConsent: true,
-          consentVersion,
-          privacyPolicyVersion,
-          firstSeenAt: attribution.firstSeenAt,
-          attribution: {
-            ccQr: attribution.ccQr,
-            ccCampaign: attribution.ccCampaign,
-            ccVariant: attribution.ccVariant
-          },
-          website: String(data.get("website") ?? "")
-        })
-      });
-      const payload = await response.json().catch(() => ({})) as { status?: string; error?: string };
-
-      if (response.ok && payload.status === "created") {
-        setState("success");
-        track("signup_success", { ctaVariant: "prelaunch_primary_v1", formPosition: "hero_inline", hasProductMedia: false });
-        track("reward_view", { section: "reward", hasProductMedia: false });
-        return;
-      }
-      if (response.ok && payload.status === "duplicate") {
-        setState("duplicate");
-        track("signup_duplicate", { formPosition: "hero_inline", hasProductMedia: false });
-        return;
-      }
-      if (response.status === 400) {
-        setState("idle");
-        setPhoneTouched(true);
-        setServerMessage(payload.error ?? "Confira o número informado e tente novamente.");
-        track("signup_error", { formPosition: "hero_inline", hasProductMedia: false });
-        return;
-      }
-      throw new Error("signup_failed");
-    } catch {
-      setState("error");
-      track("signup_error", { formPosition: "hero_inline", hasProductMedia: false });
-    }
-  };
-
-  if (state === "success" || state === "duplicate") {
-    const duplicate = state === "duplicate";
-    return <div className="signup-result" role="status" aria-live="polite">
-      <span className="result-mark" aria-hidden="true">✓</span>
-      <h2>{duplicate ? "Você já está na Lista dos Primeiros." : "Você está dentro."}</h2>
-      <p>{duplicate ? "Esse WhatsApp já está confirmado. Quando houver novidade da inauguração, você continua dentro." : bannerVip ? "Seu cadastro pela campanha do banner foi confirmado. Você terá acesso VIP a promoções, cupons e outros benefícios do Carro Chefe." : "Seu lugar na Lista dos Primeiros está confirmado."}</p>
-      {!duplicate && <ol className="progress-list"><li><strong>Cadastro confirmado</strong><span>✓</span></li><li><strong>A abertura será anunciada pelo WhatsApp</strong></li><li><strong>{bannerVip ? "Acesso VIP a promoções, cupons e outros benefícios" : "Seu benefício chegará próximo à inauguração"}</strong></li></ol>}
-      <div className="post-signup-actions"><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>Acompanhar no Instagram</a></div>
-    </div>;
-  }
-
-  return <form className="signup-form" onSubmit={submit} noValidate data-clarity-mask="true">
-    <div className="form-heading"><span>Lista dos Primeiros</span><h2>Saiba antes. Chegue primeiro.</h2><p>{bannerVip ? "Cadastre seu WhatsApp para receber novidades da inauguração e ter acesso VIP a promoções, cupons e outros benefícios. Saia quando quiser." : "Novidades da inauguração e promoções pelo WhatsApp. Saia quando quiser."}</p></div>
-    <div className="field-group">
-      <label htmlFor="whatsapp">Seu WhatsApp</label>
-      <input id="whatsapp" name="whatsapp" type="tel" inputMode="tel" autoComplete="tel" placeholder="(67) 99204-6721" value={phone} aria-invalid={phoneInvalid || Boolean(serverMessage)} aria-describedby="phone-help phone-error" onFocus={markStarted} onBlur={() => setPhoneTouched(true)} onChange={(event) => { const next = formatPhone(event.target.value); setPhone(next); if (phoneTouched && isValidPhone(next)) setServerMessage(""); }} data-clarity-mask="true" />
-      <small id="phone-help">DDD + telefone. Aceitamos número com ou sem formatação.</small>
-      {(phoneInvalid || serverMessage) && <p id="phone-error" className="field-error" role="alert"><strong>Confira o número.</strong> {serverMessage || "Digite DDD + telefone, por exemplo (67) 99204-6721."}</p>}
-    </div>
-    <label className={`consent-row${consentError ? " has-error" : ""}`}>
-      <input type="checkbox" checked={consent} onFocus={markStarted} onChange={(event) => { setConsent(event.target.checked); if (event.target.checked) setConsentError(false); }} />
-      <span>Quero receber pelo WhatsApp novidades da inauguração, promoções, cupons e outros benefícios do Carro Chefe. Posso cancelar quando quiser.</span>
-    </label>
-    {consentError && <p className="field-error consent-message" role="alert">Marque esta opção para confirmar que deseja receber as mensagens.</p>}
-    <div className="honeypot" aria-hidden="true"><label htmlFor="website">Site</label><input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" /></div>
-    {state === "error" && <div className="network-error" role="alert"><strong>Não conseguimos confirmar agora.</strong><span>Seu cadastro ainda não foi concluído. Confira a conexão e tente novamente.</span></div>}
-    <button className="signup-button" type="submit" disabled={state === "loading"} onClick={() => track("signup_cta_click", { ctaVariant: "prelaunch_primary_v1", formPosition: "hero_inline", hasProductMedia: false })}>{state === "loading" ? "Confirmando seu lugar…" : state === "error" ? "Tentar novamente" : "Entrar na Lista dos Primeiros"}</button>
-    <p className="privacy-note">Ao se cadastrar, seus dados são usados para este contato conforme nosso <Link to="/privacidade" onClick={() => track("privacy_open")}>aviso de privacidade</Link>.</p>
-  </form>;
-}
-
 function BrandHeader() {
-  return <header className="prelaunch-header"><Link className="brand" to="/" aria-label="Carro Chefe — início"><img src="/assets/brand/logo-base.png" alt="" /><span><strong>Carro Chefe</strong><small>Sabor que lidera</small></span></Link><span className="header-status">Pré-inauguração</span></header>;
+  const { pathname, search } = useLocation();
+  const home = pathname === "/" ? "" : `/${search}`;
+  return <header className="prelaunch-header"><Link className="brand" to={{ pathname: "/", search }} aria-label="Carro Chefe — início"><img src="/assets/logos/base_no-background.png" alt="" width="56" height="56" /><span><strong>Carro Chefe</strong><small>Sabor que lidera</small></span></Link><nav aria-label="Navegação principal"><a href={`${home}#chefao`}>O Chefão</a><a href={`${home}#como-funciona`}>Como funciona</a><a className="header-cta" href={`${home}#cadastro`}>Quero ser avisado <span aria-hidden="true">↗</span></a></nav></header>;
 }
 
 function PrelaunchLanding() {
   const [, setAnalyticsConsent] = useState<AnalyticsConsent>(() => getAnalyticsConsent());
-  const attribution = useMemo(() => getAttribution(), []);
+  const { search } = useLocation();
+  const attribution = useMemo(() => getAttribution(), [search]);
   const bannerVip = isBannerVipCampaign(attribution);
+  const copy = bannerVip ? campaignContent.vip : campaignContent.direct;
 
   useEffect(() => {
     const consent = getAnalyticsConsent();
     if (consent === "granted") loadAnalyticsVendors();
-    if (attribution.ccQr) trackOnce("qr_scan", { hasProductMedia: false });
-    trackOnce("landing_view", { hasProductMedia: false });
+    if (attribution.ccQr) trackOnce("qr_scan", { hasProductMedia: true });
+    trackOnce("landing_view", { hasProductMedia: true });
   }, [attribution]);
 
   return <div className="prelaunch-shell"><a className="skip" href="#cadastro">Pular para o cadastro</a><BrandHeader />
     <main>
-      <section className="prelaunch-hero">
-        <div className="hero-message"><span className="eyebrow">Pré-inauguração · Campo Grande</span><h1>O Carro Chefe<br /><em>está chegando.</em></h1><p className="hero-lead">Brasa, espeto e baguete em uma experiência feita para chamar atenção antes mesmo da primeira mordida.</p><p className="hero-promise">{bannerVip ? <>Entre para a <strong>Lista dos Primeiros</strong>, receba a abertura em primeira mão e tenha <strong>acesso VIP a promoções, cupons e outros benefícios</strong>.</> : <>Entre para a <strong>Lista dos Primeiros</strong> e receba a abertura em primeira mão e um benefício especial de inauguração.</>}</p><a className="hero-anchor" href="#cadastro" onClick={() => track("signup_cta_click", { ctaVariant: "prelaunch_anchor_v1", formPosition: "hero_inline", hasProductMedia: false })}>Entrar na Lista dos Primeiros <span aria-hidden="true">↓</span></a></div>
-        <div className="signup-panel" id="cadastro"><SignupForm /></div>
+      <section className="prelaunch-hero" aria-labelledby="hero-title">
+        <div className="hero-message">
+          <span className="opening-badge"><span aria-hidden="true" />{bannerVip ? "Convite exclusivo pelo QR · Pré-inauguração" : "Pré-inauguração · Campo Grande"}</span>
+          <h1 id="hero-title">Esse é o <em>Chefão.</em></h1>
+          <p className="hero-lead">Espeto na parrilla, baguete e um recheio de respeito.</p>
+        </div>
+        <figure className="hero-product">
+          <div className="product-stage"><img src="/assets/products/chefao-recorte-v02.webp" srcSet="/assets/products/chefao-recorte-v02-800.webp 800w, /assets/products/chefao-recorte-v02.webp 1659w" sizes="(max-width: 760px) calc(100vw - 24px), (max-width: 1200px) calc(100vw - 96px), 1100px" width="1659" height="522" fetchPriority="high" alt="Chefão inteiro: baguete recheada com espetos na parrilla, cheddar, alface, tomate, cebola-roxa e batata palha." /></div>
+          <figcaption className="product-highlights"><span><strong>30 cm</strong> de baguete</span><span><strong>2 espetos</strong> na parrilla</span><span>Recheio <strong>de respeito</strong></span></figcaption>
+        </figure>
+        <div className="hero-invitation">
+          {bannerVip && <aside className="campaign-invitation" aria-label="Seu convite pelo QR"><span className="campaign-badge">{campaignContent.vip.badge}</span><h2>{campaignContent.vip.title}</h2><p>{campaignContent.vip.description}</p></aside>}
+          <div className="hero-actions"><a className="button button-primary" href="#cadastro" onClick={() => track("signup_cta_click", { ctaVariant: "product_hero_v3_cutout", formPosition: "signup_section", hasProductMedia: true })}>{copy.cta} <span aria-hidden="true">↗</span></a><a className="text-link" href="#chefao">O que vem no Chefão <span aria-hidden="true">↓</span></a></div>
+          <p className="hero-promise">{bannerVip ? <>Veio pelo banner? Entre na <strong>Lista dos Primeiros</strong> para receber a inauguração e os cupons e promoções exclusivas pelo WhatsApp.</> : <>Estamos preparando a inauguração. Entre na <strong>Lista dos Primeiros</strong> para receber as novidades pelo WhatsApp.</>}</p>
+        </div>
       </section>
-      <section className="expectation-strip" aria-label="O que você recebe"><div><span>01</span><strong>Abertura em primeira mão</strong><p>Você recebe o aviso pelo WhatsApp quando a inauguração estiver confirmada.</p></div><div><span>02</span><strong>{bannerVip ? "Acesso VIP" : "Benefício de inauguração"}</strong><p>{bannerVip ? "Cadastros da campanha QR-001 terão acesso VIP a promoções, cupons e outros benefícios. Os detalhes de cada ação serão comunicados pelo Carro Chefe." : "A Lista dos Primeiros receberá a condição especial quando a regra estiver definida e pronta para ser honrada."}</p></div><div><span>03</span><strong>Bastidores da marca</strong><p>Acompanhe a preparação do Carro Chefe sem promessas, datas ou contagens artificiais.</p></div></section>
-      <section className="brand-story"><div><span className="eyebrow">Sabor que lidera</span><h2>Brasa no centro.<br />Sem atalhos na promessa.</h2></div><p>O pré-lançamento existe para avisar quem quer chegar primeiro — sem pedido antecipado, sem data inventada e sem escassez artificial. Quando estiver pronto para abrir, você vai saber.</p></section>
-      <section className="social-section"><span className="eyebrow">Enquanto a brasa acende</span><h2>Acompanhe os bastidores.</h2><p>O cadastro é a forma principal de receber a abertura. Se quiser ver o processo de perto, estamos também nas redes.</p><div><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>@carrochefe_cg</a><a href={whatsapp} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_click", { section: "social" })}>WhatsApp oficial</a></div></section>
+      <section className="product-section section-shell" id="chefao" aria-labelledby="product-title"><div className="product-intro"><span className="eyebrow">Conheça o Chefão</span><h2 id="product-title">Espeto na brasa.<br />Abraço de baguete.</h2><p>Nosso lanche de 30 cm junta dois espetos preparados na parrilla com maionese, cheddar, alface, tomate, cebola-roxa e batata palha.</p><p className="product-detail">Aquela combinação de pão, recheio e crocância para a hora da fome.</p></div><div className="product-features"><article><span className="feature-icon" aria-hidden="true">↔</span><div><h3>30 cm de baguete</h3><p>Espaço de sobra para o recheio.</p></div></article><article><span className="feature-icon" aria-hidden="true">♨</span><div><h3>Dois espetos na parrilla</h3><p>O sabor da brasa no centro do lanche.</p></div></article><article><span className="feature-icon" aria-hidden="true">+</span><div><h3>Do seu jeito</h3><p>Até dois adicionais gratuitos entre picles, requeijão cremoso, barbecue e maionese de bacon.</p></div></article></div></section>
+      <section className="signup-section section-shell" id="cadastro" aria-labelledby="signup-title" tabIndex={-1}><div className="signup-intro"><span className="eyebrow">Entre na Lista dos Primeiros</span><h2 id="signup-title">A brasa vai acender.<br />A gente te avisa.</h2><p>Estamos preparando nossa lanchonete em Campo Grande. Deixe seu WhatsApp para saber quando chegar.</p><div className="expectation-list" id="como-funciona"><h3>Como funciona</h3><ol><li><span aria-hidden="true">1</span><div><strong>Você entra na lista</strong><p>É gratuito e só precisa do seu WhatsApp.</p></div></li><li><span aria-hidden="true">2</span><div><strong>Recebe a data de abertura</strong><p>Avisamos quando a inauguração estiver confirmada.</p></div></li><li><span aria-hidden="true">3</span><div><strong>{bannerVip ? "Fica por dentro dos cupons e promoções exclusivas" : "Fica por dentro das novidades"}</strong><p>{bannerVip ? "Promoções, cupons e outros benefícios. As regras de cada ação chegam pelo WhatsApp." : "Acompanhe a inauguração e as promoções da marca."}</p></div></li></ol></div></div><div className="signup-panel"><SignupForm key={search} /></div></section>
+      <section className="faq-section section-shell" aria-labelledby="faq-title"><div><span className="eyebrow">Pra você chegar sabendo</span><h2 id="faq-title">Ficou com vontade?<br />Tire suas dúvidas.</h2></div><div className="faq-list"><details><summary>Já posso fazer um pedido?</summary><p>Ainda estamos em pré-inauguração. Entre na lista para receber a data de abertura e as informações para pedir quando começarmos.</p></details><details><summary>O cadastro é gratuito?</summary><p>Sim. Você só informa seu WhatsApp e escolhe receber nossas mensagens. Pode pedir para sair a qualquer momento pelo WhatsApp oficial.</p></details><details><summary>{copy.faqTitle}</summary><p>{copy.faqAnswer}</p></details><details><summary>Preciso seguir o Instagram?</summary><p>Não. Seu cadastro já basta para receber as novidades pelo WhatsApp. O Instagram é um convite para acompanhar os bastidores, se você quiser.</p></details></div></section>
+      <section className="social-section section-shell"><div><span className="eyebrow">Pode chegar mais perto</span><h2>O primeiro encontro<br />pode ser nos bastidores.</h2><p>Conheça a preparação da nossa lanchonete e acompanhe o Carro Chefe no Instagram.</p></div><div className="social-actions"><a className="button button-secondary" href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>Ver @carrochefe_cg <span aria-hidden="true">↗</span></a><a className="text-link" href={whatsapp} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_click", { section: "social" })}>Falar com a gente no WhatsApp ↗</a></div></section>
     </main>
-    <footer className="prelaunch-footer"><div className="footer-brand"><img src="/assets/brand/logo-base.png" alt="" /><span><strong>Carro Chefe</strong><small>Sabor que lidera</small></span></div><nav aria-label="Rodapé"><Link to="/privacidade" onClick={() => track("privacy_open")}>Privacidade</Link><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>Instagram</a><a href={whatsapp} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_click", { section: "social" })}>WhatsApp</a></nav><small>© {new Date().getFullYear()} Carro Chefe</small></footer>
-    <AnalyticsChoice onChange={setAnalyticsConsent} />
+    <footer className="prelaunch-footer"><div className="footer-brand"><img src="/assets/logos/base_no-background.png" alt="" /><span><strong>Carro Chefe</strong><small>Sabor que lidera</small></span></div><nav aria-label="Rodapé"><Link to={{ pathname: "/privacidade", search }} onClick={() => track("privacy_open")}>Privacidade</Link><a href={instagram} target="_blank" rel="noreferrer" onClick={() => track("instagram_click", { section: "social" })}>Instagram</a><a href={whatsapp} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_click", { section: "social" })}>WhatsApp</a></nav><small>© {new Date().getFullYear()} Carro Chefe</small></footer>
+    <div className="privacy-controls"><AnalyticsChoice onChange={setAnalyticsConsent} /></div>
   </div>;
 }
 
 function Privacy() {
+  const { search } = useLocation();
   useEffect(() => { trackOnce("privacy_open"); }, []);
   return <div className="legal-shell"><BrandHeader /><main className="legal-page"><span className="eyebrow">Versão operacional · pré-lançamento</span><h1>Aviso de Privacidade</h1><p className="legal-intro">Este aviso descreve a coleta usada na Lista dos Primeiros. O texto jurídico definitivo ainda passará por revisão antes de substituir esta versão operacional.</p>
     <section><h2>O que coletamos</h2><p>Para o cadastro, coletamos o número de WhatsApp informado, o aceite de comunicação, a versão deste aviso e, quando a visita veio de uma peça identificada, os códigos de campanha e QR. O primeiro nome não é obrigatório nesta etapa.</p></section>
@@ -391,11 +94,16 @@ function Privacy() {
     <section><h2>Analytics opcional</h2><p>Analytics não essencial só é ativado após sua escolha. Se você recusar, o cadastro continua funcionando. Eventos analíticos não recebem nome nem telefone; ferramentas externas configuradas para esta página também não devem receber esses dados.</p></section>
     <section><h2>Cancelamento e direitos</h2><p>Você pode pedir para deixar de receber mensagens pelo canal oficial de WhatsApp. Solicitações sobre acesso, correção ou eliminação de dados serão tratadas pelos canais oficiais do Carro Chefe, respeitando as obrigações legais aplicáveis.</p></section>
     <section><h2>Retenção e fornecedores</h2><p>Os dados serão mantidos somente pelo período necessário às finalidades informadas e às obrigações aplicáveis. Serviços de analytics, quando configurados e aceitos, podem atuar como fornecedores técnicos. Prazos definitivos, identificação jurídica completa do controlador e revisão de bases legais serão consolidados na versão jurídica final.</p></section>
-    <Link className="back-link" to="/">← Voltar para o pré-lançamento</Link></main></div>;
+    <Link className="back-link" to={{ pathname: "/", search }}>← Voltar para o pré-lançamento</Link></main></div>;
 }
 
 function App() {
-  return <BrowserRouter><Routes><Route path="/" element={<PrelaunchLanding />} /><Route path="/welcome" element={<Navigate to="/" replace />} /><Route path="/cardapio" element={<Navigate to="/" replace />} /><Route path="/privacidade" element={<Privacy />} /><Route path="/termos" element={<Navigate to="/privacidade" replace />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes></BrowserRouter>;
+  return <BrowserRouter><Routes><Route path="/" element={<PrelaunchLanding />} /><Route path="/welcome" element={<LandingRedirect />} /><Route path="/cardapio" element={<LandingRedirect />} /><Route path="/privacidade" element={<Privacy />} /><Route path="/termos" element={<Navigate to="/privacidade" replace />} /><Route path="*" element={<LandingRedirect />} /></Routes></BrowserRouter>;
+}
+
+function LandingRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={{ pathname: "/", search }} replace />;
 }
 
 createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);

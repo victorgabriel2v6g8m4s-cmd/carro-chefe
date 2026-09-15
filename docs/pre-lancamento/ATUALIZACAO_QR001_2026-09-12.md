@@ -1,4 +1,7 @@
-# Atualização operacional — QR-001, banner e acesso VIP
+# Atualização operacional — QR-001, banner e acesso à cupons e promoções exclusivas
+
+> Atualização de 14/09/2026: uma versão da landing já foi migrada para carrochefe.com e foi verificada no navegador. O estado atual, a nova comunicação “acesso à cupons e promoções exclusivas” e a distinção entre versão publicada e próxima release estão em [Estado da landing](ESTADO_LANDING_2026-09-14.md). Relatos anteriores de ausência de publicação referem-se às respectivas entregas históricas.
+
 
 **Data:** 2026-09-12  
 **Responsável pela implementação:** AG-DEV  
@@ -18,7 +21,7 @@ Foram confirmados como dados operacionais desta entrega:
 https://carrochefe.com/?cc_qr=QR-001&cc_campaign=banner
 ```
 
-5. clientes que se cadastrarem por essa campanha terão **acesso VIP a promoções, cupons e outros benefícios**.
+5. clientes que se cadastrarem por essa campanha terão **acesso à cupons e promoções exclusivas**.
 
 Nenhum `cc_variant` foi fornecido no QR homologado. O valor deve permanecer ausente (`null`) para esta peça.
 
@@ -55,7 +58,7 @@ cc_campaign=banner
 
 passam a receber copy específica:
 
-> acesso VIP a promoções, cupons e outros benefícios
+> acesso à cupons e promoções exclusivas
 
 A comunicação permanece deliberadamente sem:
 
@@ -78,11 +81,11 @@ QR-001 + banner → campanha VIP confirmada
 
 Efeitos:
 
-- hero comunica o acesso VIP;
+- hero comunica o acesso à cupons e promoções exclusivas;
 - formulário explica que o WhatsApp será usado para novidades, promoções, cupons e benefícios;
 - consentimento de comunicação menciona essas categorias;
-- bloco “O que você recebe” mostra “Acesso VIP”;
-- `signup_success` de um **novo cadastro** originado dessa campanha confirma o acesso VIP.
+- bloco “O que você recebe” mostra “Acesso à cupons e promoções exclusivas”;
+- `signup_success` de um **novo cadastro** originado dessa campanha confirma o acesso à cupons e promoções exclusivas.
 
 ### Duplicatas
 
@@ -133,7 +136,7 @@ Não foi criado um evento “vip” separado no P0 porque o benefício pode ser 
 - [x] rede móvel;
 - [x] identificador do QR;
 - [x] campanha;
-- [x] promessa de acesso VIP.
+- [x] promessa de acesso à cupons e promoções exclusivas.
 
 ### Ainda depende de operação/deploy
 

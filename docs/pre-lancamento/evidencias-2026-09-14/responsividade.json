@@ -1,0 +1,82 @@
+{
+  "campaign": [
+    {
+      "buttonHeight": 60,
+      "overflow": 0,
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "buttonHeight": 62,
+      "overflow": 0,
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "buttonHeight": 62,
+      "overflow": 0,
+      "scroll": 390,
+      "width": 390
+    },
+    {
+      "buttonHeight": 62,
+      "overflow": 0,
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "buttonHeight": 62,
+      "overflow": 0,
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "buttonHeight": 56,
+      "overflow": 0,
+      "scroll": 1440,
+      "width": 1440
+    }
+  ],
+  "direct": [
+    {
+      "overflow": 0,
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "overflow": 0,
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "overflow": 0,
+      "scroll": 390,
+      "width": 390
+    },
+    {
+      "overflow": 0,
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "overflow": 0,
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "overflow": 0,
+      "scroll": 1440,
+      "width": 1440
+    }
+  ],
+  "touchEmulation": {
+    "width": 390,
+    "scrollWidth": 390,
+    "pointerCoarse": true
+  },
+  "keyboard": {
+    "skipLinkFocus": "cadastro",
+    "focusOutline": "solid"
+  },
+  "copy": "acesso à cupons e promoções exclusivas"
+}

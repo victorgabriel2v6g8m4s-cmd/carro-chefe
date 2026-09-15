@@ -1,5 +1,8 @@
 # Pré-lançamento — banner da avenida e carrochefe.com
 
+> Atualização de 14/09/2026: uma versão da landing já foi migrada para carrochefe.com e foi verificada no navegador. O estado atual, a nova comunicação “acesso à cupons e promoções exclusivas” e a distinção entre versão publicada e próxima release estão em [Estado da landing](ESTADO_LANDING_2026-09-14.md). Relatos anteriores de ausência de publicação referem-se às respectivas entregas históricas.
+
+
 ## Objetivo
 
 Documentar o plano de aquisição e mensuração para o banner físico do Carro Chefe, cujo QR Code aponta para `carrochefe.com`, antes da inauguração da operação.
@@ -24,7 +27,7 @@ Estado confirmado em 2026-09-12:
 - homologado em Android;
 - homologado em iPhone;
 - homologado em rede móvel;
-- novos clientes cadastrados por essa campanha terão **acesso VIP a promoções, cupons e outros benefícios**.
+- novos clientes cadastrados por essa campanha terão **acesso à cupons e promoções exclusivas**.
 
 Percentuais, valores de cupom, brindes específicos, validade e quantidade não foram definidos e não devem ser inventados.
 
@@ -38,7 +41,7 @@ Banner físico
   → landing de pré-inauguração
   → cadastro consentido
   → Lista dos Primeiros
-  → acesso VIP a promoções, cupons e outros benefícios
+  → acesso à cupons e promoções exclusivas
   → pedido pago no ERP
   → margem atribuída
   → recompra
@@ -46,13 +49,17 @@ Banner físico
 
 ## Documentos
 
+- [Estado atual e evidências](ESTADO_LANDING_2026-09-14.md).
+- [Dashboard de campanhas — próxima entrega](DASHBOARD_CAMPANHAS_PROPOSTA.md).
+- [Acesso Hostinger e atualização da VPS](PLANO_HOSTINGER_VPS.md).
+
 - [`PLANO_ACAO.md`](./PLANO_ACAO.md): prioridades, experiência proposta, fases de entrega e critérios de aceite.
 - [`PSICOLOGIA_UI.md`](./PSICOLOGIA_UI.md): pesquisa comportamental e de UX convertida em requisitos de hero, formulário, recompensa, prova social, escassez, consentimento, mídia, acessibilidade, performance e experimentos A/B.
 - [`ANALYTICS_PRIVACIDADE.md`](./ANALYTICS_PRIVACIDADE.md): eventos, KPIs, consentimento, LGPD, GA4/Clarity e relatórios.
 - [`QR_ATRIBUICAO.md`](./QR_ATRIBUICAO.md): contrato de rastreamento, registro oficial de `QR-001`, campanha `banner`, homologação e evolução do redirector first-party.
 - [`HANDOFF_DESENVOLVIMENTO.md`](./HANDOFF_DESENVOLVIMENTO.md): escopo objetivo entregue ao agente de desenvolvimento.
 - [`IMPLEMENTACAO_DEV.md`](./IMPLEMENTACAO_DEV.md): arquitetura implementada, backend, frontend, persistência, consentimento, segurança, decisões, limites, testes, relatórios e plano de migração para VPS/`carrochefe.com`.
-- [`ATUALIZACAO_QR001_2026-09-12.md`](./ATUALIZACAO_QR001_2026-09-12.md): registro da confirmação do QR homologado, banner de referência, promessa VIP e impacto na implementação.
+- [`ATUALIZACAO_QR001_2026-09-12.md`](./ATUALIZACAO_QR001_2026-09-12.md): registro da confirmação do QR homologado, banner de referência, promessa de cupons e promoções exclusivas e impacto na implementação.
 
 ## Decisões já tomadas
 
@@ -61,7 +68,7 @@ Banner físico
 3. O cadastro deve ser enxuto: WhatsApp obrigatório; o primeiro nome é opcional e, preferencialmente, coletado por progressive disclosure após a confirmação para não elevar a fricção da conversão principal.
 4. Antes do cadastro deve existir **uma única ação visual dominante**. Instagram, WhatsApp direto, história e conteúdo são secundários.
 5. O formulário deve ser inline, mobile first, em uma coluna, com labels persistentes e validação não prematura.
-6. Para `QR-001` + campanha `banner`, a recompensa aprovada é **acesso VIP a promoções, cupons e outros benefícios**; cada promoção/cupom futuro ainda precisa de regra concreta antes de ser detalhado publicamente.
+6. Para `QR-001` + campanha `banner`, a recompensa aprovada é **acesso à cupons e promoções exclusivas**; cada promoção/cupom futuro ainda precisa de regra concreta antes de ser detalhado publicamente.
 7. A confirmação do cadastro deve entregar recompensa perceptível imediata: status de entrada, progresso real da jornada e, quando houver ativo aprovado, um teaser real do produto/bastidor.
 8. Foto/vídeo real do produto tem prioridade quando disponível e aprovado. Não representar imagem artificial como fotografia fiel do produto.
 9. Prova social e escassez só podem aparecer quando forem reais, auditáveis e operacionalmente justificadas.

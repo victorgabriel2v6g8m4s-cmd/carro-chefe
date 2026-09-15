@@ -1,5 +1,8 @@
 # Implementação AG-DEV — pré-lançamento do Carro Chefe
 
+> Atualização de 14/09/2026: uma versão da landing já foi migrada para carrochefe.com e foi verificada no navegador. O estado atual, a nova comunicação “acesso à cupons e promoções exclusivas” e a distinção entre versão publicada e próxima release estão em [Estado da landing](ESTADO_LANDING_2026-09-14.md). Relatos anteriores de ausência de publicação referem-se às respectivas entregas históricas.
+
+
 **Branch:** `dev/pre-lancamento-site`  
 **Base:** `marketing/pre-lancamento-banner-site` @ `334ae003a6c03ba89a64f40a70a7535d6c768bbb`  
 **Responsável:** `AG-DEV`  

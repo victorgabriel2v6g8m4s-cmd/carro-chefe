@@ -61,7 +61,7 @@
     {
       "path": "apps/site/AGENTS.md",
       "kind": "agents",
-      "sha256": "1eac18526ef708270ab7f36b7f9a5e1bf50442971e8180ddaec1b63f491cd66a"
+      "sha256": "ff66807ece10bb827e7b9cbb56074d673812b5fabcd87b7c0e89bf55246c218c"
     },
     {
       "path": "cardápio/AGENTS.md",
@@ -626,5 +626,5 @@
       ]
     }
   },
-  "manifestHash": "0dd2ab46abfc8a9304614a3345764e6ea77b81a9035afa8bac4494dd32bb6dc8"
+  "manifestHash": "d263ccd7953dcbe410c7ed9e135246ee6abe8cbe24f825c874545a1c49794e4c"
 }

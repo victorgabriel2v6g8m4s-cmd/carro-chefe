@@ -1,0 +1,90 @@
+{
+  "environment": "local isolated QA; synthetic data only",
+  "date": "2026-09-14",
+  "leads": [
+    {
+      "ccQr": null,
+      "ccCampaign": null,
+      "status": "active",
+      "total": 1,
+      "consentRecorded": 1
+    },
+    {
+      "ccQr": "QR-001",
+      "ccCampaign": "banner",
+      "status": "active",
+      "total": 2,
+      "consentRecorded": 1
+    }
+  ],
+  "events": [
+    {
+      "event": "consent_analytics_granted",
+      "ccCampaign": "banner",
+      "total": 1
+    },
+    {
+      "event": "form_start",
+      "ccCampaign": "banner",
+      "total": 3
+    },
+    {
+      "event": "instagram_click",
+      "ccCampaign": "banner",
+      "total": 1
+    },
+    {
+      "event": "landing_view",
+      "ccCampaign": null,
+      "total": 2
+    },
+    {
+      "event": "landing_view",
+      "ccCampaign": "banner",
+      "total": 4
+    },
+    {
+      "event": "privacy_open",
+      "ccCampaign": "banner",
+      "total": 2
+    },
+    {
+      "event": "qr_scan",
+      "ccCampaign": "banner",
+      "total": 4
+    },
+    {
+      "event": "reward_view",
+      "ccCampaign": "banner",
+      "total": 2
+    },
+    {
+      "event": "signup_cta_click",
+      "ccCampaign": "banner",
+      "total": 3
+    },
+    {
+      "event": "signup_duplicate",
+      "ccCampaign": "banner",
+      "total": 1
+    },
+    {
+      "event": "signup_submit",
+      "ccCampaign": "banner",
+      "total": 3
+    },
+    {
+      "event": "signup_success",
+      "ccCampaign": "banner",
+      "total": 2
+    },
+    {
+      "event": "whatsapp_click",
+      "ccCampaign": "banner",
+      "total": 1
+    }
+  ],
+  "sessionsWithMultipleLoads": {
+    "total": 1
+  }
+}
