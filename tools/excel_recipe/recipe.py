@@ -10,6 +10,8 @@ from .errors import RecipeError
 
 SUPPORTED_OPERATIONS = {
     "cell.set", "cell.clear", "formula.set", "formula.copy",
+    "dependency.scan", "dependency.assert_clean",
+    "table.rename", "table.rename_column",
     "table.append_rows", "table.upsert_rows", "table.update_rows", "table.delete_rows",
     "table.create", "table.resize", "table.drop", "table.add_column", "table.set_formula_column",
     "assert.cell", "assert.table", "assert.row", "workbook.recalculate_on_open",
@@ -35,7 +37,7 @@ def load_recipe(path: Path) -> Recipe:
     if not isinstance(raw, dict):
         raise RecipeError("Raiz da receita deve ser um objeto JSON.")
     if raw.get("schema_version") != 1:
-        raise RecipeError("schema_version suportado na V1: 1")
+        raise RecipeError("schema_version suportado: 1")
     recipe_id = raw.get("id")
     if not isinstance(recipe_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{2,100}", recipe_id):
         raise RecipeError("id da receita inválido.")

@@ -45,7 +45,7 @@ def execute_recipe(
     package = PackageEditor(source)
     _check_preconditions(recipe, package)
     workbook = WorkbookContext(package)
-    runner = OperationRunner(workbook)
+    runner = OperationRunner(workbook, repo_root=repo_root)
     runner.run_all(recipe.operations)
     package.assert_firewall(workbook.allowed_parts)
     changed_parts = package.changed_parts()
