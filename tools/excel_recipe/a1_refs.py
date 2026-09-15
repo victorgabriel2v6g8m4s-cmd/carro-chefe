@@ -17,6 +17,13 @@ _A1 = re.compile(
     r"(?![\w.\[])",
     re.IGNORECASE | re.UNICODE,
 )
+_WHOLE_AXIS = re.compile(
+    r"(?<![\w.\]\[])"
+    r"(?P<prefix>(?:(?P<sheet>'(?:[^']|'')+'|[\w.]+)!)?)"
+    r"(?P<ref>(?:\$?[A-Z]{1,3}:\$?[A-Z]{1,3}|\$?[1-9][0-9]*:\$?[1-9][0-9]*))"
+    r"(?![\w.\[])",
+    re.IGNORECASE | re.UNICODE,
+)
 _UNSAFE_DYNAMIC = re.compile(r"\b(INDIRECT|ADDRESS)\s*\(", re.IGNORECASE)
 _EXTERNAL = re.compile(r"\[[^\]]+\][^!]*!", re.IGNORECASE)
 
@@ -37,6 +44,18 @@ def rewrite_formula_a1(
         blockers.append("fórmula usa referência dinâmica INDIRECT/ADDRESS no contexto estrutural afetado")
     if _EXTERNAL.search(expression):
         blockers.append("fórmula contém referência externa de workbook")
+
+    def detect_unsupported(segment: str) -> str:
+        for match in _WHOLE_AXIS.finditer(segment):
+            raw_sheet = match.group("sheet")
+            reference_sheet = _sheet_name(raw_sheet) if raw_sheet else context_sheet
+            if reference_sheet.casefold() == transform.sheet.casefold():
+                blockers.append(
+                    f"referência de linha/coluna inteira {match.group(0)!r} não é regravada pela V3A"
+                )
+        return segment
+
+    _map_double_quoted(expression, detect_unsupported)
 
     def rewrite_segment(segment: str) -> str:
         nonlocal changed
