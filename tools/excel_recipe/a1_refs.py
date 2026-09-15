@@ -3,11 +3,11 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
-from .coordinates import AxisTransform, RangeMoveTransform
+from .coordinates import AxisTransform, CompactRowsTransform, RangeMoveTransform, TableColumnTransform
 from .errors import RecipeError
 from .util import make_cell_ref, parse_cell_ref, parse_range_ref
 
-Transform = AxisTransform | RangeMoveTransform
+Transform = AxisTransform | RangeMoveTransform | TableColumnTransform | CompactRowsTransform
 
 _A1 = re.compile(
     r"(?<![\w.\]])"
@@ -54,6 +54,8 @@ def rewrite_formula_a1(
                         return match.group(0)
                     relation = "shifted" if new_ref != start else "unaffected"
                 else:
+                    if isinstance(transform, RangeMoveTransform) and _encloses_move(ref, transform):
+                        return match.group(0)
                     result = transform.transform_range(ref)
                     new_ref = result.ref
                     relation = result.relation
@@ -91,6 +93,8 @@ def rewrite_simple_ref(ref: str, transform: Transform, *, allow_partial: bool = 
     if ":" not in clean:
         result = transform.transform_cell_ref(clean)
         return result, "removed" if result is None else ("shifted" if result != clean else "unaffected")
+    if isinstance(transform, RangeMoveTransform) and _encloses_move(clean, transform):
+        return clean, "unaffected"
     change = transform.transform_range(clean)
     if change.relation == "partial" and not allow_partial:
         raise RecipeError(f"Range {ref!r} cruza parcialmente a transformação.")
@@ -123,6 +127,10 @@ def ref_contains(outer: str, inner: str) -> bool:
     a = parse_range_ref(_as_range(outer))
     b = parse_range_ref(_as_range(inner))
     return a[0] <= b[0] and b[2] <= a[2] and a[1] <= b[1] and b[3] <= a[3]
+
+
+def _encloses_move(ref: str, transform: RangeMoveTransform) -> bool:
+    return ref_contains(ref, transform.source) and ref_contains(ref, transform.destination_range)
 
 
 def _as_range(ref: str) -> str:
