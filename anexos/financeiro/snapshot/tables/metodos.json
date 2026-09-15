@@ -1,0 +1,39 @@
+{
+  "columns": [
+    "Método",
+    "Desconto",
+    "Acréscimo"
+  ],
+  "display_name": "métodos",
+  "name": "métodos",
+  "ref": "P4:R9",
+  "rows": [
+    [
+      "Pix",
+      0,
+      0
+    ],
+    [
+      "Dinheiro",
+      0,
+      0
+    ],
+    [
+      "Débito",
+      0,
+      0.0279
+    ],
+    [
+      "Crédito",
+      0,
+      0.0599
+    ],
+    [
+      "Doação",
+      0,
+      1
+    ]
+  ],
+  "sheet": "configurações",
+  "totals_row_shown": false
+}

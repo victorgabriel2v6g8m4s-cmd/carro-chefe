@@ -1,0 +1,21 @@
+{
+  "columns": [
+    "Máximo de vendas",
+    "Mínimo de vendas",
+    "Faturamento Alvo",
+    "Faturamento Mínimo"
+  ],
+  "display_name": "PrevVendas",
+  "name": "PrevVendas",
+  "ref": "B4:E5",
+  "rows": [
+    [
+      2880,
+      1440,
+      7150,
+      5500
+    ]
+  ],
+  "sheet": "configurações",
+  "totals_row_shown": false
+}

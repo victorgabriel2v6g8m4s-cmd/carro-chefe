@@ -1,0 +1,81 @@
+{
+  "columns": [
+    "Item",
+    "Porcentagem"
+  ],
+  "display_name": "DespesasVariaveis",
+  "name": "DespesasVariaveis",
+  "ref": "B4:C21",
+  "rows": [
+    [
+      "Água",
+      0.02
+    ],
+    [
+      "Energia",
+      0.04
+    ],
+    [
+      "Gás",
+      0.01
+    ],
+    [
+      "Óleo",
+      0.003
+    ],
+    [
+      "Cartão",
+      0.05
+    ],
+    [
+      "Desperdício",
+      0.15
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      "Total",
+      0.273
+    ]
+  ],
+  "sheet": "Despesas Variáveis",
+  "totals_row_shown": false
+}

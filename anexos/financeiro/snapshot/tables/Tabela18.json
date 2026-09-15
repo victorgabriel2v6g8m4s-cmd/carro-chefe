@@ -1,0 +1,45 @@
+{
+  "columns": [
+    "Item",
+    "valor"
+  ],
+  "display_name": "Tabela18",
+  "name": "Tabela18",
+  "ref": "N4:O12",
+  "rows": [
+    [
+      "Mão de obra",
+      0
+    ],
+    [
+      "Das MEI",
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      0,
+      0
+    ],
+    [
+      "Total",
+      0
+    ]
+  ],
+  "sheet": "Relatório",
+  "totals_row_shown": false
+}

@@ -1,0 +1,25 @@
+{
+  "columns": [
+    "Rateio de Custos Fixos",
+    "Despesas Variáveis",
+    "Margem Cat. A",
+    "Margem Cat. B",
+    "Margem Cat. C",
+    "C.F nos custos totais?"
+  ],
+  "display_name": "ConfPrec",
+  "name": "ConfPrec",
+  "ref": "G4:L5",
+  "rows": [
+    [
+      2.8368055555555554,
+      0.273,
+      0.3,
+      0.3,
+      0.3,
+      "Não"
+    ]
+  ],
+  "sheet": "configurações",
+  "totals_row_shown": false
+}

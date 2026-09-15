@@ -1,0 +1,328 @@
+{
+  "generated_at": null,
+  "generated_at_note": "O timestamp é omitido intencionalmente para manter o snapshot determinístico; use o histórico Git.",
+  "generated_files": [
+    {
+      "bytes": 1246,
+      "path": "README.md",
+      "sha256": "8032258013b87a5b09db291be5b3c19dbeaeb4c1ed3337068097c0141b84d96d"
+    },
+    {
+      "bytes": 1513078,
+      "path": "formulas.json",
+      "sha256": "33b8df041ecb0f6cfeb53a5013ec87fcd12e2207a5729c136a26365bb1f5dec6"
+    },
+    {
+      "bytes": 10222,
+      "path": "sheets/Cadastro_de_Produtos.csv",
+      "sha256": "0b046c6c62c9afdc904db6abe6b1dd37f1c5e1dd4c242cd4aee26d21696e6d07"
+    },
+    {
+      "bytes": 8859,
+      "path": "sheets/Compras.csv",
+      "sha256": "ebdd01a19491eb5000fd83fafab7c225f84b15413a023c386af1e5d820205a34"
+    },
+    {
+      "bytes": 151,
+      "path": "sheets/Custos_Fixos.csv",
+      "sha256": "1e5df347300a2e65960fc1f283e7c3fe402243fd3a387af61ab516bc037a5ea8"
+    },
+    {
+      "bytes": 153,
+      "path": "sheets/Despesas_Variaveis.csv",
+      "sha256": "bcada1bd7bd89279b4cbeeb8fa6562041f99c24d6d855d3d82bcd274d4bda69f"
+    },
+    {
+      "bytes": 109287,
+      "path": "sheets/Embalagens.csv",
+      "sha256": "46746c81cbbf830b448b2ff27407a30db1dd4eebb6ebf432eef349a47ab8ba42"
+    },
+    {
+      "bytes": 13912,
+      "path": "sheets/Embalamento.csv",
+      "sha256": "9d382ea8727cc50f665ce6d089e11cc0ccdf78aebdd1e0a93855c526c4abd5fd"
+    },
+    {
+      "bytes": 891,
+      "path": "sheets/Estoque.csv",
+      "sha256": "f1e7622ea9bdd614c275634c3ac8f4f8f05dd956a662608f18bbf23ccadbcd1a"
+    },
+    {
+      "bytes": 7726,
+      "path": "sheets/Fluxo_de_Caixa.csv",
+      "sha256": "f57227b78fd2d294d74e15a80985e2c82cef8d997b06c75e55a6f98028c1703f"
+    },
+    {
+      "bytes": 31825,
+      "path": "sheets/Pedido.csv",
+      "sha256": "1253ace748d7d28d12ff418d863393d54b56bf6245b91803de6a26e8ca1b31b7"
+    },
+    {
+      "bytes": 13191,
+      "path": "sheets/Precificacao.csv",
+      "sha256": "8b6fe49fc29185535f1e8808439e4f58c9092331bc4be736a99001de2c709298"
+    },
+    {
+      "bytes": 5190,
+      "path": "sheets/Relatorio.csv",
+      "sha256": "d0c6ca805740f2418d4efcdfad057e4334b72650a475aa1d0281df40fe7a4330"
+    },
+    {
+      "bytes": 161344,
+      "path": "sheets/Vendas.csv",
+      "sha256": "27289974b045d1919f611e6737ed5741953c5eeaf59b5896f81261e0247be040"
+    },
+    {
+      "bytes": 636,
+      "path": "sheets/configuracoes.csv",
+      "sha256": "f12879169bd667036f1d31c08f645daeb3d517641f029d5c96f0ecbf619931ff"
+    },
+    {
+      "bytes": 205073,
+      "path": "sheets/ingredientes.csv",
+      "sha256": "4766bd3fcb482d12079a5fb748b8cbbb2b95b948eb08090b7856b0a1585c0efc"
+    },
+    {
+      "bytes": 84824,
+      "path": "sheets/insumos.csv",
+      "sha256": "b5ccb0bf47b4b53b4b5dce0444f227b0a6153af862209b24d72fade6b6d2c423"
+    },
+    {
+      "bytes": 10334,
+      "path": "sheets/simulacao_pos-vendas.csv",
+      "sha256": "8dcd535dce7201d6ab37d6aea79730b021b24e6951c579ebae09e2c5c753d5b8"
+    },
+    {
+      "bytes": 628,
+      "path": "tables/CFMensais.json",
+      "sha256": "1ee6df33e0b4dd2b81706a9659a827294ba1f26febb69d94343557433ed4d5e8"
+    },
+    {
+      "bytes": 15826,
+      "path": "tables/CaProdutos.json",
+      "sha256": "986cce847168e83612a469986ce87e615c0ce042a2d896a588b7b3d21a3fc993"
+    },
+    {
+      "bytes": 415,
+      "path": "tables/ConfPrec.json",
+      "sha256": "bcf6ce2c2958e9f96bec6723f9be57f93735783dfed88ec97e0a21f985747578"
+    },
+    {
+      "bytes": 866,
+      "path": "tables/DespesasVariaveis.json",
+      "sha256": "b1d359b9b510734dab686a287df08252ede9b54164f1a3b4c2e4402cf399e576"
+    },
+    {
+      "bytes": 120733,
+      "path": "tables/Embalagens.json",
+      "sha256": "df390ba9fab4c81d39a93ee725a1ed231d0ba0ed00beb2d1bc07a90eb612a2c5"
+    },
+    {
+      "bytes": 16978,
+      "path": "tables/Embalamento.json",
+      "sha256": "aa66751a8cc9b6bb90c12a876fb7f9372e3b8452b8b05a9bdf7fb6f6d8df7a46"
+    },
+    {
+      "bytes": 222311,
+      "path": "tables/Ingredientes.json",
+      "sha256": "00595b63cbeda1739550995cdb61ea75819ca62afc399a793ba0a5af33234a80"
+    },
+    {
+      "bytes": 16113,
+      "path": "tables/Precificacao.json",
+      "sha256": "88e4b007b3e0da76bdb243d1b58fcf41792054ece618c79faad66e9582650152"
+    },
+    {
+      "bytes": 332,
+      "path": "tables/PrevVendas.json",
+      "sha256": "b6675e7ad6e731b65fb5772de9b00133109c7934e46e808bc31f355694df394c"
+    },
+    {
+      "bytes": 19332,
+      "path": "tables/Tabela14.json",
+      "sha256": "f4b68dae7e7ecc3685242884c33af13fb44975d2a0825c373910c2c4a6bc1148"
+    },
+    {
+      "bytes": 12062,
+      "path": "tables/Tabela17.json",
+      "sha256": "4f26a7c4d56950291119cc38be44e2f7d36f8f64cf38a0fbc48363c0d97a5fdc"
+    },
+    {
+      "bytes": 455,
+      "path": "tables/Tabela18.json",
+      "sha256": "c6bf5ffeac0c712d4760fa8c8248a472cbae07f547005860ba0220eeaf5a6022"
+    },
+    {
+      "bytes": 22289,
+      "path": "tables/Tabela19.json",
+      "sha256": "13895c09477a908c7de9ec5ab0819974718133bb813b1da233461e565103d24b"
+    },
+    {
+      "bytes": 387,
+      "path": "tables/Variaveis.json",
+      "sha256": "e8807125d870d2e01ce7124f38f9b13d3c7b25be32d3df495101a6ad2eea070e"
+    },
+    {
+      "bytes": 12275,
+      "path": "tables/compras.json",
+      "sha256": "c6e2d0be2aa23051a1ba401e768a2cc69d3e80f9c638e8d90367865900dd07fb"
+    },
+    {
+      "bytes": 2757,
+      "path": "tables/estoque.json",
+      "sha256": "11b4534fb56455966a3c2b29d4f03f9182469ad91aaabf7b573ed34579922825"
+    },
+    {
+      "bytes": 95749,
+      "path": "tables/insumos.json",
+      "sha256": "6ad0877aa10fbac296a73fce767b5d7bcd70bccd43b878f14fd8dff972c42529"
+    },
+    {
+      "bytes": 460,
+      "path": "tables/metodos.json",
+      "sha256": "fa1e36eca8bcc1ed8b3614f307160e3aefca473b4fe06184129fd7c843c3e56f"
+    },
+    {
+      "bytes": 320,
+      "path": "tables/relatorio.json",
+      "sha256": "dfa6aae4b7f45ebef15057e64bc7e47f90b40c74893aedd7d8e58f5aee71744e"
+    },
+    {
+      "bytes": 11712,
+      "path": "tables/retorno.json",
+      "sha256": "95a1c4e539782c899720defd92d7b55acb3b46e570b4c2ee7ecafebcbe49c03b"
+    },
+    {
+      "bytes": 178397,
+      "path": "tables/vendas.json",
+      "sha256": "ad128b7b77c9e7bb9c263fc9161e828a098f458e74ab77f2bbe137470f26233f"
+    },
+    {
+      "bytes": 5552,
+      "path": "vba/index.json",
+      "sha256": "e730da7cafddbc66f13b412b0927622043fe29c0f9d3fce7e9ef8d012014f2e0"
+    },
+    {
+      "bytes": 24217,
+      "path": "vba/modules/CAutocompleteFicha.cls",
+      "sha256": "7b6e8d885b9f6fd16e5f84ce3799d593db6633ce156c8de68227da9670afda84"
+    },
+    {
+      "bytes": 2890,
+      "path": "vba/modules/EstaPastaDeTrabalho.cls",
+      "sha256": "e5fa879e85b76bf740d7ed8abb5113bcb45ffbe378195c01b29e584bbad13a59"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha1.cls",
+      "sha256": "904a408fc5d0144a946fceea516279723bf1152db5a5ffdfee2e6d726f972366"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha10.cls",
+      "sha256": "6f3efed83387b56ef36b8a87138bd901e6016659d56cd07f07c73defd0674305"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha11.cls",
+      "sha256": "b10faaea5429da0399a24899eebbf5014f8e8529a19b1cb50df453835c31bc8a"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha12.cls",
+      "sha256": "7a430bbc8522b601813562f9d4c2eddeec6098603897fa72a8d9e8d465beecda"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha13.cls",
+      "sha256": "90d4c6cf3c4b02d94e61ff0ae09b8989655e16709522fbc7f62bcbca5ac8e114"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha14.cls",
+      "sha256": "50a5ef0c9ba32d41ecab0c057aec93a6c65920238f709e1eb61b4cb250353baa"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha15.cls",
+      "sha256": "023e970446f0762c242771319413fa5657b976a8d79b58367c4e2e9992017de8"
+    },
+    {
+      "bytes": 295,
+      "path": "vba/modules/Planilha16.cls",
+      "sha256": "e882e1c16a9a88be082b13f883c575932ef4bda0b260914970eacb13ac494e6a"
+    },
+    {
+      "bytes": 647,
+      "path": "vba/modules/Planilha2.cls",
+      "sha256": "b8122f49c81197500c8db19496f24a861accb4ef1e2b50a40d22dd313f16a4f6"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha3.cls",
+      "sha256": "e0bbf2068623b6fe31d5a761a820dffa49f5e9442fb484ff3f1043190e225c8b"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha4.cls",
+      "sha256": "080eca176da6fa2b448945946805fc4973209559ba18f6c0497f76b1fb1275ca"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha5.cls",
+      "sha256": "936868c922ffad6a30441789f286ef557488af288b51402f87d792920bc2b0c7"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha6.cls",
+      "sha256": "c0c3a51200a1c953413689736047993531716e55a981e7ccd29b353095cfc20f"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha7.cls",
+      "sha256": "81dd276467cc2d8e0ef76f810cffee2b1d4cc69d071c1e8d440dc2e011ba712a"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha8.cls",
+      "sha256": "a9c3769939ea51a0529d652300a68a7abe015ca4803fd89b152cbe2cf71ee710"
+    },
+    {
+      "bytes": 294,
+      "path": "vba/modules/Planilha9.cls",
+      "sha256": "1d14f894cc53919d7096e135f6876f03bc727ccd6aec656a16b2bcd8eeb73c93"
+    },
+    {
+      "bytes": 17276,
+      "path": "vba/modules/modAutocompleteFicha.bas",
+      "sha256": "08f3704b57350c13b1993cc6bc40989755419257cb337fc69cc773ecd5a83c83"
+    },
+    {
+      "bytes": 10795,
+      "path": "workbook.json",
+      "sha256": "2dc507b40580876c0bdb125a53809836b542b4b080c7c0c37239679c9842e145"
+    }
+  ],
+  "generator": {
+    "deterministic": true,
+    "path": "tools/excel_snapshot/export.py",
+    "version": "1.0.0"
+  },
+  "schema_version": 1,
+  "source": {
+    "bytes": 246827,
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+    "zip_entries": 106,
+    "zip_uncompressed_bytes": 1827605
+  },
+  "workbook": {
+    "formula_count": 5830,
+    "sheet_count": 16,
+    "table_count": 21,
+    "vba_module_count": 19,
+    "vba_present": true,
+    "vba_project_bytes": 219648,
+    "vba_project_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  }
+}

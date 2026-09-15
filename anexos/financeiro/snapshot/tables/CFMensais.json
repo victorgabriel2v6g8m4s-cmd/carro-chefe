@@ -1,0 +1,54 @@
+{
+  "columns": [
+    "Descrição",
+    "Valor",
+    "Porcentagem"
+  ],
+  "display_name": "CFMensais",
+  "name": "CFMensais",
+  "ref": "B4:D12",
+  "rows": [
+    [
+      "Mão de obra",
+      4000,
+      0.9791921664626683
+    ],
+    [
+      "Das MEI",
+      85,
+      0.0208078335373317
+    ],
+    [
+      null,
+      null,
+      0
+    ],
+    [
+      null,
+      null,
+      0
+    ],
+    [
+      null,
+      null,
+      0
+    ],
+    [
+      null,
+      null,
+      0
+    ],
+    [
+      null,
+      null,
+      0
+    ],
+    [
+      "Total",
+      4085,
+      1
+    ]
+  ],
+  "sheet": "Custos Fixos",
+  "totals_row_shown": false
+}

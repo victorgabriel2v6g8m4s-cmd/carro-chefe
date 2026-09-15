@@ -1,0 +1,23 @@
+{
+  "columns": [
+    "Faturamento",
+    "Lucro Bruto",
+    "Lucro Líquido",
+    "Reestoque",
+    "Custos Fixos"
+  ],
+  "display_name": "relatório",
+  "name": "relatório",
+  "ref": "B4:F5",
+  "rows": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "sheet": "Relatório",
+  "totals_row_shown": false
+}

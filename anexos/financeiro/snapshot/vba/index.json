@@ -1,0 +1,162 @@
+{
+  "execution": "never",
+  "module_count": 19,
+  "modules": [
+    {
+      "bytes": 24217,
+      "name": "CAutocompleteFicha",
+      "original_filename": "CAutocompleteFicha.cls",
+      "path": "vba/modules/CAutocompleteFicha.cls",
+      "sha256": "7b6e8d885b9f6fd16e5f84ce3799d593db6633ce156c8de68227da9670afda84",
+      "stream_path": "VBA/CAutocompleteFicha"
+    },
+    {
+      "bytes": 2890,
+      "name": "EstaPastaDeTrabalho",
+      "original_filename": "EstaPastaDeTrabalho.cls",
+      "path": "vba/modules/EstaPastaDeTrabalho.cls",
+      "sha256": "e5fa879e85b76bf740d7ed8abb5113bcb45ffbe378195c01b29e584bbad13a59",
+      "stream_path": "VBA/EstaPastaDeTrabalho"
+    },
+    {
+      "bytes": 17276,
+      "name": "modAutocompleteFicha",
+      "original_filename": "modAutocompleteFicha.bas",
+      "path": "vba/modules/modAutocompleteFicha.bas",
+      "sha256": "08f3704b57350c13b1993cc6bc40989755419257cb337fc69cc773ecd5a83c83",
+      "stream_path": "VBA/modAutocompleteFicha"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha1",
+      "original_filename": "Planilha1.cls",
+      "path": "vba/modules/Planilha1.cls",
+      "sha256": "904a408fc5d0144a946fceea516279723bf1152db5a5ffdfee2e6d726f972366",
+      "stream_path": "VBA/Planilha1"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha10",
+      "original_filename": "Planilha10.cls",
+      "path": "vba/modules/Planilha10.cls",
+      "sha256": "6f3efed83387b56ef36b8a87138bd901e6016659d56cd07f07c73defd0674305",
+      "stream_path": "VBA/Planilha10"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha11",
+      "original_filename": "Planilha11.cls",
+      "path": "vba/modules/Planilha11.cls",
+      "sha256": "b10faaea5429da0399a24899eebbf5014f8e8529a19b1cb50df453835c31bc8a",
+      "stream_path": "VBA/Planilha11"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha12",
+      "original_filename": "Planilha12.cls",
+      "path": "vba/modules/Planilha12.cls",
+      "sha256": "7a430bbc8522b601813562f9d4c2eddeec6098603897fa72a8d9e8d465beecda",
+      "stream_path": "VBA/Planilha12"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha13",
+      "original_filename": "Planilha13.cls",
+      "path": "vba/modules/Planilha13.cls",
+      "sha256": "90d4c6cf3c4b02d94e61ff0ae09b8989655e16709522fbc7f62bcbca5ac8e114",
+      "stream_path": "VBA/Planilha13"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha14",
+      "original_filename": "Planilha14.cls",
+      "path": "vba/modules/Planilha14.cls",
+      "sha256": "50a5ef0c9ba32d41ecab0c057aec93a6c65920238f709e1eb61b4cb250353baa",
+      "stream_path": "VBA/Planilha14"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha15",
+      "original_filename": "Planilha15.cls",
+      "path": "vba/modules/Planilha15.cls",
+      "sha256": "023e970446f0762c242771319413fa5657b976a8d79b58367c4e2e9992017de8",
+      "stream_path": "VBA/Planilha15"
+    },
+    {
+      "bytes": 295,
+      "name": "Planilha16",
+      "original_filename": "Planilha16.cls",
+      "path": "vba/modules/Planilha16.cls",
+      "sha256": "e882e1c16a9a88be082b13f883c575932ef4bda0b260914970eacb13ac494e6a",
+      "stream_path": "VBA/Planilha16"
+    },
+    {
+      "bytes": 647,
+      "name": "Planilha2",
+      "original_filename": "Planilha2.cls",
+      "path": "vba/modules/Planilha2.cls",
+      "sha256": "b8122f49c81197500c8db19496f24a861accb4ef1e2b50a40d22dd313f16a4f6",
+      "stream_path": "VBA/Planilha2"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha3",
+      "original_filename": "Planilha3.cls",
+      "path": "vba/modules/Planilha3.cls",
+      "sha256": "e0bbf2068623b6fe31d5a761a820dffa49f5e9442fb484ff3f1043190e225c8b",
+      "stream_path": "VBA/Planilha3"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha4",
+      "original_filename": "Planilha4.cls",
+      "path": "vba/modules/Planilha4.cls",
+      "sha256": "080eca176da6fa2b448945946805fc4973209559ba18f6c0497f76b1fb1275ca",
+      "stream_path": "VBA/Planilha4"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha5",
+      "original_filename": "Planilha5.cls",
+      "path": "vba/modules/Planilha5.cls",
+      "sha256": "936868c922ffad6a30441789f286ef557488af288b51402f87d792920bc2b0c7",
+      "stream_path": "VBA/Planilha5"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha6",
+      "original_filename": "Planilha6.cls",
+      "path": "vba/modules/Planilha6.cls",
+      "sha256": "c0c3a51200a1c953413689736047993531716e55a981e7ccd29b353095cfc20f",
+      "stream_path": "VBA/Planilha6"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha7",
+      "original_filename": "Planilha7.cls",
+      "path": "vba/modules/Planilha7.cls",
+      "sha256": "81dd276467cc2d8e0ef76f810cffee2b1d4cc69d071c1e8d440dc2e011ba712a",
+      "stream_path": "VBA/Planilha7"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha8",
+      "original_filename": "Planilha8.cls",
+      "path": "vba/modules/Planilha8.cls",
+      "sha256": "a9c3769939ea51a0529d652300a68a7abe015ca4803fd89b152cbe2cf71ee710",
+      "stream_path": "VBA/Planilha8"
+    },
+    {
+      "bytes": 294,
+      "name": "Planilha9",
+      "original_filename": "Planilha9.cls",
+      "path": "vba/modules/Planilha9.cls",
+      "sha256": "1d14f894cc53919d7096e135f6876f03bc727ccd6aec656a16b2bcd8eeb73c93",
+      "stream_path": "VBA/Planilha9"
+    }
+  ],
+  "note": "Código VBA extraído estaticamente; nenhum macro é executado por esta ferramenta.",
+  "present": true,
+  "vba_project_bytes": 219648,
+  "vba_project_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+}

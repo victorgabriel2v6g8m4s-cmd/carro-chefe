@@ -1,0 +1,393 @@
+{
+  "columns": [
+    "Data",
+    "ID",
+    "Item",
+    "Qtd.",
+    "Medida",
+    "Valor"
+  ],
+  "display_name": "compras",
+  "name": "compras",
+  "ref": "B4:G51",
+  "rows": [
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "=IFERROR(INDEX(insumos[ID], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null,
+      null,
+      "=IFERROR(INDEX(insumos[medida], MATCH(compras[[#This Row],[Item]], insumos[item], 0)), \"\")",
+      null
+    ],
+    [
+      null,
+      "Total",
+      null,
+      null,
+      null,
+      0
+    ]
+  ],
+  "sheet": "Compras",
+  "totals_row_shown": false
+}
