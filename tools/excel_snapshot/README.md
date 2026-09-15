@@ -61,17 +61,21 @@ python tools/excel_snapshot/export.py --check
 
 O modo `--check` gera uma cópia temporária e compara todos os hashes com o snapshot versionado. Qualquer alteração no `.xlsm`, nas fórmulas, nas tabelas ou no VBA que mude a saída faz o comando retornar código diferente de zero.
 
-O CI usa temporariamente:
+O primeiro bootstrap já foi concluído. O CI usa a verificação estrita acima, sem `--allow-bootstrap`.
 
-```bash
-python tools/excel_snapshot/export.py --check --allow-bootstrap
-```
+`--allow-bootstrap` permanece implementado somente como mecanismo controlado para uma inicialização excepcional: ele aceita `BOOTSTRAP_REQUIRED.json` apenas quando ainda não existe `manifest.json` e quando a fonte continua exatamente no SHA-256 registrado no marcador. Esse não é mais o estado normal deste repositório.
 
-`--allow-bootstrap` existe apenas para a primeira adoção da ferramenta. Ele aceita `BOOTSTRAP_REQUIRED.json` somente enquanto o `.xlsm` continuar exatamente no SHA-256 registrado no marcador. Mesmo nesse modo, o exportador é executado integralmente em diretório temporário. Quando o primeiro snapshot real for gerado, o comando normal substitui o diretório e remove o marcador; depois disso o CI passa a exigir sincronização estrita.
-
-## Determinismo
+## Determinismo e finais de linha
 
 Os arquivos gerados não incluem horário de geração variável. `manifest.json` registra `generated_at: null` de propósito e aponta o histórico Git como fonte do momento da geração. Isso permite que duas execuções sobre o mesmo binário produzam o mesmo conteúdo e que o CI compare hashes byte a byte.
+
+Como o `--check` é byte a byte, `.gitattributes` força `LF` em `anexos/financeiro/snapshot/**`. Isso evita falsos positivos em checkouts Windows configurados para converter arquivos de texto para `CRLF`.
+
+A regra versionada é:
+
+```gitattributes
+anexos/financeiro/snapshot/** text eol=lf
+```
 
 ## Valores e fórmulas
 
@@ -104,7 +108,7 @@ Os limites de linhas/colunas podem ser ajustados explicitamente com `--max-rows`
 4. executar `python tools/excel_snapshot/export.py`;
 5. revisar o diff textual de `snapshot/`, principalmente `tables/`, `formulas.json` e `vba/modules/`;
 6. versionar o `.xlsm` e o snapshot no mesmo commit/PR;
-7. deixar o CI confirmar que o snapshot corresponde exatamente à fonte.
+7. executar `python tools/excel_snapshot/export.py --check` ou deixar o CI confirmar que o snapshot corresponde exatamente à fonte.
 
 ## Governança
 
