@@ -1,22 +1,33 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+from .dependencies import DependencyScanner
 from .errors import RecipeError
 from .formulas import FormulaEditor
+from .refactor import RefactorEngine
 from .table_structure import TableStructureEditor
 from .tables import TableManager
 from .util import parse_range_ref
 from .workbook import WorkbookContext
 
+STRUCTURAL_RENAMES = {"table.rename", "table.rename_column"}
+
 
 class OperationRunner:
-    def __init__(self, workbook: WorkbookContext) -> None:
+    def __init__(self, workbook: WorkbookContext, repo_root: Path | None = None) -> None:
         self.workbook = workbook
         self.tables = TableManager(workbook)
         self.structure = TableStructureEditor(workbook, self.tables)
         self.formulas = FormulaEditor(workbook)
+        self.dependencies = DependencyScanner(workbook, repo_root or Path.cwd())
+        self.refactor = RefactorEngine(workbook)
+        self._clean_plans: dict[tuple[str, str | None], dict] = {}
         self.applied: list[dict] = []
 
     def run_all(self, operations: list[dict]) -> None:
+        if sum(operation.get("op") in STRUCTURAL_RENAMES for operation in operations) > 1:
+            raise RecipeError("V2 permite apenas um refactor estrutural por receita.")
         for index, operation in enumerate(operations):
             try:
                 detail = self.run(operation)
@@ -37,6 +48,19 @@ class OperationRunner:
                 self._text(operation, "sheet"), self._text(operation, "from"), self._text(operation, "to"),
                 translate_relative_refs=bool(operation.get("translate_relative_refs", False)),
             )
+        elif op == "dependency.scan":
+            return {"dependency_report": self._dependency_report(operation, require_clean=False)}
+        elif op == "dependency.assert_clean":
+            report = self._dependency_report(operation, require_clean=True)
+            self._clean_plans[(report["table"], report["column"])] = report
+            return {"dependency_report": report}
+        elif op == "table.rename":
+            old = self._text(operation, "table")
+            return self.refactor.rename_table(old, self._text(operation, "new_name"), self._require_plan(old, None))
+        elif op == "table.rename_column":
+            table = self._text(operation, "table")
+            column = self._text(operation, "column")
+            return self.refactor.rename_column(table, column, self._text(operation, "new_name"), self._require_plan(table, column))
         elif op == "table.append_rows":
             rows = self._rows(operation)
             written = self.tables.append(self.tables.find(self._text(operation, "table")), rows)
@@ -76,6 +100,23 @@ class OperationRunner:
         else:
             raise RecipeError(f"Operação não implementada: {op}")
         return None
+
+    def _dependency_report(self, operation: dict, *, require_clean: bool) -> dict:
+        table = self._text(operation, "table")
+        column = operation.get("column")
+        if column is not None and (not isinstance(column, str) or not column):
+            raise RecipeError("Campo 'column' deve ser texto não vazio quando informado.")
+        report = self.dependencies.scan(table, column)
+        if require_clean:
+            self.dependencies.assert_clean(report)
+        return report
+
+    def _require_plan(self, table: str, column: str | None) -> dict:
+        plan = self._clean_plans.get((table, column))
+        if plan is None:
+            target = f"{table}.{column}" if column else table
+            raise RecipeError(f"Refactor {target} exige dependency.assert_clean anterior na mesma receita.")
+        return plan
 
     def _upsert(self, operation: dict) -> dict:
         table = self.tables.find(self._text(operation, "table"))
