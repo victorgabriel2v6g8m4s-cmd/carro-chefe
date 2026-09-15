@@ -174,3 +174,130 @@ class RangeMoveTransform:
             "destination": self.destination,
             "destination_range": self.destination_range,
         }
+
+
+@dataclass(frozen=True)
+class TableColumnTransform:
+    sheet: str
+    table_ref: str
+    column: int
+    mode: str
+
+    def __post_init__(self) -> None:
+        start_row, start_col, end_row, end_col = parse_range_ref(self.table_ref)
+        if self.mode not in {"insert", "delete"}:
+            raise RecipeError(f"Modo de coluna de tabela inválido: {self.mode}")
+        if self.column < start_col or self.column > end_col + (1 if self.mode == "insert" else 0):
+            raise RecipeError("Posição de coluna fora da tabela.")
+        if self.mode == "insert" and end_col >= MAX_COLUMN:
+            raise RecipeError("Tabela já alcança a coluna XFD.")
+        if self.mode == "delete" and start_col == end_col:
+            raise RecipeError("Não é permitido excluir a única coluna de uma tabela.")
+        if start_row > end_row:
+            raise RecipeError("Range de tabela inválido.")
+
+    def transform_cell(self, row: int, column: int) -> tuple[int, int] | None:
+        start_row, start_col, end_row, end_col = parse_range_ref(self.table_ref)
+        if not (start_row <= row <= end_row):
+            return row, column
+        if self.mode == "insert":
+            if self.column <= column <= end_col:
+                return row, column + 1
+            return row, column
+        if column == self.column:
+            return None
+        if self.column < column <= end_col:
+            return row, column - 1
+        return row, column
+
+    def transform_cell_ref(self, cell_ref: str) -> str | None:
+        row, column = parse_cell_ref(cell_ref)
+        result = self.transform_cell(row, column)
+        return None if result is None else make_cell_ref(*result)
+
+    def transform_range(self, range_ref: str) -> RangeChange:
+        start_row, start_col, end_row, end_col = parse_range_ref(range_ref)
+        table_start_row, _, table_end_row, table_end_col = parse_range_ref(self.table_ref)
+        if end_row < table_start_row or start_row > table_end_row:
+            return RangeChange(range_ref, "unaffected")
+        if start_row < table_start_row or end_row > table_end_row:
+            if start_col <= table_end_col and end_col >= self.column:
+                return RangeChange(range_ref, "partial")
+            return RangeChange(range_ref, "unaffected")
+        start_result = self.transform_cell(start_row, start_col)
+        end_result = self.transform_cell(end_row, end_col)
+        if start_result is None or end_result is None:
+            return RangeChange(None, "removed")
+        new_ref = make_range_ref(start_result[0], start_result[1], end_result[0], end_result[1])
+        return RangeChange(new_ref, "shifted" if new_ref != range_ref else "unaffected")
+
+    def as_dict(self) -> dict:
+        return {
+            "kind": "table_column",
+            "sheet": self.sheet,
+            "table_ref": self.table_ref,
+            "column": self.column,
+            "mode": self.mode,
+        }
+
+
+@dataclass(frozen=True)
+class CompactRowsTransform:
+    sheet: str
+    table_ref: str
+    removed_rows: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        start_row, _, end_row, _ = parse_range_ref(self.table_ref)
+        if not self.removed_rows:
+            raise RecipeError("table.compact_rows não encontrou linhas vazias para compactar.")
+        if any(row <= start_row or row > end_row for row in self.removed_rows):
+            raise RecipeError("Linha de compactação fora da área de dados da tabela.")
+        if tuple(sorted(set(self.removed_rows))) != self.removed_rows:
+            raise RecipeError("removed_rows deve ser ordenado e sem duplicatas.")
+
+    def transform_cell(self, row: int, column: int) -> tuple[int, int] | None:
+        start_row, start_col, end_row, end_col = parse_range_ref(self.table_ref)
+        if not (start_col <= column <= end_col and start_row < row <= end_row):
+            return row, column
+        if row in self.removed_rows:
+            return None
+        shift = sum(removed < row for removed in self.removed_rows)
+        return row - shift, column
+
+    def transform_cell_ref(self, cell_ref: str) -> str | None:
+        row, column = parse_cell_ref(cell_ref)
+        result = self.transform_cell(row, column)
+        return None if result is None else make_cell_ref(*result)
+
+    def transform_range(self, range_ref: str) -> RangeChange:
+        start_row, start_col, end_row, end_col = parse_range_ref(range_ref)
+        table_start_row, table_start_col, table_end_row, table_end_col = parse_range_ref(self.table_ref)
+        intersects = not (
+            end_row < table_start_row + 1
+            or start_row > table_end_row
+            or end_col < table_start_col
+            or start_col > table_end_col
+        )
+        if not intersects:
+            return RangeChange(range_ref, "unaffected")
+        inside = (
+            table_start_row < start_row <= end_row <= table_end_row
+            and table_start_col <= start_col <= end_col <= table_end_col
+        )
+        if not inside:
+            return RangeChange(range_ref, "partial")
+        start_result = self.transform_cell(start_row, start_col)
+        end_result = self.transform_cell(end_row, end_col)
+        if start_result is None or end_result is None:
+            return RangeChange(range_ref, "partial")
+        new_ref = make_range_ref(start_result[0], start_result[1], end_result[0], end_result[1])
+        return RangeChange(new_ref, "shifted" if new_ref != range_ref else "unaffected")
+
+    def as_dict(self) -> dict:
+        return {
+            "kind": "compact_rows",
+            "sheet": self.sheet,
+            "table_ref": self.table_ref,
+            "removed_rows": list(self.removed_rows),
+        }
