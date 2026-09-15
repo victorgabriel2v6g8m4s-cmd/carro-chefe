@@ -114,3 +114,43 @@ jobs:
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1
           if (-not (Test-Path tools/windows-supervisor/bin/CarroChefeSupervisor.exe)) { throw "Executável não foi gerado." }
+
+  tool-health:
+    name: Tool Health / Linux
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: file:./.runtime/tool-health.db
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Prepare isolated Python tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .runtime
+          python3 -m venv .runtime/tool-health-venv
+          .runtime/tool-health-venv/bin/python -m pip install --disable-pip-version-check --requirement tools/excel_snapshot/requirements.txt
+          echo "$PWD/.runtime/tool-health-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Run tool health and update generated section
+        run: npm run tools:status
+
+      - name: Verify generated documentation is committed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- docs/ferramentas/STATUS_AUTOMATICO.md; then
+            echo "STATUS_AUTOMATICO.md está desatualizado. Execute 'npm run tools:status' e versione o resultado."
+            exit 1
+          fi
