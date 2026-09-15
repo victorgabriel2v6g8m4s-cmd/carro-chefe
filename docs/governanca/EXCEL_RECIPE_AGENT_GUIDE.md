@@ -16,6 +16,8 @@ Quem preparar uma receita é responsável por provar de onde vieram os valores e
 
 Antes de escrever a receita, leia `AGENTS.md`, `REGRAS.md`, o `AGENTS.md` mais próximo, `tools/excel_recipe/README.md`, `docs/tecnologia/EXCEL_RECIPE_V1.md`, `docs/tecnologia/EXCEL_RECIPE_V2.md` e o snapshot atual em `anexos/financeiro/snapshot/`.
 
+O plano futuro está em `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md`. Use-o para saber o que está planejado, mas **não trate operações V3 como disponíveis** enquanto a implementação correspondente não estiver na `main` e documentada no README corrente da ferramenta.
+
 Parta sempre da `main` atual e crie uma branch exclusiva da entrega. Não edite a planilha diretamente pela interface do GitHub nem gere arquivos paralelos como `carro chefe v2.xlsm`.
 
 Use o snapshot para localizar a tabela, coluna, fórmula ou célula. Prefira operações por nome de tabela e chave estável a coordenadas absolutas. IDs existentes devem ser preservados; novos IDs só podem ser criados quando a regra de negócio os autorizar.
@@ -59,6 +61,20 @@ No `dependency_report`, confira o `table`/`column` alvo, `source_sha256`, `vba_s
 Uma ocorrência `rewritable` significa que o motor conhece aquele contexto e sabe regravá-lo. Uma ocorrência `blocker` significa que o motor detectou dependência que não sabe alterar com segurança. Não existe aprovação humana ou `force: true` que transforme automaticamente um blocker em seguro; a capacidade precisa ser implementada e testada primeiro.
 
 O plano é ligado ao estado interno do pacote. Qualquer mutação entre `dependency.assert_clean` e o rename invalida o plano. Essa falha deve ser tratada recriando a receita sobre a base correta, não removendo a precondição.
+
+## Pedidos que pertencem à V3 planejada
+
+Hoje, pedidos como inserir/excluir fisicamente linhas ou colunas no meio da worksheet, mover ranges com cascata, inserir/remover coluna no meio de uma Table, compactar fisicamente linhas, reescrever gráficos ou pivôs e editar VBA estão fora das capacidades disponíveis.
+
+O agente deve:
+
+1. identificar que o pedido exige capacidade V3;
+2. consultar `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md` para verificar se já existe estratégia planejada;
+3. não simular a operação usando várias edições V1/V2 que contornem blockers;
+4. encaminhar implementação ao `AG-DEV` quando o usuário quiser desenvolver a capacidade;
+5. só usar a nova operação depois de ela estar na `main`, com schema, testes, probes reais e documentação atualizados.
+
+Planejamento não é autorização para executar comportamento ainda inexistente.
 
 ## Dados e precisão
 

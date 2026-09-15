@@ -111,6 +111,8 @@ A V2 não é um parser completo da linguagem de fórmulas do Excel. Ela suporta 
 
 Também continuam fora do escopo edição de VBA, reescrita de gráficos/pivôs/Power Query, inserção física arbitrária no meio da worksheet e recálculo headless equivalente ao Excel.
 
-## Próxima evolução sugerida
+## Próxima evolução
 
-Uma V3 deve priorizar o uso do grafo para operações estruturais de linhas/colunas e, separadamente, parsers específicos para gráficos/pivôs. Edição de VBA deve permanecer um subsistema independente, com assinatura/hash e testes próprios, em vez de ser misturada ao rewriter OOXML.
+A V3 foi formalmente planejada em [`EXCEL_RECIPE_V3_PLAN.md`](./EXCEL_RECIPE_V3_PLAN.md). O plano prioriza primeiro operações físicas seguras de linhas e colunas usando o grafo de dependências, depois parsers específicos para gráficos e pivôs. Edição de VBA permanece um subsistema separado, com hash/assinatura e testes próprios, em vez de ser misturada ao rewriter OOXML.
+
+As capacidades da V3 são **planejadas, não disponíveis** enquanto não houver implementação, testes e CI correspondentes na `main`.

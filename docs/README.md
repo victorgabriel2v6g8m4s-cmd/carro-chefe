@@ -11,8 +11,9 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 5. [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md) — fluxo de colaboração, branches e agentes.
 6. [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md) — edição transacional e auditável do workbook `.xlsm`.
 7. [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md) — mapa de dependências e refactors estruturais seguros.
-8. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção da planilha por receitas JSON.
-9. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
+8. [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md) — evolução planejada para transformações físicas, gráficos, pivôs e subsistema VBA.
+9. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção da planilha por receitas JSON.
+10. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
 
 ## Organização
 
@@ -43,6 +44,7 @@ docs/
 │   ├── EXCEL_RECIPE_V1.md
 │   ├── EXCEL_RECIPE_V2.md
 │   ├── EXCEL_RECIPE_V2_PLAN.md
+│   ├── EXCEL_RECIPE_V3_PLAN.md
 │   └── TOTEM_AUTOATENDIMENTO.md
 ├── operacao/
 │   ├── COMPRAS.md
@@ -61,7 +63,7 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Plano Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Plano Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2_PLAN.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [Compras](./operacao/COMPRAS.md), [Operação e qualidade](./operacao/OPERACAO.md) |
 | **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 
@@ -74,6 +76,7 @@ docs/
 - referências partindo da raiz do repositório devem usar `docs/<categoria>/<arquivo>.md`;
 - nomes de arquivos permanecem em maiúsculas com `_` quando já fazem parte do vocabulário do projeto;
 - mudanças de estrutura precisam atualizar este índice e todas as referências encontradas no repositório;
+- documentos de plano devem distinguir claramente capacidade **disponível** de capacidade **planejada**;
 - documentos transacionais não substituem as fontes oficiais definidas em `AGENTS.md`.
 
 A partir da integração desta reorganização, os caminhos categorizados acima são os caminhos canônicos; branches posteriores devem atualizar referências antigas antes de serem integradas.
