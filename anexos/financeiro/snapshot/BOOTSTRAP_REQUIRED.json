@@ -1,0 +1,5 @@
+{
+  "reason": "Primeira materialização do snapshot textual ainda pendente; o CI só aceita este bootstrap enquanto a fonte permanecer byte a byte igual.",
+  "source_path": "anexos/financeiro/carro chefe.xlsm",
+  "source_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70"
+}
