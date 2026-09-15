@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-A V2 adiciona ao editor transacional da V1 um mapa determinístico de dependências antes de mudanças estruturais. O primeiro escopo é renomear **tabelas** e **colunas de tabelas** sem fazer substituições cegas em XML ou fórmulas.
+A V2 adicionou ao editor transacional da V1 um mapa determinístico de dependências antes de mudanças estruturais. Seu escopo é renomear **tabelas** e **colunas de tabelas** sem fazer substituições cegas em XML ou fórmulas.
 
 O princípio permanece fail-closed: se a ferramenta não consegue classificar uma referência como regravável com segurança, o refactor é bloqueado antes da escrita.
 
@@ -26,7 +26,7 @@ O refactor também compara o SHA do estado interno do pacote com o estado que or
 
 ## Dependências regraváveis
 
-Na primeira fase da V2, o motor reescreve deterministicamente:
+A V2 reescreve deterministicamente:
 
 - fórmulas de células (`<f>`);
 - fórmulas calculadas e de totais de Table Parts;
@@ -42,7 +42,7 @@ No rename de coluna, uma referência qualificada como `Itens[Item]` é segura em
 
 ## Blockers
 
-O refactor é bloqueado quando o símbolo aparece em um contexto que a V2 não modifica, incluindo:
+O refactor é bloqueado quando o símbolo aparece em contexto que a V2 não modifica com segurança, incluindo:
 
 - código VBA extraído estaticamente;
 - gráficos;
@@ -105,14 +105,21 @@ O CI executa o scanner/refactor em Linux e Windows e contém um probe `plan` con
 
 O firewall da V1 permanece ativo depois do refactor; portanto, mesmo um bug no rewriter não pode alterar silenciosamente VBA, ActiveX, gráficos, pivôs ou mídia.
 
-## Limites atuais
+## Limites da geração V2
 
-A V2 não é um parser completo da linguagem de fórmulas do Excel. Ela suporta somente padrões de referência classificados pela implementação; padrões desconhecidos devem bloquear, não ser adivinhados.
+A V2, isoladamente, não é um parser completo da linguagem de fórmulas do Excel e não implementava deslocamento físico arbitrário de linhas/colunas. Esses eram limites históricos desta geração, não do motor corrente.
 
-Também continuam fora do escopo edição de VBA, reescrita de gráficos/pivôs/Power Query, inserção física arbitrária no meio da worksheet e recálculo headless equivalente ao Excel.
+As transformações físicas foram implementadas posteriormente pela **V3A**, documentada em [`EXCEL_RECIPE_V3A.md`](./EXCEL_RECIPE_V3A.md). A V3A adiciona `structural.plan`, `structural.assert_clean`, insert/delete de linhas e colunas, `range.move`, inserção/exclusão de coluna no meio de Table e compactação física de linhas com análise de impacto.
 
-## Próxima evolução
+Ainda permanecem fora do motor corrente a reescrita de Drawing/VML/ActiveX, gráficos, PivotTables/PivotCaches, Power Query/conexões e edição de VBA. Esses itens continuam fail-closed.
 
-A V3 foi formalmente planejada em [`EXCEL_RECIPE_V3_PLAN.md`](./EXCEL_RECIPE_V3_PLAN.md). O plano prioriza primeiro operações físicas seguras de linhas e colunas usando o grafo de dependências, depois parsers específicos para gráficos e pivôs. Edição de VBA permanece um subsistema separado, com hash/assinatura e testes próprios, em vez de ser misturada ao rewriter OOXML.
+## Evolução posterior
 
-As capacidades da V3 são **planejadas, não disponíveis** enquanto não houver implementação, testes e CI correspondentes na `main`.
+O roadmap V3 está em [`EXCEL_RECIPE_V3_PLAN.md`](./EXCEL_RECIPE_V3_PLAN.md):
+
+- **V3A:** implementada — operações físicas seguras;
+- **V3B:** planejada — drawings/gráficos;
+- **V3C:** planejada — pivôs/caches;
+- **V3D:** planejada, se necessária — subsistema VBA separado.
+
+Para saber quais operações estão disponíveis hoje, consulte sempre `tools/excel_recipe/README.md` e a documentação da versão implementada, não apenas documentos históricos de V1/V2.
