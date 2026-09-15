@@ -13,7 +13,7 @@ Este inventário cobre aplicações, scripts e utilitários mantidos pelo própr
 | `excel-snapshot` | `tools/excel_snapshot` | exportar XLSM para snapshot textual determinístico, fórmulas, tabelas e VBA estático; verificar sincronização | completa | médio | nenhum direto/baixo | Python/dependências isoladas; não recalcula Excel nem executa macros | 95 |
 | `windows-supervisor` | `tools/windows-supervisor` | compilar/instalar supervisor que inicia API, agentes e webhooks no Windows | completa | baixo/médio | nenhum direto | Windows; instalação no logon é efeito de sistema e deve ser explícita | 89 |
 | `planejamento-legacy` | `planejamento` | servidor/API e testes legados preservados; mantém compatibilidade durante a transição | completa/legada | baixo/médio | nenhum direto | não é arquitetura-alvo; evitar novas capacidades aqui sem decisão explícita | 74 |
-| `tool-health` | `tools/tool-health` | validar catálogo, executar checks seguros, classificar saúde e atualizar status documental | em desenvolvimento nesta branch | baixo/médio | nenhum direto/baixo | só testa comandos declarados; não instala dependências nem contorna permissões | 93 |
+| `tool-health` | `tools/tool-health` | validar catálogo, executar checks seguros, classificar saúde e atualizar status documental | em desenvolvimento | baixo/médio | nenhum direto/baixo | só testa comandos declarados; não instala dependências nem contorna permissões | 93 |
 
 ## Componentes compartilhados
 
