@@ -111,11 +111,11 @@ O receipt registra hashes da fonte e do VBA antes/depois, partes OOXML modificad
 
 ## Limites deliberados
 
-A V1 não suporta renome de tabela/coluna com cascata, inserção/exclusão física no meio da worksheet, edição de VBA/ActiveX, alteração de pivôs/gráficos, refresh de Power Query ou recálculo headless. Consulte `docs/EXCEL_RECIPE_V2_PLAN.md` para a próxima evolução.
+A V1 não suporta renome de tabela/coluna com cascata, inserção/exclusão física no meio da worksheet, edição de VBA/ActiveX, alteração de pivôs/gráficos, refresh de Power Query ou recálculo headless. Consulte `docs/tecnologia/EXCEL_RECIPE_V2_PLAN.md` para a próxima evolução.
 
 ## Documentação relacionada
 
-`docs/EXCEL_RECIPE_V1.md` descreve arquitetura e garantias. `docs/EXCEL_RECIPE_AGENT_GUIDE.md` é o manual obrigatório para agentes. `anexos/financeiro/recipes/README.md` define a organização das receitas. `tools/excel_recipe/AGENTS.md` contém regras locais de desenvolvimento e uso.
+`docs/tecnologia/EXCEL_RECIPE_V1.md` descreve arquitetura e garantias. `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md` é o manual obrigatório para agentes. `anexos/financeiro/recipes/README.md` define a organização das receitas. `tools/excel_recipe/AGENTS.md` contém regras locais de desenvolvimento e uso.
 
 ## Testes
 
