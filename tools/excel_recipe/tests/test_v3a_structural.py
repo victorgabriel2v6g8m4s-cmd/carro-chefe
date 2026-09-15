@@ -89,17 +89,16 @@ class StructuralV3ATests(unittest.TestCase):
         self.assertEqual("=SUM(Dados!E4:E6)", ctx.read_cell("Resumo", "A3"))
 
     def test_table_delete_column_when_dependencies_are_clean(self) -> None:
-        operations = [
-            {"op": "cell.clear", "sheet": "Resumo", "cell": "A3"},
-            *self.pair("table.delete_column", table="Itens", column="Total"),
-        ]
-        execute_recipe(self.write_recipe(operations, "table-delete-col"), refresh_snapshot=False, repo_root=self.root)
+        insert_fields = {"table": "Itens", "position": 2, "name": "Qtd", "default": 1}
+        execute_recipe(self.write_recipe(self.pair("table.insert_column", **insert_fields), "prepare-delete-col"), refresh_snapshot=False, repo_root=self.root)
+        delete_fields = {"table": "Itens", "column": "Qtd"}
+        execute_recipe(self.write_recipe(self.pair("table.delete_column", **delete_fields), "table-delete-col"), refresh_snapshot=False, repo_root=self.root)
         ctx = self.context()
         table = TableManager(ctx).find("Itens")
-        self.assertEqual(["ID", "Item"], table.columns)
-        self.assertEqual("B3:C6", table.ref)
+        self.assertEqual(["ID", "Item", "Total"], table.columns)
+        self.assertEqual("B3:D6", table.ref)
         self.assertEqual("Pão", ctx.read_cell("Dados", "C4"))
-        self.assertEqual("=Dados!B6", ctx.read_cell("Resumo", "A2"))
+        self.assertEqual("=SUM(Dados!D4:D6)", ctx.read_cell("Resumo", "A3"))
 
     def test_table_delete_column_blocks_structured_dependency(self) -> None:
         recipe = self.write_recipe([
