@@ -1,19 +1,8 @@
-# Excel Recipe V1
+# Excel Recipe
 
 Motor transacional para aplicar **roteiros JSON** ao mesmo arquivo `anexos/financeiro/carro chefe.xlsm`, sem depender do Excel Desktop e sem regravar partes do pacote OOXML que a receita não autorizou.
 
-## Princípios
-
-- o `.xlsm` continua sendo um único arquivo versionado;
-- a receita exige SHA-256 exato da fonte e pode exigir SHA-256 exato do `vbaProject.bin`;
-- VBA, ActiveX, gráficos, pivôs e mídias são imutáveis na V1;
-- alterações são feitas diretamente nas partes XML necessárias do pacote OOXML;
-- qualquer parte alterada fora da allowlist da operação faz o firewall abortar;
-- a escrita é atômica: primeiro é criado/validado um candidato temporário, só depois ele substitui a fonte;
-- por padrão, uma aplicação bem-sucedida regenera `anexos/financeiro/snapshot/` e grava um receipt auditável;
-- o motor nunca executa VBA e nunca recalcula fórmulas: ele marca recálculo completo na próxima abertura do Excel.
-
-## Uso
+## Uso normal
 
 Validar/simular uma receita sem alterar arquivos:
 
@@ -21,13 +10,29 @@ Validar/simular uma receita sem alterar arquivos:
 python -m tools.excel_recipe validate anexos/financeiro/recipes/minha-receita.json
 ```
 
-Aplicar:
+Aplicar e regenerar snapshot + receipt:
 
 ```bash
 python -m tools.excel_recipe apply anexos/financeiro/recipes/minha-receita.json
 ```
 
-`--dry-run` também pode ser usado no comando `apply`. `--no-snapshot` existe para testes automatizados e não deve ser o fluxo normal de manutenção.
+Depois que a alteração for mergeada na `main`, sincronizar o computador local:
+
+```bash
+python -m tools.excel_recipe.sync
+```
+
+`--dry-run` pode ser usado em `apply`. `--no-snapshot` existe para testes automatizados e não deve ser usado em manutenção normal.
+
+## Princípios de segurança
+
+O `.xlsm` continua sendo um único arquivo versionado. Toda receita exige SHA-256 exato da fonte e, enquanto VBA for imutável, deve fixar também o SHA-256 de `xl/vbaProject.bin`.
+
+VBA, ActiveX, gráficos, pivôs e mídias são imutáveis na V1. O motor altera diretamente apenas as partes XML necessárias, calcula hashes de todas as entradas antes/depois e aborta se qualquer parte fora da allowlist mudar.
+
+A escrita é atômica: cria um candidato temporário, reabre e valida o pacote, confere novamente o VBA e só então substitui a fonte. Uma aplicação bem-sucedida regenera `anexos/financeiro/snapshot/` e grava receipt auditável. Se o snapshot falhar, o workbook original é restaurado.
+
+O motor nunca executa VBA nem recalcula fórmulas. Fórmulas alteradas têm cache removido e o workbook é marcado para recálculo completo quando for aberto no Excel.
 
 ## Operações V1
 
@@ -36,30 +41,26 @@ python -m tools.excel_recipe apply anexos/financeiro/recipes/minha-receita.json
 | `cell.set` | escrever valor em célula |
 | `cell.clear` | limpar conteúdo preservando estilo |
 | `formula.set` | escrever fórmula e remover cache antigo |
-| `formula.copy` | copiar fórmula; tradução A1 relativa é **opt-in** |
-| `table.append_rows` | inserir registros usando primeiro espaço lógico vazio |
-| `table.upsert_rows` | atualizar por chave ou inserir se a chave não existir |
+| `formula.copy` | copiar fórmula; tradução A1 relativa é opt-in |
+| `table.append_rows` | inserir registros usando espaço lógico vazio |
+| `table.upsert_rows` | atualizar por chave ou inserir |
 | `table.update_rows` | atualizar registros por filtro explícito |
-| `table.delete_rows` | excluir logicamente registros limpando suas células |
+| `table.delete_rows` | excluir logicamente registros, sem deslocar linhas |
 | `table.create` | criar Table Part em intervalo explícito |
 | `table.resize` | expandir/reduzir apenas o final das linhas |
-| `table.drop` | remover a definição de tabela; células ficam por padrão |
-| `table.add_column` | adicionar coluna somente à direita da tabela |
-| `table.set_formula_column` | definir fórmula calculada de uma coluna |
+| `table.drop` | remover definição de tabela; células ficam por padrão |
+| `table.add_column` | adicionar coluna somente à direita |
+| `table.set_formula_column` | definir fórmula calculada de coluna |
 | `assert.cell` | precondição de célula |
-| `assert.table` | precondição de range/colunas de tabela |
+| `assert.table` | precondição de range/colunas |
 | `assert.row` | precondição de registro |
 | `workbook.recalculate_on_open` | marcar recálculo completo ao abrir |
 
-### Semântica de exclusão
+## Semântica de exclusão
 
-`table.delete_rows` **não desloca linhas físicas** e não compacta a worksheet. Na V1 ele limpa o registro encontrado e mantém a faixa da tabela. Isso evita quebrar referências externas, validações, gráficos ou VBA por deslocamento estrutural invisível.
+`table.delete_rows` não desloca linhas físicas nem compacta a worksheet. Ele limpa o registro encontrado e mantém a faixa da tabela. Operações estruturais que precisem mover células dependem do mapa de dependências previsto para a V2.
 
-### Fórmulas
-
-`formula.copy` só traduz referências A1 quando `translate_relative_refs: true` é informado explicitamente. A tradução não pretende fazer refactor de nomes definidos, referências estruturadas, gráficos, pivôs ou VBA. Para fórmulas complexas, prefira `formula.set` ou `table.set_formula_column`.
-
-## Exemplo de upsert
+## Exemplo mínimo
 
 ```json
 {
@@ -74,7 +75,7 @@ python -m tools.excel_recipe apply anexos/financeiro/recipes/minha-receita.json
     {
       "op": "assert.table",
       "table": "insumos",
-      "expected_columns": ["ID", "item", "Preço", "Qtd.", "Medida"]
+      "expected_columns": ["ID", "item", "Preço"]
     },
     {
       "op": "table.upsert_rows",
@@ -92,49 +93,34 @@ python -m tools.excel_recipe apply anexos/financeiro/recipes/minha-receita.json
 }
 ```
 
-O exemplo acima é ilustrativo; valores operacionais reais não devem ser inventados.
+O exemplo é ilustrativo; agentes não devem inventar valores operacionais.
 
 ## Valores tipados
 
-Além de `string`, número, boolean e `null` JSON, a V1 aceita:
-
-```json
-{ "type": "decimal", "value": "12.34" }
-{ "type": "integer", "value": 5 }
-{ "type": "string", "value": "texto" }
-{ "type": "boolean", "value": true }
-{ "type": "blank", "value": null }
-```
-
-Para dinheiro, prefira `decimal` textual.
+Além de `string`, número, boolean e `null` JSON, a V1 aceita objetos tipados como `decimal`, `integer`, `string`, `boolean` e `blank`. Para dinheiro, prefira decimal textual, por exemplo `{ "type": "decimal", "value": "12.34" }`.
 
 ## Receipt
 
-Após sucesso, a receita gera por padrão:
+Após sucesso, o motor gera por padrão:
 
 ```text
 anexos/financeiro/recipes/receipts/<id>.receipt.json
 ```
 
-Ele registra SHA da fonte antes/depois, SHA do VBA antes/depois, partes OOXML modificadas e operações efetivamente aplicadas. Timestamp variável é omitido; a data vem do histórico Git.
+O receipt registra hashes da fonte e do VBA antes/depois, partes OOXML modificadas e operações aplicadas. Ele é gerado pelo motor e nunca deve ser editado manualmente.
 
-## Sincronização segura do computador local
+## Limites deliberados
 
-Depois que uma alteração for mergeada na `main`:
+A V1 não suporta renome de tabela/coluna com cascata, inserção/exclusão física no meio da worksheet, edição de VBA/ActiveX, alteração de pivôs/gráficos, refresh de Power Query ou recálculo headless. Consulte `docs/EXCEL_RECIPE_V2_PLAN.md` para a próxima evolução.
 
-```bash
-python -m tools.excel_recipe.sync
-```
+## Documentação relacionada
 
-O comando exige que você esteja em `main`, recusa sincronizar se o `.xlsm` tiver alteração local e usa somente `git fetch` + `git merge --ff-only`. Ele nunca executa `reset --hard`, `stash`, `checkout --force` ou cria cópias da planilha.
-
-## Limites deliberados da V1
-
-Não são suportados: renomear tabela/coluna com cascata, inserir/excluir linha ou coluna física no meio da worksheet, editar VBA/ActiveX, alterar pivôs/gráficos, refresh de Power Query ou recálculo headless. Esses recursos exigem mapa de dependências e entram em versões futuras.
+`docs/EXCEL_RECIPE_V1.md` descreve arquitetura e garantias. `docs/EXCEL_RECIPE_AGENT_GUIDE.md` é o manual obrigatório para agentes. `anexos/financeiro/recipes/README.md` define a organização das receitas. `tools/excel_recipe/AGENTS.md` contém regras locais de desenvolvimento e uso.
 
 ## Testes
 
 ```bash
 python -m unittest discover -s tools/excel_recipe/tests -p "test_*.py" -v
 python -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json
+python -m tools.excel_recipe validate tools/excel_recipe/examples/probe-carro-chefe-real.json
 ```
