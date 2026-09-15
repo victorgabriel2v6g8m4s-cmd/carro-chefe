@@ -10,7 +10,7 @@ from .util import make_cell_ref, make_range_ref, parse_cell_ref, parse_range_ref
 Transform = AxisTransform | RangeMoveTransform | TableColumnTransform | CompactRowsTransform
 
 _A1 = re.compile(
-    r"(?<![\w.\]])"
+    r"(?<![\w.\]\[])"
     r"(?P<prefix>(?:(?P<sheet>'(?:[^']|'')+'|[\w.]+)!)?)"
     r"(?P<start>\$?[A-Z]{1,3}\$?[1-9][0-9]*)"
     r"(?::(?P<end>\$?[A-Z]{1,3}\$?[1-9][0-9]*))?"
@@ -29,8 +29,12 @@ def rewrite_formula_a1(
     blockers: list[str] = []
     changed = False
 
-    if _UNSAFE_DYNAMIC.search(expression):
-        blockers.append("fórmula usa referência dinâmica INDIRECT/ADDRESS")
+    dynamic = _UNSAFE_DYNAMIC.search(expression)
+    if dynamic and (
+        context_sheet.casefold() == transform.sheet.casefold()
+        or transform.sheet.casefold() in expression.casefold()
+    ):
+        blockers.append("fórmula usa referência dinâmica INDIRECT/ADDRESS no contexto estrutural afetado")
     if _EXTERNAL.search(expression):
         blockers.append("fórmula contém referência externa de workbook")
 
