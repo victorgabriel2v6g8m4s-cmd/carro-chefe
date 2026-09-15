@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "probe-carro-chefe-real-package",
+  "workbook": {
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "expected_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+    "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  },
+  "operations": [
+    {
+      "op": "assert.table",
+      "table": "CaProdutos",
+      "expected_ref": "B4:M47"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B4",
+      "equals": "ID"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B4",
+      "value": "ID"
+    },
+    {
+      "op": "table.resize",
+      "table": "CaProdutos",
+      "end_row": 47
+    },
+    {
+      "op": "workbook.recalculate_on_open"
+    }
+  ]
+}
