@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://carrochefe.com/schemas/excel-recipe-v2.json",
-  "title": "Carro Chefe Excel Recipe V2",
+  "$id": "https://carrochefe.com/schemas/excel-recipe-v3a.json",
+  "title": "Carro Chefe Excel Recipe V3A",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "id", "workbook", "operations"],
@@ -35,15 +35,31 @@
           "enum": [
             "cell.set", "cell.clear", "formula.set", "formula.copy",
             "dependency.scan", "dependency.assert_clean",
+            "structural.plan", "structural.assert_clean",
+            "sheet.insert_rows", "sheet.delete_rows", "sheet.insert_columns", "sheet.delete_columns",
+            "range.move", "table.insert_column", "table.delete_column", "table.compact_rows",
             "table.rename", "table.rename_column",
             "table.append_rows", "table.upsert_rows", "table.update_rows", "table.delete_rows",
             "table.create", "table.resize", "table.drop", "table.add_column", "table.set_formula_column",
             "assert.cell", "assert.table", "assert.row", "workbook.recalculate_on_open"
           ]
         },
+        "action": {
+          "enum": [
+            "sheet.insert_rows", "sheet.delete_rows", "sheet.insert_columns", "sheet.delete_columns",
+            "range.move", "table.insert_column", "table.delete_column", "table.compact_rows"
+          ]
+        },
+        "sheet": { "type": "string", "minLength": 1 },
         "table": { "type": "string", "minLength": 1 },
         "column": { "type": "string", "minLength": 1 },
-        "new_name": { "type": "string", "minLength": 1 }
+        "new_name": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "destination": { "type": "string", "minLength": 1 },
+        "at": { "type": "integer", "minimum": 1 },
+        "count": { "type": "integer", "minimum": 1 },
+        "position": { "type": "integer", "minimum": 1 }
       },
       "additionalProperties": true
     }

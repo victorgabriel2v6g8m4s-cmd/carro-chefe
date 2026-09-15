@@ -8,100 +8,183 @@ A ferramenta é um mecanismo de manutenção versionada. Ela não transforma a p
 
 ## Responsabilidades
 
-Agentes de domínio podem identificar a necessidade de mudança e fornecer os dados aprovados de sua especialidade. Alterações no código do motor pertencem ao `AG-DEV`. Alterações financeiras, custos, margens e configuração de ERP continuam sujeitas à validação de `AG-FINANCAS`; dados, contratos e linhagem ficam sob `AG-DADOS` quando aplicável.
+Agentes de domínio podem identificar a necessidade de mudança e fornecer dados aprovados de sua especialidade. Alterações no código do motor pertencem ao `AG-DEV`. Custos, margens e configuração financeira continuam sujeitos à validação de `AG-FINANCAS`; dados, contratos e linhagem ficam sob `AG-DADOS` quando aplicável.
 
-Quem preparar uma receita é responsável por provar de onde vieram os valores e por não ultrapassar o escopo da operação suportada.
+Quem prepara uma receita é responsável por provar a origem dos valores e por não ultrapassar o escopo da versão disponível.
+
+## Documentos obrigatórios
+
+Antes de escrever uma receita, leia:
+
+- `AGENTS.md` e `REGRAS.md`;
+- o `AGENTS.md` mais próximo;
+- `tools/excel_recipe/README.md`;
+- `docs/tecnologia/EXCEL_RECIPE_V1.md`;
+- `docs/tecnologia/EXCEL_RECIPE_V2.md`;
+- `docs/tecnologia/EXCEL_RECIPE_V3A.md` quando houver transformação física;
+- o snapshot atual em `anexos/financeiro/snapshot/`.
+
+`docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md` contém também V3B/V3C/V3D. Essas fases continuam planejadas; não trate uma capacidade descrita apenas no roadmap como disponível.
 
 ## Procedimento obrigatório
 
-Antes de escrever a receita, leia `AGENTS.md`, `REGRAS.md`, o `AGENTS.md` mais próximo, `tools/excel_recipe/README.md`, `docs/tecnologia/EXCEL_RECIPE_V1.md`, `docs/tecnologia/EXCEL_RECIPE_V2.md` e o snapshot atual em `anexos/financeiro/snapshot/`.
+Parta da `main` atual e crie uma branch exclusiva. Não edite a planilha diretamente pela interface do GitHub e não crie arquivos permanentes como `carro chefe v2.xlsm`.
 
-O plano futuro está em `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md`. Use-o para saber o que está planejado, mas **não trate operações V3 como disponíveis** enquanto a implementação correspondente não estiver na `main` e documentada no README corrente da ferramenta.
+Use o snapshot para localizar tabela, coluna, fórmula ou célula. Prefira nomes de Table e chaves estáveis a coordenadas absolutas sempre que o domínio oferecer esse identificador.
 
-Parta sempre da `main` atual e crie uma branch exclusiva da entrega. Não edite a planilha diretamente pela interface do GitHub nem gere arquivos paralelos como `carro chefe v2.xlsm`.
+A receita deve fixar `expected_sha256` do workbook e, enquanto VBA permanecer imutável, `expected_vba_sha256`. Inclua `assert.table`, `assert.row` ou `assert.cell` quando puderem impedir aplicação sobre estrutura inesperada.
 
-Use o snapshot para localizar a tabela, coluna, fórmula ou célula. Prefira operações por nome de tabela e chave estável a coordenadas absolutas. IDs existentes devem ser preservados; novos IDs só podem ser criados quando a regra de negócio os autorizar.
-
-A receita deve fixar `expected_sha256` do workbook e, enquanto VBA estiver fora do escopo de edição, `expected_vba_sha256`. Inclua `assert.table`, `assert.row` ou `assert.cell` sempre que eles puderem impedir uma aplicação sobre estrutura inesperada.
-
-Execute primeiro:
+Valide primeiro:
 
 ```bash
 python -m tools.excel_recipe validate <receita.json>
 ```
 
-Para receita estrutural da V2, gere e leia o plano antes da aplicação:
+Quando houver rename V2 ou transformação V3A, gere/revise o plano:
 
 ```bash
 python -m tools.excel_recipe plan <receita.json>
 ```
 
-Só aplique depois de revisar o dry-run/plano:
+Só aplique depois de revisar plano/dry-run:
 
 ```bash
 python -m tools.excel_recipe apply <receita.json>
 ```
 
-Depois da aplicação, revise o `.xlsm`, o snapshot textual e o receipt. O diff deve refletir apenas a intenção solicitada. Se o firewall, SHA, assert, scanner, snapshot ou CI falhar, não contorne a proteção: investigue a causa.
+Depois, revise `.xlsm`, snapshot e receipt. Se SHA, assert, scanner, firewall, snapshot ou CI falhar, investigue; não remova a proteção para “fazer passar”.
 
-## Escolha de operação
+## Escolha de operação V1
 
-Para modificar um registro identificado por chave estável, prefira `table.upsert_rows` ou `table.update_rows`. Para inserir registros novos sem substituir existentes, use `table.append_rows`. `table.delete_rows` é limpeza lógica, não remoção física da linha.
+Para modificar registro por chave estável, prefira `table.upsert_rows` ou `table.update_rows`. Para inserir registros sem substituir, use `table.append_rows`.
 
-Para fórmulas, prefira `formula.set` quando a fórmula final é conhecida. Use `formula.copy` com `translate_relative_refs: true` apenas quando a tradução A1 relativa for realmente desejada. Para coluna calculada de Table, prefira `table.set_formula_column`.
+`table.delete_rows` é exclusão lógica: limpa conteúdo sem remover fisicamente a linha. Se a intenção for remover fisicamente os vazios de uma Table, a V3A oferece `table.compact_rows`, desde que o plano esteja limpo.
 
-A V2 permite renome de tabela e coluna somente pelo fluxo de dependências. Para investigar impacto, use `dependency.scan`. Para autorizar a escrita, a receita deve executar `dependency.assert_clean` para o mesmo alvo imediatamente antes de `table.rename` ou `table.rename_column`. O motor aceita apenas um refactor estrutural por receita.
+Para fórmulas, prefira `formula.set` quando a fórmula final é conhecida. Use `formula.copy` com `translate_relative_refs: true` apenas quando tradução A1 relativa for realmente desejada. Para fórmula de coluna de Table, use `table.set_formula_column`.
 
-Nunca substitua esse fluxo por várias edições manuais de fórmulas/células para simular um rename. Se o scanner encontrar blocker em VBA, gráfico, PivotTable/PivotCache, ActiveX, link externo, QueryTable, conexão ou referência de coluna ambígua, o refactor deve parar.
+## Rename V2
 
-## Como revisar um plano V2
+Para investigar rename de tabela/coluna, use `dependency.scan`. Para autorizar escrita, a receita deve executar `dependency.assert_clean` para o mesmo alvo imediatamente antes de `table.rename` ou `table.rename_column`.
 
-No `dependency_report`, confira o `table`/`column` alvo, `source_sha256`, `vba_sha256`, `plan_sha256`, `rewritable_count`, `blocker_count` e a lista completa de `occurrences`.
+O motor aceita um rename estrutural por receita. Não simule rename com várias edições manuais de células/fórmulas.
 
-Uma ocorrência `rewritable` significa que o motor conhece aquele contexto e sabe regravá-lo. Uma ocorrência `blocker` significa que o motor detectou dependência que não sabe alterar com segurança. Não existe aprovação humana ou `force: true` que transforme automaticamente um blocker em seguro; a capacidade precisa ser implementada e testada primeiro.
+No `dependency_report`, revise `table`, `column`, `source_sha256`, `vba_sha256`, `plan_sha256`, contagens e `occurrences`. Qualquer `blocker` encerra a tentativa.
 
-O plano é ligado ao estado interno do pacote. Qualquer mutação entre `dependency.assert_clean` e o rename invalida o plano. Essa falha deve ser tratada recriando a receita sobre a base correta, não removendo a precondição.
+## Transformações físicas V3A
 
-## Pedidos que pertencem à V3 planejada
+A V3A disponibiliza:
 
-Hoje, pedidos como inserir/excluir fisicamente linhas ou colunas no meio da worksheet, mover ranges com cascata, inserir/remover coluna no meio de uma Table, compactar fisicamente linhas, reescrever gráficos ou pivôs e editar VBA estão fora das capacidades disponíveis.
+- `sheet.insert_rows` / `sheet.delete_rows`;
+- `sheet.insert_columns` / `sheet.delete_columns`;
+- `range.move`;
+- `table.insert_column` / `table.delete_column`;
+- `table.compact_rows`.
 
-O agente deve:
+Toda transformação física deve usar primeiro `structural.plan` para investigação e, na receita de escrita, `structural.assert_clean` imediatamente antes da operação correspondente.
 
-1. identificar que o pedido exige capacidade V3;
-2. consultar `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md` para verificar se já existe estratégia planejada;
-3. não simular a operação usando várias edições V1/V2 que contornem blockers;
-4. encaminhar implementação ao `AG-DEV` quando o usuário quiser desenvolver a capacidade;
-5. só usar a nova operação depois de ela estar na `main`, com schema, testes, probes reais e documentação atualizados.
+Exemplo:
 
-Planejamento não é autorização para executar comportamento ainda inexistente.
+```json
+{
+  "op": "structural.assert_clean",
+  "action": "sheet.insert_rows",
+  "sheet": "Custos Fixos",
+  "at": 12,
+  "count": 1
+},
+{
+  "op": "sheet.insert_rows",
+  "sheet": "Custos Fixos",
+  "at": 12,
+  "count": 1
+}
+```
+
+A V3A aceita somente **uma transformação física por receita** e não permite misturar transformação física com rename V2 na mesma receita.
+
+### Como revisar `structural_plan`
+
+Confira obrigatoriamente:
+
+- `action` e `target`;
+- transformação normalizada;
+- `source_sha256`;
+- `package_state_sha256`;
+- `vba_sha256`;
+- `plan_sha256`;
+- `parts_impacted`;
+- `rewritable_count`;
+- `blocker_count`;
+- lista completa de `occurrences`.
+
+`rewritable` significa que existe regra determinística implementada e testada para aquele contexto. `blocker` significa que a ferramenta não consegue provar a alteração. Aprovação humana não transforma blocker em regravável.
+
+O plano é ligado ao estado interno do pacote. Mutação entre `structural.assert_clean` e a operação invalida o plano; refaça a receita em vez de retirar o assert.
+
+### Regras específicas
+
+Para inserção/exclusão global de colunas que atravesse uma Table, use as operações específicas `table.insert_column`/`table.delete_column`; não tente contornar a proteção com `sheet.*columns`.
+
+`range.move` exige origem/destino não sobrepostos. Fórmula na própria origem ou valor existente no destino é blocker. Não use várias `cell.set` para imitar um move quando o planner bloqueia.
+
+`table.insert_column` deve ter posição/nome explícitos e só passa se a expansão for segura. `table.delete_column` bloqueia quando há referência estruturada dependente. `table.compact_rows` só deve ser usado quando a intenção de remover fisicamente linhas lógicas vazias for clara.
+
+### Blockers V3A
+
+Entre outros, pare diante de:
+
+- VBA que precisaria ser regravado;
+- Drawing/VML/ActiveX/OLE na sheet alvo;
+- gráfico/pivô afetado;
+- Power Query, QueryTable, link/conexão externa atingidos;
+- `INDIRECT`/`ADDRESS` no contexto estrutural afetado;
+- referência inteira `A:A` ou `1:1` atingida;
+- range parcialmente intersectado sem regra segura;
+- limite de linha/coluna do Excel;
+- plano obsoleto.
+
+Não existe `force: true` genérico.
+
+## V3B/V3C/V3D continuam indisponíveis
+
+Se o pedido exigir reescrever anchors/séries de gráfico, PivotTable/PivotCache ou VBA, consulte `EXCEL_RECIPE_V3_PLAN.md`, mas **não simule a capacidade** usando edições V1/V2/V3A.
+
+O agente deve registrar a necessidade e encaminhar evolução ao `AG-DEV`. Só use a nova operação quando houver código, schema, testes, probe real, documentação e CI verde na `main`.
 
 ## Dados e precisão
 
-Não invente preços, custos, fornecedores, quantidades, datas, margens, IDs ou fórmulas. Se o pedido não contém um valor e ele não pode ser obtido de fonte oficial versionada, registre a lacuna em vez de adivinhar.
+Não invente preços, custos, fornecedores, quantidades, datas, margens, IDs ou fórmulas. Se o pedido não contém um valor e ele não pode ser obtido de fonte oficial versionada, registre a lacuna.
 
-Para valores monetários, use `decimal` textual. Preserve grafia, unidades e IDs do snapshot. Antes de atualizar uma linha, confirme que a chave identifica exatamente um registro.
+Para dinheiro, use `decimal` textual. Preserve grafia, unidades e IDs do snapshot. Antes de atualizar uma linha, confirme que a chave identifica exatamente um registro.
 
 ## Revisão antes do PR
 
-O PR deve conter a receita, o mesmo `.xlsm` atualizado, o snapshot regenerado e o receipt correspondente quando houver aplicação real. Não versione temporários, backups ou caches.
+Quando houver aplicação real, o PR deve conter a receita, o **mesmo** `.xlsm` atualizado, snapshot regenerado e receipt. Não versione temporários, backups ou caches.
 
-A descrição do PR deve registrar intenção, fonte dos dados, tabelas/partes afetadas, hashes de base, limites conhecidos e comandos de validação executados. Em refactor V2, registre também o `plan_sha256`, contagem de ocorrências e ausência de blockers. Alterações inesperadas em VBA, ActiveX, gráficos, pivôs ou mídia são bloqueadoras.
+A descrição deve registrar intenção, fonte dos dados, partes/tabelas afetadas, hashes de base, limites conhecidos e comandos executados. Para V2, registre `plan_sha256`; para V3A, registre também transformação, `parts_impacted`, contagens e ausência de blockers.
+
+Qualquer alteração inesperada em VBA, ActiveX, gráficos, pivôs ou mídia é bloqueadora.
 
 ## Sincronização do proprietário
 
-Depois do merge em `main`, a atualização local recomendada é:
+Depois do merge em `main`:
 
 ```bash
 python -m tools.excel_recipe.sync
 ```
 
-Se houver edição local do `.xlsm`, o sync deve parar. O agente nunca deve instruir `reset --hard`, sobrescrita manual do arquivo ou criação de cópias como solução automática para divergência.
+Se houver edição local do `.xlsm`, o sync deve parar. Nunca instrua `reset --hard`, overwrite manual ou criação de cópias da planilha como solução automática para divergência.
 
-## Checklist rápido para agentes
+## Checklist rápido
 
-Antes de abrir ou atualizar o PR, confirme: a branch partiu da `main` atual; a receita aponta para o SHA correto; o VBA SHA foi fixado; há asserts proporcionais ao risco; `validate` passou; se houver refactor, `plan` foi revisado e não há blockers; `apply` ou `--dry-run` produziu apenas as mudanças esperadas; snapshot e receipt foram revisados; nenhuma parte imutável mudou; e os checks do CI estão verdes.
+Antes do PR/merge confirme: branch partiu da `main` atual; receita aponta para SHA correto; VBA SHA foi fixado; asserts são proporcionais ao risco; `validate` passou; plano aplicável foi revisado; não há blockers; a operação consumiu o mesmo `plan_sha256`; snapshot/receipt estão coerentes; partes imutáveis não mudaram; CI está verde.
+
+Para mudança no próprio motor V3A, execute também:
+
+```bash
+python -m tools.excel_recipe.probe_v3a_real
+```
 
 ## Regra de parada
 
-Se a alteração desejada exigir recurso fora da versão atual, se o scanner apontar dependência bloqueadora ou se o motor não conseguir provar que somente as partes permitidas foram modificadas, a entrega deve parar sem substituir o workbook. Segurança e auditabilidade têm precedência sobre completar a edição a qualquer custo.
+Se a alteração exigir recurso fora da versão atual, se o scanner apontar blocker ou se o motor não puder provar que somente as partes permitidas mudam, a entrega deve parar sem substituir o workbook. Segurança e auditabilidade têm precedência sobre concluir a alteração a qualquer custo.

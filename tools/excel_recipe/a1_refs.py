@@ -1,0 +1,236 @@
+from __future__ import annotations
+
+import re
+from collections.abc import Callable
+
+from .coordinates import AxisTransform, CompactRowsTransform, RangeMoveTransform, TableColumnTransform
+from .errors import RecipeError
+from .util import make_cell_ref, make_range_ref, parse_cell_ref, parse_range_ref
+
+Transform = AxisTransform | RangeMoveTransform | TableColumnTransform | CompactRowsTransform
+
+_A1 = re.compile(
+    r"(?<![\w.\]\[])"
+    r"(?P<prefix>(?:(?P<sheet>'(?:[^']|'')+'|[\w.]+)!)?)"
+    r"(?P<start>\$?[A-Z]{1,3}\$?[1-9][0-9]*)"
+    r"(?::(?P<end>\$?[A-Z]{1,3}\$?[1-9][0-9]*))?"
+    r"(?![\w.\[])",
+    re.IGNORECASE | re.UNICODE,
+)
+_WHOLE_AXIS = re.compile(
+    r"(?<![\w.\]\[])"
+    r"(?P<prefix>(?:(?P<sheet>'(?:[^']|'')+'|[\w.]+)!)?)"
+    r"(?P<ref>(?:\$?[A-Z]{1,3}:\$?[A-Z]{1,3}|\$?[1-9][0-9]*:\$?[1-9][0-9]*))"
+    r"(?![\w.\[])",
+    re.IGNORECASE | re.UNICODE,
+)
+_UNSAFE_DYNAMIC = re.compile(r"\b(INDIRECT|ADDRESS)\s*\(", re.IGNORECASE)
+_EXTERNAL = re.compile(r"\[[^\]]+\][^!]*!", re.IGNORECASE)
+
+
+def rewrite_formula_a1(
+    expression: str,
+    context_sheet: str,
+    transform: Transform,
+) -> tuple[str, bool, list[str]]:
+    blockers: list[str] = []
+    changed = False
+
+    dynamic = _UNSAFE_DYNAMIC.search(expression)
+    if dynamic and (
+        context_sheet.casefold() == transform.sheet.casefold()
+        or transform.sheet.casefold() in expression.casefold()
+    ):
+        blockers.append("fórmula usa referência dinâmica INDIRECT/ADDRESS no contexto estrutural afetado")
+    if _EXTERNAL.search(expression):
+        blockers.append("fórmula contém referência externa de workbook")
+
+    def detect_unsupported(segment: str) -> str:
+        for match in _WHOLE_AXIS.finditer(segment):
+            raw_sheet = match.group("sheet")
+            reference_sheet = _sheet_name(raw_sheet) if raw_sheet else context_sheet
+            if reference_sheet.casefold() == transform.sheet.casefold():
+                blockers.append(
+                    f"referência de linha/coluna inteira {match.group(0)!r} não é regravada pela V3A"
+                )
+        return segment
+
+    _map_double_quoted(expression, detect_unsupported)
+
+    def rewrite_segment(segment: str) -> str:
+        nonlocal changed
+
+        def repl(match: re.Match[str]) -> str:
+            nonlocal changed
+            raw_sheet = match.group("sheet")
+            reference_sheet = _sheet_name(raw_sheet) if raw_sheet else context_sheet
+            if reference_sheet.casefold() != transform.sheet.casefold():
+                return match.group(0)
+            start = _strip_dollars(match.group("start"))
+            end_raw = match.group("end")
+            ref = start if end_raw is None else f"{start}:{_strip_dollars(end_raw)}"
+            try:
+                if end_raw is None:
+                    new_ref = transform.transform_cell_ref(start)
+                    if new_ref is None:
+                        blockers.append(f"referência {match.group(0)!r} aponta para célula removida")
+                        return match.group(0)
+                    relation = "shifted" if new_ref != start else "unaffected"
+                else:
+                    override = _local_range_override(ref, transform)
+                    if override is not None:
+                        new_ref, relation = override
+                    elif isinstance(transform, RangeMoveTransform) and _encloses_move(ref, transform):
+                        return match.group(0)
+                    else:
+                        result = transform.transform_range(ref)
+                        new_ref = result.ref
+                        relation = result.relation
+                    if relation == "partial":
+                        blockers.append(f"range {match.group(0)!r} cruza parcialmente a transformação")
+                        return match.group(0)
+                    if new_ref is None:
+                        blockers.append(f"range {match.group(0)!r} foi totalmente removido")
+                        return match.group(0)
+            except RecipeError as exc:
+                blockers.append(str(exc))
+                return match.group(0)
+            if relation == "unaffected" or new_ref == ref:
+                return match.group(0)
+            changed = True
+            prefix = match.group("prefix") or ""
+            if end_raw is None:
+                return prefix + _restore_cell_dollars(match.group("start"), new_ref)
+            new_start, new_end = new_ref.split(":")
+            return (
+                prefix
+                + _restore_cell_dollars(match.group("start"), new_start)
+                + ":"
+                + _restore_cell_dollars(end_raw, new_end)
+            )
+
+        return _A1.sub(repl, segment)
+
+    rewritten = _map_double_quoted(expression, rewrite_segment)
+    return rewritten, changed, sorted(set(blockers))
+
+
+def rewrite_simple_ref(ref: str, transform: Transform, *, allow_partial: bool = False) -> tuple[str | None, str]:
+    clean = ref.replace("$", "")
+    if ":" not in clean:
+        result = transform.transform_cell_ref(clean)
+        return result, "removed" if result is None else ("shifted" if result != clean else "unaffected")
+    override = _local_range_override(clean, transform)
+    if override is not None:
+        return override
+    if isinstance(transform, RangeMoveTransform) and _encloses_move(clean, transform):
+        return clean, "unaffected"
+    change = transform.transform_range(clean)
+    if change.relation == "partial" and not allow_partial:
+        raise RecipeError(f"Range {ref!r} cruza parcialmente a transformação.")
+    return change.ref, change.relation
+
+
+def rewrite_sqref(value: str, transform: Transform, *, allow_partial: bool = False) -> tuple[str, bool]:
+    refs = value.split()
+    output: list[str] = []
+    changed = False
+    for ref in refs:
+        new_ref, _ = rewrite_simple_ref(ref, transform, allow_partial=allow_partial)
+        if new_ref is None:
+            changed = True
+            continue
+        output.append(new_ref)
+        changed = changed or new_ref != ref.replace("$", "")
+    if not output:
+        raise RecipeError(f"Transformação remove integralmente o range {value!r}.")
+    return " ".join(output), changed
+
+
+def ref_intersects(ref: str, other: str) -> bool:
+    a = parse_range_ref(_as_range(ref))
+    b = parse_range_ref(_as_range(other))
+    return not (a[2] < b[0] or a[0] > b[2] or a[3] < b[1] or a[1] > b[3])
+
+
+def ref_contains(outer: str, inner: str) -> bool:
+    a = parse_range_ref(_as_range(outer))
+    b = parse_range_ref(_as_range(inner))
+    return a[0] <= b[0] and b[2] <= a[2] and a[1] <= b[1] and b[3] <= a[3]
+
+
+def _local_range_override(ref: str, transform: Transform) -> tuple[str, str] | None:
+    clean = _as_range(ref)
+    if isinstance(transform, TableColumnTransform):
+        old = _as_range(transform.table_ref)
+        srow, scol, erow, ecol = parse_range_ref(old)
+        new_end = ecol + 1 if transform.mode == "insert" else ecol - 1
+        new = make_range_ref(srow, scol, erow, new_end)
+        if clean == old:
+            return new, "expanded" if transform.mode == "insert" else "contracted"
+        if ref_contains(clean, old) and ref_contains(clean, new):
+            return clean, "unaffected"
+    if isinstance(transform, CompactRowsTransform):
+        old = _as_range(transform.table_ref)
+        srow, scol, erow, ecol = parse_range_ref(old)
+        new = make_range_ref(srow, scol, erow - len(transform.removed_rows), ecol)
+        if clean == old:
+            return new, "contracted"
+        if ref_contains(clean, old):
+            return clean, "unaffected"
+    return None
+
+
+def _encloses_move(ref: str, transform: RangeMoveTransform) -> bool:
+    return ref_contains(ref, transform.source) and ref_contains(ref, transform.destination_range)
+
+
+def _as_range(ref: str) -> str:
+    clean = ref.replace("$", "")
+    return clean if ":" in clean else f"{clean}:{clean}"
+
+
+def _strip_dollars(ref: str) -> str:
+    return ref.replace("$", "").upper()
+
+
+def _restore_cell_dollars(template: str, cell_ref: str) -> str:
+    row, column = parse_cell_ref(cell_ref)
+    letters = make_cell_ref(1, column)[:-1]
+    col_absolute = template.startswith("$")
+    row_absolute = "$" in template[1 if col_absolute else 0 :]
+    return ("$" if col_absolute else "") + letters + ("$" if row_absolute else "") + str(row)
+
+
+def _sheet_name(raw: str) -> str:
+    if raw.startswith("'") and raw.endswith("'"):
+        return raw[1:-1].replace("''", "'")
+    return raw
+
+
+def _map_double_quoted(expression: str, transform: Callable[[str], str]) -> str:
+    output: list[str] = []
+    buffer: list[str] = []
+    quoted = False
+    index = 0
+    while index < len(expression):
+        char = expression[index]
+        if char == '"':
+            if quoted and index + 1 < len(expression) and expression[index + 1] == '"':
+                buffer.append('""')
+                index += 2
+                continue
+            if buffer:
+                segment = "".join(buffer)
+                output.append(segment if quoted else transform(segment))
+                buffer.clear()
+            quoted = not quoted
+            output.append(char)
+            index += 1
+            continue
+        buffer.append(char)
+        index += 1
+    if buffer:
+        segment = "".join(buffer)
+        output.append(segment if quoted else transform(segment))
+    return "".join(output)

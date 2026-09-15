@@ -6,12 +6,18 @@ from .dependencies import DependencyScanner
 from .errors import RecipeError
 from .formulas import FormulaEditor
 from .refactor import RefactorEngine
+from .structural import StructuralEngine
+from .structural_plan import StructuralPlanner
 from .table_structure import TableStructureEditor
 from .tables import TableManager
 from .util import parse_range_ref
 from .workbook import WorkbookContext
 
 STRUCTURAL_RENAMES = {"table.rename", "table.rename_column"}
+V3_MUTATIONS = {
+    "sheet.insert_rows", "sheet.delete_rows", "sheet.insert_columns", "sheet.delete_columns",
+    "range.move", "table.insert_column", "table.delete_column", "table.compact_rows",
+}
 
 
 class OperationRunner:
@@ -20,14 +26,24 @@ class OperationRunner:
         self.tables = TableManager(workbook)
         self.structure = TableStructureEditor(workbook, self.tables)
         self.formulas = FormulaEditor(workbook)
-        self.dependencies = DependencyScanner(workbook, repo_root or Path.cwd())
+        root = repo_root or Path.cwd()
+        self.dependencies = DependencyScanner(workbook, root)
         self.refactor = RefactorEngine(workbook)
+        self.structural_planner = StructuralPlanner(workbook, root)
+        self.structural = StructuralEngine(workbook, self.structural_planner)
         self._clean_plans: dict[tuple[str, str | None], dict] = {}
+        self._structural_clean_plan: dict | None = None
         self.applied: list[dict] = []
 
     def run_all(self, operations: list[dict]) -> None:
-        if sum(operation.get("op") in STRUCTURAL_RENAMES for operation in operations) > 1:
+        renames = sum(operation.get("op") in STRUCTURAL_RENAMES for operation in operations)
+        physical = sum(operation.get("op") in V3_MUTATIONS for operation in operations)
+        if renames > 1:
             raise RecipeError("V2 permite apenas um refactor estrutural por receita.")
+        if physical > 1:
+            raise RecipeError("V3A permite apenas uma transformação física por receita.")
+        if renames and physical:
+            raise RecipeError("Rename V2 e transformação física V3A não podem ser compostos na mesma receita.")
         for index, operation in enumerate(operations):
             try:
                 detail = self.run(operation)
@@ -54,6 +70,17 @@ class OperationRunner:
             report = self._dependency_report(operation, require_clean=True)
             self._clean_plans[(report["table"], report["column"])] = report
             return {"dependency_report": report}
+        elif op == "structural.plan":
+            return {"structural_plan": self.structural_planner.plan(operation)}
+        elif op == "structural.assert_clean":
+            report = self.structural_planner.plan(operation)
+            self.structural_planner.assert_clean(report)
+            self._structural_clean_plan = report
+            return {"structural_plan": report}
+        elif op in V3_MUTATIONS:
+            if self._structural_clean_plan is None:
+                raise RecipeError(f"{op} exige structural.assert_clean anterior na mesma receita.")
+            return self.structural.apply(operation, self._structural_clean_plan)
         elif op == "table.rename":
             old = self._text(operation, "table")
             return self.refactor.rename_table(old, self._text(operation, "new_name"), self._require_plan(old, None))

@@ -24,4 +24,4 @@ MAX_ROWS_PER_OPERATION = 5_000
 
 DEFAULT_WORKBOOK = "anexos/financeiro/carro chefe.xlsm"
 DEFAULT_SNAPSHOT_SCRIPT = "tools/excel_snapshot/export.py"
-TOOL_VERSION = "2.0.0"
+TOOL_VERSION = "3.0.0"
