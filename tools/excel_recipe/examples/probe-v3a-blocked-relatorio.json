@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "probe-v3a-blocked-relatorio",
+  "id": "probe-v3a-blocked-configuracoes",
   "workbook": {
     "path": "anexos/financeiro/carro chefe.xlsm",
     "expected_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
@@ -10,8 +10,8 @@
     {
       "op": "structural.plan",
       "action": "sheet.insert_rows",
-      "sheet": "Relatório",
-      "at": 10,
+      "sheet": "configurações",
+      "at": 12,
       "count": 1
     }
   ]
