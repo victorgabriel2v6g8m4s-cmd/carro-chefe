@@ -10,4 +10,4 @@ O fluxo esperado é: analisar `anexos/financeiro/snapshot/`, criar a receita na 
 
 Receipts ficam em `anexos/financeiro/recipes/receipts/` e são gerados pelo motor. Nunca os edite manualmente.
 
-Consulte `tools/excel_recipe/README.md`, `docs/EXCEL_RECIPE_V1.md` e, para agentes, `docs/EXCEL_RECIPE_AGENT_GUIDE.md`.
+Consulte `tools/excel_recipe/README.md`, `docs/tecnologia/EXCEL_RECIPE_V1.md` e, para agentes, `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md`.
