@@ -58,7 +58,7 @@ Se uma próxima peça precisar ser comparada por versão criativa/local/oferta, 
 
 ## 3. Benefício confirmado da campanha
 
-O proprietário confirmou que clientes que se cadastrarem por esta campanha terão **acesso VIP a promoções, cupons e outros benefícios**.
+O proprietário confirmou que clientes que se cadastrarem por esta campanha terão **acesso à cupons e promoções exclusivas**.
 
 A implementação pode comunicar essa promessa para acessos identificados por:
 
@@ -111,7 +111,7 @@ Quando o visitante se cadastrar, o lead pode guardar:
 - `ccVariant`;
 - `firstSeenAt`.
 
-A origem inicial deve ser preservada mesmo que o usuário navegue por outras seções antes do cadastro.
+A origem da entrada atual é preservada ao navegar por seções e links internos com os parâmetros. Desde a revisão de 14/09/2026, uma nova entrada sem campanha é direta, mesmo após visitar uma campanha na mesma aba; a URL atual prevalece sobre atribuição armazenada anteriormente. Isso evita classificar visita direta como campanha.
 
 Para o QR atual, um novo lead criado nessa sessão deve ficar conceitualmente com:
 
@@ -121,7 +121,7 @@ ccCampaign: banner
 ccVariant: null
 ```
 
-A deduplicação continua preservando first-touch. Portanto, a interface não deve afirmar que um lead duplicado foi originalmente adquirido pela campanha `banner` sem verificar essa origem.
+A deduplicação preserva a origem da primeira inscrição bem-sucedida (não existe histórico completo de first-touch de navegação). Portanto, a interface não deve afirmar que um lead duplicado foi originalmente adquirido pela campanha `banner` sem verificar essa origem.
 
 Se futuramente houver necessidade de comparar first-touch e last-touch, isso deve ser adicionado explicitamente; não alterar silenciosamente a semântica dos campos acima.
 
@@ -169,7 +169,7 @@ Variante: não informada
 Mídia: banner vertical externo
 Status: homologado para uso
 Destino: /
-Benefício associado: acesso VIP a promoções, cupons e outros benefícios
+Benefício associado: acesso à cupons e promoções exclusivas
 ```
 
 O banner de referência fornecido pelo proprietário apresenta a marca Carro Chefe, o Chefão de 30 cm, Instagram `@carrochefe_cg`, WhatsApp oficial e o QR Code da campanha.
