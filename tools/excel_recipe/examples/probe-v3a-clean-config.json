@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "id": "probe-v3a-clean-config",
+  "id": "probe-v3a-clean-custos-fixos",
   "workbook": {
     "path": "anexos/financeiro/carro chefe.xlsm",
     "expected_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
@@ -10,8 +10,8 @@
     {
       "op": "structural.plan",
       "action": "sheet.insert_rows",
-      "sheet": "configurações",
-      "at": 12,
+      "sheet": "Custos Fixos",
+      "at": 13,
       "count": 1
     }
   ]
