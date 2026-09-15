@@ -99,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          .runtime/xlsm-snapshot-venv/bin/python tools/excel_snapshot/export.py --check --allow-bootstrap
+          .runtime/xlsm-snapshot-venv/bin/python tools/excel_snapshot/export.py --check
 
   windows-supervisor:
     name: Windows Supervisor
