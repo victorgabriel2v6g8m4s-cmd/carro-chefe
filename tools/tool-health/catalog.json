@@ -70,14 +70,14 @@
     },
     {
       "id": "excel-recipe",
-      "name": "Excel Recipe Engine V2",
+      "name": "Excel Recipe Engine V3A",
       "path": "tools/excel_recipe",
       "maturity": "complete",
       "platforms": ["linux", "darwin", "win32"],
       "commands": {
-        "linux": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json",
-        "darwin": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json",
-        "win32": "python -m unittest discover -s tools/excel_recipe/tests -p \"test_*.py\" -v && python -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json"
+        "linux": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json && python3 -m tools.excel_recipe.probe_v3a_real",
+        "darwin": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json && python3 -m tools.excel_recipe.probe_v3a_real",
+        "win32": "python -m unittest discover -s tools/excel_recipe/tests -p \"test_*.py\" -v && python -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json && python -m tools.excel_recipe.probe_v3a_real"
       },
       "timeoutMs": 180000
     },
