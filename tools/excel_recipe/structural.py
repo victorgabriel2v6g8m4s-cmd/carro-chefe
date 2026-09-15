@@ -125,6 +125,22 @@ class StructuralEngine:
                 if scol <= column <= ecol:
                     source_cells.append((row_number, column, copy.deepcopy(cell)))
                     row.remove(cell)
+
+        cleared_targets = 0
+        drow, dcol, dend_row, dend_col = parse_range_ref(transform.destination_range)
+        for row in list(sheet_data.findall("x:row", NS)):
+            row_number = int(row.get("r", "0"))
+            if not (drow <= row_number <= dend_row):
+                continue
+            for cell in list(row.findall("x:c", NS)):
+                ref = cell.get("r")
+                if not ref:
+                    continue
+                _, column = parse_cell_ref(ref)
+                if dcol <= column <= dend_col:
+                    row.remove(cell)
+                    cleared_targets += 1
+
         for row_number, column, cell in source_cells:
             new_row, new_col = transform.transform_cell(row_number, column)
             cell.set("r", make_cell_ref(new_row, new_col))
@@ -132,7 +148,7 @@ class StructuralEngine:
             target_row.append(cell)
             self._sort_cells(target_row)
         self.workbook.save_sheet(transform.sheet)
-        return len(source_cells)
+        return len(source_cells) + cleared_targets
 
     def _mutate_table_columns(self, transform: TableColumnTransform) -> int:
         root = self.workbook.sheet_root(transform.sheet)
