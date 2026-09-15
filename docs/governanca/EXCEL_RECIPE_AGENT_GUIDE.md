@@ -66,6 +66,10 @@ python -m tools.excel_recipe.sync
 
 Se houver edição local do `.xlsm`, o sync deve parar. O agente nunca deve instruir `reset --hard`, sobrescrita manual do arquivo ou criação de cópias como solução automática para divergência.
 
+## Checklist rápido para agentes
+
+Antes de abrir ou atualizar o PR, confirme: a branch partiu da `main` atual; a receita aponta para o SHA correto; o VBA SHA foi fixado; há asserts proporcionais ao risco; `validate` passou; `apply` ou `--dry-run` produziu apenas as mudanças esperadas; snapshot e receipt foram revisados; nenhuma parte imutável mudou; e os checks do CI estão verdes.
+
 ## Regra de parada
 
 Se a alteração desejada exigir recurso fora da versão atual, ou se o motor não conseguir provar que somente as partes permitidas foram modificadas, a entrega deve parar sem substituir o workbook. Segurança e auditabilidade têm precedência sobre completar a edição a qualquer custo.
