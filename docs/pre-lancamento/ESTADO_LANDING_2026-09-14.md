@@ -16,14 +16,14 @@ A aplicação local apresenta o Chefão inteiro, recortado, sem texto ou logo de
 | Convite | Cartão “Achou o QR. Encontrou o acesso à cupons e promoções exclusivas.” | Convite simples para acompanhar a abertura |
 | Ação principal | “Quero meu acesso à cupons e promoções exclusivas” | “Me avise quando abrir” |
 | Formulário | Acesso à cupons e promoções exclusivas | Novidades da inauguração e promoções |
-| Confirmação nova | Confirma recebimento do cadastro exclusivo | Confirma entrada na lista |
+| Confirmação nova | Confirma recebimento do cadastro da campanha | Confirma entrada na lista |
 | Perguntas frequentes | Explica o benefício da campanha | Explica o que a lista oferece |
 
 Não foram inventados desconto, brinde, prazo, limite de vagas ou data de abertura. O visitante direto continua recebendo uma experiência acolhedora. O visitante do QR percebe um convite especial, condicionado ao cadastro naquela campanha.
 
-A URL atual passou a determinar a experiência: direto → QR → direto funciona na mesma aba. O cache antigo de atribuição deixou de sobrepor a URL. Links internos de privacidade e retorno preservam os parâmetros; `/welcome` mantém a campanha ao redirecionar. Parâmetros inválidos não ativam exclusivo. Uma URL de campanha pode ser compartilhada; `qr_scan` significa entrada com identificador de QR, não prova uma leitura física por câmera.
+A URL atual passou a determinar a experiência: direto → QR → direto funciona na mesma aba. O cache antigo de atribuição deixou de sobrepor a URL. Links internos de privacidade e retorno preservam os parâmetros; `/welcome` mantém a campanha ao redirecionar. Parâmetros inválidos não ativam a oferta da campanha. Uma URL de campanha pode ser compartilhada; `qr_scan` significa entrada com identificador de QR, não prova uma leitura física por câmera.
 
-O cadastro duplicado mantém a origem da primeira inscrição e não promete converter automaticamente um cadastro anterior em exclusivo. Participação de clientes já cadastrados em novas campanhas precisa de regra e modelo próprios, previstos no dashboard.
+O cadastro duplicado mantém a origem da primeira inscrição e não promete incluir automaticamente um cadastro anterior na nova campanha. Participação de clientes já cadastrados em novas campanhas precisa de regra e modelo próprios, previstos no dashboard.
 
 ## Evidências de responsividade e uso
 
@@ -53,7 +53,7 @@ Ambiente: `http://127.0.0.1:4193`, mesma aplicação/API do repositório; banco 
 | Cenário exercitado | Resultado observado |
 |---|---|
 | Direto, analytics recusado | Uma inscrição ativa, campanha/QR nulos, consentimento e versões gravados; zero eventos antes de permitir medição |
-| QR-001/banner | Inscrição ativa com QR e campanha corretos; confirmação exclusivo na UI |
+| QR-001/banner | Inscrição ativa com QR e campanha corretos; confirmação da campanha na UI |
 | Mesmo telefone novamente | Resposta `duplicate`, sem nova linha e sem trocar a origem |
 | Telefone vazio ou sem aceite | Erro acessível; envio válido não prossegue |
 | Falha de rede simulada | Mensagem humana e “Tentar novamente”; após reconectar, concluiu sem redigitar os dados |
@@ -73,7 +73,7 @@ As reações abaixo são uma simulação de jornada, não pesquisa com consumido
 | Vejo o banner na avenida | “Que lanche é esse? Quero ver melhor.” | Foto inteira pode despertar apetite rapidamente | Verificar legibilidade e distância real do QR na peça impressa; não foi teste de câmera em campo |
 | Escaneio hoje o domínio público | “A marca está chegando; posso deixar meu número.” | Já existe landing com formulário e identidade da marca | Publicar a apresentação atual do Chefão e homologar persistência na produção |
 | Entro na landing corrigida | “É um lanche com espeto dentro da baguete.” | Foto grande, nome e explicação curta | Confirmar aparência da foto tratada com o produto servido |
-| Percebo a campanha | “Boa, achei um convite especial.” | exclusivo identificado sem exigir Instagram | Benefício ainda amplo; aprovar oferta concreta e suas regras quando disponíveis |
+| Percebo a campanha | “Boa, achei um convite especial.” | Convite exclusivo sem exigir Instagram | Benefício ainda amplo; aprovar oferta concreta e suas regras quando disponíveis |
 | Entendo a pré-inauguração | “Ainda não posso pedir; posso receber o aviso.” | Não cria expectativa de pedido imediato | Data, endereço completo e referência de esquina farão falta até confirmação |
 | Informo WhatsApp | “Só um dado, consigo fazer rápido.” | Um campo, botão grande, aceite explícito | Leitura do aceite pode ser demorada na rua; manter clareza sem esconder a finalidade |
 | Cadastro conclui ou já existe | “Funcionou. Agora espero o aviso.” | Resposta clara, sem exigir outra ação | Falta operação comprovada de boas-vindas e entrega dos benefícios; gravar não significa enviar mensagem |
