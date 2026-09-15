@@ -1,0 +1,530 @@
+{
+  "calculation": {
+    "force_full_calc": null,
+    "full_calc_on_load": true,
+    "mode": null
+  },
+  "defined_names": [
+    {
+      "hidden": false,
+      "local_sheet_id": null,
+      "name": "ListaItensFicha",
+      "value": "EMPILHARV(insumos[item],CaProdutos[Item])"
+    }
+  ],
+  "properties": {
+    "category": null,
+    "contentStatus": null,
+    "created": "2026-03-24T22:33:58",
+    "creator": "Datwork",
+    "description": null,
+    "identifier": null,
+    "keywords": null,
+    "language": null,
+    "lastModifiedBy": "Datwork",
+    "modified": "2026-09-11T16:21:37",
+    "subject": null,
+    "title": null,
+    "version": null
+  },
+  "sheets": [
+    {
+      "columns": 18,
+      "name": "configurações",
+      "path": "sheets/configuracoes.csv",
+      "rows": 11,
+      "state": "visible",
+      "tables": [
+        "ConfPrec",
+        "métodos",
+        "PrevVendas",
+        "Variáveis"
+      ]
+    },
+    {
+      "columns": 26,
+      "name": "ingredientes",
+      "path": "sheets/ingredientes.csv",
+      "rows": 263,
+      "state": "visible",
+      "tables": [
+        "Ingredientes"
+      ]
+    },
+    {
+      "columns": 7,
+      "name": "Embalamento",
+      "path": "sheets/Embalamento.csv",
+      "rows": 48,
+      "state": "visible",
+      "tables": [
+        "Embalamento"
+      ]
+    },
+    {
+      "columns": 11,
+      "name": "Embalagens",
+      "path": "sheets/Embalagens.csv",
+      "rows": 122,
+      "state": "visible",
+      "tables": [
+        "Embalagens"
+      ]
+    },
+    {
+      "columns": 11,
+      "name": "insumos",
+      "path": "sheets/insumos.csv",
+      "rows": 122,
+      "state": "visible",
+      "tables": [
+        "insumos"
+      ]
+    },
+    {
+      "columns": 13,
+      "name": "Cadastro de Produtos",
+      "path": "sheets/Cadastro_de_Produtos.csv",
+      "rows": 47,
+      "state": "visible",
+      "tables": [
+        "CaProdutos"
+      ]
+    },
+    {
+      "columns": 7,
+      "name": "Estoque",
+      "path": "sheets/Estoque.csv",
+      "rows": 30,
+      "state": "visible",
+      "tables": [
+        "estoque"
+      ]
+    },
+    {
+      "columns": 11,
+      "name": "Pedido",
+      "path": "sheets/Pedido.csv",
+      "rows": 79,
+      "state": "visible",
+      "tables": [
+        "Tabela14"
+      ]
+    },
+    {
+      "columns": 4,
+      "name": "Custos Fixos",
+      "path": "sheets/Custos_Fixos.csv",
+      "rows": 12,
+      "state": "visible",
+      "tables": [
+        "CFMensais"
+      ]
+    },
+    {
+      "columns": 3,
+      "name": "Despesas Variáveis",
+      "path": "sheets/Despesas_Variaveis.csv",
+      "rows": 21,
+      "state": "visible",
+      "tables": [
+        "DespesasVariaveis"
+      ]
+    },
+    {
+      "columns": 12,
+      "name": "Precificação",
+      "path": "sheets/Precificacao.csv",
+      "rows": 42,
+      "state": "visible",
+      "tables": [
+        "Precificação"
+      ]
+    },
+    {
+      "columns": 8,
+      "name": "simulação pós-vendas",
+      "path": "sheets/simulacao_pos-vendas.csv",
+      "rows": 21,
+      "state": "visible",
+      "tables": [
+        "retorno"
+      ]
+    },
+    {
+      "columns": 7,
+      "name": "Compras",
+      "path": "sheets/Compras.csv",
+      "rows": 51,
+      "state": "visible",
+      "tables": [
+        "compras"
+      ]
+    },
+    {
+      "columns": 13,
+      "name": "Vendas",
+      "path": "sheets/Vendas.csv",
+      "rows": 137,
+      "state": "visible",
+      "tables": [
+        "vendas"
+      ]
+    },
+    {
+      "columns": 18,
+      "name": "Relatório",
+      "path": "sheets/Relatorio.csv",
+      "rows": 164,
+      "state": "visible",
+      "tables": [
+        "relatório",
+        "Tabela17",
+        "Tabela18"
+      ]
+    },
+    {
+      "columns": 15,
+      "name": "Fluxo de Caixa",
+      "path": "sheets/Fluxo_de_Caixa.csv",
+      "rows": 125,
+      "state": "visible",
+      "tables": [
+        "Tabela19"
+      ]
+    }
+  ],
+  "source": "anexos/financeiro/carro chefe.xlsm",
+  "source_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+  "tables": [
+    {
+      "columns": [
+        "ID",
+        "Item",
+        "Adicional 1",
+        "Adicional 2",
+        "Adicional 3",
+        "Variação",
+        "Tipo",
+        "Cat. ABC",
+        "Custo do Lote",
+        "Un. Por Lote",
+        "Custo de Produção (1 un.)",
+        "Custo Total (1 un.)"
+      ],
+      "name": "CaProdutos",
+      "path": "tables/CaProdutos.json",
+      "ref": "B4:M47",
+      "row_count": 43,
+      "sheet": "Cadastro de Produtos"
+    },
+    {
+      "columns": [
+        "Descrição",
+        "Valor",
+        "Porcentagem"
+      ],
+      "name": "CFMensais",
+      "path": "tables/CFMensais.json",
+      "ref": "B4:D12",
+      "row_count": 8,
+      "sheet": "Custos Fixos"
+    },
+    {
+      "columns": [
+        "Data",
+        "ID",
+        "Item",
+        "Qtd.",
+        "Medida",
+        "Valor"
+      ],
+      "name": "compras",
+      "path": "tables/compras.json",
+      "ref": "B4:G51",
+      "row_count": 47,
+      "sheet": "Compras"
+    },
+    {
+      "columns": [
+        "Rateio de Custos Fixos",
+        "Despesas Variáveis",
+        "Margem Cat. A",
+        "Margem Cat. B",
+        "Margem Cat. C",
+        "C.F nos custos totais?"
+      ],
+      "name": "ConfPrec",
+      "path": "tables/ConfPrec.json",
+      "ref": "G4:L5",
+      "row_count": 1,
+      "sheet": "configurações"
+    },
+    {
+      "columns": [
+        "Item",
+        "Porcentagem"
+      ],
+      "name": "DespesasVariaveis",
+      "path": "tables/DespesasVariaveis.json",
+      "ref": "B4:C21",
+      "row_count": 17,
+      "sheet": "Despesas Variáveis"
+    },
+    {
+      "columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ],
+      "name": "Embalagens",
+      "path": "tables/Embalagens.json",
+      "ref": "B4:K122",
+      "row_count": 118,
+      "sheet": "Embalagens"
+    },
+    {
+      "columns": [
+        "ID",
+        "Produto",
+        "Embalagem",
+        "Quantidade",
+        "Medida",
+        "Preço"
+      ],
+      "name": "Embalamento",
+      "path": "tables/Embalamento.json",
+      "ref": "B4:G48",
+      "row_count": 44,
+      "sheet": "Embalamento"
+    },
+    {
+      "columns": [
+        "ID",
+        "Item",
+        "Quantidade por pacote",
+        "Quantidade",
+        "Estimativa",
+        "Medida"
+      ],
+      "name": "estoque",
+      "path": "tables/estoque.json",
+      "ref": "B4:G30",
+      "row_count": 26,
+      "sheet": "Estoque"
+    },
+    {
+      "columns": [
+        "Produto",
+        "ID",
+        "item",
+        "qtd.",
+        "medida",
+        "Porções",
+        "preço"
+      ],
+      "name": "Ingredientes",
+      "path": "tables/Ingredientes.json",
+      "ref": "C4:I263",
+      "row_count": 259,
+      "sheet": "ingredientes"
+    },
+    {
+      "columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ],
+      "name": "insumos",
+      "path": "tables/insumos.json",
+      "ref": "B4:K122",
+      "row_count": 118,
+      "sheet": "insumos"
+    },
+    {
+      "columns": [
+        "Método",
+        "Desconto",
+        "Acréscimo"
+      ],
+      "name": "métodos",
+      "path": "tables/metodos.json",
+      "ref": "P4:R9",
+      "row_count": 5,
+      "sheet": "configurações"
+    },
+    {
+      "columns": [
+        "ID",
+        "Item",
+        "Preço de Custo",
+        "Preço de Venda",
+        "Preço Definitivo",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Incluir C.F?"
+      ],
+      "name": "Precificação",
+      "path": "tables/Precificacao.json",
+      "ref": "B4:I42",
+      "row_count": 38,
+      "sheet": "Precificação"
+    },
+    {
+      "columns": [
+        "Máximo de vendas",
+        "Mínimo de vendas",
+        "Faturamento Alvo",
+        "Faturamento Mínimo"
+      ],
+      "name": "PrevVendas",
+      "path": "tables/PrevVendas.json",
+      "ref": "B4:E5",
+      "row_count": 1,
+      "sheet": "configurações"
+    },
+    {
+      "columns": [
+        "Faturamento",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Reestoque",
+        "Custos Fixos"
+      ],
+      "name": "relatório",
+      "path": "tables/relatorio.json",
+      "ref": "B4:F5",
+      "row_count": 1,
+      "sheet": "Relatório"
+    },
+    {
+      "columns": [
+        "Qtd. Vendida",
+        "ID",
+        "Item",
+        "Faturamento",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Rateio de C.F"
+      ],
+      "name": "retorno",
+      "path": "tables/retorno.json",
+      "ref": "B4:H21",
+      "row_count": 17,
+      "sheet": "simulação pós-vendas"
+    },
+    {
+      "columns": [
+        "ID",
+        "produto",
+        "Item",
+        "Preço",
+        "Quantidade Produzida",
+        "Pedido Mínimo",
+        "Pedido",
+        "Arredondar",
+        "Total",
+        "Total Arredondado"
+      ],
+      "name": "Tabela14",
+      "path": "tables/Tabela14.json",
+      "ref": "B4:K37",
+      "row_count": 33,
+      "sheet": "Pedido"
+    },
+    {
+      "columns": [
+        "ID",
+        "item",
+        "quantidade",
+        "medida",
+        "valor"
+      ],
+      "name": "Tabela17",
+      "path": "tables/Tabela17.json",
+      "ref": "H4:L164",
+      "row_count": 160,
+      "sheet": "Relatório"
+    },
+    {
+      "columns": [
+        "Item",
+        "valor"
+      ],
+      "name": "Tabela18",
+      "path": "tables/Tabela18.json",
+      "ref": "N4:O12",
+      "row_count": 8,
+      "sheet": "Relatório"
+    },
+    {
+      "columns": [
+        "Data",
+        "Investimento",
+        "Pró-Labore",
+        "Vendas",
+        "Entradas",
+        "Saídas",
+        "Bruto",
+        "Líquido",
+        "Faturamento",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Reestoque",
+        "Custos Fixos",
+        "Caixa"
+      ],
+      "name": "Tabela19",
+      "path": "tables/Tabela19.json",
+      "ref": "B4:O125",
+      "row_count": 121,
+      "sheet": "Fluxo de Caixa"
+    },
+    {
+      "columns": [
+        "Medidas"
+      ],
+      "name": "Variáveis",
+      "path": "tables/Variaveis.json",
+      "ref": "N4:N11",
+      "row_count": 7,
+      "sheet": "configurações"
+    },
+    {
+      "columns": [
+        "data",
+        "ID",
+        "Item",
+        "Adicional 1",
+        "Adicional 2",
+        "Adicional 3",
+        "Qtd.",
+        "Valor",
+        "Método de Pagamento",
+        "Recebimento",
+        "Lucro Bruto",
+        "Lucro Líquido"
+      ],
+      "name": "vendas",
+      "path": "tables/vendas.json",
+      "ref": "B4:M137",
+      "row_count": 133,
+      "sheet": "Vendas"
+    }
+  ],
+  "tool_version": "1.0.0"
+}

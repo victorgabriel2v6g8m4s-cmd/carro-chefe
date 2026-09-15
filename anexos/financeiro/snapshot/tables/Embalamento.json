@@ -1,0 +1,369 @@
+{
+  "columns": [
+    "ID",
+    "Produto",
+    "Embalagem",
+    "Quantidade",
+    "Medida",
+    "Preço"
+  ],
+  "display_name": "Embalamento",
+  "name": "Embalamento",
+  "ref": "B4:G48",
+  "rows": [
+    [
+      1,
+      "Carro Chefe Simples",
+      "Isopor Embalagem de Cachorro Quente Grande",
+      1,
+      "Unidades",
+      1
+    ],
+    [
+      1,
+      "Carro Chefe Simples",
+      "Guardanapo",
+      2,
+      "Unidades",
+      0.4
+    ],
+    [
+      1,
+      "Carro Chefe Simples",
+      "Papel Toalha",
+      0.3,
+      "Metros",
+      0.03
+    ],
+    [
+      1,
+      "Carro Chefe Simples",
+      "Ketchup Sachê",
+      6,
+      "Unidades",
+      0.30000000000000004
+    ],
+    [
+      3,
+      "Chefão",
+      "Isopor Embalagem de Cachorro Quente Grande",
+      1,
+      "Unidades",
+      1
+    ],
+    [
+      3,
+      "Chefão",
+      "Guardanapo",
+      2,
+      "Unidades",
+      0.4
+    ],
+    [
+      3,
+      "Chefão",
+      "Papel Toalha",
+      0.3,
+      "Metros",
+      0.03
+    ],
+    [
+      3,
+      "Chefão",
+      "Ketchup Sachê",
+      6,
+      "Unidades",
+      0.30000000000000004
+    ],
+    [
+      8,
+      "Espeto Simples",
+      "Isopor Embalagem de Cachorro Quente Grande",
+      1,
+      "Unidades",
+      1
+    ],
+    [
+      8,
+      "Espeto Simples",
+      "Guardanapo",
+      2,
+      "Unidades",
+      0.4
+    ],
+    [
+      8,
+      "Espeto Simples",
+      "Papel Toalha",
+      0.3,
+      "Metros",
+      0.03
+    ],
+    [
+      8,
+      "Espeto Simples",
+      "Ketchup Sachê",
+      2,
+      "Unidades",
+      0.1
+    ],
+    [
+      9,
+      "Espeto Completo",
+      "Isopor Embalagem de Cachorro Quente Grande",
+      1,
+      "Unidades",
+      1
+    ],
+    [
+      9,
+      "Espeto Completo",
+      "Guardanapo",
+      2,
+      "Unidades",
+      0.4
+    ],
+    [
+      9,
+      "Espeto Completo",
+      "Papel Toalha",
+      0.3,
+      "Metros",
+      0.03
+    ],
+    [
+      9,
+      "Espeto Completo",
+      "Ketchup Sachê",
+      2,
+      "Unidades",
+      0.1
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ],
+    [
+      "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
+      null,
+      null,
+      null,
+      "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
+      "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")"
+    ]
+  ],
+  "sheet": "Embalamento",
+  "totals_row_shown": false
+}

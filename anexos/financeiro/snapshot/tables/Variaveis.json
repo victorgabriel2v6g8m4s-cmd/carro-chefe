@@ -1,0 +1,33 @@
+{
+  "columns": [
+    "Medidas"
+  ],
+  "display_name": "Variáveis",
+  "name": "Variáveis",
+  "ref": "N4:N11",
+  "rows": [
+    [
+      "Unidades"
+    ],
+    [
+      "Quilos"
+    ],
+    [
+      "Gramas"
+    ],
+    [
+      "Litros"
+    ],
+    [
+      "ML"
+    ],
+    [
+      "Centímetros"
+    ],
+    [
+      "Metros"
+    ]
+  ],
+  "sheet": "configurações",
+  "totals_row_shown": false
+}

@@ -1,0 +1,399 @@
+{
+  "columns": [
+    "ID",
+    "Item",
+    "Preço de Custo",
+    "Preço de Venda",
+    "Preço Definitivo",
+    "Lucro Bruto",
+    "Lucro Líquido",
+    "Incluir C.F?"
+  ],
+  "display_name": "Precificação",
+  "name": "Precificação",
+  "ref": "B4:I42",
+  "rows": [
+    [
+      1,
+      "Carro Chefe Simples",
+      4.863898833883389,
+      14.865905248782887,
+      15,
+      6.5796302147408685,
+      3.742824659185313,
+      "Sim"
+    ],
+    [
+      2,
+      "Carro Chefe Com Cheddar",
+      0,
+      0,
+      null,
+      0,
+      -2.8368055555555554,
+      "Não"
+    ],
+    [
+      3,
+      "Chefão",
+      9.90558723968049,
+      24.772936897038143,
+      25,
+      9.644708060962188,
+      6.807902505406632,
+      "Sim"
+    ],
+    [
+      8,
+      "Espeto Simples",
+      6.773777777777779,
+      15.496340691251286,
+      8,
+      -2.8474384838758997,
+      -5.684244039431455,
+      "Não"
+    ],
+    [
+      9,
+      "Espeto Completo",
+      6.980448888888889,
+      15.902454094888759,
+      null,
+      -11.13171786642213,
+      -13.968523421977686,
+      "Não"
+    ],
+    [
+      10,
+      "Adc. Batata Palha",
+      0.37374999999999997,
+      0.734427195912753,
+      null,
+      -0.514099037138927,
+      -3.3509045926944823,
+      "Não"
+    ],
+    [
+      11,
+      "Adc. Cheddar",
+      1.14775,
+      2.255354686578896,
+      null,
+      -1.578748280605227,
+      -4.4155538361607825,
+      "Não"
+    ],
+    [
+      12,
+      "Adc. Mussarela",
+      3.3333333333333335,
+      6.550075325866248,
+      12,
+      7.4149472718936265,
+      4.578141716338071,
+      "Não"
+    ],
+    [
+      13,
+      "Adc. Parmesão",
+      7.775,
+      15.278050697583023,
+      16,
+      5.305364511691884,
+      2.468558956136329,
+      "Não"
+    ],
+    [
+      14,
+      "Adc. Queijo Ralado",
+      2.495,
+      4.902731381410887,
+      null,
+      -3.4319119669876206,
+      -6.2687175225431755,
+      "Não"
+    ],
+    [
+      15,
+      "Adc. Picles",
+      1.165,
+      2.2892513263902536,
+      null,
+      -1.6024759284731775,
+      -4.439281484028733,
+      "Não"
+    ],
+    [
+      16,
+      "Adc. Requeijão Cremoso",
+      0,
+      0,
+      null,
+      0,
+      -2.8368055555555554,
+      "Não"
+    ],
+    [
+      17,
+      "Adc. Maionese de Bacon",
+      0,
+      0,
+      null,
+      0,
+      -2.8368055555555554,
+      "Não"
+    ],
+    [
+      18,
+      "Adc. Espeto Bovino",
+      4.4,
+      8.646099430143448,
+      null,
+      -6.052269601100413,
+      -8.889075156655968,
+      "Não"
+    ],
+    [
+      23,
+      "Adc. Espeto Medalhão de Frango ",
+      8.125,
+      15.96580860679898,
+      null,
+      -11.176066024759285,
+      -14.01287158031484,
+      "Não"
+    ],
+    [
+      24,
+      "Adc. Espeto de Frango",
+      3.8000000000000003,
+      7.467085871487523,
+      null,
+      -5.226960110041266,
+      -8.063765665596822,
+      "Não"
+    ],
+    [
+      25,
+      "Adc. Espeto Linguiça",
+      3.8,
+      7.467085871487522,
+      null,
+      -5.226960110041265,
+      -8.06376566559682,
+      "Não"
+    ],
+    [
+      28,
+      "Adc. Espeto de Queijo Coalho",
+      5.5,
+      10.80762428767931,
+      null,
+      -7.565337001375516,
+      -10.402142556931071,
+      "Não"
+    ],
+    [
+      29,
+      "Adc. Espeto de Medalhão de Queijo",
+      12,
+      23.58027117311849,
+      1,
+      -15.506189821182943,
+      -18.3429953767385,
+      "Não"
+    ],
+    [
+      31,
+      "Adc. Azeitona Preta",
+      1.9565217391304348,
+      3.8446094303997547,
+      6,
+      3.308773398720172,
+      0.4719678431646166,
+      "Não"
+    ],
+    [
+      19,
+      "Porç. Vinagrete",
+      0.2066711111111111,
+      0.4061134036374752,
+      5,
+      4.715720617453767,
+      1.878915061898212,
+      "Não"
+    ],
+    [
+      20,
+      "Porç. Arroz",
+      0.3020277777777778,
+      0.593491408484531,
+      3,
+      2.584556014060828,
+      -0.2522495414947272,
+      "Não"
+    ],
+    [
+      21,
+      "Porç. Mandioca",
+      1.37375,
+      2.6994497936726276,
+      null,
+      -1.8896148555708392,
+      -4.726420411126394,
+      "Não"
+    ],
+    [
+      22,
+      "Porç. Farofa",
+      0.698,
+      1.3715857732363923,
+      null,
+      -0.9601100412654745,
+      -3.7969155968210297,
+      "Não"
+    ],
+    [
+      30,
+      "Suco de Cupuaçú 500ML",
+      0,
+      0,
+      null,
+      0,
+      -2.8368055555555554,
+      "Não"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "Não"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "Sim"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      0,
+      "#N/A",
+      "#N/A",
+      "=IFERROR(IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) / (1 - IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"A\", INDEX(ConfPrec[Margem Cat. A], 1), IF(INDEX(CaProdutos[Cat. ABC], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)) = \"B\", INDEX(ConfPrec[Margem Cat. B], 1), INDEX(ConfPrec[Margem Cat. C], 1)))), \"\") + IF(Precificação[[#This Row],[Incluir C.F?]] = \"Sim\", INDEX(ConfPrec[Rateio de Custos Fixos], 1), 0), \"\")",
+      null,
+      "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
+      "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
+      "#N/A"
+    ],
+    [
+      "Total",
+      null,
+      "#N/A",
+      185.8967525958492,
+      91,
+      -35.15619903931665,
+      -106.07633792820552,
+      null
+    ]
+  ],
+  "sheet": "Precificação",
+  "totals_row_shown": false
+}
