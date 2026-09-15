@@ -46,6 +46,17 @@ Estados: `aberto`, `mitigado`, `resolvido`, `aceito`.
 - **Tratamento:** `tool-health` não instala pacotes nem altera máquina por conta própria; o CI prepara venv isolado conforme `.github/workflows/ci.yml`.
 - **Owner:** `AG-DEV`.
 
+### BLOCK-TOOL-005 — Ambiente de validação local sem resolução para GitHub
+
+- **Data:** 2026-09-15
+- **Tipo:** recurso/rede
+- **Status:** mitigado
+- **Contexto:** implementação inicial do catálogo e `tool-health` na branch `chore/tool-catalog-health`.
+- **Impacto:** o terminal disponível ao agente não conseguiu resolver `github.com`, impedindo clone da branch e execução local da suíte completa.
+- **Evidência segura:** `git clone` falhou com `Could not resolve host: github.com`; nenhuma credencial foi envolvida.
+- **Tratamento:** usar o PR em rascunho e os runners oficiais do GitHub Actions para validar a mesma revisão; não declarar teste local como executado.
+- **Owner:** `AG-DEV` / ambiente de execução.
+
 ## Regra obrigatória
 
 Quando um agente encontrar qualquer bloqueio de acesso, recurso, permissão, quota, credencial, ambiente, fornecedor ou autoridade que impeça a tarefa, deve atualizar este registro (ou o registro transacional equivalente quando existir) antes de encerrar a entrega. Não ocultar falha com estimativa inventada, credencial ampla, bypass de segurança ou mudança de escopo silenciosa.
