@@ -134,13 +134,9 @@ jobs:
         shell: pwsh
         run: python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json
 
-      - name: Plan V3A clean candidate against real workbook
+      - name: Verify V3A real acceptance probes
         shell: pwsh
-        run: python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v3a-clean-custos-fixos.json
-
-      - name: Plan V3A blocked candidate against real workbook
-        shell: pwsh
-        run: python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v3a-blocked-configuracoes.json
+        run: python -m tools.excel_recipe.probe_v3a_real
 
   windows-supervisor:
     name: Windows Supervisor
