@@ -7,11 +7,20 @@ Este repositório reúne os ativos de marca existentes, a arquitetura do negóci
 ## Comece por aqui
 
 1. Leia [AGENTS.md](./AGENTS.md) para conhecer a missão, as regras e as responsabilidades.
-2. Abra o [índice da documentação](./docs/README.md) para navegar por categoria.
-3. Abra [docs/fundacao/ARQUITETURA.md](./docs/fundacao/ARQUITETURA.md) para visualizar o negócio e os sistemas.
-4. Consulte [docs/fundacao/ROADMAP.md](./docs/fundacao/ROADMAP.md) para a ordem de execução.
-5. Inicie a plataforma seguindo [docs/tecnologia/ARQUITETURA_TECNICA_V2.md](./docs/tecnologia/ARQUITETURA_TECNICA_V2.md).
-6. Use [docs/governanca/GITHUB_E_AGENTES.md](./docs/governanca/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
+2. Antes de qualquer tarefa, consulte o [catálogo operacional de ferramentas](./docs/ferramentas/README.md) e selecione as ferramentas adequadas.
+3. Abra o [índice da documentação](./docs/README.md) para navegar por categoria.
+4. Abra [docs/fundacao/ARQUITETURA.md](./docs/fundacao/ARQUITETURA.md) para visualizar o negócio e os sistemas.
+5. Consulte [docs/fundacao/ROADMAP.md](./docs/fundacao/ROADMAP.md) para a ordem de execução.
+6. Inicie a plataforma seguindo [docs/tecnologia/ARQUITETURA_TECNICA_V2.md](./docs/tecnologia/ARQUITETURA_TECNICA_V2.md).
+7. Use [docs/governanca/GITHUB_E_AGENTES.md](./docs/governanca/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
+
+## Protocolo obrigatório de ferramentas para agentes
+
+Em toda tarefa, o agente deve aplicar a política **tool-first** descrita em `docs/ferramentas/README.md`: procurar primeiro as ferramentas disponíveis, comparar capacidades, saúde, custo relativo, impacto estimado de Work, limitações e acesso, e priorizar a melhor ferramenta existente em vez de recriar sua função manualmente.
+
+Se nenhuma ferramenta atender uma necessidade recorrente, o agente deve registrar o planejamento em [`docs/ferramentas/PENDENCIAS.md`](./docs/ferramentas/PENDENCIAS.md), com capacidade necessária e critérios de aceite. Se a execução for impedida por nível de acesso, permissão, quota, credencial, plataforma, dependência, recurso, fornecedor, autoridade ou qualquer outro bloqueio, o agente deve registrar o impedimento em [`docs/ferramentas/BLOQUEIOS.md`](./docs/ferramentas/BLOQUEIOS.md), sem contornar controles de segurança ou inventar dados.
+
+Ferramentas próprias têm inventário executável em `tools/tool-health/catalog.json`. Use `npm run tools:status` para testar os checks aplicáveis e atualizar [`docs/ferramentas/STATUS_AUTOMATICO.md`](./docs/ferramentas/STATUS_AUTOMATICO.md).
 
 ## Estrutura
 
@@ -19,7 +28,9 @@ Este repositório reúne os ativos de marca existentes, a arquitetura do negóci
 apps/site/            Site público React/Vite (`/welcome` e `/cardapio`)
 apps/gestao/          Central Operacional React/Vite (`/gestao`)
 apps/api/             API TypeScript, SSE, webhooks e bridge do Codex
+apps/qr_manipulator/  QR Lab e tracking de derivados QR
 packages/             Banco Prisma, contratos e componentes compartilhados
+tools/                Runtime, policy, supervisor, snapshots e health check
 cardápio/             Materiais atuais do cardápio
 elementos gráficos/  Elementos visuais originais
 logos/                Variações oficiais da marca
@@ -34,11 +45,12 @@ planejamento/         Dados iniciais e implementação legada preservada
 - arquitetura do site público, ERP, atendimento, dados e operação;
 - catálogo normalizado do cardápio e modelo de modificadores;
 - roadmap por ondas, impacto, urgência e dependências;
-- agentes de Gestão, Marketing, Mídias, Development, Compras, Operações e Finanças;
+- agentes de Gestão, Marketing, Mídias, Development, Dados, Compras, Operações, Finanças e Marca;
 - matriz de indicadores, riscos, decisões e critérios de aceite;
 - API transacional com histórico justificado, trilha de auditoria, SSE e webhooks assinados;
 - canal de execução, perguntas e respostas entre a Central e agentes Codex;
-- site público e painel responsivo baseados na identidade visual existente.
+- site público e painel responsivo baseados na identidade visual existente;
+- catálogo de ferramentas e verificação automática da saúde das ferramentas próprias.
 
 ## Princípio de operação
 

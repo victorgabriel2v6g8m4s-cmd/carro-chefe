@@ -4,17 +4,29 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 
 ## Comece por aqui
 
-1. [Arquitetura do negócio](./fundacao/ARQUITETURA.md) — visão geral da operação, experiência física e sistemas.
-2. [Roadmap](./fundacao/ROADMAP.md) — portões de decisão e ordem de execução.
-3. [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md) — aplicações, API, persistência e runtime.
-4. [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md) — fluxo de colaboração, branches e agentes.
-5. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
+1. [Catálogo operacional de ferramentas](./ferramentas/README.md) — seleção tool-first, custos relativos, limitações, saúde, pendências e bloqueios.
+2. [Arquitetura do negócio](./fundacao/ARQUITETURA.md) — visão geral da operação, experiência física e sistemas.
+3. [Roadmap](./fundacao/ROADMAP.md) — portões de decisão e ordem de execução.
+4. [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md) — aplicações, API, persistência e runtime.
+5. [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md) — fluxo de colaboração, branches e agentes.
+6. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
 
 ## Organização
 
 ```text
 docs/
 ├── README.md
+├── ferramentas/
+│   ├── README.md
+│   ├── GITHUB.md
+│   ├── AGENTES.md
+│   ├── SKILLS.md
+│   ├── PLUGINS.md
+│   ├── PROPRIAS.md
+│   ├── EXTERNAS.md
+│   ├── STATUS_AUTOMATICO.md
+│   ├── PENDENCIAS.md
+│   └── BLOQUEIOS.md
 ├── fundacao/
 │   ├── ARQUITETURA.md
 │   └── ROADMAP.md
@@ -39,6 +51,7 @@ docs/
 
 | Categoria | Finalidade | Documentos |
 |---|---|---|
+| **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
 | **Tecnologia** | sistemas, integrações, dados, ERP e equipamentos digitais | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
@@ -47,6 +60,8 @@ docs/
 
 ## Convenções
 
+- antes de qualquer tarefa, agentes consultam `docs/ferramentas/README.md` e priorizam ferramentas existentes adequadas;
+- capacidade inexistente é registrada em `docs/ferramentas/PENDENCIAS.md`; impedimento de acesso/recurso é registrado em `docs/ferramentas/BLOQUEIOS.md`;
 - novos documentos devem entrar na categoria mais próxima, evitando criar uma nova pasta para um único arquivo;
 - referências dentro de `docs/` devem usar links relativos;
 - referências partindo da raiz do repositório devem usar `docs/<categoria>/<arquivo>.md`;
