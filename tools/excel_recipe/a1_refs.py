@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from .coordinates import AxisTransform, CompactRowsTransform, RangeMoveTransform, TableColumnTransform
 from .errors import RecipeError
-from .util import make_cell_ref, parse_cell_ref, parse_range_ref
+from .util import make_cell_ref, make_range_ref, parse_cell_ref, parse_range_ref
 
 Transform = AxisTransform | RangeMoveTransform | TableColumnTransform | CompactRowsTransform
 
@@ -54,12 +54,16 @@ def rewrite_formula_a1(
                         return match.group(0)
                     relation = "shifted" if new_ref != start else "unaffected"
                 else:
-                    if isinstance(transform, RangeMoveTransform) and _encloses_move(ref, transform):
+                    override = _local_range_override(ref, transform)
+                    if override is not None:
+                        new_ref, relation = override
+                    elif isinstance(transform, RangeMoveTransform) and _encloses_move(ref, transform):
                         return match.group(0)
-                    result = transform.transform_range(ref)
-                    new_ref = result.ref
-                    relation = result.relation
-                    if result.relation == "partial":
+                    else:
+                        result = transform.transform_range(ref)
+                        new_ref = result.ref
+                        relation = result.relation
+                    if relation == "partial":
                         blockers.append(f"range {match.group(0)!r} cruza parcialmente a transformação")
                         return match.group(0)
                     if new_ref is None:
@@ -93,6 +97,9 @@ def rewrite_simple_ref(ref: str, transform: Transform, *, allow_partial: bool = 
     if ":" not in clean:
         result = transform.transform_cell_ref(clean)
         return result, "removed" if result is None else ("shifted" if result != clean else "unaffected")
+    override = _local_range_override(clean, transform)
+    if override is not None:
+        return override
     if isinstance(transform, RangeMoveTransform) and _encloses_move(clean, transform):
         return clean, "unaffected"
     change = transform.transform_range(clean)
@@ -127,6 +134,28 @@ def ref_contains(outer: str, inner: str) -> bool:
     a = parse_range_ref(_as_range(outer))
     b = parse_range_ref(_as_range(inner))
     return a[0] <= b[0] and b[2] <= a[2] and a[1] <= b[1] and b[3] <= a[3]
+
+
+def _local_range_override(ref: str, transform: Transform) -> tuple[str, str] | None:
+    clean = _as_range(ref)
+    if isinstance(transform, TableColumnTransform):
+        old = _as_range(transform.table_ref)
+        srow, scol, erow, ecol = parse_range_ref(old)
+        new_end = ecol + 1 if transform.mode == "insert" else ecol - 1
+        new = make_range_ref(srow, scol, erow, new_end)
+        if clean == old:
+            return new, "expanded" if transform.mode == "insert" else "contracted"
+        if ref_contains(clean, old) and ref_contains(clean, new):
+            return clean, "unaffected"
+    if isinstance(transform, CompactRowsTransform):
+        old = _as_range(transform.table_ref)
+        srow, scol, erow, ecol = parse_range_ref(old)
+        new = make_range_ref(srow, scol, erow - len(transform.removed_rows), ecol)
+        if clean == old:
+            return new, "contracted"
+        if ref_contains(clean, old):
+            return clean, "unaffected"
+    return None
 
 
 def _encloses_move(ref: str, transform: RangeMoveTransform) -> bool:
