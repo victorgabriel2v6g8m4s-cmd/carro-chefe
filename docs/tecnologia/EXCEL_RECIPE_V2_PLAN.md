@@ -1,8 +1,12 @@
 # Excel Recipe V2 — mapa de dependências e refactors estruturais seguros
 
+## Status
+
+Planejada como a entrega imediatamente posterior à V1. A implementação deve partir da `main` após a integração da V1 e preservar todas as garantias já existentes de SHA, candidato temporário, firewall OOXML, rollback, snapshot e CI multiplataforma.
+
 ## Objetivo
 
-A próxima entrega evolui o motor da V1 de um editor transacional local para um mecanismo capaz de **entender dependências** antes de alterações estruturais. O foco inicial é permitir renome de tabela e de coluna com análise explícita de impacto e reescrita controlada das referências que a ferramenta sabe interpretar.
+Evoluir o motor da V1 de um editor transacional local para um mecanismo capaz de **entender dependências** antes de alterações estruturais. O foco inicial é permitir renome de tabela e de coluna com análise explícita de impacto e reescrita controlada das referências que a ferramenta sabe interpretar.
 
 A V2 não tem como meta “editar qualquer coisa do Excel”. Ela amplia poder somente quando consegue explicar o que será afetado, provar quais partes foram alteradas e falhar diante de dependências desconhecidas.
 
@@ -14,7 +18,7 @@ O motor deve produzir um relatório determinístico em JSON com origem, tipo de 
 
 ## Novas operações planejadas
 
-A V2 introduzirá `dependency.scan` e `dependency.assert_clean` como operações de análise/precondição. Em seguida, serão habilitados `table.rename` e `table.rename_column` com modo `plan` obrigatório antes da aplicação.
+A V2 introduzirá `dependency.scan` e `dependency.assert_clean` como operações de análise/precondição. Em seguida, serão habilitados `table.rename` e `table.rename_column` com modo de planejamento obrigatório antes da aplicação.
 
 Uma renomeação só poderá ser aplicada quando todas as dependências conhecidas estiverem classificadas como regraváveis ou explicitamente preservadas. Referências encontradas apenas em VBA serão reportadas; a V2 inicial não editará `vbaProject.bin`.
 
@@ -32,9 +36,11 @@ O primeiro suporte de cascata deve se limitar a referências que possam ser anal
 
 Validações e formatação condicional devem ser reescritas somente quando a expressão puder ser classificada com segurança. Gráficos, pivôs e VBA serão escaneados e reportados, mas qualquer dependência neles bloqueará renome automático até uma versão capaz de tratá-los.
 
-## Entregáveis
+## Entregáveis e critérios de aceite
 
-A entrega será considerada concluída quando houver scanner determinístico, relatório JSON versionável, comando de plano, `table.rename`, `table.rename_column`, asserts de dependência, testes sintéticos cobrindo referências estruturadas/nome definido/fórmula e probes contra o workbook real sem persistir alterações.
+A entrega só estará pronta quando houver scanner determinístico, relatório JSON versionável, comando de plano, `table.rename`, `table.rename_column`, asserts de dependência, testes sintéticos cobrindo referências estruturadas/nome definido/fórmula e probes contra o workbook real sem persistir alterações.
+
+O plano deve provar que nenhuma ocorrência conhecida ficou sem classificação. Renomeações devem falhar quando houver ocorrência bloqueadora em VBA, gráfico, pivot ou expressão não reconhecida. O mesmo conjunto de entrada deve produzir relatório estável entre execuções.
 
 A documentação e o schema de receita devem ser atualizados na mesma branch. O CI precisa testar Linux e Windows e confirmar que um refactor dry-run do workbook real preserva o VBA e todas as partes imutáveis.
 
