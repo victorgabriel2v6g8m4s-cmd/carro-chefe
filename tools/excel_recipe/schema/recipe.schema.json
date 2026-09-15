@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://carrochefe.com/schemas/excel-recipe-v1.json",
+  "title": "Carro Chefe Excel Recipe V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "workbook", "operations"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,100}$" },
+    "workbook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "expected_sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "\\.xlsm$" },
+        "expected_sha256": { "$ref": "#/$defs/sha256" },
+        "expected_vba_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "receipt_path": { "type": "string", "pattern": "\\.json$" },
+    "operations": {
+      "type": "array",
+      "maxItems": 500,
+      "items": { "$ref": "#/$defs/operation" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+    "operation": {
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "enum": [
+            "cell.set", "cell.clear", "formula.set", "formula.copy",
+            "table.append_rows", "table.upsert_rows", "table.update_rows", "table.delete_rows",
+            "table.create", "table.resize", "table.drop", "table.add_column", "table.set_formula_column",
+            "assert.cell", "assert.table", "assert.row", "workbook.recalculate_on_open"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

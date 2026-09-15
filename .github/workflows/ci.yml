@@ -101,6 +101,31 @@ jobs:
           set -euo pipefail
           .runtime/xlsm-snapshot-venv/bin/python tools/excel_snapshot/export.py --check
 
+  excel-recipe:
+    name: Excel Recipe / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify Python runtime
+        shell: pwsh
+        run: python --version
+
+      - name: Test Excel Recipe engine
+        shell: pwsh
+        run: python -m unittest discover -s tools/excel_recipe/tests -p "test_*.py" -v
+
+      - name: Validate no-op recipe against real workbook
+        shell: pwsh
+        run: python -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest
