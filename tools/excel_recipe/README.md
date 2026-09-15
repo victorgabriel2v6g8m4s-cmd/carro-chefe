@@ -114,11 +114,14 @@ O receipt registra hashes da fonte e do VBA antes/depois, partes OOXML modificad
 
 A V2 ainda não edita VBA/ActiveX, não regrava séries de gráficos, PivotTable/PivotCache, Power Query ou conexões externas, não faz refactor quando encontra dependência ambígua e não oferece `force: true` para ignorar blockers.
 
+Operações físicas de linha/coluna, movimentação de ranges, reescrita de gráficos/pivôs e eventual edição de VBA estão descritas como **planejamento futuro** em `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md`; elas não devem ser usadas nem simuladas enquanto não forem implementadas e validadas na `main`.
+
 ## Documentação relacionada
 
 - `docs/tecnologia/EXCEL_RECIPE_V1.md`: fundação transacional.
 - `docs/tecnologia/EXCEL_RECIPE_V2.md`: scanner e refactors estruturais.
 - `docs/tecnologia/EXCEL_RECIPE_V2_PLAN.md`: escopo/decisões que originaram a V2.
+- `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md`: plano formal da próxima evolução; capacidades ainda não disponíveis.
 - `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md`: procedimento obrigatório para agentes.
 - `anexos/financeiro/recipes/README.md`: organização das receitas e receipts.
 
