@@ -3,7 +3,7 @@
 Este diretório é **gerado automaticamente** por `tools/excel_snapshot/export.py`. Não edite seus arquivos manualmente.
 
 Fonte binária: `anexos/financeiro/carro chefe.xlsm`  
-SHA-256 da fonte: `62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70`  
+SHA-256 da fonte: `f14fa0e4c9658b43cb43e39599ef5c21ee04b27b59cd386d1919b6bd2768164a`  
 Versão do gerador: `1.0.0`
 
 ## Conteúdo
@@ -15,7 +15,7 @@ Versão do gerador: `1.0.0`
 - `tables/*.json`: tabelas estruturadas em formato estável;
 - `vba/index.json` e `vba/modules/*`: código-fonte VBA extraído estaticamente.
 
-Resumo: 16 abas, 21 tabelas, 5830 fórmulas e 19 módulos VBA extraídos.
+Resumo: 16 abas, 21 tabelas, 5820 fórmulas e 19 módulos VBA extraídos.
 
 ## Governança
 

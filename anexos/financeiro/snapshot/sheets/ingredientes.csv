@@ -44,12 +44,12 @@
 ,,Chefão,31,Adc. Azeitona Preta,1,Unidades,1,1.9565217391304348,,,,,,,,,,,,,,,,,
 ,,Chefão,10,Adc. Batata Palha,1,Unidades,1,0.37374999999999997,,,,,,,,,,,,,,,,,
 ,,Chefão,11,Adc. Cheddar,1,Unidades,1,1.14775,,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,"Coca-Cola Original PET 2,5 L","=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))","Coca Cola 2,5",1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -64,12 +64,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Coca-Cola Original Lata 310 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Coca Cola Lata 310,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -84,12 +84,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Coca-Cola Zero Lata 350 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Coca Cola Zero Lata 350,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -104,12 +104,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Guaraná Antarctica Lata 350 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Guaraná Lata 350,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -124,12 +124,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Guaraná Funada PET 2 L,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Funada 2,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -144,12 +144,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Cerveja Original Pilsen Garrafa 300 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Original Garrafa 300,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -164,12 +164,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Cerveja Brahma Chopp Pilsen Lata 350 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Brahma Chopp 350,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -184,12 +184,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Cerveja Amstel Puro Malte Lata 350 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Amstel 350,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -204,12 +204,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Cerveja Heineken Long Neck 330 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Heineken L.N 330,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -224,12 +224,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Cerveja Skol Pilsen Lata 269 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Skol 269,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -244,12 +244,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Coca-Cola Zero PET 600 ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Coca Cola Zero 600,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -264,12 +264,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Fanta Laranja PET 2 L,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Fanta 2,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),

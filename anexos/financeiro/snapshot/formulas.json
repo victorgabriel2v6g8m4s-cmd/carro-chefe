@@ -1,5 +1,5 @@
 {
-  "count": 5830,
+  "count": 5820,
   "formulas": [
     {
       "cached_value": 2.8368055555555554,
@@ -11552,7 +11552,7 @@
       "sheet": "insumos"
     },
     {
-      "cached_value": 11.19,
+      "cached_value": null,
       "cell": "G20",
       "formula": "=IF(insumos[preço] <> \"\", insumos[[#This Row],[preço]] / IF(insumos[[#This Row],[medida]] = \"unidades\", insumos[[#This Row],[quantidade]], 1), \"\")",
       "sheet": "insumos"
@@ -11582,7 +11582,7 @@
       "sheet": "insumos"
     },
     {
-      "cached_value": 3.19,
+      "cached_value": null,
       "cell": "G21",
       "formula": "=IF(insumos[preço] <> \"\", insumos[[#This Row],[preço]] / IF(insumos[[#This Row],[medida]] = \"unidades\", insumos[[#This Row],[quantidade]], 1), \"\")",
       "sheet": "insumos"
@@ -19310,12 +19310,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I31",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B32",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19388,12 +19382,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I33",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B34",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19427,12 +19415,6 @@
       "cached_value": null,
       "cell": "H34",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I34",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
@@ -19472,12 +19454,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I35",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B36",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19511,12 +19487,6 @@
       "cached_value": null,
       "cell": "H36",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I36",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
@@ -19556,12 +19526,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I37",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B38",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19595,12 +19559,6 @@
       "cached_value": null,
       "cell": "H38",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I38",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
@@ -19640,12 +19598,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I39",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B40",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19682,12 +19634,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I40",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B41",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19721,12 +19667,6 @@
       "cached_value": null,
       "cell": "H41",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I41",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
