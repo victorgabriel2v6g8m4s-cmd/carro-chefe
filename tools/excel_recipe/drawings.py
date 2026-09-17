@@ -48,6 +48,8 @@ class DrawingSupport:
         changed = 0
         for ref in refs:
             root = self.package.get_xml(ref.drawing_path)
+            if not list(root):
+                raise RecipeError("Drawing vazio/sem anchors permanece blocker.")
             drawing_changed = self._rewrite_anchors(root, transform)
             if drawing_changed:
                 self.package.set_xml(ref.drawing_path, root)
@@ -105,6 +107,8 @@ class DrawingSupport:
 
     def _scan_anchors(self, root: ET.Element, part: str, transform) -> list[dict]:
         out: list[dict] = []
+        if not list(root):
+            return [self._occ("drawing_empty", part, "wsDr", "sem anchors", "Drawing vazio/sem anchor conhecido não é promovido automaticamente")]
         for anchor in list(root):
             kind = self._local(anchor.tag)
             if kind not in SUPPORTED_ANCHORS:
