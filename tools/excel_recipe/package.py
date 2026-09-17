@@ -14,6 +14,7 @@ from .constants import (
 )
 from .errors import RecipeError
 from .util import canonical_path, sha256_bytes, sha256_file
+from .xml_compat import assert_excel_xml_compatible, serialize_preserving_namespaces
 
 
 class PackageEditor:
@@ -95,7 +96,9 @@ class PackageEditor:
             raise RecipeError(f"XML inválido em {path}: {exc}") from exc
 
     def set_xml(self, path: str, root: ET.Element) -> None:
-        self.set(path, ET.tostring(root, encoding="utf-8", xml_declaration=True))
+        normalized = canonical_path(path)
+        original = self.entries.get(normalized)
+        self.set(normalized, serialize_preserving_namespaces(root, original))
 
     def hash_map(self) -> dict[str, str]:
         return {name: sha256_bytes(data) for name, data in self.entries.items()}
@@ -114,6 +117,15 @@ class PackageEditor:
                 violations.append(path)
         if violations:
             raise RecipeError("Firewall OOXML bloqueou alterações inesperadas: " + ", ".join(violations))
+
+    def assert_excel_compatible(self, parts: list[str] | set[str] | None = None) -> None:
+        targets = sorted(parts if parts is not None else self.entries)
+        for path in targets:
+            normalized = canonical_path(path)
+            if normalized not in self.entries:
+                continue
+            if normalized.endswith(".xml") or normalized.endswith(".rels"):
+                assert_excel_xml_compatible(self.entries[normalized], normalized)
 
     def write(self, target: Path) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
