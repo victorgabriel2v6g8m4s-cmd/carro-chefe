@@ -22,6 +22,10 @@ MAX_UNCOMPRESSED_BYTES = 250 * 1024 * 1024
 MAX_OPERATIONS = 500
 MAX_ROWS_PER_OPERATION = 5_000
 
+# Compatibilidade do perfil financeiro do Carro Chefe. O core não depende
+# destes caminhos para operar em outros workbooks; eles existem apenas como
+# defaults legados/convenientes para o workbook versionado do projeto.
 DEFAULT_WORKBOOK = "anexos/financeiro/carro chefe.xlsm"
+DEFAULT_SNAPSHOT_OUTPUT = "anexos/financeiro/snapshot"
 DEFAULT_SNAPSHOT_SCRIPT = "tools/excel_snapshot/export.py"
-TOOL_VERSION = "3.0.0"
+TOOL_VERSION = "3.1.0"
