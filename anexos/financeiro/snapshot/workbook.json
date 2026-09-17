@@ -1,8 +1,8 @@
 {
   "calculation": {
-    "force_full_calc": null,
+    "force_full_calc": true,
     "full_calc_on_load": true,
-    "mode": null
+    "mode": "auto"
   },
   "defined_names": [
     {
@@ -195,7 +195,7 @@
     }
   ],
   "source": "anexos/financeiro/carro chefe.xlsm",
-  "source_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+  "source_sha256": "4c7925344fc68220d8779ca9a4076397fc06e9d404e726d89a14428581fc1e6e",
   "tables": [
     {
       "columns": [

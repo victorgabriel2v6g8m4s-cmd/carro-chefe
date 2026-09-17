@@ -1,0 +1,442 @@
+{
+  "changed_parts": [
+    "xl/workbook.xml",
+    "xl/worksheets/sheet11.xml",
+    "xl/worksheets/sheet2.xml",
+    "xl/worksheets/sheet5.xml",
+    "xl/worksheets/sheet6.xml"
+  ],
+  "generated_at": null,
+  "generated_at_note": "Timestamp omitido para determinismo; use o histórico Git.",
+  "operations": [
+    {
+      "index": 0,
+      "op": "assert.table"
+    },
+    {
+      "index": 1,
+      "op": "assert.row"
+    },
+    {
+      "index": 2,
+      "op": "assert.row"
+    },
+    {
+      "index": 3,
+      "op": "assert.row"
+    },
+    {
+      "index": 4,
+      "op": "assert.row"
+    },
+    {
+      "index": 5,
+      "op": "assert.row"
+    },
+    {
+      "index": 6,
+      "op": "assert.row"
+    },
+    {
+      "index": 7,
+      "op": "assert.row"
+    },
+    {
+      "index": 8,
+      "op": "assert.row"
+    },
+    {
+      "index": 9,
+      "op": "assert.row"
+    },
+    {
+      "index": 10,
+      "op": "assert.row"
+    },
+    {
+      "index": 11,
+      "op": "assert.row"
+    },
+    {
+      "index": 12,
+      "op": "assert.row"
+    },
+    {
+      "index": 13,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 14,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 15,
+      "op": "assert.table"
+    },
+    {
+      "index": 16,
+      "op": "assert.cell"
+    },
+    {
+      "index": 17,
+      "op": "assert.cell"
+    },
+    {
+      "index": 18,
+      "op": "assert.cell"
+    },
+    {
+      "index": 19,
+      "op": "cell.set"
+    },
+    {
+      "index": 20,
+      "op": "cell.set"
+    },
+    {
+      "index": 21,
+      "op": "cell.set"
+    },
+    {
+      "index": 22,
+      "op": "assert.cell"
+    },
+    {
+      "index": 23,
+      "op": "assert.cell"
+    },
+    {
+      "index": 24,
+      "op": "assert.cell"
+    },
+    {
+      "index": 25,
+      "op": "cell.set"
+    },
+    {
+      "index": 26,
+      "op": "cell.set"
+    },
+    {
+      "index": 27,
+      "op": "cell.set"
+    },
+    {
+      "index": 28,
+      "op": "assert.cell"
+    },
+    {
+      "index": 29,
+      "op": "assert.cell"
+    },
+    {
+      "index": 30,
+      "op": "assert.cell"
+    },
+    {
+      "index": 31,
+      "op": "cell.set"
+    },
+    {
+      "index": 32,
+      "op": "cell.set"
+    },
+    {
+      "index": 33,
+      "op": "cell.set"
+    },
+    {
+      "index": 34,
+      "op": "assert.cell"
+    },
+    {
+      "index": 35,
+      "op": "assert.cell"
+    },
+    {
+      "index": 36,
+      "op": "assert.cell"
+    },
+    {
+      "index": 37,
+      "op": "cell.set"
+    },
+    {
+      "index": 38,
+      "op": "cell.set"
+    },
+    {
+      "index": 39,
+      "op": "cell.set"
+    },
+    {
+      "index": 40,
+      "op": "assert.cell"
+    },
+    {
+      "index": 41,
+      "op": "assert.cell"
+    },
+    {
+      "index": 42,
+      "op": "assert.cell"
+    },
+    {
+      "index": 43,
+      "op": "cell.set"
+    },
+    {
+      "index": 44,
+      "op": "cell.set"
+    },
+    {
+      "index": 45,
+      "op": "cell.set"
+    },
+    {
+      "index": 46,
+      "op": "assert.cell"
+    },
+    {
+      "index": 47,
+      "op": "assert.cell"
+    },
+    {
+      "index": 48,
+      "op": "assert.cell"
+    },
+    {
+      "index": 49,
+      "op": "cell.set"
+    },
+    {
+      "index": 50,
+      "op": "cell.set"
+    },
+    {
+      "index": 51,
+      "op": "cell.set"
+    },
+    {
+      "index": 52,
+      "op": "assert.cell"
+    },
+    {
+      "index": 53,
+      "op": "assert.cell"
+    },
+    {
+      "index": 54,
+      "op": "assert.cell"
+    },
+    {
+      "index": 55,
+      "op": "cell.set"
+    },
+    {
+      "index": 56,
+      "op": "cell.set"
+    },
+    {
+      "index": 57,
+      "op": "cell.set"
+    },
+    {
+      "index": 58,
+      "op": "assert.cell"
+    },
+    {
+      "index": 59,
+      "op": "assert.cell"
+    },
+    {
+      "index": 60,
+      "op": "assert.cell"
+    },
+    {
+      "index": 61,
+      "op": "cell.set"
+    },
+    {
+      "index": 62,
+      "op": "cell.set"
+    },
+    {
+      "index": 63,
+      "op": "cell.set"
+    },
+    {
+      "index": 64,
+      "op": "assert.cell"
+    },
+    {
+      "index": 65,
+      "op": "assert.cell"
+    },
+    {
+      "index": 66,
+      "op": "assert.cell"
+    },
+    {
+      "index": 67,
+      "op": "cell.set"
+    },
+    {
+      "index": 68,
+      "op": "cell.set"
+    },
+    {
+      "index": 69,
+      "op": "cell.set"
+    },
+    {
+      "index": 70,
+      "op": "assert.cell"
+    },
+    {
+      "index": 71,
+      "op": "assert.cell"
+    },
+    {
+      "index": 72,
+      "op": "assert.cell"
+    },
+    {
+      "index": 73,
+      "op": "cell.set"
+    },
+    {
+      "index": 74,
+      "op": "cell.set"
+    },
+    {
+      "index": 75,
+      "op": "cell.set"
+    },
+    {
+      "index": 76,
+      "op": "assert.cell"
+    },
+    {
+      "index": 77,
+      "op": "assert.cell"
+    },
+    {
+      "index": 78,
+      "op": "assert.cell"
+    },
+    {
+      "index": 79,
+      "op": "cell.set"
+    },
+    {
+      "index": 80,
+      "op": "cell.set"
+    },
+    {
+      "index": 81,
+      "op": "cell.set"
+    },
+    {
+      "index": 82,
+      "op": "assert.cell"
+    },
+    {
+      "index": 83,
+      "op": "assert.cell"
+    },
+    {
+      "index": 84,
+      "op": "assert.cell"
+    },
+    {
+      "index": 85,
+      "op": "cell.set"
+    },
+    {
+      "index": 86,
+      "op": "cell.set"
+    },
+    {
+      "index": 87,
+      "op": "cell.set"
+    },
+    {
+      "index": 88,
+      "op": "assert.table"
+    },
+    {
+      "index": 89,
+      "inserted": 12,
+      "op": "table.upsert_rows",
+      "updated": 0
+    },
+    {
+      "index": 90,
+      "op": "assert.table"
+    },
+    {
+      "index": 91,
+      "op": "cell.set"
+    },
+    {
+      "index": 92,
+      "op": "cell.set"
+    },
+    {
+      "index": 93,
+      "op": "cell.set"
+    },
+    {
+      "index": 94,
+      "op": "cell.set"
+    },
+    {
+      "index": 95,
+      "op": "cell.set"
+    },
+    {
+      "index": 96,
+      "op": "cell.set"
+    },
+    {
+      "index": 97,
+      "op": "cell.set"
+    },
+    {
+      "index": 98,
+      "op": "cell.set"
+    },
+    {
+      "index": 99,
+      "op": "cell.set"
+    },
+    {
+      "index": 100,
+      "op": "cell.set"
+    },
+    {
+      "index": 101,
+      "op": "cell.set"
+    },
+    {
+      "index": 102,
+      "op": "cell.set"
+    },
+    {
+      "index": 103,
+      "op": "workbook.recalculate_on_open"
+    }
+  ],
+  "recipe_id": "bebidas-fort-2026-09-17",
+  "schema_version": 1,
+  "snapshot_output": "anexos/financeiro/snapshot",
+  "source_sha256_after": "4c7925344fc68220d8779ca9a4076397fc06e9d404e726d89a14428581fc1e6e",
+  "source_sha256_before": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+  "tool_version": "3.1.0",
+  "vba_sha256_after": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
+  "vba_sha256_before": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
+  "workbook": "anexos/financeiro/carro chefe.xlsm"
+}
