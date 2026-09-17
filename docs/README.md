@@ -12,9 +12,10 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 6. [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md) — edição transacional e auditável do workbook `.xlsm`.
 7. [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md) — mapa de dependências e renames seguros.
 8. [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md) — transformações físicas seguras de linhas, colunas, ranges e Tables.
-9. [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md) — status da V3A e roadmap V3B/V3C/V3D.
-10. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção da planilha por receitas JSON.
-11. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
+9. [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md) — núcleo executável de DrawingML/ChartML e seus blockers atuais.
+10. [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md) — roadmap V3A/V3B/V3C/V3D.
+11. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção da planilha por receitas JSON.
+12. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
 
 ## Organização
 
@@ -22,23 +23,8 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 docs/
 ├── README.md
 ├── ferramentas/
-│   ├── README.md
-│   ├── GITHUB.md
-│   ├── AGENTES.md
-│   ├── SKILLS.md
-│   ├── PLUGINS.md
-│   ├── PROPRIAS.md
-│   ├── EXTERNAS.md
-│   ├── STATUS_AUTOMATICO.md
-│   ├── PENDENCIAS.md
-│   └── BLOQUEIOS.md
 ├── fundacao/
-│   ├── ARQUITETURA.md
-│   └── ROADMAP.md
 ├── negocio/
-│   ├── MARCA.md
-│   ├── MARKETING_MIDIAS.md
-│   └── PRODUTO_CARDAPIO.md
 ├── tecnologia/
 │   ├── ARQUITETURA_TECNICA_V2.md
 │   ├── DADOS_ERP.md
@@ -46,16 +32,11 @@ docs/
 │   ├── EXCEL_RECIPE_V2.md
 │   ├── EXCEL_RECIPE_V2_PLAN.md
 │   ├── EXCEL_RECIPE_V3A.md
+│   ├── EXCEL_RECIPE_V3B.md
 │   ├── EXCEL_RECIPE_V3_PLAN.md
 │   └── TOTEM_AUTOATENDIMENTO.md
 ├── operacao/
-│   ├── COMPRAS.md
-│   └── OPERACAO.md
 └── governanca/
-    ├── AGENTES.md
-    ├── EXCEL_RECIPE_AGENT_GUIDE.md
-    ├── GITHUB_E_AGENTES.md
-    └── RISCOS_DECISOES.md
 ```
 
 ## Categorias
@@ -65,7 +46,7 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [Compras](./operacao/COMPRAS.md), [Operação e qualidade](./operacao/OPERACAO.md) |
 | **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 
