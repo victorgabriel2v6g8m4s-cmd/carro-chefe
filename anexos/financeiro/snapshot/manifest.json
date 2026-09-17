@@ -5,17 +5,17 @@
     {
       "bytes": 1246,
       "path": "README.md",
-      "sha256": "8032258013b87a5b09db291be5b3c19dbeaeb4c1ed3337068097c0141b84d96d"
+      "sha256": "06cf11000796319dfb50e2d5ddcfc4ee476471d6c95f81378f06def265731ac0"
     },
     {
-      "bytes": 1513078,
+      "bytes": 1510937,
       "path": "formulas.json",
-      "sha256": "33b8df041ecb0f6cfeb53a5013ec87fcd12e2207a5729c136a26365bb1f5dec6"
+      "sha256": "59b85847c84b4bfadae35dde5dc906a7c27f65fda2f1ace082f22a9cbbca798a"
     },
     {
-      "bytes": 10222,
+      "bytes": 10622,
       "path": "sheets/Cadastro_de_Produtos.csv",
-      "sha256": "0b046c6c62c9afdc904db6abe6b1dd37f1c5e1dd4c242cd4aee26d21696e6d07"
+      "sha256": "989203b02cbfef018ef04a692a47fef4cad790904ff1c040e9c505c87dce26e4"
     },
     {
       "bytes": 8859,
@@ -58,9 +58,9 @@
       "sha256": "1253ace748d7d28d12ff418d863393d54b56bf6245b91803de6a26e8ca1b31b7"
     },
     {
-      "bytes": 13191,
+      "bytes": 13192,
       "path": "sheets/Precificacao.csv",
-      "sha256": "8b6fe49fc29185535f1e8808439e4f58c9092331bc4be736a99001de2c709298"
+      "sha256": "711f64d33c369a681b5ba0fe964fc7f7b2c1328efc0008f1c5c7d542c0f53287"
     },
     {
       "bytes": 5190,
@@ -78,14 +78,14 @@
       "sha256": "f12879169bd667036f1d31c08f645daeb3d517641f029d5c96f0ecbf619931ff"
     },
     {
-      "bytes": 205073,
+      "bytes": 205625,
       "path": "sheets/ingredientes.csv",
-      "sha256": "4766bd3fcb482d12079a5fb748b8cbbb2b95b948eb08090b7856b0a1585c0efc"
+      "sha256": "95237f2b12fe6754896647e4176bc0cd2378c3557342f74166c88cc26364a456"
     },
     {
-      "bytes": 84824,
+      "bytes": 85127,
       "path": "sheets/insumos.csv",
-      "sha256": "b5ccb0bf47b4b53b4b5dce0444f227b0a6153af862209b24d72fade6b6d2c423"
+      "sha256": "7381e5db3ecf313608d298871944dba81faaa230449e11ee0e01819b4c3ec9ce"
     },
     {
       "bytes": 10334,
@@ -98,9 +98,9 @@
       "sha256": "1ee6df33e0b4dd2b81706a9659a827294ba1f26febb69d94343557433ed4d5e8"
     },
     {
-      "bytes": 15826,
+      "bytes": 16104,
       "path": "tables/CaProdutos.json",
-      "sha256": "986cce847168e83612a469986ce87e615c0ce042a2d896a588b7b3d21a3fc993"
+      "sha256": "56371f23880d67807a7cecfca81b4e9ae61e55ebf02d6b420b2550163f2dfc0c"
     },
     {
       "bytes": 415,
@@ -123,14 +123,14 @@
       "sha256": "aa66751a8cc9b6bb90c12a876fb7f9372e3b8452b8b05a9bdf7fb6f6d8df7a46"
     },
     {
-      "bytes": 222311,
+      "bytes": 222763,
       "path": "tables/Ingredientes.json",
-      "sha256": "00595b63cbeda1739550995cdb61ea75819ca62afc399a793ba0a5af33234a80"
+      "sha256": "6331cb9e1aafee7cf3b4b4dcc49a91ba3b49b7d7a9743497c3b1cd618fda7492"
     },
     {
-      "bytes": 16113,
+      "bytes": 16114,
       "path": "tables/Precificacao.json",
-      "sha256": "88e4b007b3e0da76bdb243d1b58fcf41792054ece618c79faad66e9582650152"
+      "sha256": "fffecd1919fc78f8ec13c92483601f31b3b0fc104c5dd499144258c99c01dd85"
     },
     {
       "bytes": 332,
@@ -173,9 +173,9 @@
       "sha256": "11b4534fb56455966a3c2b29d4f03f9182469ad91aaabf7b573ed34579922825"
     },
     {
-      "bytes": 95749,
+      "bytes": 96052,
       "path": "tables/insumos.json",
-      "sha256": "6ad0877aa10fbac296a73fce767b5d7bcd70bccd43b878f14fd8dff972c42529"
+      "sha256": "1610c9e47d9ec7aa75c6d1c89a66d6265ce4065a35afa28fc24eadfc0883054c"
     },
     {
       "bytes": 460,
@@ -298,9 +298,9 @@
       "sha256": "08f3704b57350c13b1993cc6bc40989755419257cb337fc69cc773ecd5a83c83"
     },
     {
-      "bytes": 10795,
+      "bytes": 10797,
       "path": "workbook.json",
-      "sha256": "2dc507b40580876c0bdb125a53809836b542b4b080c7c0c37239679c9842e145"
+      "sha256": "678dbd91f81d1ea3f60bac4e2aa178b6388e1d78a86c03de2182137186c5a9c4"
     }
   ],
   "generator": {
@@ -310,14 +310,14 @@
   },
   "schema_version": 1,
   "source": {
-    "bytes": 246827,
+    "bytes": 223597,
     "path": "anexos/financeiro/carro chefe.xlsm",
-    "sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+    "sha256": "f14fa0e4c9658b43cb43e39599ef5c21ee04b27b59cd386d1919b6bd2768164a",
     "zip_entries": 106,
-    "zip_uncompressed_bytes": 1827605
+    "zip_uncompressed_bytes": 1826199
   },
   "workbook": {
-    "formula_count": 5830,
+    "formula_count": 5820,
     "sheet_count": 16,
     "table_count": 21,
     "vba_module_count": 19,
