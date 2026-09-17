@@ -62,8 +62,10 @@ class StructuralEngineV3B(StructuralEngine):
         self.visuals = DrawingChartManager(workbook)
 
     def apply(self, operation: dict, plan: dict) -> dict:
-        result = super().apply(operation, plan)
+        # A transformação precisa ser capturada sobre o mesmo estado que originou
+        # o plano. Operações de Table mudam a própria definição usada por _build.
         _, transform, _ = self.planner._build(operation)
+        result = super().apply(operation, plan)
         visual = self.visuals.apply(transform)
         structural = result["structural"]
         structural["rewritten_drawing_anchors"] = visual["drawing_anchors"]
