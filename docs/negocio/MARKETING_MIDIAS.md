@@ -7,7 +7,7 @@
 Pilares de mensagem:
 
 - **produto protagonista:** brasa, textura, montagem e escolha do espeto;
-- **ritual visível:** parrilla e preparo como prova de sabor;
+- **ritual visível:** parrilla, montagem ao vivo, queijo maçaricado e finalização de molhos como prova de sabor;
 - **personalização simples:** escolha que não trava a fila;
 - **identidade memorável:** jipe-chef, madeira, bronze e “Sabor que lidera”;
 - **conveniência local:** pedido no totem, atendimento ou site.
@@ -30,7 +30,7 @@ Tráfego pago deve começar com raio pequeno, horários em que a operação tem 
 A arquitetura de cardápio aprovada em 17/09/2026 usa três produtos com funções diferentes:
 
 - **Carro‑Chefe Simples:** porta de entrada econômica e de baixo risco percebido;
-- **Carro‑Chefe Brasa Dourada:** produto intermediário de sabor, com identidade própria de cheddar, cebola-roxa tostada na parrilla, barbecue e batata palha;
+- **Brasa Dourada:** produto intermediário de sabor, com assinatura visual de queijo maçaricado dourado, cheddar, cebola-roxa tostada na parrilla, barbecue e batata palha;
 - **Chefão:** experiência completa, com 30 cm, dois espetos e maior presença visual.
 
 O objetivo não é empurrar todos para o item mais caro. A estratégia deve permitir que dois perfis cheguem a conclusões favoráveis à marca:
@@ -45,18 +45,34 @@ O Brasa Dourada serve como ponte real entre os dois, não como opção proposita
 - mostrar os três lanches próximos para facilitar comparação;
 - manter o preço do Simples muito fácil de encontrar;
 - descrever o Simples como **“O essencial do Carro‑Chefe”**, ou mensagem equivalente, sem depreciá-lo;
-- apresentar o Brasa Dourada como receita de assinatura de brasa, e não como “Simples + cheddar”;
-- no Chefão, comunicar primeiro fatos de valor — **30 cm • 2 espetos • composição completa • até 2 adicionais inclusos**, quando essa regra estiver definitivamente validada — e depois o preço;
+- apresentar o Brasa Dourada como receita de assinatura de brasa e dourado, não como “Simples + cheddar”;
+- explorar visualmente o **queijo maçaricado real** como prova do conceito “Dourada”;
+- no Chefão, comunicar primeiro fatos de valor — **30 cm • 2 espetos • composição completa** — e depois o preço;
 - dar ao Chefão a maior fotografia/área visual entre os três;
 - usar no Chefão rótulos factuais como **“Experiência completa”**, sem alegar “mais vendido” antes de haver dados;
 - não usar preço riscado, promoção fictícia, escassez artificial ou porcentagem de economia não demonstrável;
 - manter o CTA **Monte seu lanche** como rota própria, sem interromper a comparação rápida das receitas prontas.
 
+### Ritual visual de preparo
+
+A montagem diante do cliente deve ser usada como ativo de comunicação porque é parte real da experiência:
+
+1. espeto na parrilla;
+2. pão preparado e umedecido com caldo do vinagrete;
+3. montagem dos ingredientes à vista;
+4. no Brasa Dourada, queijo de cobertura maçaricado até dourar;
+5. cliente escolhe os molhos à vontade aprovados;
+6. produto é finalizado e entregue;
+7. pimentas permanecem disponíveis separadamente no balcão.
+
+Conteúdo publicitário pode registrar esse ritual desde que não simule chama, volume de queijo, quantidade de molho ou ingredientes diferentes do produto servido.
+
 ### Direção visual
 
 - **Simples:** layout limpo, informação objetiva, fotografia honesta e preço em alto contraste;
-- **Brasa Dourada:** bronze/brasa, close de cheddar, cebola tostada e crocância; riqueza visual sem competir em escala com o Chefão;
-- **Chefão:** maior presença, enquadramento de comprimento e recheio, detalhes dourados e os números `30 cm` e `2 espetos` facilmente legíveis.
+- **Brasa Dourada:** bronze/brasa, foco no queijo maçaricado dourado, cheddar, cebola tostada e crocância; riqueza visual sem competir em escala com o Chefão;
+- **Chefão:** maior presença, enquadramento de comprimento e recheio, detalhes dourados e os números `30 cm` e `2 espetos` facilmente legíveis;
+- **nenhum lanche novo deve mostrar alface**.
 
 O preço final continua dependente de ficha técnica e margem. A referência relativa da Escada do Chefe está em [`PRODUTO_CARDAPIO.md`](./PRODUTO_CARDAPIO.md).
 
@@ -64,9 +80,11 @@ O preço final continua dependente de ficha técnica e margem. A referência rel
 
 Depois que o cliente escolhe o produto principal, o upsell deve respeitar a escolha:
 
-- Simples → bebida e um adicional compatível;
+- Simples → bebida e adicionais pagos compatíveis;
 - Brasa Dourada → bebida e comparação transparente com Chefão quando houver diferença real calculada;
 - Chefão → bebida e acompanhamento/combinação somente após margem validada.
+
+Os **molhos à vontade aprovados não devem ser vendidos como upsell** enquanto permanecerem incluídos na experiência. Eles funcionam como valor percebido e personalização final. Pimentas de balcão também não devem ser comunicadas como ingrediente incluído na receita.
 
 Evitar insistência que aumente abandono. O objetivo é elevar **margem e ticket por pedido pago**, não cliques em upgrades.
 
@@ -78,8 +96,10 @@ Acompanhar por produto e canal:
 - mix Simples/Brasa Dourada/Chefão;
 - ticket e margem por degrau;
 - taxa de bebida/adicional;
+- consumo médio de molhos por pedido;
 - troca de produto antes do checkout;
 - abandono depois de preço;
+- tempo adicional de finalização do Brasa Dourada;
 - recompra por primeiro produto comprado.
 
 Testes de foto, texto, posição, badge e preço devem isolar variáveis sempre que possível. Não alterar preço, composição e fotografia simultaneamente e depois atribuir o resultado a uma única causa.
@@ -119,11 +139,13 @@ Métrica principal por estágio:
 - conteúdo registra o preparo real e feedback autorizado;
 - mídia paga limitada ao volume que a operação consegue entregar;
 - oferta não pode mascarar CMV ou criar fila insegura;
-- observar separadamente aceitação do Simples, Brasa Dourada e Chefão antes de recalibrar a Escada do Chefe.
+- observar separadamente aceitação do Simples, Brasa Dourada e Chefão antes de recalibrar a Escada do Chefe;
+- medir o impacto operacional da escolha final de molhos e do maçarico na fila.
 
 ### Primeiros 30 dias
 
 - campanha principal do Carro‑Chefe, com Chefão como peça de escala/compartilhamento e Brasa Dourada como receita intermediária de assinatura;
+- conteúdo recorrente do queijo maçaricado somente quando o padrão real de execução estiver homologado;
 - remarketing para quem abriu cardápio sem comprar, quando juridicamente e tecnicamente permitido;
 - campanha de recompra baseada em intervalo real, consentimento e margem;
 - testes A/B de criativo/oferta, sem alterar várias variáveis ao mesmo tempo;
@@ -134,8 +156,8 @@ Métrica principal por estágio:
 | Pilar | Formatos | Frequência indicativa | Objetivo |
 |---|---|---|---|
 | Produto | macro, corte, montagem, ASMR | 2–3/semana | desejo e compreensão |
-| Bastidores | parrilla, preparação, quiosque | 2/semana | confiança e identidade |
-| Escolha | espeto/adicionais/combinações | 1–2/semana | reduzir dúvida |
+| Bastidores | parrilla, preparação, maçarico, montagem ao vivo | 2/semana | confiança e identidade |
+| Escolha | espeto/adicionais/molhos/combinações | 1–2/semana | reduzir dúvida |
 | Prova social | reação, avaliação, UGC autorizado | 1/semana | credibilidade |
 | Serviço | horário, localização, pedido | stories recorrentes | conversão |
 
