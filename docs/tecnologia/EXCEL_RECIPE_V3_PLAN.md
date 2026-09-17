@@ -4,12 +4,12 @@
 
 A V3 é um programa evolutivo dividido em fases independentes.
 
-- **V3A — linhas, colunas, ranges e Tables físicas:** implementada nesta entrega; consulte `EXCEL_RECIPE_V3A.md`.
-- **V3B — gráficos e objetos de desenho:** planejada.
+- **V3A — linhas, colunas, ranges e Tables físicas:** implementada; consulte `EXCEL_RECIPE_V3A.md`.
+- **V3B — DrawingML e ChartML clássico:** implementada para as famílias explicitamente suportadas; consulte `EXCEL_RECIPE_V3B.md`.
 - **V3C — PivotTables e PivotCaches:** planejada.
 - **V3D — eventual subsistema VBA:** planejada como projeto separado e somente se houver necessidade operacional real.
 
-Capacidade planejada não deve ser tratada como disponível. O código e a documentação corrente do motor são a fonte para decidir quais operações podem ser usadas.
+Capacidade planejada não deve ser tratada como disponível. V3B também não significa suporte irrestrito a qualquer desenho/gráfico: variantes não promovidas continuam blockers.
 
 A V3 preserva as garantias das versões anteriores: SHA-256 da fonte e do VBA, candidato temporário, firewall OOXML, rollback, snapshot determinístico, receipts, `plan_sha256`, detecção de plano obsoleto, CI Linux/Windows e fail-closed.
 
@@ -25,28 +25,22 @@ A V3A entrega:
 
 - `structural.plan`;
 - `structural.assert_clean`;
-- `sheet.insert_rows`;
-- `sheet.delete_rows`;
-- `sheet.insert_columns`;
-- `sheet.delete_columns`;
+- `sheet.insert_rows` / `sheet.delete_rows`;
+- `sheet.insert_columns` / `sheet.delete_columns`;
 - `range.move`;
-- `table.insert_column`;
-- `table.delete_column`;
+- `table.insert_column` / `table.delete_column`;
 - `table.compact_rows`;
-- transformador de coordenadas puro e testável;
+- transformador de coordenadas puro;
 - parser A1 conservador;
-- reescrita das dependências suportadas;
-- blockers para VBA, Drawing/VML/ActiveX, gráficos, pivôs, conexões e sintaxes não regraváveis;
+- reescrita das dependências SpreadsheetML suportadas;
 - receipts estruturais;
 - probes determinísticos contra o workbook real em Linux e Windows.
 
-### Dependências V3A
+### Dependências após V3B
 
-A V3A regrava quando a transformação é determinística:
-
-| Dependência | V3A |
+| Dependência | Situação |
 | --- | --- |
-| fórmula A1 em worksheet | regravável |
+| fórmula A1 em worksheet | regravável nos padrões suportados |
 | fórmula de Table | regravável nos padrões conhecidos |
 | Table `ref` / `autoFilter` | regravável |
 | nome definido | regravável em referências A1 simples |
@@ -56,66 +50,59 @@ A V3A regrava quando a transformação é determinística:
 | hyperlink interno | regravável quando baseado em referência simples |
 | freeze pane | regravável quando o deslocamento é determinístico |
 | dimension / ranges XML simples | regravável |
+| DrawingML `oneCellAnchor` | V3B: regravável |
+| DrawingML `twoCellAnchor` padrão/twoCell | V3B: regravável |
+| `absoluteAnchor` | V3B: preservado |
+| ChartML clássico `c:f` | V3B: regravável quando A1 suportado |
 | referência de linha/coluna inteira (`A:A`, `1:1`) | blocker |
 | `INDIRECT`/`ADDRESS` no contexto afetado | blocker |
 | referência externa de workbook | blocker |
-| Drawing/VML/ActiveX/OLE | blocker |
-| gráfico | blocker até V3B |
+| VML / ActiveX / OLE | blocker |
+| `chartEx`, SmartArt/diagramas não modelados | blocker |
+| `twoCellAnchor` com `editAs` não promovido | blocker |
 | PivotTable/PivotCache | blocker até V3C |
 | VBA que precisaria ser regravado | blocker até V3D |
 | Power Query/conexão | blocker |
 
-A semântica completa, limitações e exemplos estão em `EXCEL_RECIPE_V3A.md`.
+A semântica base está em `EXCEL_RECIPE_V3A.md`; a promoção DrawingML/ChartML está em `EXCEL_RECIPE_V3B.md`.
 
-### Validação da V3A
-
-O aceite exige, simultaneamente:
-
-1. transformador puro testado nos limites de linha/coluna;
-2. `structural.plan` determinístico;
-3. `structural.assert_clean` obrigatório antes de escrita;
-4. uma transformação física por receita;
-5. testes sintéticos positivos e negativos para as oito operações físicas;
-6. preservação do firewall das partes imutáveis;
-7. snapshot determinístico;
-8. receipt com transformação + `plan_sha256`;
-9. probe limpo no workbook real capaz de produzir candidato temporário;
-10. probe real deliberadamente bloqueado;
-11. mesmo `plan_sha256` em Linux e Windows;
-12. checks gerais do repositório verdes.
-
-A implementação foi consolidada em um único PR por orientação explícita do proprietário do projeto, embora o planejamento original sugerisse subdividir V3A em PRs menores. Internamente, a implementação ainda seguiu a sequência transformador → planner → linhas/colunas → ranges/Tables → probes/documentação.
-
-## V3B — gráficos e objetos de desenho
+## V3B — implementada
 
 ### Objetivo
 
-Permitir que transformações estruturais atravessem sheets com drawings quando for possível atualizar explicitamente os objetos afetados, substituindo o blocker genérico por parsers específicos.
+Permitir que transformações estruturais atravessem sheets com drawings/charts quando for possível atualizar explicitamente os objetos e referências afetados, substituindo blockers genéricos por parsers específicos.
 
-### Escopo inicial planejado
+### Escopo promovido
 
-- anchors `oneCellAnchor` e `twoCellAnchor` de DrawingML;
-- séries de gráficos com fórmulas/ranges A1;
-- categorias e valores de séries;
-- títulos vinculados a células;
-- atualização de posição/tamanho do objeto quando linhas/colunas forem inseridas ou removidas;
-- VML apenas quando houver modelo específico comprovado;
-- detecção explícita de chart/object não suportado.
+- `oneCellAnchor`;
+- `twoCellAnchor` com `editAs` ausente ou `twoCell`;
+- preservação de `absoluteAnchor`;
+- objetos `graphicFrame`, `pic`, `sp`, `cxnSp`, `grpSp` em anchors suportados;
+- resolução worksheet → drawing → chart por relationships OOXML;
+- ChartML clássico;
+- fórmulas `c:f` de séries, categorias, valores e textos/títulos vinculados quando o parser A1 consegue provar a transformação;
+- scanner global de charts, inclusive quando o gráfico está ancorado em outra sheet;
+- allowlist dinâmica somente dos drawing/chart parts realmente alterados.
 
-### Critérios de promoção
+### Segurança específica
 
-Uma família de gráfico/objeto só deixa de ser blocker quando possuir:
+A promoção de `xl/charts/` não remove o firewall: chart modificado precisa ser explicitamente adicionado a `allowed_parts` pelo rewriter V3B. Qualquer chart/objeto não modelado permanece blocker.
 
-- parser específico;
-- modelo de dependência documentado;
-- rewriter específico;
-- fixture sintético;
-- round-trip testado;
-- blocker para variantes não suportadas;
-- probe no workbook real;
-- firewall ampliado somente para as partes necessárias.
+A V3B não reconstrói caches de séries. A fonte `c:f` é corrigida e o workbook é marcado para recálculo completo ao abrir; recálculo não substitui integridade estrutural.
 
-Suportar alguns gráficos não autoriza alterar silenciosamente os demais.
+### Evidência real
+
+O workbook `carro chefe.xlsm` possui um cenário real suportado em `Fluxo de Caixa`, com `drawing2.xml` e `chart1.xml`/`chart2.xml`, além de cenários bloqueados reais com VML/ActiveX.
+
+O gate `python -m tools.excel_recipe.probe_v3b_real` exige:
+
+1. transformação determinística limpa em `Fluxo de Caixa`;
+2. pelo menos um anchor realmente regravado;
+3. pelo menos uma fórmula de chart realmente regravada;
+4. candidato completo passando firewall;
+5. blocker VML + ActiveX real em `ingredientes`;
+6. workbook real preservado após dry-run;
+7. mesmo plano canônico em Linux e Windows.
 
 ## V3C — PivotTables e PivotCaches
 
@@ -157,26 +144,25 @@ Não haverá `force: true` genérico, best-effort nem fallback para substituiç�
 
 ### Plano ligado ao estado interno
 
-`structural.assert_clean` e os planners das fases seguintes devem carregar `source_sha256`, `package_state_sha256`, `vba_sha256` e `plan_sha256`. Mutação entre o plano e a escrita invalida o plano.
+`structural.assert_clean` carrega `source_sha256`, `package_state_sha256`, `vba_sha256` e `plan_sha256`. Mutação entre o plano e a escrita invalida o plano.
 
 ### Uma transformação física por receita
 
-A V3A mantém uma transformação física por receita. Composição só poderá ser promovida numa versão futura se houver semântica formal para composição de transforms e testes suficientes.
+A V3 mantém uma transformação física por receita. Composição só poderá ser promovida numa versão futura se houver semântica formal para composição de transforms e testes suficientes.
 
 ### Partes binárias protegidas
 
-VBA, ActiveX, OLE e demais binários permanecem imutáveis por padrão. Cada fase só pode ampliar a allowlist para as partes estritamente necessárias.
+VBA, ActiveX, OLE e demais binários permanecem imutáveis por padrão. Cada fase só amplia a allowlist para as partes estritamente necessárias.
 
 ### Recálculo não substitui integridade
 
-Marcar `fullCalcOnLoad` é apenas uma consequência de fórmulas alteradas. A ferramenta precisa entregar estrutura e referências corretas antes que o Excel abra o arquivo.
+Marcar `fullCalcOnLoad` é apenas consequência de fórmulas alteradas. A ferramenta precisa entregar estrutura e referências corretas antes que o Excel abra o arquivo.
 
 ## Receipts V3
 
-Receipts V3 mantêm compatibilidade conceitual com V1/V2 e acrescentam, conforme a operação:
+Receipts V3 mantêm compatibilidade conceitual com V1/V2 e registram, conforme a operação:
 
 - transformação normalizada;
-- coordenadas antes/depois;
 - número de células/ranges deslocados ou removidos;
 - `plan_sha256` consumido;
 - partes alteradas;
@@ -193,8 +179,15 @@ Cada fase executável precisa de, no mínimo:
 - resultado determinístico em Linux e Windows;
 - fonte real preservada após o dry-run.
 
-Na V3A, os probes canônicos estão em `tools/excel_recipe/examples/probe-v3a-*.json` e o gate de aceitação está em `tools/excel_recipe/probe_v3a_real.py`.
+Gates atuais:
 
-## Próxima entrega recomendada
+```bash
+python -m tools.excel_recipe.probe_v3a_real
+python -m tools.excel_recipe.probe_v3b_real
+```
 
-A próxima evolução técnica é **V3B**, começando por inventário/parse de DrawingML e anchors, sem habilitar reescrita até que os fixtures e blockers estejam consolidados. V3C e V3D devem permanecer independentes.
+## Próxima entrega estrutural recomendada
+
+Com V3B consolidada, a próxima evolução estrutural é **V3C — PivotTable/PivotCache**. Ela deve começar por inventário e modelo de dependências de cache, sem permitir refresh/reconstrução até que essa semântica seja comprovada.
+
+O eixo de reutilização G2/G3/G4 permanece separado e pode continuar posteriormente sem alterar esta ordem estrutural.
