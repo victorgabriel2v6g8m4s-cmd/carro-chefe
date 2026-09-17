@@ -16,6 +16,7 @@ XDR = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 C = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+CS = "http://schemas.microsoft.com/office/drawing/2012/chartStyle"
 
 DRAWING = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xdr:wsDr xmlns:xdr="{XDR}" xmlns:a="{A}" xmlns:c="{C}" xmlns:r="{R}">
@@ -140,6 +141,20 @@ class DrawingV3BTests(unittest.TestCase):
             [node.text for node in rewritten.iter(qname(C, "f"))],
             ["Resumo!$A$2", "Resumo!$A$2:$A$3", "Resumo!$A$2:$A$3"],
         )
+
+    def test_chart_style_parts_are_not_treated_as_data_charts(self) -> None:
+        with zipfile.ZipFile(self.path, "r") as archive:
+            files = {info.filename: archive.read(info) for info in archive.infolist()}
+        files["xl/charts/style1.xml"] = f'<cs:chartStyle xmlns:cs="{CS}" id="102"/>'.encode()
+        files["xl/charts/colors1.xml"] = f'<cs:colorStyle xmlns:cs="{CS}" meth="cycle" id="10"/>'.encode()
+        with zipfile.ZipFile(self.path, "w", zipfile.ZIP_DEFLATED) as archive:
+            for name, data in files.items():
+                archive.writestr(name, data)
+
+        _, _, planner, _ = self._context()
+        report = planner.plan({"op": "structural.plan", "action": "sheet.insert_rows", "sheet": "Dados", "at": 4, "count": 1})
+        self.assertEqual(report["blocker_count"], 0)
+        self.assertFalse(any(item["kind"] == "chart_type" for item in report["occurrences"]))
 
     def test_two_cell_anchor_non_two_cell_edit_mode_is_blocked(self) -> None:
         package, _, planner, _ = self._context()
