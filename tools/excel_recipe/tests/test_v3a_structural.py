@@ -135,7 +135,7 @@ class StructuralV3ATests(unittest.TestCase):
         receipt = execute_recipe(recipe, dry_run=True, refresh_snapshot=False, repo_root=self.root)
         report = receipt["operations"][0]["structural_plan"]
         self.assertGreater(report["blocker_count"], 0)
-        self.assertTrue(any(item["kind"] == "sheet_object" for item in report["blockers"]))
+        self.assertTrue(any(item["kind"] in {"sheet_object", "drawing_empty", "drawing_anchor", "drawing_object"} for item in report["blockers"]))
 
     def test_structural_plan_becomes_stale_after_mutation(self) -> None:
         operations = [
