@@ -15,10 +15,19 @@ class V3BStructuralPlanner(StructuralPlanner):
         report = super().plan(operation)
         _, transform, _ = self._build(operation)
 
-        # Remove apenas o blocker genérico de Drawing; VML/ActiveX/OLE continuam protegidos.
+        # Drawing/ChartML clássicos passam a ser responsabilidade do scanner V3B.
+        # VML/ActiveX/OLE, pivôs e demais partes continuam sob os blockers V3A.
         occurrences = [
             item for item in report["occurrences"]
-            if not (item.get("kind") == "sheet_object" and "/drawing" in str(item.get("value", "")) and "/vmlDrawing" not in str(item.get("value", "")))
+            if not (
+                item.get("kind") == "sheet_object"
+                and "/drawing" in str(item.get("value", ""))
+                and "/vmlDrawing" not in str(item.get("value", ""))
+            )
+            and not (
+                item.get("kind") == "protected_ooxml"
+                and str(item.get("part", "")).startswith("xl/charts/")
+            )
         ]
         occurrences.extend(DrawingSupport(self.workbook).scan(transform))
         occurrences = self._dedupe(occurrences)
