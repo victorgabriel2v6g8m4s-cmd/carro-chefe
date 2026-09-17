@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .constants import DEFAULT_SNAPSHOT_SCRIPT, TOOL_VERSION
 from .errors import RecipeError
-from .operations import OperationRunner
+from .operations_v3b import OperationRunnerV3B as OperationRunner
 from .package import PackageEditor
 from .recipe import Recipe, load_recipe
 from .workbook import WorkbookContext
