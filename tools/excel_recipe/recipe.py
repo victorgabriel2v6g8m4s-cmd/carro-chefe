@@ -5,7 +5,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .constants import DEFAULT_WORKBOOK, MAX_OPERATIONS, MAX_ROWS_PER_OPERATION
+from .constants import (
+    DEFAULT_SNAPSHOT_OUTPUT,
+    DEFAULT_WORKBOOK,
+    MAX_OPERATIONS,
+    MAX_ROWS_PER_OPERATION,
+)
 from .errors import RecipeError
 
 SUPPORTED_OPERATIONS = {
@@ -30,6 +35,7 @@ class Recipe:
     expected_vba_sha256: str | None
     operations: list[dict]
     receipt_path: str
+    snapshot_output_path: str | None
 
 
 def load_recipe(path: Path) -> Recipe:
@@ -48,6 +54,9 @@ def load_recipe(path: Path) -> Recipe:
     if not isinstance(workbook, dict):
         raise RecipeError("workbook deve ser objeto.")
     workbook_path = workbook.get("path", DEFAULT_WORKBOOK)
+    if not isinstance(workbook_path, str) or not workbook_path.lower().endswith(".xlsm"):
+        raise RecipeError("workbook.path deve apontar para .xlsm.")
+    workbook_path = _portable_path(workbook_path)
     expected_sha = workbook.get("expected_sha256")
     expected_vba = workbook.get("expected_vba_sha256")
     _validate_sha(expected_sha, "expected_sha256", required=True)
@@ -59,12 +68,58 @@ def load_recipe(path: Path) -> Recipe:
         raise RecipeError(f"Receita excede {MAX_OPERATIONS} operações.")
     for index, operation in enumerate(operations):
         _validate_operation(operation, index)
-    receipt_path = raw.get("receipt_path") or f"anexos/financeiro/recipes/receipts/{recipe_id}.receipt.json"
-    if not isinstance(workbook_path, str) or not workbook_path.endswith(".xlsm"):
-        raise RecipeError("workbook.path deve apontar para .xlsm.")
+
+    receipt_path = raw.get("receipt_path") or _default_receipt_path(workbook_path, recipe_id)
     if not isinstance(receipt_path, str) or not receipt_path.endswith(".json"):
         raise RecipeError("receipt_path deve apontar para .json.")
-    return Recipe(1, recipe_id, workbook_path, expected_sha.lower(), expected_vba.lower() if expected_vba else None, operations, receipt_path)
+    receipt_path = _portable_path(receipt_path)
+    snapshot_output = _parse_snapshot_output(workbook, workbook_path)
+
+    return Recipe(
+        1,
+        recipe_id,
+        workbook_path,
+        expected_sha.lower(),
+        expected_vba.lower() if expected_vba else None,
+        operations,
+        receipt_path,
+        snapshot_output,
+    )
+
+
+def _portable_path(value: str) -> str:
+    return value.replace("\\", "/")
+
+
+def _default_receipt_path(workbook_path: str, recipe_id: str) -> str:
+    parent = Path(workbook_path).parent.as_posix()
+    prefix = "" if parent == "." else f"{parent}/"
+    return f"{prefix}recipes/receipts/{recipe_id}.receipt.json"
+
+
+def _parse_snapshot_output(workbook: dict, workbook_path: str) -> str | None:
+    snapshot = workbook.get("snapshot")
+    is_default_workbook = workbook_path == DEFAULT_WORKBOOK
+    if snapshot is None:
+        return DEFAULT_SNAPSHOT_OUTPUT if is_default_workbook else None
+    if not isinstance(snapshot, dict):
+        raise RecipeError("workbook.snapshot deve ser objeto quando informado.")
+
+    enabled = snapshot.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise RecipeError("workbook.snapshot.enabled deve ser booleano.")
+    output = snapshot.get("output")
+    if not enabled:
+        if output is not None:
+            raise RecipeError("workbook.snapshot.output não deve ser informado quando enabled=false.")
+        return None
+    if output is None:
+        if is_default_workbook:
+            return DEFAULT_SNAPSHOT_OUTPUT
+        raise RecipeError("workbook.snapshot.output é obrigatório para workbook genérico com snapshot habilitado.")
+    if not isinstance(output, str) or not output.strip():
+        raise RecipeError("workbook.snapshot.output deve ser caminho não vazio.")
+    return _portable_path(output)
 
 
 def _validate_sha(value, field: str, *, required: bool) -> None:

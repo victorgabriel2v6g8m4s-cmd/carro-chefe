@@ -10,15 +10,24 @@ from .errors import RecipeError
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Aplica receitas JSON transacionais ao XLSM do Carro Chefe.")
+    parser = argparse.ArgumentParser(
+        description="Aplica receitas JSON transacionais a workbooks Excel OOXML .xlsm."
+    )
     sub = parser.add_subparsers(dest="command", required=True)
-    apply_cmd = sub.add_parser("apply", help="Aplica a receita ao mesmo XLSM e atualiza o snapshot.")
+    apply_cmd = sub.add_parser(
+        "apply",
+        help="Aplica a receita ao workbook indicado e atualiza o snapshot configurado, se houver.",
+    )
     apply_cmd.add_argument("recipe", type=Path)
     apply_cmd.add_argument("--dry-run", action="store_true", help="Valida e simula sem alterar arquivos.")
-    apply_cmd.add_argument("--no-snapshot", action="store_true", help="Uso de testes: não regenera o snapshot.")
+    apply_cmd.add_argument(
+        "--no-snapshot",
+        action="store_true",
+        help="Não executa o snapshot configurado na receita. Uso principal: testes/diagnóstico.",
+    )
     validate_cmd = sub.add_parser("validate", help="Valida precondições e operações sem alterar arquivos.")
     validate_cmd.add_argument("recipe", type=Path)
-    plan_cmd = sub.add_parser("plan", help="Executa dry-run e imprime o plano/impacto determinístico do refactor.")
+    plan_cmd = sub.add_parser("plan", help="Executa dry-run e imprime o plano/impacto determinístico.")
     plan_cmd.add_argument("recipe", type=Path)
     return parser
 
