@@ -24,7 +24,11 @@ class StructuralPlannerV3B(StructuralPlanner):
             for item in report["occurrences"]
             if not self._is_v3a_visual_blocker(item)
         ]
-        occurrences.extend(self.visuals.scan(transform))
+        visual_occurrences = self.visuals.scan(transform)
+        for item in visual_occurrences:
+            if item.get("kind") == "drawing_part" and item.get("disposition") == "blocker":
+                item = {**item, "kind": "sheet_object"}
+            occurrences.append(item)
         occurrences = self._dedupe(occurrences)
         blockers = [item for item in occurrences if item["disposition"] == "blocker"]
         report.update(
