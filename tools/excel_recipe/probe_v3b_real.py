@@ -3,65 +3,60 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .drawing_charts import DrawingChartManager
-from .package import PackageEditor
-from .structural_v3b import StructuralPlannerV3B
+from .engine import execute_recipe
 from .util import sha256_file
-from .workbook import WorkbookContext
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKBOOK = ROOT / "anexos/financeiro/carro chefe.xlsm"
+CLEAN_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3b-clean-fluxo-caixa.json"
+BLOCKED_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3b-blocked-ingredientes.json"
+
+EXPECTED_CLEAN_PLAN = "e1cb7cba1f4b5930362d01e48caa5dc664788d0389419ca9ddd542dc797f1ecc"
+EXPECTED_BLOCKED_PLAN = "e2ea23e0563503ae6c8f8c1df67581917703103850bd1465c3f52db25a1c68a0"
+EXPECTED_V3B_PARTS = {
+    "xl/charts/chart1.xml",
+    "xl/charts/chart2.xml",
+    "xl/drawings/drawing2.xml",
+    "xl/tables/table21.xml",
+    "xl/worksheets/sheet16.xml",
+    "xl/workbook.xml",
+}
 
 
 def main() -> int:
     source_before = sha256_file(WORKBOOK)
-    package = PackageEditor(WORKBOOK)
-    workbook = WorkbookContext(package)
-    manager = DrawingChartManager(workbook)
 
-    bindings = list(manager._drawing_bindings())
-    inventory = []
-    for sheet, drawing in bindings:
-        inventory.append({"sheet": sheet, "drawing": drawing, "charts": manager._chart_paths(drawing)})
-    if not inventory:
-        raise SystemExit("Workbook real não possui DrawingML; V3B não pode ser promovida sem probe real.")
+    clean = execute_recipe(CLEAN_RECIPE, dry_run=True, refresh_snapshot=False, repo_root=ROOT)
+    clean_plan = clean["operations"][0]["structural_plan"]
+    clean_apply = clean["operations"][1]["structural"]
+    if clean_plan["blocker_count"] != 0:
+        raise SystemExit(f"Probe limpo V3B ganhou blockers: {clean_plan['blockers']}")
+    if clean_plan["plan_sha256"] != EXPECTED_CLEAN_PLAN:
+        raise SystemExit(f"plan_sha256 limpo V3B divergente: {clean_plan['plan_sha256']} != {EXPECTED_CLEAN_PLAN}")
+    if clean_apply["plan_sha256"] != EXPECTED_CLEAN_PLAN:
+        raise SystemExit("Mutação V3B não consumiu exatamente o plano aprovado.")
+    if not EXPECTED_V3B_PARTS.issubset(set(clean["changed_parts"])):
+        raise SystemExit(f"Candidato V3B não alterou as partes esperadas: {clean['changed_parts']}")
 
-    candidates = []
-    for item in inventory:
-        sheet = item["sheet"]
-        planner = StructuralPlannerV3B(WorkbookContext(PackageEditor(WORKBOOK)), ROOT)
-        for at in (2, 4, 5, 12, 20):
-            operation = {"op": "structural.plan", "action": "sheet.insert_rows", "sheet": sheet, "at": at, "count": 1}
-            report = planner.plan(operation)
-            v3b_occurrences = [o for o in report["occurrences"] if o["kind"] in {"drawing_anchor", "chart_formula", "chart_feature"}]
-            if v3b_occurrences:
-                candidates.append({
-                    "sheet": sheet,
-                    "at": at,
-                    "plan_sha256": report["plan_sha256"],
-                    "blocker_count": report["blocker_count"],
-                    "parts_impacted": report["parts_impacted"],
-                    "v3b_occurrences": v3b_occurrences,
-                })
+    blocked = execute_recipe(BLOCKED_RECIPE, dry_run=True, refresh_snapshot=False, repo_root=ROOT)
+    blocked_plan = blocked["operations"][0]["structural_plan"]
+    if blocked_plan["plan_sha256"] != EXPECTED_BLOCKED_PLAN:
+        raise SystemExit(f"plan_sha256 bloqueado V3B divergente: {blocked_plan['plan_sha256']} != {EXPECTED_BLOCKED_PLAN}")
+    alternate = [item for item in blocked_plan["blockers"] if item.get("kind") == "drawing_anchor" and item.get("expression") == "AlternateContent"]
+    if not alternate:
+        raise SystemExit(f"Probe bloqueado V3B perdeu blocker AlternateContent: {blocked_plan['blockers']}")
 
-    if not candidates:
-        raise SystemExit("Nenhum cenário real produziu ocorrência V3B em anchors/ChartML.")
-
-    clean = next((c for c in candidates if c["blocker_count"] == 0), None)
-    blocked = next((c for c in candidates if c["blocker_count"] > 0), None)
     source_after = sha256_file(WORKBOOK)
     if source_before != source_after:
-        raise SystemExit("Probe V3B alterou o workbook real durante planejamento.")
+        raise SystemExit("Probe dry-run V3B alterou o workbook real versionado.")
 
     print(json.dumps({
-        "inventory": inventory,
-        "clean_candidate": clean,
-        "blocked_candidate": blocked,
-        "candidate_count": len(candidates),
+        "clean_plan_sha256": EXPECTED_CLEAN_PLAN,
+        "blocked_plan_sha256": EXPECTED_BLOCKED_PLAN,
+        "clean_changed_parts": clean["changed_parts"],
+        "blocked_alternate_content": len(alternate),
         "workbook_preserved": source_before == source_after,
     }, ensure_ascii=False, sort_keys=True, indent=2))
-    if clean is None:
-        raise SystemExit("Nenhum cenário real V3B limpo foi encontrado; revisar blockers antes de promover.")
     return 0
 
 
