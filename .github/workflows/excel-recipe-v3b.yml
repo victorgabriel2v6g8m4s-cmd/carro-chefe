@@ -1,0 +1,39 @@
+name: Excel Recipe V3B
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/excel_recipe/**'
+      - 'anexos/financeiro/carro chefe.xlsm'
+      - '.github/workflows/excel-recipe-v3b.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: excel-recipe-v3b-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  v3b:
+    name: V3B / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify Python
+        shell: pwsh
+        run: python --version
+      - name: Run Excel Recipe suite
+        shell: pwsh
+        run: python -m unittest discover -s tools/excel_recipe/tests -p "test_*.py" -v
+      - name: Probe V3B against real workbook
+        shell: pwsh
+        run: python -m tools.excel_recipe.probe_v3b_real
