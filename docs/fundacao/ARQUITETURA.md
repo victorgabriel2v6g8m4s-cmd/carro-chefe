@@ -16,7 +16,15 @@ O proprietário confirmou em 17/09/2026 o endereço operacional da unidade inici
 
 **Rua Vicente Solari, 531 — CEP 79006-440.**
 
-Esse endereço passa a ser a referência canônica para planejamento físico, levantamentos presenciais, infraestrutura, acessos, logística, licenças e demais documentos que dependam da localização da unidade. Medidas do ponto, disponibilidade/capacidade de energia, água, esgoto, internet, ventilação, acessibilidade e exigências locais continuam dependentes de levantamento e validação específicos.
+Já existem fotos do local, medidas registradas, levantamento de infraestrutura e validações presenciais do ponto. Por decisão do proprietário, os arquivos e valores detalhados permanecem fora do repositório.
+
+Isso significa que:
+
+- o projeto pode considerar que o levantamento físico **existe**;
+- nenhuma medida, capacidade ou condição física deve ser inferida a partir da ausência do dado no Git;
+- agente que precise de um detalhe deve solicitar diretamente ao proprietário somente o dado necessário;
+- se o dado não puder ser obtido na execução, registrar `INFO-PEND-*` em [`../governanca/RISCOS_DECISOES.md`](../governanca/RISCOS_DECISOES.md);
+- manter fotos/plantas/medições fora do Git não substitui validações profissionais ou legais aplicáveis.
 
 Cidade e UF não devem ser acrescentadas por inferência a este registro; quando necessárias em documentação oficial, devem ser confirmadas explicitamente ou validadas em fonte oficial apropriada.
 
@@ -74,7 +82,7 @@ Regras de layout:
 - totem fica antes do ponto de pagamento assistido, sem bloquear fila ou retirada;
 - placa de menu precisa ser legível da fila; QR code é apoio, não substituto;
 - retirada deve ter identificação de pedido e espaço para conferência;
-- a solução final depende de medidas, energia, água, esgoto, ventilação, acessibilidade e exigências locais ainda não informadas.
+- decisões finais de layout devem usar as medidas e condições presenciais já levantadas, solicitadas ao proprietário conforme a necessidade, além das exigências profissionais/legais aplicáveis.
 
 ## Arquitetura digital
 
@@ -147,6 +155,7 @@ Requisitos: carregamento progressivo, imagem substituta, respeito a `prefers-red
 | Pedido, pagamento e fiscal | ERP/adquirente | não replicar cartão ou checkout |
 | Estoque, compras e custos | ERP | ficha técnica conecta venda a consumo |
 | Plano, tarefas, decisões e riscos | Central Operacional | alterações via API aprovada |
+| Dados físicos detalhados do ponto | proprietário / evidência externa deliberada | existência registrada no Git; valores, fotos e medições são solicitados sob demanda e não versionados sem nova decisão |
 | Ativos finais de marca | repositório + biblioteca de mídia | original imutável, derivados versionados |
 | Campanhas | plataforma de mídia + registro interno | UTMs e custo conciliados com pedidos |
 | Indicadores consolidados | camada analítica | reconciliação diária com ERP |
@@ -175,9 +184,8 @@ flowchart LR
 
 ## Limites atuais
 
-- preços, gramaturas, custos, horários e data de abertura ainda não foram fornecidos;
-- medidas e condições de infraestrutura do ponto ainda precisam de levantamento presencial;
+- preços, gramaturas, custos, horários e data de abertura ainda não foram fornecidos/aprovados no repositório;
+- fotos, medidas, infraestrutura e validações presenciais do ponto existem, mas os detalhes são mantidos fora do Git por decisão do proprietário;
 - ERP, adquirente, hospedagem e hardware ainda não foram escolhidos;
-- não há planta com medidas do quiosque;
-- licenças e regras municipais precisam de validação local;
+- licenças e regras municipais ainda precisam de validação pelas fontes/profissionais aplicáveis;
 - nenhuma métrica de venda é real até o início da operação.
