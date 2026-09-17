@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "id": "bebidas-fort-2026-09-17",
+  "workbook": {
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "expected_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+    "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  },
+  "operations": [
+    {
+      "op": "assert.table",
+      "table": "insumos",
+      "expected_ref": "B4:K122",
+      "expected_columns": ["ID", "item", "preço", "quantidade", "medida", "Unidades", "Quilos", "Gramas", "Litros", "MLs"]
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 28},
+      "equals": {"item": "Coca Cola 2,5", "preço": {"value": "11.19"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 29},
+      "equals": {"item": "Coca Cola Lata 350", "preço": {"value": "3.19"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 30},
+      "equals": {"item": "Coca Cola Zero Lata 350", "preço": {"value": "3.89"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 31},
+      "equals": {"item": "Guaraná Lata 350", "preço": {"value": "3.39"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 32},
+      "equals": {"item": "Funada 2", "preço": {"value": "6.29"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 33},
+      "equals": {"item": "Original Garrafa 300", "preço": {"value": "4.79"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 34},
+      "equals": {"item": "Brahma Chopp 350", "preço": {"value": "3.99"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 35},
+      "equals": {"item": "Amstel 350", "preço": {"value": "4.09"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 36},
+      "equals": {"item": "Heineken L.N 330", "preço": {"value": "6.98"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 37},
+      "equals": {"item": "Skol 269", "preço": {"value": "3.09"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 38},
+      "equals": {"item": "Coca Cola Zero 600", "preço": {"value": "5.49"}}
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {"ID": 40},
+      "equals": {"item": "Fanta 2", "preço": {"value": "9.49"}}
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {"ID": 28},
+      "values": {"preço": {"type": "decimal", "value": "11.79"}}
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {"ID": 29},
+      "values": {"item": "Coca Cola Lata 310"}
+    },
+    {
+      "op": "assert.table",
+      "table": "Ingredientes",
+      "expected_ref": "C4:I263",
+      "expected_columns": ["Produto", "ID", "item", "qtd.", "medida", "Porções", "preço"]
+    },
+    {
+      "op": "table.upsert_rows",
+      "table": "Ingredientes",
+      "key": ["Produto", "item"],
+      "rows": [
+        {"Produto": "Coca-Cola Original PET 2,5 L", "item": "Coca Cola 2,5", "qtd.": 1},
+        {"Produto": "Coca-Cola Original Lata 310 ml", "item": "Coca Cola Lata 310", "qtd.": 1},
+        {"Produto": "Coca-Cola Zero Lata 350 ml", "item": "Coca Cola Zero Lata 350", "qtd.": 1},
+        {"Produto": "Guaraná Antarctica Lata 350 ml", "item": "Guaraná Lata 350", "qtd.": 1},
+        {"Produto": "Guaraná Funada PET 2 L", "item": "Funada 2", "qtd.": 1},
+        {"Produto": "Cerveja Original Pilsen Garrafa 300 ml", "item": "Original Garrafa 300", "qtd.": 1},
+        {"Produto": "Cerveja Brahma Chopp Pilsen Lata 350 ml", "item": "Brahma Chopp 350", "qtd.": 1},
+        {"Produto": "Cerveja Amstel Puro Malte Lata 350 ml", "item": "Amstel 350", "qtd.": 1},
+        {"Produto": "Cerveja Heineken Long Neck 330 ml", "item": "Heineken L.N 330", "qtd.": 1},
+        {"Produto": "Cerveja Skol Pilsen Lata 269 ml", "item": "Skol 269", "qtd.": 1},
+        {"Produto": "Coca-Cola Zero PET 600 ml", "item": "Coca Cola Zero 600", "qtd.": 1},
+        {"Produto": "Fanta Laranja PET 2 L", "item": "Fanta 2", "qtd.": 1}
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "CaProdutos",
+      "expected_ref": "B4:M47",
+      "expected_columns": ["ID", "Item", "Adicional 1", "Adicional 2", "Adicional 3", "Variação", "Tipo", "Cat. ABC", "Custo do Lote", "Un. Por Lote", "Custo de Produção (1 un.)", "Custo Total (1 un.)"]
+    },
+    {
+      "op": "table.upsert_rows",
+      "table": "CaProdutos",
+      "key": "ID",
+      "rows": [
+        {"ID": 32, "Item": "Coca-Cola Original PET 2,5 L", "Un. Por Lote": 1},
+        {"ID": 33, "Item": "Coca-Cola Original Lata 310 ml", "Un. Por Lote": 1},
+        {"ID": 34, "Item": "Coca-Cola Zero Lata 350 ml", "Un. Por Lote": 1},
+        {"ID": 35, "Item": "Guaraná Antarctica Lata 350 ml", "Un. Por Lote": 1},
+        {"ID": 36, "Item": "Guaraná Funada PET 2 L", "Un. Por Lote": 1},
+        {"ID": 37, "Item": "Cerveja Original Pilsen Garrafa 300 ml", "Un. Por Lote": 1},
+        {"ID": 38, "Item": "Cerveja Brahma Chopp Pilsen Lata 350 ml", "Un. Por Lote": 1},
+        {"ID": 39, "Item": "Cerveja Amstel Puro Malte Lata 350 ml", "Un. Por Lote": 1},
+        {"ID": 40, "Item": "Cerveja Heineken Long Neck 330 ml", "Un. Por Lote": 1},
+        {"ID": 41, "Item": "Cerveja Skol Pilsen Lata 269 ml", "Un. Por Lote": 1},
+        {"ID": 42, "Item": "Coca-Cola Zero PET 600 ml", "Un. Por Lote": 1},
+        {"ID": 43, "Item": "Fanta Laranja PET 2 L", "Un. Por Lote": 1}
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Precificação",
+      "expected_ref": "B4:I42",
+      "expected_columns": ["ID", "Item", "Preço de Custo", "Preço de Venda", "Preço Definitivo", "Lucro Bruto", "Lucro Líquido", "Incluir C.F?"]
+    },
+    {
+      "op": "table.upsert_rows",
+      "table": "Precificação",
+      "key": "ID",
+      "rows": [
+        {"ID": 32, "Incluir C.F?": "Não"},
+        {"ID": 33, "Incluir C.F?": "Não"},
+        {"ID": 34, "Incluir C.F?": "Não"},
+        {"ID": 35, "Incluir C.F?": "Não"},
+        {"ID": 36, "Incluir C.F?": "Não"},
+        {"ID": 37, "Incluir C.F?": "Não"},
+        {"ID": 38, "Incluir C.F?": "Não"},
+        {"ID": 39, "Incluir C.F?": "Não"},
+        {"ID": 40, "Incluir C.F?": "Não"},
+        {"ID": 41, "Incluir C.F?": "Não"},
+        {"ID": 42, "Incluir C.F?": "Não"},
+        {"ID": 43, "Incluir C.F?": "Não"}
+      ]
+    },
+    {
+      "op": "workbook.recalculate_on_open"
+    }
+  ]
+}
