@@ -127,15 +127,14 @@ class StructuralV3ATests(unittest.TestCase):
         self.assertEqual(10, ctx.read_cell("Dados", "I5"))
         self.assertEqual("=Dados!H5", ctx.read_cell("Resumo", "A1"))
 
-    def test_drawing_on_target_sheet_is_fail_closed(self) -> None:
+    def test_empty_drawing_is_not_blocker_after_v3b(self) -> None:
         make_v3_xlsm(self.workbook, with_drawing=True)
         recipe = self.write_recipe([
             {"op": "structural.plan", "action": "sheet.insert_rows", "sheet": "Dados", "at": 4, "count": 1}
         ], "drawing-plan")
         receipt = execute_recipe(recipe, dry_run=True, refresh_snapshot=False, repo_root=self.root)
         report = receipt["operations"][0]["structural_plan"]
-        self.assertGreater(report["blocker_count"], 0)
-        self.assertTrue(any(item["kind"] == "sheet_object" for item in report["blockers"]))
+        self.assertEqual(0, report["blocker_count"])
 
     def test_structural_plan_becomes_stale_after_mutation(self) -> None:
         operations = [
