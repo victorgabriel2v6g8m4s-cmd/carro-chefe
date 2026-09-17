@@ -118,6 +118,37 @@ class DrawingV3BTests(unittest.TestCase):
         self.assertTrue(rel.get("Type", "").endswith("/chart"))
         self.assertIn("xl/charts/chart1.xml", report["parts_impacted"])
 
+    def test_chart_on_other_sheet_is_still_a_global_dependency(self) -> None:
+        package, _, planner, engine = self._context()
+        chart = package.get_xml("xl/charts/chart1.xml")
+        formulas = list(chart.iter(qname(C, "f")))
+        formulas[0].text = "Resumo!$A$1"
+        formulas[1].text = "Resumo!$A$1:$A$2"
+        formulas[2].text = "Resumo!$A$1:$A$2"
+        package.set_xml("xl/charts/chart1.xml", chart)
+
+        operation = {"op": "sheet.insert_rows", "sheet": "Resumo", "at": 1, "count": 1}
+        report = planner.plan({"op": "structural.assert_clean", **{k: v for k, v in operation.items() if k != "op"}, "action": operation["op"]})
+        self.assertEqual(report["blocker_count"], 0)
+        self.assertIn("xl/charts/chart1.xml", report["parts_impacted"])
+        self.assertNotIn("xl/drawings/drawing1.xml", report["parts_impacted"])
+
+        planner.assert_clean(report)
+        engine.apply(operation, report)
+        rewritten = package.get_xml("xl/charts/chart1.xml")
+        self.assertEqual(
+            [node.text for node in rewritten.iter(qname(C, "f"))],
+            ["Resumo!$A$2", "Resumo!$A$2:$A$3", "Resumo!$A$2:$A$3"],
+        )
+
+    def test_two_cell_anchor_non_two_cell_edit_mode_is_blocked(self) -> None:
+        package, _, planner, _ = self._context()
+        drawing = package.get_xml("xl/drawings/drawing1.xml")
+        list(drawing)[0].set("editAs", "oneCell")
+        package.set_xml("xl/drawings/drawing1.xml", drawing)
+        report = planner.plan({"op": "structural.plan", "action": "sheet.insert_rows", "sheet": "Dados", "at": 4, "count": 1})
+        self.assertTrue(any(item["kind"] == "drawing_anchor_mode" for item in report["blockers"]))
+
 
 if __name__ == "__main__":
     unittest.main()
