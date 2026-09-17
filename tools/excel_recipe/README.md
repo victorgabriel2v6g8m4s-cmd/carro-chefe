@@ -1,82 +1,80 @@
 # Excel Recipe
 
-Motor transacional para aplicar **roteiros JSON** ao mesmo arquivo `anexos/financeiro/carro chefe.xlsm`, sem depender do Excel Desktop e sem regravar partes do pacote OOXML que a receita não autorizou.
+Motor transacional para aplicar **roteiros JSON** ao mesmo arquivo `anexos/financeiro/carro chefe.xlsm`, sem depender do Excel Desktop e sem regravar partes OOXML que a receita não autorizou.
 
-A versão corrente é **V3A**. Ela preserva V1/V2 e acrescenta transformações físicas controladas de linhas, colunas, ranges e Tables, sempre precedidas por um plano estrutural fail-closed.
+A versão corrente é **V3B**. Ela preserva V1/V2/V3A e acrescenta suporte fail-closed a DrawingML e referências de gráficos clássicos durante transformações físicas.
 
-## Uso normal
-
-Validar/simular uma receita sem alterar arquivos:
+## Uso
 
 ```bash
 python -m tools.excel_recipe validate anexos/financeiro/recipes/minha-receita.json
-```
-
-Gerar o plano/dry-run:
-
-```bash
 python -m tools.excel_recipe plan anexos/financeiro/recipes/minha-receita.json
-```
-
-Aplicar e regenerar snapshot + receipt:
-
-```bash
 python -m tools.excel_recipe apply anexos/financeiro/recipes/minha-receita.json
-```
-
-Depois do merge em `main`, sincronizar o computador local sem overwrite destrutivo:
-
-```bash
 python -m tools.excel_recipe.sync
 ```
 
-`--dry-run` pode ser usado em `apply`. `--no-snapshot` existe para testes automatizados e não deve ser usado em manutenção normal.
+`validate`/`plan` não persistem alterações. `apply --dry-run` percorre o candidato transacional sem substituir o workbook. `--no-snapshot` existe para testes automatizados e não deve ser usado em manutenção normal.
 
-## Princípios de segurança
+## Segurança permanente
 
-O `.xlsm` continua sendo um único arquivo versionado. Toda receita exige SHA-256 exato da fonte e deve fixar `expected_vba_sha256` enquanto VBA permanecer imutável.
+Toda receita fixa o SHA-256 da fonte e, enquanto VBA permanecer imutável, `expected_vba_sha256`. A escrita usa candidato temporário, reabre o pacote, valida o firewall e o VBA, e somente depois substitui a fonte. Falha de snapshot restaura o workbook anterior.
 
-VBA, ActiveX, gráficos, pivôs e mídias permanecem protegidos por firewall. O motor calcula SHA-256 das partes do pacote antes/depois e aborta se qualquer parte fora da allowlist mudar.
+Não existe `force: true` para dependências desconhecidas. O motor não executa VBA, não executa Excel Desktop e não considera recálculo posterior uma prova de integridade.
 
-A escrita é atômica: candidato temporário → reabertura/validação → conferência do VBA/firewall → substituição. Uma aplicação real regenera o snapshot e grava receipt. Se o snapshot falhar, o workbook anterior é restaurado.
-
-O motor nunca executa VBA e não tenta reproduzir o cálculo do Excel. Fórmulas regravadas perdem caches obsoletos e o workbook é marcado para recálculo completo ao abrir.
-
-## Capacidades por geração
+## Capacidades
 
 ### V1 — edição transacional
 
-Inclui células/fórmulas, CRUD de registros, criação/redimensionamento de Tables, colunas à direita, fórmulas calculadas e asserts.
+Células/fórmulas, CRUD de registros, criação/redimensionamento de Tables, colunas simples, fórmulas calculadas e asserts.
 
 ### V2 — dependências e rename
 
-| Operação | Finalidade |
-| --- | --- |
-| `dependency.scan` | inventariar referências de tabela/coluna |
-| `dependency.assert_clean` | exigir zero blockers |
-| `table.rename` | renomear Table com cascata suportada |
-| `table.rename_column` | renomear coluna/cabeçalho com cascata suportada |
+- `dependency.scan`;
+- `dependency.assert_clean`;
+- `table.rename`;
+- `table.rename_column`.
 
-### V3A — transformação física
+### V3A — estrutura física
 
-| Operação | Finalidade |
-| --- | --- |
-| `structural.plan` | produzir plano físico determinístico sem escrever |
-| `structural.assert_clean` | exigir zero blockers e fixar o plano |
-| `sheet.insert_rows` | inserir linhas físicas |
-| `sheet.delete_rows` | excluir linhas físicas |
-| `sheet.insert_columns` | inserir colunas físicas |
-| `sheet.delete_columns` | excluir colunas físicas |
-| `range.move` | mover range retangular não sobreposto |
-| `table.insert_column` | inserir coluna em posição explícita dentro de Table |
-| `table.delete_column` | excluir coluna de Table quando dependências permitem |
-| `table.compact_rows` | remover fisicamente registros lógicos vazios |
+- `structural.plan` / `structural.assert_clean`;
+- `sheet.insert_rows` / `sheet.delete_rows`;
+- `sheet.insert_columns` / `sheet.delete_columns`;
+- `range.move`;
+- `table.insert_column` / `table.delete_column`;
+- `table.compact_rows`.
 
-A V3A aceita apenas **uma transformação física por receita** e não a mistura com rename V2 na mesma receita.
+Uma transformação física por receita. Rename V2 e transformação física não são compostos no mesmo roteiro.
 
-## Fluxo V3A
+### V3B — DrawingML e charts
 
-Investigação:
+A V3B não adiciona novos nomes de operação; ela amplia o planner/executor das operações V3A quando a sheet possui objetos visuais suportados.
+
+Suporta:
+
+- `oneCellAnchor` e `twoCellAnchor` DrawingML;
+- deslocamento/expansão/contração de anchors quando a transformação é determinística;
+- referências A1 em `c:f` de charts clássicos, incluindo séries, categorias, valores e títulos vinculados;
+- charts clássicos em allowlist: area, bar, bubble, doughnut, line, ofPie, pie, radar, scatter, stock e surface, incluindo variantes 3D previstas;
+- alteração de coordenadas somente quando a forma/cardinalidade do range do chart é preservada;
+- allowlist exata de `xl/drawings/*.xml` e `xl/charts/*.xml` efetivamente regravados.
+
+Permanece fail-closed para:
+
+- VML, ActiveX, OLE/controls;
+- `absoluteAnchor` e anchors desconhecidos;
+- PivotChart/PivotTable/PivotCache;
+- `externalData`;
+- tipo de chart desconhecido/extensão sem rewriter;
+- mudança que alteraria o número de pontos do cache;
+- referência afetada fora de `c:f`;
+- referências estruturadas de chart em alteração física de coluna de Table;
+- VBA que precisaria mudar, Power Query/conexões e demais blockers V3A.
+
+Detalhes formais: `docs/tecnologia/EXCEL_RECIPE_V3B.md`.
+
+## Fluxo estrutural
+
+Investigue primeiro:
 
 ```json
 {
@@ -88,7 +86,7 @@ Investigação:
 }
 ```
 
-Aplicação:
+Para aplicar:
 
 ```json
 {
@@ -106,56 +104,45 @@ Aplicação:
 }
 ```
 
-A mutação verifica se o estado interno do pacote ainda é exatamente o que originou o plano. Qualquer alteração intermediária invalida a execução.
+O plano carrega `source_sha256`, `package_state_sha256`, `vba_sha256` e `plan_sha256`. Mutação intermediária invalida o plano.
 
-## Dependências V3A
+## Charts e caches
 
-A V3A regrava fórmulas A1 suportadas, Tables, nomes definidos, validações, formatação condicional, merges, hyperlinks internos, freeze pane, autofiltros, dimensions e ranges simples conhecidos.
+A V3B regrava somente a referência, não reconstrói cache. Assim:
 
-Ela bloqueia em vez de adivinhar quando encontra referências externas, `INDIRECT`/`ADDRESS` relevantes, `A:A`/`1:1`, ranges parciais não classificados, VBA que precisaria ser atualizado, Drawing/VML/ActiveX/OLE, gráficos, pivôs, QueryTables ou conexões.
+- `C4:C6` → `C5:C7`: permitido;
+- `D4:D6` → `E4:E6`: permitido;
+- `C4:C6` → `C4:C7`: blocker, pois a cardinalidade muda.
 
-`range.move` também bloqueia fórmula dentro da própria origem e destino com valor. Célula XML de destino existente mas vazia é sobrescrita deterministicamente para evitar refs duplicadas.
-
-## Tables
-
-`table.insert_column` pode inserir coluna no meio da Table, desde que a faixa de expansão esteja livre. `table.delete_column` exige que a coluna não tenha dependências estruturadas bloqueadoras. `table.compact_rows` remove linhas lógicas vazias ignorando colunas calculadas para decidir vazio; Tables com totals row permanecem bloqueadas nesta fase.
-
-`table.delete_rows` da V1 continua disponível e mantém sua semântica de exclusão lógica. Use `table.compact_rows` quando a intenção for compactação física e o plano estiver limpo.
+Essa regra evita produzir um chart cujo cache tenha tamanho incompatível com a série declarada.
 
 ## Receipt
 
-Receipts ficam por padrão em:
+Receipts ficam em `anexos/financeiro/recipes/receipts/<id>.receipt.json`.
 
-```text
-anexos/financeiro/recipes/receipts/<id>.receipt.json
-```
+Além dos campos V3A, transformações V3B registram:
 
-Além dos hashes e partes alteradas, operações V3A registram transformação normalizada, `plan_sha256`, células movidas/removidas e referências regravadas. Receipts são gerados pelo motor e não devem ser editados manualmente.
+- `rewritten_drawing_anchors`;
+- `rewritten_chart_references`.
 
 ## Probes reais
 
-O gate canônico da V3A é:
-
 ```bash
 python -m tools.excel_recipe.probe_v3a_real
+python -m tools.excel_recipe.probe_v3b_real
 ```
 
-Ele executa em dry-run uma transformação limpa em `Custos Fixos`, comprova um blocker VML real em `configurações`, fixa os `plan_sha256` esperados e verifica que o workbook versionado não foi modificado.
-
-## Limites deliberados
-
-V3A ainda não regrava Drawing/VML/ActiveX, séries/anchors de gráficos, PivotTable/PivotCache, Power Query/conexões ou VBA. Também não suporta múltiplas transformações físicas na mesma receita, `range.move` de células-fórmula na origem, referências inteiras `A:A`/`1:1` nem recálculo headless compatível com Excel.
-
-Esses limites são blockers, não convites a workaround manual.
+O V3B encontra deterministicamente um cenário real limpo que percorre escrita de DrawingML/chart em candidato temporário, mantém um cenário VML bloqueado, verifica os hashes esperados e comprova que o workbook versionado permaneceu intacto.
 
 ## Documentação relacionada
 
-- `docs/tecnologia/EXCEL_RECIPE_V1.md` — fundação transacional.
-- `docs/tecnologia/EXCEL_RECIPE_V2.md` — grafo e renames.
-- `docs/tecnologia/EXCEL_RECIPE_V3A.md` — contrato operacional atual de transformação física.
-- `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md` — roadmap V3B/V3C/V3D.
-- `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md` — procedimento obrigatório para agentes.
-- `anexos/financeiro/recipes/README.md` — organização de recipes/receipts.
+- `docs/tecnologia/EXCEL_RECIPE_V1.md` — fundação transacional;
+- `docs/tecnologia/EXCEL_RECIPE_V2.md` — dependências e renames;
+- `docs/tecnologia/EXCEL_RECIPE_V3A.md` — estrutura física;
+- `docs/tecnologia/EXCEL_RECIPE_V3B.md` — DrawingML/charts;
+- `docs/tecnologia/EXCEL_RECIPE_V3_PLAN.md` — roadmap V3C/V3D;
+- `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md` — procedimento obrigatório;
+- `anexos/financeiro/recipes/README.md` — recipes e receipts.
 
 ## Testes
 
@@ -165,4 +152,5 @@ python -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-che
 python -m tools.excel_recipe validate tools/excel_recipe/examples/probe-carro-chefe-real.json
 python -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json
 python -m tools.excel_recipe.probe_v3a_real
+python -m tools.excel_recipe.probe_v3b_real
 ```
