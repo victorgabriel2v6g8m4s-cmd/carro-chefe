@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://carrochefe.com/schemas/excel-recipe-v3a.json",
-  "title": "Carro Chefe Excel Recipe V3A",
+  "$id": "https://carrochefe.com/schemas/excel-recipe-v3a-g1.json",
+  "title": "Excel Recipe Engine V3A / Generic G1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "id", "workbook", "operations"],
@@ -13,9 +13,17 @@
       "additionalProperties": false,
       "required": ["path", "expected_sha256"],
       "properties": {
-        "path": { "type": "string", "pattern": "\\.xlsm$" },
+        "path": { "type": "string", "pattern": "\\.[xX][lL][sS][mM]$" },
         "expected_sha256": { "$ref": "#/$defs/sha256" },
-        "expected_vba_sha256": { "$ref": "#/$defs/sha256" }
+        "expected_vba_sha256": { "$ref": "#/$defs/sha256" },
+        "snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "output": { "type": "string", "minLength": 1 }
+          }
+        }
       }
     },
     "receipt_path": { "type": "string", "pattern": "\\.json$" },
