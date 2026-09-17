@@ -7,7 +7,7 @@
 | `DEC-002` | ERP e adquirente | catálogo, totem, dados e integração | prova de conceito com Chefão antes de contratar |
 | `DEC-003` | regras do Chefão | cadastro, custo e produção | definir repetição de espetos e quantidades |
 | `DEC-004` | escopo do embed em `/cardapio` | segurança/UX | exigir confirmação técnica; manter redirect como fallback |
-| `DEC-005` | local, medidas e infraestrutura | layout, licenças e equipamentos | levantamento presencial documentado |
+| `DEC-005` | medidas, infraestrutura e validações do ponto | layout, licenças e equipamentos | levantamento presencial documentado no endereço aprovado |
 | `DEC-006` | data e orçamento de abertura | priorização e contratação | decidir após G1 e orçamento preliminar |
 | `DEC-007` | marca Catupiry/Seara no texto | compra e comunicação | usar marca só quando o item real e o acordo permitirem |
 
@@ -17,6 +17,8 @@
 |---|---|---|---|
 | `DEC-001` | 13/08/2026 | **Carro Chefe** é a marca; **Carro‑Chefe** é a família/produto; “Paulistinha” fica apenas como alias legado interno | aprovação do proprietário na pergunta da execução `cmsroii6800qgv4tpkffdqygr`; na futura derivação da capa, usar `LANCHES • ESPETINHO • BEBIDAS`; site e anúncios não usam “Paulistinha” |
 | `DEC-008` | 17/09/2026 | Cardápio físico inicial enxuto, personalização destacada por QR, QR digital individual por mesa, rastreamento de origem e totem sem login obrigatório | aprovação direta do proprietário; planejamento e critérios de execução em [`../tecnologia/ATRIBUICAO_OMNICANAL.md`](../tecnologia/ATRIBUICAO_OMNICANAL.md) e experiência comercial em [`../negocio/PRODUTO_CARDAPIO.md`](../negocio/PRODUTO_CARDAPIO.md) |
+| `DEC-009` | 17/09/2026 | Endereço operacional informado para a unidade inicial: **Rua Vicente Solari, 531 — CEP 79006-440** | aprovação direta do proprietário; passa a ser o endereço canônico para planejamento físico, levantamentos, licenças, logística e documentação. Cidade/UF não são acrescentados por inferência neste registro |
+| `DEC-010` | 17/09/2026 | Autorização permanente para fazer merge de registros de decisões já finalizados | aprovação direta do proprietário; PRs exclusivamente documentais destinados a registrar decisões já aprovadas/finalizadas podem ser mergeados por squash sem nova confirmação, desde que cumpram branch protection, checks obrigatórios, revisão de escopo e não contenham código, deploy, compra, publicação externa ou mudança operacional não aprovada |
 
 ## Riscos prioritários
 
@@ -40,6 +42,8 @@ Probabilidade e impacto são estimativas iniciais de planejamento, não dados ob
 ## Processo de decisão
 
 Uma decisão registra: contexto, opções, custos, riscos, evidências, recomendação, responsável, prazo, decisão final e consequências. Decisão vencida volta à pauta diária; não deve ser resolvida silenciosamente por um agente.
+
+Quando a decisão já tiver sido aprovada pelo proprietário e o trabalho restante for exclusivamente seu registro documental, aplica-se `DEC-010`: o PR pode ser integrado sem pedir uma nova autorização de merge, desde que permaneça estritamente dentro desse escopo e satisfaça as proteções da `main`.
 
 ## Processo de risco
 

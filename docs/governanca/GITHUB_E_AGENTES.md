@@ -49,7 +49,7 @@ flowchart LR
 5. Dê a cada agente uma entrega delimitada e caminhos de escrita diferentes. Um único agente deve ser responsável por cada arquivo ou branch.
 6. Exija que o coordenador reúna os resultados, verifique conflitos e registre a proposta na Central Operacional.
 
-Os agentes personalizados têm acesso de escrita ao workspace porque precisam produzir arquivos e testes. Isso não autoriza compra, publicação, deploy, alteração de DNS/ERP, uso de dados pessoais, merge ou push forçado; os limites do `AGENTS.md` continuam valendo.
+Os agentes personalizados têm acesso de escrita ao workspace porque precisam produzir arquivos e testes. Isso não autoriza compra, publicação, deploy, alteração de DNS/ERP, uso de dados pessoais, merge ou push forçado; os limites do `AGENTS.md` continuam valendo, incluindo a autorização permanente e estritamente limitada de `DEC-010` para registros documentais de decisões finalizadas.
 
 ### Exemplos de pedidos
 
@@ -82,12 +82,28 @@ Chats diferentes não devem depender da memória uns dos outros. Toda decisão �
 1. Atualizar a `main` local e criar uma branch por entrega: `dev/...`, `marketing/...`, `midias/...`, `compras/...` ou `chore/...`.
 2. Alterar apenas o escopo atribuído e executar os testes proporcionais.
 3. Revisar a lista de arquivos modificados; nunca incluir `.env`, `.runtime/`, uploads ou segredos.
-4. Criar commit pequeno e descritivo somente após autorização.
-5. Enviar a branch e abrir um pull request em rascunho somente após autorização.
-6. Esperar o CI ficar verde, resolver comentários e fazer merge por squash.
+4. Criar commit pequeno e descritivo somente após autorização aplicável ao escopo.
+5. Enviar a branch e abrir pull request conforme a autorização aplicável ao escopo.
+6. Esperar o CI ficar verde, resolver comentários e fazer merge por squash quando houver autorização.
 7. Apagar a branch remota depois do merge.
 
 `main` é integração, não área de trabalho. Push forçado e reescrita de histórico são proibidos.
+
+### Autorização permanente para registros de decisões — `DEC-010`
+
+Em 17/09/2026, o proprietário concedeu autorização permanente para fazer merge de **registros de decisões finalizados**.
+
+Essa autorização pode ser usada sem pedir uma nova confirmação quando, cumulativamente:
+
+- a decisão já foi explicitamente aprovada/finalizada pelo proprietário;
+- o PR é exclusivamente documental e existe para registrar, organizar ou aprimorar o planejamento daquela decisão;
+- o diff não contém código, deploy, configuração de produção, compra, contratação, publicação externa, alteração de DNS/ERP ou outra ação operacional;
+- não há segredo, credencial ou dado pessoal indevido no diff;
+- os checks obrigatórios da `main` foram satisfeitos;
+- não há conflito ou comentário pendente que altere o conteúdo da decisão;
+- o merge é feito por squash, preservando a rastreabilidade da decisão e do PR.
+
+Se qualquer mudança extrapolar o registro documental da decisão, `DEC-010` deixa de ser suficiente e volta a ser necessária autorização específica para a ação adicional. A autorização não permite bypass de branch protection, force push ou reescrita de histórico.
 
 ## Acessos e credenciais
 
@@ -120,6 +136,8 @@ A `main` foi configurada para manter:
 - resolução obrigatória de conversas;
 - histórico linear;
 - nenhuma exceção permanente para agentes.
+
+`DEC-010` não é exceção à proteção da `main`; é somente uma autorização humana permanente para o ato de merge dentro do escopo documental definido. Os checks e bloqueios técnicos continuam obrigatórios.
 
 Mesmo com o repositório público, os ativos de marca não recebem licença de reutilização automática. Consulte `NOTICE.md`.
 
