@@ -57,6 +57,7 @@ def execute_recipe(
         else:
             shutil.copy2(source, candidate)
         candidate_package = PackageEditor(candidate)
+        candidate_package.assert_excel_compatible(changed_parts)
         _check_vba_preserved(package, candidate_package)
         receipt = _build_receipt(recipe, package, candidate_package, changed_parts, runner.applied)
         if dry_run:
