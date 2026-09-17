@@ -24,6 +24,9 @@ jobs:
         with:
           ref: excel/bebidas-fort-2026-09-17-recovered
 
+      - name: Install snapshot dependencies
+        run: python -m pip install --disable-pip-version-check -r tools/excel_snapshot/requirements.txt
+
       - name: Verify recipe before mutation
         run: python -m tools.excel_recipe validate anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
 
