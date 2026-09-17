@@ -16,6 +16,7 @@
 | ID | Data | Decisão | Evidência e consequência |
 |---|---|---|---|
 | `DEC-001` | 13/08/2026 | **Carro Chefe** é a marca; **Carro‑Chefe** é a família/produto; “Paulistinha” fica apenas como alias legado interno | aprovação do proprietário na pergunta da execução `cmsroii6800qgv4tpkffdqygr`; na futura derivação da capa, usar `LANCHES • ESPETINHO • BEBIDAS`; site e anúncios não usam “Paulistinha” |
+| `DEC-008` | 17/09/2026 | Cardápio físico inicial enxuto, personalização destacada por QR, QR digital individual por mesa, rastreamento de origem e totem sem login obrigatório | aprovação direta do proprietário; planejamento e critérios de execução em [`../tecnologia/ATRIBUICAO_OMNICANAL.md`](../tecnologia/ATRIBUICAO_OMNICANAL.md) e experiência comercial em [`../negocio/PRODUTO_CARDAPIO.md`](../negocio/PRODUTO_CARDAPIO.md) |
 
 ## Riscos prioritários
 
