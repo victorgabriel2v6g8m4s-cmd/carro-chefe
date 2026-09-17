@@ -1,0 +1,62 @@
+name: Apply Excel Recipe Delivery
+
+on:
+  push:
+    branches:
+      - excel/bebidas-fort-2026-09-17
+    paths:
+      - anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
+      - .github/workflows/apply-excel-recipe-delivery.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-recipe:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: excel/bebidas-fort-2026-09-17
+
+      - name: Prepare Python tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv .runtime/excel-recipe-venv
+          .runtime/excel-recipe-venv/bin/python -m pip install --disable-pip-version-check --requirement tools/excel_snapshot/requirements.txt
+
+      - name: Validate recipe
+        shell: bash
+        run: |
+          set -euo pipefail
+          .runtime/excel-recipe-venv/bin/python -m tools.excel_recipe validate anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
+
+      - name: Apply recipe and regenerate snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          .runtime/excel-recipe-venv/bin/python -m tools.excel_recipe apply anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
+
+      - name: Verify snapshot synchronization
+        shell: bash
+        run: |
+          set -euo pipefail
+          .runtime/excel-recipe-venv/bin/python tools/excel_snapshot/export.py --check
+
+      - name: Commit generated workbook, snapshot and receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Carro Chefe Excel Recipe"
+          git config user.email "actions@users.noreply.github.com"
+          git add "anexos/financeiro/carro chefe.xlsm" anexos/financeiro/snapshot anexos/financeiro/recipes/receipts
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração gerada pela receita."
+            exit 1
+          fi
+          git commit -m "financeiro: cadastrar e precificar bebidas do Fort"
+          git push origin HEAD:excel/bebidas-fort-2026-09-17
