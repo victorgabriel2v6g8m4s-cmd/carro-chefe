@@ -12,7 +12,7 @@ CLEAN_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-clean-custos-fixos.
 BLOCKED_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-blocked-configuracoes.json"
 
 EXPECTED_CLEAN_PLAN = "6ff7e0adc6ceb252b3fd6157479c78789e9f8f31eabd9d3ae1a303f5d34fe999"
-EXPECTED_BLOCKED_PLAN = "1a35ffee13b35644aae0547608405921966d0c57d9c25a8cae113ce2144982a2"
+EXPECTED_BLOCKED_PLAN = "128f29f626ff2420379a3855b7337531d81bc1996da4af37ef3247927f435e42"
 EXPECTED_CLEAN_PARTS = {
     "xl/tables/table12.xml",
     "xl/workbook.xml",
@@ -39,15 +39,15 @@ def main() -> int:
 
     blocked = execute_recipe(BLOCKED_RECIPE, dry_run=True, refresh_snapshot=False, repo_root=ROOT)
     blocked_plan = blocked["operations"][0]["structural_plan"]
+    if blocked_plan["blocker_count"] != 1:
+        raise SystemExit(f"Probe bloqueado esperava exatamente 1 blocker: {blocked_plan['blockers']}")
+    blocker = blocked_plan["blockers"][0]
+    if blocker.get("kind") != "vml_drawing" or "vmlDrawing" not in blocker.get("expression", ""):
+        raise SystemExit(f"Blocker real inesperado: {blocker}")
     if blocked_plan["plan_sha256"] != EXPECTED_BLOCKED_PLAN:
         raise SystemExit(
             f"plan_sha256 bloqueado divergente: {blocked_plan['plan_sha256']} != {EXPECTED_BLOCKED_PLAN}"
         )
-    if blocked_plan["blocker_count"] != 1:
-        raise SystemExit(f"Probe bloqueado esperava exatamente 1 blocker: {blocked_plan['blockers']}")
-    blocker = blocked_plan["blockers"][0]
-    if blocker.get("kind") != "sheet_object" or "vmlDrawing" not in blocker.get("expression", ""):
-        raise SystemExit(f"Blocker real inesperado: {blocker}")
 
     source_after = sha256_file(WORKBOOK)
     if source_before != source_after:
