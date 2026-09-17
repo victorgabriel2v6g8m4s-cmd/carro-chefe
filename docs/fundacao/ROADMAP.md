@@ -19,7 +19,7 @@ flowchart LR
 Objetivo: transformar a ideia em decisões controladas.
 
 - confirmar nome legal/comercial, responsáveis e orçamento-limite;
-- arquitetura de nomes aprovada: Carro Chefe como marca, Carro‑Chefe como família/produto e “Paulistinha” apenas como alias legado interno;
+- arquitetura de nomes aprovada: Carro Chefe como marca, Carro‑Chefe Simples como produto de entrada, **Brasa Dourada** como intermediário e “Paulistinha” apenas como alias legado interno;
 - reconhecer que fotos, medidas, infraestrutura e validações presenciais do ponto **já existem**, porém são mantidas fora do repositório por decisão do proprietário; quando uma tarefa depender de detalhe físico, solicitar o dado diretamente ao proprietário ou registrar `INFO-PEND-*` em `docs/governanca/RISCOS_DECISOES.md`;
 - congelar escopo do MVP do cardápio;
 - definir data-alvo somente depois da análise de licenças e obras;
@@ -36,6 +36,7 @@ Objetivo: saber se, onde e sob quais condições a operação pode abrir.
 - usar as medições e evidências presenciais existentes, solicitando ao proprietário somente os dados específicos necessários à tarefa;
 - desenhar planta operacional com fluxo de crus, prontos, equipe, fila e retirada;
 - dimensionar energia, água, frio, ventilação, iluminação, internet e segurança com base nos dados presenciais disponíveis e validações profissionais aplicáveis;
+- prever estação segura para maçarico, montagem visível, molhos e pimentas de balcão;
 - cotar adequações e criar reserva de contingência.
 
 Saída: checklist de licenças, planta validada e custo de implantação por faixa.
@@ -49,11 +50,16 @@ Objetivo: tornar cada produto repetível, seguro e rentável.
 - calcular CMV, margem de contribuição e preço por cenário;
 - simular e validar a estratégia **Escada do Chefe** sem publicar preço antes da aprovação financeira;
 - mapear alérgenos e substituições;
-- testar Carro‑Chefe Simples, Carro‑Chefe Brasa Dourada, Chefão e Espeto Completo com clientes-piloto;
-- validar tempo de estação e consistência da cebola-roxa tostada do Brasa Dourada;
+- testar Carro‑Chefe Simples, **Brasa Dourada**, Chefão e Espeto Completo com clientes-piloto;
+- homologar quantidade de caldo do vinagrete por pão e medir a economia líquida obtida com a retirada da maionese-base;
+- validar tipo/gramatura e método seguro do queijo maçaricado do Brasa Dourada;
+- validar tempo de estação e consistência da cebola-roxa tostada;
+- criar fichas técnicas dos molhos caseiros aprovados, com rendimento, custo e rotina de conservação;
+- testar a etapa de escolha de molhos à vontade sem criar gargalo;
+- retirar alface das fichas e novas referências de todos os lanches;
 - aprovar nomes, descrições e arquitetura de modificadores.
 
-Saída: cardápio MVP com ficha técnica, custo, preço aprovado, foto e tempo padrão.
+Saída: cardápio MVP com ficha técnica, custo, preço aprovado, foto, sequência de montagem e tempo padrão.
 
 ## G3 — ERP, equipamentos, fornecedores e canais
 
@@ -62,8 +68,11 @@ Objetivo: ligar venda, produção, estoque e financeiro antes de gerar demanda.
 - selecionar ERP por prova de conceito com o fluxo real do Chefão;
 - escolher totem, pin pad/adquirente, impressora/KDS e contingência de internet;
 - cadastrar produtos, modificadores, insumos, receitas e fornecedores;
+- cadastrar `MOD-MOLHO-LIVRE` separado de pimentas de balcão;
+- sincronizar site, ERP e dados financeiros com a retirada de alface, nome Brasa Dourada e nova composição;
 - validar baixa automática de estoque e conciliação de pagamento;
 - contratar equipamentos e insumos pelo método de custo total/avaliações;
+- homologar equipamento/procedimento de maçarico antes de uso real;
 - construir versão leve de `/welcome` e integrar `/cardapio`;
 - configurar analytics, UTMs, pixels e política de privacidade.
 
@@ -74,9 +83,11 @@ Saída: pedido de ponta a ponta aprovado em todos os canais e compras críticas 
 Objetivo: provar a rotina sem clientes reais.
 
 - contratar/definir parrilheiro, atendente e assistente;
-- treinar abertura, pré-preparo, atendimento, produção, conferência e fechamento;
+- treinar abertura, pré-preparo, atendimento, produção, montagem visível, escolha de molhos, conferência e fechamento;
 - simular pico com pedidos mistos e falhas de internet/pagamento;
 - medir capacidade, gargalo, tempo de fila e tempo de preparo;
+- medir especificamente impacto de cebola tostada, maçarico e etapa de molhos no ciclo do Brasa Dourada;
+- medir consumo médio e reposição de cada molho;
 - calibrar estoque mínimo, ponto de reposição e desperdício;
 - produzir banco inicial de fotos/vídeos e campanha de pré-abertura.
 
@@ -89,6 +100,7 @@ Objetivo: aprender com risco e volume limitados.
 - realizar soft opening com janela e público controlados;
 - acompanhar pedidos, aprovação de pagamento, tempo, ruptura, erro e feedback;
 - observar mix, ticket e margem dos três degraus da Escada do Chefe antes de alterar preço/apresentação;
+- acompanhar consumo real dos molhos e impacto econômico do caldo do vinagrete/queijo maçaricado;
 - limitar mídia paga até estabilizar produção e disponibilidade;
 - fazer reunião diária de 15 minutos e fechamento de caixa/estoque;
 - corrigir descrição, embalagem, layout e treinamento com evidência.
@@ -101,6 +113,7 @@ Objetivo: transformar aprendizagem em crescimento rentável.
 
 - revisar cardápio por margem, popularidade e complexidade;
 - recalibrar a Escada do Chefe com dados de mix, margem, adicionais, bebida e recompra;
+- revisar custo/consumo dos molhos à vontade e perdas do vinagrete;
 - ativar remarketing e campanhas por raio somente com rastreamento conciliado;
 - criar rotina de recompra via WhatsApp com consentimento;
 - negociar fornecedores com base em consumo real;
