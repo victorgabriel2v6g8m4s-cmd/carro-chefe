@@ -29,6 +29,7 @@ Bebidas receberão IDs após definição de marcas, volumes, sabores, teor alco�
 | `MOD-ESP-1` | Escolha um espeto | exatamente 1; Simples, Brasa Dourada e Completo |
 | `MOD-ESP-2` | Escolha dois espetos | exatamente 2; permitir repetição somente após decisão |
 | `MOD-MOLHO-LIVRE` | Molhos à vontade | cliente pode escolher livremente entre os molhos aprovados na finalização; sem cobrança adicional enquanto a política estiver vigente |
+| `MOD-GRATIS-2` | Até dois adicionais grátis | política anterior preservada; opções não-molho e regras finais precisam ser reconciliadas com a nova estação de molhos. Molhos de `MOD-MOLHO-LIVRE` não consomem uma das duas escolhas |
 | `MOD-PAGO` | Adicionais pagos | 0 a N; preço, limite e impacto de estoque por opção |
 | `MOD-REMOVER` | Remover ingredientes | sem desconto; registrar para cozinha e analytics |
 | `MOD-PONTO` | Ponto da carne | só habilitar se operação garantir execução e segurança |
@@ -245,6 +246,19 @@ essencial da casa        QUEIJO MAÇARICADO           EXPERIÊNCIA COMPLETA
 PREÇO VISÍVEL            BRASA + DOURADO             FOTO/HERO + BENEFÍCIOS
 ```
 
+### Ticket médio e validação da Escada
+
+- Simples: priorizar bebida e adicionais pagos coerentes depois da escolha;
+- Brasa Dourada: bebida e comparação transparente com Chefão quando houver diferença real calculada;
+- Chefão: bebida e acompanhamento/combinação somente após margem validada;
+- molhos à vontade não são upsell enquanto permanecerem incluídos;
+- personalização digital deve manter preço atualizado a cada modificação;
+- combos só entram após cálculo de margem e não devem usar “economia” se a diferença não for real.
+
+Acompanhar visualização, seleção, pagamento, mix dos três degraus, ticket, margem, taxa de bebida/adicional, consumo de molhos, abandono após preço, tempo de produção e recompra. Testes devem isolar variáveis sempre que possível.
+
+Nenhum preço final é aprovado por esta estratégia. Antes da publicação: concluir fichas técnicas/gramaturas, calcular custo variável e margem, simular as faixas relativas, validar margem mínima, provar cardápio físico/digital, testar com clientes-piloto e aprovar preços finais com Gestão/Finanças.
+
 ## Estratégia aprovada de cardápio e canais — 17/09/2026
 
 O cardápio inicial será deliberadamente enxuto no material físico: poucas combinações de lanches e espetos, com uma opção visualmente destacada para **montar um lanche personalizado**.
@@ -315,6 +329,7 @@ O contrato técnico completo de tracking, modelo de atribuição, privacidade, e
 - se queijo coalho do Espeto Completo é parte do espeto ou porção adicional;
 - se dois espetos do Chefão podem ser iguais;
 - quantidade/gramatura de cada ingrediente e adicional;
+- reconciliar a composição definitiva de `MOD-GRATIS-2` com a nova política de molhos à vontade, preservando que molhos livres não contam no limite de dois adicionais;
 - tipo, formato e gramatura do queijo maçaricado do Brasa Dourada;
 - quantidade padrão de caldo do vinagrete por pão e método de aplicação;
 - procedimento/porção de cebola tostada do Brasa Dourada;
