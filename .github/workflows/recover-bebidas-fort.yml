@@ -1,0 +1,65 @@
+name: Recover Fort beverages workbook
+
+on:
+  push:
+    branches:
+      - excel/bebidas-fort-2026-09-17-recovered
+    paths:
+      - .github/workflows/recover-bebidas-fort.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: recover-bebidas-fort
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout recovery branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: excel/bebidas-fort-2026-09-17-recovered
+
+      - name: Verify recipe before mutation
+        run: python -m tools.excel_recipe validate anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
+
+      - name: Apply recipe with compatibility gate
+        run: python -m tools.excel_recipe apply anexos/financeiro/recipes/2026-09-17-bebidas-fort.json
+
+      - name: Validate complete regenerated package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from tools.excel_recipe.package import PackageEditor
+
+          path = Path('anexos/financeiro/carro chefe.xlsm')
+          package = PackageEditor(path)
+          package.assert_excel_compatible()
+          print('OOXML_COMPAT_OK')
+          print('SOURCE_SHA256=' + package.source_sha256)
+          print('VBA_SHA256=' + str(package.vba_sha256))
+          PY
+          python tools/excel_snapshot/export.py --check \
+            --source 'anexos/financeiro/carro chefe.xlsm' \
+            --output 'anexos/financeiro/snapshot'
+
+      - name: Commit regenerated workbook and audit artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Carro Chefe Excel Recipe'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- \
+            'anexos/financeiro/carro chefe.xlsm' \
+            'anexos/financeiro/snapshot' \
+            'anexos/financeiro/recipes/2026-09-17-bebidas-fort.json' \
+            'anexos/financeiro/recipes/receipts/bebidas-fort-2026-09-17.receipt.json'
+          git diff --cached --quiet && { echo 'Nenhuma alteração gerada pela receita.' >&2; exit 1; }
+          git commit -m 'financeiro: regenerar bebidas do Fort sem corrupção OOXML'
+          git push origin HEAD:excel/bebidas-fort-2026-09-17-recovered
