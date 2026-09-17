@@ -15,12 +15,12 @@ O painel operacional criado deriva dessa linguagem sem alterar os arquivos origi
 
 ## Arquitetura de nomes aprovada
 
-Decisão do proprietário registrada na Central Operacional em 13/08/2026 e atualizada em 17/09/2026:
+Decisão do proprietário registrada na Central Operacional em 13/08/2026 e revisada em 17/09/2026:
 
 - **Carro Chefe** (sem hífen): marca institucional, logotipo, assinatura de comunicação, domínio e perfis;
-- **Carro‑Chefe** (com hífen): família e produto herói, incluindo **Carro‑Chefe Simples** e **Carro‑Chefe Brasa Dourada**;
-- **Carro‑Chefe Brasa Dourada**: substitui o nome legado **Carro‑Chefe com Cheddar** e representa uma receita própria de 15 cm com um espeto, cheddar, cebola-roxa tostada na parrilla, barbecue e batata palha, sujeita a ficha técnica final;
-- **Chefão**: produto de 30 cm da mesma arquitetura de portfólio e degrau superior da estratégia Escada do Chefe;
+- **Carro‑Chefe** (com hífen): família/produto de entrada, incluindo **Carro‑Chefe Simples**;
+- **Brasa Dourada**: nome curto e autônomo do produto intermediário `PROD-CCC-001`; substitui **Carro‑Chefe Brasa Dourada** e o legado anterior **Carro‑Chefe com Cheddar**;
+- **Chefão**: produto de 30 cm e degrau superior da estratégia Escada do Chefe;
 - **Lanches**: rótulo genérico de categoria para substituir “Paulistinha” na futura derivação da capa; não é novo nome de produto;
 - **Paulistinha**: alias legado interno para rastreabilidade, sem uso em capa, site, anúncios, catálogo ou comunicação ao cliente.
 
@@ -28,22 +28,20 @@ Por aplicação:
 
 | Aplicação | Nomenclatura aprovada |
 |---|---|
-| Produto/cardápio | Carro‑Chefe Simples; Carro‑Chefe Brasa Dourada; Chefão |
+| Produto/cardápio | Carro‑Chefe Simples; Brasa Dourada; Chefão |
 | Capa | `LANCHES • ESPETINHO • BEBIDAS`, substituindo apenas “Paulistinha” em um derivado versionado |
-| Site | Carro Chefe para a marca; Carro‑Chefe para a família/produto |
-| Anúncios | Carro Chefe como emissor; Carro‑Chefe/Chefão como produtos; não usar “Paulistinha” nem “Carro‑Chefe com Cheddar” em novas peças |
+| Site | Carro Chefe para a marca; nomes individuais dos produtos no cardápio |
+| Anúncios | Carro Chefe como emissor; Carro‑Chefe Simples, Brasa Dourada e Chefão como produtos; não usar nomes legados em novas peças |
 
 ### Racional do nome Brasa Dourada
 
-O nome deve comunicar uma experiência, não apenas um ingrediente acrescentado:
+O nome foi encurtado para ser mais objetivo, memorável e rápido de ler no cardápio.
 
 - **Brasa** conecta a receita ao preparo visível na parrilla e à identidade sensorial da marca;
-- **Dourada** remete ao cheddar, tostado, calor e aos elementos em ouro/bronze da identidade visual;
-- a expressão permanece subordinada à família **Carro‑Chefe**, evitando criar uma submarca desconectada.
+- **Dourada** deixa de ser apenas referência verbal ao cheddar: passa a ser materializada pelo **queijo de cobertura maçaricado**, com acabamento dourado real no produto servido;
+- o nome curto diferencia o produto intermediário sem competir com a marca institucional Carro Chefe.
 
-O tratamento visual do Brasa Dourada pode usar brasa, bronze e ouro fosco, mas não deve superar o Chefão em escala ou protagonismo na estratégia **Escada do Chefe**.
-
-O arquivo original `cardápio/Cardápio Capa.png` é imutável. A versão editada pela designer deve ser entregue como novo arquivo, com data, versão, origem e finalidade, e validada por Marca antes de impressão ou publicação.
+A fotografia e a apresentação devem mostrar o dourado verdadeiro do queijo maçaricado, sem exagerar volume, chama ou efeito cenográfico. O tratamento visual pode usar brasa, bronze e ouro fosco, mas não deve superar o Chefão em escala ou protagonismo dentro da estratégia **Escada do Chefe**.
 
 ## Paleta digital inicial
 
@@ -89,7 +87,7 @@ Usar `light.png` apenas quando contraste, branco real do arquivo e impressão fo
 - estrutura da tenda preta permanece visualmente secundária;
 - sinalização precisa sobreviver à distância, sol, chuva e luz noturna;
 - ornamentos devem enquadrar, não competir com nome, preço ou chamada;
-- parrilla e produto são parte da identidade sensorial, condicionados à segurança e ao conforto.
+- parrilla, montagem ao vivo e produto são parte da identidade sensorial, condicionados à segurança e ao conforto.
 
 ## Embalagem e etiqueta
 
@@ -103,7 +101,9 @@ A etiqueta precisa priorizar: logo, URL/QR, Instagram e WhatsApp. QR deve aponta
 - distorção do medalhão ou recorte do chapéu/corda;
 - efeitos 3D que pareçam tecnologia fria ou atrasem o pedido;
 - reintroduzir “Paulistinha” na comunicação pública ou tratar “Lanches” como nome de produto;
-- usar “Carro‑Chefe com Cheddar” em novas peças depois da aprovação de Brasa Dourada;
+- usar **Carro‑Chefe com Cheddar** ou **Carro‑Chefe Brasa Dourada** em novas peças depois da aprovação do nome **Brasa Dourada**;
+- mostrar alface em novos materiais dos lanches;
+- simular queijo maçaricado que não corresponda ao produto real;
 - usar marca de fornecedor como ingrediente genérico.
 
 ## Pendências do manual definitivo
