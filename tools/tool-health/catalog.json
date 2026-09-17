@@ -70,7 +70,7 @@
     },
     {
       "id": "excel-recipe",
-      "name": "Excel Recipe Engine V3A",
+      "name": "Excel Recipe Engine V3A / Generic G1",
       "path": "tools/excel_recipe",
       "maturity": "complete",
       "platforms": ["linux", "darwin", "win32"],
