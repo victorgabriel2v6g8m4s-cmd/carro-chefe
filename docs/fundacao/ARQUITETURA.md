@@ -10,6 +10,16 @@ O Carro Chefe deve operar como três produtos conectados:
 
 Objetivo norteador: **vender um produto memorável com velocidade, margem e dados suficientes para repetir, melhorar e escalar a operação**.
 
+## Endereço operacional aprovado
+
+O proprietário confirmou em 17/09/2026 o endereço operacional da unidade inicial:
+
+**Rua Vicente Solari, 531 — CEP 79006-440.**
+
+Esse endereço passa a ser a referência canônica para planejamento físico, levantamentos presenciais, infraestrutura, acessos, logística, licenças e demais documentos que dependam da localização da unidade. Medidas do ponto, disponibilidade/capacidade de energia, água, esgoto, internet, ventilação, acessibilidade e exigências locais continuam dependentes de levantamento e validação específicos.
+
+Cidade e UF não devem ser acrescentadas por inferência a este registro; quando necessárias em documentação oficial, devem ser confirmadas explicitamente ou validadas em fonte oficial apropriada.
+
 ## Mapa do negócio
 
 ```mermaid
@@ -165,7 +175,8 @@ flowchart LR
 
 ## Limites atuais
 
-- preços, gramaturas, custos, endereço, horários e data de abertura ainda não foram fornecidos;
+- preços, gramaturas, custos, horários e data de abertura ainda não foram fornecidos;
+- medidas e condições de infraestrutura do ponto ainda precisam de levantamento presencial;
 - ERP, adquirente, hospedagem e hardware ainda não foram escolhidos;
 - não há planta com medidas do quiosque;
 - licenças e regras municipais precisam de validação local;
