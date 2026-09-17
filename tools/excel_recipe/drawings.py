@@ -130,7 +130,7 @@ class DrawingSupport:
                 if new is None:
                     out.append(self._occ("drawing_anchor", part, f"{kind}.{marker_name}", old, "Anchor cairia em linha/coluna removida"))
                 elif new != old:
-                    out.append({"kind": "drawing_anchor", "part": part, "location": f"{kind}.{marker_name}", "value": old, "disposition": "rewritable", "reason": None})
+                    out.append(self._rewritable("drawing_anchor", part, f"{kind}.{marker_name}", old))
         return out
 
     def _scan_chart(self, chart_path: str, transform) -> list[dict]:
@@ -143,7 +143,7 @@ class DrawingSupport:
                 continue
             _, changed, blockers = rewrite_formula_a1(node.text, "", transform)
             if changed:
-                out.append({"kind": "chart_formula", "part": chart_path, "location": "c:f", "value": node.text, "disposition": "rewritable", "reason": None})
+                out.append(self._rewritable("chart_formula", chart_path, "c:f", node.text))
             for reason in blockers:
                 out.append(self._occ("chart_formula", chart_path, "c:f", node.text, reason))
         return out
@@ -207,5 +207,9 @@ class DrawingSupport:
         return tag.rsplit("}", 1)[-1]
 
     @staticmethod
-    def _occ(kind: str, part: str, location: str, value: str, reason: str) -> dict:
-        return {"kind": kind, "part": part, "location": location, "value": value[:240], "disposition": "blocker", "reason": reason}
+    def _rewritable(kind: str, part: str, location: str, expression: str) -> dict:
+        return {"kind": kind, "part": part, "location": location, "expression": expression[:240], "disposition": "rewritable", "reason": None}
+
+    @staticmethod
+    def _occ(kind: str, part: str, location: str, expression: str, reason: str) -> dict:
+        return {"kind": kind, "part": part, "location": location, "expression": expression[:240], "disposition": "blocker", "reason": reason}
