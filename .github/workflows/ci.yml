@@ -138,6 +138,10 @@ jobs:
         shell: pwsh
         run: python -m tools.excel_recipe.probe_v3a_real
 
+      - name: Verify V3B real DrawingML/ChartML probes
+        shell: pwsh
+        run: python -m tools.excel_recipe.probe_v3b_real
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest
