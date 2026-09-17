@@ -17,11 +17,7 @@ class V3BStructuralPlanner(StructuralPlanner):
 
         occurrences = [
             item for item in report["occurrences"]
-            if not (
-                item.get("kind") == "sheet_object"
-                and "/drawing" in str(item.get("expression", ""))
-                and "/vmlDrawing" not in str(item.get("expression", ""))
-            )
+            if not self._replaced_sheet_object_blocker(item)
             and not (
                 item.get("kind") == "protected_ooxml"
                 and str(item.get("part", "")).startswith("xl/charts/")
@@ -41,6 +37,19 @@ class V3BStructuralPlanner(StructuralPlanner):
             json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
         return report
+
+    @staticmethod
+    def _replaced_sheet_object_blocker(item: dict) -> bool:
+        if item.get("kind") != "sheet_object":
+            return False
+        expression = str(item.get("expression", ""))
+        # Estes relationships possuem scanner específico na V3B. Remover o
+        # blocker legado evita diagnósticos duplicados sem relaxar a proteção:
+        # DrawingSupport volta a emitir rewritable ou blocker específico.
+        return any(
+            token in expression
+            for token in ("/drawing", "/vmlDrawing", "/oleObject", "/control")
+        )
 
 
 class V3BStructuralEngine(StructuralEngine):
