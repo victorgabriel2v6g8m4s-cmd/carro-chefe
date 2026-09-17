@@ -5,6 +5,7 @@ import json
 import tempfile
 from pathlib import Path
 
+from .constants import NS
 from .engine import REPO_ROOT, execute_recipe
 from .package import PackageEditor
 from .structural_v3b import StructuralPlannerV3B
@@ -17,8 +18,10 @@ EXPECTED_CLEAN_PLAN_SHA256 = ""
 EXPECTED_BLOCKED_PLAN_SHA256 = ""
 
 _VISUAL_KINDS = {"drawing_anchor", "chart_formula"}
-_ROW_POSITIONS = (1, 2, 3, 4, 5, 8, 10, 12, 15, 20, 30, 50, 75, 100, 150, 200)
-_COLUMN_POSITIONS = (1, 2, 3, 5, 8, 10, 12, 15, 20, 30, 50)
+# Poucos deslocamentos canônicos bastam: a busca só roda nas sheets que
+# realmente possuem DrawingML, evitando centenas de planos caros no CI.
+_ROW_POSITIONS = (1, 2, 3, 5, 10)
+_COLUMN_POSITIONS = (1, 2, 3, 5, 10)
 
 
 def main() -> int:
@@ -95,16 +98,21 @@ def main() -> int:
 
 
 def _find_clean_visual_plan(workbook: WorkbookContext, planner: StructuralPlannerV3B) -> tuple[dict, dict]:
-    sheets = sorted(
-        (node.get("name", "") for node in workbook.workbook_root.findall("x:sheets/x:sheet", {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"})),
+    all_sheets = sorted(
+        (node.get("name", "") for node in workbook.workbook_root.findall("x:sheets/x:sheet", NS)),
         key=str.casefold,
     )
+    drawing_sheets = [sheet for sheet in all_sheets if planner.visuals._drawings_for_sheet(sheet)]
+    if not drawing_sheets:
+        raise SystemExit("Workbook real não possui sheets com DrawingML para probe V3B.")
+
     candidates: list[dict] = []
-    for sheet in sheets:
+    for sheet in drawing_sheets:
         for at in _ROW_POSITIONS:
             candidates.append({"op": "structural.plan", "action": "sheet.insert_rows", "sheet": sheet, "at": at, "count": 1})
         for at in _COLUMN_POSITIONS:
             candidates.append({"op": "structural.plan", "action": "sheet.insert_columns", "sheet": sheet, "at": at, "count": 1})
+
     for operation in candidates:
         try:
             plan = planner.plan(operation)
@@ -117,7 +125,7 @@ def _find_clean_visual_plan(workbook: WorkbookContext, planner: StructuralPlanne
         ]
         if plan["blocker_count"] == 0 and visual:
             return operation, plan
-    raise SystemExit("Nenhum cenário V3B limpo com drawing/chart real foi encontrado.")
+    raise SystemExit("Nenhum cenário V3B limpo com DrawingML/chart real foi encontrado.")
 
 
 def _execute_clean_dry_run(plan_operation: dict) -> tuple[list[str], dict]:
