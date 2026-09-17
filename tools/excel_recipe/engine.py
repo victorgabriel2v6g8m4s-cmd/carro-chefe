@@ -61,7 +61,7 @@ def execute_recipe(
         receipt = _build_receipt(recipe, package, candidate_package, changed_parts, runner.applied)
         if dry_run:
             return receipt
-        _install(source, candidate, receipt_path, receipt, refresh_snapshot, repo_root)
+        _install(source, candidate, receipt_path, receipt, recipe, refresh_snapshot, repo_root)
         return receipt
 
 
@@ -91,6 +91,7 @@ def _build_receipt(recipe: Recipe, before: PackageEditor, after: PackageEditor, 
         "tool_version": TOOL_VERSION,
         "recipe_id": recipe.recipe_id,
         "workbook": recipe.workbook_path,
+        "snapshot_output": recipe.snapshot_output_path,
         "source_sha256_before": before.source_sha256,
         "source_sha256_after": after.source_sha256,
         "vba_sha256_before": before.vba_sha256,
@@ -102,7 +103,15 @@ def _build_receipt(recipe: Recipe, before: PackageEditor, after: PackageEditor, 
     }
 
 
-def _install(source: Path, candidate: Path, receipt_path: Path, receipt: dict, refresh_snapshot: bool, repo_root: Path) -> None:
+def _install(
+    source: Path,
+    candidate: Path,
+    receipt_path: Path,
+    receipt: dict,
+    recipe: Recipe,
+    refresh_snapshot: bool,
+    repo_root: Path,
+) -> None:
     backup = source.with_name(f".{source.name}.recipe-backup-{os.getpid()}")
     receipt_tmp = receipt_path.with_name(f".{receipt_path.name}.tmp-{os.getpid()}")
     if backup.exists() or receipt_tmp.exists():
@@ -112,8 +121,8 @@ def _install(source: Path, candidate: Path, receipt_path: Path, receipt: dict, r
     try:
         os.replace(source, backup)
         shutil.copy2(candidate, source)
-        if refresh_snapshot:
-            _refresh_snapshot(repo_root)
+        if refresh_snapshot and recipe.snapshot_output_path is not None:
+            _refresh_snapshot(recipe, repo_root)
         os.replace(receipt_tmp, receipt_path)
         backup.unlink(missing_ok=True)
     except Exception:
@@ -124,9 +133,25 @@ def _install(source: Path, candidate: Path, receipt_path: Path, receipt: dict, r
         raise
 
 
-def _refresh_snapshot(repo_root: Path) -> None:
+def _refresh_snapshot(recipe: Recipe, repo_root: Path) -> None:
     script = resolve_repo_path(DEFAULT_SNAPSHOT_SCRIPT, repo_root)
+    source = resolve_repo_path(recipe.workbook_path, repo_root)
+    output = resolve_repo_path(recipe.snapshot_output_path or "", repo_root)
+    if source == output or output in source.parents:
+        raise RecipeError("Snapshot configurado não pode conter nem substituir a planilha fonte.")
+    command = [
+        sys.executable,
+        str(script),
+        "--source",
+        recipe.workbook_path,
+        "--output",
+        recipe.snapshot_output_path or "",
+    ]
     try:
-        subprocess.run([sys.executable, str(script)], cwd=repo_root, check=True)
-    except subprocess.CalledProcessError as exc:
-        raise RecipeError(f"Snapshot falhou após aplicar receita; workbook foi restaurado. Exit code {exc.returncode}.") from exc
+        subprocess.run(command, cwd=repo_root, check=True)
+    except (subprocess.CalledProcessError, OSError) as exc:
+        code = getattr(exc, "returncode", None)
+        detail = f" Exit code {code}." if code is not None else ""
+        raise RecipeError(
+            "Snapshot configurado falhou após aplicar receita; workbook foi restaurado." + detail
+        ) from exc
