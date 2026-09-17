@@ -20,7 +20,7 @@ Objetivo: transformar a ideia em decisões controladas.
 
 - confirmar nome legal/comercial, responsáveis e orçamento-limite;
 - arquitetura de nomes aprovada: Carro Chefe como marca, Carro‑Chefe como família/produto e “Paulistinha” apenas como alias legado interno;
-- medir o ponto e registrar infraestrutura disponível;
+- reconhecer que fotos, medidas, infraestrutura e validações presenciais do ponto **já existem**, porém são mantidas fora do repositório por decisão do proprietário; quando uma tarefa depender de detalhe físico, solicitar o dado diretamente ao proprietário ou registrar `INFO-PEND-*` em `docs/governanca/RISCOS_DECISOES.md`;
 - congelar escopo do MVP do cardápio;
 - definir data-alvo somente depois da análise de licenças e obras;
 - criar contas e acessos com autenticação forte e proprietários definidos.
@@ -33,8 +33,9 @@ Objetivo: saber se, onde e sob quais condições a operação pode abrir.
 
 - consultar contador e responsáveis locais sobre empresa, fiscal e contratação;
 - mapear alvará, vigilância sanitária, bombeiros, ocupação de calçada, resíduos, gás/energia e venda de álcool;
+- usar as medições e evidências presenciais existentes, solicitando ao proprietário somente os dados específicos necessários à tarefa;
 - desenhar planta operacional com fluxo de crus, prontos, equipe, fila e retirada;
-- dimensionar energia, água, frio, ventilação, iluminação, internet e segurança;
+- dimensionar energia, água, frio, ventilação, iluminação, internet e segurança com base nos dados presenciais disponíveis e validações profissionais aplicáveis;
 - cotar adequações e criar reserva de contingência.
 
 Saída: checklist de licenças, planta validada e custo de implantação por faixa.
@@ -46,8 +47,10 @@ Objetivo: tornar cada produto repetível, seguro e rentável.
 - testar receitas, gramaturas, tempos, rendimento e apresentação;
 - criar ficha técnica de ingrediente, embalagem e perda;
 - calcular CMV, margem de contribuição e preço por cenário;
+- simular e validar a estratégia **Escada do Chefe** sem publicar preço antes da aprovação financeira;
 - mapear alérgenos e substituições;
-- testar Simples, Cheddar, Chefão e Espeto Completo com clientes-piloto;
+- testar Carro‑Chefe Simples, Carro‑Chefe Brasa Dourada, Chefão e Espeto Completo com clientes-piloto;
+- validar tempo de estação e consistência da cebola-roxa tostada do Brasa Dourada;
 - aprovar nomes, descrições e arquitetura de modificadores.
 
 Saída: cardápio MVP com ficha técnica, custo, preço aprovado, foto e tempo padrão.
@@ -85,6 +88,7 @@ Objetivo: aprender com risco e volume limitados.
 
 - realizar soft opening com janela e público controlados;
 - acompanhar pedidos, aprovação de pagamento, tempo, ruptura, erro e feedback;
+- observar mix, ticket e margem dos três degraus da Escada do Chefe antes de alterar preço/apresentação;
 - limitar mídia paga até estabilizar produção e disponibilidade;
 - fazer reunião diária de 15 minutos e fechamento de caixa/estoque;
 - corrigir descrição, embalagem, layout e treinamento com evidência.
@@ -96,6 +100,7 @@ Saída: três ciclos de operação estáveis antes de ampliar mídia ou horário
 Objetivo: transformar aprendizagem em crescimento rentável.
 
 - revisar cardápio por margem, popularidade e complexidade;
+- recalibrar a Escada do Chefe com dados de mix, margem, adicionais, bebida e recompra;
 - ativar remarketing e campanhas por raio somente com rastreamento conciliado;
 - criar rotina de recompra via WhatsApp com consentimento;
 - negociar fornecedores com base em consumo real;
