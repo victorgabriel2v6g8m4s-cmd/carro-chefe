@@ -25,7 +25,7 @@ class DrawingRef:
 
 
 class DrawingSupport:
-    """V3B: inventaria e regrava anchors DrawingML e fórmulas de charts clássicos."""
+    """V3B: inventaria e regrava anchors DrawingML e fórmulas de ChartML clássico."""
 
     def __init__(self, workbook: WorkbookContext) -> None:
         self.workbook = workbook
@@ -37,8 +37,11 @@ class DrawingSupport:
         for ref in refs:
             root = self.package.get_xml(ref.drawing_path)
             out.extend(self._scan_anchors(root, ref.drawing_path, transform))
-            for chart_path in ref.chart_paths:
-                out.extend(self._scan_chart(chart_path, transform))
+
+        # Charts são dependências globais: um chart ancorado em outra sheet pode
+        # referenciar células da sheet estruturalmente transformada.
+        for chart_path in self._all_chart_paths():
+            out.extend(self._scan_chart(chart_path, transform))
         return out
 
     def rewrite(self, transform) -> int:
@@ -55,13 +58,14 @@ class DrawingSupport:
                 self.package.set_xml(ref.drawing_path, root)
                 self.workbook.allowed_parts.add(ref.drawing_path)
                 changed += drawing_changed
-            for chart_path in ref.chart_paths:
-                chart_root = self.package.get_xml(chart_path)
-                chart_changed = self._rewrite_chart(chart_root, chart_path, transform)
-                if chart_changed:
-                    self.package.set_xml(chart_path, chart_root)
-                    self.workbook.allowed_parts.add(chart_path)
-                    changed += chart_changed
+
+        for chart_path in self._all_chart_paths():
+            chart_root = self.package.get_xml(chart_path)
+            chart_changed = self._rewrite_chart(chart_root, chart_path, transform)
+            if chart_changed:
+                self.package.set_xml(chart_path, chart_root)
+                self.workbook.allowed_parts.add(chart_path)
+                changed += chart_changed
         return changed
 
     def _discover(self, sheet: str) -> tuple[list[DrawingRef], list[dict]]:
@@ -105,6 +109,13 @@ class DrawingSupport:
             refs.append(DrawingRef(drawing_path, drawing_rels if drawing_rels in self.package.entries else None, tuple(sorted(set(chart_paths)))))
         return refs, blockers
 
+    def _all_chart_paths(self) -> tuple[str, ...]:
+        return tuple(sorted(
+            path
+            for path in self.package.entries
+            if path.startswith("xl/charts/") and path.endswith(".xml") and "/_rels/" not in path
+        ))
+
     def _scan_anchors(self, root: ET.Element, part: str, transform) -> list[dict]:
         out: list[dict] = []
         if not list(root):
@@ -116,12 +127,20 @@ class DrawingSupport:
                 continue
             if kind == "absoluteAnchor":
                 continue
+            if kind == "twoCellAnchor" and anchor.get("editAs") not in (None, "twoCell"):
+                out.append(self._occ("drawing_anchor_mode", part, kind, anchor.get("editAs", ""), "twoCellAnchor com editAs diferente de twoCell ainda não possui semântica provada"))
+                continue
             objects = [self._local(child.tag) for child in list(anchor) if self._local(child.tag) not in {"from", "to", "ext", "clientData"}]
             unsupported = [name for name in objects if name not in SUPPORTED_OBJECTS]
             if unsupported:
                 out.append(self._occ("drawing_object", part, kind, ",".join(unsupported), "Objeto DrawingML não suportado"))
                 continue
-            for marker_name in ("from", "to"):
+            required = ("from", "to") if kind == "twoCellAnchor" else ("from",)
+            missing = [name for name in required if anchor.find(qname(XDR_NS, name)) is None]
+            if missing:
+                out.append(self._occ("drawing_anchor", part, kind, ",".join(missing), "Anchor DrawingML sem marker obrigatório"))
+                continue
+            for marker_name in required:
                 marker = anchor.find(qname(XDR_NS, marker_name))
                 if marker is None:
                     continue
@@ -160,10 +179,16 @@ class DrawingSupport:
                 continue
             if kind not in SUPPORTED_ANCHORS:
                 raise RecipeError(f"Anchor DrawingML não suportado após plano limpo: {kind}")
-            for marker_name in ("from", "to"):
+            if kind == "twoCellAnchor" and anchor.get("editAs") not in (None, "twoCell"):
+                raise RecipeError("twoCellAnchor com editAs não suportado após plano limpo.")
+            objects = [self._local(child.tag) for child in list(anchor) if self._local(child.tag) not in {"from", "to", "ext", "clientData"}]
+            if any(name not in SUPPORTED_OBJECTS for name in objects):
+                raise RecipeError("Objeto DrawingML não suportado após plano limpo.")
+            required = ("from", "to") if kind == "twoCellAnchor" else ("from",)
+            for marker_name in required:
                 marker = anchor.find(qname(XDR_NS, marker_name))
                 if marker is None:
-                    continue
+                    raise RecipeError("Anchor DrawingML perdeu marker obrigatório após plano limpo.")
                 old = self._marker_ref(marker)
                 new = transform.transform_cell_ref(old)
                 if new is None:
