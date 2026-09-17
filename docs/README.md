@@ -15,6 +15,7 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 9. [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md) — status da V3A e roadmap V3B/V3C/V3D.
 10. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção da planilha por receitas JSON.
 11. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
+12. [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md) — regras aprovadas para cardápio físico/digital, QR por mesa, personalização, totem e origem de pedidos.
 
 ## Organização
 
@@ -41,6 +42,7 @@ docs/
 │   └── PRODUTO_CARDAPIO.md
 ├── tecnologia/
 │   ├── ARQUITETURA_TECNICA_V2.md
+│   ├── ATRIBUICAO_OMNICANAL.md
 │   ├── DADOS_ERP.md
 │   ├── EXCEL_RECIPE_V1.md
 │   ├── EXCEL_RECIPE_V2.md
@@ -65,7 +67,7 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [Compras](./operacao/COMPRAS.md), [Operação e qualidade](./operacao/OPERACAO.md) |
 | **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 

@@ -235,3 +235,17 @@ Não:
 - usar número de scans como equivalente a número de pessoas ou vendas;
 - declarar venda atribuída sem conciliação futura com pedido pago do ERP;
 - prometer percentual, valor de cupom, brinde ou limitação que ainda não tenha regra aprovada.
+
+## 12. Expansão aprovada para a operação física
+
+Em 17/09/2026 o proprietário aprovou a expansão do conceito de QR rastreável para a operação da lanchonete:
+
+- QR destacado no cardápio físico para **montar um lanche personalizado**;
+- QR individual de cardápio digital em cada mesa;
+- atribuição integrada ao totem de autoatendimento;
+- distinção entre origem física e origem online;
+- conta/login opcionais no totem, nunca obrigatórios para concluir o pedido.
+
+O contrato `cc_*` continua sendo a base de identificação das peças. Dados operacionais como loja, mesa e superfície devem preferencialmente ser resolvidos por um manifesto first-party a partir do `cc_qr`, evitando URLs desnecessariamente longas e exposição de dados internos.
+
+As regras de classificação, sessão anônima, correlação entre dispositivos, eventos, privacidade, modelo de dados, fases de execução e critérios de aceite pós-abertura estão centralizadas em [`../tecnologia/ATRIBUICAO_OMNICANAL.md`](../tecnologia/ATRIBUICAO_OMNICANAL.md). Este documento preserva o histórico e o contrato da campanha de pré-lançamento; o documento omnicanal governa a operação física/digital depois da abertura.

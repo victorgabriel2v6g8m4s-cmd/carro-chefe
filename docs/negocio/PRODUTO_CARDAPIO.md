@@ -29,6 +29,68 @@ Bebidas receberão IDs após definição de marcas, volumes, sabores, teor alco�
 | `MOD-REMOVER` | Remover ingredientes | sem desconto; registrar para cozinha e analytics |
 | `MOD-PONTO` | Ponto da carne | só habilitar se operação garantir execução e segurança |
 
+## Estratégia aprovada de cardápio e canais — 17/09/2026
+
+O cardápio inicial será deliberadamente enxuto no material físico: poucas combinações de lanches e espetos, com uma opção visualmente destacada para **montar um lanche personalizado**.
+
+A personalização não precisa ser espremida no cardápio impresso. O material físico deve funcionar como porta de entrada: a opção destacada aponta por QR Code para uma experiência digital mobile-first, simples e rápida, capaz de aplicar as mesmas regras de modificadores, disponibilidade e preço usadas pelos demais canais.
+
+Também está aprovado que:
+
+- cada mesa terá um QR próprio para o cardápio digital;
+- o QR da personalização no cardápio físico terá origem rastreável;
+- o cardápio digital por mesa terá origem rastreável e estado da mesa consultado no momento do scan;
+- o totem de autoatendimento terá origem rastreável sem exigir login;
+- conta/cadastro no totem serão opcionais;
+- a atribuição deve distinguir aquisição, entrada do pedido e superfície de conversão;
+- a operação não deve inventar identidade cross-device quando não houver vínculo confiável.
+
+### Experiência esperada do cliente
+
+```text
+CARDÁPIO FÍSICO
+├── poucas combinações prontas de lanches
+├── poucos espetos/combinações principais
+└── destaque: MONTE SEU LANCHE
+    └── QR → construtor digital
+
+MESA
+└── QR próprio → cardápio digital
+
+TOTEM
+└── cardápio/pedido sem login obrigatório
+
+ONLINE
+└── cardápio e construtor com origem própria
+```
+
+### Regras comerciais de origem
+
+- QR de personalização vindo do material físico: origem `physical_menu_custom_qr`;
+- QR de mesa sem pedido aberto: `table_qr_digital_first`;
+- QR de mesa com pedido aberto: `table_qr_after_order`;
+- totem sem evidência anterior vinculável na visita: `kiosk_direct`;
+- totem com vínculo confiável a um QR anterior: `kiosk_after_qr`;
+- construtor iniciado online sem QR físico: `online_custom_builder`.
+
+Essas classificações são regras de atribuição, não prova absoluta do comportamento visual da pessoa. Por exemplo, `table_qr_digital_first` significa que não havia pedido aberto naquela mesa quando o QR foi lido; não permite afirmar que o cliente nunca viu o cardápio físico.
+
+### Requisitos do construtor personalizado
+
+A primeira versão deve priorizar velocidade de decisão:
+
+- abrir diretamente a montagem quando o QR dedicado for lido;
+- funcionar bem em celular e rede móvel;
+- usar controles grandes e linguagem simples;
+- apresentar regras e limites de modificadores sem ambiguidade;
+- atualizar preço quando aplicável;
+- permitir revisão antes de confirmar;
+- preservar escolhas ao voltar uma etapa;
+- não exigir criação de conta;
+- medir início, conclusão e abandono sem enviar PII a analytics.
+
+O contrato técnico completo de tracking, modelo de atribuição, privacidade, eventos, fases de implementação e testes está em [`../tecnologia/ATRIBUICAO_OMNICANAL.md`](../tecnologia/ATRIBUICAO_OMNICANAL.md).
+
 ## Decisões necessárias antes do cadastro final
 
 - corte e gramatura da carne bovina;
