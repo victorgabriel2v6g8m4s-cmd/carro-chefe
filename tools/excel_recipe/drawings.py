@@ -33,21 +33,25 @@ class DrawingSupport:
 
     def scan(self, transform) -> list[dict]:
         refs, blockers = self._discover(transform.sheet)
-        out = list(blockers)
+        chart_paths, chart_blockers = self._discover_global_charts()
+        out = list(blockers) + chart_blockers
         for ref in refs:
             root = self.package.get_xml(ref.drawing_path)
             out.extend(self._scan_anchors(root, ref.drawing_path, transform))
 
         # Charts são dependências globais: um chart ancorado em outra sheet pode
-        # referenciar células da sheet estruturalmente transformada.
-        for chart_path in self._all_chart_paths():
+        # referenciar células da sheet estruturalmente transformada. A seleção é
+        # feita por relationships /chart, não por prefixo de diretório, porque
+        # xl/charts também contém chartStyle/colorStyle.
+        for chart_path in chart_paths:
             out.extend(self._scan_chart(chart_path, transform))
         return out
 
     def rewrite(self, transform) -> int:
         refs, blockers = self._discover(transform.sheet)
-        if blockers:
-            raise RecipeError("Drawing V3B tornou-se inseguro após plano limpo.")
+        chart_paths, chart_blockers = self._discover_global_charts()
+        if blockers or chart_blockers:
+            raise RecipeError("Drawing/Chart V3B tornou-se inseguro após plano limpo.")
         changed = 0
         for ref in refs:
             root = self.package.get_xml(ref.drawing_path)
@@ -59,7 +63,7 @@ class DrawingSupport:
                 self.workbook.allowed_parts.add(ref.drawing_path)
                 changed += drawing_changed
 
-        for chart_path in self._all_chart_paths():
+        for chart_path in chart_paths:
             chart_root = self.package.get_xml(chart_path)
             chart_changed = self._rewrite_chart(chart_root, chart_path, transform)
             if chart_changed:
@@ -109,12 +113,30 @@ class DrawingSupport:
             refs.append(DrawingRef(drawing_path, drawing_rels if drawing_rels in self.package.entries else None, tuple(sorted(set(chart_paths)))))
         return refs, blockers
 
-    def _all_chart_paths(self) -> tuple[str, ...]:
-        return tuple(sorted(
-            path
-            for path in self.package.entries
-            if path.startswith("xl/charts/") and path.endswith(".xml") and "/_rels/" not in path
-        ))
+    def _discover_global_charts(self) -> tuple[tuple[str, ...], list[dict]]:
+        paths: set[str] = set()
+        blockers: list[dict] = []
+        for rels_path in sorted(path for path in self.package.entries if path.endswith(".rels")):
+            try:
+                rels = self.package.get_xml(rels_path)
+            except RecipeError as exc:
+                blockers.append(self._occ("relationship_xml", rels_path, "parse", "inválido", str(exc)))
+                continue
+            owner_path = self._owner_path_from_rels(rels_path)
+            if owner_path is None:
+                continue
+            for rel in rels.findall(qname(PKG_REL_NS, "Relationship")):
+                rel_type = rel.get("Type", "")
+                target = rel.get("Target", "")
+                if rel_type.endswith(REL_CHART):
+                    chart_path = self._target_path(owner_path, target)
+                    if chart_path not in self.package.entries:
+                        blockers.append(self._occ("chart_missing", rels_path, rel.get("Id", "?"), chart_path, "Relationship de chart aponta para part ausente"))
+                    else:
+                        paths.add(chart_path)
+                elif "/chartEx" in rel_type:
+                    blockers.append(self._occ("chart_ex", rels_path, rel.get("Id", "?"), rel_type, "ChartEx global permanece blocker porque pode depender da sheet transformada"))
+        return tuple(sorted(paths)), blockers
 
     def _scan_anchors(self, root: ET.Element, part: str, transform) -> list[dict]:
         out: list[dict] = []
@@ -234,6 +256,18 @@ class DrawingSupport:
     @staticmethod
     def _rels_path(part: str) -> str:
         return canonical_path(posixpath.join(posixpath.dirname(part), "_rels", posixpath.basename(part) + ".rels"))
+
+    @staticmethod
+    def _owner_path_from_rels(rels_path: str) -> str | None:
+        directory = posixpath.dirname(rels_path)
+        if posixpath.basename(directory) != "_rels":
+            return None
+        filename = posixpath.basename(rels_path)
+        if not filename.endswith(".rels"):
+            return None
+        owner_dir = posixpath.dirname(directory)
+        owner_name = filename[:-5]
+        return canonical_path(posixpath.join(owner_dir, owner_name))
 
     @staticmethod
     def _local(tag: str) -> str:
