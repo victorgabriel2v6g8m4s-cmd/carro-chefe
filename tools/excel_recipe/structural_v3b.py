@@ -21,8 +21,8 @@ class V3BStructuralPlanner(StructuralPlanner):
             item for item in report["occurrences"]
             if not (
                 item.get("kind") == "sheet_object"
-                and "/drawing" in str(item.get("value", ""))
-                and "/vmlDrawing" not in str(item.get("value", ""))
+                and "/drawing" in str(item.get("expression", ""))
+                and "/vmlDrawing" not in str(item.get("expression", ""))
             )
             and not (
                 item.get("kind") == "protected_ooxml"
