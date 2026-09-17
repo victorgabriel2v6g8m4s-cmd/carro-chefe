@@ -1,5 +1,13 @@
 # Operação e qualidade
 
+## Unidade inicial — endereço operacional
+
+Endereço informado e aprovado pelo proprietário em 17/09/2026:
+
+**Rua Vicente Solari, 531 — CEP 79006-440.**
+
+Esse endereço é a referência para vistorias, medição do ponto, levantamento de energia/água/esgoto/internet, acessibilidade, logística de abastecimento, análise de fluxo e validações de licenciamento. O endereço conhecido não substitui levantamento presencial: medidas, infraestrutura disponível e exigências locais continuam pendentes de confirmação.
+
 ## Papéis no turno
 
 ### Parrilheiro
@@ -98,4 +106,3 @@ O limite operacional do canal deve ficar abaixo do ponto de saturação observad
 ## Documentos a validar com especialistas
 
 Manual de boas práticas, POPs, registros de temperatura/limpeza, controle de pragas, água, resíduos, manutenção, treinamento, alérgenos e rastreabilidade. A lista exata deve seguir enquadramento e órgãos locais.
-
