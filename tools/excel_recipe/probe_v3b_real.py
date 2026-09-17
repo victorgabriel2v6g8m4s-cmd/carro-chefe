@@ -17,10 +17,13 @@ TARGET_SHEET = "Fluxo de Caixa"
 BLOCKED_SHEET = "ingredientes"
 EXPECTED_DRAWING = "xl/drawings/drawing2.xml"
 EXPECTED_CHARTS = {"xl/charts/chart1.xml", "xl/charts/chart2.xml"}
-
-# Preenchido depois que o mesmo plano for comprovado em Linux e Windows.
-EXPECTED_PLAN_SHA256: str | None = None
-EXPECTED_OPERATION: dict | None = None
+EXPECTED_PLAN_SHA256 = "c65bdd1b5b9d51486d715956cabefe067072c0c7088605eeecdaadae97214e13"
+EXPECTED_OPERATION = {
+    "op": "sheet.insert_rows",
+    "sheet": TARGET_SHEET,
+    "at": 1,
+    "count": 1,
+}
 
 
 def _candidate_operations() -> list[dict]:
@@ -99,9 +102,9 @@ def main() -> int:
     planner = V3BStructuralPlanner(workbook, ROOT)
 
     operation, selected_plan = _select_clean_plan(planner)
-    if EXPECTED_OPERATION is not None and operation != EXPECTED_OPERATION:
+    if operation != EXPECTED_OPERATION:
         raise SystemExit(f"Operação canônica V3B divergiu: {operation} != {EXPECTED_OPERATION}")
-    if EXPECTED_PLAN_SHA256 is not None and selected_plan["plan_sha256"] != EXPECTED_PLAN_SHA256:
+    if selected_plan["plan_sha256"] != EXPECTED_PLAN_SHA256:
         raise SystemExit(
             f"plan_sha256 V3B divergente: {selected_plan['plan_sha256']} != {EXPECTED_PLAN_SHA256}"
         )
@@ -109,17 +112,20 @@ def main() -> int:
     receipt = _run_dry_recipe(package, operation)
     recipe_plan = receipt["operations"][0]["structural_plan"]
     applied = receipt["operations"][1]["structural"]
-    if recipe_plan["plan_sha256"] != selected_plan["plan_sha256"]:
-        raise SystemExit("Plano direto e plano consumido pela receita V3B divergiram.")
-    if applied["plan_sha256"] != selected_plan["plan_sha256"]:
-        raise SystemExit("Mutação V3B não consumiu exatamente o plano aprovado.")
+    if recipe_plan["plan_sha256"] != EXPECTED_PLAN_SHA256:
+        raise SystemExit("Plano consumido pela receita V3B divergiu do plano canônico.")
+    if applied["plan_sha256"] != EXPECTED_PLAN_SHA256:
+        raise SystemExit("Mutação V3B não consumiu exatamente o plano canônico aprovado.")
 
     changed = set(receipt["changed_parts"])
     if EXPECTED_DRAWING not in changed:
         raise SystemExit(f"Probe V3B não regravou o drawing real esperado: {receipt['changed_parts']}")
     changed_charts = EXPECTED_CHARTS.intersection(changed)
-    if not changed_charts:
-        raise SystemExit(f"Probe V3B não regravou nenhum chart real esperado: {receipt['changed_parts']}")
+    if changed_charts != EXPECTED_CHARTS:
+        raise SystemExit(
+            "Probe V3B não regravou os dois charts reais canônicos: "
+            f"{sorted(changed_charts)} != {sorted(EXPECTED_CHARTS)}"
+        )
 
     blocked_report = planner.plan({
         "op": "structural.plan",
@@ -138,7 +144,7 @@ def main() -> int:
 
     print(json.dumps({
         "operation": operation,
-        "plan_sha256": selected_plan["plan_sha256"],
+        "plan_sha256": EXPECTED_PLAN_SHA256,
         "changed_parts": receipt["changed_parts"],
         "changed_charts": sorted(changed_charts),
         "blocked_kinds": sorted(blocked_kinds),
