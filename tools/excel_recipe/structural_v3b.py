@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 
-from .drawingml import DRAWING_REL, DrawingChartManager
+from .drawingml import CONTROL_REL, DRAWING_REL, OLE_REL, VML_REL, DrawingChartManager
 from .structural import StructuralEngine
 from .structural_plan import StructuralPlanner
 from .workbook import WorkbookContext
@@ -26,6 +26,10 @@ class StructuralPlannerV3B(StructuralPlanner):
         ]
         visual_occurrences = self.visuals.scan(transform)
         for item in visual_occurrences:
+            # VML, ActiveX/OLE e controles já são blockers V3A estáveis. Não os
+            # duplique na V3B para preservar plan_sha256 histórico e contrato.
+            if item.get("kind") == "sheet_object" and item.get("expression") in {VML_REL, OLE_REL, CONTROL_REL}:
+                continue
             if item.get("kind") == "drawing_part" and item.get("disposition") == "blocker":
                 item = {**item, "kind": "sheet_object"}
             occurrences.append(item)
