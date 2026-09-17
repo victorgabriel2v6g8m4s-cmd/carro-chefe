@@ -6,7 +6,18 @@ Endereço informado e aprovado pelo proprietário em 17/09/2026:
 
 **Rua Vicente Solari, 531 — CEP 79006-440.**
 
-Esse endereço é a referência para vistorias, medição do ponto, levantamento de energia/água/esgoto/internet, acessibilidade, logística de abastecimento, análise de fluxo e validações de licenciamento. O endereço conhecido não substitui levantamento presencial: medidas, infraestrutura disponível e exigências locais continuam pendentes de confirmação.
+Já existem **fotos do local, medidas registradas, levantamento de infraestrutura e validações presenciais do ponto**. Por decisão do proprietário, esse material não será versionado no repositório neste momento.
+
+Consequências operacionais:
+
+- os dados físicos não devem ser tratados como inexistentes;
+- agentes não devem estimar medidas, infraestrutura ou condições presenciais quando o valor exato for necessário;
+- quando uma tarefa depender desses dados, o agente deve pedir diretamente ao proprietário somente a informação necessária;
+- se não for possível obter a informação naquela execução, registrar uma pendência `INFO-PEND-*` em [`../governanca/RISCOS_DECISOES.md`](../governanca/RISCOS_DECISOES.md);
+- fotos, plantas e medições detalhadas só entram no Git mediante nova decisão explícita do proprietário;
+- validações legais/profissionais aplicáveis continuam necessárias mesmo existindo levantamento presencial.
+
+O endereço continua sendo a referência para vistorias, logística de abastecimento, análise de fluxo e validações de licenciamento.
 
 ## Papéis no turno
 
