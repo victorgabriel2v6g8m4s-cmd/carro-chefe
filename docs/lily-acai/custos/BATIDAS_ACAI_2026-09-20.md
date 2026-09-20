@@ -56,3 +56,21 @@ A alteração é executada exclusivamente por `tools/excel_recipe` a partir de:
 `anexos/financeiro/recipes/lily-acai-batidas-2026-09-20.json`.
 
 O receipt gerado pelo motor e o snapshot atualizado são a evidência técnica da aplicação.
+
+## Evidência da aplicação
+
+Aplicação concluída na branch `lily-acai` pelo motor `tools/excel_recipe` v3.2.1.
+
+- workflow final: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35526628211
+- commit do workbook: `f79d8f91c309b38c506161821e0863941d7217d0`
+- SHA-256 do workbook antes: `62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70`
+- SHA-256 do workbook depois: `569d0f24b078a2355da1edf82d2b15dc1fefd3e0bce710ac40d7dc94da2308ea`
+- SHA-256 do projeto VBA antes/depois: `b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf` (inalterado)
+- `policy:preflight`: passou
+- `excel_recipe validate`: passou na execução final
+- `excel_recipe plan`: passou
+- `excel_recipe apply`: passou
+- verificação do snapshot regenerado: passou
+- receipt: `anexos/financeiro/recipes/receipts/lily-acai-batidas-2026-09-20.receipt.json`
+
+Duas execuções anteriores foram bloqueadas em `validate`, sem alterar o workbook: a primeira porque a tabela Ingredientes possui linha de totais e não aceita `append_rows`; a segunda porque a asserção lia o valor calculado do snapshot em vez da fórmula OOXML real da coluna de ID da Precificação. As duas causas foram corrigidas antes da aplicação final.
