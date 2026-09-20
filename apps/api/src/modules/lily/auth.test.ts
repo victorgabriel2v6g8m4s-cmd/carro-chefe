@@ -32,6 +32,16 @@ describe("Lily auth", () => {
     expect(response.json()).toEqual({ status: "ok", service: "lily-acai" });
   });
 
+  it("não aceita sessão externa ou arbitrária como sessão Lily", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/me",
+      headers: { cookie: "lily_session=carro-chefe-session-arbitraria" }
+    });
+    expect(response.statusCode).toBe(401);
+    expect(response.json().details.code).toBe("LILY_SESSION_INVALID");
+  });
+
   it("cadastra customer com consentimentos opcionais recusados", async () => {
     const response = await app.inject({
       method: "POST",
