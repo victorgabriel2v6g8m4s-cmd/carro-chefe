@@ -281,7 +281,7 @@
       null,
       "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
       "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "#N/A"
+      "Não"
     ],
     [
       0,
@@ -291,7 +291,7 @@
       null,
       "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
       "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "Sim"
+      "Não"
     ],
     [
       0,
@@ -301,7 +301,7 @@
       null,
       "=IFERROR(Precificação[[#This Row],[Preço Definitivo]] - INDEX(CaProdutos[Custo Total (1 un.)], MATCH(Precificação[[#This Row],[ID]], CaProdutos[ID], 0)), \"\")",
       "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "#N/A"
+      "Não"
     ],
     [
       0,

@@ -44,12 +44,12 @@
 ,,Chefão,31,Adc. Azeitona Preta,1,Unidades,1,1.9565217391304348,,,,,,,,,,,,,,,,,
 ,,Chefão,10,Adc. Batata Palha,1,Unidades,1,0.37374999999999997,,,,,,,,,,,,,,,,,
 ,,Chefão,11,Adc. Cheddar,1,Unidades,1,1.14775,,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Morango,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Creme de leite Piracanjuba 200g,200,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -64,12 +64,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Morango,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite condensado Italac 395g,395,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -84,12 +84,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Morango,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Água da receita (custo em despesas variáveis),100,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -104,12 +104,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Morango,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Refresco Frisco Morango 18g,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -124,12 +124,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Maracujá,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Creme de leite Piracanjuba 200g,200,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -144,12 +144,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Maracujá,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite condensado Italac 395g,395,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -164,12 +164,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Maracujá,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Água da receita (custo em despesas variáveis),100,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -184,12 +184,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Moussie Maracujá,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Refresco Frisco Maracujá 18g,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -204,12 +204,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite em pó Piracanjuba 400g,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -224,12 +224,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite Italac desnatado 1L,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -244,12 +244,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Açaí Polpa Amazônia 3L,390,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -264,12 +264,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Moussie Morango,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -284,12 +284,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite em pó Piracanjuba 400g,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -304,12 +304,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Leite Italac desnatado 1L,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -324,12 +324,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Açaí Polpa Amazônia 3L,390,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -344,12 +344,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,Lily - Batida de Açaí com Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",Lily - Moussie Maracujá,1,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
