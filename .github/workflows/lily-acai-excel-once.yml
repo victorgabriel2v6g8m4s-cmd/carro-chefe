@@ -1,0 +1,58 @@
+name: Lily Acai Excel Recipe Once
+
+on:
+  push:
+    branches:
+      - lily-acai
+    paths:
+      - "anexos/financeiro/recipes/lily-acai-batidas-2026-09-20.json"
+      - ".github/workflows/lily-acai-excel-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-lily-recipe:
+    name: Apply Lily acai workbook recipe
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Policy preflight
+        run: npm run policy:preflight -- --agent AG-DEV --scope anexos/financeiro
+
+      - name: Prepare snapshot dependencies
+        run: python -m pip install --disable-pip-version-check --requirement tools/excel_snapshot/requirements.txt
+
+      - name: Validate recipe
+        run: python -m tools.excel_recipe validate anexos/financeiro/recipes/lily-acai-batidas-2026-09-20.json
+
+      - name: Plan recipe
+        run: python -m tools.excel_recipe plan anexos/financeiro/recipes/lily-acai-batidas-2026-09-20.json
+
+      - name: Apply recipe
+        run: python -m tools.excel_recipe apply anexos/financeiro/recipes/lily-acai-batidas-2026-09-20.json
+
+      - name: Verify regenerated snapshot
+        run: python tools/excel_snapshot/export.py --check
+
+      - name: Commit workbook, snapshot and receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short
+          git add "anexos/financeiro/carro chefe.xlsm" \
+                  anexos/financeiro/snapshot \
+                  anexos/financeiro/recipes/receipts/lily-acai-batidas-2026-09-20.receipt.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração produzida pela receita."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(lily): lança custos das batidas de açaí"
+          git push origin HEAD:lily-acai
