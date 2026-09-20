@@ -1,11 +1,21 @@
+import path from "node:path";
 import { defineConfig } from "prisma/config";
 
+function sqliteUrl(input: string | undefined) {
+  const configured = input ?? "file:../../.runtime/lily-acai.db";
+  if (!configured.startsWith("file:")) return configured;
+  const rawPath = configured.slice(5);
+  if (path.isAbsolute(rawPath)) return configured;
+  const absolute = path.resolve(process.cwd(), rawPath).split(path.sep).join("/");
+  return `file:${absolute}`;
+}
+
 export default defineConfig({
-  schema: "packages/lily-database/prisma/schema.prisma",
+  schema: "prisma/schema.prisma",
   migrations: {
-    path: "packages/lily-database/prisma/migrations"
+    path: "prisma/migrations"
   },
   datasource: {
-    url: process.env.LILY_DATABASE_URL ?? "file:./.runtime/lily-acai.db"
+    url: sqliteUrl(process.env.LILY_DATABASE_URL)
   }
 });
