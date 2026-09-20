@@ -10,6 +10,19 @@ Backend isolado da operação temporária Lily Açaí.
 
 Somente `packages/lily-database`. É proibido usar o Prisma/client de `packages/database` para dados Lily.
 
-## Estado nesta entrega
+## Entrega 2 implementada
 
-A Entrega 1 define governança e fronteiras. Rotas, serviços, autenticação e repositories começam na Entrega 2.
+Rotas disponíveis:
+
+```text
+GET  /api/v1/lily/public/health
+GET  /api/v1/lily/public/config
+POST /api/v1/lily/auth/register
+POST /api/v1/lily/auth/login
+GET  /api/v1/lily/auth/me
+POST /api/v1/lily/auth/logout
+```
+
+A autenticação usa telefone normalizado, senha com scrypt, sessão aleatória armazenada somente como hash, cookie HttpOnly e CSRF próprio da sessão. Registro público sempre cria papel `customer`.
+
+A Entrega 3 adicionará catálogo/mídia/admin sem misturar esse módulo com os dados Carro Chefe.
