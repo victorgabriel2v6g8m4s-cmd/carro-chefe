@@ -10,6 +10,7 @@ assertLoopbackBinding(config.host);
 const app = await buildApp();
 const siteDist = path.join(config.projectRoot, "apps", "site", "dist");
 const managementDist = path.join(config.projectRoot, "apps", "gestao", "dist");
+const lilyDist = path.join(config.projectRoot, "apps", "lily_acai", "dist");
 
 function isMissingFile(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
@@ -31,6 +32,15 @@ app.get("/assets/brand/:file", { config: { rateLimit: { max: 120, timeWindow: "1
   if (!allowed[file]) return reply.code(404).send({ error: "Ativo não encontrado." });
   return reply.type("image/png").send(await fs.readFile(allowed[file]));
 });
+
+
+app.get("/lilyacai/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" } } }, async (request, reply) => {
+  const pathname = new URL(request.url, "http://local").pathname;
+  const relative = pathname.slice("/lilyacai/".length);
+  if (relative && path.extname(relative)) return sendFile(reply, lilyDist, relative);
+  return sendFile(reply, lilyDist, "index.html");
+});
+app.get("/lilyacai", async (_request, reply) => reply.redirect("/lilyacai/cardapio"));
 
 app.get("/gestao/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" } } }, async (request, reply) => {
   const pathname = new URL(request.url, "http://local").pathname;
