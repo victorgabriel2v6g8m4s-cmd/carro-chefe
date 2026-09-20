@@ -102,6 +102,29 @@ Nenhum teste de runtime foi declarado como aprovado sem ter código corresponden
 - `packages/lily-database/README.md`
 - `docs/lily-acai/*`
 
+## Verificação final da branch
+
+Comparação `main...lily-acai` após o fechamento documental:
+
+```text
+status: ahead
+ahead_by: 16
+behind_by: 0
+arquivos alterados: somente policy/governança, fronteiras Lily e documentação Lily
+```
+
+A busca de código na branch padrão por `Lily Açaí` / `lilyacai` retornou zero resultados, confirmando que a documentação específica não foi gravada na `main`.
+
+### CI
+
+Não houve workflow automático para a branch `lily-acai` até esta verificação:
+
+```text
+workflow_runs: 0
+```
+
+Portanto, `npm run policy:check`, `npm run check`, `npm test` e `npm run build` **não são declarados como executados nesta entrega**. A validação executada nesta etapa foi estrutural/determinística da policy e do diff. A Entrega 2 deve executar os comandos em ambiente de código antes de ser concluída.
+
 ## Resultado
 
 A branch agora possui governança suficiente para começar código Lily sem um agente interpretar erroneamente a exceção como autorização para mudar o checkout ou o banco do Carro Chefe.
