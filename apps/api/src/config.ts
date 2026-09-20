@@ -23,7 +23,9 @@ const defaultCorsOrigins = [
   "http://127.0.0.1:4173",
   "http://127.0.0.1:4174",
   "http://localhost:4173",
-  "http://localhost:4174"
+  "http://localhost:4174",
+  "http://127.0.0.1:5175",
+  "http://localhost:5175"
 ].join(",");
 
 export const config = {
