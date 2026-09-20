@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model LilyUser {
+  id              String              @id @default(cuid())
+  phoneNormalized String              @unique
+  passwordHash    String
+  displayName     String?
+  role            String              @default("customer")
+  status          String              @default("active")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  sessions        LilySession[]
+  consents        LilyConsentRecord[]
+
+  @@index([status, createdAt])
+}
+
+model LilySession {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  csrfTokenHash String
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  lastSeenAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  user          LilyUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+}
+
+model LilyConsentRecord {
+  id         String    @id @default(cuid())
+  userId     String
+  purpose    String
+  version    String
+  granted    Boolean
+  source     String
+  recordedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  user       LilyUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, recordedAt])
+}
