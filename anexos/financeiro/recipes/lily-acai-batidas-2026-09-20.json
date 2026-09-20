@@ -446,90 +446,292 @@
       ]
     },
     {
-      "op": "table.append_rows",
-      "table": "Ingredientes",
-      "rows": [
-        {
-          "Produto": "Lily - Moussie Morango",
-          "item": "Lily - Creme de leite Piracanjuba 200g",
-          "qtd.": 200
-        },
-        {
-          "Produto": "Lily - Moussie Morango",
-          "item": "Lily - Leite condensado Italac 395g",
-          "qtd.": 395
-        },
-        {
-          "Produto": "Lily - Moussie Morango",
-          "item": "Lily - Água da receita (custo em despesas variáveis)",
-          "qtd.": 100
-        },
-        {
-          "Produto": "Lily - Moussie Morango",
-          "item": "Lily - Refresco Frisco Morango 18g",
-          "qtd.": 1
-        },
-        {
-          "Produto": "Lily - Moussie Maracujá",
-          "item": "Lily - Creme de leite Piracanjuba 200g",
-          "qtd.": 200
-        },
-        {
-          "Produto": "Lily - Moussie Maracujá",
-          "item": "Lily - Leite condensado Italac 395g",
-          "qtd.": 395
-        },
-        {
-          "Produto": "Lily - Moussie Maracujá",
-          "item": "Lily - Água da receita (custo em despesas variáveis)",
-          "qtd.": 100
-        },
-        {
-          "Produto": "Lily - Moussie Maracujá",
-          "item": "Lily - Refresco Frisco Maracujá 18g",
-          "qtd.": 1
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Morango 500ml",
-          "item": "Lily - Leite em pó Piracanjuba 400g",
-          "qtd.": 50
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Morango 500ml",
-          "item": "Lily - Leite Italac desnatado 1L",
-          "qtd.": 50
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Morango 500ml",
-          "item": "Lily - Açaí Polpa Amazônia 3L",
-          "qtd.": 390
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Morango 500ml",
-          "item": "Lily - Moussie Morango",
-          "qtd.": 1
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
-          "item": "Lily - Leite em pó Piracanjuba 400g",
-          "qtd.": 50
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
-          "item": "Lily - Leite Italac desnatado 1L",
-          "qtd.": 50
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
-          "item": "Lily - Açaí Polpa Amazônia 3L",
-          "qtd.": 390
-        },
-        {
-          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
-          "item": "Lily - Moussie Maracujá",
-          "qtd.": 1
-        }
-      ]
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C47",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E47",
+      "value": "Lily - Creme de leite Piracanjuba 200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F47",
+      "value": 200
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C48",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E48",
+      "value": "Lily - Leite condensado Italac 395g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F48",
+      "value": 395
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C49",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E49",
+      "value": "Lily - Água da receita (custo em despesas variáveis)"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F49",
+      "value": 100
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C50",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E50",
+      "value": "Lily - Refresco Frisco Morango 18g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F50",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C51",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E51",
+      "value": "Lily - Creme de leite Piracanjuba 200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F51",
+      "value": 200
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C52",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E52",
+      "value": "Lily - Leite condensado Italac 395g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F52",
+      "value": 395
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C53",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E53",
+      "value": "Lily - Água da receita (custo em despesas variáveis)"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F53",
+      "value": 100
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C54",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E54",
+      "value": "Lily - Refresco Frisco Maracujá 18g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F54",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C55",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E55",
+      "value": "Lily - Leite em pó Piracanjuba 400g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F55",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C56",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E56",
+      "value": "Lily - Leite Italac desnatado 1L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F56",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C57",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E57",
+      "value": "Lily - Açaí Polpa Amazônia 3L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F57",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C58",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E58",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F58",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C59",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E59",
+      "value": "Lily - Leite em pó Piracanjuba 400g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F59",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C60",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E60",
+      "value": "Lily - Leite Italac desnatado 1L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F60",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C61",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E61",
+      "value": "Lily - Açaí Polpa Amazônia 3L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F61",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C62",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E62",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F62",
+      "value": 1
     },
     {
       "op": "table.append_rows",
