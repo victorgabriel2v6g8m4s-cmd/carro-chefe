@@ -2,7 +2,7 @@ import path from "node:path";
 import { defineConfig } from "prisma/config";
 
 function sqliteUrl(input: string | undefined) {
-  const configured = input ?? "file:../../.runtime/lily-acai.db";
+  const configured = input ?? "file:./.runtime/lily-acai.db";
   if (!configured.startsWith("file:")) return configured;
   const rawPath = configured.slice(5);
   if (path.isAbsolute(rawPath)) return configured;
