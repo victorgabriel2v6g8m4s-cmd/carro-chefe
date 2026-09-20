@@ -1,4 +1,4 @@
-import { FormEvent, StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { getLilyConfig, loginLily, registerLily } from "./api";
@@ -7,7 +7,7 @@ import "./styles.css";
 const instagram = "https://instagram.com/acai._lily";
 const whatsapp = "https://wa.me/5567999289187";
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children }: { children: ReactNode }) {
   return <div className="lily-shell">
     <header className="topbar">
       <Link className="brand" to="/cardapio" aria-label="Lily Açaí — início">
