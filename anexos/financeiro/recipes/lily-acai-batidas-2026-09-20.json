@@ -779,25 +779,25 @@
       "op": "assert.cell",
       "sheet": "Precificação",
       "cell": "B30",
-      "equals": 0
+      "equals": "=CaProdutos[[#This Row],[ID]]"
     },
     {
       "op": "assert.cell",
       "sheet": "Precificação",
       "cell": "B31",
-      "equals": 0
+      "equals": "=CaProdutos[[#This Row],[ID]]"
     },
     {
       "op": "assert.cell",
       "sheet": "Precificação",
       "cell": "B32",
-      "equals": 0
+      "equals": "=CaProdutos[[#This Row],[ID]]"
     },
     {
       "op": "assert.cell",
       "sheet": "Precificação",
       "cell": "B33",
-      "equals": 0
+      "equals": "=CaProdutos[[#This Row],[ID]]"
     },
     {
       "op": "cell.set",
