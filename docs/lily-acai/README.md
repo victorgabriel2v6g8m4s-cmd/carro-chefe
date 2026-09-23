@@ -1,10 +1,10 @@
-# Lily Gourmet — operação temporária
+# CookLily — operação temporária
 
 ## Nome público e compatibilidade técnica
 
-A marca pública passa a se chamar **Lily Gourmet** a partir de 23/09/2026.
+O nome público definitivo da marca é **CookLily**. No ativo visual oficial, o wordmark aparece como **cookLily**.
 
-Por compatibilidade, os identificadores técnicos existentes permanecem inalterados até uma migração específica ser aprovada:
+Os identificadores técnicos existentes permanecem inalterados por compatibilidade:
 
 - branch `lily-acai`;
 - documentação `docs/lily-acai/`;
@@ -13,37 +13,29 @@ Por compatibilidade, os identificadores técnicos existentes permanecem inaltera
 - API `/api/v1/lily/*`;
 - banco `lily-acai.db`.
 
-Esses nomes técnicos não devem aparecer como marca principal para o cliente.
+Esses identificadores são técnicos e não representam o nome exibido ao cliente.
 
 ## Escopo
 
-A Lily Gourmet é uma operação temporária para geração de caixa antes da inauguração do Carro Chefe. Ela não integra a proposta permanente do Carro Chefe e continua isolada na branch `lily-acai`.
-
-Compartilha somente infraestrutura por economia: `carrochefe.com`, VPS Hostinger, Nginx/TLS e runtime quando aplicável. Identidade, aplicação, autenticação, banco, clientes, catálogo, pedidos, pagamentos, tracking e mídia permanecem separados.
-
-## Endereços planejados
-
-- landing: `https://carrochefe.com/lilyacai/`;
-- cardápio: `https://carrochefe.com/lilyacai/cardapio`;
-- painel: `https://carrochefe.com/lilyacai/painel/`.
-
-## Identidade
-
-A identidade oficial será derivada da **logo oficial da Lily Gourmet**. Até o ativo ser recebido e versionado, cores exatas, fontes e proporções oficiais permanecem pendentes e não devem ser inventadas.
-
-A parceria deve ser discreta e textual:
-
-> Lily Gourmet × Carro Chefe — parceria temporária. Esta experiência usa a infraestrutura digital do Carro Chefe, mas possui cadastro, cardápio e operação próprios.
+A CookLily é uma operação temporária para geração de caixa antes da inauguração do Carro Chefe. Compartilha domínio, VPS e proxy por economia, mas mantém identidade, autenticação, banco, clientes, catálogo, pedidos, pagamentos, tracking e mídia logicamente separados.
 
 ## Canais confirmados
 
 - Instagram: `@acai._lily`;
 - WhatsApp: `+55 67 99928-9187`.
 
-## Sequência oficial aprovada em 23/09/2026
+## Sequência oficial
 
-1. **Entrega 03 — Marca Lily Gourmet:** logo oficial, kit de marca e rebranding integral do frontend.
+1. **Entrega 03 — Marca CookLily:** acervo, kit, tokens e rebranding integral.
 2. **Entrega 04 — Landing + WhatsApp + VPS:** captação de telefone para cupons/promoções, acompanhamento P0 pelo WhatsApp e primeira publicação.
-3. **Entrega 05 — Catálogo administrável:** produtos publicados/ativos e disponíveis aparecem automaticamente no cardápio; segunda publicação.
+3. **Entrega 05 — Catálogo administrável:** produtos publicados/ativos e disponíveis alimentam automaticamente o cardápio e seguem para segunda publicação.
 
-Ver `ROADMAP_LILY_GOURMET.md`, `marca/KIT_DE_MARCA.md`, `DEPLOY_VPS.md` e `entregas/`.
+Documentos principais:
+
+- `ROADMAP_COOKLILY.md`;
+- `marca/KIT_DE_MARCA.md`;
+- `marca/ATIVOS.md`;
+- `TRACKING_COMPATIBILIDADE.md`;
+- `DEPLOY_VPS.md`;
+- `DECISOES_PENDENCIAS.md`;
+- `entregas/`.

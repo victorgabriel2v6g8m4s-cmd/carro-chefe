@@ -1,35 +1,20 @@
-# Ativos recebidos — Lily Gourmet
+# Ativos recebidos — CookLily
 
-Inventário editorial do material disponível para construir o kit de marca.
+| ID | Tipo | Estado | Papel |
+|---|---|---|---|
+| `CL-MARCA-001` | logo circular `cookLily` | recebido/verificado | fonte visual principal |
+| `CL-IMP-001` | adesivo vertical com QR | recebido/verificado | embalagem/CTA/tracking |
+| `CL-PROD-001` | batida de açaí com maracujá | recebido com nome único/verificado | referência real |
+| `CL-PROD-002` | batida de açaí com morango | recebido com nome único/verificado | referência real |
 
-A documentação detalhada vive em `../../mídias/lily-gourmet/`.
+## Fotos renomeadas
 
-| ID | Tipo | Estado | Papel no kit |
-| --- | --- | --- | --- |
-| `LG-MARCA-001` | logo circular `cookLily` | recebido/review | fonte visual principal; naming precisa reconciliação |
-| `LG-IMP-001` | adesivo vertical com QR | recebido/review | referência de composição, paleta, CTA e embalagem |
-| `LG-PROD-001` | foto batida maracujá | recebido/review | referência real de produto |
-| `LG-PROD-002` | foto batida morango | visual recebido; binário pendente | referência real de produto |
+- `imagem_editada_acai_com_maracuja.jpeg` — 900×1600 — 111.657 B — SHA-256 `e64cec799074320a91b734b9b21fd9850e178aded0acd9575a37ef1d3957f74d`;
+- `imagem_editada_acai_com_morango.jpeg` — 900×1600 — 89.595 B — SHA-256 `1bd9c8602da111484c2440a1afbb1e270d410b33ec7fd2577aa6c5ba29838080`.
 
-## Decisões já extraídas do acervo
+## Logo e adesivo
 
-- direção cromática observada: rosa-claro + ameixa/vinho + bordô;
-- laço e forma circular são elementos fortes da linguagem existente;
-- logo usa mistura de lettering condensado e manuscrito;
-- produto real trabalha visualmente contraste entre açaí roxo e mousse por sabor;
-- a foto de morango tem proximidade cromática natural com a identidade;
-- a arte de adesivo anterior precisa de atualização de naming e tracking.
+- logo 2048×2048 PNG — SHA-256 `70448b75e51a603540d6610fb004c0902ac011819cd5a6ff5a813246471ee92c`;
+- adesivo 1024×2048 PNG — SHA-256 `7b480878a429aad9a4e0299e9a2fc3651eea84264272bb2d7fd9ccd48387ad14`.
 
-## Não decidido ainda
-
-- se `cookLily` será mantido como wordmark, assinatura ou nome legado;
-- lettering final “Lily Gourmet”;
-- fontes oficiais;
-- tokens finais de cor;
-- versões negativas/monocromáticas;
-- padrões gráficos adicionais;
-- fotografia final para hero/cardápio;
-- novo adesivo final;
-- QR Lily final.
-
-Consultar `mídias/lily-gourmet/CATALOGO_IA.json` e as fichas antes de usar qualquer ativo.
+Consultar `mídias/cooklily/CATALOGO_IA.json` e as fichas antes de qualquer uso final.

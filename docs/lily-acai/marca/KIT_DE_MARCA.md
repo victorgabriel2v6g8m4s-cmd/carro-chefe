@@ -1,168 +1,85 @@
-# Kit de marca — Lily Gourmet
+# Kit de marca — CookLily
 
-**Status:** acervo inicial recebido em 23/09/2026; kit em construção.
+**Status:** identidade-base aprovada; aplicação web em validação.
 
-## Regra principal
+## Nome e assinatura
 
-O kit deve ser derivado da **logo oficial fornecida pelo proprietário** e das demais mídias reais catalogadas em `mídias/lily-gourmet/`.
+- nome público definitivo: **CookLily**;
+- grafia visual do wordmark oficial: **cookLily**;
+- a logo recebida é a fonte visual oficial;
+- `lily-acai` e `lily` permanecem somente como namespaces técnicos.
 
-A logo foi recebida em 23/09/2026. O original traz o lettering `cookLily`, enquanto o nome público aprovado é **Lily Gourmet**. O arquivo original é fonte visual oficial e deve permanecer imutável; a adaptação de naming precisa ser decidida e criada como derivado separado.
+## Fonte de ativos
 
-Não escolher fonte oficial ou alterar o lettering por suposição.
+A fonte de verdade das mídias é `mídias/cooklily/`. Originais são imutáveis. Derivados web, social e impressão devem indicar origem e finalidade.
 
-## Ativos
+## Paleta e tokens aprovados
 
-O repositório já possui uma governança própria para mídias. Por isso, a estrutura canônica passa a ser:
+| Token | HEX | Uso |
+|---|---|---|
+| `brand-primary` | `#820023` | bordô; CTA/ênfase |
+| `brand-secondary` | `#44042D` | ameixa; títulos/contraste |
+| `brand-accent` | `#F9C0CF` | rosa principal |
+| `surface` | `#FFF7FA` | superfície clara |
+| `surface-strong` | `#FCE8EE` | cartões/apoio |
+| `text-primary` | `#44042D` | texto principal |
+| `text-muted` | `#6E3D59` | texto secundário |
+| `success` | `#23664B` | sucesso |
+| `danger` | `#9C123D` | erro |
 
-```text
-mídias/lily-gourmet/
-  README.md
-  CATALOGO_IA.json
-  fichas/
-  originais/
-    marca/
-    impressos/
-    produtos/
-  derivados/
-    web/
-    social/
-    impressao/
+Os três primeiros valores vêm diretamente do raster oficial; os demais são derivados funcionais aprovados para UI.
 
-docs/lily-acai/marca/
-  KIT_DE_MARCA.md
-  ATIVOS.md
+## Contrato CSS
 
-apps/lily_acai/public/brand/
-  # somente derivados aprovados/otimizados usados pelo runtime
+```css
+--cl-color-primary: #820023;
+--cl-color-secondary: #44042D;
+--cl-color-accent: #F9C0CF;
+--cl-color-surface: #FFF7FA;
+--cl-color-surface-strong: #FCE8EE;
+--cl-color-text: #44042D;
+--cl-color-text-muted: #6E3D59;
+--cl-color-success: #23664B;
+--cl-color-danger: #9C123D;
 ```
 
-Não duplicar originais dentro de `docs/` nem em `public/`.
-
-Regras:
-
-- originais são imutáveis;
-- derivados registram origem, data e finalidade;
-- não sobrescrever o master;
-- não versionar fonte paga sem licença de redistribuição;
-- runtime usa derivados, nunca destrói o original.
-
-## Logo
-
-Documentar:
-
-- versão principal;
-- horizontal/símbolo quando existirem;
-- monocromática/negativa;
-- fundos permitidos;
-- área de proteção;
-- tamanho mínimo;
-- proporção;
-- usos proibidos;
-- favicon/avatar.
-
-## Paleta
-
-Preencher após extração e aprovação:
-
-| Token | HEX | RGB | Uso |
-|---|---|---|---|
-| `brand-primary` | pendente | pendente | CTA/ênfase |
-| `brand-secondary` | pendente | pendente | apoio |
-| `brand-accent` | pendente | pendente | destaque |
-| `surface` | pendente | pendente | fundos |
-| `text-primary` | pendente | pendente | texto |
-| `text-muted` | pendente | pendente | apoio |
-| `success` | pendente | pendente | confirmação |
-| `danger` | pendente | pendente | erro |
-
-Todos os pares usados em UI devem ter contraste validado.
+O prefixo oficial é `--cl-`. O antigo `--lg-` nunca virou contrato de produção.
 
 ## Tipografia
 
-Registrar:
+O lettering da logo é parte do ativo e não deve ser recriado com fonte aproximada. Na interface web, enquanto não houver uma família final licenciada/aprovada, usar stack condensada do sistema para títulos e `system-ui` para corpo/controles.
 
-- fonte de títulos;
-- fonte de texto;
-- pesos;
-- fallback;
-- licença/origem;
-- escala;
-- line-height;
-- tracking.
+## Formas e linguagem
 
-## Tokens web
-
-Contrato sugerido:
-
-```css
---lg-color-primary
---lg-color-secondary
---lg-color-accent
---lg-color-surface
---lg-color-text
---lg-font-display
---lg-font-body
---lg-radius-sm
---lg-radius-md
---lg-radius-lg
---lg-shadow-card
---lg-space-*
-```
-
-Valores entram somente após aprovação.
-
-## Linguagem visual
-
-Definir:
-
-- formas/raios;
-- cards;
-- botões;
-- campos;
-- ícones;
-- badges;
-- fundos;
-- fotografia;
-- motion;
-- loading/vazio/erro/sucesso.
-
-A Lily Gourmet não deve parecer uma skin do Carro Chefe.
+- círculos, selos e curvas suaves;
+- cantos generosos;
+- superfícies claras em rosa;
+- bordô/ameixa para contraste;
+- laço somente derivado do ativo oficial;
+- fotografia real preservando cor, volume e textura;
+- nenhuma estética preta/bronze/ouro/madeira/colonial do Carro Chefe.
 
 ## Tom de voz
 
-Comunicação curta, calorosa e comercial, sem urgência falsa, desconto inexistente, prova social inventada ou slogan do Carro Chefe.
+Curto, acolhedor, apetitoso e claro. A frase do adesivo é aprovada como direção:
+
+> cremosidade, sabor e qualidade em cada garrafa
+
+Sem urgência falsa, desconto inventado ou promessa operacional não aprovada.
 
 ## Acessibilidade
 
-- contraste WCAG;
+- texto principal em `#44042D` ou `#820023` sobre superfícies claras;
+- `#F9C0CF` não é cor de texto principal;
 - foco visível;
-- informação não transmitida somente por cor;
-- toque adequado;
-- motion reduzido;
-- alt text quando necessário.
+- informação não depende só de cor;
+- estados semânticos também usam texto;
+- alvos de toque adequados.
 
-## Pronto
+## Fotografia
 
-- logo original versionada;
-- variantes documentadas;
-- paleta aprovada;
-- fontes aprovadas/licenciadas;
-- tokens preenchidos;
-- componentes-chave definidos;
-- frontend inteiro convertido;
-- QA mobile/desktop/teclado/contraste concluído.
+As referências reais iniciais são morango e maracujá. Derivados podem corrigir enquadramento, exposição, balanço de branco, reflexos e fundo, mas não alterar quantidade, cor essencial ou textura do produto vendido.
 
+## Estado da Entrega 03
 
-## Acervo visual recebido em 23/09/2026
-
-Consultar [`ATIVOS.md`](./ATIVOS.md) e `mídias/lily-gourmet/`.
-
-O acervo inicial já permite trabalhar com:
-
-- forma circular e laço;
-- família rosa/ameixa/bordô;
-- referência de tipografia/lettering existente;
-- exemplo real de adesivo;
-- duas referências reais de produto.
-
-Ainda não permite fechar o manual sem decidir a relação entre o lettering `cookLily` e o nome público **Lily Gourmet**.
+O sistema visual base está fechado. O frontend já recebeu os tokens CookLily e segue para CI/QA. A incorporação binária dos originais/derivados ao Git é uma tarefa separada da definição do kit.
