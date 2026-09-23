@@ -37,11 +37,11 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 - Segurança alimentar, alvarás, tributação, venda de bebidas alcoólicas e acessibilidade física exigem validação por profissionais e órgãos locais antes da abertura.
 - Arquivos originais de marca são imutáveis. Derivados devem indicar origem, data e finalidade.
 
-## 3.1 Exceção estritamente isolada — Lily Gourmet (branch `lily-acai`)
+## 3.1 Exceção estritamente isolada — CookLily (branch `lily-acai`)
 
 Esta seção existe **somente na branch `lily-acai`** e não altera a arquitetura transacional do Carro Chefe.
 
-O proprietário aprovou uma operação temporária e independente chamada **Lily Gourmet**, hospedada sob o mesmo domínio/VPS apenas para reduzir custo antes da inauguração. Para essa operação:
+O proprietário aprovou uma operação temporária e independente chamada **CookLily**, hospedada sob o mesmo domínio/VPS apenas para reduzir custo antes da inauguração. Para essa operação:
 
 - o namespace público é `/lilyacai/*`;
 - o namespace de API é `/api/v1/lily/*`;

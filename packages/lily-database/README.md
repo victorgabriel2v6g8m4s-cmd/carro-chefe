@@ -1,6 +1,6 @@
-# Persistência Lily Gourmet
+# Persistência CookLily
 
-Banco transacional dedicado à operação temporária Lily Gourmet.
+Banco transacional dedicado à operação temporária CookLily.
 
 ## Regra central
 

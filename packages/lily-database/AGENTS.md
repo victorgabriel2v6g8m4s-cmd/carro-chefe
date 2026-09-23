@@ -1,8 +1,8 @@
-# AGENTS — Banco Lily Gourmet
+# AGENTS — Banco CookLily
 
 ## Região
 
-Persistência exclusiva da operação temporária Lily Gourmet. Este pacote é separado de `packages/database`, que continua pertencendo à Central Operacional do Carro Chefe.
+Persistência exclusiva da operação temporária CookLily. Este pacote é separado de `packages/database`, que continua pertencendo à Central Operacional do Carro Chefe.
 
 ## Isolamento
 

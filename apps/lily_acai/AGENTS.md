@@ -1,8 +1,8 @@
-# AGENTS — Lily Gourmet frontend
+# AGENTS — CookLily frontend
 
 ## Região
 
-Aplicação temporária e independente da Lily Gourmet. Herda `REGRAS.md`, `AGENTS.md` raiz e `apps/AGENTS.md`.
+Aplicação temporária e independente da CookLily. Herda `REGRAS.md`, `AGENTS.md` raiz e `apps/AGENTS.md`.
 
 ## Fronteira obrigatória
 

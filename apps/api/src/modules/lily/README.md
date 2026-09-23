@@ -1,6 +1,6 @@
-# Módulo API Lily Gourmet
+# Módulo API CookLily
 
-Backend isolado da operação temporária Lily Gourmet.
+Backend isolado da operação temporária CookLily.
 
 ## Namespace
 

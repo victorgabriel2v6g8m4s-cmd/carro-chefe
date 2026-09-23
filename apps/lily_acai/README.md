@@ -1,6 +1,6 @@
-# App Lily Gourmet
+# App CookLily
 
-Frontend independente da operação temporária Lily Gourmet.
+Frontend independente da operação temporária CookLily.
 
 ## Compatibilidade técnica
 
@@ -30,4 +30,4 @@ Próximas etapas:
 2. Entrega 04 — landing/leads/WhatsApp/deploy;
 3. Entrega 05 — catálogo/admin/cardápio dinâmico/deploy.
 
-Ver `docs/lily-acai/ROADMAP_LILY_GOURMET.md`.
+Ver `docs/lily-acai/ROADMAP_COOKLILY.md`.

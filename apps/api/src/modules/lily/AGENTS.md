@@ -1,8 +1,8 @@
-# AGENTS — API Lily Gourmet
+# AGENTS — API CookLily
 
 ## Região
 
-Módulo de backend exclusivo da operação temporária Lily Gourmet. Herda as regras de `apps/api`, com a exceção transacional isolada definida no `AGENTS.md` raiz desta branch.
+Módulo de backend exclusivo da operação temporária CookLily. Herda as regras de `apps/api`, com a exceção transacional isolada definida no `AGENTS.md` raiz desta branch.
 
 ## Namespace
 
