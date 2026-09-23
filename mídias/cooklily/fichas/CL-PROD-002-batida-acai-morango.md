@@ -36,7 +36,7 @@ Não usar a imagem como medição física de volume, gramatura ou embalagem.
 
 ## Usos sugeridos
 
-Após reenvio, tratamento e aprovação:
+Após tratamento e aprovação:
 
 - cardápio online;
 - card de sabor;
@@ -60,8 +60,6 @@ Após reenvio, tratamento e aprovação:
 
 ## Evitar
 
-- publicação antes de preservar o binário correto;
-- usar uma cópia da foto de maracujá em seu lugar;
 - alterar cor/quantidade do creme;
 - inferir peso/volume;
 - apresentar como embalagem final se houver troca de garrafa ou rótulo.

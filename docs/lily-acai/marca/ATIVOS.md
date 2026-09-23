@@ -18,3 +18,9 @@
 - adesivo 1024×2048 PNG — SHA-256 `7b480878a429aad9a4e0299e9a2fc3651eea84264272bb2d7fd9ccd48387ad14`.
 
 Consultar `mídias/cooklily/CATALOGO_IA.json` e as fichas antes de qualquer uso final.
+
+## Derivado em produção futura
+
+O frontend passou a usar `apps/lily_acai/public/brand/cooklily-logo-96.webp`, derivado do `CL-MARCA-001`. Dimensões 96×96, 7.122 B, SHA-256 `85e041408bca1b64464ff009917cc234fd15dcad8f9272761d15312be115bc59`.
+
+Esse WebP existe para runtime e não substitui o PNG fonte.

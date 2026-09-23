@@ -28,7 +28,7 @@
     {
       "id": "CL-MARCA-001",
       "categoria": "marca",
-      "arquivo": "originais/marca/2026-09-23_marca-lily-gourmet-logo-principal_png_v01_review.png",
+      "arquivo": "originais/marca/2026-09-23_marca-cooklily-logo-principal_png_v01_review.png",
       "arquivo_recebido": "cook (6).png",
       "binary_status": "source_received_verified",
       "descricao": "Logo circular em fundo transparente. Disco rosa-claro com anel interno ameixa escuro, laço bordô no topo e wordmark cookLily ao centro. 'cook' aparece em lettering estreito/condensado de aparência limpa; 'Lily' usa traço manuscrito/caligrafado em ameixa, com pequeno coração como detalhe do i. A forma circular e o laço comunicam delicadeza, confeitaria/gourmet e feminilidade visual.",
@@ -60,28 +60,27 @@
     {
       "id": "CL-IMP-001",
       "categoria": "impresso/adesivo",
-      "arquivo": "originais/impressos/2026-09-23_marca-lily-gourmet-adesivo-500ml-qr_png_v01_review.png",
+      "arquivo": "originais/impressos/2026-09-23_marca-cooklily-adesivo-500ml-qr_png_v01_review.png",
       "arquivo_recebido": "500ml (4 x 8 cm) (7).png",
       "binary_status": "source_received_verified",
       "descricao": "Arte vertical promocional para aplicação em embalagem/garrafa. Fundo texturizado em gradiente roxo/rosa, logo cookLily em destaque no topo, mensagem 'cremosidade, sabor e qualidade em cada garrafa', ícone de garrafa, QR Code central em cartão branco e CTA 'PEÇA JÁ!' na base.",
       "orientacao": "retrato 1024x2048, RGBA",
-      "qualidade": "boa como arte raster de referência; precisa revisão de naming, QR e prova de impressão antes de nova tiragem",
+      "qualidade": "boa como arte raster de referência; naming correto, QR legado compatível e prova de impressão ainda necessária",
       "edicao": "validar prova de impressão e quiet zone quando necessário; naming cookLily está correto e o QR legado permanece compatível.",
       "qr_destino_decodificado": "https://carrochefe.com/lilyacai/cardapio?cc_qr=LILY1&cc_campaign=adesivos",
       "qr_observacao": "O QR usa cc_* legado. A CookLily aceita cc_* e la_* na entrada e normaliza para campos canônicos la*; novas artes devem preferir la_*.",
       "usos_sugeridos": [
-        "referência de layout para novo adesivo CookLily",
+        "referência de layout para adesivo CookLily",
         "estudo de paleta",
         "base para etiqueta 4x8 cm após validação",
         "peça de balcão/embalagem depois de atualização",
         "referência para QR de campanha"
       ],
       "nao_recomendado": [
-        "reimpressão sem revisar QR",
-        "publicação como peça atual sem reconciliar cookLily/CookLily",
+        "reimpressão sem validar leitura/quiet zone",
         "redimensionar de modo que reduza quiet zone do QR"
       ],
-      "prioridade": "alta como referência de embalagem, não como arte final atual",
+      "prioridade": "alta como referência de embalagem; aprovada conceitualmente, sujeita a prova física",
       "size_bytes": 2885636,
       "sha256": "7b480878a429aad9a4e0299e9a2fc3651eea84264272bb2d7fd9ccd48387ad14",
       "requires_visual_inspection_before_final_use": true
@@ -149,5 +148,15 @@
       "sha256": "1bd9c8602da111484c2440a1afbb1e270d410b33ec7fd2577aa6c5ba29838080",
       "requires_visual_inspection_before_final_use": true
     }
-  ]
+  ],
+  "derivados_web": {
+    "logo": {
+      "arquivo": "apps/lily_acai/public/brand/cooklily-logo-96.webp",
+      "fonte": "CL-MARCA-001",
+      "dimensoes": "96x96",
+      "size_bytes": 7122,
+      "sha256": "85e041408bca1b64464ff009917cc234fd15dcad8f9272761d15312be115bc59",
+      "finalidade": "runtime do frontend CookLily"
+    }
+  }
 }

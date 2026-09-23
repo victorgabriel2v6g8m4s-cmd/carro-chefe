@@ -4,60 +4,53 @@
 
 - **Categoria:** impresso / embalagem / aquisição.
 - **Arquivo recebido:** `500ml (4 x 8 cm) (7).png`.
-- **Arquivo canônico esperado:** `../originais/impressos/2026-09-23_marca-lily-gourmet-adesivo-500ml-qr_png_v01_review.png`.
+- **Arquivo canônico esperado:** `../originais/impressos/2026-09-23_marca-cooklily-adesivo-500ml-qr_png_v01_review.png`.
 - **Dimensões digitais:** 1024×2048 px.
 - **Formato:** PNG RGBA.
 - **Tamanho:** 2.885.636 B.
 - **SHA-256:** `7b480878a429aad9a4e0299e9a2fc3651eea84264272bb2d7fd9ccd48387ad14`.
-- **Indicação no nome recebido:** 4 × 8 cm; confirmar tamanho físico antes de imprimir.
+- **Indicação no nome recebido:** 4 × 8 cm; validar tamanho físico/prova antes de imprimir.
 - **Status:** `review`.
 
 ## Descrição visual
 
-Peça vertical em tons de roxo, magenta e rosa, com textura/gradiente. A logo `cookLily` aparece em grande destaque no topo. Abaixo há a mensagem “cremosidade, sabor e qualidade em cada garrafa”, acompanhada por um pequeno pictograma de garrafa.
+Peça vertical em roxo, magenta e rosa, com textura/gradiente. A logo `cookLily` aparece no topo; abaixo há a mensagem “cremosidade, sabor e qualidade em cada garrafa”, pictograma de garrafa, QR central em cartão branco e CTA “PEÇA JÁ!”.
 
-O centro é dominado por um QR Code preto sobre cartão branco de cantos arredondados. Na base, o CTA “PEÇA JÁ!” aparece em tipografia alta e estreita.
+A hierarquia é: marca → promessa → ação digital → CTA.
 
-A composição tem boa hierarquia de cima para baixo: marca → promessa → ação digital → CTA.
+## QR atual e compatibilidade
 
-## QR atual
-
-Decodificação local do arquivo recebido:
+Destino decodificado:
 
 `https://carrochefe.com/lilyacai/cardapio?cc_qr=LILY1&cc_campaign=adesivos`
 
-O destino `/lilyacai/cardapio` é compatível com a arquitetura atual. Porém os parâmetros `cc_qr` e `cc_campaign` pertencem ao namespace do Carro Chefe. A Lily planeja `la_qr`, `la_campaign` e `la_variant`.
+O QR continua funcional por decisão de compatibilidade. A aplicação aceita `cc_qr`/`cc_campaign` como aliases e normaliza para `laQr`/`laCampaign` antes da futura persistência.
 
-**Não reimprimir esta versão sem regenerar/validar o QR.**
+Novas artes devem preferir:
+
+- `la_qr`;
+- `la_campaign`;
+- `la_variant`.
 
 ## Usos sugeridos
 
-Depois de atualizar naming e QR:
-
-- adesivo da garrafa;
+- adesivo de garrafa;
 - etiqueta promocional;
 - material de balcão;
 - QR em embalagem;
-- amostra de linguagem para flyer;
-- base de campanha de rastreamento por lote/arte;
-- referência para versão de 500 ml;
-- referência de hierarquia de CTA para Stories.
+- referência de layout para flyer/story;
+- campanha rastreada por variação de arte.
 
-## Ajustes recomendados
+## Antes de nova tiragem
 
-- reconciliar `cookLily` com `CookLily`;
-- regenerar QR com namespace Lily;
-- validar quiet zone e leitura no tamanho físico;
-- conferir sangria/margem de corte;
-- validar contraste após impressão;
-- padronizar tipografia com o kit;
-- revisar se a frase continuará como mensagem oficial;
-- considerar um identificador de variação de arte no QR.
+- validar leitura e quiet zone no tamanho físico;
+- confirmar sangria/margem de corte;
+- validar contraste em prova impressa;
+- incluir `la_variant` quando houver teste entre artes;
+- confirmar que a rota de destino publicada está ativa.
 
 ## Evitar
 
-- impressão direta desta versão como arte atual;
 - reduzir o QR sem teste de leitura;
-- aplicar efeitos ou transparência sobre o QR;
-- usar o QR como tracking Lily sem migrar parâmetros;
-- inferir que “4 × 8 cm” está tecnicamente pronto para gráfica só pelo nome do arquivo.
+- aplicar efeitos/transparência sobre o QR;
+- interpretar o nome “4 × 8 cm” como prova técnica de gráfica sem conferir o arquivo/origem.

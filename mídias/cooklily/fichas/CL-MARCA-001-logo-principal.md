@@ -3,63 +3,59 @@
 ## Identificação
 
 - **Categoria:** marca / logo.
+- **Nome oficial:** CookLily.
+- **Wordmark:** `cookLily`.
 - **Arquivo recebido:** `cook (6).png`.
-- **Arquivo canônico esperado:** `../originais/marca/2026-09-23_marca-lily-gourmet-logo-principal_png_v01_review.png`.
+- **Arquivo canônico esperado:** `../originais/marca/2026-09-23_marca-cooklily-logo-principal_png_v01_review.png`.
 - **Dimensões:** 2048×2048 px.
 - **Formato:** PNG RGBA com transparência.
 - **Tamanho:** 384.801 B.
 - **SHA-256:** `70448b75e51a603540d6610fb004c0902ac011819cd5a6ff5a813246471ee92c`.
 - **Origem:** fornecida pelo proprietário como logo oficial.
 - **Status editorial:** `review`.
-- **Binário no Git:** pendente de incorporação sem alteração dos bytes.
 
 ## Descrição visual
 
-Marca circular dominada por rosa-claro. Um anel ameixa escuro forma a moldura interna e um laço bordô aparece centralizado na parte superior. No centro, o wordmark combina “cook” em traço estreito e limpo com “Lily” em escrita manuscrita/caligrafada de maior personalidade. Um pequeno coração funciona como detalhe do “i”.
+Marca circular dominada por rosa-claro, com anel ameixa, laço bordô no topo e wordmark `cookLily` central. “cook” usa traço estreito/condensado e “Lily” usa escrita manuscrita/caligrafada, com pequeno coração como detalhe do “i”.
 
-A composição tem caráter delicado, artesanal e gourmet. O círculo funciona bem como selo, avatar, etiqueta e assinatura de embalagem.
+A composição comunica delicadeza, produto artesanal e universo gourmet. O formato circular funciona especialmente bem como selo, avatar, etiqueta e assinatura de embalagem.
 
-## Cores observadas no raster
+## Cores aprovadas
 
-- rosa principal aproximado: `#F9C0CF`;
-- ameixa escuro aproximado: `#44042D`;
-- bordô/vermelho do laço aproximado: `#820023`.
+- rosa principal: `#F9C0CF`;
+- ameixa escuro: `#44042D`;
+- bordô do laço: `#820023`.
 
-Essas cores ainda **não são tokens oficiais**. Devem ser validadas no kit de marca e em prova de tela/impressão.
+Essas cores são tokens oficiais do kit CookLily.
 
-## Relação com CookLily
+## Uso recomendado
 
-O arquivo foi declarado pelo proprietário como logo oficial, porém o lettering visível é **cookLily** e o nome público documentado do projeto é **CookLily**.
-
-O original deve ser preservado exatamente. A decisão entre:
-
-- manter `cookLily` como assinatura/linha visual;
-- criar um lockup `CookLily`;
-- redesenhar apenas o lettering;
-- ou usar o símbolo/laço como elemento independente
-
-faz parte do kit de marca e não deve ser tomada por edição automática.
-
-## Usos sugeridos
-
-- fonte principal para construção do kit de marca;
-- avatar de rede social, após decisão de naming;
-- cabeçalho/assinatura do site;
-- favicon ou ícone derivado do símbolo;
-- etiqueta e embalagem;
-- selo em peças sociais;
+- cabeçalho do site;
+- avatar/social;
+- selo de embalagem;
 - assinatura de cardápio;
-- marca d’água discreta;
-- referência para extração da paleta e linguagem de formas.
+- etiqueta;
+- favicon/símbolo derivado;
+- referência de paleta e formas.
+
+## Derivado web versionado
+
+`apps/lily_acai/public/brand/cooklily-logo-96.webp`
+
+- 96×96;
+- 7.122 B;
+- SHA-256 `85e041408bca1b64464ff009917cc234fd15dcad8f9272761d15312be115bc59`;
+- finalidade: runtime do frontend;
+- não substitui o original.
 
 ## Evitar
 
-- sobrescrever este PNG;
-- remover ou trocar lettering no arquivo original;
-- ampliar indefinidamente para grande formato sem avaliar rasterização;
-- usar como “CookLily” final sem resolver a divergência de naming;
-- alterar as cores por conta própria antes do kit.
+- sobrescrever o PNG original;
+- recriar o lettering com fonte aproximada;
+- distorcer proporção;
+- alterar cores sem uma nova decisão de marca;
+- ampliar o raster para grande formato sem teste de resolução.
 
-## Próximos derivados possíveis
+## Derivados futuros
 
-Após aprovação do kit: SVG/vetor redesenhado a partir de fonte legítima, versão horizontal, símbolo isolado, monocromática, negativa, favicon, social avatar e web PNG/WebP.
+Versão vetorial legítima, horizontal, símbolo isolado, monocromática, negativa, favicon e exports de impressão.

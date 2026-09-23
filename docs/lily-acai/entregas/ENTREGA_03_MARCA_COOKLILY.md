@@ -1,6 +1,6 @@
 # Entrega 03 — Marca CookLily e rebranding integral
 
-**Status:** em andamento  
+**Status:** implementação técnica concluída; homologação visual/manual pendente  
 **Deploy:** não
 
 ## Decisões fechadas em 23/09/2026
@@ -32,9 +32,9 @@
 - [x] fotos renomeadas verificadas;
 - [x] tema aplicado no código;
 - [x] aliases de tracking implementados com testes;
-- [ ] CI final concluído;
+- [x] CI final concluído;
 - [ ] QA visual manual mobile/desktop;
-- [ ] binários originais/derivados organizados no Git;
+- [~] derivado web da logo versionado; originais completos e derivados de produto ainda não foram incorporados ao Git;
 - [ ] entrega marcada como concluída;
 - [x] nenhum deploy executado.
 
@@ -45,3 +45,20 @@ Os preflights de `apps/lily_acai` e `apps/api/src/modules/lily` foram executados
 ## Próxima entrega
 
 Entrega 04 — landing, captação de telefone, WhatsApp, persistência canônica da atribuição e primeira publicação controlada.
+
+## Evidência de validação
+
+- preflight frontend/API: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35916276396 — **success**;
+- regeneração/verificação do manifesto: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35917002720 — **success**;
+- CI do head técnico `b6b855bda71462b1ef0722491fad99476c413cf5`: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35917670078 — **success**;
+- CodeQL do mesmo head: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35917670105 — **success**;
+- PR temporário #58: fechado sem merge e sem deploy.
+
+O CI executou e aprovou Quality Node 20, Quality Node 24, testes, checks estáticos, builds de produção, Tool Health, Excel Recipe em Linux/Windows, Windows Supervisor e Workbook Snapshot.
+
+## Testes não executados / pendências desta entrega
+
+- QA visual manual em navegador real, mobile e desktop: **não executado**;
+- prova de impressão do adesivo/QR em 4 × 8 cm: **não executada**;
+- incorporação dos quatro binários originais completos ao Git: **não executada**; hashes/fontes estão documentados e o derivado web da logo foi versionado;
+- deploy Hostinger/VPS: **não executado**, conforme escopo e ausência de autorização de publicação.
