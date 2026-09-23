@@ -15,7 +15,6 @@ EXPECTED_CLEAN_PLAN = "25569848d2d9eb86030c74c2c58511c2647c34b46e686553f60c13508
 EXPECTED_BLOCKED_PLAN = "128f29f626ff2420379a3855b7337531d81bc1996da4af37ef3247927f435e42"
 EXPECTED_CLEAN_PARTS = {
     "xl/tables/table12.xml",
-    "xl/workbook.xml",
     "xl/worksheets/sheet9.xml",
 }
 
