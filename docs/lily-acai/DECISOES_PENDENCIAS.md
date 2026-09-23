@@ -33,7 +33,7 @@ Este arquivo pertence somente à branch `lily-acai`.
 
 | ID | Tema | Informação necessária | Impacto |
 |---|---|---|---|
-| LILY-PEND-001 | Logo | arquivo oficial Lily Gourmet | bloqueia kit final |
+| LILY-PEND-001 | Logo | **resolvida em 23/09/2026:** arquivo raster oficial recebido e catalogado como `LG-MARCA-001` | não bloqueia mais o acervo; naming ainda exige decisão |
 | LILY-PEND-002 | Marca | aprovação de paleta/tipografia | bloqueia rebranding final |
 | LILY-PEND-003 | Landing | copy final de cupons/promoções | bloqueia texto definitivo |
 | LILY-PEND-004 | WhatsApp | confirmar P0 humano e futura automação | define integração futura |
@@ -41,7 +41,7 @@ Este arquivo pertence somente à branch `lily-acai`.
 | LILY-PEND-006 | Preços | preço por produto/tamanho | bloqueia publicação |
 | LILY-PEND-007 | Adicionais | lista e preços | bloqueia configuração final |
 | LILY-PEND-008 | Admin | primeira conta staff segura | bloqueia painel produção |
-| LILY-PEND-009 | Mídia | fotos reais | define placeholders |
+| LILY-PEND-009 | Mídia | duas fotos reais iniciais já recebidas; ainda falta sessão/padrão final de fotografia e demais produtos | placeholders continuam possíveis onde não houver foto aprovada |
 | LILY-PEND-010 | Operação | horários/disponibilidade/capacidade | bloqueia promessas |
 | LILY-PEND-011 | Entrega | áreas/taxas | Entrega 06 |
 | LILY-PEND-012 | Retirada | local/horário/regra | Entrega 06 |
@@ -49,6 +49,9 @@ Este arquivo pertence somente à branch `lily-acai`.
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | política final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | frequência/política de envios | automação CRM |
+
+| LILY-PEND-017 | Naming da marca | logo recebida contém `cookLily`, enquanto o nome público aprovado é `Lily Gourmet`; definir se o wordmark será mantido, adaptado ou substituído em derivado | bloqueia logo final/web/impresso |
+| LILY-PEND-018 | Foto morango | reenviar a foto de morango com nome de arquivo único para preservar bytes, dimensões e SHA-256 | bloqueia incorporação binária canônica dessa mídia |
 
 ## Regra
 

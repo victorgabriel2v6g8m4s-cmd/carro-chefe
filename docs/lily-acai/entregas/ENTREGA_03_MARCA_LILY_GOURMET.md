@@ -1,6 +1,6 @@
 # Entrega 03 — Marca oficial Lily Gourmet e rebranding integral
 
-**Status:** planejada  
+**Status:** em andamento — acervo inicial recebido e catalogado  
 **Dependência:** Entrega 02 concluída  
 **Deploy:** não
 
@@ -10,9 +10,16 @@ Versionar a logo oficial, criar o kit de marca e aplicar a identidade Lily Gourm
 
 ## Entrada obrigatória
 
-Logo oficial em formato utilizável, preferencialmente vetor original ou PNG de alta resolução/transparência.
+A primeira entrada foi recebida em 23/09/2026:
 
-Sem o ativo, não inventar logo, cores exatas ou fontes oficiais.
+- logo raster oficial (`LG-MARCA-001`);
+- adesivo/QR existente (`LG-IMP-001`);
+- foto real da batida de maracujá (`LG-PROD-001`);
+- foto real da batida de morango (`LG-PROD-002`, binário pendente de reenvio com nome único).
+
+O acervo está documentado em `mídias/lily-gourmet/`.
+
+Ainda é desejável obter vetor/editável da logo, se existir. Não inventar fontes oficiais nem redesenhar o wordmark sem aprovação.
 
 ## Etapas
 
