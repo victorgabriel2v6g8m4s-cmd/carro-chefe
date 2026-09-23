@@ -48,6 +48,15 @@ O proprietário confirmou que as fontes da identidade CookLily são **Summer** e
 
 Os arquivos binários das fontes não estão no repositório e não foram obtidos de fontes externas. Até o recebimento dos arquivos licenciados, o CSS usa fallback seguro.
 
+
+### Evidência da atualização tipográfica
+
+- preflight do frontend: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35919299845 — **success**;
+- CI do commit `8623ba0a6b210cdcadb51b7db0de51211cab4121`: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35919478610 — **success** em Node 20 e Node 24, incluindo checks, testes e builds;
+- CodeQL do mesmo commit: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/35919478652 — **success**;
+- PR temporário #59: usado somente para validação e fechado sem merge;
+- deploy: **não executado**.
+
 ## Próxima entrega
 
 Entrega 04 — landing, captação de telefone, WhatsApp, persistência canônica da atribuição e primeira publicação controlada.
