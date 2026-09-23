@@ -1,8 +1,8 @@
-# AGENTS — Lily Açaí frontend
+# AGENTS — Lily Gourmet frontend
 
 ## Região
 
-Aplicação temporária e independente da Lily Açaí. Herda `REGRAS.md`, `AGENTS.md` raiz e `apps/AGENTS.md`.
+Aplicação temporária e independente da Lily Gourmet. Herda `REGRAS.md`, `AGENTS.md` raiz e `apps/AGENTS.md`.
 
 ## Fronteira obrigatória
 

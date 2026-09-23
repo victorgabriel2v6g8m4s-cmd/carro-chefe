@@ -1,4 +1,6 @@
-# Plano de execução em 24h — Lily Açaí
+# Plano de execução em 24h — Lily Gourmet
+
+> **Nota de sequência (23/09/2026):** este documento preserva o plano técnico P0 original. A ordem das Entregas 03 em diante foi substituída por `ROADMAP_LILY_GOURMET.md`: marca → landing/WhatsApp/deploy → catálogo/admin/publicação. O conteúdo técnico posterior continua como referência.
 
 ## 1. Objetivo
 
@@ -24,7 +26,7 @@ O P0 deve permitir:
 
 ## 2. Não objetivos
 
-Nesta fase não transformar Lily Açaí em linha de negócio permanente do Carro Chefe, não inserir Lily na documentação da `main`, não reutilizar branding do Carro Chefe, não compartilhar banco de usuários e não construir ERP/fiscal/estoque completo.
+Nesta fase não transformar Lily Gourmet em linha de negócio permanente do Carro Chefe, não inserir Lily na documentação da `main`, não reutilizar branding do Carro Chefe, não compartilhar banco de usuários e não construir ERP/fiscal/estoque completo.
 
 Também não inventar sabores, preços, taxas, raio de entrega, promoções ou disponibilidade. Conteúdo provisório deve ser marcado como demonstração e permanecer não publicável até aprovação operacional.
 

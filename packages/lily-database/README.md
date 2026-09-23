@@ -1,6 +1,6 @@
-# Persistência Lily Açaí
+# Persistência Lily Gourmet
 
-Banco transacional dedicado à operação temporária Lily Açaí.
+Banco transacional dedicado à operação temporária Lily Gourmet.
 
 ## Regra central
 

@@ -1,6 +1,6 @@
-# Módulo API Lily Açaí
+# Módulo API Lily Gourmet
 
-Backend isolado da operação temporária Lily Açaí.
+Backend isolado da operação temporária Lily Gourmet.
 
 ## Namespace
 

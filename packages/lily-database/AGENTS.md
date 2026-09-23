@@ -1,8 +1,8 @@
-# AGENTS — Banco Lily Açaí
+# AGENTS — Banco Lily Gourmet
 
 ## Região
 
-Persistência exclusiva da operação temporária Lily Açaí. Este pacote é separado de `packages/database`, que continua pertencendo à Central Operacional do Carro Chefe.
+Persistência exclusiva da operação temporária Lily Gourmet. Este pacote é separado de `packages/database`, que continua pertencendo à Central Operacional do Carro Chefe.
 
 ## Isolamento
 
