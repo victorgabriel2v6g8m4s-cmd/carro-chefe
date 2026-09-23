@@ -35,6 +35,7 @@
 | LILY-PEND-016 | Marketing | frequência/política de envios | CRM |
 | LILY-PEND-017 | Naming | **resolvida:** CookLily definitivo | — |
 | LILY-PEND-018 | Foto morango | **resolvida:** arquivo renomeado e hash verificado | — |
-| LILY-PEND-019 | Tipografia | família web final opcional | não bloqueia P0 |
+| LILY-PEND-019 | Tipografia | **resolvida:** famílias oficiais Summer e Amsterdam Four informadas em 23/09/2026 | — |
+| LILY-PEND-020 | Fontes web | receber os arquivos licenciados de Summer e Amsterdam Four e confirmar permissão de uso/redistribuição web | necessário para renderização idêntica em todos os dispositivos; fallback já implementado |
 
 Nunca preencher informação real ausente por suposição.

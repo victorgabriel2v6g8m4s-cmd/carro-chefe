@@ -24,7 +24,7 @@ function Shell({ children }: { children: ReactNode }) {
     <header className="topbar">
       <Link className="brand" to="/cardapio" aria-label="CookLily — início">
         <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
-        <span className="brand-copy"><strong>cookLily</strong><small>batidas de açaí</small></span>
+        <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>batidas de açaí</small></span>
       </Link>
       <nav aria-label="Navegação principal">
         <Link to="/cardapio">Cardápio</Link>
@@ -57,7 +57,7 @@ function Cardapio() {
         </div>
       </div>
       <div className="brand-showcase" aria-label="Identidade visual CookLily">
-        <div className="brand-orbit"><span className="brand-wordmark">cook<em>Lily</em></span></div>
+        <div className="brand-orbit"><span className="brand-wordmark"><span>cook</span><em>Lily</em></span></div>
         <div className="flavour-tags" aria-label="Primeiros sabores confirmados">
           <span>Morango</span><span>Maracujá</span>
         </div>

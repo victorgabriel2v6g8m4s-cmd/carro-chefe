@@ -15,6 +15,8 @@
   --cl-radius-pill: 999px;
   --cl-shadow-card: 0 20px 60px rgb(68 4 45 / 12%);
   --cl-shadow-hero: 0 32px 90px rgb(68 4 45 / 18%);
-  --cl-font-display: "Arial Narrow", "Aptos Narrow", "Trebuchet MS", sans-serif;
+  --cl-font-brand-summer: "Summer", "Arial Narrow", "Aptos Narrow", "Trebuchet MS", sans-serif;
+  --cl-font-brand-script: "Amsterdam Four", "Segoe Script", "Brush Script MT", cursive;
+  --cl-font-display: var(--cl-font-brand-summer);
   --cl-font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }

@@ -10,7 +10,9 @@ button, input { font: inherit; }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
 .brand-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 50%; box-shadow: 0 8px 24px rgb(68 4 45 / 12%); }
 .brand-copy { display: grid; }
-.brand-copy strong { font: 800 22px/1 var(--cl-font-display); letter-spacing: -.03em; color: var(--cl-color-secondary); }
+.brand-copy strong { display: flex; align-items: baseline; font-size: 22px; line-height: 1; color: var(--cl-color-secondary); }
+.brand-cook { font-family: var(--cl-font-brand-summer); font-weight: 400; letter-spacing: -.03em; }
+.brand-lily { margin-left: .02em; font-family: var(--cl-font-brand-script); font-size: 1.08em; font-weight: 400; letter-spacing: 0; }
 .brand-copy small { margin-top: 4px; color: var(--cl-color-text-muted); font-size: 12px; }
 .topbar nav { display: flex; gap: 22px; }
 .topbar nav a { text-decoration: none; font-weight: 750; }
@@ -34,8 +36,8 @@ p { line-height: 1.65; color: var(--cl-color-text-muted); }
 .brand-showcase::before { width: 340px; height: 340px; top: -90px; right: -80px; }
 .brand-showcase::after { width: 220px; height: 220px; bottom: -90px; left: -60px; }
 .brand-orbit { width: min(290px,78vw); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: rgb(255 247 250 / 72%); border: 10px solid var(--cl-color-secondary); position: relative; z-index: 1; }
-.brand-wordmark { color: var(--cl-color-primary); font: 700 clamp(38px,6vw,66px)/1 var(--cl-font-display); letter-spacing: -.06em; }
-.brand-wordmark em { color: var(--cl-color-secondary); font-style: italic; font-weight: 500; }
+.brand-wordmark { color: var(--cl-color-primary); font-family: var(--cl-font-brand-summer); font-size: clamp(38px,6vw,66px); font-weight: 400; line-height: 1; letter-spacing: -.06em; }
+.brand-wordmark em { color: var(--cl-color-secondary); font-family: var(--cl-font-brand-script); font-style: normal; font-weight: 400; letter-spacing: 0; }
 .flavour-tags { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; position: relative; z-index: 1; }
 .flavour-tags span { border-radius: var(--cl-radius-pill); padding: 9px 14px; background: rgb(255 255 255 / 78%); color: var(--cl-color-secondary); font-weight: 800; border: 1px solid rgb(68 4 45 / 15%); }
 .status-card { margin-bottom: 90px; padding: clamp(28px,5vw,54px); border: 1px solid rgb(130 0 35 / 13%); border-radius: var(--cl-radius-lg); background: rgb(255 255 255 / 80%); box-shadow: var(--cl-shadow-card); }

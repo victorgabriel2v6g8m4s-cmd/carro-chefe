@@ -47,7 +47,23 @@ O prefixo oficial é `--cl-`. O antigo `--lg-` nunca virou contrato de produçã
 
 ## Tipografia
 
-O lettering da logo é parte do ativo e não deve ser recriado com fonte aproximada. Na interface web, enquanto não houver uma família final licenciada/aprovada, usar stack condensada do sistema para títulos e `system-ui` para corpo/controles.
+As famílias tipográficas oficiais usadas na identidade/lettering da logo são:
+
+- **Summer** — família de display principal; no frontend é o token de títulos e da parte `cook` da assinatura textual;
+- **Amsterdam Four** — família manuscrita/caligrafada; no frontend é usada na parte `Lily` da assinatura textual.
+
+Tokens web:
+
+```css
+--cl-font-brand-summer: "Summer", "Arial Narrow", "Aptos Narrow", "Trebuchet MS", sans-serif;
+--cl-font-brand-script: "Amsterdam Four", "Segoe Script", "Brush Script MT", cursive;
+--cl-font-display: var(--cl-font-brand-summer);
+--cl-font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+```
+
+**Disponibilidade/licença:** os arquivos de fonte Summer e Amsterdam Four ainda não estão versionados no repositório. Até que os binários licenciados sejam fornecidos e sua permissão de uso/redistribuição web seja confirmada, o site declara os nomes oficiais e usa fallbacks locais. Não baixar, copiar ou versionar arquivos dessas fontes de fontes não autorizadas.
+
+O corpo de texto e os controles permanecem em `system-ui` para legibilidade e performance.
 
 ## Formas e linguagem
 

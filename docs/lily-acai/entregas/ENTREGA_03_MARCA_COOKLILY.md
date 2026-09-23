@@ -42,6 +42,12 @@
 
 Os preflights de `apps/lily_acai` e `apps/api/src/modules/lily` foram executados antes da alteração de código e passaram no workflow temporário CookLily Preflight Once.
 
+## Atualização tipográfica — 23/09/2026
+
+O proprietário confirmou que as fontes da identidade CookLily são **Summer** e **Amsterdam Four**. O kit de marca e o frontend foram atualizados para usar esses nomes como tokens oficiais, com Summer no papel de display/`cook` e Amsterdam Four na assinatura `Lily`.
+
+Os arquivos binários das fontes não estão no repositório e não foram obtidos de fontes externas. Até o recebimento dos arquivos licenciados, o CSS usa fallback seguro.
+
 ## Próxima entrega
 
 Entrega 04 — landing, captação de telefone, WhatsApp, persistência canônica da atribuição e primeira publicação controlada.
