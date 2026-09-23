@@ -1,58 +1,55 @@
-# Decisões e pendências — Lily Açaí
+# Decisões e pendências — Lily Gourmet
 
-Este arquivo pertence somente à branch `lily-acai`. Ele não deve ser copiado para a documentação da `main`.
+Este arquivo pertence somente à branch `lily-acai`.
 
 ## Confirmado pelo proprietário
 
-- operação temporária para levantar fundos antes da inauguração do Carro Chefe;
-- mesma VPS e mesmo domínio por economia;
-- rota pública sob `carrochefe.com/lilyacai/`;
-- identidade rosa/roxa sem correspondência visual com Carro Chefe;
-- parceria Lily Açaí × Carro Chefe deve ser transparente;
-- documentação e código apenas na branch Lily;
+- nome público: **Lily Gourmet**;
+- namespaces técnicos atuais permanecem por compatibilidade;
+- logo oficial será versionada e originará o kit de marca;
+- site inteiro seguirá o kit antes da primeira publicação Lily;
+- landing captará telefone para cupons/promoções;
+- acompanhamento P0 será pelo WhatsApp oficial;
+- painel de produtos alimentará automaticamente o cardápio;
+- somente itens publicados/ativos e disponíveis aparecem;
+- mesma VPS Hostinger e domínio por economia;
 - Instagram `@acai._lily`;
 - WhatsApp `+55 67 99928-9187`;
-- login independente;
-- consentimento de compartilhamento de informações;
-- catálogo com adicionais;
-- endereços de entrega salvos;
-- pagamento;
-- painel com separação entre retirada/balcão e entrega;
-- histórico para ofertas futuras;
-- tracking de QR equivalente em lógica ao Carro Chefe;
-- conteúdo/fotos provisórios até existirem produtos reais;
-- ferramenta de administração de produtos, capas, mídias, descrições e adicionais.
+- banco/autenticação/dados permanecem separados do Carro Chefe.
 
-## Decisões de arquitetura adotadas para o P0
+## Arquitetura confirmada
 
 - banco Lily separado;
-- prefixo API `/api/v1/lily`;
-- app Vite separado;
-- namespace de tracking `la_qr`, `la_campaign`, `la_variant`;
-- IDs de QR `LILY-QR-*`;
-- consentimentos separados por finalidade;
-- compartilhamento com Carro Chefe opcional, nunca condição de compra;
-- Checkout Pro do Mercado Pago como primeira integração recomendada, condicionado a credenciais;
-- conteúdo provisório permanece `draft` até publicação explícita;
-- pagamentos confirmados apenas pelo backend/webhook.
+- API `/api/v1/lily`;
+- Vite separado;
+- tracking `la_qr`, `la_campaign`, `la_variant`;
+- lead promocional não exige senha;
+- telefone nunca entra em analytics;
+- publicação e disponibilidade são controles distintos;
+- deploy por SHA aprovado da `lily-acai`;
+- conteúdo provisório permanece draft.
 
-## Pendências obrigatórias antes da venda real
+## Pendências
 
 | ID | Tema | Informação necessária | Impacto |
 |---|---|---|---|
-| LILY-PEND-001 | Catálogo | sabores/produtos reais | impede publicação real |
-| LILY-PEND-002 | Preços | preço por produto/tamanho | impede checkout real |
-| LILY-PEND-003 | Adicionais | lista e preços | impede configuração final |
-| LILY-PEND-004 | Entrega | bairros/CEPs atendidos e taxas | impede cálculo final |
-| LILY-PEND-005 | Retirada | regra/local/horário de retirada | impede comunicação final |
-| LILY-PEND-006 | Pagamento | conta e credenciais do Mercado Pago | impede confirmação automática |
-| LILY-PEND-007 | Jurídico | identificação do controlador/contato de privacidade | impede política definitiva |
-| LILY-PEND-008 | Retenção | prazos para conta, endereço, pedidos, logs e tracking | política provisória apenas |
-| LILY-PEND-009 | Marketing | regra de ofertas e frequência de contato | impede automação de CRM |
-| LILY-PEND-010 | Admin | criação segura da primeira conta staff | bloqueia painel em produção |
-| LILY-PEND-011 | Mídia | fotos reais e identidade final | conteúdo provisório permanece |
-| LILY-PEND-012 | Operação | horários/disponibilidade/capacidade | impede promessas públicas |
+| LILY-PEND-001 | Logo | arquivo oficial Lily Gourmet | bloqueia kit final |
+| LILY-PEND-002 | Marca | aprovação de paleta/tipografia | bloqueia rebranding final |
+| LILY-PEND-003 | Landing | copy final de cupons/promoções | bloqueia texto definitivo |
+| LILY-PEND-004 | WhatsApp | confirmar P0 humano e futura automação | define integração futura |
+| LILY-PEND-005 | Catálogo | produtos/sabores finais | bloqueia catálogo completo |
+| LILY-PEND-006 | Preços | preço por produto/tamanho | bloqueia publicação |
+| LILY-PEND-007 | Adicionais | lista e preços | bloqueia configuração final |
+| LILY-PEND-008 | Admin | primeira conta staff segura | bloqueia painel produção |
+| LILY-PEND-009 | Mídia | fotos reais | define placeholders |
+| LILY-PEND-010 | Operação | horários/disponibilidade/capacidade | bloqueia promessas |
+| LILY-PEND-011 | Entrega | áreas/taxas | Entrega 06 |
+| LILY-PEND-012 | Retirada | local/horário/regra | Entrega 06 |
+| LILY-PEND-013 | Pagamento | credenciais do provedor | Entrega 07 |
+| LILY-PEND-014 | Jurídico | controlador/contato de privacidade | política final |
+| LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
+| LILY-PEND-016 | Marketing | frequência/política de envios | automação CRM |
 
-## Regra para informações ainda ausentes
+## Regra
 
-O sistema deve transformar decisões pendentes em configurações administráveis sempre que isso reduzir retrabalho, mas não deve preencher valores reais por suposição.
+Nunca preencher informação real ausente por suposição. Tornar configurável quando isso reduzir retrabalho.

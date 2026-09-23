@@ -1,20 +1,33 @@
-# App Lily Açaí
+# App Lily Gourmet
 
-Frontend independente da operação temporária Lily Açaí.
+Frontend independente da operação temporária Lily Gourmet.
 
-## Base pública
+## Compatibilidade técnica
 
-- URL: `/lilyacai/`
-- cardápio: `/lilyacai/cardapio`
-- cadastro: `/lilyacai/cadastro`
-- login: `/lilyacai/entrar`
-- privacidade: `/lilyacai/privacidade`
-- API: somente `/api/v1/lily/*`
+O nome público mudou, mas permanecem por compatibilidade:
 
-## Estado após a Entrega 2
+- app `apps/lily_acai`;
+- base `/lilyacai/`;
+- API `/api/v1/lily/*`.
 
-O app React/Vite já possui base própria `/lilyacai/`, identidade rosa/roxa independente, shell de cardápio sem produtos inventados, cadastro, login e aviso operacional de privacidade.
+Renomear esses contratos exige migração separada.
 
-O catálogo real, upload de mídia e painel administrativo pertencem à Entrega 3.
+## Rotas atuais
 
-Consulte `AGENTS.md` antes de alterar este diretório.
+- `/lilyacai/`;
+- `/lilyacai/cardapio`;
+- `/lilyacai/cadastro`;
+- `/lilyacai/entrar`;
+- `/lilyacai/privacidade`.
+
+## Estado
+
+A base React/Vite, autenticação e consentimentos da Entrega 02 existem. A aparência atual é provisória.
+
+Próximas etapas:
+
+1. Entrega 03 — logo/kit/rebranding;
+2. Entrega 04 — landing/leads/WhatsApp/deploy;
+3. Entrega 05 — catálogo/admin/cardápio dinâmico/deploy.
+
+Ver `docs/lily-acai/ROADMAP_LILY_GOURMET.md`.
