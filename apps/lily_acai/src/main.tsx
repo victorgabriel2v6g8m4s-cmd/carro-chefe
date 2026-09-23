@@ -7,6 +7,7 @@ import "./styles.css";
 
 const instagram = "https://instagram.com/acai._lily";
 const whatsapp = "https://wa.me/5567999289187";
+const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
 function AttributionCapture() {
   useEffect(() => {
@@ -22,7 +23,7 @@ function Shell({ children }: { children: ReactNode }) {
   return <div className="lily-shell">
     <header className="topbar">
       <Link className="brand" to="/cardapio" aria-label="CookLily — início">
-        <span className="brand-seal" aria-hidden="true">C</span>
+        <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
         <span className="brand-copy"><strong>cookLily</strong><small>batidas de açaí</small></span>
       </Link>
       <nav aria-label="Navegação principal">

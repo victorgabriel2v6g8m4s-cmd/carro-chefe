@@ -8,7 +8,7 @@ button, input { font: inherit; }
 .lily-shell { min-height: 100vh; display: flex; flex-direction: column; }
 .topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(18px,5vw,72px); border-bottom: 1px solid rgb(130 0 35 / 14%); background: rgb(255 247 250 / 92%); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 10; }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
-.brand-seal { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--cl-color-accent); color: var(--cl-color-primary); border: 3px solid var(--cl-color-secondary); font: 800 24px/1 var(--cl-font-display); box-shadow: 0 8px 24px rgb(68 4 45 / 12%); }
+.brand-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 50%; box-shadow: 0 8px 24px rgb(68 4 45 / 12%); }
 .brand-copy { display: grid; }
 .brand-copy strong { font: 800 22px/1 var(--cl-font-display); letter-spacing: -.03em; color: var(--cl-color-secondary); }
 .brand-copy small { margin-top: 4px; color: var(--cl-color-text-muted); font-size: 12px; }
