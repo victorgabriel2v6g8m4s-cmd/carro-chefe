@@ -1,0 +1,20 @@
+:root {
+  --cl-color-primary: #820023;
+  --cl-color-secondary: #44042d;
+  --cl-color-accent: #f9c0cf;
+  --cl-color-surface: #fff7fa;
+  --cl-color-surface-strong: #fce8ee;
+  --cl-color-text: #44042d;
+  --cl-color-text-muted: #6e3d59;
+  --cl-color-success: #23664b;
+  --cl-color-danger: #9c123d;
+  --cl-color-white: #ffffff;
+  --cl-radius-sm: 12px;
+  --cl-radius-md: 20px;
+  --cl-radius-lg: 32px;
+  --cl-radius-pill: 999px;
+  --cl-shadow-card: 0 20px 60px rgb(68 4 45 / 12%);
+  --cl-shadow-hero: 0 32px 90px rgb(68 4 45 / 18%);
+  --cl-font-display: "Arial Narrow", "Aptos Narrow", "Trebuchet MS", sans-serif;
+  --cl-font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}

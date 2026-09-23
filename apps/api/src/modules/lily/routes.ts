@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
+import { COOKLILY_ATTRIBUTION_PARAMS } from "./attribution";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -102,9 +103,18 @@ export async function lilyRoutes(app: FastifyInstance) {
       shareWithCarroChefe: LILY_SHARE_VERSION,
       analyticsOptional: LILY_ANALYTICS_VERSION
     },
+    brand: {
+      name: "CookLily",
+      wordmark: "cookLily"
+    },
     social: {
       instagram: "acai._lily",
       whatsapp: "+5567999289187"
+    },
+    tracking: {
+      canonical: { qr: "la_qr", campaign: "la_campaign", variant: "la_variant" },
+      acceptedAliases: COOKLILY_ATTRIBUTION_PARAMS,
+      precedence: "la_* over cc_*"
     }
   }));
 
@@ -116,7 +126,7 @@ export async function lilyRoutes(app: FastifyInstance) {
     if (!phoneNormalized) throw new ApiError(400, "Telefone inválido.", { code: "LILY_INVALID_PHONE" });
 
     const existing = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized } });
-    if (existing) throw new ApiError(409, "Já existe uma conta Lily para este telefone.", { code: "LILY_PHONE_EXISTS" });
+    if (existing) throw new ApiError(409, "Já existe uma conta CookLily para este telefone.", { code: "LILY_PHONE_EXISTS" });
 
     const passwordHash = await hashPassword(input.password);
     let created: { id: string; phoneNormalized: string; displayName: string | null; role: string; status: string };
@@ -136,7 +146,7 @@ export async function lilyRoutes(app: FastifyInstance) {
       });
     } catch (error) {
       if ((error as { code?: string }).code === "P2002") {
-        throw new ApiError(409, "Já existe uma conta Lily para este telefone.", { code: "LILY_PHONE_EXISTS" });
+        throw new ApiError(409, "Já existe uma conta CookLily para este telefone.", { code: "LILY_PHONE_EXISTS" });
       }
       throw error;
     }
