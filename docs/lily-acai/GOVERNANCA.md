@@ -1,4 +1,4 @@
-# Governança da branch Lily Gourmet
+# Governança da branch CookLily
 
 ## Conflito aparente com as regras do Carro Chefe
 
@@ -6,7 +6,7 @@ O `AGENTS.md` raiz da `main` determina que pedidos e pagamentos do Carro Chefe p
 
 Essa regra **permanece válida e inalterada para todos os namespaces, aplicações e dados do Carro Chefe**.
 
-A Lily Gourmet, porém, foi aprovada pelo proprietário como operação temporária e isolada, compartilhando apenas domínio/VPS. Portanto, antes de implementar checkout Lily, esta branch deve registrar uma delimitação explícita de escopo na política da própria branch.
+A CookLily, porém, foi aprovada pelo proprietário como operação temporária e isolada, compartilhando apenas domínio/VPS. Portanto, antes de implementar checkout Lily, esta branch deve registrar uma delimitação explícita de escopo na política da própria branch.
 
 ## Alterações de governança exigidas antes do código
 

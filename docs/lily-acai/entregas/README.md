@@ -1,4 +1,4 @@
-# Entregas — Lily Gourmet
+# Entregas — CookLily
 
 A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme decisão de 23/09/2026.
 
@@ -17,7 +17,7 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 
 Planos:
 
-- `ENTREGA_03_MARCA_LILY_GOURMET.md`;
+- `ENTREGA_03_MARCA_COOKLILY.md`;
 - `ENTREGA_04_LANDING_WHATSAPP_DEPLOY.md`;
 - `ENTREGA_05_CATALOGO_PUBLICACAO.md`.
 

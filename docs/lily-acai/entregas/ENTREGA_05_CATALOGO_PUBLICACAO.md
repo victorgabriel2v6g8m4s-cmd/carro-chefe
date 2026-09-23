@@ -5,7 +5,7 @@
 
 ## Objetivo
 
-Permitir cadastro sem editar código e fazer com que todo produto **publicado/ativo e disponível** apareça automaticamente no cardápio Lily Gourmet.
+Permitir cadastro sem editar código e fazer com que todo produto **publicado/ativo e disponível** apareça automaticamente no cardápio CookLily.
 
 ## Escopo
 

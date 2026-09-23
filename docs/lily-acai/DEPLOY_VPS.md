@@ -1,4 +1,4 @@
-# Runbook de deploy — Lily Gourmet na VPS Hostinger
+# Runbook de deploy — CookLily na VPS Hostinger
 
 Este runbook adapta o procedimento já usado pelo Carro Chefe para a branch `lily-acai`.
 
@@ -11,7 +11,7 @@ Internet
   -> Nginx/TLS carrochefe.com
      -> Fastify 127.0.0.1:4173
         -> /                  Carro Chefe
-        -> /lilyacai/*       Lily Gourmet
+        -> /lilyacai/*       CookLily
         -> /api/v1/lily/*    API Lily
 ```
 
@@ -137,7 +137,7 @@ curl --fail http://127.0.0.1:4173/api/v1/lily/public/health
 
 ## Smoke da Entrega 04
 
-- `/lilyacai/` abre Lily Gourmet;
+- `/lilyacai/` abre CookLily;
 - identidade oficial correta;
 - telefone válido persiste;
 - duplicata não duplica;

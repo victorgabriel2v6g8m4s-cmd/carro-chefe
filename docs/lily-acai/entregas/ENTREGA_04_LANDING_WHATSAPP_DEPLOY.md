@@ -6,7 +6,7 @@
 
 ## Objetivo
 
-Publicar uma landing Lily Gourmet que capte telefone de interessados em cupons/promoções e direcione acompanhamento de pedidos ao WhatsApp oficial.
+Publicar uma landing CookLily que capte telefone de interessados em cupons/promoções e direcione acompanhamento de pedidos ao WhatsApp oficial.
 
 ## Landing
 

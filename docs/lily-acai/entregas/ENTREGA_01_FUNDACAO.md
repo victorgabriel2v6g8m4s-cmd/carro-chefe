@@ -6,7 +6,7 @@
 
 ## Objetivo
 
-Criar uma fronteira técnica explícita para que a Lily Açaí possa ser desenvolvida na mesma infraestrutura do Carro Chefe sem se transformar em parte permanente da marca e sem misturar autenticação, banco, pedidos, pagamentos ou dados de clientes.
+Criar uma fronteira técnica explícita para que a CookLily possa ser desenvolvida na mesma infraestrutura do Carro Chefe sem se transformar em parte permanente da marca e sem misturar autenticação, banco, pedidos, pagamentos ou dados de clientes.
 
 ## Implementado
 
@@ -113,7 +113,7 @@ behind_by: 0
 arquivos alterados: somente policy/governança, fronteiras Lily e documentação Lily
 ```
 
-A busca de código na branch padrão por `Lily Açaí` / `lilyacai` retornou zero resultados, confirmando que a documentação específica não foi gravada na `main`.
+A busca de código na branch padrão por `CookLily` / `lilyacai` retornou zero resultados, confirmando que a documentação específica não foi gravada na `main`.
 
 ### CI
 
