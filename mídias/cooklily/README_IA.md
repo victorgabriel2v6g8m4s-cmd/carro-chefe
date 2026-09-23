@@ -1,6 +1,6 @@
-# Lily Gourmet — leitura rápida do acervo por IA
+# CookLily — leitura rápida do acervo por IA
 
-Este arquivo resume como agentes devem usar o acervo em `mídias/lily-gourmet/`.
+Este arquivo resume como agentes devem usar o acervo em `mídias/cooklily/`.
 
 ## Pode usar a documentação sem abrir o arquivo para
 
@@ -26,9 +26,9 @@ Este arquivo resume como agentes devem usar o acervo em `mídias/lily-gourmet/`.
 
 ## Regra de marca
 
-O arquivo recebido como logo oficial traz o texto visual **cookLily**. O nome público registrado no projeto é **Lily Gourmet**.
+O arquivo recebido como logo oficial traz o texto visual **cookLily**. O nome público registrado no projeto é **CookLily**.
 
-Não substituir automaticamente `cookLily` por `Lily Gourmet`, nem recriar o lettering por conta própria. O arquivo original deve permanecer intacto e qualquer adaptação deve existir como derivado aprovado no kit de marca.
+Não substituir automaticamente `cookLily` por `CookLily`, nem recriar o lettering por conta própria. O arquivo original deve permanecer intacto e qualquer adaptação deve existir como derivado aprovado no kit de marca.
 
 ## Regra de produto
 

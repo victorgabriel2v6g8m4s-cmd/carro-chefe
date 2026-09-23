@@ -1,4 +1,4 @@
-# Guia de uso por IA — Lily Gourmet
+# Guia de uso por IA — CookLily
 
 ## Princípio
 
@@ -10,13 +10,13 @@ Em qualquer tarefa com impacto visual, comercial ou de publicação, abrir a mí
 
 ### Marca
 
-`LG-MARCA-001` é a fonte visual recebida como logo oficial. Ela é referência prioritária para forma, laço, contraste, família de cores e personalidade visual.
+`CL-MARCA-001` é a fonte visual recebida como logo oficial. Ela é referência prioritária para forma, laço, contraste, família de cores e personalidade visual.
 
-Limitação atual: o lettering embutido diz `cookLily`, não `Lily Gourmet`. Preservar o original e tratar essa divergência como decisão de marca.
+Limitação atual: o lettering embutido diz `cookLily`, não `CookLily`. Preservar o original e tratar essa divergência como decisão de marca.
 
 ### Impresso / adesivo
 
-`LG-IMP-001` é uma arte vertical concebida para embalagem/garrafa. O próprio nome recebido menciona `4 x 8 cm`, mas o tamanho físico de impressão deve ser validado no arquivo/ferramenta de origem antes de produção.
+`CL-IMP-001` é uma arte vertical concebida para embalagem/garrafa. O próprio nome recebido menciona `4 x 8 cm`, mas o tamanho físico de impressão deve ser validado no arquivo/ferramenta de origem antes de produção.
 
 A peça contém:
 
@@ -31,7 +31,7 @@ O QR atual aponta para `/lilyacai/cardapio`, mas usa parâmetros de tracking `cc
 
 ### Produto real
 
-`LG-PROD-001` e `LG-PROD-002` mostram o produto real em garrafa transparente com tampa verde, em enquadramento vertical e fundo doméstico/neutro.
+`CL-PROD-001` e `CL-PROD-002` mostram o produto real em garrafa transparente com tampa verde, em enquadramento vertical e fundo doméstico/neutro.
 
 Servem muito bem para:
 
@@ -75,7 +75,7 @@ Essas alterações podem transformar referência real em representação enganos
 Para marketing/publicação, revisar conjuntamente:
 
 1. fidelidade do produto;
-2. naming Lily Gourmet;
+2. naming CookLily;
 3. uso correto da logo;
 4. QR/tracking;
 5. contraste/legibilidade;

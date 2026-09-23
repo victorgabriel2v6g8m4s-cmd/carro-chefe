@@ -1,8 +1,9 @@
 {
   "schema_version": 1,
   "marca": {
-    "id": "LILY-GOURMET",
-    "nome_publico": "Lily Gourmet",
+    "id": "COOKLILY",
+    "nome_publico": "CookLily",
+    "wordmark": "cookLily",
     "namespace_tecnico": "lily-acai"
   },
   "data_incorporacao": "2026-09-23",
@@ -19,20 +20,21 @@
     "observacao": "Arquivos fornecidos pelo proprietário para uso no projeto. Confirmar autoria/licença quando necessário para distribuição externa."
   },
   "naming": {
-    "nome_publico_aprovado": "Lily Gourmet",
-    "observacao": "A logo e o adesivo recebidos contêm o lettering cookLily. Preservar os originais e resolver a adaptação de naming no kit de marca."
+    "nome_publico_aprovado": "CookLily",
+    "wordmark_oficial": "cookLily",
+    "observacao": "Naming definitivo aprovado pelo proprietário em 23/09/2026."
   },
   "arquivos": [
     {
-      "id": "LG-MARCA-001",
+      "id": "CL-MARCA-001",
       "categoria": "marca",
       "arquivo": "originais/marca/2026-09-23_marca-lily-gourmet-logo-principal_png_v01_review.png",
       "arquivo_recebido": "cook (6).png",
-      "binary_status": "pending_repository_ingestion",
+      "binary_status": "source_received_verified",
       "descricao": "Logo circular em fundo transparente. Disco rosa-claro com anel interno ameixa escuro, laço bordô no topo e wordmark cookLily ao centro. 'cook' aparece em lettering estreito/condensado de aparência limpa; 'Lily' usa traço manuscrito/caligrafado em ameixa, com pequeno coração como detalhe do i. A forma circular e o laço comunicam delicadeza, confeitaria/gourmet e feminilidade visual.",
       "orientacao": "quadrada 2048x2048, RGBA/transparência",
       "qualidade": "alta como fonte raster; adequada para referência oficial e derivados digitais, mas vetor original ainda seria preferível para grande formato",
-      "edicao": "não editar o original. Para Lily Gourmet, qualquer mudança no lettering deve ser derivado separado e aprovada no kit de marca.",
+      "edicao": "não editar o original; o lettering cookLily corresponde ao nome e wordmark definitivos.",
       "cores_observadas": [
         "#F9C0CF",
         "#44042D",
@@ -47,9 +49,8 @@
         "assinatura de peças sociais"
       ],
       "nao_recomendado": [
-        "alterar o lettering diretamente no original",
-        "impressão em grande formato sem testar resolução",
-        "uso como logo final Lily Gourmet sem decidir a relação entre cookLily e Lily Gourmet"
+        "sobrescrever o original",
+        "impressão em grande formato sem validar a resolução raster"
       ],
       "prioridade": "máxima para o kit de marca",
       "size_bytes": 384801,
@@ -57,19 +58,19 @@
       "requires_visual_inspection_before_final_use": true
     },
     {
-      "id": "LG-IMP-001",
+      "id": "CL-IMP-001",
       "categoria": "impresso/adesivo",
       "arquivo": "originais/impressos/2026-09-23_marca-lily-gourmet-adesivo-500ml-qr_png_v01_review.png",
       "arquivo_recebido": "500ml (4 x 8 cm) (7).png",
-      "binary_status": "pending_repository_ingestion",
+      "binary_status": "source_received_verified",
       "descricao": "Arte vertical promocional para aplicação em embalagem/garrafa. Fundo texturizado em gradiente roxo/rosa, logo cookLily em destaque no topo, mensagem 'cremosidade, sabor e qualidade em cada garrafa', ícone de garrafa, QR Code central em cartão branco e CTA 'PEÇA JÁ!' na base.",
       "orientacao": "retrato 1024x2048, RGBA",
       "qualidade": "boa como arte raster de referência; precisa revisão de naming, QR e prova de impressão antes de nova tiragem",
-      "edicao": "necessária antes de uso atual: adaptar naming se aprovado, revisar tipografia no kit, regenerar QR com tracking Lily e conferir tamanho físico/sangria/quiet zone.",
+      "edicao": "validar prova de impressão e quiet zone quando necessário; naming cookLily está correto e o QR legado permanece compatível.",
       "qr_destino_decodificado": "https://carrochefe.com/lilyacai/cardapio?cc_qr=LILY1&cc_campaign=adesivos",
-      "qr_observacao": "Destino técnico é coerente, mas o tracking usa namespace cc_* e deve migrar para la_* na versão Lily.",
+      "qr_observacao": "O QR usa cc_* legado. A CookLily aceita cc_* e la_* na entrada e normaliza para campos canônicos la*; novas artes devem preferir la_*.",
       "usos_sugeridos": [
-        "referência de layout para novo adesivo Lily Gourmet",
+        "referência de layout para novo adesivo CookLily",
         "estudo de paleta",
         "base para etiqueta 4x8 cm após validação",
         "peça de balcão/embalagem depois de atualização",
@@ -77,7 +78,7 @@
       ],
       "nao_recomendado": [
         "reimpressão sem revisar QR",
-        "publicação como peça atual sem reconciliar cookLily/Lily Gourmet",
+        "publicação como peça atual sem reconciliar cookLily/CookLily",
         "redimensionar de modo que reduza quiet zone do QR"
       ],
       "prioridade": "alta como referência de embalagem, não como arte final atual",
@@ -86,12 +87,12 @@
       "requires_visual_inspection_before_final_use": true
     },
     {
-      "id": "LG-PROD-001",
+      "id": "CL-PROD-001",
       "categoria": "produto",
       "produto": "Batida de açaí com maracujá",
       "arquivo": "originais/produtos/2026-09-23_produto-batida-acai-maracuja_foto_v01_review.jpeg",
-      "arquivo_recebido": "imagem_editada.jpeg",
-      "binary_status": "pending_repository_ingestion",
+      "arquivo_recebido": "imagem_editada_acai_com_maracuja.jpeg",
+      "binary_status": "source_received_verified",
       "descricao": "Fotografia vertical de uma garrafa plástica transparente com tampa verde, preenchida por base roxa intensa de açaí e faixas/escorridos espessos de creme amarelo, identificado pelo proprietário como sabor maracujá. A garrafa ocupa quase toda a altura do quadro sobre superfície clara, com parede bege ao fundo. A luz é direta e forte, destacando brilho, condensação/reflexos do plástico e contraste entre roxo e amarelo.",
       "angulo": "frontal levemente deslocado, produto inteiro em retrato",
       "orientacao": "retrato 900x1600",
@@ -118,15 +119,15 @@
       "requires_visual_inspection_before_final_use": true
     },
     {
-      "id": "LG-PROD-002",
+      "id": "CL-PROD-002",
       "categoria": "produto",
       "produto": "Batida de açaí com morango",
       "arquivo": "originais/produtos/2026-09-23_produto-batida-acai-morango_foto_v01_review.jpeg",
-      "arquivo_recebido": "imagem_editada.jpeg",
-      "binary_status": "pending_reupload_unique_filename",
+      "arquivo_recebido": "imagem_editada_acai_com_morango.jpeg",
+      "binary_status": "source_received_verified",
       "descricao": "Fotografia vertical de garrafa plástica transparente com tampa verde, base roxa de açaí e creme/mousse rosa-claro formando faixas largas e sinuosas ao redor do produto, identificado pelo proprietário como sabor morango. A composição é frontal e central, sobre superfície clara e fundo bege. O contraste rosa/roxo é coerente com a família cromática já presente na marca e diferencia visualmente o sabor.",
       "angulo": "frontal, produto inteiro em retrato",
-      "orientacao": "retrato; dimensões técnicas pendentes do reenvio",
+      "orientacao": "retrato 900x1600",
       "qualidade": "média-alta como referência real; composição simples e legível, com potencial para cardápio/social após padronização",
       "edicao": "recomendada para publicação: recorte, balanço de branco, controle de reflexos/sombras, fundo e padronização com maracujá. Não alterar cor, volume aparente ou textura do produto.",
       "usos_sugeridos": [
@@ -139,14 +140,13 @@
         "thumbnail de produto"
       ],
       "nao_recomendado": [
-        "uso final antes de reenvio do arquivo correto",
         "hero sem tratamento",
         "prova de volume/gramatura",
         "substituição silenciosa da embalagem real"
       ],
-      "prioridade": "alta, com binário pendente",
-      "size_bytes": null,
-      "sha256": null,
+      "prioridade": "alta como referência real",
+      "size_bytes": 89595,
+      "sha256": "1bd9c8602da111484c2440a1afbb1e270d410b33ec7fd2577aa6c5ba29838080",
       "requires_visual_inspection_before_final_use": true
     }
   ]

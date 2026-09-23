@@ -1,9 +1,9 @@
-# LG-PROD-001 — batida de açaí com maracujá
+# CL-PROD-001 — batida de açaí com maracujá
 
 ## Identificação
 
 - **Produto:** Batida de Açaí com Maracujá.
-- **Arquivo recebido:** `imagem_editada.jpeg`.
+- **Arquivo recebido:** `imagem_editada_acai_com_maracuja.jpeg`.
 - **Arquivo canônico esperado:** `../originais/produtos/2026-09-23_produto-batida-acai-maracuja_foto_v01_review.jpeg`.
 - **Dimensões:** 900×1600 px.
 - **Formato:** JPEG.

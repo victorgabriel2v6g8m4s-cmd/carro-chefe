@@ -1,24 +1,20 @@
-# LG-PROD-002 — batida de açaí com morango
+# CL-PROD-002 — batida de açaí com morango
 
 ## Identificação
 
 - **Produto:** Batida de Açaí com Morango.
-- **Arquivo recebido:** `imagem_editada.jpeg`.
+- **Arquivo recebido:** `imagem_editada_acai_com_morango.jpeg`.
 - **Arquivo canônico esperado:** `../originais/produtos/2026-09-23_produto-batida-acai-morango_foto_v01_review.jpeg`.
-- **Formato visual:** retrato.
-- **Dimensões/tamanho/SHA-256:** pendentes de reenvio do binário.
+- **Dimensões:** 900×1600 px.
+- **Formato:** JPEG.
+- **Tamanho:** 89.595 B.
+- **SHA-256:** `1bd9c8602da111484c2440a1afbb1e270d410b33ec7fd2577aa6c5ba29838080`.
 - **Identificação do sabor:** informada pelo proprietário.
-- **Status:** `review/pending_binary`.
+- **Status:** `review`.
 
 ## Situação do arquivo
 
-A foto foi recebida visualmente no mesmo envio, mas os dois sabores chegaram com o mesmo nome `imagem_editada.jpeg`. O ambiente preservou apenas um binário distinguível nessa ingestão.
-
-Para evitar registrar o hash errado ou sobrescrever um original, a foto de morango deve ser reenviada com nome único, por exemplo:
-
-`batida-acai-morango-original.jpeg`
-
-Até isso ocorrer, esta ficha documenta apenas o que foi visualmente observado.
+O arquivo foi reenviado com nome único e teve dimensões, tamanho e SHA-256 verificados em 23/09/2026.
 
 ## Descrição visual
 

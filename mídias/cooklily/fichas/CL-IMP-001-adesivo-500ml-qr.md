@@ -1,4 +1,4 @@
-# LG-IMP-001 — adesivo vertical com QR
+# CL-IMP-001 — adesivo vertical com QR
 
 ## Identificação
 
@@ -45,7 +45,7 @@ Depois de atualizar naming e QR:
 
 ## Ajustes recomendados
 
-- reconciliar `cookLily` com `Lily Gourmet`;
+- reconciliar `cookLily` com `CookLily`;
 - regenerar QR com namespace Lily;
 - validar quiet zone e leitura no tamanho físico;
 - conferir sangria/margem de corte;

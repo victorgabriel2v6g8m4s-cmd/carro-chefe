@@ -1,4 +1,4 @@
-# LG-MARCA-001 — logo principal recebida
+# CL-MARCA-001 — logo principal recebida
 
 ## Identificação
 
@@ -27,14 +27,14 @@ A composição tem caráter delicado, artesanal e gourmet. O círculo funciona b
 
 Essas cores ainda **não são tokens oficiais**. Devem ser validadas no kit de marca e em prova de tela/impressão.
 
-## Relação com Lily Gourmet
+## Relação com CookLily
 
-O arquivo foi declarado pelo proprietário como logo oficial, porém o lettering visível é **cookLily** e o nome público documentado do projeto é **Lily Gourmet**.
+O arquivo foi declarado pelo proprietário como logo oficial, porém o lettering visível é **cookLily** e o nome público documentado do projeto é **CookLily**.
 
 O original deve ser preservado exatamente. A decisão entre:
 
 - manter `cookLily` como assinatura/linha visual;
-- criar um lockup `Lily Gourmet`;
+- criar um lockup `CookLily`;
 - redesenhar apenas o lettering;
 - ou usar o símbolo/laço como elemento independente
 
@@ -57,7 +57,7 @@ faz parte do kit de marca e não deve ser tomada por edição automática.
 - sobrescrever este PNG;
 - remover ou trocar lettering no arquivo original;
 - ampliar indefinidamente para grande formato sem avaliar rasterização;
-- usar como “Lily Gourmet” final sem resolver a divergência de naming;
+- usar como “CookLily” final sem resolver a divergência de naming;
 - alterar as cores por conta própria antes do kit.
 
 ## Próximos derivados possíveis
