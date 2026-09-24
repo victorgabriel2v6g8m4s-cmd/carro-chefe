@@ -305,9 +305,9 @@
     ],
     [
       108,
-      null,
-      null,
-      null,
+      "CookLily - Garrafa 300ml (custo provisório conforme açaí)",
+      1,
+      1,
       "Unidades",
       "=IF(Embalagens[preço] <> \"\", Embalagens[[#This Row],[preço]] / IF(Embalagens[[#This Row],[medida]] = \"unidades\", Embalagens[[#This Row],[quantidade]], 1), \"\")",
       "=IFERROR(Embalagens[[#This Row],[preço]] / (Embalagens[quantidade] / IF(Embalagens[[#This Row],[medida]] = \"Gramas\", 1000, IF(Embalagens[[#This Row],[medida]] = \"Quilos\", 1, 0))), \"\")",

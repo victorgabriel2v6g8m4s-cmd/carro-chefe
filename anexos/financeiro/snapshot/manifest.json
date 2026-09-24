@@ -5,17 +5,17 @@
     {
       "bytes": 1246,
       "path": "README.md",
-      "sha256": "980bdcf128e56486ea7617a3cff0a291727d4d00adbd594efc395fb91f96febb"
+      "sha256": "cac5558baf473e827d2804e77a5085496a871fc75540f13fce7bb8c0ad0b77b2"
     },
     {
-      "bytes": 1511360,
+      "bytes": 1509214,
       "path": "formulas.json",
-      "sha256": "6da3b5faa3edf8bfe627b9b6aa38c8724be9787bd29402eb09b6254b9836f494"
+      "sha256": "648ba64e01bb3adcc90f05205094aefdc9e45bf24f587d26f0cf87850bc90845"
     },
     {
-      "bytes": 10496,
+      "bytes": 10902,
       "path": "sheets/Cadastro_de_Produtos.csv",
-      "sha256": "7a9f87c672ab132253214f09b6d01bb725f11a09393c75d6d383443a98a172ad"
+      "sha256": "774c34916c9f71e905ca7ca8819c793f59a4edd7f73aade016c5273b1d055d57"
     },
     {
       "bytes": 8859,
@@ -33,14 +33,14 @@
       "sha256": "bcada1bd7bd89279b4cbeeb8fa6562041f99c24d6d855d3d82bcd274d4bda69f"
     },
     {
-      "bytes": 109378,
+      "bytes": 109440,
       "path": "sheets/Embalagens.csv",
-      "sha256": "f2f1f37d46927d67c3770d7fbc4e9c8334286c489762ba6ca2eeab357afbe6f3"
+      "sha256": "1fc6428cf8af8a686052f69dc14a881d807a3bad65f6f8f77bf4ebdc6bc7ef43"
     },
     {
-      "bytes": 13694,
+      "bytes": 13570,
       "path": "sheets/Embalamento.csv",
-      "sha256": "b9e414cff2a2b03f25f7ccb82c8ede7eead6241060dde72210e132495b25d42c"
+      "sha256": "9fcfcb3ef6c8940059351c44f6c2e47da17b6fe6b3022a7ced609ee50f6588ab"
     },
     {
       "bytes": 891,
@@ -60,7 +60,7 @@
     {
       "bytes": 13192,
       "path": "sheets/Precificacao.csv",
-      "sha256": "de1178d3b79faca2d933836434f84104023d391c49644e981d2c6bbd13acd105"
+      "sha256": "84d9f03dcf7921f422e70375ec6186b95dc07b04365ac7ca541675506be6be25"
     },
     {
       "bytes": 5190,
@@ -78,14 +78,14 @@
       "sha256": "f12879169bd667036f1d31c08f645daeb3d517641f029d5c96f0ecbf619931ff"
     },
     {
-      "bytes": 206199,
+      "bytes": 207254,
       "path": "sheets/ingredientes.csv",
-      "sha256": "16593b47bcb85edc0b425b342f21b90a6cdd2dcba62eb14497a6971bcfe9e45c"
+      "sha256": "0ccf03cce461cd6bc7b2e5ce7b266b1a173fc9c9189a1b145df42a41bace2e64"
     },
     {
-      "bytes": 85213,
+      "bytes": 85507,
       "path": "sheets/insumos.csv",
-      "sha256": "6ef01c9db93879aa116e6d70d1b5ec22fbd413cb36c4ed924ea8e039d6a07d2a"
+      "sha256": "5e83e2d02c2e9cc3e70d5afea82611298f7900d38bcb64a0a4dd530af0036aee"
     },
     {
       "bytes": 10334,
@@ -98,9 +98,9 @@
       "sha256": "1ee6df33e0b4dd2b81706a9659a827294ba1f26febb69d94343557433ed4d5e8"
     },
     {
-      "bytes": 16044,
+      "bytes": 16394,
       "path": "tables/CaProdutos.json",
-      "sha256": "953fa6d41e854bd3ccb72f3d6feec332ea4c40ca7eb21e102dac5b1de6a2a9d6"
+      "sha256": "63017ef8fd251ca31c43b00be110a74154770530c0550766eabd00ce33ed5569"
     },
     {
       "bytes": 415,
@@ -113,24 +113,24 @@
       "sha256": "b1d359b9b510734dab686a287df08252ede9b54164f1a3b4c2e4402cf399e576"
     },
     {
-      "bytes": 120788,
+      "bytes": 120840,
       "path": "tables/Embalagens.json",
-      "sha256": "bb2684e5b30ac58264a8c6f3338c3aa029028f31b7f795ed87016e7ae18e239a"
+      "sha256": "fef3708a2281a77c091f5176fb67fa291101ea9e9652ee88139b976670de028e"
     },
     {
-      "bytes": 16694,
+      "bytes": 16504,
       "path": "tables/Embalamento.json",
-      "sha256": "8545ea343d4c3ff8973f302236ae17289fded3ac834515cc8f4cd7169b14e4a8"
+      "sha256": "bde927638484303f4dea61f8c466b7fadc4827104635c1e66825d5c139f242af"
     },
     {
-      "bytes": 223309,
+      "bytes": 224260,
       "path": "tables/Ingredientes.json",
-      "sha256": "69f69da620e7c1c1c09557ab7db75eac79706604b75aef89f9252af5b816afea"
+      "sha256": "7bf6000dff51ffbb33ba8115b0668fc3b3f6bd7a3b66f650c4e4a6e6222b05ed"
     },
     {
       "bytes": 16114,
       "path": "tables/Precificacao.json",
-      "sha256": "270f0a5600ceb305a5a7ccc67bf57c7e91c73d24e924ba63f65f4e56351f09e4"
+      "sha256": "ffc3e665bc7e2960581921309a7c31437aa9e39bc913d0ecdef763ca7429ef49"
     },
     {
       "bytes": 332,
@@ -173,9 +173,9 @@
       "sha256": "11b4534fb56455966a3c2b29d4f03f9182469ad91aaabf7b573ed34579922825"
     },
     {
-      "bytes": 96046,
+      "bytes": 96256,
       "path": "tables/insumos.json",
-      "sha256": "3e13d5008e8267b57cf99a2f20724bd079f23f733c1c0a69c5c6093f95282069"
+      "sha256": "df840b8fe63add926de5dc73ef5a0c82099ed696226cafc73cda4e0f64e803cb"
     },
     {
       "bytes": 460,
@@ -300,7 +300,7 @@
     {
       "bytes": 10797,
       "path": "workbook.json",
-      "sha256": "5fa58b2a7885dd16ec76c7852b5fecd5f57c4968246d28f13aed97f6210f14a5"
+      "sha256": "e80f42c6ebe13e3e76cf16f11ca6aa95525111068b7ac786e5b14249ad545e94"
     }
   ],
   "generator": {
@@ -310,14 +310,14 @@
   },
   "schema_version": 1,
   "source": {
-    "bytes": 224092,
+    "bytes": 225173,
     "path": "anexos/financeiro/carro chefe.xlsm",
-    "sha256": "569d0f24b078a2355da1edf82d2b15dc1fefd3e0bce710ac40d7dc94da2308ea",
+    "sha256": "7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1",
     "zip_entries": 106,
-    "zip_uncompressed_bytes": 1829395
+    "zip_uncompressed_bytes": 1833387
   },
   "workbook": {
-    "formula_count": 5822,
+    "formula_count": 5812,
     "sheet_count": 16,
     "table_count": 21,
     "vba_module_count": 19,
