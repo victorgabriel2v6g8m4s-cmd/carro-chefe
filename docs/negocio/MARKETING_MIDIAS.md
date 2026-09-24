@@ -196,7 +196,8 @@ A estratégia de redes sociais foi aprofundada com pesquisa específica de Campo
 Documentos canônicos desta frente:
 
 - [Radar de redes sociais e trends — Campo Grande/MS — 2026](./REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md) — evidências locais, movimentos de TikTok/Instagram/YouTube, matriz de tendências, limitações e processo semanal de atualização;
-- [Funil social de pré-lançamento](./FUNIL_SOCIAL_PRE_LANCAMENTO.md) — audiência fria/quente, séries editoriais, enquetes, social listening, calendário relativo, creators, atribuição, KPIs e experimentos.
+- [Funil social de pré-lançamento](./FUNIL_SOCIAL_PRE_LANCAMENTO.md) — audiência fria/quente, séries editoriais, enquetes, social listening, calendário relativo, creators, atribuição, KPIs e experimentos;
+- [Social Growth Engine](../tecnologia/SOCIAL_GROWTH_ENGINE.md) — automação planejada de radar, listening, backlog, produção assistida, aprovação, analytics, aprendizado e publicação futura.
 
 Diretriz aprovada para teste: **trend não substitui produto nem verdade operacional**. O conteúdo deve usar bastidor, brasa, montagem, pessoas e evidência real como núcleo; áudio, meme e formato rápido entram somente quando aumentarem distribuição ou participação sem distorcer o que será servido.
 
