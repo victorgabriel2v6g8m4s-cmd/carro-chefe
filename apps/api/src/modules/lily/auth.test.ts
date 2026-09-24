@@ -16,6 +16,7 @@ function cookieFrom(response: { headers: Record<string, unknown> }) {
 }
 
 beforeEach(async () => {
+  await lilyPrisma.lilyMarketingLead.deleteMany();
   await lilyPrisma.lilyConsentRecord.deleteMany();
   await lilyPrisma.lilySession.deleteMany();
   await lilyPrisma.lilyUser.deleteMany();

@@ -40,7 +40,7 @@ app.get("/lilyacai/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute"
   if (relative && path.extname(relative)) return sendFile(reply, lilyDist, relative);
   return sendFile(reply, lilyDist, "index.html");
 });
-app.get("/lilyacai", async (_request, reply) => reply.redirect("/lilyacai/cardapio"));
+app.get("/lilyacai", async (_request, reply) => reply.redirect("/lilyacai/"));
 
 app.get("/gestao/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" } } }, async (request, reply) => {
   const pathname = new URL(request.url, "http://local").pathname;

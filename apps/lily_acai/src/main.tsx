@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyConfig, loginLily, registerLily } from "./api";
-import { hasCookLilyAttribution, readCookLilyAttribution } from "./tracking";
+import { getLilyConfig, loginLily, registerLily, submitCookLilyLead } from "./api";
+import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
 
 const instagram = "https://instagram.com/acai._lily";
@@ -13,7 +13,7 @@ function AttributionCapture() {
   useEffect(() => {
     const attribution = readCookLilyAttribution(window.location.search);
     if (hasCookLilyAttribution(attribution)) {
-      sessionStorage.setItem("cooklily_attribution_v1", JSON.stringify(attribution));
+      storeCookLilyAttribution(attribution);
     }
   }, []);
   return null;
@@ -27,8 +27,9 @@ function Shell({ children }: { children: ReactNode }) {
         <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>batidas de açaí</small></span>
       </Link>
       <nav aria-label="Navegação principal">
+        <Link to="/">Início</Link>
         <Link to="/cardapio">Cardápio</Link>
-        <Link to="/entrar">Entrar</Link>
+        <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
       </nav>
     </header>
     <main>{children}</main>
@@ -42,6 +43,95 @@ function Shell({ children }: { children: ReactNode }) {
       <small>CookLily × Carro Chefe — parceria temporária. Esta experiência usa a infraestrutura digital do Carro Chefe, mas possui cadastro e operação próprios.</small>
     </footer>
   </div>;
+}
+
+function Landing() {
+  const [config, setConfig] = useState<{ privacyPolicyVersion: string; consentVersions: Record<string, string> } | null>(null);
+  const [state, setState] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    getLilyConfig()
+      .then((value) => setConfig(value))
+      .catch(() => {
+        setState("error");
+        setMessage("Não foi possível carregar o cadastro agora. Você ainda pode falar com a CookLily pelo WhatsApp.");
+      });
+  }, []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!config) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const accepted = data.get("marketingConsent") === "on";
+    if (!accepted) {
+      setState("error");
+      setMessage("Marque a autorização para receber cupons e promoções antes de entrar na lista.");
+      return;
+    }
+
+    setState("submitting");
+    setMessage("");
+    try {
+      const current = readCookLilyAttribution(window.location.search);
+      const stored = readStoredCookLilyAttribution();
+      const attribution = hasCookLilyAttribution(current) ? current : stored;
+      await submitCookLilyLead({
+        phone: String(data.get("phone") ?? ""),
+        marketingConsent: true,
+        consentVersion: config.consentVersions.lilyMarketing,
+        privacyPolicyVersion: config.privacyPolicyVersion,
+        attribution: attributionForApi(attribution),
+        website: String(data.get("website") ?? "")
+      });
+      form.reset();
+      setState("success");
+      setMessage("Cadastro recebido. Quando houver cupons e promoções CookLily, este WhatsApp poderá receber as novidades.");
+    } catch (cause) {
+      setState("error");
+      setMessage(cause instanceof Error ? cause.message : "Não foi possível cadastrar agora.");
+    }
+  }
+
+  const trackingText = encodeURIComponent("Olá! Vim pelo site da CookLily e gostaria de acompanhar meu pedido.");
+  return <Shell>
+    <section className="landing-hero">
+      <div className="landing-copy">
+        <span className="eyebrow">CookLily · novidades no seu WhatsApp</span>
+        <h1>Entre na lista da CookLily.</h1>
+        <p>Cadastre seu número para receber cupons e promoções quando estiverem disponíveis. Sem criar senha e sem compartilhar seu cadastro automaticamente com o Carro Chefe.</p>
+        <div className="landing-points" aria-label="Benefícios da lista">
+          <span>Cupons quando houver campanha</span>
+          <span>Promoções CookLily</span>
+          <span>Contato direto pelo WhatsApp</span>
+        </div>
+      </div>
+      <form className="lead-card" onSubmit={submit}>
+        <span className="eyebrow">Quero receber novidades</span>
+        <h2>Seu WhatsApp é suficiente.</h2>
+        <label>WhatsApp
+          <input name="phone" inputMode="tel" autoComplete="tel" placeholder="(67) 99999-9999" required />
+        </label>
+        <label className="check lead-consent">
+          <input name="marketingConsent" type="checkbox" />
+          <span>Quero receber cupons, promoções e novidades da CookLily neste número. Posso pedir para sair da lista depois.</span>
+        </label>
+        <label className="trap-field" aria-hidden="true">Site
+          <input name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+        <p className="privacy-note">Ao enviar, seu telefone fica na base própria da CookLily. <Link to="/privacidade">Veja como tratamos os dados.</Link></p>
+        {message && <p className={state === "success" ? "success" : "error"} role="status">{message}</p>}
+        <button className="button primary" disabled={state === "submitting" || !config}>
+          {state === "submitting" ? "Cadastrando..." : "Entrar na lista"}
+        </button>
+      </form>
+    </section>
+    <section className="whatsapp-card">
+      <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
+      <a className="button primary" href={`${whatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
+    </section>
+  </Shell>;
 }
 
 function Cardapio() {
@@ -169,7 +259,7 @@ function Privacidade() {
 
 function App() {
   return <><AttributionCapture /><Routes>
-    <Route path="/" element={<Navigate to="/cardapio" replace />} />
+    <Route path="/" element={<Landing />} />
     <Route path="/cardapio" element={<Cardapio />} />
     <Route path="/cadastro" element={<Cadastro />} />
     <Route path="/entrar" element={<Entrar />} />

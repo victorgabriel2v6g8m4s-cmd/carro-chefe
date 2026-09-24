@@ -74,3 +74,24 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   footer { grid-template-columns: 1fr; }
   footer small { grid-column: auto; }
 }
+
+.landing-hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: clamp(30px,7vw,90px); align-items: center; padding: clamp(54px,9vw,110px) 0 70px; }
+.landing-copy h1 { max-width: 740px; }
+.landing-copy > p { max-width: 680px; font-size: clamp(17px,2vw,20px); }
+.landing-points { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.landing-points span { padding: 10px 14px; border-radius: var(--cl-radius-pill); background: var(--cl-color-surface-strong); color: var(--cl-color-secondary); font-weight: 750; border: 1px solid rgb(130 0 35 / 12%); }
+.lead-card { display: grid; gap: 18px; padding: clamp(24px,4vw,42px); border-radius: var(--cl-radius-lg); background: white; border: 1px solid rgb(130 0 35 / 14%); box-shadow: var(--cl-shadow-hero); }
+.lead-card h2 { margin-top: 4px; font-size: clamp(34px,5vw,52px); }
+.lead-card > label:not(.check):not(.trap-field) { display: grid; gap: 8px; font-weight: 800; }
+.lead-consent { padding: 14px; border-radius: var(--cl-radius-md); background: var(--cl-color-surface-strong); }
+.privacy-note { margin: 0; font-size: 13px; }
+.success { margin: 0; color: var(--cl-color-success); background: #edf8f2; padding: 12px 14px; border-radius: var(--cl-radius-sm); }
+.trap-field { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; }
+.whatsapp-card { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin: 0 0 90px; padding: clamp(28px,5vw,52px); border-radius: var(--cl-radius-lg); background: var(--cl-color-secondary); color: white; }
+.whatsapp-card h2 { color: white; }
+.whatsapp-card p { color: #f4d6df; max-width: 720px; }
+.whatsapp-card .eyebrow { color: var(--cl-color-accent); }
+@media (max-width:760px) {
+  .landing-hero { grid-template-columns: 1fr; padding-top: 42px; }
+  .whatsapp-card { align-items: stretch; flex-direction: column; }
+}

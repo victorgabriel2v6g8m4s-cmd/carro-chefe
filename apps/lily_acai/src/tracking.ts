@@ -28,3 +28,32 @@ export function readCookLilyAttribution(search: string): CookLilyAttribution {
 export function hasCookLilyAttribution(value: CookLilyAttribution) {
   return Boolean(value.laQr || value.laCampaign || value.laVariant);
 }
+
+
+const STORAGE_KEY = "cooklily_attribution_v1";
+
+export function storeCookLilyAttribution(value: CookLilyAttribution) {
+  if (!hasCookLilyAttribution(value)) return;
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+}
+
+export function readStoredCookLilyAttribution(): CookLilyAttribution {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "{}") as Partial<CookLilyAttribution>;
+    return {
+      laQr: typeof parsed.laQr === "string" ? sanitize(parsed.laQr) : null,
+      laCampaign: typeof parsed.laCampaign === "string" ? sanitize(parsed.laCampaign) : null,
+      laVariant: typeof parsed.laVariant === "string" ? sanitize(parsed.laVariant) : null
+    };
+  } catch {
+    return { laQr: null, laCampaign: null, laVariant: null };
+  }
+}
+
+export function attributionForApi(value: CookLilyAttribution) {
+  return {
+    ...(value.laQr ? { la_qr: value.laQr } : {}),
+    ...(value.laCampaign ? { la_campaign: value.laCampaign } : {}),
+    ...(value.laVariant ? { la_variant: value.laVariant } : {})
+  };
+}

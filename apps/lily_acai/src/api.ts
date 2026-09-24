@@ -30,6 +30,8 @@ export async function getLilyConfig() {
     termsVersion: string;
     privacyPolicyVersion: string;
     consentVersions: Record<string, string>;
+    brand: { name: string; wordmark: string };
+    tracking: unknown;
   }>(response);
 }
 
@@ -63,4 +65,22 @@ export async function loginLily(input: { phone: string; password: string }) {
     body: JSON.stringify(input)
   });
   return parseResponse<AuthPayload>(response);
+}
+
+
+export async function submitCookLilyLead(input: {
+  phone: string;
+  marketingConsent: true;
+  consentVersion: string;
+  privacyPolicyVersion: string;
+  attribution?: Record<string, string>;
+  website?: string;
+}) {
+  const response = await fetch("/api/v1/lily/public/leads", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  return parseResponse<{ accepted: true }>(response);
 }

@@ -50,3 +50,20 @@ model LilyConsentRecord {
 
   @@index([userId, purpose, recordedAt])
 }
+
+
+model LilyMarketingLead {
+  id                 String   @id @default(cuid())
+  phoneNormalized    String   @unique
+  status             String   @default("subscribed")
+  marketingConsentAt DateTime
+  consentVersion     String
+  privacyVersion     String
+  laQr               String?
+  laCampaign         String?
+  laVariant          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status, createdAt])
+}

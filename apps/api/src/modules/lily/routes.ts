@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { COOKLILY_ATTRIBUTION_PARAMS } from "./attribution";
+import { COOKLILY_ATTRIBUTION_PARAMS, normalizeLilyAttribution } from "./attribution";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -44,6 +44,24 @@ const registerSchema = z.object({
 }).strict();
 
 const loginSchema = z.object({ phone, password }).strict();
+
+const attributionSchema = z.object({
+  la_qr: z.string().max(200).optional(),
+  la_campaign: z.string().max(200).optional(),
+  la_variant: z.string().max(200).optional(),
+  cc_qr: z.string().max(200).optional(),
+  cc_campaign: z.string().max(200).optional(),
+  cc_variant: z.string().max(200).optional()
+}).strict().optional();
+
+const leadSchema = z.object({
+  phone,
+  marketingConsent: z.literal(true),
+  consentVersion: z.literal(LILY_MARKETING_VERSION),
+  privacyPolicyVersion: z.literal(LILY_PRIVACY_VERSION),
+  attribution: attributionSchema,
+  website: z.string().max(200).optional().default("")
+}).strict();
 
 function normalizeDisplayName(input?: string | null) {
   if (!input) return null;
@@ -117,6 +135,56 @@ export async function lilyRoutes(app: FastifyInstance) {
       precedence: "la_* over cc_*"
     }
   }));
+
+  app.post("/api/v1/lily/public/leads", {
+    config: { rateLimit: { max: 8, timeWindow: "1 minute" } }
+  }, async (request, reply) => {
+    const input = leadSchema.parse(request.body);
+
+    // Honeypot: bots recebem a mesma resposta, mas não geram PII persistida.
+    if (input.website.trim()) {
+      return reply.code(202).send({ accepted: true });
+    }
+
+    const phoneNormalized = normalizeLilyPhone(input.phone);
+    if (!phoneNormalized) throw new ApiError(400, "Telefone inválido.", { code: "LILY_INVALID_PHONE" });
+
+    const attribution = normalizeLilyAttribution(input.attribution ?? {});
+    const now = new Date();
+    const existing = await lilyPrisma.lilyMarketingLead.findUnique({ where: { phoneNormalized } });
+
+    if (existing) {
+      await lilyPrisma.lilyMarketingLead.update({
+        where: { id: existing.id },
+        data: {
+          status: "subscribed",
+          marketingConsentAt: now,
+          consentVersion: input.consentVersion,
+          privacyVersion: input.privacyPolicyVersion,
+          laQr: attribution.laQr ?? existing.laQr,
+          laCampaign: attribution.laCampaign ?? existing.laCampaign,
+          laVariant: attribution.laVariant ?? existing.laVariant
+        }
+      });
+    } else {
+      await lilyPrisma.lilyMarketingLead.create({
+        data: {
+          phoneNormalized,
+          status: "subscribed",
+          marketingConsentAt: now,
+          consentVersion: input.consentVersion,
+          privacyVersion: input.privacyPolicyVersion,
+          laQr: attribution.laQr,
+          laCampaign: attribution.laCampaign,
+          laVariant: attribution.laVariant
+        }
+      });
+    }
+
+    reply.header("Cache-Control", "no-store");
+    // A mesma resposta é usada para novo cadastro e repetição para não revelar histórico do telefone.
+    return reply.code(202).send({ accepted: true });
+  });
 
   app.post("/api/v1/lily/auth/register", {
     config: { rateLimit: { max: 8, timeWindow: "1 minute" } }
