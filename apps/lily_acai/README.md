@@ -4,30 +4,26 @@ Frontend independente da operação temporária CookLily.
 
 ## Compatibilidade técnica
 
-O nome público mudou, mas permanecem por compatibilidade:
+- pasta: `apps/lily_acai`;
+- base: `/lilyacai/`;
+- API: `/api/v1/lily/*`.
 
-- app `apps/lily_acai`;
-- base `/lilyacai/`;
-- API `/api/v1/lily/*`.
+## Rotas
 
-Renomear esses contratos exige migração separada.
-
-## Rotas atuais
-
-- `/lilyacai/`;
-- `/lilyacai/cardapio`;
-- `/lilyacai/cadastro`;
+- `/lilyacai/` — landing de leads/WhatsApp;
+- `/lilyacai/cardapio` — cardápio/estado atual;
+- `/lilyacai/cadastro` — conta CookLily já existente;
 - `/lilyacai/entrar`;
 - `/lilyacai/privacidade`.
 
-## Estado
+## Entrega 04
 
-A base React/Vite, autenticação e consentimentos da Entrega 02 existem. A aparência atual é provisória.
+A landing permite entrar na lista promocional somente com telefone + opt-in; não cria senha.
 
-Próximas etapas:
+Atribuição da URL é normalizada e preservada temporariamente em `sessionStorage`. No envio, o backend aplica novamente a normalização antes da persistência.
 
-1. Entrega 03 — logo/kit/rebranding;
-2. Entrega 04 — landing/leads/WhatsApp/deploy;
-3. Entrega 05 — catálogo/admin/cardápio dinâmico/deploy.
+O acompanhamento P0 abre o WhatsApp oficial para atendimento humano.
 
-Ver `docs/lily-acai/ROADMAP_COOKLILY.md`.
+## Identidade
+
+Tema CookLily usa tokens `--cl-*`, logo oficial derivada e Summer / Amsterdam Four quando disponíveis, com fallbacks enquanto os binários licenciados estiverem adiados.
