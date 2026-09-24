@@ -22,6 +22,7 @@ Exemplo mínimo em `/etc/carro-chefe/carro-chefe.env`:
 
 ```env
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
+LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
 TRUST_PROXY=true
 PRODUCTION_AUTH_READY=false
 VITE_GA4_ID=
@@ -74,7 +75,10 @@ Faça o smoke test externo somente por HTTPS e confirme que:
 - `/gestao` retorna 404 no Nginx;
 - recusar analytics não carrega GA4/Clarity;
 - aceitar analytics carrega somente os IDs configurados;
-- QR mantém `cc_qr`, `cc_campaign` e `cc_variant` no cadastro.
+- CookLily aceita `cc_qr`/`cc_campaign`/`cc_variant` por compatibilidade e persiste o modelo canônico `la*`;
+- `/api/v1/lily/public/health` responde;
+- lead CookLily válido persiste no banco Lily e repetição não duplica;
+- sem opt-in promocional não há lead CookLily persistido.
 
 ## TLS e Nginx
 
@@ -100,3 +104,12 @@ Procedimento mínimo de restauração:
 6. executar health check e smoke test de cadastro em ambiente controlado.
 
 Antes de múltiplas réplicas, storage de rede ou arquitetura distribuída, migrar a persistência para PostgreSQL gerenciado.
+
+
+## CookLily — primeira publicação
+
+Antes da primeira publicação CookLily, além do banco principal, faça backup de `/srv/carro-chefe/data/lily-acai.db` se ele já existir. Aplique a migration Lily com `npm run db:deploy:lily`.
+
+O template Nginx da branch `lily-acai` libera somente `/api/v1/lily/public/*`. Auth/admin continuam atrás do bloqueio genérico de `/api/` até uma entrega posterior.
+
+A publicação deve usar um SHA imutável aprovado, nunca um `git pull` cego.
