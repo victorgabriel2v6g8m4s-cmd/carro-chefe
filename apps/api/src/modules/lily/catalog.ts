@@ -541,6 +541,15 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       }
     }
 
+    const now = new Date();
+    const applicableOffer = product.offers.find((offer) =>
+      offer.status === "published"
+      && activeWindow(offer.startsAt, offer.endsAt, now)
+      && (!offer.variantId || offer.variantId === variant.id)
+      && offer.regularPriceCents === basePriceCents
+    );
+    if (applicableOffer) basePriceCents = applicableOffer.offerPriceCents;
+
     const uniqueAddonIds = new Set(input.addons.map((item) => item.addonId));
     if (uniqueAddonIds.size !== input.addons.length || uniqueAddonIds.size > 3) {
       throw new ApiError(400, "Use no máximo 3 tipos diferentes de adicional.", { code: "LILY_ADDON_TYPES_LIMIT" });
@@ -851,10 +860,19 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/offers", async (request, reply) => {
     const context = await requireStaff(request, true);
     const input = offerCreateSchema.parse(request.body);
+    let productId = input.productId ?? null;
+    if (input.variantId) {
+      const variant = await lilyPrisma.lilyProductVariant.findUnique({ where: { id: input.variantId } });
+      if (!variant) throw new ApiError(404, "Variante da oferta não encontrada.");
+      if (productId && productId !== variant.productId) {
+        throw new ApiError(400, "Produto e variante da oferta não correspondem.");
+      }
+      productId = variant.productId;
+    }
     const projected = await projectedMarginForOffer(input);
     if (projected != null && projected < marginFloorBps) throw new ApiError(400, "Oferta ficaria abaixo da margem mínima de 10%.");
     const created = await lilyPrisma.lilyOffer.create({
-      data: { ...input, savingsCents: input.regularPriceCents - input.offerPriceCents }
+      data: { ...input, productId, savingsCents: input.regularPriceCents - input.offerPriceCents }
     });
     await audit(context.user.id, "create", "offer", created.id, input);
     return reply.code(201).send(created);
