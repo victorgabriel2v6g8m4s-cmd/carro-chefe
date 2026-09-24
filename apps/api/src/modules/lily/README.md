@@ -8,21 +8,35 @@ Backend isolado da operação temporária CookLily.
 
 ## Persistência
 
-Somente `packages/lily-database`. É proibido usar o Prisma/client de `packages/database` para dados Lily.
+Somente `packages/lily-database`. É proibido usar o banco do Carro Chefe para dados CookLily.
 
-## Entrega 2 implementada
+## Rotas implementadas
 
-Rotas disponíveis:
+### Público
 
 ```text
 GET  /api/v1/lily/public/health
 GET  /api/v1/lily/public/config
+POST /api/v1/lily/public/leads
+```
+
+### Autenticação
+
+```text
 POST /api/v1/lily/auth/register
 POST /api/v1/lily/auth/login
 GET  /api/v1/lily/auth/me
 POST /api/v1/lily/auth/logout
 ```
 
-A autenticação usa telefone normalizado, senha com scrypt, sessão aleatória armazenada somente como hash, cookie HttpOnly e CSRF próprio da sessão. Registro público sempre cria papel `customer`.
+A autenticação usa telefone normalizado, scrypt, sessão aleatória persistida somente como hash, cookie HttpOnly e CSRF próprio. Registro público sempre cria `customer`.
 
-A Entrega 3 adicionará catálogo/mídia/admin sem misturar esse módulo com os dados Carro Chefe.
+## Leads
+
+`POST /public/leads` não cria conta nem senha. Exige opt-in de marketing, normaliza telefone, deduplica por telefone e grava somente no Lily DB.
+
+Tracking aceita `la_*` e `cc_*` na entrada e persiste apenas `laQr`, `laCampaign` e `laVariant`.
+
+## Próximo escopo
+
+Entrega 05 adicionará catálogo, mídia e admin com papel `staff`.
