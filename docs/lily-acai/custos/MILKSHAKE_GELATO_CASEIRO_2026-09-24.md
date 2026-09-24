@@ -1,0 +1,132 @@
+# Precificação provisória — Milk-shake de Gelato Caseiro CookLily
+
+**Data-base:** 2026-09-24  
+**Nome comercial:** provisório; “Milk-shake de Gelato Caseiro” é somente nome de trabalho.
+
+## Insumos informados
+
+| Insumo | Compra | Custo |
+| --- | ---: | ---: |
+| Açúcar cristal | 5 kg | R$ 12,37 |
+| Creme de leite | 4 × 200 g | R$ 11,96 |
+| Leite integral | 1 L | R$ 5,99 |
+| Liga neutra | 2 × 100 g | R$ 15,00 |
+| Emustab | 200 g | R$ 15,90 |
+| Café 3 Corações | 20 g | R$ 1,99 |
+| Nutella original | 375 g | R$ 30,00 |
+
+Embalamento informado como o mesmo das batidas de açaí: garrafa R$ 1,00, canudo R$ 0,30 e sacola R$ 0,15. Para a versão de 300 ml, o custo da garrafa foi provisoriamente mantido em R$ 1,00 porque ainda não foi informado um custo específico de embalagem de 300 ml.
+
+## Subreceita — base
+
+Receita informada:
+
+- 4 caixas de creme de leite (800 g);
+- 300 g de açúcar;
+- 2 colherzinhas de café de Emustab;
+- 30 g de liga neutra;
+- 750 ml de leite integral;
+- rendimento: 2,5 L.
+
+### Hipótese provisória do Emustab
+
+O peso das duas colherzinhas não foi medido. Para permitir o custeio inicial, a planilha usa **5 g no total** como hipótese temporária. Isso não transforma 5 g em receita homologada. A primeira produção deve pesar as duas colherzinhas e substituir o valor.
+
+Com 5 g provisórios:
+
+| Componente | Custo no lote |
+| --- | ---: |
+| Creme de leite 800 g | R$ 11,96 |
+| Açúcar 300 g | R$ 0,7422 |
+| Leite integral 750 ml | R$ 4,4925 |
+| Liga neutra 30 g | R$ 2,2500 |
+| Emustab 5 g | R$ 0,3975 |
+| **Lote 2,5 L** | **R$ 19,8422** |
+
+Custo direto: **R$ 7,93688/L** ou **R$ 0,00793688/ml**.
+
+## Subreceita — mistura de Nutella
+
+- 375 g de Nutella original: R$ 30,00;
+- 400 g de creme de leite: R$ 5,98;
+- rendimento informado: 775 ml;
+- custo do lote: **R$ 35,98**;
+- custo por ml: **R$ 0,0464258065**.
+
+A dosagem final foi informada em gramas enquanto o rendimento foi informado em ml. Para o primeiro custeio é usada a equivalência **1 g ≈ 1 ml**, que deve ser substituída pela densidade/peso real medido do lote.
+
+## Regra de montagem para custeio
+
+Interpretação usada: as quantidades de sabor fazem parte do **volume final nominal**.
+
+### Café 500 ml
+
+- 440 ml de base;
+- 50 g/ml equivalentes de mistura de Nutella;
+- 10 g de café.
+
+### Café 300 ml
+
+Escala de 60%:
+
+- 264 ml de base;
+- 30 g/ml equivalentes de mistura de Nutella;
+- 6 g de café.
+
+### Sabores de fruta
+
+Para 500 ml:
+
+- 390 ml de base;
+- 50 g/ml equivalentes de mistura de Nutella;
+- 60 g de fruta.
+
+Para 300 ml:
+
+- 234 ml de base;
+- 30 g/ml equivalentes de mistura de Nutella;
+- 36 g de fruta.
+
+O balanço volumétrico é uma convenção inicial de custeio. A produção deve medir rendimento final real, incorporação de ar e volume após bater/congelar.
+
+## Precificação calculada
+
+Configuração vigente do workbook:
+
+- despesas variáveis: 27,3%;
+- margem da categoria quando não classificada: 30%;
+- rateio de custo fixo: não incluído;
+- preço definitivo: não preenchido automaticamente.
+
+| Produto provisório | Ingredientes diretos | Embalamento | Custo total modelado | Preço calculado pela planilha |
+| --- | ---: | ---: | ---: | ---: |
+| Café 500 ml | R$ 6,81 | R$ 1,45 | **R$ 10,82** | **R$ 15,45** |
+| Café 300 ml | R$ 4,09 | R$ 1,45 | **R$ 7,07** | **R$ 10,10** |
+
+Esses valores não são preços finais de venda. O campo `Preço Definitivo` permanece vazio até decisão comercial.
+
+## Sabores de fruta — fórmula pendente de custo
+
+Se `P` for o custo da fruta em R$/kg:
+
+- 500 ml: custo total modelado = **R$ 8,90072 + 0,08253095 × P**; preço calculado = **R$ 12,71531 + 0,11790136 × P**;
+- 300 ml: custo total modelado = **R$ 5,92043 + 0,04951857 × P**; preço calculado = **R$ 8,45776 + 0,07074081 × P**.
+
+Nenhum sabor de fruta é lançado como produto precificado enquanto o custo/kg e o sabor real não forem informados.
+
+## Pendências de validação
+
+1. pesar as duas colherzinhas de Emustab;
+2. pesar/medir o lote final da mistura de Nutella para obter densidade real;
+3. confirmar embalagem e custo específicos de 300 ml;
+4. informar frutas efetivamente usadas e custo/kg;
+5. medir rendimento real após processamento;
+6. definir nome comercial definitivo;
+7. definir processo, tempo, temperatura, armazenamento/validade;
+8. validar alergênicos pelos rótulos dos insumos usados no lote real.
+
+## Rastreabilidade
+
+Receita Excel: `anexos/financeiro/recipes/cooklily-milkshake-gelato-2026-09-24.json`.
+
+O workbook só é alterado pelo motor `tools/excel_recipe`, com SHA da fonte, hash VBA, asserts, snapshot e receipt.
