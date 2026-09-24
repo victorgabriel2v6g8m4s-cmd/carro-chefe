@@ -119,7 +119,7 @@ describe("CookLily marketing leads", () => {
       method: "POST",
       url: "/api/v1/lily/public/leads",
       headers: { origin },
-      payload: payload({ phone: "123" })
+      payload: payload({ phone: "11111111111" })
     });
     expect(response.statusCode).toBe(400);
     expect(response.json().details.code).toBe("LILY_INVALID_PHONE");
