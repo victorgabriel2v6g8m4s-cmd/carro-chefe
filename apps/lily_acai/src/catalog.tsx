@@ -173,7 +173,9 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
       {product.descriptiveName && <span className="product-descriptor">{product.descriptiveName}</span>}
       {product.description && <p>{product.description}</p>}
       <div className="product-price">
-        {price > 0 ? <><small>A partir de</small><strong>{money(price)}</strong></> : <strong>Em breve</strong>}
+        {bestOffer
+          ? <><small>Oferta</small><s>{money(bestOffer.regularPriceCents)}</s><strong>{money(bestOffer.offerPriceCents)}</strong></>
+          : price > 0 ? <><small>A partir de</small><strong>{money(price)}</strong></> : <strong>Em breve</strong>}
       </div>
     </button>
   </article>;
@@ -218,7 +220,7 @@ export function FeaturedCarousel() {
         {product.weeklyHighlight && <span className="offer-pill">Produto da semana</span>}
         <h3>{product.displayName}</h3>
         <p>{product.description}</p>
-        <strong>{money(minimumPrice(product))}</strong>
+        <strong>{product.offers[0] ? money(product.offers[0].offerPriceCents) : money(minimumPrice(product))}</strong>
         <a className="button primary" href={`${import.meta.env.BASE_URL}cardapio#${product.slug}`}>Ver no cardápio</a>
       </div>
     </div>
