@@ -114,6 +114,21 @@ CI em Node 20 e 24.
 
 Seguir `docs/lily-acai/DEPLOY_VPS.md`. O smoke deve provar que mudar disponibilidade/publicação no painel altera o cardápio sem editar código/rebuild.
 
+## Produto provisório recebido em 24/09/2026
+
+Foi cadastrada financeiramente uma nova família com nome de trabalho **“Milk-shake de Gelato Caseiro”**.
+
+Registros atuais do workbook:
+
+- `2101` — base interna;
+- `2102` — mistura interna de Nutella;
+- `2110` — Café 500 ml;
+- `2111` — Café 300 ml.
+
+Esses registros são insumo para o futuro catálogo, mas **não devem ser publicados automaticamente** nesta entrega enquanto permanecerem pendentes nome comercial definitivo, preço definitivo, mídia, disponibilidade operacional e homologação da ficha. Sabores de fruta aguardam custo real por kg antes de virar variantes precificadas.
+
+Documentação técnica: `docs/lily-acai/produtos/MILKSHAKE_GELATO_CASEIRO_PROVISORIO.md`.
+
 ## Próxima entrega
 
 Entrega 06 — carrinho, endereço e criação de pedido.
