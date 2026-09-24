@@ -247,3 +247,16 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .admin-check-grid { grid-template-columns: 1fr; }
   .tier-grid { grid-template-columns: 1fr 1fr; }
 }
+
+.commercial-admin { display: grid; gap: 28px; padding: 18px 20px 24px; }
+.commercial-admin section > h4 { margin: 0 0 12px; }
+.commercial-list { padding: 0; }
+.commercial-list form { grid-template-columns: 1.1fr 1.7fr .75fr .75fr .8fr auto auto; padding: 8px 0; border-bottom: 1px solid rgb(130 0 35 / 10%); }
+.offers-list form { grid-template-columns: 1.5fr .8fr .8fr 1fr .8fr auto; }
+.offer-create { padding: 16px 0 0; }
+@media (max-width:1100px) {
+  .commercial-list form,.offers-list form { grid-template-columns: repeat(3,1fr); }
+}
+@media (max-width:760px) {
+  .commercial-list form,.offers-list form { grid-template-columns: 1fr; }
+}
