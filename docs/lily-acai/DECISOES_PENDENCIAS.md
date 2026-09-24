@@ -35,7 +35,7 @@
 | LILY-PEND-005 | Cardápio inicial | **resolvida** pelo documento canônico | — |
 | LILY-PEND-006 | Preços | **resolvida** para o cardápio inicial | — |
 | LILY-PEND-007 | Adicionais | **resolvida** para o cardápio inicial | — |
-| LILY-PEND-008 | Admin | criar primeira conta staff segura | Entrega 05 |
+| LILY-PEND-008 | Admin | painel staff implementado; criar/homologar primeira conta staff segura na publicação | deploy/homologação |
 | LILY-PEND-009 | Fotografia | morango/maracujá aprovados; produzir Café e demais gradualmente | mídia |
 | LILY-PEND-010 | Horários/capacidade | implementar como configuração do sistema | checkout/operação |
 | LILY-PEND-011 | Entrega | áreas/taxas/pedido mínimo configuráveis | Entrega 06 |
@@ -56,7 +56,7 @@
 | LILY-PEND-026 | Operação LilyShake | **resolvida** | — |
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
 | LILY-PEND-028 | Alergênicos | criar configuração específica antes da venda comercial completa | compliance |
-| LILY-PEND-029 | Catálogo | implementar modelo dinâmico LilyMix, subcategorias, oferta e adicionais | Entrega 05 |
+| LILY-PEND-029 | Catálogo | **resolvida tecnicamente:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel implementados/validados; deploy pendente | Entrega 05 |
 | LILY-PEND-030 | Checkout | carrinho, entrega/retirada, pedido e checkout online | Entregas 06–07 |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
