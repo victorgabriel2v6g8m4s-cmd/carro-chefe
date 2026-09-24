@@ -12,7 +12,7 @@ CLEAN_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-clean-custos-fixos.
 BLOCKED_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-blocked-configuracoes.json"
 
 EXPECTED_CLEAN_PLAN = "dc022c05aafde883b149f0ac7c81722a2d3b6534c6ec6ec7cef13921f2d1995f"
-EXPECTED_BLOCKED_PLAN = "b2fdb9bcf84ede170eb31cf118cb67de2b18a66bce43adbd0f7c4737ef86f381"
+EXPECTED_BLOCKED_PLAN = "372af17d61e3c94fc37e8cdf53c605abc13e49025ef99307545832371e5e8963"
 EXPECTED_CLEAN_PARTS = {
     "xl/tables/table12.xml",
     "xl/worksheets/sheet9.xml",

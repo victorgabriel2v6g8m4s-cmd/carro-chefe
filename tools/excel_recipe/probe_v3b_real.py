@@ -17,7 +17,7 @@ TARGET_SHEET = "Fluxo de Caixa"
 BLOCKED_SHEET = "ingredientes"
 EXPECTED_DRAWING = "xl/drawings/drawing2.xml"
 EXPECTED_CHARTS = {"xl/charts/chart1.xml", "xl/charts/chart2.xml"}
-EXPECTED_PLAN_SHA256 = "9a3553f5bbb80512aed6a234ee1474be5abadf5e1336b0215787935f719f115e"
+EXPECTED_PLAN_SHA256 = "e54e91ca131ec74a4db9110772c2e23150d42b3e4fbbff06d9f49f88caa66bd0"
 EXPECTED_OPERATION = {
     "op": "sheet.insert_rows",
     "sheet": TARGET_SHEET,

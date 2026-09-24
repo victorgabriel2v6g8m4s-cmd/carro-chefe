@@ -125,7 +125,14 @@ Registros atuais do workbook:
 - `2110` — Café 500 ml;
 - `2111` — Café 300 ml.
 
-Esses registros são insumo para o futuro catálogo, mas **não devem ser publicados automaticamente** nesta entrega enquanto permanecerem pendentes nome comercial definitivo, preço definitivo, mídia, disponibilidade operacional e homologação da ficha. Sabores de fruta aguardam custo real por kg antes de virar variantes precificadas.
+Além dos registros-base, já existem as variantes financeiras:
+
+- `2112` — Morango 500 ml;
+- `2113` — Morango 300 ml;
+- `2114` — Maracujá 500 ml;
+- `2115` — Maracujá 300 ml.
+
+Café, morango e maracujá já possuem ficha de custo provisória. Esses registros são insumo para o futuro catálogo, mas **não devem ser publicados automaticamente** enquanto permanecerem pendentes nome comercial definitivo, preço definitivo, mídia, disponibilidade operacional e homologação da ficha.
 
 Documentação técnica: `docs/lily-acai/produtos/MILKSHAKE_GELATO_CASEIRO_PROVISORIO.md`.
 

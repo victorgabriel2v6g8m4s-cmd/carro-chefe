@@ -14,6 +14,8 @@
 | Emustab | 200 g | R$ 15,90 |
 | Café 3 Corações | 20 g | R$ 1,99 |
 | Nutella original | 375 g | R$ 30,00 |
+| Morango in natura | 295 g | R$ 10,00 |
+| Maracujá in natura | 1 kg | R$ 15,00 |
 
 Embalamento informado como o mesmo das batidas de açaí: garrafa R$ 1,00, canudo R$ 0,30 e sacola R$ 0,15. Para a versão de 300 ml, o custo da garrafa foi provisoriamente mantido em R$ 1,00 porque ainda não foi informado um custo específico de embalagem de 300 ml.
 
@@ -142,7 +144,9 @@ Os valores de “Preço calculado” continuam sendo saída do modelo vigente, n
 
 ## Rastreabilidade
 
-Receita Excel: `anexos/financeiro/recipes/cooklily-milkshake-gelato-2026-09-24.json`.
+Receita-base Excel: `anexos/financeiro/recipes/cooklily-milkshake-gelato-2026-09-24.json`.
+
+Receita complementar de frutas: `anexos/financeiro/recipes/cooklily-milkshake-gelato-frutas-2026-09-24.json`.
 
 O workbook só é alterado pelo motor `tools/excel_recipe`, com SHA da fonte, hash VBA, asserts, snapshot e receipt.
 
@@ -185,3 +189,23 @@ Evidências:
 - PR temporário #61: fechado sem merge e sem publicação.
 
 A alteração dos dados do workbook mudou legitimamente seu SHA e, por consequência, os hashes determinísticos dos probes reais V3A/V3B. Os fixtures foram atualizados somente para refletir o novo artefato-base; a lógica do motor não foi alterada.
+
+
+## Evidência da aplicação dos sabores de fruta
+
+Execução transacional: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36041200580
+
+- `validate`: passou;
+- `plan`: passou;
+- `apply`: passou;
+- morango cadastrado no ID `96`;
+- maracujá cadastrado no ID `97`;
+- SKUs `2112` a `2115` criados;
+- snapshot regenerado;
+- receipt: `anexos/financeiro/recipes/receipts/cooklily-milkshake-gelato-frutas-2026-09-24.receipt.json`;
+- SHA-256 antes: `7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1`;
+- SHA-256 depois: `b14b1e32c1774b1781847ab2afc97c8d504aec90a4a317bfccaa70293e2b977d`;
+- VBA antes/depois: `b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf`;
+- commit do workbook: `ca18149a2cb772c5e42eb47116d48c0963545f20`.
+
+O custo de morango e maracujá deixou de ser pendência. Os valores de venda calculados continuam sendo referência do modelo, não preço definitivo.
