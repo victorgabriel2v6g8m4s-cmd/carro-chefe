@@ -1,87 +1,272 @@
 # Entrega 05 — Catálogo administrável, cardápio dinâmico e publicação
 
-**Status:** planejada  
-**Dependência:** Entrega 04 publicada e estável
+**Status:** planejada com requisitos comerciais fechados  
+**Dependência:** Entrega 04 publicada e estável  
+**Fonte canônica de produto:** docs/lily-acai/produtos/CARDAPIO_INICIAL_DEFINITIVO.md
 
 ## Objetivo
 
-Permitir cadastro sem editar código e fazer com que todo produto **publicado/ativo e disponível** apareça automaticamente no cardápio CookLily.
+Transformar o cardápio definitivo em catálogo administrável sem editar código e permitir que publicação, disponibilidade, mídia, preços, ofertas, combinações e adicionais reflitam no cardápio sem rebuild.
+
+Esta entrega não reabre decisões de naming, sabores, preços iniciais ou limites comerciais já aprovados.
 
 ## Escopo
 
-Inclui categorias, produtos, variantes/tamanhos, preços, adicionais, mídia/capa, ordenação, publicação, pausa, disponibilidade, preview, painel staff, API pública e deploy.
+Inclui:
 
-Não inclui carrinho, endereço, checkout, pagamento ou painel de produção.
+- categorias e subcategorias;
+- Batidas de Açaí, LilyShakes e Doces “em breve”;
+- nome próprio + nome descritivo;
+- descrição, tags e busca;
+- variantes 300/500 ml;
+- preço regular e preço promocional;
+- margem projetada;
+- mídia/capa/galeria/placeholder;
+- disponibilidade e esgotado;
+- lead time opcional;
+- adicionais específicos por produto;
+- combinações LilyMix de até 3 sabores;
+- matriz de compatibilidade;
+- ofertas e combos;
+- Destaque da Semana;
+- painel staff;
+- API pública;
+- publicação.
 
-## Dados principais
+Carrinho, criação do pedido, entrega/retirada e pagamento permanecem tecnicamente nas Entregas 06–07, mas o catálogo deve expor contrato suficiente para o configurador de item e o lançamento comercial completo só ocorre com checkout online.
 
-`LilyCategory`: id, slug, name, description, status, sortOrder.
+## Modelos
 
-`LilyProduct`: id estável, categoryId, slug, name, description, status, `isAvailable`, featured, coverMediaId, sortOrder.
+### LilyCategory
 
-`LilyProductVariant`: id, productId, name, `priceCents`, status, `isAvailable`, sortOrder.
+- id;
+- parentId opcional;
+- slug;
+- name;
+- description;
+- status;
+- sortOrder;
+- isComingSoon.
 
-`LilyAddonGroup`, `LilyAddon` e `LilyProductAddonGroup` continuam o modelo já planejado.
+### LilyProduct
 
-`LilyMediaAsset`: storageName, originalName, MIME, size, SHA-256, dimensões, alt text, placeholder e status.
+- id;
+- categoryId/subcategoryId;
+- slug;
+- displayName;
+- descriptiveName;
+- description;
+- tags;
+- status;
+- isAvailable;
+- featured;
+- weeklyHighlight;
+- coverMediaId;
+- sortOrder;
+- preparationLeadMinutes opcional.
 
-Dinheiro em centavos. Mídia física fora do Git.
+### LilyProductVariant
 
-## Regra pública central
+- id;
+- productId;
+- sizeMl;
+- name;
+- priceCents;
+- compareAtPriceCents opcional;
+- costCents opcional;
+- projectedMarginBps opcional;
+- status;
+- isAvailable;
+- sortOrder.
 
-Produto aparece somente quando:
+### LilyFlavorComponent
 
-1. categoria `published`;
-2. produto `published`;
-3. `product.isAvailable = true`;
-4. ao menos uma variante publicada e disponível;
+Representa Café, Morango, Maracujá, Doce de Leite, Frutas Vermelhas, Oreo, Banana, Leite Condensado, Paçoca, Ovomaltine, Ninho, Creme de Ninho e Nutella.
+
+Campos mínimos:
+
+- id/slug;
+- name;
+- status;
+- priceModifier por tamanho;
+- defaultPortion por tamanho;
+- premium;
+- tags.
+
+### LilyFlavorCompatibility
+
+Par-a-par, editável pelo admin.
+
+Uma combinação de três sabores só é válida quando todos os pares internos forem compatíveis.
+
+Não criar cada permutação como SKU.
+
+### LilyAddon
+
+- nome;
+- preço;
+- porção 300;
+- porção 500;
+- status;
+- limite individual.
+
+### LilyProductAddon
+
+Relação produto/adicional com:
+
+- permitido;
+- limite específico;
+- preço opcional sobrescrito;
+- porção opcional sobrescrita.
+
+Limites canônicos iniciais:
+
+- 3 tipos diferentes;
+- 2 porções por adicional;
+- 4 porções totais;
+- produto que já contém Nutella aceita apenas 1 Nutella extra.
+
+### LilyOffer
+
+- produto/variante/combo;
+- regularPriceCents;
+- offerPriceCents;
+- savingsCents;
+- startsAt;
+- endsAt;
+- status;
+- campaignId opcional;
+- minProjectedMarginBps.
+
+Nenhuma oferta publica com margem líquida projetada abaixo de 10%.
+
+### LilyMediaAsset
+
+Mantém storageName, originalName, MIME, size, SHA-256, dimensões, alt text, placeholder e status.
+
+## Produtos iniciais
+
+### Batidas
+
+- Rosa da Lily;
+- Rosa Nutt;
+- Sol da Lily;
+- Sol Nutt;
+- Ninho Nutt.
+
+Preços e descrições: usar exclusivamente o documento canônico.
+
+### LilyShakes
+
+Cards simples dos sabores aprovados + LilyMix configurável.
+
+Preço da matriz:
+
+- 1 sabor: R$ 15 / R$ 22;
+- 2 sabores: R$ 18 / R$ 25;
+- 3 sabores: R$ 20 / R$ 28;
+- Nutella: + R$ 5.
+
+### Doces
+
+Categoria publicada como “em breve”, sem produtos compráveis.
+
+## Catálogo público
+
+APIs mínimas:
+
+GET /api/v1/lily/public/catalog  
+GET /api/v1/lily/public/products/:slug  
+GET /api/v1/lily/public/media/:id  
+GET /api/v1/lily/public/catalog/search  
+POST /api/v1/lily/public/configure-item
+
+O configure-item valida tamanho, sabores, compatibilidade, adicionais, limites, preço e disponibilidade e devolve configuração determinística para o futuro carrinho.
+
+## Admin
+
+Além do CRUD já previsto, precisa editar:
+
+- subcategorias;
+- sabores;
+- matriz de compatibilidade;
+- porções;
+- adicionais por produto;
+- limites;
+- preço regular/oferta;
+- margem;
+- combos;
+- Destaque da Semana;
+- estado “em breve”;
+- lead time;
+- placeholder e galeria.
+
+Rotas administrativas continuam exigindo sessão Lily, staff, CSRF, Zod, rate limit e auditoria.
+
+## UX do cardápio
+
+- rolagem infinita/paginação incremental;
+- imagem como maior elemento do card;
+- nome próprio em destaque;
+- nome descritivo minimalista;
+- descrição secundária;
+- busca tolerante a acentos;
+- filtros por categoria, subcategoria, sabor, Simples/Com Nutella/Duo/Trio, tamanho, oferta, preço e disponibilidade;
+- imagem/mídia em tela cheia;
+- placeholder CookLily quando faltar foto;
+- esgotado permanece visível com contraste reduzido e compra bloqueada.
+
+Landing exibe apenas Destaques, Produto da Semana, combos e ofertas em carrossel automático com controles acessíveis.
+
+## Ofertas e combos iniciais
+
+- Dupla Lily: 2 LilyShakes simples 500 ml por R$ 40;
+- Trio Lily: 3 LilyShakes simples 300 ml por R$ 40;
+- Dupla Açaí: 2 Batidas simples 500 ml por R$ 48.
+
+Etiqueta mostra economia absoluta em reais.
+
+## Regras de publicação
+
+Produto comprável exige:
+
+1. categoria publicada;
+2. produto publicado;
+3. disponibilidade;
+4. variante publicada/disponível;
 5. preço válido;
-6. capa válida;
-7. adicionais consistentes.
+6. mídia válida ou placeholder autorizado;
+7. adicionais/combinações consistentes;
+8. margem >= 10% quando houver custo calculável.
 
-Pausa/indisponibilidade deve refletir sem deploy.
-
-## APIs
-
-Públicas:
-
-```text
-GET /api/v1/lily/public/catalog
-GET /api/v1/lily/public/products/:slug
-GET /api/v1/lily/public/media/:id
-```
-
-Admin:
-
-```text
-GET/POST/PATCH /api/v1/lily/admin/categories
-GET/POST/PATCH /api/v1/lily/admin/products
-GET/POST/PATCH /api/v1/lily/admin/variants
-GET/POST/PATCH /api/v1/lily/admin/addon-groups
-GET/POST/PATCH /api/v1/lily/admin/addons
-GET/POST/PATCH /api/v1/lily/admin/product-addon-groups
-GET/POST/PATCH /api/v1/lily/admin/media
-```
-
-Admin exige sessão Lily, `staff`, CSRF, Zod, rate limit e auditoria.
-
-## Painel
-
-```text
-/lilyacai/painel
-/lilyacai/painel/cardapio
-/lilyacai/painel/midias
-```
-
-Deve criar/editar categoria, produto, preço/variante, adicionais, mídia, ordem, disponibilidade, pausa, preview e publicação.
+Produto esgotado pode continuar público, mas não comprável.
 
 ## Mídia
 
-Produção: `/srv/carro-chefe/data/lily-acai/uploads/`.
+Produção: /srv/carro-chefe/data/lily-acai/uploads/  
+Dev: .runtime/lily-acai/uploads/
 
-Dev: `.runtime/lily-acai/uploads/`.
+Fotos existentes de morango e maracujá estão aprovadas. Café e demais sabores usam placeholder até upload oficial.
 
-P0: JPEG/PNG/WebP, limite, MIME/extensão allowlist, nome aleatório, SHA-256, alt text e proteção contra path traversal.
+Fotos do cardápio mostram apenas o produto; não é necessário ter foto separada por tamanho.
+
+## Tracking
+
+Preservar la_* e aliases cc_*.
+
+Eventos digitais devem distinguir:
+
+- produto;
+- variante/tamanho;
+- combinação de sabores;
+- adicionais;
+- oferta/combo;
+- campanha;
+- origem;
+- superfície;
+- futura conversão/pedido.
+
+Nunca colocar PII em URL de tracking.
 
 ## Testes obrigatórios
 
@@ -89,53 +274,41 @@ P0: JPEG/PNG/WebP, limite, MIME/extensão allowlist, nome aleatório, SHA-256, a
 - sem sessão 401;
 - staff funciona;
 - sem CSRF 403;
-- draft/paused não aparecem;
-- indisponível não aparece como comprável;
-- published + disponível aparece;
-- produto sem variante não publica;
-- preço inválido rejeita;
-- regras de adicionais validadas;
+- busca/filtros determinísticos;
+- subcategoria funciona;
+- esgotado permanece visível e não comprável;
+- preço por tamanho correto;
+- oferta calcula savings corretamente;
+- margem <10% bloqueia publicação de preço/oferta;
+- limite de adicionais;
+- Nutella extra respeita limite;
+- pares incompatíveis são rejeitados;
+- trio com qualquer par incompatível é rejeitado;
+- LilyMix não cria duplicidade por ordem de sabores;
+- placeholder funciona;
+- mídia fullscreen;
+- Destaque da Semana tem vigência;
 - upload inválido/path traversal rejeitados.
 
 Regressão:
 
-```bash
-npm run policy:check
-npm run db:deploy
-npm run check
-npm test
-npm run build
+npm run policy:check  
+npm run db:deploy  
+npm run check  
+npm test  
+npm run build  
 npm run tools:status:check
-```
 
 CI em Node 20 e 24.
 
 ## Publicação
 
-Seguir `docs/lily-acai/DEPLOY_VPS.md`. O smoke deve provar que mudar disponibilidade/publicação no painel altera o cardápio sem editar código/rebuild.
+Seguir docs/lily-acai/DEPLOY_VPS.md.
 
-## Produto provisório recebido em 24/09/2026
+O smoke da Entrega 05 deve provar que editar preço, disponibilidade, mídia, oferta, adicional ou compatibilidade no painel altera o cardápio sem editar código/rebuild.
 
-Foi cadastrada financeiramente uma nova família com nome de trabalho **“Milk-shake de Gelato Caseiro”**.
+## Próximo escopo
 
-Registros atuais do workbook:
+Entrega 06 implementa carrinho, endereço, entrega/retirada e criação de pedido usando o configurador desta entrega. Entrega 07 fecha checkout/pagamento.
 
-- `2101` — base interna;
-- `2102` — mistura interna de Nutella;
-- `2110` — Café 500 ml;
-- `2111` — Café 300 ml.
-
-Além dos registros-base, já existem as variantes financeiras:
-
-- `2112` — Morango 500 ml;
-- `2113` — Morango 300 ml;
-- `2114` — Maracujá 500 ml;
-- `2115` — Maracujá 300 ml.
-
-Café, morango e maracujá já possuem ficha de custo provisória. Esses registros são insumo para o futuro catálogo, mas **não devem ser publicados automaticamente** enquanto permanecerem pendentes nome comercial definitivo, preço definitivo, mídia, disponibilidade operacional e homologação da ficha.
-
-Documentação técnica: `docs/lily-acai/produtos/MILKSHAKE_GELATO_CASEIRO_PROVISORIO.md`.
-
-## Próxima entrega
-
-Entrega 06 — carrinho, endereço e criação de pedido.
+O lançamento comercial completo exige checkout online; portanto Entregas 05–07 formam a sequência mínima para venda digital completa.
