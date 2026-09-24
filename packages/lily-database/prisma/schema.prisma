@@ -51,7 +51,6 @@ model LilyConsentRecord {
   @@index([userId, purpose, recordedAt])
 }
 
-
 model LilyMarketingLead {
   id                 String   @id @default(cuid())
   phoneNormalized    String   @unique
@@ -66,4 +65,254 @@ model LilyMarketingLead {
   updatedAt          DateTime @updatedAt
 
   @@index([status, createdAt])
+}
+
+model LilyCategory {
+  id           String         @id @default(cuid())
+  parentId     String?
+  slug         String         @unique
+  name         String
+  description  String?
+  status       String         @default("draft")
+  sortOrder    Int            @default(0)
+  isComingSoon Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  parent       LilyCategory?  @relation("LilyCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children     LilyCategory[] @relation("LilyCategoryTree")
+  products     LilyProduct[]
+
+  @@index([parentId])
+  @@index([status, sortOrder])
+}
+
+model LilyMediaAsset {
+  id           String             @id @default(cuid())
+  storageName  String             @unique
+  originalName String
+  mime         String
+  size         Int
+  sha256       String
+  width        Int?
+  height       Int?
+  altText      String
+  placeholder  Boolean            @default(false)
+  status       String             @default("active")
+  createdAt    DateTime           @default(now())
+  coverFor     LilyProduct[]      @relation("LilyProductCover")
+  productLinks LilyProductMedia[]
+
+  @@index([status, createdAt])
+}
+
+model LilyProduct {
+  id                     String             @id @default(cuid())
+  categoryId             String
+  coverMediaId           String?
+  slug                   String             @unique
+  displayName            String
+  descriptiveName        String?
+  description            String?
+  tagsJson               String             @default("[]")
+  configurationType      String             @default("fixed")
+  status                 String             @default("draft")
+  isAvailable            Boolean            @default(false)
+  featured               Boolean            @default(false)
+  weeklyHighlight        Boolean            @default(false)
+  allowPlaceholder       Boolean            @default(true)
+  sortOrder              Int                @default(0)
+  preparationLeadMinutes Int?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  category               LilyCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  coverMedia             LilyMediaAsset?    @relation("LilyProductCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  variants               LilyProductVariant[]
+  flavorLinks            LilyProductFlavor[]
+  addonLinks             LilyProductAddon[]
+  mediaLinks             LilyProductMedia[]
+  mixTiers               LilyMixPriceTier[]
+  comboItems             LilyComboItem[]
+  offers                 LilyOffer[]
+
+  @@index([categoryId, status, sortOrder])
+  @@index([status, isAvailable, featured])
+}
+
+model LilyProductVariant {
+  id                     String        @id @default(cuid())
+  productId              String
+  sizeMl                 Int
+  name                   String
+  priceCents             Int
+  compareAtPriceCents    Int?
+  costCents              Int?
+  projectedMarginBps     Int?
+  status                 String        @default("draft")
+  isAvailable            Boolean       @default(false)
+  sortOrder              Int           @default(0)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  product                LilyProduct   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offers                 LilyOffer[]
+
+  @@unique([productId, sizeMl])
+  @@index([productId, status, sortOrder])
+}
+
+model LilyFlavorComponent {
+  id                String                    @id @default(cuid())
+  slug              String                    @unique
+  name              String
+  status            String                    @default("published")
+  premium           Boolean                   @default(false)
+  tagsJson          String                    @default("[]")
+  portion300        Int
+  portion500        Int
+  priceModifier300  Int                       @default(0)
+  priceModifier500  Int                       @default(0)
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  productLinks      LilyProductFlavor[]
+  addons            LilyAddon[]
+  compatibilitiesA  LilyFlavorCompatibility[] @relation("LilyFlavorA")
+  compatibilitiesB  LilyFlavorCompatibility[] @relation("LilyFlavorB")
+
+  @@index([status, name])
+}
+
+model LilyFlavorCompatibility {
+  flavorAId    String
+  flavorBId    String
+  isCompatible Boolean             @default(true)
+  updatedAt    DateTime            @updatedAt
+  flavorA      LilyFlavorComponent @relation("LilyFlavorA", fields: [flavorAId], references: [id], onDelete: Cascade)
+  flavorB      LilyFlavorComponent @relation("LilyFlavorB", fields: [flavorBId], references: [id], onDelete: Cascade)
+
+  @@id([flavorAId, flavorBId])
+  @@index([flavorBId])
+}
+
+model LilyProductFlavor {
+  productId String
+  flavorId  String
+  product   LilyProduct         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  flavor    LilyFlavorComponent @relation(fields: [flavorId], references: [id], onDelete: Cascade)
+
+  @@id([productId, flavorId])
+  @@index([flavorId])
+}
+
+model LilyAddon {
+  id              String               @id @default(cuid())
+  flavorId        String?
+  slug            String               @unique
+  name            String
+  priceCents      Int
+  portion300      Int
+  portion500      Int
+  individualLimit Int                  @default(2)
+  status          String               @default("published")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  flavor          LilyFlavorComponent? @relation(fields: [flavorId], references: [id], onDelete: SetNull)
+  productLinks    LilyProductAddon[]
+
+  @@index([status, name])
+}
+
+model LilyProductAddon {
+  productId       String
+  addonId         String
+  allowed         Boolean     @default(true)
+  individualLimit Int?
+  priceOverride   Int?
+  portion300      Int?
+  portion500      Int?
+  product         LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addon           LilyAddon   @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@id([productId, addonId])
+  @@index([addonId])
+}
+
+model LilyProductMedia {
+  productId String
+  mediaId   String
+  sortOrder Int            @default(0)
+  product   LilyProduct    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media     LilyMediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([productId, mediaId])
+  @@index([mediaId, sortOrder])
+}
+
+model LilyMixPriceTier {
+  id          String      @id @default(cuid())
+  productId   String
+  flavorCount Int
+  sizeMl      Int
+  priceCents  Int
+  status      String      @default("published")
+  product     LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, flavorCount, sizeMl])
+  @@index([productId, status])
+}
+
+model LilyCombo {
+  id                String          @id @default(cuid())
+  slug              String          @unique
+  name              String
+  description       String?
+  rulesJson         String          @default("{}")
+  regularPriceCents Int
+  offerPriceCents   Int
+  savingsCents      Int
+  status            String          @default("draft")
+  featured          Boolean         @default(false)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  items             LilyComboItem[]
+
+  @@index([status, featured, sortOrder])
+}
+
+model LilyComboItem {
+  id          String      @id @default(cuid())
+  comboId     String
+  productId   String
+  quantity    Int         @default(1)
+  sizeMl      Int?
+  flavorCount Int?
+  combo       LilyCombo   @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  product     LilyProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([comboId])
+  @@index([productId])
+}
+
+model LilyOffer {
+  id                    String              @id @default(cuid())
+  productId             String?
+  variantId             String?
+  name                  String
+  regularPriceCents     Int
+  offerPriceCents       Int
+  savingsCents          Int
+  startsAt              DateTime?
+  endsAt                DateTime?
+  status                String              @default("draft")
+  campaignId            String?
+  minProjectedMarginBps Int                 @default(1000)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  product               LilyProduct?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant               LilyProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([status, startsAt, endsAt])
+  @@index([productId])
+  @@index([variantId])
 }
