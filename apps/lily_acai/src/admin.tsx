@@ -90,6 +90,11 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     coverMediaId: product.cover?.id ?? ""
   });
   const [busy, setBusy] = useState(false);
+  const [flavorIds, setFlavorIds] = useState<string[]>(product.rawFlavorIds ?? []);
+  const [addonIds, setAddonIds] = useState<string[]>((product.rawAddonLinks ?? []).filter((item: any) => item.allowed).map((item: any) => item.addonId));
+  const [mixTiers, setMixTiers] = useState<Array<{ flavorCount: number; sizeMl: number; priceCents: number; status: string }>>(
+    (product.mixTiers ?? []).map((tier: any) => ({ flavorCount: tier.flavorCount, sizeMl: tier.sizeMl, priceCents: tier.priceCents, status: "published" }))
+  );
 
   async function save() {
     setBusy(true);
@@ -118,6 +123,35 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao salvar preço.");
+    }
+  }
+
+  async function saveRelations() {
+    setBusy(true);
+    setError("");
+    try {
+      await lilyAdminJson(`products/${product.id}/flavors`, "PUT", csrf, { flavorIds });
+      const nutellaFlavor = data.flavors.find((flavor: any) => flavor.slug === "nutella");
+      const productHasNutella = Boolean(nutellaFlavor && flavorIds.includes(nutellaFlavor.id));
+      await lilyAdminJson(`products/${product.id}/addons`, "PUT", csrf, {
+        addons: addonIds.map((addonId) => {
+          const addon = data.addons.find((item: any) => item.id === addonId);
+          const existing = (product.rawAddonLinks ?? []).find((item: any) => item.addonId === addonId);
+          return {
+            addonId,
+            allowed: true,
+            individualLimit: existing?.individualLimit ?? (productHasNutella && addon?.slug === "nutella" ? 1 : addon?.individualLimit ?? 2)
+          };
+        })
+      });
+      if (product.configurationType === "lilymix") {
+        await lilyAdminJson(`products/${product.id}/mix-tiers`, "PUT", csrf, { tiers: mixTiers });
+      }
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao salvar regras do produto.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -165,6 +199,45 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
         <label className="toggle"><input name="available" type="checkbox" defaultChecked={variant.isAvailable} /> Disponível</label>
         <button className="button ghost" type="submit">Salvar preço</button>
       </form>)}
+    </div>
+
+    <div className="product-rules-admin">
+      <div>
+        <h4>Sabores deste produto</h4>
+        <div className="admin-check-grid">
+          {data.flavors.map((flavor: any) => <label key={flavor.id} className="toggle">
+            <input type="checkbox" checked={flavorIds.includes(flavor.id)} onChange={(event) =>
+              setFlavorIds((current) => event.target.checked ? [...new Set([...current, flavor.id])] : current.filter((id) => id !== flavor.id))
+            } />
+            {flavor.name}
+          </label>)}
+        </div>
+      </div>
+      <div>
+        <h4>Adicionais aceitos</h4>
+        <div className="admin-check-grid">
+          {data.addons.map((addon: any) => <label key={addon.id} className="toggle">
+            <input type="checkbox" checked={addonIds.includes(addon.id)} onChange={(event) =>
+              setAddonIds((current) => event.target.checked ? [...new Set([...current, addon.id])] : current.filter((id) => id !== addon.id))
+            } />
+            {addon.name}
+          </label>)}
+        </div>
+      </div>
+      {product.configurationType === "lilymix" && <div className="admin-span">
+        <h4>Preços LilyMix por número de sabores</h4>
+        <div className="tier-grid">
+          {mixTiers.map((tier, index) => <label key={`${tier.sizeMl}-${tier.flavorCount}`}>
+            {tier.sizeMl} ml · {tier.flavorCount} sabor{tier.flavorCount > 1 ? "es" : ""}
+            <input value={moneyInput(tier.priceCents)} onChange={(event) => {
+              const next = [...mixTiers];
+              next[index] = { ...tier, priceCents: parseMoney(event.target.value) };
+              setMixTiers(next);
+            }} />
+          </label>)}
+        </div>
+      </div>}
+      <button className="button primary" type="button" disabled={busy} onClick={saveRelations}>Salvar sabores, adicionais e regras</button>
     </div>
   </details>;
 }
