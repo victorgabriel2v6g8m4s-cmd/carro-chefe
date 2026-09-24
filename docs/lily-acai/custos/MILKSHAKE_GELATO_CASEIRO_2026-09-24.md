@@ -130,3 +130,22 @@ Nenhum sabor de fruta é lançado como produto precificado enquanto o custo/kg e
 Receita Excel: `anexos/financeiro/recipes/cooklily-milkshake-gelato-2026-09-24.json`.
 
 O workbook só é alterado pelo motor `tools/excel_recipe`, com SHA da fonte, hash VBA, asserts, snapshot e receipt.
+
+
+## Evidência da aplicação no Excel
+
+Execução: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36023722134
+
+Resultado:
+
+- `validate`: passou;
+- `plan`: passou;
+- `apply`: passou;
+- snapshot: regenerado;
+- receipt: gerado;
+- SHA-256 do workbook antes: `569d0f24b078a2355da1edf82d2b15dc1fefd3e0bce710ac40d7dc94da2308ea`;
+- SHA-256 do workbook depois: `7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1`;
+- VBA antes/depois: `b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf`;
+- commit gerado pelo motor: `27305cbc60807c3ff2d75bbc35bf009220ecb6a7`.
+
+A primeira execução foi abortada com rollback automático porque o runner não tinha `openpyxl` para gerar o snapshot. Nenhum workbook dessa tentativa foi persistido. O workflow foi corrigido para instalar `tools/excel_snapshot/requirements.txt` e a segunda execução concluiu transacionalmente.
