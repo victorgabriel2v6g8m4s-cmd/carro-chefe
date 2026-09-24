@@ -2,6 +2,8 @@ import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from 
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { getLilyConfig, loginLily, registerLily, submitCookLilyLead } from "./api";
+import { CatalogPage, FeaturedCarousel } from "./catalog";
+import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
 
@@ -24,7 +26,7 @@ function Shell({ children }: { children: ReactNode }) {
     <header className="topbar">
       <Link className="brand" to="/cardapio" aria-label="CookLily — início">
         <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
-        <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>batidas de açaí</small></span>
+        <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
       </Link>
       <nav aria-label="Navegação principal">
         <Link to="/">Início</Link>
@@ -40,7 +42,7 @@ function Shell({ children }: { children: ReactNode }) {
         <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
         <Link to="/privacidade">Privacidade</Link>
       </div>
-      <small>CookLily × Carro Chefe — parceria temporária. Esta experiência usa a infraestrutura digital do Carro Chefe, mas possui cadastro e operação próprios.</small>
+      <small>CookLily × Carro Chefe — parceria temporária.</small>
     </footer>
   </div>;
 }
@@ -100,7 +102,7 @@ function Landing() {
       <div className="landing-copy">
         <span className="eyebrow">CookLily · novidades no seu WhatsApp</span>
         <h1>Entre na lista da CookLily.</h1>
-        <p>Cadastre seu número para receber cupons e promoções quando estiverem disponíveis. Sem criar senha e sem compartilhar seu cadastro automaticamente com o Carro Chefe.</p>
+        <p>Cadastre seu número para receber cupons, promoções e novidades quando estiverem disponíveis. Sem precisar criar senha.</p>
         <div className="landing-points" aria-label="Benefícios da lista">
           <span>Cupons quando houver campanha</span>
           <span>Promoções CookLily</span>
@@ -120,14 +122,14 @@ function Landing() {
         <label className="trap-field" aria-hidden="true">Site
           <input name="website" tabIndex={-1} autoComplete="off" />
         </label>
-        <p className="privacy-note">Ao enviar, seu telefone fica na base própria da CookLily. <Link to="/privacidade">Veja como tratamos os dados.</Link></p>
+        <p className="privacy-note">Ao enviar, você concorda com o uso do telefone para esta finalidade. <Link to="/privacidade">Veja como tratamos os dados.</Link></p>
         {message && <p className={state === "success" ? "success" : "error"} role="status">{message}</p>}
         <button className="button primary" disabled={state === "submitting" || !config}>
           {state === "submitting" ? "Cadastrando..." : "Entrar na lista"}
         </button>
       </form>
     </section>
-    <section className="whatsapp-card">
+    <FeaturedCarousel />\n    <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       <a className="button primary" href={`${whatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
     </section>
@@ -135,30 +137,7 @@ function Landing() {
 }
 
 function Cardapio() {
-  return <Shell>
-    <section className="hero">
-      <div className="hero-copy">
-        <span className="eyebrow">CookLily · batidas de açaí</span>
-        <h1>Cremosidade, sabor e qualidade em cada garrafa.</h1>
-        <p>O cardápio online está sendo preparado. Os primeiros sabores confirmados são morango e maracujá; preços e disponibilidade só aparecem quando forem publicados pela operação.</p>
-        <div className="hero-actions">
-          <Link className="button primary" to="/">Entrar na lista</Link>
-          <a className="button ghost" href={whatsapp} target="_blank" rel="noreferrer">Falar no WhatsApp</a>
-        </div>
-      </div>
-      <div className="brand-showcase" aria-label="Identidade visual CookLily">
-        <div className="brand-orbit"><span className="brand-wordmark"><span>cook</span><em>Lily</em></span></div>
-        <div className="flavour-tags" aria-label="Primeiros sabores confirmados">
-          <span>Morango</span><span>Maracujá</span>
-        </div>
-      </div>
-    </section>
-    <section className="status-card" aria-labelledby="catalogo-status">
-      <span className="eyebrow">Cardápio digital</span>
-      <h2 id="catalogo-status">Catálogo em configuração</h2>
-      <p>As fotos reais de morango e maracujá já fazem parte do acervo CookLily. Preços, disponibilidade e adicionais continuarão ocultos até serem cadastrados e publicados pela operação.</p>
-    </section>
-  </Shell>;
+  return <Shell><CatalogPage /></Shell>;
 }
 
 function Cadastro() {
@@ -197,7 +176,7 @@ function Cadastro() {
   }
 
   return <Shell><section className="form-page">
-    <div className="form-copy"><span className="eyebrow">Conta CookLily</span><h1>Crie sua conta.</h1><p>Seu cadastro CookLily é separado do cadastro do Carro Chefe. Preferências opcionais não impedem o uso da loja.</p></div>
+    <div className="form-copy"><span className="eyebrow">Conta CookLily</span><h1>Crie sua conta.</h1><p>Crie sua conta para ter uma experiência mais rápida. Preferências opcionais não impedem o uso da loja.</p></div>
     <form className="auth-card" onSubmit={submit}>
       <label>Nome <span>opcional</span><input name="displayName" autoComplete="name" maxLength={80} /></label>
       <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
@@ -265,6 +244,9 @@ function App() {
     <Route path="/cadastro" element={<Cadastro />} />
     <Route path="/entrar" element={<Entrar />} />
     <Route path="/privacidade" element={<Privacidade />} />
+    <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
+    <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
+    <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></>;
 }
