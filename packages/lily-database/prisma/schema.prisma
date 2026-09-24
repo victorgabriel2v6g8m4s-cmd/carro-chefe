@@ -316,3 +316,17 @@ model LilyOffer {
   @@index([productId])
   @@index([variantId])
 }
+
+
+model LilyAdminAudit {
+  id          String   @id @default(cuid())
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String?
+  payloadJson String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId, createdAt])
+}
