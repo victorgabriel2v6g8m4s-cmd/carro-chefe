@@ -55,6 +55,7 @@ docs/
 │   ├── EXCEL_RECIPE_V3A.md
 │   ├── EXCEL_RECIPE_V3B.md
 │   ├── EXCEL_RECIPE_V3_PLAN.md
+│   ├── SOCIAL_GROWTH_ENGINE.md
 │   └── TOTEM_AUTOATENDIMENTO.md
 ├── operacao/
 │   ├── COMPRAS.md
@@ -73,7 +74,7 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Radar social de Campo Grande](./negocio/REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md), [Funil social de pré-lançamento](./negocio/FUNIL_SOCIAL_PRE_LANCAMENTO.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Social Growth Engine](./tecnologia/SOCIAL_GROWTH_ENGINE.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [Compras](./operacao/COMPRAS.md), [Operação e qualidade](./operacao/OPERACAO.md) |
 | **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 
