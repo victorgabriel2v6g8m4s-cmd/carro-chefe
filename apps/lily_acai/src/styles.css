@@ -236,3 +236,14 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .media-grid { grid-template-columns: repeat(2,1fr); }
   .compat-row { grid-template-columns: 1fr; }
 }
+
+.product-rules-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 4px 20px 22px; }
+.product-rules-admin h4 { margin: 12px 0 10px; }
+.admin-check-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px 12px; padding: 12px; border-radius: var(--cl-radius-sm); background: var(--cl-color-surface); }
+.tier-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.tier-grid label { display: grid; gap: 5px; font-size: 12px; font-weight: 800; }
+@media (max-width:760px) {
+  .product-rules-admin { grid-template-columns: 1fr; }
+  .admin-check-grid { grid-template-columns: 1fr; }
+  .tier-grid { grid-template-columns: 1fr 1fr; }
+}
