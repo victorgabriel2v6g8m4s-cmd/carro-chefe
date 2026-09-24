@@ -19,8 +19,8 @@
 |---|---|---|---|
 | LILY-PEND-001 | Logo | **resolvida:** raster oficial recebido | — |
 | LILY-PEND-002 | Tokens | **resolvida:** aprovados em 23/09/2026 | — |
-| LILY-PEND-003 | Landing | copy final de cupons/promoções | Entrega 04 |
-| LILY-PEND-004 | WhatsApp | confirmar P0 humano e futura automação | integração futura |
+| LILY-PEND-003 | Landing | **resolvida para P0:** copy neutra sem promessa de benefício específico | — |
+| LILY-PEND-004 | WhatsApp | **resolvida para P0:** acompanhamento humano por link; automação oficial permanece futura | — |
 | LILY-PEND-005 | Catálogo | produtos/sabores além dos dois iniciais | Entrega 05 |
 | LILY-PEND-006 | Preços | preço por produto/tamanho | catálogo |
 | LILY-PEND-007 | Adicionais | lista e preços | catálogo |
@@ -36,6 +36,6 @@
 | LILY-PEND-017 | Naming | **resolvida:** CookLily definitivo | — |
 | LILY-PEND-018 | Foto morango | **resolvida:** arquivo renomeado e hash verificado | — |
 | LILY-PEND-019 | Tipografia | **resolvida:** famílias oficiais Summer e Amsterdam Four informadas em 23/09/2026 | — |
-| LILY-PEND-020 | Fontes web | receber os arquivos licenciados de Summer e Amsterdam Four e confirmar permissão de uso/redistribuição web | necessário para renderização idêntica em todos os dispositivos; fallback já implementado |
+| LILY-PEND-020 | Fontes web | adiada pelo proprietário; receber arquivos/licença quando conveniente | não bloqueia Entregas 04–05; fallback implementado |
 
 Nunca preencher informação real ausente por suposição.
