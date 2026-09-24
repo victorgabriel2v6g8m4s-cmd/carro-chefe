@@ -1,314 +1,337 @@
 # Entrega 05 — Catálogo administrável, cardápio dinâmico e publicação
 
-**Status:** planejada com requisitos comerciais fechados  
-**Dependência:** Entrega 04 publicada e estável  
-**Fonte canônica de produto:** docs/lily-acai/produtos/CARDAPIO_INICIAL_DEFINITIVO.md
+**Status:** implementação técnica concluída e validada; deploy e QA visual pendentes  
+**Data da validação:** 24/09/2026  
+**Fonte canônica de produto:** `docs/lily-acai/produtos/CARDAPIO_INICIAL_DEFINITIVO.md`  
+**SHA técnico validado:** `9e9c2e194076aa5a8dd3262e73528ac3689c8896`
 
-## Objetivo
+## Resultado
 
-Transformar o cardápio definitivo em catálogo administrável sem editar código e permitir que publicação, disponibilidade, mídia, preços, ofertas, combinações e adicionais reflitam no cardápio sem rebuild.
+A Entrega 05 transformou o cardápio CookLily fechado em 24/09/2026 em um catálogo administrável, persistido no banco Lily e consumido pelo frontend sem depender de rebuild para alterar preço, disponibilidade, textos, sabores, adicionais, ofertas, combos ou mídia.
 
-Esta entrega não reabre decisões de naming, sabores, preços iniciais ou limites comerciais já aprovados.
+A entrega permanece isolada do banco transacional do Carro Chefe.
 
-## Escopo
+## Banco
 
-Inclui:
+Migration:
 
-- categorias e subcategorias;
-- Batidas de Açaí, LilyShakes e Doces “em breve”;
-- nome próprio + nome descritivo;
-- descrição, tags e busca;
-- variantes 300/500 ml;
-- preço regular e preço promocional;
-- margem projetada;
-- mídia/capa/galeria/placeholder;
-- disponibilidade e esgotado;
-- lead time opcional;
-- adicionais específicos por produto;
-- combinações LilyMix de até 3 sabores;
-- matriz de compatibilidade;
-- ofertas e combos;
-- Destaque da Semana;
-- painel staff;
-- API pública;
-- publicação.
+`packages/lily-database/prisma/migrations/20260924190000_lily_catalog/migration.sql`
 
-Carrinho, criação do pedido, entrega/retirada e pagamento permanecem tecnicamente nas Entregas 06–07, mas o catálogo deve expor contrato suficiente para o configurador de item e o lançamento comercial completo só ocorre com checkout online.
+Modelos adicionados:
 
-## Modelos
+- `LilyCategory`;
+- `LilyMediaAsset`;
+- `LilyProduct`;
+- `LilyProductVariant`;
+- `LilyFlavorComponent`;
+- `LilyFlavorCompatibility`;
+- `LilyProductFlavor`;
+- `LilyAddon`;
+- `LilyProductAddon`;
+- `LilyProductMedia`;
+- `LilyMixPriceTier`;
+- `LilyCombo`;
+- `LilyComboItem`;
+- `LilyOffer`;
+- `LilyAdminAudit`.
 
-### LilyCategory
-
-- id;
-- parentId opcional;
-- slug;
-- name;
-- description;
-- status;
-- sortOrder;
-- isComingSoon.
-
-### LilyProduct
-
-- id;
-- categoryId/subcategoryId;
-- slug;
-- displayName;
-- descriptiveName;
-- description;
-- tags;
-- status;
-- isAvailable;
-- featured;
-- weeklyHighlight;
-- coverMediaId;
-- sortOrder;
-- preparationLeadMinutes opcional.
-
-### LilyProductVariant
-
-- id;
-- productId;
-- sizeMl;
-- name;
-- priceCents;
-- compareAtPriceCents opcional;
-- costCents opcional;
-- projectedMarginBps opcional;
-- status;
-- isAvailable;
-- sortOrder.
-
-### LilyFlavorComponent
-
-Representa Café, Morango, Maracujá, Doce de Leite, Frutas Vermelhas, Oreo, Banana, Leite Condensado, Paçoca, Ovomaltine, Ninho, Creme de Ninho e Nutella.
-
-Campos mínimos:
-
-- id/slug;
-- name;
-- status;
-- priceModifier por tamanho;
-- defaultPortion por tamanho;
-- premium;
-- tags.
-
-### LilyFlavorCompatibility
-
-Par-a-par, editável pelo admin.
-
-Uma combinação de três sabores só é válida quando todos os pares internos forem compatíveis.
-
-Não criar cada permutação como SKU.
-
-### LilyAddon
-
-- nome;
-- preço;
-- porção 300;
-- porção 500;
-- status;
-- limite individual.
-
-### LilyProductAddon
-
-Relação produto/adicional com:
-
-- permitido;
-- limite específico;
-- preço opcional sobrescrito;
-- porção opcional sobrescrita.
-
-Limites canônicos iniciais:
-
-- 3 tipos diferentes;
-- 2 porções por adicional;
-- 4 porções totais;
-- produto que já contém Nutella aceita apenas 1 Nutella extra.
-
-### LilyOffer
-
-- produto/variante/combo;
-- regularPriceCents;
-- offerPriceCents;
-- savingsCents;
-- startsAt;
-- endsAt;
-- status;
-- campaignId opcional;
-- minProjectedMarginBps.
-
-Nenhuma oferta publica com margem líquida projetada abaixo de 10%.
-
-### LilyMediaAsset
-
-Mantém storageName, originalName, MIME, size, SHA-256, dimensões, alt text, placeholder e status.
-
-## Produtos iniciais
-
-### Batidas
-
-- Rosa da Lily;
-- Rosa Nutt;
-- Sol da Lily;
-- Sol Nutt;
-- Ninho Nutt.
-
-Preços e descrições: usar exclusivamente o documento canônico.
-
-### LilyShakes
-
-Cards simples dos sabores aprovados + LilyMix configurável.
-
-Preço da matriz:
-
-- 1 sabor: R$ 15 / R$ 22;
-- 2 sabores: R$ 18 / R$ 25;
-- 3 sabores: R$ 20 / R$ 28;
-- Nutella: + R$ 5.
-
-### Doces
-
-Categoria publicada como “em breve”, sem produtos compráveis.
+A migration também cadastra a estrutura inicial aprovada: categorias/subcategorias, Batidas, LilyShakes, LilyMix, sabores, matriz de compatibilidade, adicionais, preços e três combos iniciais.
 
 ## Catálogo público
 
-APIs mínimas:
+Implementado em `apps/api/src/modules/lily/catalog.ts`.
 
-GET /api/v1/lily/public/catalog  
-GET /api/v1/lily/public/products/:slug  
-GET /api/v1/lily/public/media/:id  
-GET /api/v1/lily/public/catalog/search  
+Rotas:
+
+```text
+GET  /api/v1/lily/public/catalog
+GET  /api/v1/lily/public/catalog/search
+GET  /api/v1/lily/public/products/:slug
+GET  /api/v1/lily/public/media/:id
 POST /api/v1/lily/public/configure-item
+```
 
-O configure-item valida tamanho, sabores, compatibilidade, adicionais, limites, preço e disponibilidade e devolve configuração determinística para o futuro carrinho.
+O catálogo suporta:
+
+- paginação incremental;
+- pesquisa tolerante a acentos;
+- categoria e subcategoria;
+- sabor;
+- tamanho;
+- ofertas;
+- disponibilidade/esgotado;
+- faixa de preço;
+- mídia/capa/galeria;
+- placeholder;
+- Destaque da Semana;
+- combos.
+
+Produto esgotado continua público, mas não comprável.
+
+## LilyMix
+
+O LilyMix não cria cada permutação como SKU.
+
+`configure-item` valida no servidor:
+
+- 1 a 3 sabores;
+- sabores sem repetição;
+- compatibilidade par-a-par;
+- tier de preço por quantidade de sabores e tamanho;
+- modificador premium, incluindo Nutella;
+- adicionais permitidos para o produto;
+- compatibilidade adicional × sabores;
+- máximo de 3 tipos de adicional;
+- máximo de 2 porções por adicional, salvo override;
+- máximo de 4 porções adicionais no item.
+
+A configuração recebe hash determinístico para reutilização pela Entrega 06.
+
+## Preços e ofertas
+
+Preços iniciais do documento canônico foram persistidos.
+
+Ofertas possuem:
+
+- preço regular;
+- preço promocional;
+- economia absoluta;
+- vigência;
+- campanha opcional;
+- piso de margem.
+
+Quando uma oferta publicada e vigente corresponde à variante/configuração, o configurador público devolve o preço promocional.
+
+Variante com margem projetada conhecida abaixo de 10% não pode ser publicada. Oferta vinculada a variante com custo conhecido também é bloqueada se projetar margem abaixo do piso de 10%.
 
 ## Admin
 
-Além do CRUD já previsto, precisa editar:
+Rotas administrativas:
 
-- subcategorias;
-- sabores;
-- matriz de compatibilidade;
-- porções;
-- adicionais por produto;
-- limites;
-- preço regular/oferta;
-- margem;
-- combos;
-- Destaque da Semana;
-- estado “em breve”;
-- lead time;
-- placeholder e galeria.
+```text
+GET   /api/v1/lily/admin/catalog
+POST  /api/v1/lily/admin/categories
+PATCH /api/v1/lily/admin/categories/:id
+POST  /api/v1/lily/admin/products
+PATCH /api/v1/lily/admin/products/:id
+PUT   /api/v1/lily/admin/products/:id/flavors
+PUT   /api/v1/lily/admin/products/:id/addons
+PUT   /api/v1/lily/admin/products/:id/mix-tiers
+POST  /api/v1/lily/admin/variants
+PATCH /api/v1/lily/admin/variants/:id
+POST  /api/v1/lily/admin/flavors
+PATCH /api/v1/lily/admin/flavors/:id
+PUT   /api/v1/lily/admin/compatibilities
+POST  /api/v1/lily/admin/addons
+PATCH /api/v1/lily/admin/addons/:id
+POST  /api/v1/lily/admin/combos
+PATCH /api/v1/lily/admin/combos/:id
+POST  /api/v1/lily/admin/offers
+PATCH /api/v1/lily/admin/offers/:id
+POST  /api/v1/lily/admin/media
+PATCH /api/v1/lily/admin/media/:id
+```
 
-Rotas administrativas continuam exigindo sessão Lily, staff, CSRF, Zod, rate limit e auditoria.
+Proteções:
 
-## UX do cardápio
+- sessão CookLily;
+- papel `staff` ou `admin`;
+- CSRF nas mutações;
+- Zod;
+- rate limit global existente;
+- auditoria em `LilyAdminAudit`.
 
-- rolagem infinita/paginação incremental;
-- imagem como maior elemento do card;
-- nome próprio em destaque;
-- nome descritivo minimalista;
-- descrição secundária;
-- busca tolerante a acentos;
-- filtros por categoria, subcategoria, sabor, Simples/Com Nutella/Duo/Trio, tamanho, oferta, preço e disponibilidade;
-- imagem/mídia em tela cheia;
-- placeholder CookLily quando faltar foto;
-- esgotado permanece visível com contraste reduzido e compra bloqueada.
-
-Landing exibe apenas Destaques, Produto da Semana, combos e ofertas em carrossel automático com controles acessíveis.
-
-## Ofertas e combos iniciais
-
-- Dupla Lily: 2 LilyShakes simples 500 ml por R$ 40;
-- Trio Lily: 3 LilyShakes simples 300 ml por R$ 40;
-- Dupla Açaí: 2 Batidas simples 500 ml por R$ 48.
-
-Etiqueta mostra economia absoluta em reais.
-
-## Regras de publicação
-
-Produto comprável exige:
-
-1. categoria publicada;
-2. produto publicado;
-3. disponibilidade;
-4. variante publicada/disponível;
-5. preço válido;
-6. mídia válida ou placeholder autorizado;
-7. adicionais/combinações consistentes;
-8. margem >= 10% quando houver custo calculável.
-
-Produto esgotado pode continuar público, mas não comprável.
+Foi corrigido durante a validação um caso importante: PATCHes administrativos agora preservam campos ausentes e alteram somente propriedades realmente enviadas, evitando que defaults de schemas de criação mudem silenciosamente o status de um produto.
 
 ## Mídia
 
-Produção: /srv/carro-chefe/data/lily-acai/uploads/  
-Dev: .runtime/lily-acai/uploads/
+Upload administrativo aceita:
 
-Fotos existentes de morango e maracujá estão aprovadas. Café e demais sabores usam placeholder até upload oficial.
+- JPEG;
+- PNG;
+- WebP;
+- até 10 MB.
 
-Fotos do cardápio mostram apenas o produto; não é necessário ter foto separada por tamanho.
+O backend:
 
-## Tracking
+- gera nome aleatório;
+- calcula SHA-256;
+- não usa o nome fornecido pelo cliente como path físico;
+- mantém mídia fora do Git;
+- serve o arquivo por ID.
 
-Preservar la_* e aliases cc_*.
+Diretórios:
 
-Eventos digitais devem distinguir:
+- produção: `/srv/carro-chefe/data/lily-acai/uploads/`;
+- desenvolvimento: `.runtime/lily-acai/uploads/`.
+
+## Frontend público
+
+`/lilyacai/cardapio` agora possui catálogo real.
+
+Implementado:
+
+- cards image-first;
+- nome próprio em destaque;
+- descritor minimalista;
+- busca;
+- filtros;
+- rolagem incremental;
+- combos;
+- selo de oferta;
+- preço promocional;
+- esgotado com menor contraste;
+- modal de configuração;
+- LilyMix;
+- adicionais;
+- mídia fullscreen;
+- placeholder para produtos ainda sem foto.
+
+A landing não renderiza o cardápio completo. Ela recebeu carrossel automático de produtos destacados/ofertas, com controles manuais e pausa na interação.
+
+## Painel
+
+Rotas:
+
+```text
+/lilyacai/painel
+/lilyacai/painel/cardapio
+/lilyacai/painel/midias
+```
+
+O painel permite administrar:
 
 - produto;
-- variante/tamanho;
-- combinação de sabores;
+- nome próprio/descritivo;
+- descrição;
+- categoria;
+- status;
+- disponibilidade;
+- ordem;
+- destaque;
+- Produto da Semana;
+- capa;
+- variantes;
+- preços;
+- sabores por produto;
+- adicionais por produto;
+- tiers do LilyMix;
+- categorias/subcategorias;
+- sabores;
+- matriz de compatibilidade;
 - adicionais;
-- oferta/combo;
-- campanha;
-- origem;
-- superfície;
-- futura conversão/pedido.
+- combos;
+- ofertas;
+- upload de mídia.
 
-Nunca colocar PII em URL de tracking.
+## Nginx
 
-## Testes obrigatórios
+O template `deploy/nginx/carrochefe.com.conf.example` foi preparado para liberar explicitamente:
 
-- customer 403 no admin;
-- sem sessão 401;
-- staff funciona;
-- sem CSRF 403;
-- busca/filtros determinísticos;
-- subcategoria funciona;
-- esgotado permanece visível e não comprável;
-- preço por tamanho correto;
-- oferta calcula savings corretamente;
-- margem <10% bloqueia publicação de preço/oferta;
-- limite de adicionais;
-- Nutella extra respeita limite;
-- pares incompatíveis são rejeitados;
-- trio com qualquer par incompatível é rejeitado;
-- LilyMix não cria duplicidade por ordem de sabores;
-- placeholder funciona;
-- mídia fullscreen;
-- Destaque da Semana tem vigência;
-- upload inválido/path traversal rejeitados.
+```text
+/api/v1/lily/public/
+/api/v1/lily/auth/
+/api/v1/lily/admin/
+```
 
-Regressão:
+O restante de `/api/` continua bloqueado no proxy público e `/gestao` permanece inacessível.
 
-npm run policy:check  
-npm run db:deploy  
-npm run check  
-npm test  
-npm run build  
-npm run tools:status:check
+A autorização real de admin continua no Fastify; Nginx não substitui sessão/papel/CSRF.
 
-CI em Node 20 e 24.
+## Testes adicionados
 
-## Publicação
+`apps/api/src/modules/lily/catalog.test.ts` cobre, entre outros:
 
-Seguir docs/lily-acai/DEPLOY_VPS.md.
+- catálogo público;
+- categorias e LilyMix;
+- busca sem acento;
+- combinação LilyMix válida;
+- combinação incompatível;
+- limite total de adicionais;
+- customer recebe 403 no admin;
+- staff sem CSRF recebe 403;
+- staff autorizado altera disponibilidade;
+- produto esgotado continua público;
+- auditoria de mutação;
+- publicação com margem abaixo de 10% bloqueada;
+- oferta administrativa publicada altera o preço do configurador público.
 
-O smoke da Entrega 05 deve provar que editar preço, disponibilidade, mídia, oferta, adicional ou compatibilidade no painel altera o cardápio sem editar código/rebuild.
+## Evidências executadas
 
-## Próximo escopo
+SHA validado:
 
-Entrega 06 implementa carrinho, endereço, entrega/retirada e criação de pedido usando o configurador desta entrega. Entrega 07 fecha checkout/pagamento.
+`9e9c2e194076aa5a8dd3262e73528ac3689c8896`
 
-O lançamento comercial completo exige checkout online; portanto Entregas 05–07 formam a sequência mínima para venda digital completa.
+CI:
+
+https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36071488950
+
+Resultado: **success**.
+
+- Quality Node 20: success;
+- Quality Node 24: success;
+- 20 arquivos de teste aprovados;
+- 94 testes aprovados em Node 20;
+- 94 testes aprovados em Node 24;
+- produção/build Lily: success;
+- Workbook Snapshot: success;
+- Excel Recipe Linux: success;
+- Excel Recipe Windows: success;
+- Tool Health: success;
+- Windows Supervisor: success.
+
+CodeQL:
+
+https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36071488899
+
+Resultado: **success**.
+
+PR temporário de validação:
+
+https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/64
+
+O PR existe somente para disparar os gates. A branch `lily-acai` não deve ser mergeada integralmente em `main`.
+
+## Não executado
+
+A conclusão técnica desta entrega **não significa publicação em produção**.
+
+Ainda não foram executados nesta entrega:
+
+- deploy do SHA na VPS;
+- migration contra o banco Lily real da VPS;
+- criação/homologação da primeira conta staff de produção;
+- aplicação real do novo template Nginx;
+- `nginx -t` na VPS;
+- restart do serviço;
+- smoke externo HTTPS;
+- upload real de mídia em produção;
+- QA visual manual em dispositivos móveis/desktop;
+- sincronização financeira final do workbook com todas as novas decisões do cardápio.
+
+## Gate de publicação
+
+Quando houver autorização de deploy:
+
+1. backup de `lily-acai.db`, se existir;
+2. deploy por SHA imutável;
+3. `npm run db:deploy:lily`;
+4. preparar `/srv/carro-chefe/data/lily-acai/uploads/`;
+5. aplicar/revisar Nginx;
+6. `nginx -t`;
+7. restart controlado;
+8. criar/homologar staff;
+9. smoke de catálogo;
+10. validar alteração de preço/disponibilidade pelo painel;
+11. validar mídia;
+12. validar LilyMix;
+13. QA visual mobile/desktop;
+14. rollback se algum gate crítico falhar.
+
+## Próxima entrega
+
+**Entrega 06 — carrinho, endereço, entrega/retirada e criação de pedido.**
+
+Ela deve consumir o `configurationHash` e os preços validados pela Entrega 05, sem confiar em valores calculados apenas pelo navegador.
+
+A Entrega 07 fechará pagamento/reconciliação.
