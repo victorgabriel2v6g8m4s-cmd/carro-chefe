@@ -103,7 +103,9 @@ A migração só deve ser aplicada em produção depois de backup do banco Lily.
 - preflight frontend/API/database: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36012876471 — **success**;
 - primeira rodada de CI no commit `6d01a6d5e47c88ab846e0bf281cba62c09508724`: detectou uma expectativa incorreta do teste de telefone inválido; a implementação estava rejeitando corretamente e o teste foi corrigido;
 - CodeQL após a correção: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36013416649 — **success**;
-- CI final do head limpo será registrado após a remoção dos artefatos temporários de preflight.
+- CI final do SHA `421075fb1ac54a230238acab77b7c794826d4f77`: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36014196804 — **success** em Node 20 e Node 24, incluindo migrations de teste, checks, testes e builds;
+- CodeQL do mesmo SHA: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36014196823 — **success**;
+- PR temporário #60: fechado sem merge; nenhum deploy executado.
 
 ## Não executado
 
@@ -124,3 +126,14 @@ Nenhum deploy foi executado. A publicação exige autorização explícita para 
 **Entrega 05 — catálogo, mídia, painel administrativo e cardápio dinâmico.**
 
 A sequência aprovada prevê primeiro publicar e estabilizar esta landing antes da publicação da Entrega 05.
+
+
+## Candidato de publicação
+
+O SHA técnico validado para a primeira publicação é:
+
+`421075fb1ac54a230238acab77b7c794826d4f77`
+
+Esse SHA inclui a landing, migration de leads, tracking compatível, Nginx template P0, atualização de privacidade e remoção dos artefatos temporários de preflight.
+
+A branch pode conter commits documentais posteriores; para a publicação da Entrega 04 usar explicitamente o SHA acima, salvo nova validação de outro SHA.
