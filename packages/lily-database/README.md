@@ -1,29 +1,30 @@
-# Persistência CookLily
+# Banco CookLily
 
-Banco transacional dedicado à operação temporária CookLily.
+Pacote Prisma/SQLite independente da operação CookLily.
 
-## Regra central
+## Isolamento
 
-Este pacote não substitui, estende nem compartilha tabelas com `packages/database`.
+- variável: `LILY_DATABASE_URL`;
+- produção planejada: `file:/srv/carro-chefe/data/lily-acai.db`;
+- sem FK/view para o banco Carro Chefe.
 
-Datasource local padrão:
-
-```text
-file:./.runtime/lily-acai.db
-```
-
-Em produção, usar caminho persistente independente, por exemplo:
-
-```text
-file:/srv/carro-chefe/data/lily-acai.db
-```
-
-## Entrega 2
-
-Schema e primeira migration implementam:
+## Modelos atuais
 
 - `LilyUser`;
 - `LilySession`;
-- `LilyConsentRecord`.
+- `LilyConsentRecord`;
+- `LilyMarketingLead`.
 
-Tokens de sessão ficam somente em hash; senhas ficam somente em hash; consentimentos são registros versionados por finalidade. Não existem relações com o schema do Carro Chefe.
+`LilyMarketingLead` guarda telefone normalizado, consentimento/versionamento e atribuição canônica `la*`. Não exige uma conta CookLily.
+
+## Comandos
+
+```bash
+npm run db:generate:lily
+npm run db:validate:lily
+npm run db:migrate:lily
+npm run db:deploy:lily
+npm run db:studio:lily
+```
+
+Nunca executar reset ou seed de desenvolvimento no banco de produção.
