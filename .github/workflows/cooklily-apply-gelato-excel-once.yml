@@ -18,6 +18,8 @@ jobs:
         with:
           ref: lily-acai
           fetch-depth: 0
+      - name: Install snapshot dependencies
+        run: python -m pip install -r tools/excel_snapshot/requirements.txt
       - name: Policy preflight
         run: npm run policy:preflight -- --agent AG-FINANCAS --scope anexos/financeiro
       - name: Validate recipe
