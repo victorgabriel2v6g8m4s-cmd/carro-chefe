@@ -6,8 +6,8 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 |---|---|---|
 | 01 | Fundação, isolamento e governança | concluída |
 | 02 | Scaffold, banco base, autenticação e consentimentos | concluída |
-| 03 | Logo oficial, kit de marca e rebranding integral | planejada |
-| 04 | Landing, leads, WhatsApp e primeira publicação | planejada |
+| 03 | Logo oficial, kit de marca e rebranding integral | implementação técnica concluída; QA visual pendente |
+| 04 | Landing, leads, WhatsApp e primeira publicação | implementação concluída; deploy pendente |
 | 05 | Catálogo, mídia, admin, cardápio dinâmico e publicação | planejada |
 | 06 | Carrinho, endereço e criação de pedido | não iniciada |
 | 07 | Pagamento e reconciliação | não iniciada |
