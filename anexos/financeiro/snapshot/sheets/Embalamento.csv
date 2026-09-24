@@ -42,65 +42,29 @@ INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[i
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
 ,2111,CookLily - Milk-shake de Gelato Caseiro Café 300ml,Lily - Sacola plástica,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2112,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,Lily - Garrafa 500ml,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2112,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,Lily - Canudo,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2112,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,Lily - Sacola plástica,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2113,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,CookLily - Garrafa 300ml (custo provisório conforme açaí),1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2113,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,Lily - Canudo,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2113,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,Lily - Sacola plástica,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2114,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,Lily - Garrafa 500ml,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2114,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,Lily - Canudo,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2114,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,Lily - Sacola plástica,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2115,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,CookLily - Garrafa 300ml (custo provisório conforme açaí),1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2115,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,Lily - Canudo,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
-,"=IFERROR(
-INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),
-""""
-)",,,,"=IFERROR(
+,2115,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,Lily - Sacola plástica,1,"=IFERROR(
 INDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), """")","=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], """")"
 ,"=IFERROR(
 INDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),

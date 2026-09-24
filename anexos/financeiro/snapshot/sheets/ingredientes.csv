@@ -624,12 +624,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Base do Milk-shake de Gelato Caseiro,390,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -644,12 +644,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Mistura de Nutella,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -664,12 +664,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Morango in natura 295g,60,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -684,12 +684,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Base do Milk-shake de Gelato Caseiro,234,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -704,12 +704,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Mistura de Nutella,30,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -724,12 +724,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Morango 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Morango in natura 295g,36,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -744,12 +744,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Base do Milk-shake de Gelato Caseiro,390,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -764,12 +764,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Mistura de Nutella,50,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -784,12 +784,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Maracujá in natura 1kg,60,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -804,12 +804,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Base do Milk-shake de Gelato Caseiro,234,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -824,12 +824,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Mistura de Nutella,30,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),
@@ -844,12 +844,12 @@ IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"","""
         """"
     )
 )",,,,,,,,,,,,,,,,,
-,,,"=IFERROR(
+,,CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml,"=IFERROR(
 INDEX(insumos[ID],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 INDEX(CaProdutos[ID],MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)),
 """"
-))",,,"=IFERROR(
+))",CookLily - Maracujá in natura 1kg,36,"=IFERROR(
 INDEX(insumos[medida],MATCH(Ingredientes[[#This Row],[item]],insumos[item],0)),
 IFERROR(
 IF(MATCH(Ingredientes[[#This Row],[item]],CaProdutos[Item],0)>0,""Unidades"",""""),

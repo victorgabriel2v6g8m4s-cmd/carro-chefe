@@ -1,5 +1,5 @@
 {
-  "count": 5812,
+  "count": 5796,
   "formulas": [
     {
       "cached_value": 2.8368055555555554,
@@ -7227,12 +7227,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B33",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F33",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7241,12 +7235,6 @@
       "cached_value": null,
       "cell": "G33",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B34",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -7263,12 +7251,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B35",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F35",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7277,12 +7259,6 @@
       "cached_value": null,
       "cell": "G35",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B36",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -7299,12 +7275,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B37",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F37",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7313,12 +7283,6 @@
       "cached_value": null,
       "cell": "G37",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B38",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -7335,12 +7299,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B39",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F39",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7349,12 +7307,6 @@
       "cached_value": null,
       "cell": "G39",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B40",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -7371,12 +7323,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B41",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F41",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7385,12 +7331,6 @@
       "cached_value": null,
       "cell": "G41",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B42",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -7407,12 +7347,6 @@
     },
     {
       "cached_value": null,
-      "cell": "B43",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
       "cell": "F43",
       "formula": "=IFERROR(\nINDEX(Embalagens[medida],MATCH(Embalamento[[#This Row],[Embalagem]],Embalagens[item],0)), \"\")",
       "sheet": "Embalamento"
@@ -7421,12 +7355,6 @@
       "cached_value": null,
       "cell": "G43",
       "formula": "=IFERROR(INDEX(Embalagens[preço], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) / INDEX(Embalagens[quantidade], MATCH(Embalamento[[#This Row],[Embalagem]], Embalagens[item], 0)) * Embalamento[[#This Row],[Quantidade]], \"\")",
-      "sheet": "Embalamento"
-    },
-    {
-      "cached_value": null,
-      "cell": "B44",
-      "formula": "=IFERROR(\nINDEX(CaProdutos[ID],MATCH(Embalamento[[#This Row],[Produto]],CaProdutos[Item],0)),\n\"\"\n)",
       "sheet": "Embalamento"
     },
     {
@@ -19490,12 +19418,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I38",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B39",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19529,12 +19451,6 @@
       "cached_value": null,
       "cell": "H39",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I39",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
@@ -19574,12 +19490,6 @@
       "sheet": "Precificação"
     },
     {
-      "cached_value": "#N/A",
-      "cell": "I40",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
       "cached_value": 0,
       "cell": "B41",
       "formula": "=CaProdutos[[#This Row],[ID]]",
@@ -19613,12 +19523,6 @@
       "cached_value": null,
       "cell": "H41",
       "formula": "=IFERROR(Precificação[[#This Row],[Lucro Bruto]] - INDEX(ConfPrec[Rateio de Custos Fixos], 1), \"\")",
-      "sheet": "Precificação"
-    },
-    {
-      "cached_value": "#N/A",
-      "cell": "I41",
-      "formula": "=IF(Precificação[[#This Row],[Item]] <> \"\", INDEX(ConfPrec[C.F nos custos totais?], 1), \"\")",
       "sheet": "Precificação"
     },
     {
