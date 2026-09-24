@@ -423,3 +423,16 @@ INSERT INTO "LilyCombo" ("id","slug","name","description","rulesJson","regularPr
 ('combo-dupla-lily','dupla-lily','Dupla Lily','2 LilyShakes simples de 500 ml.','{"quantity":2,"category":"lilyshakes","subtype":"simple","sizeMl":500,"flavorCount":1}',4400,4000,400,'published',true,10,CURRENT_TIMESTAMP),
 ('combo-trio-lily','trio-lily','Trio Lily','3 LilyShakes simples de 300 ml.','{"quantity":3,"category":"lilyshakes","subtype":"simple","sizeMl":300,"flavorCount":1}',4500,4000,500,'published',true,20,CURRENT_TIMESTAMP),
 ('combo-dupla-acai','dupla-acai','Dupla Açaí','2 Batidas simples de 500 ml.','{"quantity":2,"category":"batidas-de-acai","subtype":"simple","sizeMl":500}',5000,4800,200,'published',true,30,CURRENT_TIMESTAMP);
+
+CREATE TABLE "LilyAdminAudit" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "actorUserId" TEXT NOT NULL,
+  "action" TEXT NOT NULL,
+  "entityType" TEXT NOT NULL,
+  "entityId" TEXT,
+  "payloadJson" TEXT,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX "LilyAdminAudit_actorUserId_createdAt_idx" ON "LilyAdminAudit"("actorUserId","createdAt");
+CREATE INDEX "LilyAdminAudit_entityType_entityId_createdAt_idx" ON "LilyAdminAudit"("entityType","entityId","createdAt");
+
