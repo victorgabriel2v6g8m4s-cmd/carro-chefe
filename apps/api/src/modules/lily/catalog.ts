@@ -458,6 +458,17 @@ function patchObject<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(Object.entries(value).filter(([, current]) => current !== undefined));
 }
 
+function patchFromRequest<T extends Record<string, unknown>>(parsed: T, raw: unknown) {
+  const keys = new Set(
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? Object.keys(raw as Record<string, unknown>)
+      : []
+  );
+  return Object.fromEntries(
+    Object.entries(parsed).filter(([key, current]) => keys.has(key) && current !== undefined)
+  ) as Partial<T>;
+}
+
 async function projectedMarginForOffer(input: { variantId?: string | null; offerPriceCents: number }) {
   if (!input.variantId) return null;
   const variant = await lilyPrisma.lilyProductVariant.findUnique({ where: { id: input.variantId } });
@@ -627,7 +638,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/categories/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = categoryCreateSchema.partial().parse(request.body);
+    const parsed = categoryCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const updated = await lilyPrisma.lilyCategory.update({ where: { id }, data: patchObject(input) });
     await audit(context.user.id, "update", "category", id, input);
     return updated;
@@ -647,7 +659,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/products/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = productCreateSchema.partial().parse(request.body);
+    const parsed = productCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const { tags, ...rest } = input;
     const updated = await lilyPrisma.lilyProduct.update({
       where: { id },
@@ -723,7 +736,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/variants/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = variantCreateSchema.partial().omit({ productId: true }).parse(request.body);
+    const parsed = variantCreateSchema.partial().omit({ productId: true }).parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const current = await lilyPrisma.lilyProductVariant.findUnique({ where: { id } });
     if (!current) throw new ApiError(404, "Variante não encontrada.");
     assertMarginForPublish(input.status ?? current.status, input.projectedMarginBps ?? current.projectedMarginBps);
@@ -744,7 +758,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/flavors/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = flavorCreateSchema.partial().parse(request.body);
+    const parsed = flavorCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const { tags, ...rest } = input;
     const updated = await lilyPrisma.lilyFlavorComponent.update({
       where: { id },
@@ -791,7 +806,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/addons/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = addonCreateSchema.partial().parse(request.body);
+    const parsed = addonCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const updated = await lilyPrisma.lilyAddon.update({ where: { id }, data: patchObject(input) });
     await audit(context.user.id, "update", "addon", id, input);
     return updated;
@@ -812,7 +828,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/combos/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = comboCreateSchema.partial().parse(request.body);
+    const parsed = comboCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const current = await lilyPrisma.lilyCombo.findUnique({ where: { id } });
     if (!current) throw new ApiError(404, "Combo não encontrado.");
     const regular = input.regularPriceCents ?? current.regularPriceCents;
@@ -846,7 +863,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/offers/:id", async (request) => {
     const context = await requireStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
-    const input = offerCreateSchema.partial().parse(request.body);
+    const parsed = offerCreateSchema.partial().parse(request.body);
+    const input = patchFromRequest(parsed, request.body);
     const current = await lilyPrisma.lilyOffer.findUnique({ where: { id } });
     if (!current) throw new ApiError(404, "Oferta não encontrada.");
     const merged = {
