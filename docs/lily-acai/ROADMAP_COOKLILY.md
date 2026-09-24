@@ -52,7 +52,9 @@ Fechado em 24/09/2026:
 
 ## Entrega 05 — catálogo/admin
 
-Implementar fielmente o cardápio canônico:
+**Status:** implementação técnica concluída e validada; deploy/QA visual pendentes.
+
+Implementado fielmente ao cardápio canônico:
 
 - categorias/subcategorias;
 - produtos/variantes;
@@ -68,7 +70,11 @@ Implementar fielmente o cardápio canônico:
 - Destaque da Semana;
 - admin completo.
 
+Validação técnica da Entrega 05: SHA `9e9c2e194076aa5a8dd3262e73528ac3689c8896`, CI Node 20/24 e CodeQL aprovados.
+
 ## Entrega 06 — carrinho, endereço e pedido
+
+**Status:** próxima entrega.
 
 - montar pedido com configuração vinda da Entrega 05;
 - observações;
