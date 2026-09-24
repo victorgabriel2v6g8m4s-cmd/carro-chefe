@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { COOKLILY_ATTRIBUTION_PARAMS, normalizeLilyAttribution } from "./attribution";\nimport { lilyCatalogRoutes } from "./catalog";
+import { COOKLILY_ATTRIBUTION_PARAMS, normalizeLilyAttribution } from "./attribution";
+import { lilyCatalogRoutes } from "./catalog";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -272,4 +273,6 @@ export async function lilyRoutes(app: FastifyInstance) {
     clearLilySessionCookie(request, reply);
     return reply.code(204).send();
   });
-}\n\n  await app.register(lilyCatalogRoutes);
+
+  await app.register(lilyCatalogRoutes);
+}
