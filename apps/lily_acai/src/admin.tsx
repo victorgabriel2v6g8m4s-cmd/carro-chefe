@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getLilyAdminCatalog, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
 
 function moneyInput(cents: number | null | undefined) {
@@ -38,7 +38,7 @@ function useAdminData() {
   return { session, data, error, loading, refresh, setError };
 }
 
-function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => React.ReactNode }) {
+function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => ReactNode }) {
   const state = useAdminData();
   if (state.loading) return <section className="admin-state"><h1>Carregando painel...</h1></section>;
   if (!state.session || !state.data) return <section className="admin-state">
