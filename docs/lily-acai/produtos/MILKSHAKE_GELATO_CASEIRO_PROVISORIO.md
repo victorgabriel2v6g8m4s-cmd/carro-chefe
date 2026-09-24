@@ -12,7 +12,16 @@
 | 2110 | CookLily - Milk-shake de Gelato Caseiro Café 500ml | produto vendável provisório |
 | 2111 | CookLily - Milk-shake de Gelato Caseiro Café 300ml | produto vendável provisório |
 
-Sabores de fruta são uma regra de formulação, ainda não produtos publicáveis, porque faltam nome do sabor/custo da fruta.
+Também passam a existir quatro variantes provisórias:
+
+| ID | Variante |
+| ---: | --- |
+| 2112 | Morango 500 ml |
+| 2113 | Morango 300 ml |
+| 2114 | Maracujá 500 ml |
+| 2115 | Maracujá 300 ml |
+
+Os sabores estão definidos e custeados, mas continuam não publicáveis enquanto faltarem nome comercial definitivo, preço final, mídia e homologação operacional.
 
 ## Ficha técnica — base
 
@@ -63,13 +72,45 @@ Como rendimento está em ml e uso em g, a primeira versão usa 1 g ≈ 1 ml para
 - preço calculado pelo modelo financeiro atual: aproximadamente R$ 10,10;
 - preço definitivo: pendente.
 
-## Regra para sabor de fruta
+## Fichas técnicas — sabores de fruta
 
-500 ml: 390 ml de base + 50 g de mistura de Nutella + 60 g de fruta.
+### Morango 500 ml — ID 2112
 
-300 ml: 234 ml de base + 30 g de mistura de Nutella + 36 g de fruta.
+- base: 390 ml;
+- mistura de Nutella: 50 g;
+- morango: 60 g;
+- custo do morango: aproximadamente R$ 2,03;
+- custo total modelado: aproximadamente **R$ 11,70**;
+- preço calculado pelo modelo: aproximadamente **R$ 16,71**.
 
-O custo do produto depende do preço/kg da fruta; por isso variantes de fruta ficam bloqueadas para precificação/publicação.
+### Morango 300 ml — ID 2113
+
+- base: 234 ml;
+- mistura de Nutella: 30 g;
+- morango: 36 g;
+- custo do morango: aproximadamente R$ 1,22;
+- custo total modelado: aproximadamente **R$ 7,60**;
+- preço calculado pelo modelo: aproximadamente **R$ 10,86**.
+
+### Maracujá 500 ml — ID 2114
+
+- base: 390 ml;
+- mistura de Nutella: 50 g;
+- maracujá: 60 g;
+- custo do maracujá: R$ 0,90;
+- custo total modelado: aproximadamente **R$ 10,14**;
+- preço calculado pelo modelo: aproximadamente **R$ 14,48**.
+
+### Maracujá 300 ml — ID 2115
+
+- base: 234 ml;
+- mistura de Nutella: 30 g;
+- maracujá: 36 g;
+- custo do maracujá: R$ 0,54;
+- custo total modelado: aproximadamente **R$ 6,66**;
+- preço calculado pelo modelo: aproximadamente **R$ 9,52**.
+
+Custos de compra usados: morango R$ 10,00/295 g e maracujá R$ 15,00/kg.
 
 ## Estoque e consumo
 
@@ -85,7 +126,6 @@ Ainda não há ficha de rótulos consolidada. A composição contém derivados d
 - pesagem do Emustab;
 - densidade da mistura de Nutella;
 - custo/embalagem de 300 ml;
-- sabores de fruta e respectivos custos;
 - processo de preparo padronizado;
 - rendimento real pós-processamento;
 - tempo de preparo;

@@ -105,25 +105,40 @@ Configuração vigente do workbook:
 
 Esses valores não são preços finais de venda. O campo `Preço Definitivo` permanece vazio até decisão comercial.
 
-## Sabores de fruta — fórmula pendente de custo
+## Sabores de fruta — custos confirmados
 
-Se `P` for o custo da fruta em R$/kg:
+Custos informados pelo proprietário em 24/09/2026:
 
-- 500 ml: custo total modelado = **R$ 8,90072 + 0,08253095 × P**; preço calculado = **R$ 12,71531 + 0,11790136 × P**;
-- 300 ml: custo total modelado = **R$ 5,92043 + 0,04951857 × P**; preço calculado = **R$ 8,45776 + 0,07074081 × P**.
+- morango: **R$ 10,00 por 295 g** = **R$ 33,8983/kg**;
+- maracujá: **R$ 15,00/kg**.
 
-Nenhum sabor de fruta é lançado como produto precificado enquanto o custo/kg e o sabor real não forem informados.
+Custo de fruta por produto:
+
+| Sabor | 500 ml | 300 ml |
+| --- | ---: | ---: |
+| Morango | 60 g = **R$ 2,03** | 36 g = **R$ 1,22** |
+| Maracujá | 60 g = **R$ 0,90** | 36 g = **R$ 0,54** |
+
+Precificação resultante pelo mesmo modelo financeiro:
+
+| Produto provisório | Ingredientes diretos | Embalamento | Custo total modelado | Preço calculado |
+| --- | ---: | ---: | ---: | ---: |
+| Morango 500 ml | **R$ 7,45** | R$ 1,45 | **R$ 11,70** | **R$ 16,71** |
+| Morango 300 ml | **R$ 4,47** | R$ 1,45 | **R$ 7,60** | **R$ 10,86** |
+| Maracujá 500 ml | **R$ 6,32** | R$ 1,45 | **R$ 10,14** | **R$ 14,48** |
+| Maracujá 300 ml | **R$ 3,79** | R$ 1,45 | **R$ 6,66** | **R$ 9,52** |
+
+Os valores de “Preço calculado” continuam sendo saída do modelo vigente, não preço comercial aprovado. `Preço Definitivo` permanece vazio.
 
 ## Pendências de validação
 
 1. pesar as duas colherzinhas de Emustab;
 2. pesar/medir o lote final da mistura de Nutella para obter densidade real;
 3. confirmar embalagem e custo específicos de 300 ml;
-4. informar frutas efetivamente usadas e custo/kg;
-5. medir rendimento real após processamento;
-6. definir nome comercial definitivo;
-7. definir processo, tempo, temperatura, armazenamento/validade;
-8. validar alergênicos pelos rótulos dos insumos usados no lote real.
+4. medir rendimento real após processamento;
+5. definir nome comercial definitivo;
+6. definir processo, tempo, temperatura, armazenamento/validade;
+7. validar alergênicos pelos rótulos dos insumos usados no lote real.
 
 ## Rastreabilidade
 

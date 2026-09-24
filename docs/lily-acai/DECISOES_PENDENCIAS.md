@@ -42,7 +42,7 @@ Nunca preencher informação real ausente por suposição.
 
 | LILY-PEND-021 | Produto gelato | definir nome comercial definitivo do “Milk-shake de Gelato Caseiro” | bloqueia nome público, não bloqueia ficha provisória |
 | LILY-PEND-022 | Receita gelato | pesar 2 colherzinhas de café de Emustab; custeio usa 5 g provisórios | afeta CMV |
-| LILY-PEND-023 | Frutas gelato | informar sabores e custo real por kg | bloqueia precificação/publicação dos sabores de fruta |
+| LILY-PEND-023 | Frutas gelato | **resolvida:** morango R$ 10/295 g e maracujá R$ 15/kg; sabores definidos em 24/09/2026 | — |
 | LILY-PEND-024 | Embalagem 300 ml | confirmar embalagem e custo unitário; custeio provisório usa R$ 1,00 | afeta CMV 300 ml |
 | LILY-PEND-025 | Nutella | medir peso/volume final para substituir 1 g ≈ 1 ml | melhora precisão do CMV |
 | LILY-PEND-026 | Operação gelato | definir processo, tempo, temperatura, armazenamento, validade e rendimento final | bloqueia ativação pública |

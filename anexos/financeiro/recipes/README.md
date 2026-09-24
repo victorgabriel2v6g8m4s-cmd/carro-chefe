@@ -32,3 +32,6 @@ Consulte `tools/excel_recipe/README.md`, `docs/tecnologia/EXCEL_RECIPE_V1.md`, `
 ## CookLily — gelato/milk-shake provisório
 
 `cooklily-milkshake-gelato-2026-09-24.json` cadastra os insumos comprados, a base, a mistura de Nutella e as versões de café 500 ml/300 ml. Hipóteses provisórias (Emustab, equivalência g/ml e embalagem 300 ml) estão documentadas em `docs/lily-acai/custos/MILKSHAKE_GELATO_CASEIRO_2026-09-24.md`.
+
+
+`cooklily-milkshake-gelato-frutas-2026-09-24.json` complementa a ficha do gelato com os custos reais de morango e maracujá e cria as variantes 500 ml/300 ml. É uma receita incremental aplicada sobre o workbook já atualizado pela receita-base.
