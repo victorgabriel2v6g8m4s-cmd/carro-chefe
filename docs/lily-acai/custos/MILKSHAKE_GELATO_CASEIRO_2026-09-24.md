@@ -149,3 +149,24 @@ Resultado:
 - commit gerado pelo motor: `27305cbc60807c3ff2d75bbc35bf009220ecb6a7`.
 
 A primeira execução foi abortada com rollback automático porque o runner não tinha `openpyxl` para gerar o snapshot. Nenhum workbook dessa tentativa foi persistido. O workflow foi corrigido para instalar `tools/excel_snapshot/requirements.txt` e a segunda execução concluiu transacionalmente.
+
+
+## Validação final da branch
+
+Head técnico validado:
+
+`ef36e28be56b924764812753c3256e3a969a5782`
+
+Evidências:
+
+- CI completo: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36024776435 — **success**;
+- CodeQL: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36024775974 — **success**;
+- Excel Recipe Linux: **success**;
+- Excel Recipe Windows: **success**;
+- Workbook Snapshot: **success**;
+- Quality Node 20: **success**;
+- Quality Node 24: **success**;
+- Tool Health Linux: **success**;
+- PR temporário #61: fechado sem merge e sem publicação.
+
+A alteração dos dados do workbook mudou legitimamente seu SHA e, por consequência, os hashes determinísticos dos probes reais V3A/V3B. Os fixtures foram atualizados somente para refletir o novo artefato-base; a lógica do motor não foi alterada.
