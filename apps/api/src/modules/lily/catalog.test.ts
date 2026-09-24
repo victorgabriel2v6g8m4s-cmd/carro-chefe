@@ -37,6 +37,7 @@ async function register(role: "customer" | "staff" = "customer") {
 
 beforeEach(async () => {
   await lilyPrisma.lilyAdminAudit.deleteMany();
+  await lilyPrisma.lilyOffer.deleteMany();
   await lilyPrisma.lilyConsentRecord.deleteMany();
   await lilyPrisma.lilySession.deleteMany();
   await lilyPrisma.lilyUser.deleteMany();
@@ -151,6 +152,39 @@ describe("CookLily catálogo", () => {
     expect(catalog.statusCode).toBe(200);
     expect(catalog.json().soldOut).toBe(true);
     expect(await lilyPrisma.lilyAdminAudit.count()).toBeGreaterThan(0);
+  });
+
+  it("aplica oferta publicada ao configurador público", async () => {
+    const staff = await register("staff");
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/offers",
+      headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+      payload: {
+        productId: "prod-acai-sol-lily",
+        variantId: "var-sol-300",
+        name: "Oferta teste Sol",
+        regularPriceCents: 1500,
+        offerPriceCents: 1400,
+        status: "published",
+        minProjectedMarginBps: 1000
+      }
+    });
+    expect(created.statusCode).toBe(201);
+
+    const configured = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/public/configure-item",
+      payload: {
+        productId: "prod-acai-sol-lily",
+        sizeMl: 300,
+        flavorIds: [],
+        addons: []
+      }
+    });
+    expect(configured.statusCode).toBe(200);
+    expect(configured.json().basePriceCents).toBe(1400);
+    expect(configured.json().totalPriceCents).toBe(1400);
   });
 
   it("bloqueia publicação de variante com margem projetada menor que 10%", async () => {
