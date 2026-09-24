@@ -3,7 +3,7 @@
   "id": "probe-v3a-blocked-configuracoes",
   "workbook": {
     "path": "anexos/financeiro/carro chefe.xlsm",
-    "expected_sha256": "7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1",
+    "expected_sha256": "b14b1e32c1774b1781847ab2afc97c8d504aec90a4a317bfccaa70293e2b977d",
     "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
   },
   "operations": [
