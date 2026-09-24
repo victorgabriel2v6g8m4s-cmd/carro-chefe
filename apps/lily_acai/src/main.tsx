@@ -142,7 +142,7 @@ function Cardapio() {
         <h1>Cremosidade, sabor e qualidade em cada garrafa.</h1>
         <p>O cardápio online está sendo preparado. Os primeiros sabores confirmados são morango e maracujá; preços e disponibilidade só aparecem quando forem publicados pela operação.</p>
         <div className="hero-actions">
-          <Link className="button primary" to="/cadastro">Criar minha conta</Link>
+          <Link className="button primary" to="/">Entrar na lista</Link>
           <a className="button ghost" href={whatsapp} target="_blank" rel="noreferrer">Falar no WhatsApp</a>
         </div>
       </div>
@@ -249,7 +249,8 @@ function Privacidade() {
   return <Shell><article className="legal-page">
     <span className="eyebrow">Versão operacional</span><h1>Privacidade e consentimentos</h1>
     <p>Esta é a versão operacional usada durante a construção da CookLily e deverá ser substituída pela versão jurídica definitiva antes da venda pública, quando os dados do controlador e os prazos de retenção estiverem aprovados.</p>
-    <h2>Conta separada</h2><p>Conta, sessão, endereço, pedido e pagamento CookLily são mantidos em domínio de dados próprio e não autenticam o usuário no Carro Chefe.</p>
+    <h2>Lista de novidades</h2><p>Para entrar na lista de cupons e promoções, a CookLily registra o WhatsApp informado, a versão do consentimento e, quando existir, a atribuição de campanha/QR. Esse cadastro não exige conta nem senha e não é compartilhado automaticamente com o Carro Chefe.</p>
+    <h2>Conta separada</h2><p>Quando uma conta CookLily for utilizada, sessão, endereço, pedido e pagamento permanecem em domínio de dados próprio e não autenticam o usuário no Carro Chefe.</p>
     <h2>O que é necessário</h2><p>Para manter uma conta, usamos o telefone informado, hash da senha, registros técnicos de sessão e o aceite dos termos aplicáveis. Senhas e tokens de sessão não são armazenados em texto puro.</p>
     <h2>Escolhas opcionais</h2><p>Marketing CookLily, analytics não essencial e compartilhamento com o Carro Chefe são escolhas independentes. Recusar qualquer uma delas não impede cadastro nem compra.</p>
     <h2>Compartilhamento</h2><p>Consentir com compartilhamento não mistura automaticamente as bases. Qualquer transferência futura deverá selecionar somente dados permitidos por finalidade e consentimento vigente.</p>
