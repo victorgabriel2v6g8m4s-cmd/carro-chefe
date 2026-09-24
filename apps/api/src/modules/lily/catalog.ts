@@ -636,8 +636,9 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/products", async (request, reply) => {
     const context = await requireStaff(request, true);
     const input = productCreateSchema.parse(request.body);
+    const { tags, ...rest } = input;
     const created = await lilyPrisma.lilyProduct.create({
-      data: { ...input, tagsJson: JSON.stringify(input.tags), tags: undefined } as never
+      data: { ...rest, tagsJson: JSON.stringify(tags) }
     });
     await audit(context.user.id, "create", "product", created.id, input);
     return reply.code(201).send(created);
