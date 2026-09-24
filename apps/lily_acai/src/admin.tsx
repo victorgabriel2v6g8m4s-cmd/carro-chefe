@@ -454,6 +454,123 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
   </div>;
 }
 
+
+function CommercialEditor({ data, csrf, refresh, setError }: any) {
+  async function saveCombo(event: FormEvent<HTMLFormElement>, combo: any) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    try {
+      await lilyAdminJson(`combos/${combo.id}`, "PATCH", csrf, {
+        name: String(form.get("name")),
+        description: String(form.get("description") || "") || null,
+        regularPriceCents: parseMoney(String(form.get("regular"))),
+        offerPriceCents: parseMoney(String(form.get("offer"))),
+        status: String(form.get("status")),
+        featured: form.get("featured") === "on"
+      });
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao salvar combo.");
+    }
+  }
+
+  async function createOffer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const productId = String(form.get("productId"));
+    const variantId = String(form.get("variantId") || "") || null;
+    try {
+      await lilyAdminJson("offers", "POST", csrf, {
+        productId,
+        variantId,
+        name: String(form.get("name")),
+        regularPriceCents: parseMoney(String(form.get("regular"))),
+        offerPriceCents: parseMoney(String(form.get("offer"))),
+        status: String(form.get("status") || "draft"),
+        campaignId: String(form.get("campaignId") || "") || null,
+        minProjectedMarginBps: 1000
+      });
+      event.currentTarget.reset();
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao criar oferta.");
+    }
+  }
+
+  async function saveOffer(event: FormEvent<HTMLFormElement>, offer: any) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    try {
+      await lilyAdminJson(`offers/${offer.id}`, "PATCH", csrf, {
+        name: String(form.get("name")),
+        regularPriceCents: parseMoney(String(form.get("regular"))),
+        offerPriceCents: parseMoney(String(form.get("offer"))),
+        status: String(form.get("status")),
+        campaignId: String(form.get("campaignId") || "") || null
+      });
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao salvar oferta.");
+    }
+  }
+
+  const selectedProductForOffer = data.products[0];
+
+  return <details className="admin-create">
+    <summary>Ofertas e combos</summary>
+    <div className="commercial-admin">
+      <section>
+        <h4>Combos permanentes</h4>
+        <div className="simple-admin-list commercial-list">
+          {data.combos.map((combo: any) => <form key={combo.id} onSubmit={(event) => void saveCombo(event, combo)}>
+            <input name="name" defaultValue={combo.name} aria-label="Nome do combo" />
+            <input name="description" defaultValue={combo.description ?? ""} aria-label="Descrição" />
+            <input name="regular" defaultValue={moneyInput(combo.regularPriceCents)} aria-label="Preço regular" />
+            <input name="offer" defaultValue={moneyInput(combo.offerPriceCents)} aria-label="Preço do combo" />
+            <select name="status" defaultValue={combo.status} aria-label="Status">
+              <option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option>
+            </select>
+            <label className="toggle"><input name="featured" type="checkbox" defaultChecked={combo.featured} /> Destaque</label>
+            <button className="button ghost" type="submit">Salvar</button>
+          </form>)}
+        </div>
+      </section>
+
+      <section>
+        <h4>Ofertas de produto</h4>
+        {data.offers.length > 0 && <div className="simple-admin-list commercial-list offers-list">
+          {data.offers.map((offer: any) => <form key={offer.id} onSubmit={(event) => void saveOffer(event, offer)}>
+            <input name="name" defaultValue={offer.name} aria-label="Nome da oferta" />
+            <input name="regular" defaultValue={moneyInput(offer.regularPriceCents)} aria-label="Preço regular" />
+            <input name="offer" defaultValue={moneyInput(offer.offerPriceCents)} aria-label="Preço oferta" />
+            <input name="campaignId" defaultValue={offer.campaignId ?? ""} placeholder="campanha" />
+            <select name="status" defaultValue={offer.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select>
+            <button className="button ghost" type="submit">Salvar</button>
+          </form>)}
+        </div>}
+
+        <form className="admin-form-grid compact offer-create" onSubmit={createOffer}>
+          <label>Nome<input name="name" placeholder="Oferta de lançamento" required /></label>
+          <label>Produto<select name="productId" defaultValue={selectedProductForOffer?.id ?? ""} required>
+            {data.products.map((product: any) => <option key={product.id} value={product.id}>{product.displayName}</option>)}
+          </select></label>
+          <label>Variante opcional<select name="variantId">
+            <option value="">Produto inteiro</option>
+            {data.products.flatMap((product: any) => product.rawVariants.map((variant: any) =>
+              <option key={variant.id} value={variant.id}>{product.displayName} · {variant.sizeMl} ml</option>
+            ))}
+          </select></label>
+          <label>Preço regular<input name="regular" inputMode="decimal" required /></label>
+          <label>Preço oferta<input name="offer" inputMode="decimal" required /></label>
+          <label>Campanha<input name="campaignId" placeholder="lancamento" /></label>
+          <label>Status<select name="status" defaultValue="draft"><option value="draft">Rascunho</option><option value="published">Publicado</option></select></label>
+          <button className="button primary" type="submit">Criar oferta</button>
+        </form>
+      </section>
+    </div>
+  </details>;
+}
+
 export function AdminCatalog() {
   return <AdminGate>{({ data, session, error, refresh, setError }) => <section className="admin-page wide">
     <div className="admin-heading">
@@ -464,6 +581,7 @@ export function AdminCatalog() {
     <CreateProduct data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
     <CategoryEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
     <FlavorAddonEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
+    <CommercialEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
     <div className="admin-product-list">
       {data!.products.map((product: any) => <ProductEditor key={product.id} product={product} data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />)}
     </div>
