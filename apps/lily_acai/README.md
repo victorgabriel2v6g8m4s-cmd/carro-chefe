@@ -1,6 +1,6 @@
 # App CookLily
 
-Frontend independente da operação temporária CookLily.
+Frontend independente da operação CookLily.
 
 ## Compatibilidade técnica
 
@@ -8,22 +8,73 @@ Frontend independente da operação temporária CookLily.
 - base: `/lilyacai/`;
 - API: `/api/v1/lily/*`.
 
-## Rotas
+## Rotas públicas
 
-- `/lilyacai/` — landing de leads/WhatsApp;
-- `/lilyacai/cardapio` — cardápio/estado atual;
-- `/lilyacai/cadastro` — conta CookLily já existente;
+- `/lilyacai/` — landing de leads/WhatsApp + carrossel de destaques;
+- `/lilyacai/cardapio` — catálogo CookLily;
+- `/lilyacai/cadastro`;
 - `/lilyacai/entrar`;
 - `/lilyacai/privacidade`.
 
-## Entrega 04
+## Rotas staff
+
+- `/lilyacai/painel`;
+- `/lilyacai/painel/cardapio`;
+- `/lilyacai/painel/midias`.
+
+O backend continua sendo a autoridade de autorização; esconder uma rota no frontend não substitui sessão/role/CSRF.
+
+## Landing
 
 A landing permite entrar na lista promocional somente com telefone + opt-in; não cria senha.
 
-Atribuição da URL é normalizada e preservada temporariamente em `sessionStorage`. No envio, o backend aplica novamente a normalização antes da persistência.
+Não mostra o cardápio inteiro. O carrossel automático consome destaques/ofertas do catálogo e possui controles manuais.
 
-O acompanhamento P0 abre o WhatsApp oficial para atendimento humano.
+## Cardápio
+
+Implementado na Entrega 05:
+
+- imagem como foco principal;
+- nome próprio + descritor;
+- busca tolerante a acentos;
+- filtros;
+- paginação/rolagem incremental;
+- combos;
+- ofertas;
+- produto esgotado visível;
+- placeholder;
+- mídia fullscreen;
+- modal/configurador;
+- LilyMix até 3 sabores;
+- adicionais específicos por produto.
+
+O configurador envia a escolha ao backend para validar compatibilidade, limites e preço.
+
+## Painel
+
+Permite alterar sem rebuild:
+
+- produtos;
+- categorias;
+- status/disponibilidade;
+- textos;
+- ordem;
+- Destaque da Semana;
+- variantes e preços;
+- sabores por produto;
+- adicionais por produto;
+- tiers LilyMix;
+- matriz de compatibilidade;
+- combos;
+- ofertas;
+- mídia.
 
 ## Identidade
 
 Tema CookLily usa tokens `--cl-*`, logo oficial derivada e Summer / Amsterdam Four quando disponíveis, com fallbacks enquanto os binários licenciados estiverem adiados.
+
+## Status
+
+Entrega 05 tecnicamente validada no SHA `9e9c2e194076aa5a8dd3262e73528ac3689c8896`.
+
+Deploy real e QA visual permanecem separados da conclusão técnica.
