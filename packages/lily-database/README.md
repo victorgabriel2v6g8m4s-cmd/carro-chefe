@@ -8,14 +8,42 @@ Pacote Prisma/SQLite independente da operação CookLily.
 - produção planejada: `file:/srv/carro-chefe/data/lily-acai.db`;
 - sem FK/view para o banco Carro Chefe.
 
-## Modelos atuais
+## Modelos de identidade/leads
 
 - `LilyUser`;
 - `LilySession`;
 - `LilyConsentRecord`;
 - `LilyMarketingLead`.
 
-`LilyMarketingLead` guarda telefone normalizado, consentimento/versionamento e atribuição canônica `la*`. Não exige uma conta CookLily.
+`LilyMarketingLead` guarda telefone normalizado, consentimento/versionamento e atribuição canônica `la*`.
+
+## Modelos do catálogo
+
+Entrega 05:
+
+- `LilyCategory`;
+- `LilyMediaAsset`;
+- `LilyProduct`;
+- `LilyProductVariant`;
+- `LilyFlavorComponent`;
+- `LilyFlavorCompatibility`;
+- `LilyProductFlavor`;
+- `LilyAddon`;
+- `LilyProductAddon`;
+- `LilyProductMedia`;
+- `LilyMixPriceTier`;
+- `LilyCombo`;
+- `LilyComboItem`;
+- `LilyOffer`;
+- `LilyAdminAudit`.
+
+## Migration do catálogo
+
+`20260924190000_lily_catalog`
+
+A migration cadastra a base do cardápio inicial, incluindo categorias, sabores, produtos, variantes, adicionais, LilyMix e combos.
+
+Ela foi aplicada com sucesso em banco SQLite limpo nos gates de CI Node 20 e Node 24.
 
 ## Comandos
 
@@ -27,4 +55,14 @@ npm run db:deploy:lily
 npm run db:studio:lily
 ```
 
+## Produção
+
 Nunca executar reset ou seed de desenvolvimento no banco de produção.
+
+Antes de aplicar migrations na VPS:
+
+1. fazer backup do `lily-acai.db`;
+2. publicar SHA imutável;
+3. executar `npm run db:deploy:lily`;
+4. realizar smoke;
+5. manter rollback disponível.
