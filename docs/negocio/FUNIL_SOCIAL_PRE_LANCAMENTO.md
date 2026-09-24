@@ -920,3 +920,21 @@ Após 14 dias ou 20 peças com volume suficiente, o AG-MARKETING deve produzir u
 - decisões de manter, aumentar, corrigir ou encerrar.
 
 A partir daí, o calendário deixa de ser orientado principalmente por benchmarks externos e passa a ser orientado pelo comportamento real da audiência do Carro Chefe.
+
+
+## 25. Automação planejada
+
+A automação deste funil está especificada em [Social Growth Engine](../tecnologia/SOCIAL_GROWTH_ENGINE.md).
+
+Prioridade de implementação:
+
+1. coleta e consolidação de sinais;
+2. social listening;
+3. métricas e snapshots;
+4. scoring e fila de conteúdo;
+5. relatórios/anomalias;
+6. geração assistida de pauta e roteiro;
+7. aprovação auditável;
+8. somente depois, publicação por API e respostas automáticas de baixo risco.
+
+A automação deve acelerar o funil sem criar perfil oculto de pessoas, inventar fatos comerciais ou remover revisão humana de ações sensíveis.
