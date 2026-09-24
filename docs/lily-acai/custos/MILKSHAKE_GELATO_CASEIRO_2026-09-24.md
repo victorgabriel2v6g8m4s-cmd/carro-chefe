@@ -209,3 +209,25 @@ Execução transacional: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chef
 - commit do workbook: `ca18149a2cb772c5e42eb47116d48c0963545f20`.
 
 O custo de morango e maracujá deixou de ser pendência. Os valores de venda calculados continuam sendo referência do modelo, não preço definitivo.
+
+
+## Validação final após os custos de fruta
+
+Head técnico validado:
+
+`75c6a5f6eaf6f2cf68ff8ba65a830a989fc0ca37`
+
+Evidências:
+
+- preflight financeiro: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36041027765 — **success**;
+- preflight AG-DEV dos pins do motor: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36041445089 — **success**;
+- aplicação da receita complementar: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36041200580 — **success**;
+- diagnóstico dos hashes estruturais: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36041864727 — **success**;
+- CI final: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36042108409 — **success**;
+- CodeQL final: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/36042108320 — **success**;
+- Excel Recipe Linux/Windows: **success**;
+- Workbook Snapshot: **success**;
+- Quality Node 20/24: **success**;
+- PR temporário #62: fechado sem merge e sem publicação.
+
+Os quatro SKUs de fruta estão precificados no workbook, mas o preço definitivo de venda continua pendente de decisão comercial.
