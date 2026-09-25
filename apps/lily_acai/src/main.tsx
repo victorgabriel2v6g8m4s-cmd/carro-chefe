@@ -1,7 +1,7 @@
-import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyAuthStatus, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyConfig, getLilySession, loginLily, logoutLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
 import { CatalogPage, FeaturedCarousel } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -23,13 +23,25 @@ function MenuIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
 }
 
+function PersonIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M5.5 19c.8-4 3-6 6.5-6s5.7 2 6.5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
+}
+
 function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
-  const initial = (user?.displayName?.trim()[0] || "C").toUpperCase();
+  const initial = user?.displayName?.trim()[0]?.toUpperCase();
   return <span className="header-profile-bubble">
     {user?.avatarUrl
       ? <img src={user.avatarUrl} alt="" />
-      : <span aria-hidden="true">{initial}</span>}
+      : initial
+        ? <span aria-hidden="true">{initial}</span>
+        : <PersonIcon />}
   </span>;
+}
+
+function safeNextPath(raw: string | null) {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/cardapio";
+  const withoutBase = raw.replace(/^\/lilyacai(?=\/|$)/, "") || "/cardapio";
+  return withoutBase.startsWith("/") && !withoutBase.startsWith("//") ? withoutBase : "/cardapio";
 }
 
 function AttributionCapture() {
@@ -44,35 +56,76 @@ function AttributionCapture() {
 
 function Shell({ children }: { children: ReactNode }) {
   const cart = useCart();
+  const navigate = useNavigate();
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const menuRef = useRef<HTMLElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     getLilyConfig().then(setConfig).catch(() => setConfig(null));
     getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => setUser(null));
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const firstFocusable = menuRef.current?.querySelector<HTMLElement>("a,button");
+    window.setTimeout(() => firstFocusable?.focus(), 0);
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      window.setTimeout(() => menuButtonRef.current?.focus(), 0);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen]);
+
   const instagramUrl = config?.social.instagramUrl ?? null;
   const whatsappUrl = config?.social.whatsappUrl ?? null;
-
+  const isStaff = user ? ["staff", "admin"].includes(user.role) : false;
   const closeMenu = () => setMenuOpen(false);
+
+  async function handleLogout() {
+    if (logoutBusy) return;
+    setLogoutBusy(true);
+    try {
+      const session = await getLilySession();
+      await logoutLily(session.csrfToken);
+    } catch {
+      // Se a sessão já expirou, o resultado esperado na interface também é sair.
+    } finally {
+      setUser(null);
+      setMenuOpen(false);
+      setLogoutBusy(false);
+      navigate("/cardapio", { replace: true });
+    }
+  }
 
   return <div className="lily-shell">
     <header className="topbar">
-      <Link className="brand" to="/cardapio" aria-label="CookLily — início" onClick={closeMenu}>
+      <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
         <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
         <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
       </Link>
 
       <nav className="desktop-nav" aria-label="Navegação principal">
-        <Link to="/">Início</Link>
         <Link to="/cardapio">Cardápio</Link>
         <Link to="/ranking">Ranking</Link>
         {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
+        {isStaff && <Link to="/painel">Painel</Link>}
         {user
-          ? <Link className="account-link" to="/perfil"><ProfileBubble user={user} /><span>Minha conta</span></Link>
-          : <><Link to="/entrar">Entrar</Link><Link className="button primary header-signup" to="/cadastro">Criar conta</Link></>}
+          ? <>
+              <Link className="account-link" to="/perfil"><ProfileBubble user={user} /><span>Minha conta</span></Link>
+              <button className="nav-button" type="button" onClick={handleLogout} disabled={logoutBusy}>{logoutBusy ? "Saindo..." : "Sair"}</button>
+            </>
+          : <>
+              <Link to="/entrar">Entrar</Link>
+              <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
+            </>}
       </nav>
 
       <div className="header-actions">
@@ -80,29 +133,39 @@ function Shell({ children }: { children: ReactNode }) {
           <CartIcon />
           {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
         </Link>
-        <Link className="header-icon mobile-only" to={user ? "/perfil" : "/entrar"} aria-label={user ? "Abrir perfil" : "Entrar na conta"}>
+        <Link className="header-icon mobile-only" to={user ? "/perfil" : "/entrar"} aria-label={user ? "Abrir perfil" : "Entrar ou criar conta"}>
           <ProfileBubble user={user} />
         </Link>
-        <button className="header-icon mobile-only" type="button" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>
+        <button ref={menuButtonRef} className="header-icon mobile-only" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
           <MenuIcon />
         </button>
       </div>
 
-      {menuOpen && <nav className="mobile-menu" aria-label="Menu mobile">
-        <Link to="/" onClick={closeMenu}>Início</Link>
-        <Link to="/cardapio" onClick={closeMenu}>Cardápio</Link>
-        <Link to="/ranking" onClick={closeMenu}>Ranking</Link>
-        {user ? <>
-          <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
-          <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
-          <Link to="/enderecos" onClick={closeMenu}>Endereços</Link>
-        </> : <>
-          <Link to="/entrar" onClick={closeMenu}>Entrar</Link>
-          <Link to="/cadastro" onClick={closeMenu}>Criar conta</Link>
-        </>}
-        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>Instagram @{config?.social.instagramHandle}</a>}
-        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp</a>}
-      </nav>}
+      {menuOpen && <>
+        <button className="mobile-menu-backdrop" type="button" aria-label="Fechar menu" tabIndex={-1} onClick={closeMenu} />
+        <nav ref={menuRef} id="lily-mobile-menu" className="mobile-menu" aria-label="Menu mobile" tabIndex={-1}>
+          <div className="mobile-menu-heading">
+            <strong>Menu</strong>
+            {user && <small>{user.displayName || user.phone}</small>}
+          </div>
+          <Link to="/cardapio" onClick={closeMenu}>Cardápio</Link>
+          <Link to="/ranking" onClick={closeMenu}>Ranking</Link>
+          {isStaff && <Link className="staff-menu-link" to="/painel" onClick={closeMenu}>Painel administrativo</Link>}
+          {user ? <>
+            <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
+            <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
+            <Link to="/enderecos" onClick={closeMenu}>Endereços</Link>
+            <button className="mobile-menu-action" type="button" onClick={handleLogout} disabled={logoutBusy}>{logoutBusy ? "Saindo..." : "Sair da conta"}</button>
+          </> : <>
+            <Link to="/entrar" onClick={closeMenu}>Entrar</Link>
+            <Link className="mobile-menu-primary" to="/cadastro" onClick={closeMenu}>Criar conta</Link>
+          </>}
+          <div className="mobile-menu-secondary">
+            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>Instagram @{config?.social.instagramHandle}</a>}
+            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp</a>}
+          </div>
+        </nav>
+      </>}
     </header>
 
     <main>{children}</main>
@@ -234,10 +297,17 @@ function Cadastro() {
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") ?? "");
+    const passwordConfirmation = String(form.get("passwordConfirmation") ?? "");
+    if (password !== passwordConfirmation) {
+      setError("As senhas não coincidem.");
+      setBusy(false);
+      return;
+    }
     try {
       await registerLily({
         phone: String(form.get("phone") ?? ""),
-        password: String(form.get("password") ?? ""),
+        password,
         displayName: String(form.get("displayName") ?? "") || undefined,
         termsAccepted: true,
         termsVersion: config.termsVersion,
@@ -262,6 +332,7 @@ function Cadastro() {
       <label>Nome <span>opcional</span><input name="displayName" autoComplete="name" maxLength={80} /></label>
       <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
       <label>Senha <span>mínimo 10 caracteres</span><input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
+      <label>Confirmar senha<input name="passwordConfirmation" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
       <label className="check"><input type="checkbox" required /> <span>Li e aceito os <Link to="/privacidade">termos operacionais e o aviso de privacidade</Link>.</span></label>
       <div className="optional-box"><strong>Preferências opcionais</strong>
         <label className="check"><input name="lilyMarketing" type="checkbox" /> <span>Quero receber novidades e ofertas da CookLily.</span></label>
@@ -277,6 +348,7 @@ function Cadastro() {
 
 function Entrar() {
   const navigate = useNavigate();
+  const nextPath = safeNextPath(new URLSearchParams(window.location.search).get("next"));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -286,7 +358,7 @@ function Entrar() {
     const form = new FormData(event.currentTarget);
     try {
       await loginLily({ phone: String(form.get("phone") ?? ""), password: String(form.get("password") ?? "") });
-      navigate("/cardapio");
+      navigate(nextPath, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao entrar.");
     } finally {
