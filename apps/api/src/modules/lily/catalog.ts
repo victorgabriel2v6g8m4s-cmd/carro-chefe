@@ -190,8 +190,7 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
       name: variant.name,
       priceCents: variant.priceCents,
       compareAtPriceCents: variant.compareAtPriceCents,
-      isAvailable: variant.isAvailable,
-      projectedMarginBps: variant.projectedMarginBps
+      isAvailable: variant.isAvailable
     }));
   const offers = product.offers
     .filter((offer) => offer.status === "published" && isActiveWindow(offer.startsAt, offer.endsAt, now))
@@ -226,7 +225,6 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
     featured: product.featured,
     weeklyHighlight: product.weeklyHighlight,
     allowPlaceholder: product.allowPlaceholder,
-    preparationLeadMinutes: product.preparationLeadMinutes,
     sortOrder: product.sortOrder,
     category: {
       id: product.category.id,
@@ -247,11 +245,7 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
         id: link.flavor.id,
         slug: link.flavor.slug,
         name: link.flavor.name,
-        premium: link.flavor.premium,
-        portion300: link.flavor.portion300,
-        portion500: link.flavor.portion500,
-        priceModifier300: link.flavor.priceModifier300,
-        priceModifier500: link.flavor.priceModifier500
+        premium: link.flavor.premium
       })),
     addons: product.addonLinks
       .filter((link) => link.allowed && link.addon.status === "published")
@@ -260,10 +254,7 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
         slug: link.addon.slug,
         name: link.addon.name,
         priceCents: link.priceOverride ?? link.addon.priceCents,
-        portion300: link.portion300 ?? link.addon.portion300,
-        portion500: link.portion500 ?? link.addon.portion500,
-        individualLimit: link.individualLimit ?? link.addon.individualLimit,
-        flavorId: link.addon.flavorId
+        individualLimit: link.individualLimit ?? link.addon.individualLimit
       })),
     mixTiers: product.mixTiers
       .filter((tier) => tier.status === "published")
@@ -421,6 +412,56 @@ async function projectedMarginForOffer(input: { variantId?: string | null; offer
 export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/public/catalog", async (request) => publicCatalog(request.query));
   app.get("/api/v1/lily/public/catalog/search", async (request) => publicCatalog(request.query));
+
+  app.get("/api/v1/lily/public/combos/:id/builder", async (request) => {
+    const { id } = z.object({ id: idSchema }).parse(request.params);
+    const combo = await lilyPrisma.lilyCombo.findUnique({ where: { id } });
+    const now = new Date();
+    if (!combo || combo.status !== "published" || !isActiveWindow(combo.startsAt, combo.endsAt, now)) {
+      throw new ApiError(404, "Combo não encontrado ou indisponível.", { code: "LILY_COMBO_NOT_FOUND" });
+    }
+
+    const rules = safeObject(combo.rulesJson);
+    const quantity = typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : 0;
+    const sizeMl = typeof rules.sizeMl === "number" ? Math.trunc(rules.sizeMl) : 0;
+    const category = typeof rules.category === "string" ? rules.category : null;
+    const subtype = typeof rules.subtype === "string" ? rules.subtype : null;
+    const flavorCount = typeof rules.flavorCount === "number" ? Math.trunc(rules.flavorCount) : null;
+
+    if (quantity < 1 || quantity > 5 || sizeMl < 100) {
+      throw new ApiError(422, "Regras do combo estão incompletas.", { code: "LILY_COMBO_RULES_INVALID" });
+    }
+
+    const rawProducts = await lilyPrisma.lilyProduct.findMany({
+      where: { status: "published", isAvailable: true },
+      include: productInclude,
+      orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }]
+    });
+
+    const options = rawProducts.map(serializeProduct).filter((product) => {
+      const rootCategory = product.category.parent?.slug ?? product.category.slug;
+      if (category && rootCategory !== category) return false;
+      if (subtype === "simple" && !product.tags.includes("simples")) return false;
+      if (!product.variants.some((variant) => variant.sizeMl === sizeMl && variant.isAvailable)) return false;
+      if (flavorCount != null && product.flavors.length !== flavorCount) return false;
+      return product.configurationType === "fixed";
+    });
+
+    return {
+      combo: {
+        id: combo.id,
+        slug: combo.slug,
+        name: combo.name,
+        description: combo.description,
+        regularPriceCents: combo.regularPriceCents,
+        offerPriceCents: combo.offerPriceCents,
+        savingsCents: combo.savingsCents
+      },
+      quantity,
+      sizeMl,
+      options
+    };
+  });
 
   app.get("/api/v1/lily/public/products/:slug", async (request) => {
     const { slug } = z.object({ slug: slugSchema }).parse(request.params);
