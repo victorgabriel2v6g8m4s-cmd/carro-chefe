@@ -207,7 +207,8 @@ function Landing() {
         </button>
       </form>
     </section>
-    <FeaturedCarousel />\n    <section className="whatsapp-card">
+    <FeaturedCarousel />
+    <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       {trackingWhatsapp
         ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
