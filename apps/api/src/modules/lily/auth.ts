@@ -132,17 +132,13 @@ export async function createLilySession(userId: string, request: FastifyRequest,
   return { csrfToken, expiresAt };
 }
 
-export async function requireLilySession(request: FastifyRequest): Promise<LilySessionContext> {
-  const token = readCookie(request, SESSION_COOKIE);
-  if (!token) throw new ApiError(401, "Sessão Lily necessária.", { code: "LILY_AUTH_REQUIRED" });
+async function loadLilySession(token: string): Promise<LilySessionContext | null> {
   const now = new Date();
   const record = await lilyPrisma.lilySession.findUnique({
     where: { tokenHash: hashToken(token) },
     include: { user: true }
   });
-  if (!record || record.revokedAt || record.expiresAt <= now || record.user.status !== "active") {
-    throw new ApiError(401, "Sessão Lily inválida ou expirada.", { code: "LILY_SESSION_INVALID" });
-  }
+  if (!record || record.revokedAt || record.expiresAt <= now || record.user.status !== "active") return null;
   await lilyPrisma.lilySession.update({
     where: { id: record.id },
     data: { lastSeenAt: now }
@@ -161,6 +157,20 @@ export async function requireLilySession(request: FastifyRequest): Promise<LilyS
       status: record.user.status
     }
   };
+}
+
+export async function getOptionalLilySession(request: FastifyRequest): Promise<LilySessionContext | null> {
+  const token = readCookie(request, SESSION_COOKIE);
+  if (!token) return null;
+  return loadLilySession(token);
+}
+
+export async function requireLilySession(request: FastifyRequest): Promise<LilySessionContext> {
+  const token = readCookie(request, SESSION_COOKIE);
+  if (!token) throw new ApiError(401, "Sessão Lily necessária.", { code: "LILY_AUTH_REQUIRED" });
+  const context = await loadLilySession(token);
+  if (!context) throw new ApiError(401, "Sessão Lily inválida ou expirada.", { code: "LILY_SESSION_INVALID" });
+  return context;
 }
 
 export async function rotateLilyCsrf(sessionId: string) {
