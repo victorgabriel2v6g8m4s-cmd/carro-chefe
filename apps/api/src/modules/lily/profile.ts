@@ -247,7 +247,12 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
     const [, revoked] = await lilyPrisma.$transaction([
       lilyPrisma.lilyUser.update({
         where: { id: context.user.id },
-        data: { passwordHash: nextHash }
+        data: {
+          passwordHash: nextHash,
+          ...(context.user.role === "staff" || context.user.role === "admin"
+            ? { staffPasswordUpgradeRequired: false }
+            : {})
+        }
       }),
       lilyPrisma.lilySession.updateMany({
         where: {
