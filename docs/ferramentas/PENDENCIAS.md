@@ -48,20 +48,6 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 - **Critérios de aceite:** artefato estruturado por plataforma; merge determinístico; referência ao commit; status final por ferramenta; sem escrita concorrente na documentação.
 - **Prioridade:** média se o relatório automático passar a ser gate de release.
 
-
-### TOOL-PEND-005 — Social Growth Engine
-
-- **Data:** 24/09/2026
-- **Status:** planejada
-- **Owner:** `AG-DEV`, com requisitos de `AG-MARKETING`, `AG-MIDIAS` e `AG-DADOS`
-- **Origem:** automação do radar de redes sociais e do funil de pré-lançamento.
-- **Problema:** pesquisa de trends, leitura de comentários, geração de pauta, consolidação de métricas e relatórios ainda dependem de trabalho manual e fragmentado; isso aumenta latência, dificulta aprendizado cumulativo e tende a repetir análise.
-- **Capacidade necessária:** engine auditável para coletar fontes permitidas, normalizar sinais, classificar trend/intenção/risco, priorizar conteúdo, gerar pauta/roteiro, manter fila de aprovação, coletar métricas, detectar anomalias e, em fase posterior, publicar por APIs oficiais com aprovação e idempotência.
-- **Alternativa temporária:** radar manual assistido, planejamento em `docs/negocio`, publicação humana e relatórios manuais.
-- **Prioridade:** alta para Fase 1 (inteligência); média para publicação automática.
-- **Critérios de aceite:** seguir [SOCIAL_GROWTH_ENGINE.md](../tecnologia/SOCIAL_GROWTH_ENGINE.md); nenhuma ação externa na Fase 1; PII separada de analytics; scores explicáveis; jobs idempotentes; fila de aprovação auditável; health checks por provider; testes de quota/token/retry/duplicidade; publicação automática somente após permissões/auditorias e aprovação da Gestão.
-- **Dependências/bloqueios:** acessos oficiais às contas, contratos de dados, política de retenção, autenticação segura da C.O., OAuth/segredos por provider e futura integração com ERP para pedido/margem.
-
 ## Regra para agentes
 
 Se uma nova tarefa exigir ferramenta inexistente, registre aqui **antes** de propor uma implementação recorrente. A criação da ferramenta ainda segue especialização: agentes de negócio definem requisito/aceite; `AG-DEV` implementa software.

@@ -1,0 +1,777 @@
+{
+  "schema_version": 1,
+  "id": "cooklily-milkshake-gelato-2026-09-24",
+  "workbook": {
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "expected_sha256": "569d0f24b078a2355da1edf82d2b15dc1fefd3e0bce710ac40d7dc94da2308ea",
+    "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  },
+  "operations": [
+    {
+      "op": "assert.table",
+      "table": "insumos",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalagens",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "CaProdutos",
+      "expected_ref": "B4:M47",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Adicional 1",
+        "Adicional 2",
+        "Adicional 3",
+        "Variação",
+        "Tipo",
+        "Cat. ABC",
+        "Custo do Lote",
+        "Un. Por Lote",
+        "Custo de Produção (1 un.)",
+        "Custo Total (1 un.)"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Ingredientes",
+      "expected_ref": "C4:I263",
+      "expected_columns": [
+        "Produto",
+        "ID",
+        "item",
+        "qtd.",
+        "medida",
+        "Porções",
+        "preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalamento",
+      "expected_ref": "B4:G48",
+      "expected_columns": [
+        "ID",
+        "Produto",
+        "Embalagem",
+        "Quantidade",
+        "Medida",
+        "Preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Precificação",
+      "expected_ref": "B4:I42",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Preço de Custo",
+        "Preço de Venda",
+        "Preço Definitivo",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Incluir C.F?"
+      ]
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 89
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 90
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 91
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 92
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 93
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 94
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 95
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 89
+      },
+      "values": {
+        "item": "CookLily - Açúcar cristal 5kg",
+        "preço": 12.37,
+        "quantidade": 5000,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 90
+      },
+      "values": {
+        "item": "CookLily - Creme de leite 4x200g",
+        "preço": 11.96,
+        "quantidade": 800,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 91
+      },
+      "values": {
+        "item": "CookLily - Leite integral 1L",
+        "preço": 5.99,
+        "quantidade": 1000,
+        "medida": "ML"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 92
+      },
+      "values": {
+        "item": "CookLily - Liga neutra 2x100g",
+        "preço": 15,
+        "quantidade": 200,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 93
+      },
+      "values": {
+        "item": "CookLily - Emustab 200g",
+        "preço": 15.9,
+        "quantidade": 200,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 94
+      },
+      "values": {
+        "item": "CookLily - Café 3 Corações 20g",
+        "preço": 1.99,
+        "quantidade": 20,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 95
+      },
+      "values": {
+        "item": "CookLily - Nutella original 375g",
+        "preço": 30,
+        "quantidade": 375,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "Embalagens",
+      "where": {
+        "ID": 108
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "Embalagens",
+      "where": {
+        "ID": 108
+      },
+      "values": {
+        "item": "CookLily - Garrafa 300ml (custo provisório conforme açaí)",
+        "preço": 1,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B34",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B35",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B36",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B37",
+      "equals": null
+    },
+    {
+      "op": "table.append_rows",
+      "table": "CaProdutos",
+      "rows": [
+        {
+          "ID": 2101,
+          "Item": "CookLily - Base do Milk-shake de Gelato Caseiro",
+          "Variação": "Base",
+          "Tipo": "Preparo interno CookLily — nome provisório",
+          "Un. Por Lote": 2500
+        },
+        {
+          "ID": 2102,
+          "Item": "CookLily - Mistura de Nutella",
+          "Variação": "Nutella",
+          "Tipo": "Preparo interno CookLily — nome provisório",
+          "Un. Por Lote": 775
+        },
+        {
+          "ID": 2110,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Café 500ml",
+          "Variação": "Café 500ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        },
+        {
+          "ID": 2111,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Café 300ml",
+          "Variação": "Café 300ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        }
+      ]
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C63",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C64",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C65",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C66",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C67",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C68",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C69",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C70",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C71",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C72",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C73",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C74",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C75",
+      "equals": null
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C63",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E63",
+      "value": "CookLily - Creme de leite 4x200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F63",
+      "value": 800
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C64",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E64",
+      "value": "CookLily - Açúcar cristal 5kg"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F64",
+      "value": 300
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C65",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E65",
+      "value": "CookLily - Leite integral 1L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F65",
+      "value": 750
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C66",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E66",
+      "value": "CookLily - Emustab 200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F66",
+      "value": 5
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C67",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E67",
+      "value": "CookLily - Liga neutra 2x100g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F67",
+      "value": 30
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C68",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E68",
+      "value": "CookLily - Nutella original 375g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F68",
+      "value": 375
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C69",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E69",
+      "value": "CookLily - Creme de leite 4x200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F69",
+      "value": 400
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C70",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E70",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F70",
+      "value": 440
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C71",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E71",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F71",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C72",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E72",
+      "value": "CookLily - Café 3 Corações 20g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F72",
+      "value": 10
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C73",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E73",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F73",
+      "value": 264
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C74",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E74",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F74",
+      "value": 30
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C75",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Café 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E75",
+      "value": "CookLily - Café 3 Corações 20g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F75",
+      "value": 6
+    },
+    {
+      "op": "table.append_rows",
+      "table": "Embalamento",
+      "rows": [
+        {
+          "ID": 2110,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 500ml",
+          "Embalagem": "Lily - Garrafa 500ml",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2110,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 500ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2110,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 500ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2111,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 300ml",
+          "Embalagem": "CookLily - Garrafa 300ml (custo provisório conforme açaí)",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2111,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 300ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2111,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Café 300ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        }
+      ]
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B34",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I34",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B35",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I35",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B36",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I36",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B37",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I37",
+      "value": "Não"
+    },
+    {
+      "op": "workbook.recalculate_on_open"
+    }
+  ]
+}

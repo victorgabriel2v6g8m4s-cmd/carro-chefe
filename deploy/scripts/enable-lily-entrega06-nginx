@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+CONF="${CARRO_CHEFE_NGINX_CONF:-/etc/nginx/sites-available/carrochefe.com}"
+BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-/srv/carro-chefe/data/backups}"
+
+[[ ${EUID} -eq 0 ]] || { echo "Execute como root/sudo." >&2; exit 1; }
+[[ -f "${CONF}" ]] || { echo "Configuração não encontrada: ${CONF}" >&2; exit 1; }
+
+mkdir -p "${BACKUP_DIR}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+BACKUP="${BACKUP_DIR}/nginx-pre-entrega06-${STAMP}.conf"
+cp -a "${CONF}" "${BACKUP}"
+
+python3 - "${CONF}" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+
+needles = (
+    "location = /api/v1/lily/orders",
+    "location ^~ /api/v1/lily/orders/",
+    "location ^~ /api/v1/lily/customer/",
+)
+present = [needle in text for needle in needles]
+
+if all(present):
+    print("Rotas da Entrega 06 já estão presentes; nenhuma alteração necessária.")
+    raise SystemExit(0)
+
+if any(present):
+    missing = [needle for needle, ok in zip(needles, present) if not ok]
+    print("Configuração parcial detectada. Não será alterada automaticamente.", file=sys.stderr)
+    print("Ausentes: " + ", ".join(missing), file=sys.stderr)
+    raise SystemExit(2)
+
+marker = "    location ^~ /api/ { return 404; }"
+if marker not in text:
+    print("Bloqueio genérico /api/ não encontrado no formato esperado; abortando.", file=sys.stderr)
+    raise SystemExit(3)
+
+block = r'''    # CookLily Entrega 06: criação do pedido usa rota exata sem barra final.
+    location = /api/v1/lily/orders {
+        proxy_pass http://127.0.0.1:4173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    # CookLily Entrega 06: cotação e subrotas de pedidos.
+    location ^~ /api/v1/lily/orders/ {
+        proxy_pass http://127.0.0.1:4173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+
+    # CookLily Entrega 06: recursos autenticados do cliente.
+    location ^~ /api/v1/lily/customer/ {
+        proxy_pass http://127.0.0.1:4173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+'''
+
+path.write_text(text.replace(marker, block + "\n" + marker, 1), encoding="utf-8")
+print("Blocos Nginx da Entrega 06 inseridos.")
+PY
+
+if ! nginx -t; then
+  echo "nginx -t falhou; restaurando backup: ${BACKUP}" >&2
+  cp -a "${BACKUP}" "${CONF}"
+  nginx -t || true
+  exit 1
+fi
+
+systemctl reload nginx
+
+echo "Nginx preparado para Entrega 06."
+echo "backup=${BACKUP}"

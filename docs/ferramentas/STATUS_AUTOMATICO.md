@@ -7,13 +7,14 @@ Para atualizar: `npm run tools:status`. Para executar sem escrever: `npm run too
 <!-- TOOL_HEALTH:START -->
 **Plataforma da última execução gravada:** `linux`  
 **Todas as ferramentas próprias estão completas e sem falha aplicável?** **NÃO**  
-**Checks:** 10 passaram; 0 falharam; 0 bloqueados; 1 não aplicáveis à plataforma; 0 planejados.
+**Checks:** 11 passaram; 0 falharam; 0 bloqueados; 1 não aplicáveis à plataforma; 0 planejados.
 
 | Ferramenta | Caminho | Maturidade | Verificação | Detalhe |
 |---|---|---|---|---|
 | `app-api` | `apps/api` | completa | verificada | teste aplicável passou |
 | `app-gestao` | `apps/gestao` | completa | verificada | teste aplicável passou |
 | `app-site` | `apps/site` | completa | verificada | teste aplicável passou |
+| `app-lily` | `apps/lily_acai` | em desenvolvimento | verificada | teste aplicável passou |
 | `app-qr` | `apps/qr_manipulator` | em desenvolvimento | verificada | teste aplicável passou |
 | `agent-policy` | `tools/agent-policy` | completa | verificada | teste aplicável passou |
 | `agent-runtime` | `tools/agent-runtime.mjs` | em desenvolvimento | verificada | teste aplicável passou |
