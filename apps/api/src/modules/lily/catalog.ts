@@ -6,7 +6,7 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
-import { isActiveWindow, lilyConfigurationSchema, quoteLilyConfiguration } from "./configuration";
+import { isActiveWindow, lilyComboConfigurationSchema, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration } from "./configuration";
 
 const statusSchema = z.enum(["draft", "published", "paused"]);
 const activeStatusSchema = z.enum(["active", "paused"]);
@@ -454,6 +454,13 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   }, async (request) => {
     const input = lilyConfigurationSchema.parse(request.body);
     return quoteLilyConfiguration(input);
+  });
+
+  app.post("/api/v1/lily/public/configure-combo", {
+    config: { rateLimit: { max: 40, timeWindow: "1 minute" } }
+  }, async (request) => {
+    const input = lilyComboConfigurationSchema.parse(request.body);
+    return quoteLilyComboConfiguration(input);
   });
 
   app.get("/api/v1/lily/admin/catalog", async (request) => {
