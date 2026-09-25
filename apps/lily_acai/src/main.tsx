@@ -1,20 +1,36 @@
 import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyConfig, loginLily, registerLily, submitCookLilyLead } from "./api";
+import { getLilyConfig, getLilySession, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
 import { CatalogPage, FeaturedCarousel } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { CartPage } from "./features/cart/CartPage";
 import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
+import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
 
-const instagram = "https://instagram.com/acai._lily";
-const whatsapp = "https://wa.me/5567999289187";
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
+
+function CartIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20 8H7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>;
+}
+
+function MenuIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+}
+
+function ProfileBubble({ session }: { session: AuthPayload | null }) {
+  const initial = (session?.user.displayName?.trim()[0] || "C").toUpperCase();
+  return <span className="header-profile-bubble">
+    {session?.user.avatarUrl
+      ? <img src={session.user.avatarUrl} alt="" />
+      : <span aria-hidden="true">{initial}</span>}
+  </span>;
+}
 
 function AttributionCapture() {
   useEffect(() => {
@@ -28,25 +44,79 @@ function AttributionCapture() {
 
 function Shell({ children }: { children: ReactNode }) {
   const cart = useCart();
+  const [config, setConfig] = useState<LilyPublicConfig | null>(null);
+  const [session, setSession] = useState<AuthPayload | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    getLilyConfig().then(setConfig).catch(() => setConfig(null));
+    getLilySession().then(setSession).catch(() => setSession(null));
+  }, []);
+
+  const instagramUrl = config?.social.instagramUrl ?? null;
+  const whatsappUrl = config?.social.whatsappUrl ?? null;
+
+  const closeMenu = () => setMenuOpen(false);
+
   return <div className="lily-shell">
     <header className="topbar">
-      <Link className="brand" to="/cardapio" aria-label="CookLily — início">
+      <Link className="brand" to="/cardapio" aria-label="CookLily — início" onClick={closeMenu}>
         <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
         <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
       </Link>
-      <nav aria-label="Navegação principal">
+
+      <nav className="desktop-nav" aria-label="Navegação principal">
         <Link to="/">Início</Link>
         <Link to="/cardapio">Cardápio</Link>
-        <Link to="/carrinho">Carrinho{cart.itemCount > 0 ? ` (${cart.itemCount})` : ""}</Link>
-        <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
+        <Link to="/ranking">Ranking</Link>
+        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
+        {session
+          ? <Link className="account-link" to="/perfil"><ProfileBubble session={session} /><span>Minha conta</span></Link>
+          : <><Link to="/entrar">Entrar</Link><Link className="button primary header-signup" to="/cadastro">Criar conta</Link></>}
       </nav>
+
+      <div className="header-actions">
+        <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
+          <CartIcon />
+          {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
+        </Link>
+        <Link className="header-icon mobile-only" to={session ? "/perfil" : "/entrar"} aria-label={session ? "Abrir perfil" : "Entrar na conta"}>
+          <ProfileBubble session={session} />
+        </Link>
+        <button className="header-icon mobile-only" type="button" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>
+          <MenuIcon />
+        </button>
+      </div>
+
+      {menuOpen && <nav className="mobile-menu" aria-label="Menu mobile">
+        <Link to="/" onClick={closeMenu}>Início</Link>
+        <Link to="/cardapio" onClick={closeMenu}>Cardápio</Link>
+        <Link to="/ranking" onClick={closeMenu}>Ranking</Link>
+        {session ? <>
+          <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
+          <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
+          <Link to="/enderecos" onClick={closeMenu}>Endereços</Link>
+        </> : <>
+          <Link to="/entrar" onClick={closeMenu}>Entrar</Link>
+          <Link to="/cadastro" onClick={closeMenu}>Criar conta</Link>
+        </>}
+        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>Instagram @{config?.social.instagramHandle}</a>}
+        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp</a>}
+      </nav>}
     </header>
+
     <main>{children}</main>
+
     <footer>
-      <div><strong>CookLily</strong><p>Cremosidade, sabor e qualidade em cada garrafa.</p></div>
+      <div>
+        <strong>CookLily</strong>
+        <p>Cremosidade, sabor e qualidade em cada garrafa.</p>
+        {config?.store.address && <small>{config.store.address}</small>}
+      </div>
       <div className="footer-links">
-        <a href={instagram} target="_blank" rel="noreferrer">@acai._lily</a>
-        <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
+        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">@{config?.social.instagramHandle}</a>}
+        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}
+        <Link to="/ranking">Ranking</Link>
         <Link to="/privacidade">Privacidade</Link>
       </div>
       <small>CookLily × Carro Chefe — parceria temporária.</small>
@@ -55,7 +125,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function Landing() {
-  const [config, setConfig] = useState<{ privacyPolicyVersion: string; consentVersions: Record<string, string> } | null>(null);
+  const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [state, setState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -104,6 +174,7 @@ function Landing() {
   }
 
   const trackingText = encodeURIComponent("Olá! Vim pelo site da CookLily e gostaria de acompanhar meu pedido.");
+  const trackingWhatsapp = config?.social.whatsappUrl ?? null;
   return <Shell>
     <section className="landing-hero">
       <div className="landing-copy">
@@ -138,7 +209,9 @@ function Landing() {
     </section>
     <FeaturedCarousel />\n    <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
-      <a className="button primary" href={`${whatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
+      {trackingWhatsapp
+        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
+        : <Link className="button primary" to="/cardapio">Ver cardápio</Link>}
     </section>
   </Shell>;
 }
@@ -256,6 +329,8 @@ function App() {
     <Route path="/enderecos" element={<Shell><AddressesPage /></Shell>} />
     <Route path="/pedidos" element={<Shell><OrdersPage /></Shell>} />
     <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
+    <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
+    <Route path="/ranking" element={<Shell><RankingPage /></Shell>} />
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
