@@ -723,13 +723,23 @@ function filtersFromParams(params: URLSearchParams): Filters {
   };
 }
 
-function sameFilters(a: Filters, b: Filters) {
-  return filterParamKeys.every((key) => a[key] === b[key]);
-}
-
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
+  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams.toString()]);
+
+  function setFilters(nextValue: Filters | ((current: Filters) => Filters)) {
+    const nextFilters = typeof nextValue === "function" ? nextValue(filters) : nextValue;
+    const next = new URLSearchParams(window.location.search);
+    for (const key of filterParamKeys) next.delete(key);
+    if (nextFilters.q) next.set("q", nextFilters.q);
+    if (nextFilters.category) next.set("category", nextFilters.category);
+    if (nextFilters.subcategory) next.set("subcategory", nextFilters.subcategory);
+    if (nextFilters.flavor) next.set("flavor", nextFilters.flavor);
+    if (nextFilters.size) next.set("size", nextFilters.size);
+    if (nextFilters.availability !== "all") next.set("availability", nextFilters.availability);
+    if (nextFilters.offer) next.set("offer", "true");
+    setSearchParams(next, { replace: true });
+  }
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [meta, setMeta] = useState<CatalogPayload | null>(null);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
@@ -750,24 +760,6 @@ export function CatalogPage() {
     offer: filters.offer ? "true" : undefined,
     limit: 12
   }), [filters]);
-
-  useEffect(() => {
-    const fromUrl = filtersFromParams(searchParams);
-    if (!sameFilters(fromUrl, filters)) setFilters(fromUrl);
-  }, [searchParams.toString()]);
-
-  useEffect(() => {
-    const next = new URLSearchParams(window.location.search);
-    for (const key of filterParamKeys) next.delete(key);
-    if (filters.q) next.set("q", filters.q);
-    if (filters.category) next.set("category", filters.category);
-    if (filters.subcategory) next.set("subcategory", filters.subcategory);
-    if (filters.flavor) next.set("flavor", filters.flavor);
-    if (filters.size) next.set("size", filters.size);
-    if (filters.availability !== "all") next.set("availability", filters.availability);
-    if (filters.offer) next.set("offer", "true");
-    setSearchParams(next, { replace: true });
-  }, [filters]);
 
   useEffect(() => {
     let cancelled = false;
