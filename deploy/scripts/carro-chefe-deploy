@@ -311,6 +311,12 @@ for attempt in 1 2 3 4 5; do
 done
 [[ "${external_ok}" -eq 1 ]] || fail "health HTTPS externo não respondeu após 5 tentativas"
 
+PHASE="operator-tools"
+if [[ -f "${APP_DIR}/deploy/scripts/lily-promote-user" ]]; then
+  install -m 0755 "${APP_DIR}/deploy/scripts/lily-promote-user" /usr/local/sbin/lily-promote-user
+  echo "operator_tool=/usr/local/sbin/lily-promote-user"
+fi
+
 PHASE="evidence"
 EVIDENCE_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.evidence"
 cat > "${EVIDENCE_FILE}" <<EOF
