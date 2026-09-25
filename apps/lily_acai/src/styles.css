@@ -556,3 +556,28 @@ img, svg { max-width: 100%; }
   .topbar { padding-inline: 10px; gap: 6px; }
   .header-actions { gap: 5px; }
 }
+
+
+/* Carrossel comercial de combos */
+.combo-section { min-width: 0; margin: 2px 0 10px; }
+.combo-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.combo-section-heading h2 { margin: 3px 0 0; font-size: clamp(27px,4vw,38px); }
+.combo-section-heading > small { color: var(--cl-color-text-muted); white-space: nowrap; }
+.combo-section .combo-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(260px,330px); grid-template-columns: none; overflow-x: auto; overflow-y: hidden; gap: 12px; padding: 3px 2px 14px; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+.combo-section .combo-strip article { min-width: 0; scroll-snap-align: start; }
+.combo-section .combo-strip article > strong { font-size: 18px; }
+.combo-section .combo-strip article .button { margin-top: 3px; }
+
+@media (max-width: 760px) {
+  .combo-section { margin-top: 0; }
+  .combo-section-heading { align-items: center; margin-bottom: 5px; }
+  .combo-section-heading h2 { font-size: 24px; }
+  .combo-section-heading .eyebrow { display: none; }
+  .combo-section-heading > small { font-size: 11px; }
+  .combo-section .combo-strip { grid-auto-columns: minmax(238px,80vw); gap: 9px; padding-bottom: 10px; scrollbar-width: none; }
+  .combo-section .combo-strip::-webkit-scrollbar { display: none; }
+  .combo-section .combo-strip article { padding: 12px; gap: 5px; border-radius: 16px; }
+  .combo-section .combo-strip article > strong { font-size: 17px; }
+  .combo-section .combo-strip article span:last-of-type { font-size: 16px; }
+  .combo-section .combo-strip article .button { min-height: 40px; }
+}
