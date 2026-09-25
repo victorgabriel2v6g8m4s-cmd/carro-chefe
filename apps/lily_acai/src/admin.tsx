@@ -568,7 +568,10 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
         <div className="combo-admin-list">
           {data.combos.map((combo: any) => {
             const rules = combo.rules ?? {};
-            const presetSelections = Array.isArray(rules.presetSelections) ? rules.presetSelections : [];
+            const configuredPresetSelections = Array.isArray(rules.presetSelections) ? rules.presetSelections : [];
+            const presetSelections = configuredPresetSelections.length
+              ? configuredPresetSelections
+              : (Array.isArray(combo.resolvedPresetSelections) ? combo.resolvedPresetSelections : []);
             const quantity = Math.min(5, Math.max(1, Number(rules.quantity || presetSelections.length || 1)));
             const mode = rules.mode === "builder" ? "builder" : "preset";
             return <form className="combo-admin-card" key={combo.id} onSubmit={(event) => void saveCombo(event, combo)}>
