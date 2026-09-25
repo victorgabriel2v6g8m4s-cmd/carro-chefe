@@ -17,7 +17,7 @@ const leaderboardLimitSchema = z.coerce.number().int().min(1).max(50).default(20
 
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128),
-  newPassword: z.string().min(12).max(128)
+  newPassword: z.string().min(8).max(128)
 }).strict();
 
 function mediaUrl(id: string | null) {
@@ -234,6 +234,12 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
 
     if (await verifyPassword(input.newPassword, current.passwordHash)) {
       throw new ApiError(400, "A nova senha precisa ser diferente da senha atual.", { code: "LILY_PASSWORD_REUSE" });
+    }
+
+    if (["staff", "admin"].includes(context.user.role) && input.newPassword.length < 12) {
+      throw new ApiError(400, "Contas da equipe exigem senha com pelo menos 12 caracteres.", {
+        code: "LILY_STAFF_PASSWORD_POLICY"
+      });
     }
 
     const nextHash = await hashPassword(input.newPassword);
