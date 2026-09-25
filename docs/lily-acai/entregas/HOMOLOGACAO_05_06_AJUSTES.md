@@ -322,3 +322,25 @@ O utilitário:
 - não exige restart.
 
 O deployer instala/atualiza `/usr/local/sbin/lily-promote-user` somente depois de um deploy saudável.
+
+
+## Gate final da segunda rodada
+
+**SHA de release validado:** `b84298447ece5d06c61be189bacb8b9ec80d24d1`
+
+A árvore desse SHA foi validada pelo commit técnico de gate `821e232cc9b685c3d3a061455f69a83d0027673b`.
+
+- CI run `36157665405`: **success**;
+- CodeQL run `36157665409`: **success**;
+- Node 20: 23 arquivos / **114 testes**;
+- Node 24: 23 arquivos / **114 testes**;
+- migration em banco limpo: success;
+- TypeScript/static checks: success;
+- builds de produção: success;
+- Tool Health: success;
+- Workbook Snapshot: success;
+- Excel Recipe Linux/Windows: success;
+- Windows Supervisor: success;
+- sintaxe Bash de `carro-chefe-deploy`, `lily-promote-user` e helper Nginx: success.
+
+Esse SHA substitui `10872e686c6c71c228ff8aef0e507a48deaaf912` como release recomendado do patch de homologação.
