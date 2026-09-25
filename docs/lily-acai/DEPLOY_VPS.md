@@ -51,6 +51,7 @@ Se houver alteração local inesperada, interromper.
 ```env
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
 LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
+LILY_UPLOAD_DIR=/srv/carro-chefe/data/lily-acai/uploads
 TRUST_PROXY=true
 NODE_ENV=production
 ```
@@ -109,12 +110,22 @@ Entrega 04:
 /api/v1/lily/public/*
 ```
 
-Entrega 05, após homologação:
+Entrega 05:
 
 ```text
 /api/v1/lily/auth/*
 /api/v1/lily/admin/*
 ```
+
+Entrega 06:
+
+```text
+/api/v1/lily/orders
+/api/v1/lily/orders/*
+/api/v1/lily/customer/*
+```
+
+As rotas acima precisam aparecer antes do bloqueio genérico de `/api/`.
 
 Depois de alterar proxy:
 
@@ -158,6 +169,36 @@ curl --fail http://127.0.0.1:4173/api/v1/lily/public/health
 - customer recebe 403 no admin;
 - mídia inválida é rejeitada;
 - disponibilidade reflete no cardápio sem rebuild.
+
+## Smoke da Entrega 06
+
+Antes de abrir pedidos ao público:
+
+- migration `20260925100000_lily_orders` aplicada;
+- `ordersEnabled` continua falso após migration;
+- `/api/v1/lily/public/fulfillment` responde;
+- painel `/lilyacai/painel/entrega` exige staff;
+- endereço de retirada/horários/taxa/regiões são configurados com dados reais;
+- pedido guest é cotado e criado;
+- retry com a mesma Idempotency-Key não duplica pedido;
+- preço/configuração stale é rejeitado;
+- entrega fora da região configurada é rejeitada;
+- pedido autenticado aparece somente para o titular;
+- endereço de outro usuário não pode ser lido/alterado;
+- pedido criado permanece `awaiting_payment`;
+- restart mantém pedido e configuração;
+- Entrega 07 ainda não é tratada como pagamento aprovado.
+
+## Publicação recomendada da Entrega 06
+
+SHA técnico validado:
+
+`da166683ab2d0e27acae23d9714ec8e824a02ac4`
+
+CI: `36124932957` — success.  
+CodeQL: `36124933082` — success.
+
+A branch pode conter commits documentais posteriores. Para deploy da Entrega 06, usar o SHA técnico acima salvo se outro SHA passar novamente pelos gates completos.
 
 ## Rollback
 
