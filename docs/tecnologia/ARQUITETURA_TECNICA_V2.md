@@ -111,41 +111,6 @@ Endpoints principais:
 
 Eventos operacionais são gravados na outbox na mesma transação da mudança. `npm run webhooks:dispatch` entrega os tópicos aos destinos habilitados, com HMAC, chave de idempotência, tentativas e atraso exponencial. O `secretRef` do destino aponta para o nome de uma variável de ambiente; o segredo nunca fica no banco.
 
-
-## Extensão planejada — Social Growth Engine
-
-A Central Operacional deverá ganhar uma frente de inteligência social descrita em [SOCIAL_GROWTH_ENGINE.md](./SOCIAL_GROWTH_ENGINE.md).
-
-Esta capacidade é **planejada e ainda não implementada**. A arquitetura deve reutilizar a API, contratos, banco, outbox, autenticação e observabilidade existentes quando isso for tecnicamente adequado, em vez de criar infraestrutura paralela sem necessidade.
-
-Rotas de UI pretendidas:
-
-```text
-/gestao/marketing/radar
-/gestao/marketing/conteudos
-/gestao/marketing/experimentos
-/gestao/marketing/audiencia
-/gestao/marketing/social-listening
-/gestao/marketing/creators
-```
-
-Requisitos arquiteturais:
-
-- jobs idempotentes e com rate-limit por provider;
-- credenciais somente por secret store/ambiente;
-- adapters isolados por plataforma;
-- aprovação auditável antes de ação externa;
-- scheduler com timezone explícito;
-- outbox/retry sem publicação duplicada;
-- kill switch por provider;
-- PII separada de analytics;
-- métricas sociais ligadas a `cc_campaign`/`cc_variant`;
-- pedido e margem somente após conciliação com ERP;
-- health checks de autenticação, coleta e publicação;
-- fallback manual quando API, quota ou auditoria impedirem automação.
-
-A primeira fase não publica conteúdo: ela automatiza coleta, análise, scoring, fila de conteúdo, relatórios e aprendizado.
-
 ## Comandos em linguagem natural
 
 O proprietário pode escrever uma orientação na Visão Geral ou em `/gestao/comandos`. A API:
