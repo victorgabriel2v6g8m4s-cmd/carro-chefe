@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { configureLilyItem, getLilyCatalog, type CatalogPayload, type CatalogProduct } from "./api";
+import { useCart } from "./features/cart/CartContext";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -25,11 +26,13 @@ function ProductImage({ product, onOpen }: { product: CatalogProduct; onOpen?: (
 }
 
 function ProductConfigurator({ product, onClose }: { product: CatalogProduct; onClose: () => void }) {
+  const cart = useCart();
   const availableVariants = product.variants.filter((variant) => variant.isAvailable);
   const [sizeMl, setSizeMl] = useState(availableVariants[0]?.sizeMl ?? product.variants[0]?.sizeMl ?? 300);
   const [flavorIds, setFlavorIds] = useState<string[]>(product.configurationType === "fixed" ? product.flavors.map((flavor) => flavor.id) : []);
   const [addons, setAddons] = useState<Record<string, number>>({});
-  const [quote, setQuote] = useState<{ totalPriceCents: number; basePriceCents: number; addonPriceCents: number } | null>(null);
+  const [quote, setQuote] = useState<Awaited<ReturnType<typeof configureLilyItem>> | null>(null);
+  const [added, setAdded] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -37,6 +40,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
   function toggleFlavor(id: string) {
     if (product.configurationType !== "lilymix") return;
     setQuote(null);
+    setAdded(false);
     setError("");
     setFlavorIds((current) => current.includes(id)
       ? current.filter((item) => item !== id)
@@ -45,6 +49,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
 
   function setAddon(id: string, quantity: number, max: number) {
     setQuote(null);
+    setAdded(false);
     setError("");
     setAddons((current) => {
       const next = { ...current };
@@ -65,6 +70,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
         addons: Object.entries(addons).map(([addonId, quantity]) => ({ addonId, quantity }))
       });
       setQuote(result);
+      setAdded(false);
     } catch (cause) {
       setQuote(null);
       setError(cause instanceof Error ? cause.message : "Não foi possível validar esta combinação.");
@@ -144,10 +150,27 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
           {quote.addonPriceCents > 0 && <small>{money(quote.basePriceCents)} do produto + {money(quote.addonPriceCents)} em adicionais</small>}
         </div>}
 
-        <button className="button primary" type="button" onClick={calculate} disabled={busy || product.soldOut}>
+        {!quote && <button className="button primary" type="button" onClick={calculate} disabled={busy || product.soldOut}>
           {busy ? "Validando..." : "Calcular configuração"}
-        </button>
-        <small className="next-delivery-note">Adicionar ao carrinho será habilitado na Entrega 06.</small>
+        </button>}
+        {quote && <button className="button primary" type="button" onClick={() => {
+          cart.addItem({
+            productId: quote.product.id,
+            productName: quote.product.name,
+            variantId: quote.variant.id,
+            variantName: quote.variant.name,
+            sizeMl: quote.sizeMl,
+            flavorIds: quote.flavors.map((flavor) => flavor.id),
+            flavors: quote.flavors,
+            addons: quote.addons,
+            configurationHash: quote.configurationHash,
+            unitPriceCents: quote.totalPriceCents
+          });
+          setAdded(true);
+        }} disabled={added}>
+          {added ? "Adicionado ao carrinho" : "Adicionar ao carrinho"}
+        </button>}
+        {added && <small className="next-delivery-note">Item salvo. O preço será recalculado no checkout antes da criação do pedido.</small>}
       </div>
     </section>
     {fullscreen && <div className="fullscreen-media" role="dialog" aria-modal="true" onClick={() => setFullscreen(false)}>
