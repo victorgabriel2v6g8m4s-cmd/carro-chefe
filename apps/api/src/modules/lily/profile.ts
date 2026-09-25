@@ -5,7 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { requireLilyCsrf, requireLilySession } from "./auth";
+import { hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
 
 const profilePatchSchema = z.object({
@@ -14,6 +14,11 @@ const profilePatchSchema = z.object({
 }).strict();
 
 const leaderboardLimitSchema = z.coerce.number().int().min(1).max(50).default(20);
+
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(12).max(128)
+}).strict();
 
 function mediaUrl(id: string | null) {
   return id ? `/api/v1/lily/public/media/${encodeURIComponent(id)}` : null;
@@ -210,6 +215,48 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
     });
 
     return profilePayload(context.user.id);
+  });
+
+  app.post("/api/v1/lily/customer/profile/password", {
+    config: { rateLimit: { max: 5, timeWindow: "1 minute" } }
+  }, async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const input = passwordChangeSchema.parse(request.body);
+
+    const current = await lilyPrisma.lilyUser.findUnique({
+      where: { id: context.user.id },
+      select: { id: true, passwordHash: true }
+    });
+    if (!current || !await verifyPassword(input.currentPassword, current.passwordHash)) {
+      throw new ApiError(401, "Senha atual incorreta.", { code: "LILY_CURRENT_PASSWORD_INVALID" });
+    }
+
+    if (await verifyPassword(input.newPassword, current.passwordHash)) {
+      throw new ApiError(400, "A nova senha precisa ser diferente da senha atual.", { code: "LILY_PASSWORD_REUSE" });
+    }
+
+    const nextHash = await hashPassword(input.newPassword);
+    const now = new Date();
+    const [, revoked] = await lilyPrisma.$transaction([
+      lilyPrisma.lilyUser.update({
+        where: { id: context.user.id },
+        data: { passwordHash: nextHash }
+      }),
+      lilyPrisma.lilySession.updateMany({
+        where: {
+          userId: context.user.id,
+          id: { not: context.session.id },
+          revokedAt: null
+        },
+        data: { revokedAt: now }
+      })
+    ]);
+
+    return {
+      changed: true,
+      otherSessionsRevoked: revoked.count
+    };
   });
 
   app.post("/api/v1/lily/customer/profile/avatar", async (request, reply) => {
