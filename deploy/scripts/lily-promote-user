@@ -95,6 +95,10 @@ SET role='${TARGET_ROLE}',
     updatedAt=CURRENT_TIMESTAMP
 WHERE id='${USER_ID}' AND status='active';
 
+UPDATE LilySession
+SET revokedAt=CURRENT_TIMESTAMP
+WHERE userId='${USER_ID}' AND revokedAt IS NULL;
+
 INSERT INTO LilyAdminAudit (
   id, actorUserId, action, entityType, entityId, payloadJson, createdAt
 ) VALUES (
