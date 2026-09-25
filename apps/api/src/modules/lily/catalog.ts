@@ -382,8 +382,12 @@ async function publicCatalog(queryInput: unknown) {
         }) ?? [];
 
         const explicitCoverProductId = typeof rules.coverProductId === "string" ? rules.coverProductId : null;
-        const coverProduct = (explicitCoverProductId ? productById.get(explicitCoverProductId) : null)
-          ?? (presetSelections[0]?.product ? productById.get(presetSelections[0].product.id) : null)
+        const explicitCoverProduct = explicitCoverProductId ? productById.get(explicitCoverProductId) : null;
+        const presetCoverProduct = presetSelections
+          .map((selection) => selection.product ? productById.get(selection.product.id) : null)
+          .find((product) => Boolean(product?.cover));
+        const coverProduct = (explicitCoverProduct?.cover ? explicitCoverProduct : null)
+          ?? presetCoverProduct
           ?? allSerializedProducts.find((product) => product.cover);
 
         return {
