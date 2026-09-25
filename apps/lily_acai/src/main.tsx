@@ -1,7 +1,7 @@
 import { StrictMode, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyConfig, getLilySession, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
 import { CatalogPage, FeaturedCarousel } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -23,11 +23,11 @@ function MenuIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
 }
 
-function ProfileBubble({ session }: { session: AuthPayload | null }) {
-  const initial = (session?.user.displayName?.trim()[0] || "C").toUpperCase();
+function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
+  const initial = (user?.displayName?.trim()[0] || "C").toUpperCase();
   return <span className="header-profile-bubble">
-    {session?.user.avatarUrl
-      ? <img src={session.user.avatarUrl} alt="" />
+    {user?.avatarUrl
+      ? <img src={user.avatarUrl} alt="" />
       : <span aria-hidden="true">{initial}</span>}
   </span>;
 }
@@ -45,12 +45,12 @@ function AttributionCapture() {
 function Shell({ children }: { children: ReactNode }) {
   const cart = useCart();
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
-  const [session, setSession] = useState<AuthPayload | null>(null);
+  const [user, setUser] = useState<AuthPayload["user"] | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     getLilyConfig().then(setConfig).catch(() => setConfig(null));
-    getLilySession().then(setSession).catch(() => setSession(null));
+    getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => setUser(null));
   }, []);
 
   const instagramUrl = config?.social.instagramUrl ?? null;
@@ -70,8 +70,8 @@ function Shell({ children }: { children: ReactNode }) {
         <Link to="/cardapio">Cardápio</Link>
         <Link to="/ranking">Ranking</Link>
         {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
-        {session
-          ? <Link className="account-link" to="/perfil"><ProfileBubble session={session} /><span>Minha conta</span></Link>
+        {user
+          ? <Link className="account-link" to="/perfil"><ProfileBubble user={user} /><span>Minha conta</span></Link>
           : <><Link to="/entrar">Entrar</Link><Link className="button primary header-signup" to="/cadastro">Criar conta</Link></>}
       </nav>
 
@@ -80,8 +80,8 @@ function Shell({ children }: { children: ReactNode }) {
           <CartIcon />
           {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
         </Link>
-        <Link className="header-icon mobile-only" to={session ? "/perfil" : "/entrar"} aria-label={session ? "Abrir perfil" : "Entrar na conta"}>
-          <ProfileBubble session={session} />
+        <Link className="header-icon mobile-only" to={user ? "/perfil" : "/entrar"} aria-label={user ? "Abrir perfil" : "Entrar na conta"}>
+          <ProfileBubble user={user} />
         </Link>
         <button className="header-icon mobile-only" type="button" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}>
           <MenuIcon />
@@ -92,7 +92,7 @@ function Shell({ children }: { children: ReactNode }) {
         <Link to="/" onClick={closeMenu}>Início</Link>
         <Link to="/cardapio" onClick={closeMenu}>Cardápio</Link>
         <Link to="/ranking" onClick={closeMenu}>Ranking</Link>
-        {session ? <>
+        {user ? <>
           <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
           <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
           <Link to="/enderecos" onClick={closeMenu}>Endereços</Link>
