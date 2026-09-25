@@ -1088,3 +1088,349 @@ img, svg { max-width: 100%; }
   .combo-preset-slots fieldset { grid-template-columns: 1fr; }
   .combo-admin-actions { align-items: stretch; flex-direction: column; }
 }
+
+
+/* Produto da semana — banner promocional no topo */
+.weekly-product-banner {
+  position: relative;
+  isolation: isolate;
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: minmax(150px,210px) minmax(0,1fr);
+  margin: 18px 0 0;
+  overflow: hidden;
+  border: 1px solid rgb(130 0 35 / 12%);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 85% 20%, rgb(255 255 255 / 42%), transparent 28%),
+    linear-gradient(112deg, #5b0b34 0%, var(--cl-color-secondary) 42%, #8a1745 100%);
+  color: white;
+  box-shadow: 0 14px 42px rgb(68 4 45 / 14%);
+}
+.weekly-product-banner::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 240px;
+  height: 240px;
+  right: -75px;
+  bottom: -125px;
+  border: 24px solid rgb(255 255 255 / 7%);
+  border-radius: 50%;
+}
+.weekly-product-media {
+  min-width: 0;
+  min-height: 150px;
+  overflow: hidden;
+}
+.weekly-product-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
+  display: block;
+  object-fit: cover;
+}
+.weekly-product-copy {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  grid-template-areas:
+    "kicker kicker kicker"
+    "title price cta";
+  align-items: center;
+  gap: 7px 20px;
+  padding: 19px clamp(20px,3.5vw,38px);
+}
+.weekly-product-kicker {
+  grid-area: kicker;
+  color: #ffd1df;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.weekly-product-title {
+  grid-area: title;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.weekly-product-title strong {
+  overflow-wrap: anywhere;
+  font-family: var(--cl-font-display);
+  font-size: clamp(27px,3.4vw,42px);
+  line-height: .98;
+  letter-spacing: -.025em;
+}
+.weekly-product-title span {
+  max-width: 520px;
+  overflow: hidden;
+  color: #f3cbd8;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.weekly-product-price {
+  grid-area: price;
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  white-space: nowrap;
+}
+.weekly-product-price s {
+  color: #d8a9b9;
+  font-size: 13px;
+}
+.weekly-product-price strong {
+  color: white;
+  font-size: 25px;
+}
+.weekly-product-price small {
+  color: #ffd4e0;
+  font-size: 10px;
+  font-weight: 800;
+}
+.weekly-product-cta {
+  grid-area: cta;
+  min-height: 44px;
+  background: white !important;
+  color: var(--cl-color-secondary) !important;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 16%) !important;
+}
+.weekly-product-cta:hover,
+.weekly-product-cta:focus-visible {
+  transform: translateY(-1px);
+}
+.weekly-product-status {
+  grid-area: cta;
+  padding: 10px 14px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  color: #ffe3eb;
+  font-size: 12px;
+  font-weight: 850;
+}
+.weekly-product-banner.is-sold-out .weekly-product-media img {
+  filter: saturate(.45);
+  opacity: .7;
+}
+.weekly-product-banner + .catalog-hero {
+  padding-top: clamp(24px,4vw,48px);
+}
+.weekly-product-banner + .landing-hero {
+  padding-top: clamp(30px,5vw,58px);
+}
+
+/* Produto destaque — vitrine editorial */
+.featured-product-spotlight {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(280px,.9fr) minmax(0,1.1fr);
+  min-height: 380px;
+  margin: 26px 0 32px;
+  overflow: hidden;
+  border: 1px solid rgb(130 0 35 / 11%);
+  border-radius: 32px;
+  background: white;
+  box-shadow: 0 18px 52px rgb(68 4 45 / 10%);
+}
+.featured-product-media {
+  position: relative;
+  min-height: 380px;
+  overflow: hidden;
+  background: var(--cl-color-surface-strong);
+}
+.featured-product-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgb(46 4 29 / 30%));
+  pointer-events: none;
+}
+.featured-product-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  display: block;
+  object-fit: cover;
+  transition: transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.featured-product-spotlight:hover .featured-product-media img {
+  transform: scale(1.025);
+}
+.featured-product-media > span {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  left: 18px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 90%);
+  color: var(--cl-color-secondary);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+.featured-product-copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 12px;
+  padding: clamp(30px,5vw,62px);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(248 181 201 / 20%), transparent 35%),
+    white;
+}
+.featured-product-copy h2 {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(42px,5.4vw,68px);
+}
+.featured-product-descriptor {
+  color: var(--cl-color-primary);
+  font-size: 15px;
+}
+.featured-product-copy p {
+  max-width: 640px;
+  margin: 0;
+  font-size: 16px;
+}
+.featured-product-flavors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.featured-product-flavors span {
+  padding: 7px 10px;
+  border: 1px solid rgb(130 0 35 / 13%);
+  border-radius: 999px;
+  background: var(--cl-color-surface);
+  color: var(--cl-color-secondary);
+  font-size: 11px;
+  font-weight: 800;
+}
+.featured-product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 2px;
+}
+.featured-product-price s {
+  color: var(--cl-color-text-muted);
+}
+.featured-product-price strong {
+  color: var(--cl-color-secondary);
+  font-size: 32px;
+}
+.featured-product-cta {
+  min-width: min(100%,220px);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.featured-product-cta:hover,
+.featured-product-cta:focus-visible {
+  transform: translateY(-2px);
+}
+.featured-product-spotlight.is-sold-out .featured-product-media img {
+  filter: saturate(.45);
+}
+
+@media (max-width: 760px) {
+  .weekly-product-banner {
+    grid-template-columns: 96px minmax(0,1fr);
+    min-height: 112px;
+    margin-top: 10px;
+    border-radius: 17px;
+  }
+  .weekly-product-media,
+  .weekly-product-media img {
+    min-height: 112px;
+  }
+  .weekly-product-copy {
+    grid-template-columns: minmax(0,1fr) auto;
+    grid-template-areas:
+      "kicker kicker"
+      "title price"
+      "cta cta";
+    gap: 4px 9px;
+    padding: 11px 12px;
+  }
+  .weekly-product-kicker {
+    font-size: 8px;
+  }
+  .weekly-product-title strong {
+    font-size: clamp(20px,6vw,26px);
+  }
+  .weekly-product-title span {
+    max-width: 42vw;
+    font-size: 10px;
+  }
+  .weekly-product-price strong {
+    font-size: 18px;
+  }
+  .weekly-product-price s,
+  .weekly-product-price small {
+    display: none;
+  }
+  .weekly-product-cta,
+  .weekly-product-status {
+    min-height: 36px;
+    width: 100%;
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+  .weekly-product-banner + .catalog-hero {
+    padding-top: 18px;
+  }
+  .weekly-product-banner + .landing-hero {
+    padding-top: 26px;
+  }
+
+  .featured-product-spotlight {
+    grid-template-columns: 1fr;
+    grid-template-rows: 220px auto;
+    min-height: 0;
+    margin: 18px 0 22px;
+    border-radius: 21px;
+  }
+  .featured-product-media {
+    min-height: 220px;
+  }
+  .featured-product-media img {
+    min-height: 220px;
+  }
+  .featured-product-media > span {
+    top: 12px;
+    left: 12px;
+    font-size: 9px;
+  }
+  .featured-product-copy {
+    gap: 8px;
+    padding: 20px 18px 22px;
+  }
+  .featured-product-copy h2 {
+    font-size: clamp(34px,10vw,46px);
+  }
+  .featured-product-copy p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .featured-product-price strong {
+    font-size: 27px;
+  }
+  .featured-product-cta {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-product-media img,
+  .weekly-product-cta,
+  .featured-product-cta {
+    transition: none !important;
+  }
+}
