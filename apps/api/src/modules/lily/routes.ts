@@ -208,7 +208,15 @@ export async function lilyRoutes(app: FastifyInstance) {
     if (existing) throw new ApiError(409, "Já existe uma conta CookLily para este telefone.", { code: "LILY_PHONE_EXISTS" });
 
     const passwordHash = await hashPassword(input.password);
-    let created: { id: string; phoneNormalized: string; displayName: string | null; role: string; status: string };
+    let created: {
+      id: string;
+      phoneNormalized: string;
+      displayName: string | null;
+      role: string;
+      status: string;
+      avatarMediaId: string | null;
+      rankingOptIn: boolean;
+    };
     try {
       created = await lilyPrisma.$transaction(async (tx) => {
         const user = await tx.lilyUser.create({
