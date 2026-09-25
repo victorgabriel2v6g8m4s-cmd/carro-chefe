@@ -21,7 +21,8 @@ Planos e relatórios:
 - `ENTREGA_04_LANDING_WHATSAPP_DEPLOY.md`;
 - `ENTREGA_05_CATALOGO_PUBLICACAO.md`;
 - `ENTREGA_06_CARRINHO_PEDIDOS.md`;
-- `HOMOLOGACAO_05_06_AJUSTES.md`.
+- `HOMOLOGACAO_05_06_AJUSTES.md`;
+- `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
 
 Validação técnica da Entrega 05:
 
@@ -54,3 +55,14 @@ Validação técnica:
 - CodeQL: `36150024735` — success;
 - Node 20/24: 111 testes;
 - deploy pendente.
+
+
+## Entrega 07 — pagamento e reconciliação
+
+Branch: `feat/lily-entrega-07-pagamentos`.
+
+A implementação inclui domínio de pagamentos, Pix manual reconciliável, painel financeiro, estados/estornos, guest token, RBAC real, gestão de equipe e upgrade obrigatório de senha para contas privilegiadas.
+
+O gateway automático continua condicionado à escolha/aprovação do provedor. A migration mantém pagamentos desabilitados por padrão.
+
+Documento canônico: `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
