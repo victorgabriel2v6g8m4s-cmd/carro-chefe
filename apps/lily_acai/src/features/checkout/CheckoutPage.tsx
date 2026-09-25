@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { useCart } from "../cart/CartContext";
+import { storeGuestOrderToken } from "../payments/PaymentPage";
 import {
   createOrder,
   createSavedAddress,
@@ -11,7 +12,6 @@ import {
   quoteOrder,
   type FulfillmentSettings,
   type LilyAddressInput,
-  type LilyOrder,
   type OrderQuote
 } from "../orders/api";
 
@@ -31,6 +31,7 @@ const emptyAddress: LilyAddressInput = {
 };
 
 export function CheckoutPage() {
+  const navigate = useNavigate();
   const cart = useCart();
   const [settings, setSettings] = useState<FulfillmentSettings | null>(null);
   const [session, setSession] = useState<AuthPayload | null>(null);
@@ -42,7 +43,6 @@ export function CheckoutPage() {
   const [customerNote, setCustomerNote] = useState("");
   const [saveAddress, setSaveAddress] = useState(false);
   const [quote, setQuote] = useState<OrderQuote | null>(null);
-  const [created, setCreated] = useState<LilyOrder | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -133,7 +133,7 @@ export function CheckoutPage() {
         session,
         idempotencyKey: key
       });
-      setCreated(order);
+      if (order.guestAccessToken) storeGuestOrderToken(order.id, order.guestAccessToken);
 
       if (saveAddress && session && fulfillmentType === "delivery" && !selectedAddressId) {
         try {
@@ -146,6 +146,7 @@ export function CheckoutPage() {
       }
 
       cart.clear();
+      navigate(`/pagamento/${order.id}`, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível criar o pedido.");
     } finally {
@@ -157,20 +158,6 @@ export function CheckoutPage() {
     setSelectedAddressId(id);
     const found = savedAddresses.find((item) => item.id === id);
     if (found) setAddress(found);
-  }
-
-  if (created) {
-    return <section className="checkout-page order-success">
-      <span className="eyebrow">Pedido criado</span>
-      <h1>{created.orderNumber}</h1>
-      <p>O pedido foi registrado com total de <strong>{money(created.grandTotalCents)}</strong>.</p>
-      <div className="payment-pending-card">
-        <strong>Aguardando pagamento</strong>
-        <p>A Entrega 06 não aprova pagamento. A integração e reconciliação financeira serão habilitadas na Entrega 07.</p>
-      </div>
-      {session && <Link className="button primary" to={`/pedidos/${created.id}`}>Ver pedido</Link>}
-      {!session && <Link className="button primary" to="/cardapio">Voltar ao cardápio</Link>}
-    </section>;
   }
 
   if (!cart.items.length) {
@@ -270,9 +257,9 @@ export function CheckoutPage() {
           {busy ? "Calculando..." : "Recalcular total"}
         </button>
         <button className="button primary" type="submit" disabled={busy || !settings?.ordersEnabled || !settings?.openNow}>
-          {busy ? "Criando..." : "Criar pedido"}
+          {busy ? "Criando..." : "Continuar para pagamento"}
         </button>
-        <small>Nenhum pagamento é aprovado nesta etapa. O pedido nasce como aguardando pagamento.</small>
+        <small>O pedido será criado como aguardando pagamento e você seguirá para a etapa de pagamento.</small>
       </aside>
     </form>
   </section>;
