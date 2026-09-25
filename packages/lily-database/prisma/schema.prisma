@@ -20,6 +20,10 @@ model LilyUser {
   consents        LilyConsentRecord[]
   addresses       LilyAddress[]
   orders          LilyOrder[]
+  loyaltyEvents   LilyLoyaltyEvent[]
+
+  avatarMediaId   String?
+  rankingOptIn    Boolean             @default(false)
 
   @@index([status, createdAt])
 }
@@ -365,8 +369,14 @@ model LilyOperationalSettings {
   pickupAddressText    String?
   pickupInstructions   String?
   businessHoursJson    String   @default("[]")
-  timezone             String   @default("America/Campo_Grande")
-  createdAt            DateTime @default(now())
+  timezone                  String   @default("America/Campo_Grande")
+  instagramHandle           String   @default("acai._lily")
+  whatsappPhone             String   @default("+5567999289187")
+  publicAddressText         String?
+  loyaltyOrderCentsPerPoint Int      @default(100)
+  loyaltyCampaignBonusPoints Int     @default(10)
+  loyaltyCouponBonusPoints Int       @default(10)
+  createdAt                 DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
 
@@ -461,4 +471,19 @@ model LilyOrderStatusEvent {
   order      LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
+}
+
+
+model LilyLoyaltyEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String
+  points       Int
+  sourceKey    String?  @unique
+  metadataJson String?
+  createdAt    DateTime @default(now())
+  user         LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
 }
