@@ -61,7 +61,57 @@ afterAll(async () => {
 });
 
 describe("CookLily gestão de equipe e RBAC", () => {
-  it("placeholder", () => {
-    expect(true).toBe(true);
+  it("promove conta existente e exige troca de senha antes do acesso staff", async () => {
+    const admin = await register("67999907101", "admin");
+    const customer = await register("67999907102");
+
+    const promoted = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/team/promote",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { phone: customer.user.phone, role: "staff" }
+    });
+    expect(promoted.statusCode).toBe(200);
+    expect(promoted.json().staffPasswordUpgradeRequired).toBe(true);
+
+    const blocked = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/catalog",
+      headers: { cookie: customer.cookie }
+    });
+    expect(blocked.statusCode).toBe(403);
+    expect(blocked.json().details.code).toBe("LILY_STAFF_PASSWORD_UPGRADE_REQUIRED");
+
+    const short = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      payload: { currentPassword: customer.secret, newPassword: "12345678" }
+    });
+    expect(short.statusCode).toBe(400);
+    expect(short.json().details.code).toBe("LILY_STAFF_PASSWORD_POLICY");
+
+    const changed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      payload: { currentPassword: customer.secret, newPassword: "nova-senha-staff-2026" }
+    });
+    expect(changed.statusCode).toBe(200);
+
+    const allowed = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/catalog",
+      headers: { cookie: customer.cookie }
+    });
+    expect(allowed.statusCode).toBe(200);
+
+    const teamDenied = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/team",
+      headers: { cookie: customer.cookie }
+    });
+    expect(teamDenied.statusCode).toBe(403);
+    expect(teamDenied.json().details.code).toBe("LILY_ADMIN_REQUIRED");
   });
 });
