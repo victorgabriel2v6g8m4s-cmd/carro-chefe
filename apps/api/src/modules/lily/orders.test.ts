@@ -318,6 +318,80 @@ describe("CookLily Entrega 06", () => {
     expect(unserved.json().details.code).toBe("LILY_DELIVERY_ZONE_NOT_FOUND");
   });
 
+  it("cota e cria combo permanente com regra e preço validados no servidor", async () => {
+    await enableFlatOperation();
+    const quoteResponse = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders/quote",
+      payload: {
+        fulfillmentType: "pickup",
+        items: [{
+          kind: "combo",
+          comboId: "combo-dupla-lily",
+          selections: [
+            { productId: "prod-ls-morango", sizeMl: 500, flavorIds: ["flv-morango"], addons: [] },
+            { productId: "prod-ls-cafe", sizeMl: 500, flavorIds: ["flv-cafe"], addons: [] }
+          ],
+          quantity: 1
+        }]
+      }
+    });
+    expect(quoteResponse.statusCode).toBe(200);
+    const quote = quoteResponse.json();
+    expect(quote.items[0].kind).toBe("combo");
+    expect(quote.items[0].totalPriceCents).toBe(4000);
+    expect(quote.items[0].selections).toHaveLength(2);
+    expect(quote.subtotalCents).toBe(4000);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders",
+      headers: { origin, "idempotency-key": "cooklily:test:combo:valid01" },
+      payload: {
+        phone: "67999995555",
+        fulfillmentType: "pickup",
+        items: [{
+          kind: "combo",
+          comboId: "combo-dupla-lily",
+          selections: [
+            { productId: "prod-ls-morango", sizeMl: 500, flavorIds: ["flv-morango"], addons: [] },
+            { productId: "prod-ls-cafe", sizeMl: 500, flavorIds: ["flv-cafe"], addons: [] }
+          ],
+          quantity: 1,
+          configurationHash: quote.items[0].configurationHash,
+          expectedUnitPriceCents: quote.items[0].totalPriceCents
+        }]
+      }
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().items[0].kind).toBe("combo");
+    expect(created.json().items[0].productName).toBe("Dupla Lily");
+    expect(created.json().items[0].unitPriceCents).toBe(4000);
+    expect(created.json().items[0].configuration.selections).toHaveLength(2);
+  });
+
+  it("rejeita produto que não atende às regras do combo", async () => {
+    await enableFlatOperation();
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders/quote",
+      payload: {
+        fulfillmentType: "pickup",
+        items: [{
+          kind: "combo",
+          comboId: "combo-dupla-lily",
+          selections: [
+            { productId: "prod-ls-morango", sizeMl: 500, flavorIds: ["flv-morango"], addons: [] },
+            { productId: "prod-ls-nutt-morango", sizeMl: 500, flavorIds: ["flv-morango", "flv-nutella"], addons: [] }
+          ],
+          quantity: 1
+        }]
+      }
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.json().details.code).toBe("LILY_COMBO_SUBTYPE");
+  });
+
   it("isola endereços entre clientes e exige CSRF em mutação", async () => {
     const a = await register("67999993001");
     const b = await register("67999993002");
