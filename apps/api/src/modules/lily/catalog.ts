@@ -355,53 +355,57 @@ async function publicCatalog(queryInput: unknown) {
   const now = new Date();
   const productById = new Map(allSerializedProducts.map((product) => [product.id, product]));
 
-  const publicCombos = await Promise.all(combos
+  const publicCombos = (await Promise.all(combos
     .filter((combo) => isActiveWindow(combo.startsAt, combo.endsAt, now))
     .map(async (combo) => {
-      const rules = safeObject(combo.rulesJson);
-      const mode = lilyComboModeFromRules(rules);
-      const presetInputs = mode === "preset" ? await resolveLilyComboPresetSelections(combo) : null;
-      const presetSelections = presetInputs?.map((selection) => {
-        const product = productById.get(selection.productId);
+      try {
+        const rules = safeObject(combo.rulesJson);
+        const mode = lilyComboModeFromRules(rules);
+        const presetInputs = mode === "preset" ? await resolveLilyComboPresetSelections(combo) : null;
+        const presetSelections = presetInputs?.map((selection) => {
+          const product = productById.get(selection.productId);
+          return {
+            productId: selection.productId,
+            sizeMl: selection.sizeMl,
+            flavorIds: selection.flavorIds,
+            addons: selection.addons,
+            product: product ? {
+              id: product.id,
+              slug: product.slug,
+              name: product.displayName,
+              cover: product.cover
+            } : null,
+            flavors: product
+              ? product.flavors.filter((flavor) => selection.flavorIds.includes(flavor.id))
+              : []
+          };
+        }) ?? [];
+
+        const explicitCoverProductId = typeof rules.coverProductId === "string" ? rules.coverProductId : null;
+        const coverProduct = (explicitCoverProductId ? productById.get(explicitCoverProductId) : null)
+          ?? (presetSelections[0]?.product ? productById.get(presetSelections[0].product.id) : null)
+          ?? allSerializedProducts.find((product) => product.cover);
+
         return {
-          productId: selection.productId,
-          sizeMl: selection.sizeMl,
-          flavorIds: selection.flavorIds,
-          addons: selection.addons,
-          product: product ? {
-            id: product.id,
-            slug: product.slug,
-            name: product.displayName,
-            cover: product.cover
-          } : null,
-          flavors: product
-            ? product.flavors.filter((flavor) => selection.flavorIds.includes(flavor.id))
-            : []
+          id: combo.id,
+          slug: combo.slug,
+          name: combo.name,
+          description: combo.description,
+          mode,
+          rules,
+          regularPriceCents: combo.regularPriceCents,
+          offerPriceCents: combo.offerPriceCents,
+          savingsCents: combo.savingsCents,
+          featured: combo.featured,
+          startsAt: combo.startsAt,
+          endsAt: combo.endsAt,
+          cover: coverProduct?.cover ?? null,
+          presetSelections
         };
-      }) ?? [];
-
-      const explicitCoverProductId = typeof rules.coverProductId === "string" ? rules.coverProductId : null;
-      const coverProduct = (explicitCoverProductId ? productById.get(explicitCoverProductId) : null)
-        ?? (presetSelections[0]?.product ? productById.get(presetSelections[0].product.id) : null)
-        ?? allSerializedProducts.find((product) => product.cover);
-
-      return {
-        id: combo.id,
-        slug: combo.slug,
-        name: combo.name,
-        description: combo.description,
-        mode,
-        rules,
-        regularPriceCents: combo.regularPriceCents,
-        offerPriceCents: combo.offerPriceCents,
-        savingsCents: combo.savingsCents,
-        featured: combo.featured,
-        startsAt: combo.startsAt,
-        endsAt: combo.endsAt,
-        cover: coverProduct?.cover ?? null,
-        presetSelections
-      };
-    }));
+      } catch {
+        return null;
+      }
+    }))).filter((combo) => combo !== null);
 
   return {
     categories: categories
@@ -568,6 +572,24 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       lilyPrisma.lilyOffer.findMany({ orderBy: { createdAt: "desc" } }),
       lilyPrisma.lilyMediaAsset.findMany({ orderBy: { createdAt: "desc" } })
     ]);
+    const adminCombos = await Promise.all(combos.map(async (combo) => {
+      const rules = safeObject(combo.rulesJson);
+      let resolvedPresetSelections: Awaited<ReturnType<typeof resolveLilyComboPresetSelections>> = null;
+      if (lilyComboModeFromRules(rules) === "preset") {
+        try {
+          resolvedPresetSelections = await resolveLilyComboPresetSelections(combo);
+        } catch {
+          resolvedPresetSelections = [];
+        }
+      }
+      return {
+        ...combo,
+        mode: lilyComboModeFromRules(rules),
+        rules,
+        resolvedPresetSelections: resolvedPresetSelections ?? []
+      };
+    }));
+
     return {
       categories,
       products: products.map((product) => ({
@@ -587,7 +609,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       flavors: flavors.map((flavor) => ({ ...flavor, tags: parseStringArray(flavor.tagsJson) })),
       addons,
       compatibilities,
-      combos: combos.map((combo) => ({ ...combo, rules: safeObject(combo.rulesJson) })),
+      combos: adminCombos,
       offers,
       media
     };
