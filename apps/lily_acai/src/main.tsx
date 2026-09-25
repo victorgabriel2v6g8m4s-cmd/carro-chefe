@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
-import { CatalogPage, FeaturedProductSpotlight, WeeklyProductBanner } from "./catalog";
+import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { CartPage } from "./features/cart/CartPage";
@@ -96,10 +96,10 @@ function Shell({ children }: { children: ReactNode }) {
         </Link>
 
         <nav className="desktop-nav" aria-label="Navegação principal">
-          <Link to="/cardapio">Cardápio</Link>
-          <Link to="/ranking">Ranking</Link>
+          <NavLink to="/cardapio">Cardápio</NavLink>
+          <NavLink to="/ranking">Ranking</NavLink>
           {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
-          {isStaff && <Link to="/painel">Painel</Link>}
+          {isStaff && <NavLink to="/painel">Painel</NavLink>}
         </nav>
 
         <div className="header-actions">
@@ -134,9 +134,9 @@ function Shell({ children }: { children: ReactNode }) {
             <strong>Menu</strong>
             {user && <small>{user.displayName || user.phone}</small>}
           </div>
-          <Link to="/cardapio" onClick={closeMenu}>Cardápio</Link>
-          <Link to="/ranking" onClick={closeMenu}>Ranking</Link>
-          {isStaff && <Link className="staff-menu-link" to="/painel" onClick={closeMenu}>Painel administrativo</Link>}
+          <NavLink to="/cardapio" onClick={closeMenu}>Cardápio</NavLink>
+          <NavLink to="/ranking" onClick={closeMenu}>Ranking</NavLink>
+          {isStaff && <NavLink className="staff-menu-link" to="/painel" onClick={closeMenu}>Painel administrativo</NavLink>}
           {user ? <>
             <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
             <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
@@ -175,7 +175,6 @@ function Shell({ children }: { children: ReactNode }) {
 function Landing() {
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [weeklyProduct, setWeeklyProduct] = useState<CatalogProduct | null>(null);
-  const [featuredProduct, setFeaturedProduct] = useState<CatalogProduct | null>(null);
   const [state, setState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -190,11 +189,9 @@ function Landing() {
     getLilyCatalog({ limit: 1 })
       .then((payload) => {
         setWeeklyProduct(payload.weeklyProduct);
-        setFeaturedProduct(payload.featuredProduct);
       })
       .catch(() => {
         setWeeklyProduct(null);
-        setFeaturedProduct(null);
       });
   }, []);
 
@@ -248,6 +245,9 @@ function Landing() {
           <span>Promoções CookLily</span>
           <span>Contato direto pelo WhatsApp</span>
         </div>
+        <Link className="button primary combo-slide-cta landing-menu-cta" to="/cardapio">
+          Ver cardápio completo
+        </Link>
       </div>
       <form className="lead-card" onSubmit={submit}>
         <span className="eyebrow">Quero receber novidades</span>
@@ -269,7 +269,6 @@ function Landing() {
         </button>
       </form>
     </section>
-    <FeaturedProductSpotlight product={featuredProduct} />
     <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       {trackingWhatsapp
