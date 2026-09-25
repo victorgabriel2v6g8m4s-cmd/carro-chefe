@@ -42,6 +42,20 @@ async function register(phone: string, role: "customer" | "admin" = "customer") 
   return { cookie, csrf: me.json().csrfToken, user: me.json().user, secret };
 }
 
+async function login(phone: string, secret: string) {
+  const response = await app.inject({
+    method: "POST",
+    url: "/api/v1/lily/auth/login",
+    headers: { origin },
+    payload: { phone, password: secret }
+  });
+  expect(response.statusCode).toBe(200);
+  const cookie = cookieFrom(response);
+  const me = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
+  expect(me.statusCode).toBe(200);
+  return { cookie, csrf: me.json().csrfToken, user: me.json().user, expiresAt: me.json().sessionExpiresAt };
+}
+
 async function cleanup() {
   await lilyPrisma.lilyPaymentReconciliation.deleteMany();
   await lilyPrisma.lilyPaymentEvent.deleteMany();
@@ -128,10 +142,22 @@ describe("CookLily gestão de equipe e RBAC", () => {
     expect(promoted.statusCode).toBe(200);
     expect(promoted.json().staffPasswordUpgradeRequired).toBe(true);
 
+    const oldSession = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/me",
+      headers: { cookie: customer.cookie }
+    });
+    expect(oldSession.statusCode).toBe(401);
+
+    const privileged = await login(customer.user.phone, customer.secret);
+    const remainingMs = new Date(privileged.expiresAt).getTime() - Date.now();
+    expect(remainingMs).toBeGreaterThan(11 * 60 * 60 * 1000);
+    expect(remainingMs).toBeLessThanOrEqual(12 * 60 * 60 * 1000);
+
     const blocked = await app.inject({
       method: "GET",
       url: "/api/v1/lily/admin/catalog",
-      headers: { cookie: customer.cookie }
+      headers: { cookie: privileged.cookie }
     });
     expect(blocked.statusCode).toBe(403);
     expect(blocked.json().details.code).toBe("LILY_STAFF_PASSWORD_UPGRADE_REQUIRED");
@@ -139,7 +165,7 @@ describe("CookLily gestão de equipe e RBAC", () => {
     const short = await app.inject({
       method: "POST",
       url: "/api/v1/lily/customer/profile/password",
-      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      headers: { origin, cookie: privileged.cookie, "x-lily-csrf": privileged.csrf },
       payload: { currentPassword: customer.secret, newPassword: "12345678" }
     });
     expect(short.statusCode).toBe(400);
@@ -148,7 +174,7 @@ describe("CookLily gestão de equipe e RBAC", () => {
     const changed = await app.inject({
       method: "POST",
       url: "/api/v1/lily/customer/profile/password",
-      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      headers: { origin, cookie: privileged.cookie, "x-lily-csrf": privileged.csrf },
       payload: { currentPassword: customer.secret, newPassword: "nova-senha-staff-2026" }
     });
     expect(changed.statusCode).toBe(200);
@@ -156,14 +182,14 @@ describe("CookLily gestão de equipe e RBAC", () => {
     const allowed = await app.inject({
       method: "GET",
       url: "/api/v1/lily/admin/catalog",
-      headers: { cookie: customer.cookie }
+      headers: { cookie: privileged.cookie }
     });
     expect(allowed.statusCode).toBe(200);
 
     const teamDenied = await app.inject({
       method: "GET",
       url: "/api/v1/lily/admin/team",
-      headers: { cookie: customer.cookie }
+      headers: { cookie: privileged.cookie }
     });
     expect(teamDenied.statusCode).toBe(403);
     expect(teamDenied.json().details.code).toBe("LILY_ADMIN_REQUIRED");
