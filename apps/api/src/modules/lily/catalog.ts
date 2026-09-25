@@ -641,8 +641,23 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const context = await requireLilyStaff(request, true);
     const input = productCreateSchema.parse(request.body);
     const { tags, ...rest } = input;
-    const created = await lilyPrisma.lilyProduct.create({
-      data: { ...rest, tagsJson: JSON.stringify(tags) }
+    const created = await lilyPrisma.$transaction(async (tx) => {
+      const product = await tx.lilyProduct.create({
+        data: { ...rest, tagsJson: JSON.stringify(tags) }
+      });
+      if (product.weeklyHighlight) {
+        await tx.lilyProduct.updateMany({
+          where: { id: { not: product.id }, weeklyHighlight: true },
+          data: { weeklyHighlight: false }
+        });
+      }
+      if (product.featured) {
+        await tx.lilyProduct.updateMany({
+          where: { id: { not: product.id }, featured: true },
+          data: { featured: false }
+        });
+      }
+      return product;
     });
     await auditLilyAdmin(context.user.id, "create", "product", created.id, input);
     return reply.code(201).send(created);
@@ -654,9 +669,23 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const parsed = productCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
     const { tags, ...rest } = input;
-    const updated = await lilyPrisma.lilyProduct.update({
-      where: { id },
-      data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
+    const updated = await lilyPrisma.$transaction(async (tx) => {
+      if (rest.weeklyHighlight === true) {
+        await tx.lilyProduct.updateMany({
+          where: { id: { not: id }, weeklyHighlight: true },
+          data: { weeklyHighlight: false }
+        });
+      }
+      if (rest.featured === true) {
+        await tx.lilyProduct.updateMany({
+          where: { id: { not: id }, featured: true },
+          data: { featured: false }
+        });
+      }
+      return tx.lilyProduct.update({
+        where: { id },
+        data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
+      });
     });
     await auditLilyAdmin(context.user.id, "update", "product", id, input);
     return updated;
