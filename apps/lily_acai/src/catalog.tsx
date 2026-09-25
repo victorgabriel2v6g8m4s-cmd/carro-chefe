@@ -634,18 +634,24 @@ export function CatalogPage() {
       </div>}
     </section>
 
-    {meta?.combos.length ? <section className="combo-strip" aria-label="Combos">
-      {meta.combos.map((combo) => <article key={combo.id}>
-        <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
-        <strong>{combo.name}</strong>
-        <small>{combo.description}</small>
-        <span><s>{money(combo.regularPriceCents)}</s> {money(combo.offerPriceCents)}</span>
-        <button className="button ghost" type="button" onClick={() => setSelectedCombo(combo)}>Montar combo</button>
-      </article>)}
+    {meta?.combos.length ? <section className="combo-section" aria-labelledby="combo-title">
+      <div className="combo-section-heading">
+        <div><span className="eyebrow">Economize combinando</span><h2 id="combo-title">Combos</h2></div>
+        <small>Deslize para ver mais →</small>
+      </div>
+      <div className="combo-strip" aria-label="Combos disponíveis">
+        {meta.combos.map((combo) => <article key={combo.id}>
+          <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
+          <strong>{combo.name}</strong>
+          <small>{combo.description}</small>
+          <span><s>{money(combo.regularPriceCents)}</s> {money(combo.offerPriceCents)}</span>
+          <button className="button ghost" type="button" onClick={() => setSelectedCombo(combo)}>Montar combo</button>
+        </article>)}
+      </div>
     </section> : null}
 
     {error && <p className="error" role="alert">{error}</p>}
-    <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> opções encontradas</div>
+    <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> produtos encontrados</div>
     <section className="catalog-grid" aria-live="polite">
       {products.map((product) => <ProductCard key={product.id} product={product} onOpen={() => setSelected(product)} />)}
     </section>
