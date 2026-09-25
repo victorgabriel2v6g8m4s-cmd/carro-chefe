@@ -1,0 +1,633 @@
+{
+  "schema_version": 1,
+  "id": "cooklily-milkshake-gelato-frutas-2026-09-24",
+  "workbook": {
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "expected_sha256": "7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1",
+    "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  },
+  "operations": [
+    {
+      "op": "assert.table",
+      "table": "insumos",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalagens",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "CaProdutos",
+      "expected_ref": "B4:M47",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Adicional 1",
+        "Adicional 2",
+        "Adicional 3",
+        "Variação",
+        "Tipo",
+        "Cat. ABC",
+        "Custo do Lote",
+        "Un. Por Lote",
+        "Custo de Produção (1 un.)",
+        "Custo Total (1 un.)"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Ingredientes",
+      "expected_ref": "C4:I263",
+      "expected_columns": [
+        "Produto",
+        "ID",
+        "item",
+        "qtd.",
+        "medida",
+        "Porções",
+        "preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalamento",
+      "expected_ref": "B4:G48",
+      "expected_columns": [
+        "ID",
+        "Produto",
+        "Embalagem",
+        "Quantidade",
+        "Medida",
+        "Preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Precificação",
+      "expected_ref": "B4:I42",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Preço de Custo",
+        "Preço de Venda",
+        "Preço Definitivo",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Incluir C.F?"
+      ]
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 96
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 97
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 96
+      },
+      "values": {
+        "item": "CookLily - Morango in natura 295g",
+        "preço": 10,
+        "quantidade": 295,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 97
+      },
+      "values": {
+        "item": "CookLily - Maracujá in natura 1kg",
+        "preço": 15,
+        "quantidade": 1000,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B38",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B39",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B40",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B41",
+      "equals": null
+    },
+    {
+      "op": "table.append_rows",
+      "table": "CaProdutos",
+      "rows": [
+        {
+          "ID": 2112,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml",
+          "Variação": "Morango 500ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        },
+        {
+          "ID": 2113,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml",
+          "Variação": "Morango 300ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        },
+        {
+          "ID": 2114,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml",
+          "Variação": "Maracujá 500ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        },
+        {
+          "ID": 2115,
+          "Item": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml",
+          "Variação": "Maracujá 300ml",
+          "Tipo": "Milk-shake CookLily — nome provisório",
+          "Un. Por Lote": 1
+        }
+      ]
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C76",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C77",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C78",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C79",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C80",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C81",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C82",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C83",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C84",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C85",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C86",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "ingredientes",
+      "cell": "C87",
+      "equals": null
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C76",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E76",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F76",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C77",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E77",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F77",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C78",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E78",
+      "value": "CookLily - Morango in natura 295g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F78",
+      "value": 60
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C79",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E79",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F79",
+      "value": 234
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C80",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E80",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F80",
+      "value": 30
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C81",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E81",
+      "value": "CookLily - Morango in natura 295g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F81",
+      "value": 36
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C82",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E82",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F82",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C83",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E83",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F83",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C84",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E84",
+      "value": "CookLily - Maracujá in natura 1kg"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F84",
+      "value": 60
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C85",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E85",
+      "value": "CookLily - Base do Milk-shake de Gelato Caseiro"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F85",
+      "value": 234
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C86",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E86",
+      "value": "CookLily - Mistura de Nutella"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F86",
+      "value": 30
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C87",
+      "value": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E87",
+      "value": "CookLily - Maracujá in natura 1kg"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F87",
+      "value": 36
+    },
+    {
+      "op": "table.append_rows",
+      "table": "Embalamento",
+      "rows": [
+        {
+          "ID": 2112,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml",
+          "Embalagem": "Lily - Garrafa 500ml",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2112,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2112,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 500ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2113,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml",
+          "Embalagem": "CookLily - Garrafa 300ml (custo provisório conforme açaí)",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2113,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2113,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Morango 300ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2114,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml",
+          "Embalagem": "Lily - Garrafa 500ml",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2114,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2114,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 500ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2115,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml",
+          "Embalagem": "CookLily - Garrafa 300ml (custo provisório conforme açaí)",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2115,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2115,
+          "Produto": "CookLily - Milk-shake de Gelato Caseiro Maracujá 300ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        }
+      ]
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B38",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I38",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B39",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I39",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B40",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I40",
+      "value": "Não"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B41",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I41",
+      "value": "Não"
+    },
+    {
+      "op": "workbook.recalculate_on_open"
+    }
+  ]
+}

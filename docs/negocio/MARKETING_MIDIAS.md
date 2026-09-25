@@ -188,18 +188,3 @@ Antes de imprimir em lote: testar QR em Android/iPhone, luz baixa, embalagem cur
 Cada campanha registra: hipótese, público, canal, criativos, período, orçamento máximo, oferta, capacidade disponível, UTMs, evento de conversão, margem esperada, regra de pausa e responsável.
 
 Nenhum resultado é declarado incremental sem método. Começar comparando períodos/células equivalentes e evoluir para testes geográficos ou de holdout quando o volume permitir.
-
-## Radar social e funil de pré-lançamento — 24/09/2026
-
-A estratégia de redes sociais foi aprofundada com pesquisa específica de Campo Grande/MS e tendências oficiais das plataformas.
-
-Documentos canônicos desta frente:
-
-- [Radar de redes sociais e trends — Campo Grande/MS — 2026](./REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md) — evidências locais, movimentos de TikTok/Instagram/YouTube, matriz de tendências, limitações e processo semanal de atualização;
-- [Funil social de pré-lançamento](./FUNIL_SOCIAL_PRE_LANCAMENTO.md) — audiência fria/quente, séries editoriais, enquetes, social listening, calendário relativo, creators, atribuição, KPIs e experimentos;
-- [Social Growth Engine](../tecnologia/SOCIAL_GROWTH_ENGINE.md) — automação planejada de radar, listening, backlog, produção assistida, aprovação, analytics, aprendizado e publicação futura.
-
-Diretriz aprovada para teste: **trend não substitui produto nem verdade operacional**. O conteúdo deve usar bastidor, brasa, montagem, pessoas e evidência real como núcleo; áudio, meme e formato rápido entram somente quando aumentarem distribuição ou participação sem distorcer o que será servido.
-
-A proporção inicial `50/30/20` (produto/prova; pesquisa/interação; trends rápidas) é uma hipótese de 14 dias e deve ser revisada com dados do próprio perfil. Likes e views isoladas não são KPI de negócio; o funil deve avançar até sessão atribuída, cadastro válido e, após a abertura, pedido pago/margem/recompra.
-

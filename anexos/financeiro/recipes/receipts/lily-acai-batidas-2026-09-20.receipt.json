@@ -1,0 +1,413 @@
+{
+  "changed_parts": [
+    "xl/workbook.xml",
+    "xl/worksheets/sheet11.xml",
+    "xl/worksheets/sheet2.xml",
+    "xl/worksheets/sheet3.xml",
+    "xl/worksheets/sheet4.xml",
+    "xl/worksheets/sheet5.xml",
+    "xl/worksheets/sheet6.xml"
+  ],
+  "generated_at": null,
+  "generated_at_note": "Timestamp omitido para determinismo; use o histórico Git.",
+  "operations": [
+    {
+      "index": 0,
+      "op": "assert.table"
+    },
+    {
+      "index": 1,
+      "op": "assert.table"
+    },
+    {
+      "index": 2,
+      "op": "assert.table"
+    },
+    {
+      "index": 3,
+      "op": "assert.table"
+    },
+    {
+      "index": 4,
+      "op": "assert.table"
+    },
+    {
+      "index": 5,
+      "op": "assert.table"
+    },
+    {
+      "index": 6,
+      "op": "assert.row"
+    },
+    {
+      "index": 7,
+      "op": "assert.row"
+    },
+    {
+      "index": 8,
+      "op": "assert.row"
+    },
+    {
+      "index": 9,
+      "op": "assert.row"
+    },
+    {
+      "index": 10,
+      "op": "assert.row"
+    },
+    {
+      "index": 11,
+      "op": "assert.row"
+    },
+    {
+      "index": 12,
+      "op": "assert.row"
+    },
+    {
+      "index": 13,
+      "op": "assert.row"
+    },
+    {
+      "index": 14,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 15,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 16,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 17,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 18,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 19,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 20,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 21,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 22,
+      "op": "assert.row"
+    },
+    {
+      "index": 23,
+      "op": "assert.row"
+    },
+    {
+      "index": 24,
+      "op": "assert.row"
+    },
+    {
+      "index": 25,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 26,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 27,
+      "op": "table.update_rows",
+      "updated": 1
+    },
+    {
+      "index": 28,
+      "op": "assert.cell"
+    },
+    {
+      "index": 29,
+      "op": "assert.cell"
+    },
+    {
+      "index": 30,
+      "op": "assert.cell"
+    },
+    {
+      "index": 31,
+      "op": "assert.cell"
+    },
+    {
+      "index": 32,
+      "op": "table.append_rows",
+      "rows": [
+        30,
+        31,
+        32,
+        33
+      ]
+    },
+    {
+      "index": 33,
+      "op": "cell.set"
+    },
+    {
+      "index": 34,
+      "op": "cell.set"
+    },
+    {
+      "index": 35,
+      "op": "cell.set"
+    },
+    {
+      "index": 36,
+      "op": "cell.set"
+    },
+    {
+      "index": 37,
+      "op": "cell.set"
+    },
+    {
+      "index": 38,
+      "op": "cell.set"
+    },
+    {
+      "index": 39,
+      "op": "cell.set"
+    },
+    {
+      "index": 40,
+      "op": "cell.set"
+    },
+    {
+      "index": 41,
+      "op": "cell.set"
+    },
+    {
+      "index": 42,
+      "op": "cell.set"
+    },
+    {
+      "index": 43,
+      "op": "cell.set"
+    },
+    {
+      "index": 44,
+      "op": "cell.set"
+    },
+    {
+      "index": 45,
+      "op": "cell.set"
+    },
+    {
+      "index": 46,
+      "op": "cell.set"
+    },
+    {
+      "index": 47,
+      "op": "cell.set"
+    },
+    {
+      "index": 48,
+      "op": "cell.set"
+    },
+    {
+      "index": 49,
+      "op": "cell.set"
+    },
+    {
+      "index": 50,
+      "op": "cell.set"
+    },
+    {
+      "index": 51,
+      "op": "cell.set"
+    },
+    {
+      "index": 52,
+      "op": "cell.set"
+    },
+    {
+      "index": 53,
+      "op": "cell.set"
+    },
+    {
+      "index": 54,
+      "op": "cell.set"
+    },
+    {
+      "index": 55,
+      "op": "cell.set"
+    },
+    {
+      "index": 56,
+      "op": "cell.set"
+    },
+    {
+      "index": 57,
+      "op": "cell.set"
+    },
+    {
+      "index": 58,
+      "op": "cell.set"
+    },
+    {
+      "index": 59,
+      "op": "cell.set"
+    },
+    {
+      "index": 60,
+      "op": "cell.set"
+    },
+    {
+      "index": 61,
+      "op": "cell.set"
+    },
+    {
+      "index": 62,
+      "op": "cell.set"
+    },
+    {
+      "index": 63,
+      "op": "cell.set"
+    },
+    {
+      "index": 64,
+      "op": "cell.set"
+    },
+    {
+      "index": 65,
+      "op": "cell.set"
+    },
+    {
+      "index": 66,
+      "op": "cell.set"
+    },
+    {
+      "index": 67,
+      "op": "cell.set"
+    },
+    {
+      "index": 68,
+      "op": "cell.set"
+    },
+    {
+      "index": 69,
+      "op": "cell.set"
+    },
+    {
+      "index": 70,
+      "op": "cell.set"
+    },
+    {
+      "index": 71,
+      "op": "cell.set"
+    },
+    {
+      "index": 72,
+      "op": "cell.set"
+    },
+    {
+      "index": 73,
+      "op": "cell.set"
+    },
+    {
+      "index": 74,
+      "op": "cell.set"
+    },
+    {
+      "index": 75,
+      "op": "cell.set"
+    },
+    {
+      "index": 76,
+      "op": "cell.set"
+    },
+    {
+      "index": 77,
+      "op": "cell.set"
+    },
+    {
+      "index": 78,
+      "op": "cell.set"
+    },
+    {
+      "index": 79,
+      "op": "cell.set"
+    },
+    {
+      "index": 80,
+      "op": "cell.set"
+    },
+    {
+      "index": 81,
+      "op": "table.append_rows",
+      "rows": [
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    },
+    {
+      "index": 82,
+      "op": "assert.cell"
+    },
+    {
+      "index": 83,
+      "op": "assert.cell"
+    },
+    {
+      "index": 84,
+      "op": "assert.cell"
+    },
+    {
+      "index": 85,
+      "op": "assert.cell"
+    },
+    {
+      "index": 86,
+      "op": "cell.set"
+    },
+    {
+      "index": 87,
+      "op": "cell.set"
+    },
+    {
+      "index": 88,
+      "op": "cell.set"
+    },
+    {
+      "index": 89,
+      "op": "cell.set"
+    },
+    {
+      "index": 90,
+      "op": "workbook.recalculate_on_open"
+    }
+  ],
+  "recipe_id": "lily-acai-batidas-2026-09-20",
+  "schema_version": 1,
+  "snapshot_output": "anexos/financeiro/snapshot",
+  "source_sha256_after": "569d0f24b078a2355da1edf82d2b15dc1fefd3e0bce710ac40d7dc94da2308ea",
+  "source_sha256_before": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+  "tool_version": "3.2.1",
+  "vba_sha256_after": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
+  "vba_sha256_before": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
+  "workbook": "anexos/financeiro/carro chefe.xlsm"
+}
