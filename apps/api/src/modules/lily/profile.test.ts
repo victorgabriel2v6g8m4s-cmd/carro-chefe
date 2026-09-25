@@ -34,7 +34,7 @@ async function register(phone: string, displayName?: string) {
   return { cookie, csrf: me.json().csrfToken, user: me.json().user };
 }
 
-const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003"];
+const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003", "+5567999970004"];
 
 async function cleanup() {
   const users = await lilyPrisma.lilyUser.findMany({ where: { phoneNormalized: { in: testPhones } }, select: { id: true } });
@@ -216,4 +216,66 @@ describe("CookLily perfil e fidelidade", () => {
     expect(row).toBeTruthy();
     expect(row.points).toBe(32);
   });
+
+  it("troca senha autenticada, exige senha atual e revoga outras sessões", async () => {
+    const account = await register("67999970004", "Cliente Segurança");
+
+    const secondLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/login",
+      payload: {
+        phone: "67999970004",
+        password: "senha-cooklily-perfil-2026"
+      }
+    });
+    expect(secondLogin.statusCode).toBe(200);
+    const secondCookie = cookieFrom(secondLogin);
+
+    const wrong = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
+      payload: {
+        currentPassword: "senha-atual-incorreta",
+        newPassword: "nova-senha-cooklily-2026"
+      }
+    });
+    expect(wrong.statusCode).toBe(401);
+
+    const changed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
+      payload: {
+        currentPassword: "senha-cooklily-perfil-2026",
+        newPassword: "nova-senha-cooklily-2026"
+      }
+    });
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json().changed).toBe(true);
+    expect(changed.json().otherSessionsRevoked).toBeGreaterThanOrEqual(1);
+
+    const revokedStatus = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/status",
+      headers: { cookie: secondCookie }
+    });
+    expect(revokedStatus.statusCode).toBe(200);
+    expect(revokedStatus.json().user).toBeNull();
+
+    const oldLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/login",
+      payload: { phone: "67999970004", password: "senha-cooklily-perfil-2026" }
+    });
+    expect(oldLogin.statusCode).toBe(401);
+
+    const newLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/login",
+      payload: { phone: "67999970004", password: "nova-senha-cooklily-2026" }
+    });
+    expect(newLogin.statusCode).toBe(200);
+  });
+
 });
