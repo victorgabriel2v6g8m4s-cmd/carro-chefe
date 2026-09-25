@@ -91,6 +91,15 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     coverMediaId: product.cover?.id ?? ""
   });
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setDraft((current) => ({
+      ...current,
+      featured: product.featured,
+      weeklyHighlight: product.weeklyHighlight
+    }));
+  }, [product.featured, product.weeklyHighlight]);
+
   const [flavorIds, setFlavorIds] = useState<string[]>(product.rawFlavorIds ?? []);
   const [addonIds, setAddonIds] = useState<string[]>((product.rawAddonLinks ?? []).filter((item: any) => item.allowed).map((item: any) => item.addonId));
   const [mixTiers, setMixTiers] = useState<Array<{ flavorCount: number; sizeMl: number; priceCents: number; status: string }>>(
