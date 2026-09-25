@@ -625,7 +625,7 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
     <div className="product-card-media">
       <ProductImage product={product} onOpen={onOpen} />
       {bestOffer && <span className="offer-badge">{money(bestOffer.savingsCents)} OFF</span>}
-      {product.weeklyHighlight && <span className="weekly-badge">Destaque</span>}
+      {product.weeklyHighlight && <span className="weekly-badge">Da semana</span>}
       {product.soldOut && <span className="soldout-badge">Esgotado</span>}
     </div>
     <button className="product-card-body" type="button" onClick={onOpen}>
@@ -642,46 +642,82 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
   </article>;
 }
 
-export function FeaturedCarousel() {
-  const [payload, setPayload] = useState<CatalogPayload | null>(null);
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+function promotedPrice(product: CatalogProduct) {
+  const offer = product.offers[0];
+  return {
+    current: offer?.offerPriceCents ?? minimumPrice(product),
+    regular: offer?.regularPriceCents ?? null,
+    savings: offer?.savingsCents ?? null
+  };
+}
 
-  useEffect(() => {
-    getLilyCatalog({ limit: 40 }).then(setPayload).catch(() => setPayload(null));
-  }, []);
+export function WeeklyProductBanner({
+  product,
+  onOpen
+}: {
+  product: CatalogProduct | null;
+  onOpen?: (product: CatalogProduct) => void;
+}) {
+  if (!product) return null;
+  const price = promotedPrice(product);
+  const cta = onOpen
+    ? <button className="button primary weekly-product-cta" type="button" onClick={() => onOpen(product)}>
+        Ver produto
+      </button>
+    : <Link className="button primary weekly-product-cta" to="/cardapio">Ver no cardápio</Link>;
 
-  const items = useMemo(() => {
-    if (!payload) return [];
-    return payload.products.filter((product) => product.featured || product.weeklyHighlight).slice(0, 8);
-  }, [payload]);
-
-  useEffect(() => {
-    if (paused || items.length <= 1) return;
-    const timer = window.setInterval(() => setIndex((value) => (value + 1) % items.length), 4500);
-    return () => window.clearInterval(timer);
-  }, [paused, items.length]);
-
-  if (!items.length) return null;
-  const product = items[index % items.length]!;
-
-  return <section className="featured-section" aria-labelledby="featured-title">
-    <div className="section-heading">
-      <div><span className="eyebrow">Destaques e ofertas</span><h2 id="featured-title">Tem coisa boa passando por aqui.</h2></div>
-      <div className="carousel-controls">
-        <button type="button" onClick={() => { setPaused(true); setIndex((value) => (value - 1 + items.length) % items.length); }} aria-label="Anterior">←</button>
-        <button type="button" onClick={() => { setPaused(true); setIndex((value) => (value + 1) % items.length); }} aria-label="Próximo">→</button>
-      </div>
-    </div>
-    <div className="featured-slide" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}>
+  return <section className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Produto da semana">
+    <div className="weekly-product-media">
       <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
-      <div>
-        {product.weeklyHighlight && <span className="offer-pill">Produto da semana</span>}
-        <h3>{product.displayName}</h3>
-        <p>{product.description}</p>
-        <strong>{product.offers[0] ? money(product.offers[0].offerPriceCents) : money(minimumPrice(product))}</strong>
-        <a className="button primary" href={`${import.meta.env.BASE_URL}cardapio#${product.slug}`}>Ver no cardápio</a>
+    </div>
+    <div className="weekly-product-copy">
+      <span className="weekly-product-kicker">Produto da semana</span>
+      <div className="weekly-product-title">
+        <strong>{product.displayName}</strong>
+        {product.descriptiveName && <span>{product.descriptiveName}</span>}
       </div>
+      <div className="weekly-product-price">
+        {price.regular != null && <s>{money(price.regular)}</s>}
+        <strong>{price.current > 0 ? money(price.current) : "Em breve"}</strong>
+        {price.savings != null && price.savings > 0 && <small>economize {money(price.savings)}</small>}
+      </div>
+      {product.soldOut ? <span className="weekly-product-status">Esgotado no momento</span> : cta}
+    </div>
+  </section>;
+}
+
+export function FeaturedProductSpotlight({
+  product,
+  onOpen
+}: {
+  product: CatalogProduct | null;
+  onOpen?: (product: CatalogProduct) => void;
+}) {
+  if (!product) return null;
+  const price = promotedPrice(product);
+  const flavorNames = product.flavors.map((flavor) => flavor.name).slice(0, 4);
+  const cta = onOpen
+    ? <button className="button primary featured-product-cta" type="button" onClick={() => onOpen(product)}>Quero experimentar</button>
+    : <Link className="button primary featured-product-cta" to="/cardapio">Quero experimentar</Link>;
+
+  return <section className={`featured-product-spotlight ${product.soldOut ? "is-sold-out" : ""}`} aria-labelledby="featured-product-title">
+    <div className="featured-product-media">
+      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
+      <span>Destaque CookLily</span>
+    </div>
+    <div className="featured-product-copy">
+      <span className="eyebrow">Escolha da casa</span>
+      <h2 id="featured-product-title">{product.displayName}</h2>
+      {product.descriptiveName && <strong className="featured-product-descriptor">{product.descriptiveName}</strong>}
+      {product.description && <p>{product.description}</p>}
+      {flavorNames.length > 0 && <div className="featured-product-flavors" aria-label="Sabores">
+        {flavorNames.map((flavor) => <span key={flavor}>{flavor}</span>)}
+      </div>}
+      <div className="featured-product-price">
+        {price.regular != null && <s>{money(price.regular)}</s>}
+        <strong>{price.current > 0 ? money(price.current) : "Em breve"}</strong>
+      </div>
+      {product.soldOut ? <span className="soldout-banner">Esgotado no momento</span> : cta}
     </div>
   </section>;
 }
@@ -787,6 +823,8 @@ export function CatalogPage() {
   ].filter(Boolean).length;
 
   return <>
+    <WeeklyProductBanner product={meta?.weeklyProduct ?? null} onOpen={setSelected} />
+
     <section className="catalog-hero">
       <span className="eyebrow">Cardápio CookLily</span>
       <h1>Escolha pelo sabor. A gente cuida da cremosidade.</h1>
@@ -831,6 +869,8 @@ export function CatalogPage() {
         <button className="button ghost" type="button" onClick={() => setFilters(initialFilters)}>Limpar filtros</button>
       </div>}
     </section>
+
+    <FeaturedProductSpotlight product={meta?.featuredProduct ?? null} onOpen={setSelected} />
 
     {meta?.combos.length ? <ComboCarousel combos={meta.combos} onSelect={setSelectedCombo} /> : null}
 
