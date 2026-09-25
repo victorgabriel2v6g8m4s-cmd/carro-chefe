@@ -29,28 +29,28 @@ O script NÃO:
 EOF
 }
 
-die() {
+early_die() {
   echo "ERRO: $*" >&2
   exit 1
 }
 
-[[ ${EUID} -eq 0 ]] || die "execute como root/sudo"
+[[ ${EUID} -eq 0 ]] || early_die "execute como root/sudo"
 [[ $# -eq 1 ]] || { usage; exit 64; }
 
 RELEASE_SHA="$1"
-[[ "${RELEASE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]] || die "release SHA deve ter 40 caracteres hexadecimais"
+[[ "${RELEASE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]] || early_die "release SHA deve ter 40 caracteres hexadecimais"
 
 for command in git npm node sqlite3 systemctl nginx curl python3 flock tee; do
-  command -v "${command}" >/dev/null 2>&1 || die "comando obrigatório ausente: ${command}"
+  command -v "${command}" >/dev/null 2>&1 || early_die "comando obrigatório ausente: ${command}"
 done
 
-[[ -d "${APP_DIR}/.git" ]] || die "${APP_DIR} não é o checkout Git esperado"
-[[ -f "${ENV_FILE}" ]] || die "arquivo de ambiente ausente: ${ENV_FILE}"
-[[ -f "${NGINX_CONF}" ]] || die "configuração Nginx ausente: ${NGINX_CONF}"
+[[ -d "${APP_DIR}/.git" ]] || early_die "${APP_DIR} não é o checkout Git esperado"
+[[ -f "${ENV_FILE}" ]] || early_die "arquivo de ambiente ausente: ${ENV_FILE}"
+[[ -f "${NGINX_CONF}" ]] || early_die "configuração Nginx ausente: ${NGINX_CONF}"
 
 mkdir -p "${BACKUP_DIR}" "${LOG_DIR}"
 exec 9>"${LOCK_FILE}"
-flock -n 9 || die "outro deploy já está em execução"
+flock -n 9 || early_die "outro deploy já está em execução"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.log"
@@ -85,6 +85,11 @@ cleanup_on_error() {
 }
 trap cleanup_on_error ERR
 
+fail() {
+  echo "ERRO: $*" >&2
+  cleanup_on_error 1
+}
+
 echo "== Carro Chefe deploy =="
 echo "timestamp=${STAMP}"
 echo "previous_sha=${PREVIOUS_SHA}"
@@ -94,12 +99,12 @@ echo "log=${LOG_FILE}"
 PHASE="validate-worktree"
 if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
-  die "checkout possui alterações; deploy cancelado"
+  fail "checkout possui alterações; deploy cancelado"
 fi
 
 PHASE="fetch"
 git fetch origin --prune
-git cat-file -e "${RELEASE_SHA}^{commit}" || die "SHA não existe no repositório local após fetch"
+git cat-file -e "${RELEASE_SHA}^{commit}" || fail "SHA não existe no repositório local após fetch"
 git show --no-patch --format='release_commit=%H %s' "${RELEASE_SHA}"
 
 PHASE="nginx-precheck"
@@ -113,13 +118,13 @@ required_nginx_patterns=(
   'location ^~ /api/ { return 404; }'
 )
 for pattern in "${required_nginx_patterns[@]}"; do
-  grep -Fq "${pattern}" "${NGINX_CONF}" || die "Nginx ainda não contém rota obrigatória: ${pattern}"
+  grep -Fq "${pattern}" "${NGINX_CONF}" || fail "Nginx ainda não contém rota obrigatória: ${pattern}"
 done
 nginx -t
 
 PHASE="checkout"
 git checkout --detach "${RELEASE_SHA}"
-[[ "$(git rev-parse HEAD)" == "${RELEASE_SHA}" ]] || die "checkout não ficou no SHA solicitado"
+[[ "$(git rev-parse HEAD)" == "${RELEASE_SHA}" ]] || fail "checkout não ficou no SHA solicitado"
 
 PHASE="environment"
 set -a
@@ -127,13 +132,13 @@ set -a
 . "${ENV_FILE}"
 set +a
 
-: "${DATABASE_URL:?DATABASE_URL ausente}"
-: "${LILY_DATABASE_URL:?LILY_DATABASE_URL ausente}"
-: "${LILY_UPLOAD_DIR:?LILY_UPLOAD_DIR ausente}"
+[[ -n "${DATABASE_URL:-}" ]] || fail "DATABASE_URL ausente"
+[[ -n "${LILY_DATABASE_URL:-}" ]] || fail "LILY_DATABASE_URL ausente"
+[[ -n "${LILY_UPLOAD_DIR:-}" ]] || fail "LILY_UPLOAD_DIR ausente"
 
-[[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || die "DATABASE_URL fora do volume esperado"
-[[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || die "LILY_DATABASE_URL fora do volume esperado"
-[[ "${LILY_UPLOAD_DIR}" == /srv/carro-chefe/data/* ]] || die "LILY_UPLOAD_DIR fora do volume esperado"
+[[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "DATABASE_URL fora do volume esperado"
+[[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "LILY_DATABASE_URL fora do volume esperado"
+[[ "${LILY_UPLOAD_DIR}" == /srv/carro-chefe/data/* ]] || fail "LILY_UPLOAD_DIR fora do volume esperado"
 
 PHASE="dependencies"
 npm ci --include=dev
@@ -181,7 +186,7 @@ preflight npm run tools:status:check
 PHASE="post-gates-cleanliness"
 if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
-  die "gates alteraram arquivos versionados/não ignorados"
+  fail "gates alteraram arquivos versionados/não ignorados"
 fi
 
 PHASE="backup"
@@ -205,16 +210,16 @@ fi
 PHASE="stop-service"
 systemctl stop "${SERVICE}"
 SERVICE_STOPPED=1
-[[ "$(systemctl is-active "${SERVICE}" || true)" == "inactive" ]] || die "serviço não ficou inativo"
+[[ "$(systemctl is-active "${SERVICE}" || true)" == "inactive" ]] || fail "serviço não ficou inativo"
 
 if command -v fuser >/dev/null 2>&1; then
   if fuser "${CORE_DB}" >/dev/null 2>&1; then
     fuser "${CORE_DB}" || true
-    die "core SQLite continua em uso após stop"
+    fail "core SQLite continua em uso após stop"
   fi
   if [[ -f "${LILY_DB}" ]] && fuser "${LILY_DB}" >/dev/null 2>&1; then
     fuser "${LILY_DB}" || true
-    die "Lily SQLite continua em uso após stop"
+    fail "Lily SQLite continua em uso após stop"
   fi
 fi
 
@@ -244,7 +249,7 @@ SERVICE_STOPPED=0
 [[ "$(systemctl is-active "${SERVICE}")" == "active" ]] || {
   systemctl status "${SERVICE}" --no-pager -l || true
   journalctl -u "${SERVICE}" -n 120 --no-pager || true
-  die "serviço não ficou ativo"
+  fail "serviço não ficou ativo"
 }
 
 PHASE="health"
