@@ -434,3 +434,16 @@ No painel `Cardápio administrável > Ofertas e combos`, cada combo permite esco
 Combos legados sem `mode` explícito são interpretados como `preset` e recebem uma composição determinística baseada nas regras antigas até que o staff salve uma composição específica no painel.
 
 Um combo preset inválido é omitido da vitrine pública em vez de derrubar todo o cardápio, mas continua visível no painel para correção.
+
+## Gate do slider e modos de combo
+
+**SHA de release validado:** `ee0089b5e1992a29d6b253ee2dafd6701eb1674b`
+
+- CI run `36169566033`: success;
+- CodeQL run `36169566016`: success;
+- Node 20: 23 arquivos / 115 testes;
+- Node 24: success;
+- builds de produção: success;
+- Tool Health e gates auxiliares: success.
+
+O primeiro gate desta rodada detectou dois testes antigos que assumiam combo builder por padrão. Eles foram corrigidos para ativar explicitamente `mode=builder`, preservando `preset` como comportamento padrão da vitrine.
