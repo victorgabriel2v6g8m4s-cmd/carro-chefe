@@ -22,7 +22,7 @@ function safeLoad(): CartItem[] {
     if (!raw) return [];
     const value = JSON.parse(raw);
     if (!Array.isArray(value)) return [];
-    return value.filter((item): item is CartItem =>
+    return value.filter((item) =>
       item && typeof item === "object"
       && typeof item.id === "string"
       && typeof item.productId === "string"
@@ -30,14 +30,26 @@ function safeLoad(): CartItem[] {
       && Number.isInteger(item.unitPriceCents)
       && Number.isInteger(item.quantity)
       && item.quantity > 0
-    ).slice(0, 30);
+    ).map((item) => ({
+      ...item,
+      kind: item.kind === "combo" ? "combo" : "product"
+    } as CartItem)).slice(0, 30);
   } catch {
     return [];
   }
 }
 
-function itemIdentity(item: AddCartItemInput) {
+function itemIdentity(item: AddCartItemInput | CartItem) {
+  if (item.kind === "combo") {
+    return JSON.stringify({
+      kind: "combo",
+      comboId: item.comboId,
+      selections: item.comboSelections?.map((selection) => selection.configurationHash).sort(),
+      configurationHash: item.configurationHash
+    });
+  }
   return JSON.stringify({
+    kind: "product",
     productId: item.productId,
     sizeMl: item.sizeMl,
     flavorIds: [...item.flavorIds].sort(),
