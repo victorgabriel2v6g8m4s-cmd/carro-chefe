@@ -71,7 +71,7 @@ export function AdminFulfillmentPage() {
   }, []);
 
   if (loading) return <section className="admin-state"><h1>Carregando configurações...</h1></section>;
-  if (!session || !data) return <section className="admin-state"><span className="eyebrow">CookLily</span><h1>Acesso staff necessário.</h1><p>{error}</p><a className="button primary" href={import.meta.env.BASE_URL + "entrar"}>Entrar</a></section>;
+  if (!session || !data) return <section className="admin-state"><span className="eyebrow">CookLily</span><h1>Acesso staff necessário.</h1><p>{error}</p><a className="button primary" href={import.meta.env.BASE_URL + "entrar?next=" + encodeURIComponent("/painel/entrega")}>Entrar</a></section>;
 
   const csrfToken = session.csrfToken;
   const settings = data.settings;
@@ -140,7 +140,7 @@ export function AdminFulfillmentPage() {
 
   return <section className="admin-page wide">
     <div className="admin-heading">
-      <div><span className="eyebrow">Entrega 06</span><h1>Entrega e retirada</h1><p>Pedidos começam desabilitados. Abra a operação apenas depois de configurar horários e regras reais.</p></div>
+      <div><span className="eyebrow">CookLily · administração</span><h1>Operação e configurações</h1><p>Gerencie pedidos, entrega, retirada, canais públicos e fidelidade sem alterar código.</p></div>
       <div className="admin-actions"><a className="button ghost" href={import.meta.env.BASE_URL + "painel"}>Resumo</a><a className="button ghost" href={import.meta.env.BASE_URL + "checkout"} target="_blank" rel="noreferrer">Preview checkout</a></div>
     </div>
     {error && <p className="error" role="alert">{error}</p>}
@@ -197,7 +197,7 @@ export function AdminFulfillmentPage() {
           })}
         </div>
       </section>
-      <button className="button primary" type="submit">Salvar operação</button>
+      <button className="button primary" type="submit">Salvar configurações</button>
     </form>
 
     <section className="checkout-section admin-zones">
