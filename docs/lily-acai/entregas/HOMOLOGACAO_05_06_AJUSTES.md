@@ -386,3 +386,51 @@ Após nova homologação visual em desktop, o header autenticado foi simplificad
 - Tool Health e gates auxiliares: success.
 
 O PR técnico #73 foi usado apenas como gate e deve permanecer fechado sem merge.
+
+## Carrossel e modos de combo
+
+A vitrine de combos foi transformada em um slider comercial de um item por vez.
+
+### Slider
+
+- exibe um combo principal por vez;
+- mostra apenas uma pequena borda do slide anterior/próximo quando eles existem;
+- transição suave por scroll-snap;
+- autoplay a cada ~6,5 s;
+- pausa no hover do mouse;
+- pausa enquanto o usuário mantém o dedo/pointer pressionado;
+- pausa enquanto controles internos estão em foco;
+- retoma preservando o tempo restante;
+- barra de tempo fina e discreta esvai-se até a próxima troca;
+- setas permitem navegação manual;
+- CTA usa animação leve de respiração/shimmer;
+- `prefers-reduced-motion` desativa animações não essenciais.
+
+Cada slide usa uma foto de capa proveniente de um produto do combo. O painel pode indicar explicitamente qual produto deve fornecer a capa; sem configuração, usa um produto do próprio preset que tenha imagem.
+
+### Modos de combo
+
+O modo padrão atual é **`preset` / Sabores selecionados**.
+
+Neste modo:
+
+- produtos, tamanhos e sabores são definidos pela CookLily;
+- cliente visualiza a composição, mas não altera os itens;
+- servidor bloqueia qualquer tentativa de adulterar as seleções;
+- disponibilidade e preço são recotados antes de adicionar ao carrinho e novamente no pedido.
+
+O modo **`builder` / Cliente monta** não foi removido.
+
+No painel `Cardápio administrável > Ofertas e combos`, cada combo permite escolher:
+
+- modo `Sabores selecionados`;
+- modo `Cliente monta`;
+- quantidade de itens;
+- produto usado como capa;
+- até cinco slots de produtos predefinidos;
+- tamanho e sabores de cada slot;
+- categoria, subtipo, tamanho e quantidade de sabores das regras do modo builder.
+
+Combos legados sem `mode` explícito são interpretados como `preset` e recebem uma composição determinística baseada nas regras antigas até que o staff salve uma composição específica no painel.
+
+Um combo preset inválido é omitido da vitrine pública em vez de derrubar todo o cardápio, mas continua visível no painel para correção.
