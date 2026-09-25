@@ -496,3 +496,53 @@ O estado local dos toggles é sincronizado após refresh do painel para que a tr
 - Tool Health e gates auxiliares: success.
 
 O PR técnico #76 foi usado apenas como gate e permanece fechado sem merge.
+
+## Hierarquia final do catálogo — homologação visual
+
+Esta seção substitui a decisão anterior de expor o `featured` em uma vitrine editorial.
+
+### Busca e filtros
+
+- a searchbar passa a ser o primeiro bloco do cardápio, logo abaixo do header;
+- permanece sticky durante a rolagem, abaixo do header sticky;
+- o painel de filtros continua recolhível;
+- busca e filtros são persistidos na URL (`q`, categoria, subcategoria, sabor, tamanho, disponibilidade e oferta);
+- refresh e links compartilhados preservam o estado do catálogo;
+- navegação do histórico do navegador volta a refletir os parâmetros da URL;
+- parâmetros de atribuição/campanha já existentes na URL são preservados.
+
+### Escolha da semana
+
+- o banner semanal continua existindo na landing e no cardápio;
+- no cardápio ele aparece depois do hero, no estilo horizontal compacto aprovado na homologação;
+- usa imagem circular à esquerda, fundo vinho/rosa, título `ESCOLHA DA SEMANA`, nome, preço e CTA;
+- no mobile mantém proporção compacta para não consumir a primeira dobra.
+
+### Mais pedido
+
+- o antigo bloco especial `FeaturedProductSpotlight` foi removido da landing e do cardápio;
+- o campo `featured` passa a controlar somente a etiqueta `Mais pedido` no canto da capa do produto dentro da grade;
+- o painel apresenta essa opção como `Mais pedido · etiqueta na grade`;
+- a etiqueta não remove o produto da grade nem altera busca/filtros.
+
+### Landing
+
+- a landing não expõe mais o produto `featured` em uma seção própria;
+- ganhou um CTA exclusivo `Ver cardápio completo`;
+- o CTA reutiliza a mesma animação leve de respiração/shimmer dos botões do carrossel de combos.
+
+### Ordem do cardápio
+
+1. header;
+2. searchbar/filtros sticky;
+3. hero do cardápio;
+4. banner `Escolha da semana`;
+5. contador + grade de produtos;
+6. carregamento incremental;
+7. carrossel de combos;
+8. footer.
+
+### Navegação
+
+- links internos principais usam estado ativo visual via `NavLink`;
+- o usuário consegue identificar Cardápio, Ranking ou Painel como seção atual sem depender apenas do conteúdo da página.
