@@ -238,8 +238,29 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingOptions(true);
     setError("");
+    setQuote(null);
+    setAdded(false);
+
+    if (combo.mode === "preset") {
+      setLoadingOptions(false);
+      setQuoting(true);
+      const selections = combo.presetSelections.map((selection) => ({
+        productId: selection.productId,
+        sizeMl: selection.sizeMl,
+        flavorIds: selection.flavorIds,
+        addons: selection.addons
+      }));
+      configureLilyCombo({ comboId: combo.id, selections })
+        .then((result) => { if (!cancelled) setQuote(result); })
+        .catch((cause) => {
+          if (!cancelled) setError(cause instanceof Error ? cause.message : "Não foi possível validar este combo.");
+        })
+        .finally(() => { if (!cancelled) setQuoting(false); });
+      return () => { cancelled = true; };
+    }
+
+    setLoadingOptions(true);
     getLilyComboBuilder(combo.id)
       .then((payload) => {
         if (cancelled) return;
@@ -253,7 +274,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
       })
       .finally(() => { if (!cancelled) setLoadingOptions(false); });
     return () => { cancelled = true; };
-  }, [combo.id]);
+  }, [combo.id, combo.mode]);
 
   function setSlot(index: number, productId: string) {
     setAdded(false);
@@ -277,6 +298,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
   );
 
   useEffect(() => {
+    if (combo.mode !== "builder") return;
     setQuote(null);
     setError((current) => loadingOptions ? current : "");
     if (!builder || loadingOptions || selectionIds.length !== builder.quantity || selectionIds.some((id) => !id)) return;
@@ -313,7 +335,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
       });
     }, 180);
     return () => window.clearTimeout(timer);
-  }, [builder, loadingOptions, selectionsSignature, combo.id]);
+  }, [builder, loadingOptions, selectionsSignature, combo.id, combo.mode]);
 
   function addCombo() {
     if (!quote) return;
@@ -343,12 +365,14 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
     setAdded(true);
   }
 
+  const modalCover = combo.cover?.url ?? combo.presetSelections.find((selection) => selection.product?.cover)?.product?.cover?.url ?? brandPlaceholder;
+
   return <div className="product-modal-backdrop" role="presentation" onMouseDown={(event) => {
     if (event.target === event.currentTarget) onClose();
   }}>
     <section className="product-modal combo-modal" role="dialog" aria-modal="true" aria-label={combo.name}>
       <button className="modal-close" type="button" onClick={onClose} aria-label="Fechar">×</button>
-      <div className="combo-cover">
+      <div className="combo-cover combo-cover-photo" style={{ backgroundImage: `linear-gradient(180deg, rgb(36 4 25 / 4%), rgb(36 4 25 / 78%)), url("${modalCover}")` }}>
         <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
         <span className="eyebrow">Combo CookLily</span>
         <h2>{combo.name}</h2>
@@ -359,57 +383,76 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
 
       <div className="product-modal-panel">
         <div className="product-modal-content combo-modal-content">
-          {loadingOptions && <p>Carregando opções do combo...</p>}
-          {builder && Array.from({ length: builder.quantity }, (_, index) => {
-            const selectedProduct = builder.options.find((product) => product.id === selectionIds[index]);
-            const addons = slotAddons[index] ?? {};
-            const addonUnits = Object.values(addons).reduce((sum, value) => sum + value, 0);
-            return <fieldset className="combo-slot" key={index}>
-              <legend>Item {index + 1} · {builder.sizeMl} ml</legend>
-              <select value={selectionIds[index] ?? ""} disabled={loadingOptions || builder.options.length === 0}
-                onChange={(event) => setSlot(index, event.target.value)}>
-                <option value="">Escolha um produto</option>
-                {builder.options.map((product) => <option key={product.id} value={product.id}>{product.displayName}</option>)}
-              </select>
-
-              {selectedProduct && <div className="combo-slot-preview">
-                {selectedProduct.cover && <img src={selectedProduct.cover.url} alt="" />}
+          {combo.mode === "preset" ? <>
+            <span className="eyebrow">Sabores selecionados</span>
+            <h3>Este combo já vem pronto.</h3>
+            <p>Os produtos e sabores abaixo são definidos pela CookLily. Você só confirma e adiciona ao carrinho.</p>
+            <div className="preset-combo-items">
+              {combo.presetSelections.map((selection, index) => <article key={`${selection.productId}-${index}`}>
+                <img src={selection.product?.cover?.url ?? brandPlaceholder} alt="" />
                 <div>
-                  <strong>{selectedProduct.displayName}</strong>
-                  {selectedProduct.flavors.length > 0 && <small>{selectedProduct.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
+                  <strong>{selection.product?.name ?? `Item ${index + 1}`}</strong>
+                  <small>{selection.sizeMl} ml</small>
+                  <span>{selection.flavors.length ? selection.flavors.map((flavor) => flavor.name).join(" + ") : "Sabor do produto"}</span>
                 </div>
-              </div>}
+              </article>)}
+            </div>
+            <small>Disponibilidade, preço e composição são validados novamente pelo servidor antes de entrar no carrinho.</small>
+          </> : <>
+            {loadingOptions && <p>Carregando opções do combo...</p>}
+            {builder && Array.from({ length: builder.quantity }, (_, index) => {
+              const selectedProduct = builder.options.find((product) => product.id === selectionIds[index]);
+              const addons = slotAddons[index] ?? {};
+              const addonUnits = Object.values(addons).reduce((sum, value) => sum + value, 0);
+              return <fieldset className="combo-slot" key={index}>
+                <legend>Item {index + 1} · {builder.sizeMl} ml</legend>
+                <select value={selectionIds[index] ?? ""} disabled={loadingOptions || builder.options.length === 0}
+                  onChange={(event) => setSlot(index, event.target.value)}>
+                  <option value="">Escolha um produto</option>
+                  {builder.options.map((product) => <option key={product.id} value={product.id}>{product.displayName}</option>)}
+                </select>
 
-              {selectedProduct && selectedProduct.addons.length > 0 && <div className="combo-addon-list">
-                <small>Adicionais deste item · {addonUnits}/4 porções</small>
-                {selectedProduct.addons.map((addon) => {
-                  const quantity = addons[addon.id] ?? 0;
-                  return <div className="addon-row compact" key={addon.id}>
-                    <div><strong>{addon.name}</strong><small>+ {money(addon.priceCents)}</small></div>
-                    <div className="stepper">
-                      <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity - 1, addon.individualLimit)} disabled={quantity === 0}>−</button>
-                      <span>{quantity}</span>
-                      <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity + 1, addon.individualLimit)}
-                        disabled={quantity >= addon.individualLimit || addonUnits >= 4}>+</button>
-                    </div>
-                  </div>;
-                })}
-              </div>}
-            </fieldset>;
-          })}
+                {selectedProduct && <div className="combo-slot-preview">
+                  {selectedProduct.cover && <img src={selectedProduct.cover.url} alt="" />}
+                  <div>
+                    <strong>{selectedProduct.displayName}</strong>
+                    {selectedProduct.flavors.length > 0 && <small>{selectedProduct.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
+                  </div>
+                </div>}
 
-          <small>Categoria, tamanho, disponibilidade, adicionais e preço são validados automaticamente no servidor.</small>
+                {selectedProduct && selectedProduct.addons.length > 0 && <div className="combo-addon-list">
+                  <small>Adicionais deste item · {addonUnits}/4 porções</small>
+                  {selectedProduct.addons.map((addon) => {
+                    const quantity = addons[addon.id] ?? 0;
+                    return <div className="addon-row compact" key={addon.id}>
+                      <div><strong>{addon.name}</strong><small>+ {money(addon.priceCents)}</small></div>
+                      <div className="stepper">
+                        <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity - 1, addon.individualLimit)} disabled={quantity === 0}>−</button>
+                        <span>{quantity}</span>
+                        <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity + 1, addon.individualLimit)}
+                          disabled={quantity >= addon.individualLimit || addonUnits >= 4}>+</button>
+                      </div>
+                    </div>;
+                  })}
+                </div>}
+              </fieldset>;
+            })}
+            <small>Categoria, tamanho, disponibilidade, adicionais e preço são validados automaticamente no servidor.</small>
+          </>}
+
           {error && <p className="error" role="alert">{error}</p>}
           {quoting && <p className="config-status" role="status">Validando combo e recalculando...</p>}
         </div>
 
         <div className="product-modal-footer">
           <div className="modal-price">
-            <small>{error ? "Combo inválido" : quoting ? "Calculando..." : quote ? "Total" : "Monte o combo"}</small>
+            <small>{error ? "Combo inválido" : quoting ? "Calculando..." : quote ? "Total" : "Validando combo"}</small>
             <strong>{quote ? money(quote.totalPriceCents) : money(combo.offerPriceCents)}</strong>
           </div>
           {!added
-            ? <button className="button primary" type="button" disabled={!quote || quoting || Boolean(error)} onClick={addCombo}>Adicionar combo ao carrinho</button>
+            ? <button className="button primary" type="button" disabled={!quote || quoting || Boolean(error)} onClick={addCombo}>
+                {combo.mode === "preset" ? "Adicionar combo ao carrinho" : "Adicionar combo ao carrinho"}
+              </button>
             : <>
               <Link className="button primary" to="/carrinho">Ir para o carrinho</Link>
               <button className="button ghost" type="button" onClick={onClose}>Continuar comprando</button>
@@ -418,6 +461,161 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
       </div>
     </section>
   </div>;
+}
+
+function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect: (combo: CatalogCombo) => void }) {
+  const AUTOPLAY_MS = 6500;
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [cycle, setCycle] = useState(0);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const slideRefs = useRef<Array<HTMLElement | null>>([]);
+  const remainingRef = useRef(AUTOPLAY_MS);
+  const startedAtRef = useRef(0);
+  const timerRef = useRef<number | null>(null);
+  const scrollEndRef = useRef<number | null>(null);
+
+  function scrollToIndex(nextIndex: number, behavior: ScrollBehavior = "smooth") {
+    if (!combos.length) return;
+    const normalized = (nextIndex + combos.length) % combos.length;
+    const viewport = viewportRef.current;
+    const slide = slideRefs.current[normalized];
+    setIndex(normalized);
+    setCycle((value) => value + 1);
+    remainingRef.current = AUTOPLAY_MS;
+    if (viewport && slide) {
+      const left = slide.offsetLeft - Math.max(0, (viewport.clientWidth - slide.clientWidth) / 2);
+      viewport.scrollTo({ left, behavior });
+    }
+  }
+
+  useEffect(() => {
+    if (paused || combos.length <= 1) return;
+    startedAtRef.current = performance.now();
+    timerRef.current = window.setTimeout(() => {
+      remainingRef.current = AUTOPLAY_MS;
+      scrollToIndex(index + 1);
+    }, remainingRef.current);
+    return () => {
+      if (timerRef.current != null) window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [paused, index, combos.length, cycle]);
+
+  function pause() {
+    if (paused) return;
+    if (timerRef.current != null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+      const elapsed = Math.max(0, performance.now() - startedAtRef.current);
+      remainingRef.current = Math.max(250, remainingRef.current - elapsed);
+    }
+    setPaused(true);
+  }
+
+  function resume() {
+    if (!paused) return;
+    setPaused(false);
+  }
+
+  function handleScroll() {
+    if (scrollEndRef.current != null) window.clearTimeout(scrollEndRef.current);
+    scrollEndRef.current = window.setTimeout(() => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const center = viewport.scrollLeft + viewport.clientWidth / 2;
+      let closest = index;
+      let distance = Number.POSITIVE_INFINITY;
+      slideRefs.current.forEach((slide, slideIndex) => {
+        if (!slide) return;
+        const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+        const currentDistance = Math.abs(slideCenter - center);
+        if (currentDistance < distance) {
+          distance = currentDistance;
+          closest = slideIndex;
+        }
+      });
+      if (closest !== index) {
+        setIndex(closest);
+        setCycle((value) => value + 1);
+        remainingRef.current = AUTOPLAY_MS;
+      }
+    }, 100);
+  }
+
+  useEffect(() => {
+    scrollToIndex(0, "auto");
+  // initialize only when combo collection changes
+  }, [combos.map((combo) => combo.id).join("|")]);
+
+  if (!combos.length) return null;
+
+  return <section
+    className="combo-carousel"
+    aria-roledescription="carrossel"
+    aria-label="Combos CookLily"
+    onMouseEnter={pause}
+    onMouseLeave={resume}
+    onPointerDown={pause}
+    onPointerUp={resume}
+    onPointerCancel={resume}
+    onFocusCapture={pause}
+    onBlurCapture={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) resume();
+    }}
+  >
+    <div className="combo-carousel-top">
+      <div><span className="eyebrow">Economize combinando</span><h2>Combos</h2></div>
+      {combos.length > 1 && <div className="combo-carousel-controls">
+        <button type="button" aria-label="Combo anterior" onClick={() => scrollToIndex(index - 1)}>←</button>
+        <span>{index + 1}/{combos.length}</span>
+        <button type="button" aria-label="Próximo combo" onClick={() => scrollToIndex(index + 1)}>→</button>
+      </div>}
+    </div>
+
+    <div className="combo-carousel-viewport" ref={viewportRef} onScroll={handleScroll}>
+      <div className="combo-carousel-track">
+        {combos.map((combo, slideIndex) => {
+          const active = slideIndex === index;
+          const cover = combo.cover?.url ?? combo.presetSelections.find((selection) => selection.product?.cover)?.product?.cover?.url ?? brandPlaceholder;
+          const flavorLabel = combo.mode === "preset"
+            ? combo.presetSelections.flatMap((selection) => selection.flavors.map((flavor) => flavor.name)).join(" · ")
+            : "Monte do seu jeito";
+          return <article
+            key={combo.id}
+            ref={(node) => { slideRefs.current[slideIndex] = node; }}
+            className={`combo-carousel-slide ${active ? "is-active" : ""}`}
+            aria-hidden={!active}
+          >
+            <div className="combo-slide-image">
+              <img src={cover} alt={combo.cover?.altText ?? `Capa do combo ${combo.name}`} draggable={false} />
+              <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
+            </div>
+            <div className="combo-slide-copy">
+              <span className="eyebrow">{combo.mode === "preset" ? "Sabores selecionados" : "Combo personalizável"}</span>
+              <h3>{combo.name}</h3>
+              {combo.description && <p>{combo.description}</p>}
+              {flavorLabel && <small className="combo-flavor-line">{flavorLabel}</small>}
+              <div className="combo-slide-price"><s>{money(combo.regularPriceCents)}</s><strong>{money(combo.offerPriceCents)}</strong></div>
+              <button className="button primary combo-slide-cta" type="button" onClick={() => onSelect(combo)}>
+                {combo.mode === "preset" ? "Quero este combo" : "Montar meu combo"}
+              </button>
+            </div>
+          </article>;
+        })}
+      </div>
+    </div>
+
+    {combos.length > 1 && <div className="combo-carousel-timer" aria-hidden="true">
+      <span
+        key={`${index}-${cycle}`}
+        style={{
+          animationDuration: `${AUTOPLAY_MS}ms`,
+          animationPlayState: paused ? "paused" : "running"
+        }}
+      />
+    </div>}
+  </section>;
 }
 
 function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () => void }) {
@@ -634,21 +832,7 @@ export function CatalogPage() {
       </div>}
     </section>
 
-    {meta?.combos.length ? <section className="combo-section" aria-labelledby="combo-title">
-      <div className="combo-section-heading">
-        <div><span className="eyebrow">Economize combinando</span><h2 id="combo-title">Combos</h2></div>
-        <small>Deslize para ver mais →</small>
-      </div>
-      <div className="combo-strip" aria-label="Combos disponíveis">
-        {meta.combos.map((combo) => <article key={combo.id}>
-          <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
-          <strong>{combo.name}</strong>
-          <small>{combo.description}</small>
-          <span><s>{money(combo.regularPriceCents)}</s> {money(combo.offerPriceCents)}</span>
-          <button className="button ghost" type="button" onClick={() => setSelectedCombo(combo)}>Montar combo</button>
-        </article>)}
-      </div>
-    </section> : null}
+    {meta?.combos.length ? <ComboCarousel combos={meta.combos} onSelect={setSelectedCombo} /> : null}
 
     {error && <p className="error" role="alert">{error}</p>}
     <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> produtos encontrados</div>
