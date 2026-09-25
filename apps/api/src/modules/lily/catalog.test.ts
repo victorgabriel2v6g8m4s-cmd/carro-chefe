@@ -154,6 +154,62 @@ describe("CookLily catálogo", () => {
     expect(await lilyPrisma.lilyAdminAudit.count()).toBeGreaterThan(0);
   });
 
+  it("mantém produto da semana e produto destaque como posições exclusivas e fora dos filtros", async () => {
+    const originals = await lilyPrisma.lilyProduct.findMany({
+      select: { id: true, featured: true, weeklyHighlight: true }
+    });
+    const staff = await register("staff");
+
+    try {
+      const first = await app.inject({
+        method: "PATCH",
+        url: "/api/v1/lily/admin/products/prod-lilymix",
+        headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+        payload: { featured: true, weeklyHighlight: true }
+      });
+      expect(first.statusCode).toBe(200);
+
+      const second = await app.inject({
+        method: "PATCH",
+        url: "/api/v1/lily/admin/products/prod-acai-sol-lily",
+        headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+        payload: { featured: true, weeklyHighlight: true }
+      });
+      expect(second.statusCode).toBe(200);
+
+      const weekly = await lilyPrisma.lilyProduct.findMany({ where: { weeklyHighlight: true } });
+      const featured = await lilyPrisma.lilyProduct.findMany({ where: { featured: true } });
+      expect(weekly).toHaveLength(1);
+      expect(featured).toHaveLength(1);
+      expect(weekly[0]?.id).toBe("prod-acai-sol-lily");
+      expect(featured[0]?.id).toBe("prod-acai-sol-lily");
+
+      const publicCatalog = await app.inject({
+        method: "GET",
+        url: "/api/v1/lily/public/catalog?q=produto-que-nao-existe&limit=1"
+      });
+      expect(publicCatalog.statusCode).toBe(200);
+      const body = publicCatalog.json();
+      expect(body.products).toHaveLength(0);
+      expect(body.weeklyProduct.id).toBe("prod-acai-sol-lily");
+      expect(body.featuredProduct.id).toBe("prod-acai-sol-lily");
+    } finally {
+      await lilyPrisma.lilyProduct.updateMany({
+        data: { featured: false, weeklyHighlight: false }
+      });
+      for (const product of originals) {
+        if (!product.featured && !product.weeklyHighlight) continue;
+        await lilyPrisma.lilyProduct.update({
+          where: { id: product.id },
+          data: {
+            featured: product.featured,
+            weeklyHighlight: product.weeklyHighlight
+          }
+        });
+      }
+    }
+  });
+
   it("aplica oferta publicada ao configurador público", async () => {
     const staff = await register("staff");
     const created = await app.inject({
