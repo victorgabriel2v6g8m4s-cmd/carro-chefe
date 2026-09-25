@@ -114,7 +114,7 @@ export type CatalogPayload = {
   nextOffset: number | null;
 };
 
-async function parseResponse<T>(response: Response): Promise<T> {
+export async function parseResponse<T>(response: Response): Promise<T> {
   const body = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const message = body && typeof body.error === "string" ? body.error : "Não foi possível concluir a solicitação.";
@@ -221,6 +221,7 @@ export async function configureLilyItem(input: {
   return parseResponse<{
     configurationHash: string;
     product: { id: string; slug: string; name: string };
+    variant: { id: string; name: string };
     sizeMl: number;
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
