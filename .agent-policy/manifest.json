@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026.08.20.1",
+  "policyVersion": "2026.09.19.1",
   "runtimeBudgetChars": 6500,
   "sources": [
     {
@@ -11,7 +11,7 @@
     {
       "path": ".agent-policy/capsules.json",
       "kind": "capsules",
-      "sha256": "cfeea2ca7f010b2dd7e9d06b0e428c20fd027140a9e0766b3144479c90ceef8d"
+      "sha256": "ae4fb07dfb437b8678a56f8511b99aa5a9829510779d7b69a0b6f45d41fee729"
     },
     {
       "path": ".codex/AGENTS.md",
@@ -26,7 +26,7 @@
     {
       "path": "AGENTS.md",
       "kind": "agents",
-      "sha256": "4529b46ecdfd0e8962e4d2eaee87002d1565a7a05e1cc01e728179ad81607793"
+      "sha256": "6de0e92d3390ee966014ca663863bbd8652fbbbeb316a8149ca867bb0cbde06d"
     },
     {
       "path": "REGRAS.md",
@@ -44,6 +44,11 @@
       "sha256": "1191107b5ee8e492797748738ce2922904285e504c2f25f79f3a60851d008a0c"
     },
     {
+      "path": "apps/api/src/modules/lily/AGENTS.md",
+      "kind": "agents",
+      "sha256": "6702e12671ffe0d40857ca703106f59700beb282a5ae561f2f857e87a2ef275e"
+    },
+    {
       "path": "apps/api/src/workers/AGENTS.md",
       "kind": "agents",
       "sha256": "0ad14f1ca3ba9fcec04ccec1a343fa27b0b266e0cf608c2c31342a35f9b0de59"
@@ -52,6 +57,11 @@
       "path": "apps/gestao/AGENTS.md",
       "kind": "agents",
       "sha256": "a92e2e7676a937eef07ea8ebad1307a6b1584da16b17f8369b35d82be5e170ae"
+    },
+    {
+      "path": "apps/lily_acai/AGENTS.md",
+      "kind": "agents",
+      "sha256": "0391b330c8daff1cc699add79984e581f622a5bff6bfa4e56156db31c3adc252"
     },
     {
       "path": "apps/qr_manipulator/AGENTS.md",
@@ -97,6 +107,11 @@
       "path": "packages/database/AGENTS.md",
       "kind": "agents",
       "sha256": "e3e57d99034ba71e51ad1170419feedff4c6fa628b9bd82f7709f8101543cd79"
+    },
+    {
+      "path": "packages/lily-database/AGENTS.md",
+      "kind": "agents",
+      "sha256": "5295e4da245817a764ca6245f5ffc84bf1db5e72c45c48b26b27dede30b47d22"
     },
     {
       "path": "packages/ui/AGENTS.md",
@@ -145,7 +160,8 @@
     "region.tools": "Ferramentas internas devem ser determinísticas, não interativas em CI, validar caminhos/entrada e falhar de modo seguro. Não imprimem segredos e não executam ação externa/destrutiva implicitamente.",
     "region.github": "Workflows usam permissões mínimas, dependências pinadas, cache seguro e falham diante de política desatualizada, segredo rastreado ou quality gate quebrado.",
     "region.codex": "Perfis Codex são estreitos e sempre fazem preflight, leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
-    "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos."
+    "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos.",
+    "region.lily": "Lily Açaí é operação temporária e isolada nesta branch. Somente /lilyacai, /api/v1/lily, apps/lily_acai, apps/api/src/modules/lily e packages/lily-database podem possuir catálogo, login, pedidos e pagamentos Lily. Nunca misture usuários, sessões, endereços, pedidos, pagamentos, tracking ou mídia com Carro Chefe. Compartilhamento consentido usa ponte/exportação explícita; a regra ERP permanece integral fora do namespace Lily."
   },
   "agentCapsules": {
     "AG-DEV": [
@@ -285,6 +301,32 @@
         "region.api"
       ]
     },
+    "apps/api/src/modules/lily": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/api",
+        "apps/api/src/modules/lily"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/api/AGENTS.md",
+        "apps/api/src/modules/lily/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.api",
+        "region.lily"
+      ]
+    },
     "apps/api/src/workers": {
       "inheritance": [
         ".",
@@ -331,6 +373,29 @@
         "region.root",
         "region.apps",
         "region.gestao"
+      ]
+    },
+    "apps/lily_acai": {
+      "inheritance": [
+        ".",
+        "apps",
+        "apps/lily_acai"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "apps/AGENTS.md",
+        "apps/lily_acai/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.apps",
+        "region.lily"
       ]
     },
     "apps/qr_manipulator": {
@@ -522,6 +587,29 @@
         "region.database"
       ]
     },
+    "packages/lily-database": {
+      "inheritance": [
+        ".",
+        "packages",
+        "packages/lily-database"
+      ],
+      "sourcePaths": [
+        "REGRAS.md",
+        "AGENTS.md",
+        "packages/AGENTS.md",
+        "packages/lily-database/AGENTS.md"
+      ],
+      "capsuleIds": [
+        "global.authority",
+        "global.architecture",
+        "global.security",
+        "global.delivery",
+        "global.context",
+        "region.root",
+        "region.packages",
+        "region.lily"
+      ]
+    },
     "packages/ui": {
       "inheritance": [
         ".",
@@ -626,5 +714,5 @@
       ]
     }
   },
-  "manifestHash": "d263ccd7953dcbe410c7ed9e135246ee6abe8cbe24f825c874545a1c49794e4c"
+  "manifestHash": "86ea8bdd8455be31949ad0071108a81555f2f9fb3eb8ea27d269ae236e859d8d"
 }

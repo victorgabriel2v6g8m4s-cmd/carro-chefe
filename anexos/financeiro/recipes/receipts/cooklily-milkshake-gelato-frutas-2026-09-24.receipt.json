@@ -1,8 +1,8 @@
 {
   "changed_parts": [
-    "xl/workbook.xml",
     "xl/worksheets/sheet11.xml",
     "xl/worksheets/sheet2.xml",
+    "xl/worksheets/sheet3.xml",
     "xl/worksheets/sheet5.xml",
     "xl/worksheets/sheet6.xml"
   ],
@@ -15,23 +15,23 @@
     },
     {
       "index": 1,
-      "op": "assert.row"
+      "op": "assert.table"
     },
     {
       "index": 2,
-      "op": "assert.row"
+      "op": "assert.table"
     },
     {
       "index": 3,
-      "op": "assert.row"
+      "op": "assert.table"
     },
     {
       "index": 4,
-      "op": "assert.row"
+      "op": "assert.table"
     },
     {
       "index": 5,
-      "op": "assert.row"
+      "op": "assert.table"
     },
     {
       "index": 6,
@@ -43,37 +43,43 @@
     },
     {
       "index": 8,
-      "op": "assert.row"
+      "op": "table.update_rows",
+      "updated": 1
     },
     {
       "index": 9,
-      "op": "assert.row"
+      "op": "table.update_rows",
+      "updated": 1
     },
     {
       "index": 10,
-      "op": "assert.row"
+      "op": "assert.cell"
     },
     {
       "index": 11,
-      "op": "assert.row"
+      "op": "assert.cell"
     },
     {
       "index": 12,
-      "op": "assert.row"
+      "op": "assert.cell"
     },
     {
       "index": 13,
-      "op": "table.update_rows",
-      "updated": 1
+      "op": "assert.cell"
     },
     {
       "index": 14,
-      "op": "table.update_rows",
-      "updated": 1
+      "op": "table.append_rows",
+      "rows": [
+        38,
+        39,
+        40,
+        41
+      ]
     },
     {
       "index": 15,
-      "op": "assert.table"
+      "op": "assert.cell"
     },
     {
       "index": 16,
@@ -89,15 +95,15 @@
     },
     {
       "index": 19,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 20,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 21,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 22,
@@ -113,11 +119,11 @@
     },
     {
       "index": 25,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 26,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 27,
@@ -125,15 +131,15 @@
     },
     {
       "index": 28,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 29,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 30,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 31,
@@ -149,15 +155,15 @@
     },
     {
       "index": 34,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 35,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 36,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 37,
@@ -173,15 +179,15 @@
     },
     {
       "index": 40,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 41,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 42,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 43,
@@ -197,15 +203,15 @@
     },
     {
       "index": 46,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 47,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 48,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 49,
@@ -221,15 +227,15 @@
     },
     {
       "index": 52,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 53,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 54,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 55,
@@ -245,15 +251,15 @@
     },
     {
       "index": 58,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 59,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 60,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 61,
@@ -265,7 +271,21 @@
     },
     {
       "index": 63,
-      "op": "cell.set"
+      "op": "table.append_rows",
+      "rows": [
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ]
     },
     {
       "index": 64,
@@ -273,7 +293,7 @@
     },
     {
       "index": 65,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 66,
@@ -285,7 +305,7 @@
     },
     {
       "index": 68,
-      "op": "cell.set"
+      "op": "assert.cell"
     },
     {
       "index": 69,
@@ -297,144 +317,18 @@
     },
     {
       "index": 71,
-      "op": "assert.cell"
+      "op": "cell.set"
     },
     {
       "index": 72,
-      "op": "assert.cell"
-    },
-    {
-      "index": 73,
-      "op": "cell.set"
-    },
-    {
-      "index": 74,
-      "op": "cell.set"
-    },
-    {
-      "index": 75,
-      "op": "cell.set"
-    },
-    {
-      "index": 76,
-      "op": "assert.cell"
-    },
-    {
-      "index": 77,
-      "op": "assert.cell"
-    },
-    {
-      "index": 78,
-      "op": "assert.cell"
-    },
-    {
-      "index": 79,
-      "op": "cell.set"
-    },
-    {
-      "index": 80,
-      "op": "cell.set"
-    },
-    {
-      "index": 81,
-      "op": "cell.set"
-    },
-    {
-      "index": 82,
-      "op": "assert.cell"
-    },
-    {
-      "index": 83,
-      "op": "assert.cell"
-    },
-    {
-      "index": 84,
-      "op": "assert.cell"
-    },
-    {
-      "index": 85,
-      "op": "cell.set"
-    },
-    {
-      "index": 86,
-      "op": "cell.set"
-    },
-    {
-      "index": 87,
-      "op": "cell.set"
-    },
-    {
-      "index": 88,
-      "op": "assert.table"
-    },
-    {
-      "index": 89,
-      "inserted": 12,
-      "op": "table.upsert_rows",
-      "updated": 0
-    },
-    {
-      "index": 90,
-      "op": "assert.table"
-    },
-    {
-      "index": 91,
-      "op": "cell.set"
-    },
-    {
-      "index": 92,
-      "op": "cell.set"
-    },
-    {
-      "index": 93,
-      "op": "cell.set"
-    },
-    {
-      "index": 94,
-      "op": "cell.set"
-    },
-    {
-      "index": 95,
-      "op": "cell.set"
-    },
-    {
-      "index": 96,
-      "op": "cell.set"
-    },
-    {
-      "index": 97,
-      "op": "cell.set"
-    },
-    {
-      "index": 98,
-      "op": "cell.set"
-    },
-    {
-      "index": 99,
-      "op": "cell.set"
-    },
-    {
-      "index": 100,
-      "op": "cell.set"
-    },
-    {
-      "index": 101,
-      "op": "cell.set"
-    },
-    {
-      "index": 102,
-      "op": "cell.set"
-    },
-    {
-      "index": 103,
       "op": "workbook.recalculate_on_open"
     }
   ],
-  "recipe_id": "bebidas-fort-2026-09-17",
+  "recipe_id": "cooklily-milkshake-gelato-frutas-2026-09-24",
   "schema_version": 1,
   "snapshot_output": "anexos/financeiro/snapshot",
-  "source_sha256_after": "f14fa0e4c9658b43cb43e39599ef5c21ee04b27b59cd386d1919b6bd2768164a",
-  "source_sha256_before": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+  "source_sha256_after": "b14b1e32c1774b1781847ab2afc97c8d504aec90a4a317bfccaa70293e2b977d",
+  "source_sha256_before": "7bd4a3defe4173f361c07ca4ee98da43654bd8f9d0724f5ad9ee1374965701c1",
   "tool_version": "3.2.1",
   "vba_sha256_after": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
   "vba_sha256_before": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf",
