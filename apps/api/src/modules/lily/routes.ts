@@ -2,8 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { COOKLILY_ATTRIBUTION_PARAMS, normalizeLilyAttribution } from "./attribution";
+import { COOKLILY_ATTRIBUTION_PARAMS, lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
 import { lilyCatalogRoutes } from "./catalog";
+import { lilyAddressRoutes } from "./addresses";
+import { lilyFulfillmentRoutes } from "./fulfillment";
+import { lilyOrderRoutes } from "./orders";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -46,21 +49,12 @@ const registerSchema = z.object({
 
 const loginSchema = z.object({ phone, password }).strict();
 
-const attributionSchema = z.object({
-  la_qr: z.string().max(200).optional(),
-  la_campaign: z.string().max(200).optional(),
-  la_variant: z.string().max(200).optional(),
-  cc_qr: z.string().max(200).optional(),
-  cc_campaign: z.string().max(200).optional(),
-  cc_variant: z.string().max(200).optional()
-}).strict().optional();
-
 const leadSchema = z.object({
   phone,
   marketingConsent: z.literal(true),
   consentVersion: z.literal(LILY_MARKETING_VERSION),
   privacyPolicyVersion: z.literal(LILY_PRIVACY_VERSION),
-  attribution: attributionSchema,
+  attribution: lilyAttributionInputSchema.optional(),
   website: z.string().max(200).optional().default("")
 }).strict();
 
@@ -275,4 +269,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   });
 
   await app.register(lilyCatalogRoutes);
+  await app.register(lilyFulfillmentRoutes);
+  await app.register(lilyAddressRoutes);
+  await app.register(lilyOrderRoutes);
 }
