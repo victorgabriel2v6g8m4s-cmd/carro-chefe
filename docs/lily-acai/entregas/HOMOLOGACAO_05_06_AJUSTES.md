@@ -356,3 +356,19 @@ A política correta para contas padrão é:
 O cadastro público sempre cria `customer`, portanto aceita senha a partir de 8 caracteres.
 
 Importante: uma conta promovida de `customer` para `staff` mantém a credencial já existente, pois o hash não revela o comprimento original. A exigência de 12 caracteres é aplicada nas próximas trocas de senha da conta privilegiada. Um mecanismo futuro de upgrade obrigatório de credencial/MFA pode tornar essa política estritamente obrigatória imediatamente após promoção.
+
+
+## Ajuste de header autenticado
+
+Após nova homologação visual em desktop, o header autenticado foi simplificado:
+
+- removido o texto `Minha conta` do header;
+- removido `Sair` do header e do menu hambúrguer;
+- conta autenticada é representada somente pelo avatar;
+- clicar no avatar abre `/lilyacai/perfil`;
+- `Sair da conta` existe somente dentro da página de perfil;
+- carrinho e avatar ficam agrupados no bloco de ações;
+- o header passou a usar o mesmo container de 1160 px do conteúdo, evitando o carrinho isolado no extremo da viewport;
+- visitante desktop continua vendo `Entrar` e `Criar conta`;
+- visitante mobile usa ícone neutro de perfil;
+- staff/admin continua vendo `Painel` na navegação e `Painel administrativo` no menu mobile.
