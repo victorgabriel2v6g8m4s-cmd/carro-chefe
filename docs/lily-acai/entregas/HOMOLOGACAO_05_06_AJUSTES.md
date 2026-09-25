@@ -372,3 +372,17 @@ Após nova homologação visual em desktop, o header autenticado foi simplificad
 - visitante desktop continua vendo `Entrar` e `Criar conta`;
 - visitante mobile usa ícone neutro de perfil;
 - staff/admin continua vendo `Painel` na navegação e `Painel administrativo` no menu mobile.
+
+
+## Gate do ajuste de header
+
+**SHA de release:** `1fed457bfcd7f95007fb8ae026eb799cf2f038d0`
+
+- CI run `36167054603`: success;
+- CodeQL run `36167054499`: success;
+- Node 20: 23 arquivos / 114 testes;
+- Node 24: success;
+- builds de produção: success;
+- Tool Health e gates auxiliares: success.
+
+O PR técnico #73 foi usado apenas como gate e deve permanecer fechado sem merge.
