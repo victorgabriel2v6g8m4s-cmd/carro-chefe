@@ -159,6 +159,11 @@ export function ProfilePage() {
   const passwordMinimum = ["staff", "admin"].includes(session.user.role) ? 12 : 8;
 
   return <section className="profile-page">
+    {session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
+      <strong>Atualização de senha obrigatória.</strong>
+      <p>Sua conta foi promovida para a equipe. Defina abaixo uma nova senha com pelo menos 12 caracteres antes de acessar o painel administrativo.</p>
+    </div>}
+
     <div className="profile-heading">
       <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
       <div className="profile-heading-copy">
