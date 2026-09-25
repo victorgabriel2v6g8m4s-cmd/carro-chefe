@@ -90,7 +90,9 @@ sqlite3 "${DB}" <<SQL
 .bail on
 BEGIN IMMEDIATE;
 UPDATE LilyUser
-SET role='${TARGET_ROLE}', updatedAt=CURRENT_TIMESTAMP
+SET role='${TARGET_ROLE}',
+    staffPasswordUpgradeRequired=1,
+    updatedAt=CURRENT_TIMESTAMP
 WHERE id='${USER_ID}' AND status='active';
 
 INSERT INTO LilyAdminAudit (
@@ -119,3 +121,4 @@ IFS='|' read -r FINAL_PHONE FINAL_ROLE FINAL_STATUS <<< "${FINAL}"
 echo "Promoção concluída."
 printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${FINAL_PHONE}" "${FINAL_ROLE}" "${FINAL_STATUS}"
 echo "A nova permissão vale na próxima requisição da sessão; não é necessário reiniciar o serviço."
+echo "A conta deverá trocar a senha antes de acessar funções administrativas."
