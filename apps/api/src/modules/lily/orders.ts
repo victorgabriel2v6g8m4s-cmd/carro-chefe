@@ -147,7 +147,7 @@ async function findOrderById(id: string) {
   return lilyPrisma.lilyOrder.findUnique({ where: { id }, include: orderInclude });
 }
 
-function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>) {
+function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestAccessToken?: string | null) {
   if (!order) return null;
   return {
     id: order.id,
@@ -161,6 +161,7 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>) {
     address: order.addressSnapshotJson ? JSON.parse(order.addressSnapshotJson) : null,
     customerNote: order.customerNote,
     createdAt: order.createdAt,
+    ...(guestAccessToken ? { guestAccessToken } : {}),
     items: order.items.map((item) => ({
       id: item.id,
       kind: item.variantId === "combo" ? "combo" : "product",
@@ -190,6 +191,12 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>) {
       createdAt: event.createdAt
     }))
   };
+}
+
+function createGuestAccessToken() {
+  const token = crypto.randomBytes(32).toString("base64url");
+  const hash = crypto.createHash("sha256").update(token).digest("hex");
+  return { token, hash };
 }
 
 function readIdempotencyKey(request: FastifyRequest) {
@@ -250,6 +257,15 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       if (existing.requestFingerprint !== requestFingerprint) {
         throw new ApiError(409, "Idempotency-Key já foi usado com outro pedido.", { code: "LILY_IDEMPOTENCY_CONFLICT" });
       }
+      if (!existing.userId) {
+        const guest = createGuestAccessToken();
+        const rotated = await lilyPrisma.lilyOrder.update({
+          where: { id: existing.id },
+          data: { guestAccessTokenHash: guest.hash },
+          include: orderInclude
+        });
+        return reply.code(200).send(serializeOrder(rotated, guest.token));
+      }
       return reply.code(200).send(serializeOrder(existing));
     }
 
@@ -278,6 +294,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     }
 
     const attribution = normalizeLilyAttribution(input.attribution ?? {});
+    const guestAccess = context ? null : createGuestAccessToken();
     let created;
     try {
       created = await lilyPrisma.lilyOrder.create({
@@ -285,6 +302,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           orderNumber: orderNumber(),
           idempotencyKey,
           requestFingerprint,
+          guestAccessTokenHash: guestAccess?.hash ?? null,
           userId: context?.user.id ?? null,
           phoneNormalized,
           fulfillmentType: input.fulfillmentType,
@@ -375,12 +393,21 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       if ((error as { code?: string }).code === "P2002") {
         const raced = await lilyPrisma.lilyOrder.findUnique({ where: { idempotencyKey }, include: orderInclude });
         if (raced?.requestFingerprint === requestFingerprint) {
+          if (!raced.userId) {
+            const guest = createGuestAccessToken();
+            const rotated = await lilyPrisma.lilyOrder.update({
+              where: { id: raced.id },
+              data: { guestAccessTokenHash: guest.hash },
+              include: orderInclude
+            });
+            return reply.code(200).send(serializeOrder(rotated, guest.token));
+          }
           return reply.code(200).send(serializeOrder(raced));
         }
       }
       throw error;
     }
-    return reply.code(201).send(serializeOrder(created));
+    return reply.code(201).send(serializeOrder(created, guestAccess?.token ?? null));
   });
 
   app.get("/api/v1/lily/customer/orders", async (request) => {
