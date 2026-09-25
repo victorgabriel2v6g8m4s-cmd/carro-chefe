@@ -265,3 +265,39 @@ export async function uploadLilyMedia(file: File, csrfToken: string) {
   });
   return parseResponse<{ id: string; url: string; originalName: string; altText: string }>(response);
 }
+
+
+export type ComboConfigurationQuote = {
+  kind: "combo";
+  configurationHash: string;
+  combo: { id: string; slug: string; name: string; description: string | null };
+  selections: Array<{
+    configurationHash: string;
+    product: { id: string; slug: string; name: string };
+    variant: { id: string; name: string };
+    sizeMl: number;
+    flavors: Array<{ id: string; name: string }>;
+    addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+    basePriceCents: number;
+    addonPriceCents: number;
+    totalPriceCents: number;
+  }>;
+  regularPriceCents: number;
+  basePriceCents: number;
+  addonPriceCents: number;
+  totalPriceCents: number;
+  savingsCents: number;
+};
+
+export async function configureLilyCombo(payload: {
+  comboId: string;
+  selections: Array<{ productId: string; sizeMl: number; flavorIds: string[]; addons: Array<{ addonId: string; quantity: number }> }>;
+}) {
+  const response = await fetch("/api/v1/lily/public/configure-combo", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return parseResponse<ComboConfigurationQuote>(response);
+}
