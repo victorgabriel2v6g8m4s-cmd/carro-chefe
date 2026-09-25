@@ -187,6 +187,16 @@ export async function getLilyAuthStatus() {
   return parseResponse<{ user: AuthPayload["user"] | null }>(response);
 }
 
+export async function logoutLily(csrfToken: string) {
+  const response = await fetch("/api/v1/lily/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "X-Lily-CSRF": csrfToken }
+  });
+  if (response.status === 204) return;
+  await parseResponse<unknown>(response);
+}
+
 export async function submitCookLilyLead(input: {
   phone: string;
   marketingConsent: true;
