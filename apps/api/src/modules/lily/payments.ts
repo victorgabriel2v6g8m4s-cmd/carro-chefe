@@ -436,7 +436,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const payment = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
     if (!payment) throw new ApiError(404, "Pagamento não encontrado.");
-    if (payment.status === "cancelled") return serializePayment(payment);
+    if (payment.status === "cancelled") return serializePayment(payment, true);
     if (payment.status !== "pending") {
       throw new ApiError(409, "Somente pagamento pendente pode ser cancelado.", { code: "LILY_PAYMENT_CANCEL_STATE" });
     }
