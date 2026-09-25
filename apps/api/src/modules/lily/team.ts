@@ -96,17 +96,26 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
       });
     }
 
-    const updated = await lilyPrisma.lilyUser.update({
-      where: { id: target.id },
-      data: {
-        role: input.role,
-        staffPasswordUpgradeRequired: target.role === input.role
-          ? target.staffPasswordUpgradeRequired
-          : true
-      },
-      include: {
-        sessions: { where: { revokedAt: null }, select: { id: true } }
+    const updated = await lilyPrisma.$transaction(async (tx) => {
+      const user = await tx.lilyUser.update({
+        where: { id: target.id },
+        data: {
+          role: input.role,
+          staffPasswordUpgradeRequired: target.role === input.role
+            ? target.staffPasswordUpgradeRequired
+            : true
+        },
+        include: {
+          sessions: { where: { revokedAt: null }, select: { id: true } }
+        }
+      });
+      if (target.role !== input.role) {
+        await tx.lilySession.updateMany({
+          where: { userId: target.id, revokedAt: null },
+          data: { revokedAt: new Date() }
+        });
       }
+      return user;
     });
     await auditLilyAdmin(context.user.id, "team.promote", "user", target.id, {
       fromRole: target.role,
