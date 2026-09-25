@@ -6,22 +6,43 @@ import { ApiError } from "../../lib/errors";
 import { lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
 import { getOptionalLilySession, normalizeLilyPhone, requireLilyCsrf, requireLilySession } from "./auth";
 import { lilyAddressInputSchema, normalizeLilyAddress } from "./addresses";
-import { lilyConfigurationSchema, quoteLilyConfiguration } from "./configuration";
+import {
+  lilyComboConfigurationSchema,
+  lilyConfigurationSchema,
+  quoteLilyComboConfiguration,
+  quoteLilyConfiguration
+} from "./configuration";
 import { resolveLilyFulfillment } from "./fulfillment";
 
 const quantitySchema = z.number().int().min(1).max(20);
 const noteSchema = z.string().trim().max(300).nullable().optional();
 const moneySchema = z.number().int().min(0).max(10_000_000);
 
-const quoteItemSchema = lilyConfigurationSchema.extend({
+const productQuoteItemSchema = lilyConfigurationSchema.extend({
+  kind: z.literal("product").default("product"),
   quantity: quantitySchema.default(1),
   note: noteSchema
 }).strict();
 
-const orderItemSchema = quoteItemSchema.extend({
+const comboQuoteItemSchema = lilyComboConfigurationSchema.extend({
+  kind: z.literal("combo"),
+  quantity: quantitySchema.default(1),
+  note: noteSchema
+}).strict();
+
+const quoteItemSchema = z.union([productQuoteItemSchema, comboQuoteItemSchema]);
+
+const productOrderItemSchema = productQuoteItemSchema.extend({
   configurationHash: z.string().regex(/^[a-f0-9]{24}$/),
   expectedUnitPriceCents: moneySchema
 }).strict();
+
+const comboOrderItemSchema = comboQuoteItemSchema.extend({
+  configurationHash: z.string().regex(/^[a-f0-9]{24}$/),
+  expectedUnitPriceCents: moneySchema
+}).strict();
+
+const orderItemSchema = z.union([productOrderItemSchema, comboOrderItemSchema]);
 
 const quoteSchema = z.object({
   fulfillmentType: z.enum(["pickup", "delivery"]),
@@ -42,26 +63,34 @@ type QuoteItemInput = z.infer<typeof quoteItemSchema>;
 type OrderInput = z.infer<typeof orderSchema>;
 
 async function quoteItems(items: QuoteItemInput[]) {
-  const calculated: Array<Awaited<ReturnType<typeof quoteLilyConfiguration>> & {
-    quantity: number;
-    note: string | null;
-    lineTotalCents: number;
-  }> = [];
-  for (const item of items) {
+  return Promise.all(items.map(async (item) => {
+    if (item.kind === "combo") {
+      const configuration = await quoteLilyComboConfiguration({
+        comboId: item.comboId,
+        selections: item.selections
+      });
+      return {
+        ...configuration,
+        quantity: item.quantity,
+        note: item.note?.trim() || null,
+        lineTotalCents: configuration.totalPriceCents * item.quantity
+      };
+    }
+
     const configuration = await quoteLilyConfiguration({
       productId: item.productId,
       sizeMl: item.sizeMl,
       flavorIds: item.flavorIds,
       addons: item.addons
     });
-    calculated.push({
+    return {
+      kind: "product" as const,
       ...configuration,
       quantity: item.quantity,
       note: item.note?.trim() || null,
       lineTotalCents: configuration.totalPriceCents * item.quantity
-    });
-  }
-  return calculated;
+    };
+  }));
 }
 
 async function calculateQuote(input: z.infer<typeof quoteSchema>) {
@@ -99,16 +128,7 @@ function fingerprint(input: {
     fulfillmentType: input.order.fulfillmentType,
     address: input.address,
     customerNote: input.order.customerNote?.trim() || null,
-    items: input.order.items.map((item) => ({
-      productId: item.productId,
-      sizeMl: item.sizeMl,
-      flavorIds: [...item.flavorIds].sort(),
-      addons: [...item.addons].sort((a, b) => a.addonId.localeCompare(b.addonId)),
-      quantity: item.quantity,
-      note: item.note?.trim() || null,
-      configurationHash: item.configurationHash,
-      expectedUnitPriceCents: item.expectedUnitPriceCents
-    })),
+    items: input.order.items,
     attribution: normalizeLilyAttribution(input.order.attribution ?? {})
   };
   return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
@@ -143,12 +163,14 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>) {
     createdAt: order.createdAt,
     items: order.items.map((item) => ({
       id: item.id,
+      kind: item.variantId === "combo" ? "combo" : "product",
       productId: item.productId,
       variantId: item.variantId,
       productName: item.productNameSnapshot,
       variantName: item.variantNameSnapshot,
       sizeMl: item.sizeMl,
       configurationHash: item.configurationHash,
+      configuration: JSON.parse(item.configurationSnapshotJson),
       flavors: JSON.parse(item.flavorsSnapshotJson),
       unitPriceCents: item.unitPriceSnapshotCents,
       quantity: item.quantity,
@@ -177,6 +199,27 @@ function readIdempotencyKey(request: FastifyRequest) {
     throw new ApiError(400, "Idempotency-Key inválido ou ausente.", { code: "LILY_IDEMPOTENCY_KEY_REQUIRED" });
   }
   return value;
+}
+
+function withoutExpectations(item: z.infer<typeof orderItemSchema>): QuoteItemInput {
+  if (item.kind === "combo") {
+    return {
+      kind: "combo",
+      comboId: item.comboId,
+      selections: item.selections,
+      quantity: item.quantity,
+      note: item.note
+    };
+  }
+  return {
+    kind: "product",
+    productId: item.productId,
+    sizeMl: item.sizeMl,
+    flavorIds: item.flavorIds,
+    addons: item.addons,
+    quantity: item.quantity,
+    note: item.note
+  };
 }
 
 export async function lilyOrderRoutes(app: FastifyInstance) {
@@ -213,8 +256,9 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     const quote = await calculateQuote({
       fulfillmentType: input.fulfillmentType,
       address: input.address,
-      items: input.items.map(({ configurationHash: _hash, expectedUnitPriceCents: _price, ...item }) => item)
+      items: input.items.map(withoutExpectations)
     });
+
     for (let index = 0; index < input.items.length; index += 1) {
       const expected = input.items[index]!;
       const current = quote.items[index]!;
@@ -255,7 +299,40 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           laCampaign: attribution.laCampaign,
           laVariant: attribution.laVariant,
           items: {
-            create: quote.items.map((item) => ({
+            create: quote.items.map((item) => item.kind === "combo" ? {
+              productId: item.combo.id,
+              variantId: "combo",
+              productNameSnapshot: item.combo.name,
+              variantNameSnapshot: "Combo",
+              sizeMl: 0,
+              configurationHash: item.configurationHash,
+              configurationSnapshotJson: JSON.stringify({
+                kind: "combo",
+                combo: item.combo,
+                selections: item.selections.map((selection) => ({
+                  configurationHash: selection.configurationHash,
+                  product: selection.product,
+                  variant: selection.variant,
+                  sizeMl: selection.sizeMl,
+                  flavors: selection.flavors,
+                  addons: selection.addons,
+                  totalPriceCents: selection.totalPriceCents
+                }))
+              }),
+              flavorsSnapshotJson: "[]",
+              unitPriceSnapshotCents: item.totalPriceCents,
+              quantity: item.quantity,
+              lineTotalCents: item.lineTotalCents,
+              customerNote: item.note,
+              addons: {
+                create: item.selections.flatMap((selection) => selection.addons.map((addon) => ({
+                  addonId: addon.addonId,
+                  addonNameSnapshot: addon.name,
+                  unitPriceSnapshotCents: addon.unitPriceCents,
+                  quantity: addon.quantity
+                })))
+              }
+            } : {
               productId: item.product.id,
               variantId: item.variant.id,
               productNameSnapshot: item.product.name,
@@ -263,6 +340,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
               sizeMl: item.sizeMl,
               configurationHash: item.configurationHash,
               configurationSnapshotJson: JSON.stringify({
+                kind: "product",
                 productId: item.product.id,
                 sizeMl: item.sizeMl,
                 flavorIds: item.flavors.map((flavor) => flavor.id),
@@ -281,7 +359,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
                   quantity: addon.quantity
                 }))
               }
-            }))
+            })
           },
           statusEvents: {
             create: {
