@@ -27,3 +27,11 @@ Não simule uma operação estrutural bloqueada usando várias edições de cél
 Receipts ficam em `anexos/financeiro/recipes/receipts/` e são gerados pelo motor. Nunca os edite manualmente. Para V3A, o receipt inclui o `structural_plan`, `plan_sha256`, transformação normalizada, partes alteradas e contagem de elementos movidos/regravados.
 
 Consulte `tools/excel_recipe/README.md`, `docs/tecnologia/EXCEL_RECIPE_V1.md`, `docs/tecnologia/EXCEL_RECIPE_V2.md`, `docs/tecnologia/EXCEL_RECIPE_V3A.md` e, para agentes, `docs/governanca/EXCEL_RECIPE_AGENT_GUIDE.md`.
+
+
+## CookLily — gelato/milk-shake provisório
+
+`cooklily-milkshake-gelato-2026-09-24.json` cadastra os insumos comprados, a base, a mistura de Nutella e as versões de café 500 ml/300 ml. Hipóteses provisórias (Emustab, equivalência g/ml e embalagem 300 ml) estão documentadas em `docs/lily-acai/custos/MILKSHAKE_GELATO_CASEIRO_2026-09-24.md`.
+
+
+`cooklily-milkshake-gelato-frutas-2026-09-24.json` complementa a ficha do gelato com os custos reais de morango e maracujá e cria as variantes 500 ml/300 ml. É uma receita incremental aplicada sobre o workbook já atualizado pela receita-base.
