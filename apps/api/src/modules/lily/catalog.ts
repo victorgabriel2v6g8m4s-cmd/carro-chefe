@@ -435,6 +435,8 @@ async function publicCatalog(queryInput: unknown) {
       premium: flavor.premium
     })),
     combos: publicCombos,
+    weeklyProduct: allSerializedProducts.find((product) => product.weeklyHighlight) ?? null,
+    featuredProduct: allSerializedProducts.find((product) => product.featured) ?? null,
     products,
     total: serialized.length,
     offset: query.offset,
