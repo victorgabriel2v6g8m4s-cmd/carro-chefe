@@ -46,7 +46,7 @@ function serializeMember(user: any) {
     staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-    activeSessions: user._count?.sessions ?? 0
+    activeSessions: Array.isArray(user.sessions) ? user.sessions.length : 0
   };
 }
 
@@ -55,7 +55,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     await requireLilyAdmin(request);
     const query = z.object({
       q: z.string().trim().max(80).optional(),
-      includeCustomers: z.coerce.boolean().default(false)
+      includeCustomers: z.enum(["true", "false"]).optional().transform((value) => value === "true")
     }).parse(request.query);
 
     const where: any = query.includeCustomers ? {} : { role: { in: ["staff", "admin"] } };
@@ -70,11 +70,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     const members = await lilyPrisma.lilyUser.findMany({
       where,
       include: {
-        _count: {
-          select: {
-            sessions: { where: { revokedAt: null } }
-          }
-        }
+        sessions: { where: { revokedAt: null }, select: { id: true } }
       },
       orderBy: [{ role: "desc" }, { createdAt: "asc" }],
       take: 100
@@ -109,9 +105,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
           : true
       },
       include: {
-        _count: {
-          select: { sessions: { where: { revokedAt: null } } }
-        }
+        sessions: { where: { revokedAt: null }, select: { id: true } }
       }
     });
     await auditLilyAdmin(context.user.id, "team.promote", "user", target.id, {
@@ -156,9 +150,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
           ...(roleChangedToPrivileged ? { staffPasswordUpgradeRequired: true } : {})
         },
         include: {
-          _count: {
-            select: { sessions: { where: { revokedAt: null } } }
-          }
+          sessions: { where: { revokedAt: null }, select: { id: true } }
         }
       });
       if (input.status === "suspended" || (input.role !== undefined && input.role === "customer")) {
