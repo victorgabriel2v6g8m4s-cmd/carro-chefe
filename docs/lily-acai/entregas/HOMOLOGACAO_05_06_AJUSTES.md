@@ -249,3 +249,76 @@ PRs de validação são técnicos e devem permanecer sem merge na `main`.
 ## Limite da validação
 
 Os gates acima validam schema, contratos, testes e build. A responsividade foi corrigida estruturalmente no CSS, mas a validação visual final em aparelhos/tamanhos reais continua sendo uma etapa de QA após deploy; não é declarada como concluída pelo CI.
+
+
+## Segunda rodada de homologação mobile e segurança
+
+Após QA em aparelho real, foram identificados conflitos de especificidade no CSS antigo do header. O patch foi ampliado para:
+
+- remover o seletor genérico `.topbar nav` que fazia a navegação desktop sobreviver no mobile;
+- manter no header mobile apenas marca, carrinho, perfil e hambúrguer;
+- substituir o avatar “C” de guest por ícone neutro de pessoa;
+- transformar o menu mobile em drawer vertical;
+- adicionar backdrop e fechamento ao clicar fora;
+- fechar com `Escape`;
+- mover foco para o menu quando aberto;
+- manter alvos de toque em 44 px;
+- mostrar `Painel administrativo` para `staff/admin`;
+- adicionar logout explícito;
+- preservar `?next=/painel...` ao autenticar para retornar ao destino administrativo;
+- compactar o hero do cardápio no mobile;
+- transformar combos em carrossel horizontal com scroll-snap, em vez de três cards empilhados;
+- manter o grid de produtos em duas colunas.
+
+### Senha
+
+Novos cadastros exigem agora no mínimo **12 caracteres** e no máximo 128.
+
+Contas existentes continuam autenticando com suas credenciais atuais.
+
+O cadastro pede confirmação da senha no frontend.
+
+A página `/lilyacai/perfil` ganhou troca autenticada de senha:
+
+- exige senha atual;
+- nova senha exige 12–128 caracteres;
+- impede reutilizar exatamente a senha atual;
+- usa o mesmo scrypt já adotado pela autenticação;
+- revoga outras sessões ativas da conta;
+- mantém somente a sessão que realizou a troca.
+
+Recuperação de senha e MFA não foram improvisados: exigem um canal de verificação confiável e permanecem pendentes, principalmente antes de ampliar o uso de contas staff.
+
+## Promoção de usuário em um comando
+
+Novo utilitário:
+
+`deploy/scripts/lily-promote-user`
+
+Depois de instalado na VPS:
+
+```bash
+lily-promote-user 67999999999
+```
+
+promove a conta para `staff`.
+
+Para `admin`:
+
+```bash
+lily-promote-user 67999999999 admin
+```
+
+O utilitário:
+
+- normaliza telefone brasileiro;
+- usa `LILY_DATABASE_URL` do ambiente de produção;
+- exige usuário existente e ativo;
+- não cria conta nem altera senha;
+- não permite downgrade;
+- permite `customer -> staff`, `customer -> admin` e `staff -> admin`;
+- grava `LilyAdminAudit`;
+- confirma o papel final;
+- não exige restart.
+
+O deployer instala/atualiza `/usr/local/sbin/lily-promote-user` somente depois de um deploy saudável.
