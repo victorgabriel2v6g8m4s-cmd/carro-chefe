@@ -258,7 +258,7 @@ export function CheckoutPage() {
       <aside className="checkout-summary">
         <h2>Resumo</h2>
         {cart.items.map((item) => <div className="checkout-line" key={item.id}>
-          <span>{item.quantity}× {item.productName} · {item.sizeMl} ml</span>
+          <span>{item.quantity}× {item.productName}{item.kind === "combo" ? "" : ` · ${item.sizeMl} ml`}</span>
           <strong>{money(item.unitPriceCents * item.quantity)}</strong>
         </div>)}
         {quote ? <>
