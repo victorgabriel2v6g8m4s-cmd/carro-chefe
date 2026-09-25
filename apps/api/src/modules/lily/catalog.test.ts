@@ -201,4 +201,43 @@ describe("CookLily catálogo", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json().details.code).toBe("LILY_MARGIN_FLOOR");
   });
+
+  it("não expõe dados internos de produção no catálogo público", async () => {
+    const response = await app.inject({ method: "GET", url: "/api/v1/lily/public/catalog?limit=40" });
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    const product = body.products.find((item: { slug: string }) => item.slug === "lilymix");
+    expect(product).toBeTruthy();
+    expect(product).not.toHaveProperty("preparationLeadMinutes");
+    expect(product.variants[0]).not.toHaveProperty("projectedMarginBps");
+    expect(product.flavors[0]).not.toHaveProperty("portion300");
+    expect(product.flavors[0]).not.toHaveProperty("portion500");
+    expect(product.flavors[0]).not.toHaveProperty("priceModifier300");
+    expect(product.flavors[0]).not.toHaveProperty("priceModifier500");
+    expect(product.addons[0]).not.toHaveProperty("portion300");
+    expect(product.addons[0]).not.toHaveProperty("portion500");
+    expect(product.addons[0]).not.toHaveProperty("flavorId");
+  });
+
+  it("montador de combo recebe opções elegíveis calculadas pelo servidor", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/public/combos/combo-dupla-lily/builder"
+    });
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.quantity).toBe(2);
+    expect(body.sizeMl).toBe(500);
+    expect(body.options.length).toBeGreaterThan(0);
+    for (const product of body.options) {
+      expect(product.tags).toContain("simples");
+      expect(product.configurationType).toBe("fixed");
+      expect(product.variants.some((variant: { sizeMl: number; isAvailable: boolean }) =>
+        variant.sizeMl === 500 && variant.isAvailable
+      )).toBe(true);
+      expect(product.variants[0]).not.toHaveProperty("projectedMarginBps");
+    }
+    expect(body.options.some((product: { slug: string }) => product.slug.includes("nutt"))).toBe(false);
+  });
+
 });
