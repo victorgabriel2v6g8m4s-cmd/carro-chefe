@@ -95,11 +95,21 @@ export type CatalogPayload = {
     slug: string;
     name: string;
     description: string | null;
+    mode: "preset" | "builder";
     rules: Record<string, unknown>;
     regularPriceCents: number;
     offerPriceCents: number;
     savingsCents: number;
     featured: boolean;
+    cover: { id: string; url: string; altText: string } | null;
+    presetSelections: Array<{
+      productId: string;
+      sizeMl: number;
+      flavorIds: string[];
+      addons: Array<{ addonId: string; quantity: number }>;
+      product: { id: string; slug: string; name: string; cover: { id: string; url: string; altText: string } | null } | null;
+      flavors: Array<{ id: string; slug: string; name: string; premium: boolean }>;
+    }>;
   }>;
   products: CatalogProduct[];
   total: number;
@@ -293,6 +303,7 @@ export async function uploadLilyMedia(file: File, csrfToken: string) {
 
 export type ComboConfigurationQuote = {
   kind: "combo";
+  mode: "preset" | "builder";
   configurationHash: string;
   combo: { id: string; slug: string; name: string; description: string | null };
   selections: Array<{
