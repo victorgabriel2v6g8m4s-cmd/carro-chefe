@@ -128,9 +128,10 @@ export function OrderDetailPage() {
     <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {order.status === "awaiting_payment" ? "Aguardando pagamento" : order.status}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
     <div className="order-detail">
       {order.items.map((item) => <article key={item.id}>
-        <div><strong>{item.quantity}× {item.productName}</strong><span>{item.sizeMl} ml · {item.variantName}</span></div>
+        <div><strong>{item.quantity}× {item.productName}</strong><span>{item.kind === "combo" ? "Combo" : `${item.sizeMl} ml · ${item.variantName}`}</span></div>
         <strong>{money(item.lineTotalCents)}</strong>
         {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
+        {item.kind === "combo" && Array.isArray(item.configuration.selections) && <small>Itens: {(item.configuration.selections as Array<{ product?: { name?: string } }>).map((selection) => selection.product?.name).filter(Boolean).join(" + ")}</small>}
         {item.addons.length > 0 && <small>{item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
       </article>)}
       <div className="checkout-total"><span>Total</span><strong>{money(order.grandTotalCents)}</strong></div>
