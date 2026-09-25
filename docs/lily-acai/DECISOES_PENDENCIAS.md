@@ -30,16 +30,16 @@
 |---|---|---|---|
 | LILY-PEND-001 | Logo | resolvida | — |
 | LILY-PEND-002 | Tokens | resolvida | — |
-| LILY-PEND-003 | Landing P0 | resolvida tecnicamente; deploy pendente | Entrega 04 |
+| LILY-PEND-003 | Landing P0 | resolvida e publicada na VPS | Entrega 04 |
 | LILY-PEND-004 | WhatsApp P0 | resolvida para atendimento humano | — |
 | LILY-PEND-005 | Cardápio inicial | **resolvida** pelo documento canônico | — |
 | LILY-PEND-006 | Preços | **resolvida** para o cardápio inicial | — |
 | LILY-PEND-007 | Adicionais | **resolvida** para o cardápio inicial | — |
 | LILY-PEND-008 | Admin | painel staff implementado; criar/homologar primeira conta staff segura na publicação | deploy/homologação |
 | LILY-PEND-009 | Fotografia | morango/maracujá aprovados; produzir Café e demais gradualmente | mídia |
-| LILY-PEND-010 | Horários/capacidade | implementar como configuração do sistema | checkout/operação |
-| LILY-PEND-011 | Entrega | áreas/taxas/pedido mínimo configuráveis | Entrega 06 |
-| LILY-PEND-012 | Retirada | regras/horários configuráveis | Entrega 06 |
+| LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
+| LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
+| LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
 | LILY-PEND-013 | Pagamento | definir/integrar credenciais do provedor | Entrega 07 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
@@ -56,8 +56,8 @@
 | LILY-PEND-026 | Operação LilyShake | **resolvida** | — |
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
 | LILY-PEND-028 | Alergênicos | criar configuração específica antes da venda comercial completa | compliance |
-| LILY-PEND-029 | Catálogo | **resolvida tecnicamente:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel implementados/validados; deploy pendente | Entrega 05 |
-| LILY-PEND-030 | Checkout | carrinho, entrega/retirada, pedido e checkout online | Entregas 06–07 |
+| LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
+| LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação permanecem para 07 | Entregas 06–07 |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
