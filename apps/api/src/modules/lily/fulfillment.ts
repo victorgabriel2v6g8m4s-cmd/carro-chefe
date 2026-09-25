@@ -28,6 +28,12 @@ const settingsPatchSchema = z.object({
   flatDeliveryFeeCents: moneySchema.optional(),
   pickupAddressText: z.string().trim().max(500).nullable().optional(),
   pickupInstructions: z.string().trim().max(1000).nullable().optional(),
+  instagramHandle: z.string().trim().min(1).max(30).regex(/^@?[A-Za-z0-9._]+$/).optional(),
+  whatsappPhone: z.string().trim().min(8).max(24).regex(/^\+?[0-9 ()-]+$/).optional(),
+  publicAddressText: z.string().trim().max(500).nullable().optional(),
+  loyaltyOrderCentsPerPoint: z.number().int().min(1).max(100000).optional(),
+  loyaltyCampaignBonusPoints: z.number().int().min(0).max(100000).optional(),
+  loyaltyCouponBonusPoints: z.number().int().min(0).max(100000).optional(),
   businessHours: businessHoursSchema.optional(),
   timezone: z.literal("America/Campo_Grande").optional()
 }).strict();
@@ -289,6 +295,12 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
         ...(input.flatDeliveryFeeCents === undefined ? {} : { flatDeliveryFeeCents: input.flatDeliveryFeeCents }),
         ...(input.pickupAddressText === undefined ? {} : { pickupAddressText: input.pickupAddressText || null }),
         ...(input.pickupInstructions === undefined ? {} : { pickupInstructions: input.pickupInstructions || null }),
+        ...(input.instagramHandle === undefined ? {} : { instagramHandle: input.instagramHandle.replace(/^@+/, "") }),
+        ...(input.whatsappPhone === undefined ? {} : { whatsappPhone: input.whatsappPhone.trim() }),
+        ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
+        ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
+        ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
+        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints }),
         ...(input.businessHours === undefined ? {} : { businessHoursJson: JSON.stringify(input.businessHours) }),
         ...(input.timezone === undefined ? {} : { timezone: input.timezone })
       }
