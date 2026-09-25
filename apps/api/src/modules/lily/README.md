@@ -65,6 +65,31 @@ O configurador público é a autoridade para:
 
 O navegador não deve ser tratado como autoridade de preço.
 
+## Pedidos — Entrega 06
+
+Rotas:
+
+```text
+POST /api/v1/lily/orders/quote
+POST /api/v1/lily/orders
+GET  /api/v1/lily/customer/orders
+GET  /api/v1/lily/customer/orders/:id
+```
+
+O servidor recota produto/combo antes de criar pedido e compara `configurationHash` + preço esperado. Pedido stale é rejeitado.
+
+Criação exige `Idempotency-Key`; retry idêntico retorna o pedido existente, enquanto reuso da chave com payload diferente retorna conflito.
+
+Guest pode criar pedido com telefone obrigatório. Quando há sessão, o pedido é vinculado ao usuário e a mutação exige CSRF. Histórico é sempre filtrado pelo titular.
+
+Pedidos da Entrega 06 nascem em `awaiting_payment`; pagamento pertence à Entrega 07.
+
+## Fulfillment e endereços
+
+`fulfillment.ts` administra abertura de pedidos, retirada, entrega, horários, pedido mínimo, taxa fixa e regiões.
+
+`addresses.ts` oferece CRUD de endereços somente para o titular autenticado, com CSRF em mutações.
+
 ## Leads
 
 `POST /public/leads` não cria conta nem senha. Exige opt-in de marketing, normaliza telefone, deduplica por telefone e grava somente no Lily DB.
@@ -89,6 +114,16 @@ SHA técnico: `9e9c2e194076aa5a8dd3262e73528ac3689c8896`
 - Node 24: 94 testes + build — success;
 - CodeQL — success.
 
+## Validação Entrega 06
+
+SHA técnico: `da166683ab2d0e27acae23d9714ec8e824a02ac4`
+
+- 21 arquivos de teste;
+- 105 testes aprovados;
+- Node 20/24: success;
+- build: success;
+- CodeQL: success.
+
 ## Próximo escopo
 
-Entrega 06 consumirá as configurações validadas deste módulo para carrinho, endereço, entrega/retirada e criação do pedido.
+Entrega 07 integra pagamento/reconciliação sobre pedidos `awaiting_payment`.
