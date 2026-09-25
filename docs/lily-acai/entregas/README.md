@@ -20,7 +20,8 @@ Planos e relatórios:
 - `ENTREGA_03_MARCA_COOKLILY.md`;
 - `ENTREGA_04_LANDING_WHATSAPP_DEPLOY.md`;
 - `ENTREGA_05_CATALOGO_PUBLICACAO.md`;
-- `ENTREGA_06_CARRINHO_PEDIDOS.md`.
+- `ENTREGA_06_CARRINHO_PEDIDOS.md`;
+- `HOMOLOGACAO_05_06_AJUSTES.md`.
 
 Validação técnica da Entrega 05:
 
@@ -40,3 +41,16 @@ Validação técnica da Entrega 06:
 - PR técnico #65 fechado sem merge.
 
 Cada entrega deve registrar o que foi feito, o que foi realmente testado, o que não foi executado, evidências, bloqueios e o plano da entrega seguinte. Nunca declarar teste como aprovado sem execução real.
+
+
+## Patch pós-homologação 05/06
+
+Feedback de homologação das Entregas 05 e 06 foi consolidado em `HOMOLOGACAO_05_06_AJUSTES.md`.
+
+Validação técnica:
+
+- SHA: `10872e686c6c71c228ff8aef0e507a48deaaf912`;
+- CI: `36150024665` — success;
+- CodeQL: `36150024735` — success;
+- Node 20/24: 111 testes;
+- deploy pendente.
