@@ -140,6 +140,8 @@ export function ProfilePage() {
   if (!loaded) return <section className="checkout-page"><h1>Carregando perfil...</h1></section>;
   if (!session || !profile) return <AccountRequired />;
 
+  const passwordMinimum = ["staff", "admin"].includes(session.user.role) ? 12 : 8;
+
   return <section className="profile-page">
     <div className="profile-heading">
       <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
@@ -178,10 +180,10 @@ export function ProfilePage() {
 
       <form className="checkout-section" onSubmit={changePassword}>
         <h2>Segurança</h2>
-        <p>Troque sua senha informando a atual. A nova senha deve ter pelo menos 12 caracteres; outras sessões serão encerradas.</p>
+        <p>Troque sua senha informando a atual. {passwordMinimum === 12 ? "Contas da equipe exigem pelo menos 12 caracteres." : "Clientes exigem pelo menos 8 caracteres."} Outras sessões serão encerradas.</p>
         <label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
-        <label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
-        <label>Confirmar nova senha<input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
+        <label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
+        <label>Confirmar nova senha<input name="confirmPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
         <button className="button ghost" type="submit" disabled={busy}>{busy ? "Atualizando..." : "Trocar senha"}</button>
       </form>
     </div>
