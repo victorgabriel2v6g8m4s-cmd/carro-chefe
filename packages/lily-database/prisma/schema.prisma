@@ -24,6 +24,7 @@ model LilyUser {
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
+  staffPasswordUpgradeRequired Boolean @default(false)
 
   @@index([status, createdAt])
 }
@@ -376,6 +377,10 @@ model LilyOperationalSettings {
   loyaltyOrderCentsPerPoint Int      @default(100)
   loyaltyCampaignBonusPoints Int     @default(10)
   loyaltyCouponBonusPoints Int       @default(10)
+  paymentsEnabled           Boolean  @default(false)
+  paymentProvider           String   @default("manual")
+  manualPixEnabled          Boolean  @default(false)
+  manualPixInstructions     String?
   createdAt                 DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -420,6 +425,7 @@ model LilyOrder {
   user                LilyUser?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   items               LilyOrderItem[]
   statusEvents        LilyOrderStatusEvent[]
+  payments            LilyPayment[]
 
   @@index([userId, createdAt])
   @@index([phoneNormalized, createdAt])
@@ -473,6 +479,71 @@ model LilyOrderStatusEvent {
   @@index([orderId, createdAt])
 }
 
+
+model LilyPayment {
+  id                   String   @id @default(cuid())
+  orderId              String
+  idempotencyKey       String   @unique
+  provider             String
+  method               String
+  status               String   @default("pending")
+  amountCents          Int
+  currency             String   @default("BRL")
+  providerPaymentId    String?
+  providerReference    String?
+  instructionsSnapshot String?
+  expiresAt            DateTime?
+  approvedAt           DateTime?
+  failedAt             DateTime?
+  cancelledAt          DateTime?
+  refundedAt           DateTime?
+  refundedCents        Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  order                LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events               LilyPaymentEvent[]
+  reconciliations      LilyPaymentReconciliation[]
+
+  @@index([orderId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([provider, providerPaymentId])
+}
+
+model LilyPaymentEvent {
+  id              String   @id @default(cuid())
+  paymentId       String
+  source          String
+  eventType       String
+  providerEventId String?  @unique
+  fromStatus      String?
+  toStatus        String?
+  payloadHash     String?
+  payloadJson     String?
+  createdAt       DateTime @default(now())
+  payment         LilyPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+  @@index([source, eventType, createdAt])
+}
+
+model LilyPaymentReconciliation {
+  id                    String   @id @default(cuid())
+  paymentId             String
+  expectedGrossCents    Int
+  reportedGrossCents    Int
+  feeCents              Int      @default(0)
+  netCents              Int
+  discrepancyCents      Int      @default(0)
+  status                String
+  providerReference     String?
+  note                  String?
+  reconciledBy          String
+  createdAt             DateTime @default(now())
+  payment               LilyPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+  @@index([status, createdAt])
+}
 
 model LilyLoyaltyEvent {
   id           String   @id @default(cuid())
