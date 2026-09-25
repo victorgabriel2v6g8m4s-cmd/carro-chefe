@@ -110,6 +110,26 @@ Antes de múltiplas réplicas, storage de rede ou arquitetura distribuída, migr
 
 Antes da primeira publicação CookLily, além do banco principal, faça backup de `/srv/carro-chefe/data/lily-acai.db` se ele já existir. Aplique a migration Lily com `npm run db:deploy:lily`.
 
-O template Nginx da branch `lily-acai` libera somente `/api/v1/lily/public/*`. Auth/admin continuam atrás do bloqueio genérico de `/api/` até uma entrega posterior.
+Na Entrega 05, o Nginx também libera `/api/v1/lily/auth/*` e `/api/v1/lily/admin/*`.
+
+Na Entrega 06, liberar explicitamente antes do bloqueio genérico:
+
+```text
+/api/v1/lily/orders
+/api/v1/lily/orders/*
+/api/v1/lily/customer/*
+```
+
+A autorização continua no Fastify; o Nginx não substitui sessão, papel ou CSRF.
 
 A publicação deve usar um SHA imutável aprovado, nunca um `git pull` cego.
+
+## CookLily — Entrega 06
+
+SHA técnico validado para carrinho/pedidos:
+
+`da166683ab2d0e27acae23d9714ec8e824a02ac4`
+
+A migration `20260925100000_lily_orders` cria pedidos, itens, endereços, fulfillment e zonas. Os defaults deixam pedidos/retirada/entrega desligados.
+
+Depois da migration, configurar dados operacionais reais no painel e manter `ordersEnabled=false` até o smoke estar concluído.
