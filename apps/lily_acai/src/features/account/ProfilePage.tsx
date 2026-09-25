@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
+  changeLilyPassword,
   getLilyProfile,
   getLilyRanking,
   getLilySession,
@@ -106,6 +107,36 @@ export function ProfilePage() {
     }
   }
 
+  async function changePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const currentPassword = String(data.get("currentPassword") || "");
+    const newPassword = String(data.get("newPassword") || "");
+    const confirmPassword = String(data.get("confirmPassword") || "");
+
+    setError("");
+    setMessage("");
+    if (newPassword !== confirmPassword) {
+      setError("A confirmação da nova senha não coincide.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const result = await changeLilyPassword({ currentPassword, newPassword }, session.csrfToken);
+      form.reset();
+      setMessage(result.otherSessionsRevoked > 0
+        ? `Senha atualizada. ${result.otherSessionsRevoked} outra(s) sessão(ões) foram encerradas.`
+        : "Senha atualizada.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível alterar a senha.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!loaded) return <section className="checkout-page"><h1>Carregando perfil...</h1></section>;
   if (!session || !profile) return <AccountRequired />;
 
@@ -143,6 +174,15 @@ export function ProfilePage() {
         <p>JPEG, PNG ou WebP de até 2 MB.</p>
         <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required />
         <button className="button ghost" type="submit" disabled={busy}>{busy ? "Enviando..." : "Atualizar foto"}</button>
+      </form>
+
+      <form className="checkout-section" onSubmit={changePassword}>
+        <h2>Segurança</h2>
+        <p>Troque sua senha informando a atual. A nova senha deve ter pelo menos 12 caracteres; outras sessões serão encerradas.</p>
+        <label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
+        <label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
+        <label>Confirmar nova senha<input name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
+        <button className="button ghost" type="submit" disabled={busy}>{busy ? "Atualizando..." : "Trocar senha"}</button>
       </form>
     </div>
 
