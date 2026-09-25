@@ -15,7 +15,6 @@ export type LilyPayment = {
   status: string;
   amountCents: number;
   currency: string;
-  providerReference: string | null;
   instructions: string | null;
   expiresAt: string | null;
   approvedAt: string | null;
@@ -26,23 +25,47 @@ export type LilyPayment = {
   createdAt: string;
   updatedAt: string;
   events: Array<{
-    source: string;
     eventType: string;
     fromStatus: string | null;
     toStatus: string | null;
     createdAt: string;
   }>;
   reconciliations: Array<{
-    expectedGrossCents: number;
-    reportedGrossCents: number;
-    feeCents: number;
-    netCents: number;
-    discrepancyCents: number;
     status: string;
-    providerReference: string | null;
-    note: string | null;
     createdAt: string;
   }>;
+};
+
+type AdminReconciliation = {
+  expectedGrossCents: number;
+  reportedGrossCents: number;
+  feeCents: number;
+  netCents: number;
+  discrepancyCents: number;
+  status: string;
+  providerReference: string | null;
+  note: string | null;
+  createdAt: string;
+};
+
+export type AdminPayment = Omit<LilyPayment, "events" | "reconciliations"> & {
+  providerReference: string | null;
+  events: Array<{
+    source: string;
+    eventType: string;
+    fromStatus: string | null;
+    toStatus: string | null;
+    createdAt: string;
+  }>;
+  reconciliations: AdminReconciliation[];
+  order: {
+    id: string;
+    orderNumber: string;
+    phone: string;
+    status: string;
+    grandTotalCents: number;
+    createdAt: string;
+  };
 };
 
 function accessHeaders(input: { session?: AuthPayload | null; guestAccessToken?: string | null }, mutate = false) {
@@ -108,17 +131,6 @@ export type AdminPaymentSettings = {
   manualPixInstructions: string | null;
 };
 
-export type AdminPayment = LilyPayment & {
-  order: {
-    id: string;
-    orderNumber: string;
-    phone: string;
-    status: string;
-    grandTotalCents: number;
-    createdAt: string;
-  };
-};
-
 export async function getAdminPaymentSettings() {
   const response = await fetch("/api/v1/lily/admin/payments/settings", { credentials: "same-origin" });
   return parseResponse<AdminPaymentSettings>(response);
@@ -151,7 +163,7 @@ export async function confirmAdminPayment(
     headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken },
     body: JSON.stringify(input)
   });
-  return parseResponse<LilyPayment>(response);
+  return parseResponse<AdminPayment>(response);
 }
 
 export async function cancelAdminPayment(paymentId: string, csrfToken: string) {
@@ -160,7 +172,7 @@ export async function cancelAdminPayment(paymentId: string, csrfToken: string) {
     credentials: "same-origin",
     headers: { "X-Lily-CSRF": csrfToken }
   });
-  return parseResponse<LilyPayment>(response);
+  return parseResponse<AdminPayment>(response);
 }
 
 export async function reconcileAdminPayment(
@@ -194,5 +206,5 @@ export async function refundAdminPayment(
     headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken },
     body: JSON.stringify(input)
   });
-  return parseResponse<LilyPayment>(response);
+  return parseResponse<AdminPayment>(response);
 }
