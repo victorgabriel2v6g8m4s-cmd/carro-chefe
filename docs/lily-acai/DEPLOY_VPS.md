@@ -313,3 +313,32 @@ Depois desse bootstrap, o deploy da Entrega 06 e releases futuras que usem os me
 ```bash
 sudo carro-chefe-deploy <sha-tecnico-validado>
 ```
+
+
+## Readiness após restart
+
+O deployer não trata mais `systemctl is-active` como prova suficiente de que a API já está pronta.
+
+Depois de iniciar `carro-chefe`, ele consulta:
+
+`http://127.0.0.1:4173/api/health`
+
+por até 30 tentativas, com intervalo padrão de 1 segundo.
+
+Variáveis opcionais:
+
+```bash
+CARRO_CHEFE_READINESS_ATTEMPTS=30
+CARRO_CHEFE_READINESS_DELAY_SECONDS=1
+```
+
+Se a aplicação não ficar pronta dentro da janela, o deploy falha mostrando automaticamente:
+
+- `systemctl status`;
+- últimas linhas do `journalctl`;
+- listener da porta 4173 quando `ss` estiver disponível;
+- último erro do health check.
+
+O smoke HTTPS externo também possui tentativas curtas para tolerar pequenos atrasos depois do reload/restart.
+
+Esse comportamento evita falso negativo como o observado na primeira publicação da Entrega 06, em que migrations e restart concluíram mas o primeiro `curl` ocorreu antes do Fastify começar a escutar.
