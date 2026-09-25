@@ -5,8 +5,9 @@ import { ApiError } from "../../lib/errors";
 import { COOKLILY_ATTRIBUTION_PARAMS, lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
 import { lilyCatalogRoutes } from "./catalog";
 import { lilyAddressRoutes } from "./addresses";
-import { lilyFulfillmentRoutes } from "./fulfillment";
+import { getLilyOperationalSettings, lilyFulfillmentRoutes } from "./fulfillment";
 import { lilyOrderRoutes } from "./orders";
+import { lilyProfileRoutes } from "./profile";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -108,28 +109,43 @@ export async function lilyRoutes(app: FastifyInstance) {
     return { status: "ok", service: "lily-acai" };
   });
 
-  app.get("/api/v1/lily/public/config", async () => ({
-    termsVersion: LILY_TERMS_VERSION,
-    privacyPolicyVersion: LILY_PRIVACY_VERSION,
-    consentVersions: {
-      lilyMarketing: LILY_MARKETING_VERSION,
-      shareWithCarroChefe: LILY_SHARE_VERSION,
-      analyticsOptional: LILY_ANALYTICS_VERSION
-    },
-    brand: {
-      name: "CookLily",
-      wordmark: "cookLily"
-    },
-    social: {
-      instagram: "acai._lily",
-      whatsapp: "+5567999289187"
-    },
-    tracking: {
-      canonical: { qr: "la_qr", campaign: "la_campaign", variant: "la_variant" },
-      acceptedAliases: COOKLILY_ATTRIBUTION_PARAMS,
-      precedence: "la_* over cc_*"
-    }
-  }));
+  app.get("/api/v1/lily/public/config", async () => {
+    const settings = await getLilyOperationalSettings();
+    const instagramHandle = settings.instagramHandle.replace(/^@+/, "");
+    const whatsappDigits = settings.whatsappPhone.replace(/\D/g, "");
+    return {
+      termsVersion: LILY_TERMS_VERSION,
+      privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consentVersions: {
+        lilyMarketing: LILY_MARKETING_VERSION,
+        shareWithCarroChefe: LILY_SHARE_VERSION,
+        analyticsOptional: LILY_ANALYTICS_VERSION
+      },
+      brand: {
+        name: "CookLily",
+        wordmark: "cookLily"
+      },
+      social: {
+        instagramHandle,
+        instagramUrl: instagramHandle ? `https://instagram.com/${instagramHandle}` : null,
+        whatsappPhone: settings.whatsappPhone,
+        whatsappUrl: whatsappDigits ? `https://wa.me/${whatsappDigits}` : null
+      },
+      store: {
+        address: settings.publicAddressText ?? settings.pickupAddressText ?? null
+      },
+      loyalty: {
+        orderCentsPerPoint: settings.loyaltyOrderCentsPerPoint,
+        campaignBonusPoints: settings.loyaltyCampaignBonusPoints,
+        couponBonusPoints: settings.loyaltyCouponBonusPoints
+      },
+      tracking: {
+        canonical: { qr: "la_qr", campaign: "la_campaign", variant: "la_variant" },
+        acceptedAliases: COOKLILY_ATTRIBUTION_PARAMS,
+        precedence: "la_* over cc_*"
+      }
+    };
+  });
 
   app.post("/api/v1/lily/public/leads", {
     config: { rateLimit: { max: 8, timeWindow: "1 minute" } }
@@ -272,4 +288,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyFulfillmentRoutes);
   await app.register(lilyAddressRoutes);
   await app.register(lilyOrderRoutes);
+  await app.register(lilyProfileRoutes);
 }
