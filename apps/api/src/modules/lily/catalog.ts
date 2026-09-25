@@ -6,7 +6,7 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
-import { isActiveWindow, lilyComboConfigurationSchema, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration } from "./configuration";
+import { isActiveWindow, lilyComboConfigurationSchema, lilyComboModeFromRules, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration, resolveLilyComboPresetSelections } from "./configuration";
 
 const statusSchema = z.enum(["draft", "published", "paused"]);
 const activeStatusSchema = z.enum(["active", "paused"]);
@@ -337,10 +337,60 @@ async function publicCatalog(queryInput: unknown) {
     })
   ]);
 
-  const serialized = rawProducts.map(serializeProduct).filter((product) => productMatchesQuery(product, query));
+  const allSerializedProducts = rawProducts.map(serializeProduct);
+  const serialized = allSerializedProducts.filter((product) => productMatchesQuery(product, query));
   const products = serialized.slice(query.offset, query.offset + query.limit);
   const nextOffset = query.offset + products.length < serialized.length ? query.offset + products.length : null;
   const now = new Date();
+  const productById = new Map(allSerializedProducts.map((product) => [product.id, product]));
+
+  const publicCombos = await Promise.all(combos
+    .filter((combo) => isActiveWindow(combo.startsAt, combo.endsAt, now))
+    .map(async (combo) => {
+      const rules = safeObject(combo.rulesJson);
+      const mode = lilyComboModeFromRules(rules);
+      const presetInputs = mode === "preset" ? await resolveLilyComboPresetSelections(combo) : null;
+      const presetSelections = presetInputs?.map((selection) => {
+        const product = productById.get(selection.productId);
+        return {
+          productId: selection.productId,
+          sizeMl: selection.sizeMl,
+          flavorIds: selection.flavorIds,
+          addons: selection.addons,
+          product: product ? {
+            id: product.id,
+            slug: product.slug,
+            name: product.displayName,
+            cover: product.cover
+          } : null,
+          flavors: product
+            ? product.flavors.filter((flavor) => selection.flavorIds.includes(flavor.id))
+            : []
+        };
+      }) ?? [];
+
+      const explicitCoverProductId = typeof rules.coverProductId === "string" ? rules.coverProductId : null;
+      const coverProduct = (explicitCoverProductId ? productById.get(explicitCoverProductId) : null)
+        ?? (presetSelections[0]?.product ? productById.get(presetSelections[0].product.id) : null)
+        ?? allSerializedProducts.find((product) => product.cover);
+
+      return {
+        id: combo.id,
+        slug: combo.slug,
+        name: combo.name,
+        description: combo.description,
+        mode,
+        rules,
+        regularPriceCents: combo.regularPriceCents,
+        offerPriceCents: combo.offerPriceCents,
+        savingsCents: combo.savingsCents,
+        featured: combo.featured,
+        startsAt: combo.startsAt,
+        endsAt: combo.endsAt,
+        cover: coverProduct?.cover ?? null,
+        presetSelections
+      };
+    }));
 
   return {
     categories: categories
@@ -365,21 +415,7 @@ async function publicCatalog(queryInput: unknown) {
       name: flavor.name,
       premium: flavor.premium
     })),
-    combos: combos
-      .filter((combo) => isActiveWindow(combo.startsAt, combo.endsAt, now))
-      .map((combo) => ({
-        id: combo.id,
-        slug: combo.slug,
-        name: combo.name,
-        description: combo.description,
-        rules: safeObject(combo.rulesJson),
-        regularPriceCents: combo.regularPriceCents,
-        offerPriceCents: combo.offerPriceCents,
-        savingsCents: combo.savingsCents,
-        featured: combo.featured,
-        startsAt: combo.startsAt,
-        endsAt: combo.endsAt
-      })),
+    combos: publicCombos,
     products,
     total: serialized.length,
     offset: query.offset,
@@ -422,6 +458,11 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     }
 
     const rules = safeObject(combo.rulesJson);
+    if (lilyComboModeFromRules(rules) !== "builder") {
+      throw new ApiError(409, "Este combo possui produtos e sabores predefinidos.", {
+        code: "LILY_COMBO_NOT_BUILDER"
+      });
+    }
     const quantity = typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : 0;
     const sizeMl = typeof rules.sizeMl === "number" ? Math.trunc(rules.sizeMl) : 0;
     const category = typeof rules.category === "string" ? rules.category : null;
