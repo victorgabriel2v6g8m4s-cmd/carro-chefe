@@ -36,6 +36,9 @@ early_die() {
   exit 1
 }
 
+[[ "${READINESS_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_ATTEMPTS deve ser inteiro positivo"
+[[ "${READINESS_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_DELAY_SECONDS deve ser inteiro positivo"
+
 [[ ${EUID} -eq 0 ]] || early_die "execute como root/sudo"
 [[ $# -eq 1 ]] || { usage; exit 64; }
 
@@ -255,16 +258,18 @@ SERVICE_STOPPED=0
 
 wait_for_internal_health() {
   local attempt
+  local health_tmp="/tmp/carro-chefe-health-${STAMP}"
+  local health_error_tmp="/tmp/carro-chefe-health-error-${STAMP}"
   echo "Aguardando readiness do Fastify em 127.0.0.1:4173..."
 
   for ((attempt=1; attempt<=READINESS_ATTEMPTS; attempt++)); do
     if [[ "$(systemctl is-active "${SERVICE}" || true)" != "active" ]]; then
       echo "Tentativa ${attempt}/${READINESS_ATTEMPTS}: serviço ainda não está active."
     elif curl --fail --silent --show-error --max-time 2 \
-      http://127.0.0.1:4173/api/health >/tmp/carro-chefe-health.$ 2>/tmp/carro-chefe-health-error.$; then
-      cat /tmp/carro-chefe-health.$
+      http://127.0.0.1:4173/api/health >"${health_tmp}" 2>"${health_error_tmp}"; then
+      cat "${health_tmp}"
       echo
-      rm -f /tmp/carro-chefe-health.$ /tmp/carro-chefe-health-error.$
+      rm -f "${health_tmp}" "${health_error_tmp}"
       echo "readiness=ok attempt=${attempt}"
       return 0
     else
@@ -278,8 +283,8 @@ wait_for_internal_health() {
   systemctl status "${SERVICE}" --no-pager -l || true
   journalctl -u "${SERVICE}" -n 120 --no-pager || true
   command -v ss >/dev/null 2>&1 && ss -ltnp | grep ':4173' || true
-  [[ -f /tmp/carro-chefe-health-error.$ ]] && cat /tmp/carro-chefe-health-error.$ || true
-  rm -f /tmp/carro-chefe-health.$ /tmp/carro-chefe-health-error.$
+  [[ -f "${health_error_tmp}" ]] && cat "${health_error_tmp}" || true
+  rm -f "${health_tmp}" "${health_error_tmp}"
   return 1
 }
 
