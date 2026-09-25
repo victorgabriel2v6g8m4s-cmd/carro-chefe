@@ -2,7 +2,8 @@
 
 **Branch:** `feat/lily-homologacao-05-06`  
 **Origem:** feedback de homologação do catálogo, carrinho e pedidos  
-**Status:** implementação em validação técnica; deploy pendente
+**Status:** implementação técnica concluída e validada; deploy/QA visual final pendentes  
+**SHA técnico validado:** `10872e686c6c71c228ff8aef0e507a48deaaf912`
 
 ## Objetivo
 
@@ -225,3 +226,26 @@ carro-chefe-deploy <SHA_VALIDADO>
 ```
 
 O script deve aplicar automaticamente a nova migration, backups, gates, restart e readiness.
+
+
+## Evidências do gate técnico
+
+A árvore do SHA técnico `10872e686c6c71c228ff8aef0e507a48deaaf912` foi validada em um commit de gate com árvore Git idêntica, necessário apenas porque a linha CookLily diverge intencionalmente da `main`.
+
+- CI run: `36150024665` — **success**;
+- CodeQL run: `36150024735` — **success**;
+- Node 20: 22 arquivos / **111 testes** — success;
+- Node 24: 22 arquivos / **111 testes** — success;
+- migration nova aplicada em banco SQLite limpo — success;
+- TypeScript/static checks — success;
+- build CookLily e demais builds de produção — success;
+- Tool Health — success;
+- Workbook Snapshot — success;
+- Excel Recipe Linux/Windows — success;
+- Windows Supervisor — success.
+
+PRs de validação são técnicos e devem permanecer sem merge na `main`.
+
+## Limite da validação
+
+Os gates acima validam schema, contratos, testes e build. A responsividade foi corrigida estruturalmente no CSS, mas a validação visual final em aparelhos/tamanhos reais continua sendo uma etapa de QA após deploy; não é declarada como concluída pelo CI.
