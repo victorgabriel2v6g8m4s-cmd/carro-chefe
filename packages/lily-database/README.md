@@ -37,6 +37,24 @@ Entrega 05:
 - `LilyOffer`;
 - `LilyAdminAudit`.
 
+## Modelos de pedido — Entrega 06
+
+- `LilyAddress`;
+- `LilyOperationalSettings`;
+- `LilyDeliveryZone`;
+- `LilyOrder`;
+- `LilyOrderItem`;
+- `LilyOrderItemAddon`;
+- `LilyOrderStatusEvent`.
+
+Pedidos preservam snapshots comerciais e attribution `la*`. A configuração operacional nasce fechada.
+
+## Migration de pedidos
+
+`20260925100000_lily_orders`
+
+Aplicada com sucesso nos gates Node 20 e Node 24 do SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`.
+
 ## Migration do catálogo
 
 `20260924190000_lily_catalog`
