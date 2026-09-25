@@ -10,6 +10,7 @@ import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
 import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
+import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
@@ -408,6 +409,7 @@ function App() {
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
     <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
+    <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></>;
 }
