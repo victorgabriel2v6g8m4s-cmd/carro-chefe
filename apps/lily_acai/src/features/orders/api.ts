@@ -28,8 +28,25 @@ export type FulfillmentSettings = {
   zones: Array<{ id: string; name: string; feeCents: number; minimumOrderCents: number }>;
 };
 
-export type OrderQuote = {
-  items: Array<{
+type ProductQuoteItem = {
+  kind: "product";
+  configurationHash: string;
+  product: { id: string; slug: string; name: string };
+  variant: { id: string; name: string };
+  sizeMl: number;
+  flavors: Array<{ id: string; name: string }>;
+  addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+  totalPriceCents: number;
+  quantity: number;
+  note: string | null;
+  lineTotalCents: number;
+};
+
+type ComboQuoteItem = {
+  kind: "combo";
+  configurationHash: string;
+  combo: { id: string; slug: string; name: string; description: string | null };
+  selections: Array<{
     configurationHash: string;
     product: { id: string; slug: string; name: string };
     variant: { id: string; name: string };
@@ -37,10 +54,15 @@ export type OrderQuote = {
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
     totalPriceCents: number;
-    quantity: number;
-    note: string | null;
-    lineTotalCents: number;
   }>;
+  totalPriceCents: number;
+  quantity: number;
+  note: string | null;
+  lineTotalCents: number;
+};
+
+export type OrderQuote = {
+  items: Array<ProductQuoteItem | ComboQuoteItem>;
   fulfillment: {
     fulfillmentType: "pickup" | "delivery";
     deliveryFeeCents: number;
@@ -70,12 +92,14 @@ export type LilyOrder = {
   createdAt: string;
   items: Array<{
     id: string;
+    kind: "product" | "combo";
     productId: string;
     variantId: string;
     productName: string;
     variantName: string;
     sizeMl: number;
     configurationHash: string;
+    configuration: Record<string, unknown>;
     flavors: Array<{ id: string; name: string }>;
     unitPriceCents: number;
     quantity: number;
@@ -86,15 +110,35 @@ export type LilyOrder = {
   statusEvents: Array<{ fromStatus: string | null; toStatus: string; actor: string; createdAt: string }>;
 };
 
-function cartPayload(items: CartItem[]) {
-  return items.map((item) => ({
+function selectionPayload(selection: NonNullable<CartItem["comboSelections"]>[number]) {
+  return {
+    productId: selection.productId,
+    sizeMl: selection.sizeMl,
+    flavorIds: selection.flavorIds,
+    addons: selection.addons.map(({ addonId, quantity }) => ({ addonId, quantity }))
+  };
+}
+
+function cartItemPayload(item: CartItem) {
+  if (item.kind === "combo") {
+    if (!item.comboId || !item.comboSelections?.length) throw new Error("Combo incompleto no carrinho.");
+    return {
+      kind: "combo" as const,
+      comboId: item.comboId,
+      selections: item.comboSelections.map(selectionPayload),
+      quantity: item.quantity,
+      note: item.note || null
+    };
+  }
+  return {
+    kind: "product" as const,
     productId: item.productId,
     sizeMl: item.sizeMl,
     flavorIds: item.flavorIds,
     addons: item.addons.map(({ addonId, quantity }) => ({ addonId, quantity })),
     quantity: item.quantity,
     note: item.note || null
-  }));
+  };
 }
 
 export async function getFulfillmentSettings() {
@@ -114,7 +158,7 @@ export async function quoteOrder(input: {
     body: JSON.stringify({
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
-      items: cartPayload(input.items)
+      items: input.items.map(cartItemPayload)
     })
   });
   return parseResponse<OrderQuote>(response);
@@ -147,12 +191,7 @@ export async function createOrder(input: {
       ...(input.address ? { address: input.address } : {}),
       customerNote: input.customerNote || null,
       items: input.items.map((item, index) => ({
-        productId: item.productId,
-        sizeMl: item.sizeMl,
-        flavorIds: item.flavorIds,
-        addons: item.addons.map(({ addonId, quantity }) => ({ addonId, quantity })),
-        quantity: item.quantity,
-        note: item.note || null,
+        ...cartItemPayload(item),
         configurationHash: input.quote.items[index]!.configurationHash,
         expectedUnitPriceCents: input.quote.items[index]!.totalPriceCents
       })),
