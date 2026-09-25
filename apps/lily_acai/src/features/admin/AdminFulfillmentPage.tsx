@@ -67,7 +67,7 @@ export function AdminFulfillmentPage() {
   if (loading) return <section className="admin-state"><h1>Carregando configurações...</h1></section>;
   if (!session || !data) return <section className="admin-state"><span className="eyebrow">CookLily</span><h1>Acesso staff necessário.</h1><p>{error}</p><a className="button primary" href={import.meta.env.BASE_URL + "entrar"}>Entrar</a></section>;
 
-  const csrfToken = csrfToken;
+  const csrfToken = session.csrfToken;
   const settings = data.settings;
   const byDay = new Map(settings.businessHours.map((hour) => [hour.dayOfWeek, hour]));
 
