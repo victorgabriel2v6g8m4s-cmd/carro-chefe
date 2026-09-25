@@ -67,6 +67,7 @@ export function AdminFulfillmentPage() {
   if (loading) return <section className="admin-state"><h1>Carregando configurações...</h1></section>;
   if (!session || !data) return <section className="admin-state"><span className="eyebrow">CookLily</span><h1>Acesso staff necessário.</h1><p>{error}</p><a className="button primary" href={import.meta.env.BASE_URL + "entrar"}>Entrar</a></section>;
 
+  const csrfToken = csrfToken;
   const settings = data.settings;
   const byDay = new Map(settings.businessHours.map((hour) => [hour.dayOfWeek, hour]));
 
@@ -85,7 +86,7 @@ export function AdminFulfillmentPage() {
       });
     }
     try {
-      await lilyAdminJson("fulfillment", "PATCH", session.csrfToken, {
+      await lilyAdminJson("fulfillment", "PATCH", csrfToken, {
         ordersEnabled: form.get("ordersEnabled") === "on",
         pickupEnabled: form.get("pickupEnabled") === "on",
         deliveryEnabled: form.get("deliveryEnabled") === "on",
@@ -109,7 +110,7 @@ export function AdminFulfillmentPage() {
     const form = new FormData(event.currentTarget);
     setError("");
     try {
-      await lilyAdminJson("delivery-zones", "POST", session.csrfToken, {
+      await lilyAdminJson("delivery-zones", "POST", csrfToken, {
         name: String(form.get("name")),
         status: "active",
         feeCents: parseMoney(String(form.get("fee") || "0")),
