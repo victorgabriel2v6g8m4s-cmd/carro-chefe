@@ -148,3 +148,28 @@ sudo carro-chefe-deploy da166683ab2d0e27acae23d9714ec8e824a02ac4
 O script usa bancos temporários para gates, gera backups antes de migration, para o serviço antes de gravar SQLite, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
 
 Novos namespaces Nginx continuam exigindo revisão explícita; o script valida e falha antes da migration em vez de editar o proxy silenciosamente.
+
+
+## Promoção CookLily para staff/admin
+
+O script `deploy/scripts/lily-promote-user` transforma a promoção de uma conta CookLily existente em uma operação única e auditada.
+
+Depois de um deploy que contenha o helper:
+
+```bash
+sudo lily-promote-user 67999999999
+```
+
+O papel padrão é `staff`.
+
+Para promover explicitamente para `admin`:
+
+```bash
+sudo lily-promote-user 67999999999 admin
+```
+
+O telefone é normalizado para `+55...`. O comando falha se a conta não existir, estiver inativa ou a transição de papel não for uma promoção válida. Ele grava uma entrada em `LilyAdminAudit`.
+
+A conta precisa ser criada antes pelo fluxo normal de cadastro. O utilitário não cria usuário e não redefine senha.
+
+O `carro-chefe-deploy` copia o helper para `/usr/local/sbin/lily-promote-user` somente depois que health checks do release passam.
