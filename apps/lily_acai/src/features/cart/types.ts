@@ -10,8 +10,19 @@ export type CartFlavor = {
   name: string;
 };
 
+export type CartComboSelection = {
+  productId: string;
+  productName: string;
+  sizeMl: number;
+  flavorIds: string[];
+  flavors: CartFlavor[];
+  addons: CartAddon[];
+  configurationHash: string;
+};
+
 export type CartItem = {
   id: string;
+  kind: "product" | "combo";
   productId: string;
   productName: string;
   variantId: string;
@@ -20,6 +31,8 @@ export type CartItem = {
   flavorIds: string[];
   flavors: CartFlavor[];
   addons: CartAddon[];
+  comboId?: string;
+  comboSelections?: CartComboSelection[];
   configurationHash: string;
   unitPriceCents: number;
   quantity: number;
