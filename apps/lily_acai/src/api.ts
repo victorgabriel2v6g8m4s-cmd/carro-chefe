@@ -4,6 +4,8 @@ export type AuthPayload = {
     phone: string;
     displayName: string | null;
     role: string;
+    avatarUrl: string | null;
+    rankingOptIn: boolean;
   };
   csrfToken: string;
   sessionExpiresAt: string;
@@ -22,7 +24,6 @@ export type CatalogVariant = {
   priceCents: number;
   compareAtPriceCents: number | null;
   isAvailable: boolean;
-  projectedMarginBps: number | null;
 };
 
 export type CatalogFlavor = {
@@ -30,10 +31,6 @@ export type CatalogFlavor = {
   slug: string;
   name: string;
   premium: boolean;
-  portion300?: number;
-  portion500?: number;
-  priceModifier300?: number;
-  priceModifier500?: number;
 };
 
 export type CatalogAddon = {
@@ -41,10 +38,7 @@ export type CatalogAddon = {
   slug: string;
   name: string;
   priceCents: number;
-  portion300: number;
-  portion500: number;
   individualLimit: number;
-  flavorId: string | null;
 };
 
 export type CatalogProduct = {
@@ -62,7 +56,6 @@ export type CatalogProduct = {
   featured: boolean;
   weeklyHighlight: boolean;
   allowPlaceholder: boolean;
-  preparationLeadMinutes: number | null;
   sortOrder: number;
   category: {
     id: string;
@@ -123,15 +116,29 @@ export async function parseResponse<T>(response: Response): Promise<T> {
   return body as T;
 }
 
+export type LilyPublicConfig = {
+  termsVersion: string;
+  privacyPolicyVersion: string;
+  consentVersions: Record<string, string>;
+  brand: { name: string; wordmark: string };
+  social: {
+    instagramHandle: string;
+    instagramUrl: string | null;
+    whatsappPhone: string;
+    whatsappUrl: string | null;
+  };
+  store: { address: string | null };
+  loyalty: {
+    orderCentsPerPoint: number;
+    campaignBonusPoints: number;
+    couponBonusPoints: number;
+  };
+  tracking: unknown;
+};
+
 export async function getLilyConfig() {
   const response = await fetch("/api/v1/lily/public/config", { credentials: "same-origin" });
-  return parseResponse<{
-    termsVersion: string;
-    privacyPolicyVersion: string;
-    consentVersions: Record<string, string>;
-    brand: { name: string; wordmark: string };
-    tracking: unknown;
-  }>(response);
+  return parseResponse<LilyPublicConfig>(response);
 }
 
 export async function registerLily(input: {
@@ -300,4 +307,92 @@ export async function configureLilyCombo(payload: {
     body: JSON.stringify(payload)
   });
   return parseResponse<ComboConfigurationQuote>(response);
+}
+
+
+export type ComboBuilderPayload = {
+  combo: {
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+    regularPriceCents: number;
+    offerPriceCents: number;
+    savingsCents: number;
+  };
+  quantity: number;
+  sizeMl: number;
+  options: CatalogProduct[];
+};
+
+export async function getLilyComboBuilder(comboId: string) {
+  const response = await fetch(`/api/v1/lily/public/combos/${encodeURIComponent(comboId)}/builder`, {
+    credentials: "same-origin"
+  });
+  return parseResponse<ComboBuilderPayload>(response);
+}
+
+export type LilyProfilePayload = {
+  user: {
+    id: string;
+    phone: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    rankingOptIn: boolean;
+  };
+  loyalty: {
+    points: number;
+    orderCount: number;
+    campaignCount: number;
+    rank: number | null;
+  };
+};
+
+export type LilyRankingRow = {
+  rank: number;
+  displayName: string;
+  avatarUrl: string | null;
+  points: number;
+  orderCount: number;
+  campaignCount: number;
+};
+
+export async function getLilyProfile() {
+  const response = await fetch("/api/v1/lily/customer/profile", { credentials: "same-origin" });
+  return parseResponse<LilyProfilePayload>(response);
+}
+
+export async function updateLilyProfile(
+  input: { displayName?: string | null; rankingOptIn?: boolean },
+  csrfToken: string
+) {
+  const response = await fetch("/api/v1/lily/customer/profile", {
+    method: "PATCH",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Lily-CSRF": csrfToken
+    },
+    body: JSON.stringify(input)
+  });
+  return parseResponse<LilyProfilePayload>(response);
+}
+
+export async function uploadLilyProfileAvatar(file: File, csrfToken: string) {
+  const data = new FormData();
+  data.append("file", file);
+  const response = await fetch("/api/v1/lily/customer/profile/avatar", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "X-Lily-CSRF": csrfToken },
+    body: data
+  });
+  return parseResponse<LilyProfilePayload>(response);
+}
+
+export async function getLilyRanking(limit = 20) {
+  const response = await fetch(`/api/v1/lily/public/loyalty/ranking?limit=${encodeURIComponent(limit)}`, {
+    credentials: "same-origin"
+  });
+  return parseResponse<{ ranking: LilyRankingRow[] }>(response);
 }
