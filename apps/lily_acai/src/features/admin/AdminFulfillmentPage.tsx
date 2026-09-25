@@ -23,6 +23,12 @@ type AdminFulfillmentPayload = {
     flatDeliveryFeeCents: number;
     pickupAddressText: string | null;
     pickupInstructions: string | null;
+    instagramHandle: string;
+    whatsappPhone: string;
+    publicAddressText: string | null;
+    loyaltyOrderCentsPerPoint: number;
+    loyaltyCampaignBonusPoints: number;
+    loyaltyCouponBonusPoints: number;
     timezone: string;
     businessHours: BusinessHour[];
   };
@@ -95,6 +101,12 @@ export function AdminFulfillmentPage() {
         flatDeliveryFeeCents: parseMoney(String(form.get("flatFee") || "0")),
         pickupAddressText: String(form.get("pickupAddress") || "") || null,
         pickupInstructions: String(form.get("pickupInstructions") || "") || null,
+        instagramHandle: String(form.get("instagramHandle") || "").trim(),
+        whatsappPhone: String(form.get("whatsappPhone") || "").trim(),
+        publicAddressText: String(form.get("publicAddressText") || "") || null,
+        loyaltyOrderCentsPerPoint: Math.max(1, Number(form.get("loyaltyOrderCentsPerPoint") || 100)),
+        loyaltyCampaignBonusPoints: Math.max(0, Number(form.get("loyaltyCampaignBonusPoints") || 0)),
+        loyaltyCouponBonusPoints: Math.max(0, Number(form.get("loyaltyCouponBonusPoints") || 0)),
         businessHours,
         timezone: "America/Campo_Grande"
       });
@@ -148,6 +160,26 @@ export function AdminFulfillmentPage() {
           <label>Taxa fixa<input name="flatFee" defaultValue={moneyInput(settings.flatDeliveryFeeCents)} /></label>
           <label className="admin-span">Endereço de retirada<input name="pickupAddress" defaultValue={settings.pickupAddressText ?? ""} /></label>
           <label className="admin-span">Instruções de retirada<textarea name="pickupInstructions" rows={2} defaultValue={settings.pickupInstructions ?? ""} /></label>
+        </div>
+      </section>
+
+      <section className="checkout-section">
+        <h2>Canais públicos</h2>
+        <p>Esses dados alimentam header, rodapé, WhatsApp, Instagram e endereço público sem alterar código.</p>
+        <div className="admin-form-grid">
+          <label>Instagram<input name="instagramHandle" defaultValue={settings.instagramHandle} placeholder="acai._lily" /></label>
+          <label>WhatsApp<input name="whatsappPhone" defaultValue={settings.whatsappPhone} placeholder="+5567999999999" /></label>
+          <label className="admin-span">Endereço público<input name="publicAddressText" defaultValue={settings.publicAddressText ?? ""} placeholder="Endereço exibido ao cliente" /></label>
+        </div>
+      </section>
+
+      <section className="checkout-section">
+        <h2>Ranking e pontos</h2>
+        <p>Compras só pontuam quando o pedido estiver pago/concluído. Campanhas usam o tracking la_campaign. Cupons usam o ledger de fidelidade quando integrados.</p>
+        <div className="admin-form-grid">
+          <label>Centavos por ponto<input name="loyaltyOrderCentsPerPoint" type="number" min="1" step="1" defaultValue={settings.loyaltyOrderCentsPerPoint} /></label>
+          <label>Bônus por campanha<input name="loyaltyCampaignBonusPoints" type="number" min="0" step="1" defaultValue={settings.loyaltyCampaignBonusPoints} /></label>
+          <label>Bônus por cupom<input name="loyaltyCouponBonusPoints" type="number" min="0" step="1" defaultValue={settings.loyaltyCouponBonusPoints} /></label>
         </div>
       </section>
 
