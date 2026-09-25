@@ -97,7 +97,7 @@ async function requireOrderPaymentAccess(request: FastifyRequest, orderId: strin
   return { order, context: null };
 }
 
-function serializePayment(payment: any) {
+function serializePayment(payment: any, internal = false) {
   return {
     id: payment.id,
     orderId: payment.orderId,
@@ -107,7 +107,6 @@ function serializePayment(payment: any) {
     status: payment.status,
     amountCents: payment.amountCents,
     currency: payment.currency,
-    providerReference: payment.providerReference,
     instructions: payment.instructionsSnapshot,
     expiresAt: payment.expiresAt,
     approvedAt: payment.approvedAt,
@@ -118,23 +117,26 @@ function serializePayment(payment: any) {
     createdAt: payment.createdAt,
     updatedAt: payment.updatedAt,
     events: (payment.events ?? []).map((event: any) => ({
-      source: event.source,
       eventType: event.eventType,
       fromStatus: event.fromStatus,
       toStatus: event.toStatus,
-      createdAt: event.createdAt
+      createdAt: event.createdAt,
+      ...(internal ? { source: event.source } : {})
     })),
     reconciliations: (payment.reconciliations ?? []).map((row: any) => ({
-      expectedGrossCents: row.expectedGrossCents,
-      reportedGrossCents: row.reportedGrossCents,
-      feeCents: row.feeCents,
-      netCents: row.netCents,
-      discrepancyCents: row.discrepancyCents,
       status: row.status,
-      providerReference: row.providerReference,
-      note: row.note,
-      createdAt: row.createdAt
-    }))
+      createdAt: row.createdAt,
+      ...(internal ? {
+        expectedGrossCents: row.expectedGrossCents,
+        reportedGrossCents: row.reportedGrossCents,
+        feeCents: row.feeCents,
+        netCents: row.netCents,
+        discrepancyCents: row.discrepancyCents,
+        providerReference: row.providerReference,
+        note: row.note
+      } : {})
+    })),
+    ...(internal ? { providerReference: payment.providerReference } : {})
   };
 }
 
@@ -268,7 +270,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       include: paymentInclude,
       orderBy: { createdAt: "desc" }
     });
-    return { payments: payments.map(serializePayment) };
+    return { payments: payments.map((payment) => serializePayment(payment)) };
   });
 
   app.get("/api/v1/lily/admin/payments/settings", async (request) => {
@@ -332,7 +334,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     });
     return {
       payments: payments.map((payment) => ({
-        ...serializePayment(payment),
+        ...serializePayment(payment, true),
         order: {
           id: payment.order.id,
           orderNumber: payment.order.orderNumber,
@@ -351,7 +353,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const input = confirmationSchema.parse(request.body);
     const existing = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
     if (!existing) throw new ApiError(404, "Pagamento não encontrado.");
-    if (existing.status === "approved") return serializePayment(existing);
+    if (existing.status === "approved") return serializePayment(existing, true);
     if (existing.status !== "pending") {
       throw new ApiError(409, "Somente pagamento pendente pode ser confirmado.", {
         code: "LILY_PAYMENT_CONFIRM_STATE",
@@ -426,7 +428,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       reconciliationStatus: reconciliation.status
     });
     const updated = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
-    return serializePayment(updated);
+    return serializePayment(updated, true);
   });
 
   app.post("/api/v1/lily/admin/payments/:id/cancel", async (request) => {
@@ -453,7 +455,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     ]);
     await auditLilyAdmin(context.user.id, "payment.cancel", "payment", id);
     const updated = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
-    return serializePayment(updated);
+    return serializePayment(updated, true);
   });
 
   app.post("/api/v1/lily/admin/payments/:id/reconcile", async (request) => {
@@ -562,6 +564,6 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       full
     });
     const updated = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
-    return serializePayment(updated);
+    return serializePayment(updated, true);
   });
 }
