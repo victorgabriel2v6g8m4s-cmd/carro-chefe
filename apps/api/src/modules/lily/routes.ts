@@ -17,6 +17,7 @@ import {
   clearLilySessionCookie,
   createLilySession,
   getConsentSnapshot,
+  getOptionalLilySession,
   hashPassword,
   normalizeLilyPhone,
   publicLilyUser,
@@ -195,6 +196,11 @@ export async function lilyRoutes(app: FastifyInstance) {
     reply.header("Cache-Control", "no-store");
     // A mesma resposta é usada para novo cadastro e repetição para não revelar histórico do telefone.
     return reply.code(202).send({ accepted: true });
+  });
+
+  app.get("/api/v1/lily/auth/status", async (request) => {
+    const context = await getOptionalLilySession(request);
+    return { user: context ? publicLilyUser(context.user) : null };
   });
 
   app.post("/api/v1/lily/auth/register", {
