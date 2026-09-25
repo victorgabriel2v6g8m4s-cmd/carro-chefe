@@ -90,6 +90,7 @@ export type LilyOrder = {
   address: LilyAddressInput | null;
   customerNote: string | null;
   createdAt: string;
+  guestAccessToken?: string;
   items: Array<{
     id: string;
     kind: "product" | "combo";
