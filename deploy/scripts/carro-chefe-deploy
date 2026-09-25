@@ -1,0 +1,348 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+APP_DIR="${CARRO_CHEFE_APP_DIR:-/srv/carro-chefe/current}"
+DATA_DIR="${CARRO_CHEFE_DATA_DIR:-/srv/carro-chefe/data}"
+ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
+NGINX_CONF="${CARRO_CHEFE_NGINX_CONF:-/etc/nginx/sites-available/carrochefe.com}"
+SERVICE="${CARRO_CHEFE_SERVICE:-carro-chefe}"
+SERVICE_USER="${CARRO_CHEFE_SERVICE_USER:-carrochefe}"
+SERVICE_GROUP="${CARRO_CHEFE_SERVICE_GROUP:-carrochefe}"
+BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-${DATA_DIR}/backups}"
+LOG_DIR="${CARRO_CHEFE_DEPLOY_LOG_DIR:-${DATA_DIR}/deploy-logs}"
+LOCK_FILE="${CARRO_CHEFE_DEPLOY_LOCK:-/run/lock/carro-chefe-deploy.lock}"
+READINESS_ATTEMPTS="${CARRO_CHEFE_READINESS_ATTEMPTS:-30}"
+READINESS_DELAY_SECONDS="${CARRO_CHEFE_READINESS_DELAY_SECONDS:-1}"
+
+usage() {
+  cat <<'EOF'
+Uso:
+  sudo carro-chefe-deploy <release-sha>
+
+Executa deploy fail-closed por SHA imutável:
+  fetch -> checkout -> npm ci -> preflight isolado -> backups -> stop ->
+  migrations -> permissões -> nginx -t/reload -> restart -> health checks.
+
+O script NÃO:
+  - executa prisma reset/seed;
+  - executa npm audit fix;
+  - sobrescreve a configuração real do Nginx;
+  - faz rollback automático de banco após migration iniciada.
+EOF
+}
+
+early_die() {
+  echo "ERRO: $*" >&2
+  exit 1
+}
+
+[[ "${READINESS_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_ATTEMPTS deve ser inteiro positivo"
+[[ "${READINESS_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_DELAY_SECONDS deve ser inteiro positivo"
+
+[[ ${EUID} -eq 0 ]] || early_die "execute como root/sudo"
+[[ $# -eq 1 ]] || { usage; exit 64; }
+
+RELEASE_SHA="$1"
+[[ "${RELEASE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]] || early_die "release SHA deve ter 40 caracteres hexadecimais"
+
+for command in git npm node sqlite3 systemctl nginx curl python3 flock tee; do
+  command -v "${command}" >/dev/null 2>&1 || early_die "comando obrigatório ausente: ${command}"
+done
+
+[[ -d "${APP_DIR}/.git" ]] || early_die "${APP_DIR} não é o checkout Git esperado"
+[[ -f "${ENV_FILE}" ]] || early_die "arquivo de ambiente ausente: ${ENV_FILE}"
+[[ -f "${NGINX_CONF}" ]] || early_die "configuração Nginx ausente: ${NGINX_CONF}"
+
+mkdir -p "${BACKUP_DIR}" "${LOG_DIR}"
+exec 9>"${LOCK_FILE}"
+flock -n 9 || early_die "outro deploy já está em execução"
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+LOG_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.log"
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+cd "${APP_DIR}"
+PREVIOUS_SHA="$(git rev-parse HEAD)"
+PHASE="init"
+SERVICE_STOPPED=0
+MIGRATION_STARTED=0
+
+cleanup_on_error() {
+  local status="${1:-$?}"
+  echo
+  echo "DEPLOY FALHOU | fase=${PHASE} | status=${status}"
+  echo "release=${RELEASE_SHA}"
+  echo "previous=${PREVIOUS_SHA}"
+  echo "log=${LOG_FILE}"
+
+  if [[ "${MIGRATION_STARTED}" -eq 0 ]]; then
+    echo "Nenhuma migration real foi iniciada; restaurando checkout anterior."
+    git checkout --detach "${PREVIOUS_SHA}" || true
+    npm ci --include=dev || true
+    if [[ "${SERVICE_STOPPED}" -eq 1 ]]; then
+      systemctl start "${SERVICE}" || true
+    fi
+  else
+    echo "Migration real já foi iniciada. Rollback de banco NÃO será automatizado."
+    echo "Consulte os backups em ${BACKUP_DIR} e o runbook antes de qualquer restauração."
+  fi
+  exit "${status}"
+}
+trap cleanup_on_error ERR
+
+fail() {
+  echo "ERRO: $*" >&2
+  cleanup_on_error 1
+}
+
+echo "== Carro Chefe deploy =="
+echo "timestamp=${STAMP}"
+echo "previous_sha=${PREVIOUS_SHA}"
+echo "release_sha=${RELEASE_SHA}"
+echo "log=${LOG_FILE}"
+
+PHASE="validate-worktree"
+if [[ -n "$(git status --porcelain)" ]]; then
+  git status --short
+  fail "checkout possui alterações; deploy cancelado"
+fi
+
+PHASE="fetch"
+git fetch origin --prune
+git cat-file -e "${RELEASE_SHA}^{commit}" || fail "SHA não existe no repositório local após fetch"
+git show --no-patch --format='release_commit=%H %s' "${RELEASE_SHA}"
+
+PHASE="nginx-precheck"
+required_nginx_patterns=(
+  'location ^~ /api/v1/lily/public/'
+  'location ^~ /api/v1/lily/auth/'
+  'location ^~ /api/v1/lily/admin/'
+  'location = /api/v1/lily/orders'
+  'location ^~ /api/v1/lily/orders/'
+  'location ^~ /api/v1/lily/customer/'
+  'location ^~ /api/ { return 404; }'
+)
+for pattern in "${required_nginx_patterns[@]}"; do
+  grep -Fq "${pattern}" "${NGINX_CONF}" || fail "Nginx ainda não contém rota obrigatória: ${pattern}"
+done
+nginx -t
+
+PHASE="checkout"
+git checkout --detach "${RELEASE_SHA}"
+[[ "$(git rev-parse HEAD)" == "${RELEASE_SHA}" ]] || fail "checkout não ficou no SHA solicitado"
+
+PHASE="environment"
+set -a
+# shellcheck disable=SC1090
+. "${ENV_FILE}"
+set +a
+
+[[ -n "${DATABASE_URL:-}" ]] || fail "DATABASE_URL ausente"
+[[ -n "${LILY_DATABASE_URL:-}" ]] || fail "LILY_DATABASE_URL ausente"
+[[ -n "${LILY_UPLOAD_DIR:-}" ]] || fail "LILY_UPLOAD_DIR ausente"
+
+[[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "DATABASE_URL fora do volume esperado"
+[[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "LILY_DATABASE_URL fora do volume esperado"
+[[ "${LILY_UPLOAD_DIR}" == /srv/carro-chefe/data/* ]] || fail "LILY_UPLOAD_DIR fora do volume esperado"
+
+PHASE="dependencies"
+npm ci --include=dev
+
+PHASE="python-tooling"
+mkdir -p .runtime
+rm -rf .runtime/tool-health-venv
+python3 -m venv .runtime/tool-health-venv
+.runtime/tool-health-venv/bin/python -m pip install \
+  --disable-pip-version-check \
+  --requirement tools/excel_snapshot/requirements.txt
+export PATH="${APP_DIR}/.runtime/tool-health-venv/bin:${PATH}"
+hash -r
+python3 -c "import openpyxl, oletools; print('python_tooling=ok')"
+
+PRE_CORE="${APP_DIR}/.runtime/deploy-preflight-core.db"
+PRE_LILY="${APP_DIR}/.runtime/deploy-preflight-lily.db"
+rm -f "${PRE_CORE}" "${PRE_CORE}-wal" "${PRE_CORE}-shm" \
+      "${PRE_LILY}" "${PRE_LILY}-wal" "${PRE_LILY}-shm"
+
+preflight() {
+  DATABASE_URL="file:${PRE_CORE}" \
+  LILY_DATABASE_URL="file:${PRE_LILY}" \
+  "$@"
+}
+
+PHASE="preflight-migrations"
+preflight npm run db:deploy
+
+PHASE="policy"
+preflight npm run policy:check
+
+PHASE="static-checks"
+preflight npm run check
+
+PHASE="tests"
+preflight npm test
+
+PHASE="build"
+preflight npm run build
+
+PHASE="tool-health"
+preflight npm run tools:status:check
+
+PHASE="post-gates-cleanliness"
+# Os testes Python geram caches não versionados; remover somente esse artefato conhecido.
+find tools -type d -name '__pycache__' -prune -exec rm -rf {} +
+find tools -type f -name '*.pyc' -delete
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  git status --short
+  fail "gates alteraram arquivos versionados/não ignorados"
+fi
+
+PHASE="backup"
+CORE_DB="${DATABASE_URL#file:}"
+LILY_DB="${LILY_DATABASE_URL#file:}"
+mkdir -p "${LILY_UPLOAD_DIR}"
+
+CORE_BACKUP="${BACKUP_DIR}/carro-chefe-pre-${RELEASE_SHA:0:12}-${STAMP}.db"
+LILY_BACKUP=""
+sqlite3 "${CORE_DB}" ".backup '${CORE_BACKUP}'"
+echo "core_backup=${CORE_BACKUP}"
+
+if [[ -f "${LILY_DB}" ]]; then
+  LILY_BACKUP="${BACKUP_DIR}/lily-acai-pre-${RELEASE_SHA:0:12}-${STAMP}.db"
+  sqlite3 "${LILY_DB}" ".backup '${LILY_BACKUP}'"
+  echo "lily_backup=${LILY_BACKUP}"
+else
+  echo "lily_backup=not_applicable_database_missing"
+fi
+
+PHASE="stop-service"
+systemctl stop "${SERVICE}"
+SERVICE_STOPPED=1
+[[ "$(systemctl is-active "${SERVICE}" || true)" == "inactive" ]] || fail "serviço não ficou inativo"
+
+if command -v fuser >/dev/null 2>&1; then
+  if fuser "${CORE_DB}" >/dev/null 2>&1; then
+    fuser "${CORE_DB}" || true
+    fail "core SQLite continua em uso após stop"
+  fi
+  if [[ -f "${LILY_DB}" ]] && fuser "${LILY_DB}" >/dev/null 2>&1; then
+    fuser "${LILY_DB}" || true
+    fail "Lily SQLite continua em uso após stop"
+  fi
+fi
+
+PHASE="production-migrations"
+MIGRATION_STARTED=1
+npm run db:deploy:core
+npm run db:deploy:lily
+
+PHASE="permissions"
+chown "${SERVICE_USER}:${SERVICE_GROUP}" "${CORE_DB}" || true
+[[ -f "${LILY_DB}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${LILY_DB}"
+for suffix in -wal -shm; do
+  [[ -f "${CORE_DB}${suffix}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${CORE_DB}${suffix}"
+  [[ -f "${LILY_DB}${suffix}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${LILY_DB}${suffix}"
+done
+mkdir -p "${LILY_UPLOAD_DIR}"
+chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "$(dirname "${LILY_UPLOAD_DIR}")"
+chmod 750 "$(dirname "${LILY_UPLOAD_DIR}")" "${LILY_UPLOAD_DIR}"
+
+PHASE="nginx"
+nginx -t
+systemctl reload nginx
+
+PHASE="restart-service"
+systemctl start "${SERVICE}"
+SERVICE_STOPPED=0
+
+wait_for_internal_health() {
+  local attempt
+  local health_tmp="/tmp/carro-chefe-health-${STAMP}"
+  local health_error_tmp="/tmp/carro-chefe-health-error-${STAMP}"
+  echo "Aguardando readiness do Fastify em 127.0.0.1:4173..."
+
+  for ((attempt=1; attempt<=READINESS_ATTEMPTS; attempt++)); do
+    if [[ "$(systemctl is-active "${SERVICE}" || true)" != "active" ]]; then
+      echo "Tentativa ${attempt}/${READINESS_ATTEMPTS}: serviço ainda não está active."
+    elif curl --fail --silent --show-error --max-time 2 \
+      http://127.0.0.1:4173/api/health >"${health_tmp}" 2>"${health_error_tmp}"; then
+      cat "${health_tmp}"
+      echo
+      rm -f "${health_tmp}" "${health_error_tmp}"
+      echo "readiness=ok attempt=${attempt}"
+      return 0
+    else
+      echo "Tentativa ${attempt}/${READINESS_ATTEMPTS}: aplicação ainda não respondeu ao health."
+    fi
+
+    sleep "${READINESS_DELAY_SECONDS}"
+  done
+
+  echo "Readiness não ficou saudável após ${READINESS_ATTEMPTS} tentativas."
+  systemctl status "${SERVICE}" --no-pager -l || true
+  journalctl -u "${SERVICE}" -n 120 --no-pager || true
+  command -v ss >/dev/null 2>&1 && ss -ltnp | grep ':4173' || true
+  [[ -f "${health_error_tmp}" ]] && cat "${health_error_tmp}" || true
+  rm -f "${health_tmp}" "${health_error_tmp}"
+  return 1
+}
+
+PHASE="readiness"
+wait_for_internal_health || fail "Fastify não ficou pronto dentro da janela de readiness"
+
+PHASE="health"
+curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4173/api/v1/lily/public/health
+echo
+curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4173/api/v1/lily/public/fulfillment
+echo
+
+PHASE="external-smoke"
+external_ok=0
+for attempt in 1 2 3 4 5; do
+  if curl --fail --silent --show-error --max-time 8 \
+    https://carrochefe.com/api/v1/lily/public/health; then
+    echo
+    echo "external_smoke=ok attempt=${attempt}"
+    external_ok=1
+    break
+  fi
+  sleep 1
+done
+[[ "${external_ok}" -eq 1 ]] || fail "health HTTPS externo não respondeu após 5 tentativas"
+
+PHASE="operator-tools"
+if [[ -f "${APP_DIR}/deploy/scripts/lily-promote-user" ]]; then
+  install -m 0755 "${APP_DIR}/deploy/scripts/lily-promote-user" /usr/local/sbin/lily-promote-user
+  echo "operator_tool=/usr/local/sbin/lily-promote-user"
+fi
+
+PHASE="evidence"
+EVIDENCE_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.evidence"
+cat > "${EVIDENCE_FILE}" <<EOF
+timestamp=${STAMP}
+previous_sha=${PREVIOUS_SHA}
+release_sha=${RELEASE_SHA}
+core_backup=${CORE_BACKUP}
+lily_backup=${LILY_BACKUP:-not_applicable}
+nginx_config=${NGINX_CONF}
+service=${SERVICE}
+service_status=$(systemctl is-active "${SERVICE}")
+internal_health=ok
+lily_health=ok
+fulfillment_health=ok
+external_health=ok
+log=${LOG_FILE}
+EOF
+
+trap - ERR
+echo
+echo "DEPLOY CONCLUÍDO"
+echo "release_sha=${RELEASE_SHA}"
+echo "previous_sha=${PREVIOUS_SHA}"
+echo "evidence=${EVIDENCE_FILE}"
+echo "log=${LOG_FILE}"
+echo
+echo "Rollback de aplicação, se compatível com o schema:"
+echo "  cd ${APP_DIR} && git checkout --detach ${PREVIOUS_SHA} && npm ci --include=dev && systemctl restart ${SERVICE}"
+echo "Restauração de banco exige decisão manual com os backups acima."

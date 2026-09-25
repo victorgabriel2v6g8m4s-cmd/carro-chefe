@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026.08.20.1",
+  "policyVersion": "2026.09.19.1",
   "runtimeBudgetChars": 6500,
   "commonCapsuleIds": [
     "global.authority",
@@ -30,11 +30,16 @@
     "region.tools": "Ferramentas internas devem ser determinísticas, não interativas em CI, validar caminhos/entrada e falhar de modo seguro. Não imprimem segredos e não executam ação externa/destrutiva implicitamente.",
     "region.github": "Workflows usam permissões mínimas, dependências pinadas, cache seguro e falham diante de política desatualizada, segredo rastreado ou quality gate quebrado.",
     "region.codex": "Perfis Codex são estreitos e sempre fazem preflight, leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
-    "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos."
+    "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos.",
+    "region.lily": "Lily Açaí é operação temporária e isolada nesta branch. Somente /lilyacai, /api/v1/lily, apps/lily_acai, apps/api/src/modules/lily e packages/lily-database podem possuir catálogo, login, pedidos e pagamentos Lily. Nunca misture usuários, sessões, endereços, pedidos, pagamentos, tracking ou mídia com Carro Chefe. Compartilhamento consentido usa ponte/exportação explícita; a regra ERP permanece integral fora do namespace Lily."
   },
   "agentCapsules": {
-    "AG-DEV": ["role.development"],
-    "business": ["role.business"]
+    "AG-DEV": [
+      "role.development"
+    ],
+    "business": [
+      "role.business"
+    ]
   },
   "businessAgentIds": [
     "AG-GESTAO",
@@ -47,19 +52,59 @@
     "AG-MARCA"
   ],
   "regionCapsules": {
-    ".": ["region.root"],
-    "apps": ["region.apps"],
-    "apps/api": ["region.api"],
-    "apps/gestao": ["region.gestao"],
-    "apps/site": ["region.site"],
-    "apps/qr_manipulator": ["region.qr"],
-    "packages": ["region.packages"],
-    "packages/contracts": ["region.contracts"],
-    "packages/database": ["region.database"],
-    "packages/ui": ["region.ui"],
-    "tools": ["region.tools"],
-    ".github": ["region.github"],
-    ".codex": ["region.codex"],
-    "docs": ["region.docs"]
+    ".": [
+      "region.root"
+    ],
+    "apps": [
+      "region.apps"
+    ],
+    "apps/api": [
+      "region.api"
+    ],
+    "apps/gestao": [
+      "region.gestao"
+    ],
+    "apps/site": [
+      "region.site"
+    ],
+    "apps/qr_manipulator": [
+      "region.qr"
+    ],
+    "packages": [
+      "region.packages"
+    ],
+    "packages/contracts": [
+      "region.contracts"
+    ],
+    "packages/database": [
+      "region.database"
+    ],
+    "packages/ui": [
+      "region.ui"
+    ],
+    "tools": [
+      "region.tools"
+    ],
+    ".github": [
+      "region.github"
+    ],
+    ".codex": [
+      "region.codex"
+    ],
+    "docs": [
+      "region.docs"
+    ],
+    "apps/lily_acai": [
+      "region.lily"
+    ],
+    "apps/api/src/modules/lily": [
+      "region.lily"
+    ],
+    "packages/lily-database": [
+      "region.lily"
+    ],
+    "docs/lily-acai": [
+      "region.lily"
+    ]
   }
 }

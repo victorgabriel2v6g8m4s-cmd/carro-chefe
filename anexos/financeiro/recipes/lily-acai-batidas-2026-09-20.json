@@ -1,0 +1,830 @@
+{
+  "schema_version": 1,
+  "id": "lily-acai-batidas-2026-09-20",
+  "workbook": {
+    "path": "anexos/financeiro/carro chefe.xlsm",
+    "expected_sha256": "62ceecb5d1349c4b27c37a901bae00aa1ac63884f5d5fe7f3990ad6f33073b70",
+    "expected_vba_sha256": "b8fa98985cdd1abd7d2d05b1cb7efabf79a8b83399136039dd040a4d6604b0cf"
+  },
+  "operations": [
+    {
+      "op": "assert.table",
+      "table": "insumos",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalagens",
+      "expected_ref": "B4:K122",
+      "expected_columns": [
+        "ID",
+        "item",
+        "preço",
+        "quantidade",
+        "medida",
+        "Unidades",
+        "Quilos",
+        "Gramas",
+        "Litros",
+        "MLs"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "CaProdutos",
+      "expected_ref": "B4:M47",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Adicional 1",
+        "Adicional 2",
+        "Adicional 3",
+        "Variação",
+        "Tipo",
+        "Cat. ABC",
+        "Custo do Lote",
+        "Un. Por Lote",
+        "Custo de Produção (1 un.)",
+        "Custo Total (1 un.)"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Ingredientes",
+      "expected_ref": "C4:I263",
+      "expected_columns": [
+        "Produto",
+        "ID",
+        "item",
+        "qtd.",
+        "medida",
+        "Porções",
+        "preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Embalamento",
+      "expected_ref": "B4:G48",
+      "expected_columns": [
+        "ID",
+        "Produto",
+        "Embalagem",
+        "Quantidade",
+        "Medida",
+        "Preço"
+      ]
+    },
+    {
+      "op": "assert.table",
+      "table": "Precificação",
+      "expected_ref": "B4:I42",
+      "expected_columns": [
+        "ID",
+        "Item",
+        "Preço de Custo",
+        "Preço de Venda",
+        "Preço Definitivo",
+        "Lucro Bruto",
+        "Lucro Líquido",
+        "Incluir C.F?"
+      ]
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 100
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 101
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 102
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 103
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 104
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 105
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 106
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "insumos",
+      "where": {
+        "ID": 107
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 100
+      },
+      "values": {
+        "item": "Lily - Água da receita (custo em despesas variáveis)",
+        "quantidade": 1000,
+        "medida": "ML"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 101
+      },
+      "values": {
+        "item": "Lily - Açaí Polpa Amazônia 3L",
+        "preço": 59.9,
+        "quantidade": 3000,
+        "medida": "ML"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 102
+      },
+      "values": {
+        "item": "Lily - Leite em pó Piracanjuba 400g",
+        "preço": 19.98,
+        "quantidade": 400,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 103
+      },
+      "values": {
+        "item": "Lily - Leite Italac desnatado 1L",
+        "preço": 5.99,
+        "quantidade": 1000,
+        "medida": "ML"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 104
+      },
+      "values": {
+        "item": "Lily - Creme de leite Piracanjuba 200g",
+        "preço": 3.89,
+        "quantidade": 200,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 105
+      },
+      "values": {
+        "item": "Lily - Leite condensado Italac 395g",
+        "preço": 5.75,
+        "quantidade": 395,
+        "medida": "Gramas"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 106
+      },
+      "values": {
+        "item": "Lily - Refresco Frisco Morango 18g",
+        "preço": 0.85,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "insumos",
+      "where": {
+        "ID": 107
+      },
+      "values": {
+        "item": "Lily - Refresco Frisco Maracujá 18g",
+        "preço": 0.85,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "Embalagens",
+      "where": {
+        "ID": 105
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "Embalagens",
+      "where": {
+        "ID": 106
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "assert.row",
+      "table": "Embalagens",
+      "where": {
+        "ID": 107
+      },
+      "equals": {
+        "item": null,
+        "preço": null,
+        "quantidade": null,
+        "medida": null
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "Embalagens",
+      "where": {
+        "ID": 105
+      },
+      "values": {
+        "item": "Lily - Garrafa 500ml",
+        "preço": 1,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "Embalagens",
+      "where": {
+        "ID": 106
+      },
+      "values": {
+        "item": "Lily - Canudo",
+        "preço": 0.3,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "table.update_rows",
+      "table": "Embalagens",
+      "where": {
+        "ID": 107
+      },
+      "values": {
+        "item": "Lily - Sacola plástica",
+        "preço": 0.15,
+        "quantidade": 1,
+        "medida": "Unidades"
+      }
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B30",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B31",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B32",
+      "equals": null
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Cadastro de Produtos",
+      "cell": "B33",
+      "equals": null
+    },
+    {
+      "op": "table.append_rows",
+      "table": "CaProdutos",
+      "rows": [
+        {
+          "ID": 2001,
+          "Item": "Lily - Moussie Morango",
+          "Variação": "Morango",
+          "Tipo": "Preparo interno Lily Açaí",
+          "Un. Por Lote": 15
+        },
+        {
+          "ID": 2002,
+          "Item": "Lily - Moussie Maracujá",
+          "Variação": "Maracujá",
+          "Tipo": "Preparo interno Lily Açaí",
+          "Un. Por Lote": 15
+        },
+        {
+          "ID": 2003,
+          "Item": "Lily - Batida de Açaí com Morango 500ml",
+          "Variação": "Morango",
+          "Tipo": "Batida Lily Açaí",
+          "Un. Por Lote": 1
+        },
+        {
+          "ID": 2004,
+          "Item": "Lily - Batida de Açaí com Maracujá 500ml",
+          "Variação": "Maracujá",
+          "Tipo": "Batida Lily Açaí",
+          "Un. Por Lote": 1
+        }
+      ]
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C47",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E47",
+      "value": "Lily - Creme de leite Piracanjuba 200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F47",
+      "value": 200
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C48",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E48",
+      "value": "Lily - Leite condensado Italac 395g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F48",
+      "value": 395
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C49",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E49",
+      "value": "Lily - Água da receita (custo em despesas variáveis)"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F49",
+      "value": 100
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C50",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E50",
+      "value": "Lily - Refresco Frisco Morango 18g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F50",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C51",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E51",
+      "value": "Lily - Creme de leite Piracanjuba 200g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F51",
+      "value": 200
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C52",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E52",
+      "value": "Lily - Leite condensado Italac 395g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F52",
+      "value": 395
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C53",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E53",
+      "value": "Lily - Água da receita (custo em despesas variáveis)"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F53",
+      "value": 100
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C54",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E54",
+      "value": "Lily - Refresco Frisco Maracujá 18g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F54",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C55",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E55",
+      "value": "Lily - Leite em pó Piracanjuba 400g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F55",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C56",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E56",
+      "value": "Lily - Leite Italac desnatado 1L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F56",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C57",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E57",
+      "value": "Lily - Açaí Polpa Amazônia 3L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F57",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C58",
+      "value": "Lily - Batida de Açaí com Morango 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E58",
+      "value": "Lily - Moussie Morango"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F58",
+      "value": 1
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C59",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E59",
+      "value": "Lily - Leite em pó Piracanjuba 400g"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F59",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C60",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E60",
+      "value": "Lily - Leite Italac desnatado 1L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F60",
+      "value": 50
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C61",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E61",
+      "value": "Lily - Açaí Polpa Amazônia 3L"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F61",
+      "value": 390
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "C62",
+      "value": "Lily - Batida de Açaí com Maracujá 500ml"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "E62",
+      "value": "Lily - Moussie Maracujá"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "ingredientes",
+      "cell": "F62",
+      "value": 1
+    },
+    {
+      "op": "table.append_rows",
+      "table": "Embalamento",
+      "rows": [
+        {
+          "ID": 2003,
+          "Produto": "Lily - Batida de Açaí com Morango 500ml",
+          "Embalagem": "Lily - Garrafa 500ml",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2003,
+          "Produto": "Lily - Batida de Açaí com Morango 500ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2003,
+          "Produto": "Lily - Batida de Açaí com Morango 500ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2004,
+          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
+          "Embalagem": "Lily - Garrafa 500ml",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2004,
+          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
+          "Embalagem": "Lily - Canudo",
+          "Quantidade": 1
+        },
+        {
+          "ID": 2004,
+          "Produto": "Lily - Batida de Açaí com Maracujá 500ml",
+          "Embalagem": "Lily - Sacola plástica",
+          "Quantidade": 1
+        }
+      ]
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B30",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B31",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B32",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "assert.cell",
+      "sheet": "Precificação",
+      "cell": "B33",
+      "equals": "=CaProdutos[[#This Row],[ID]]"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I30",
+      "value": "Não"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I31",
+      "value": "Não"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I32",
+      "value": "Não"
+    },
+    {
+      "op": "cell.set",
+      "sheet": "Precificação",
+      "cell": "I33",
+      "value": "Não"
+    },
+    {
+      "op": "workbook.recalculate_on_open"
+    }
+  ]
+}
