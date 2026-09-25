@@ -80,11 +80,22 @@ const addonCreateSchema = z.object({
   status: statusSchema.default("published")
 }).strict();
 
+const comboRulesSchema = z.object({
+  mode: z.enum(["preset", "builder"]).optional(),
+  quantity: z.number().int().min(1).max(5).optional(),
+  sizeMl: sizeSchema.nullable().optional(),
+  category: z.string().trim().max(100).nullable().optional(),
+  subtype: z.string().trim().max(60).nullable().optional(),
+  flavorCount: z.number().int().min(1).max(3).nullable().optional(),
+  coverProductId: idSchema.nullable().optional(),
+  presetSelections: z.array(lilyConfigurationSchema).max(5).optional()
+}).passthrough();
+
 const comboCreateSchema = z.object({
   slug: slugSchema,
   name: z.string().trim().min(2).max(120),
   description: z.string().trim().max(1000).nullable().optional(),
-  rules: z.record(z.string(), z.unknown()).default({}),
+  rules: comboRulesSchema.default({}),
   regularPriceCents: moneySchema,
   offerPriceCents: moneySchema,
   status: statusSchema.default("draft"),
@@ -791,12 +802,22 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const offer = input.offerPriceCents ?? current.offerPriceCents;
     if (offer >= regular) throw new ApiError(400, "Combo precisa ter economia real.");
     const { rules, ...rest } = input;
+    const currentRules = safeObject(current.rulesJson);
+    const nextRules = rules ? { ...currentRules, ...rules } : currentRules;
+    if (lilyComboModeFromRules(nextRules) === "preset" && Array.isArray(nextRules.presetSelections)) {
+      const quantity = typeof nextRules.quantity === "number" ? Math.trunc(nextRules.quantity) : nextRules.presetSelections.length;
+      if (nextRules.presetSelections.length > 0 && nextRules.presetSelections.length !== quantity) {
+        throw new ApiError(400, "O combo pronto precisa ter uma seleção para cada item.", {
+          code: "LILY_COMBO_PRESET_QUANTITY"
+        });
+      }
+    }
     const updated = await lilyPrisma.lilyCombo.update({
       where: { id },
       data: {
         ...patchObject(rest),
         savingsCents: regular - offer,
-        ...(rules ? { rulesJson: JSON.stringify(rules) } : {})
+        ...(rules ? { rulesJson: JSON.stringify(nextRules) } : {})
       }
     });
     await auditLilyAdmin(context.user.id, "update", "combo", id, input);
