@@ -18,6 +18,13 @@ export const lilyConfigurationSchema = z.object({
 
 export type LilyConfigurationInput = z.infer<typeof lilyConfigurationSchema>;
 
+export const lilyComboConfigurationSchema = z.object({
+  comboId: idSchema,
+  selections: z.array(lilyConfigurationSchema).min(1).max(5)
+}).strict();
+
+export type LilyComboConfigurationInput = z.infer<typeof lilyComboConfigurationSchema>;
+
 export function isActiveWindow(startsAt: Date | null, endsAt: Date | null, now = new Date()) {
   return (!startsAt || startsAt <= now) && (!endsAt || endsAt >= now);
 }
@@ -142,5 +149,95 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     basePriceCents,
     addonPriceCents,
     totalPriceCents
+  };
+}
+
+
+function parseComboRules(input: string) {
+  try {
+    const value = JSON.parse(input) as Record<string, unknown>;
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  } catch {
+    return {};
+  }
+}
+
+function parseTags(input: string) {
+  try {
+    const value = JSON.parse(input);
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function quoteLilyComboConfiguration(input: LilyComboConfigurationInput) {
+  const combo = await lilyPrisma.lilyCombo.findUnique({ where: { id: input.comboId } });
+  if (!combo || combo.status !== "published" || !isActiveWindow(combo.startsAt, combo.endsAt)) {
+    throw new ApiError(404, "Combo não encontrado ou indisponível.", { code: "LILY_COMBO_NOT_FOUND" });
+  }
+
+  const rules = parseComboRules(combo.rulesJson);
+  const requiredQuantity = typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : null;
+  if (!requiredQuantity || input.selections.length !== requiredQuantity) {
+    throw new ApiError(400, "Quantidade de itens do combo inválida.", {
+      code: "LILY_COMBO_QUANTITY",
+      requiredQuantity
+    });
+  }
+
+  const selections: Array<Awaited<ReturnType<typeof quoteLilyConfiguration>>> = [];
+  for (const selection of input.selections) {
+    const quoted = await quoteLilyConfiguration(selection);
+    const product = await lilyPrisma.lilyProduct.findUnique({
+      where: { id: quoted.product.id },
+      include: { category: { include: { parent: true } } }
+    });
+    if (!product) throw new ApiError(404, "Produto do combo não encontrado.");
+
+    const rootCategory = product.category.parent?.slug ?? product.category.slug;
+    if (typeof rules.category === "string" && rootCategory !== rules.category) {
+      throw new ApiError(400, "Produto não atende à categoria deste combo.", { code: "LILY_COMBO_CATEGORY" });
+    }
+    if (rules.subtype === "simple") {
+      const tags = parseTags(product.tagsJson);
+      if (!tags.includes("simples")) {
+        throw new ApiError(400, "Este combo aceita somente produtos simples.", { code: "LILY_COMBO_SUBTYPE" });
+      }
+    }
+    if (typeof rules.sizeMl === "number" && quoted.sizeMl !== rules.sizeMl) {
+      throw new ApiError(400, "Tamanho não atende à regra deste combo.", { code: "LILY_COMBO_SIZE" });
+    }
+    if (typeof rules.flavorCount === "number" && quoted.flavors.length !== rules.flavorCount) {
+      throw new ApiError(400, "Quantidade de sabores não atende à regra deste combo.", { code: "LILY_COMBO_FLAVOR_COUNT" });
+    }
+    selections.push(quoted);
+  }
+
+  const componentBasePriceCents = selections.reduce((sum, item) => sum + item.basePriceCents, 0);
+  const addonPriceCents = selections.reduce((sum, item) => sum + item.addonPriceCents, 0);
+  const comboBasePriceCents = Math.min(combo.offerPriceCents, componentBasePriceCents);
+  const totalPriceCents = comboBasePriceCents + addonPriceCents;
+  const canonical = JSON.stringify({
+    comboId: combo.id,
+    selections: selections.map((item) => item.configurationHash).sort()
+  });
+  const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
+
+  return {
+    kind: "combo" as const,
+    configurationHash,
+    combo: {
+      id: combo.id,
+      slug: combo.slug,
+      name: combo.name,
+      description: combo.description
+    },
+    selections,
+    regularPriceCents: Math.min(combo.regularPriceCents, componentBasePriceCents),
+    basePriceCents: comboBasePriceCents,
+    addonPriceCents,
+    totalPriceCents,
+    savingsCents: Math.max(0, componentBasePriceCents - comboBasePriceCents)
   };
 }
