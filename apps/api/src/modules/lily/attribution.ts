@@ -1,8 +1,19 @@
+import { z } from "zod";
+
 export const COOKLILY_ATTRIBUTION_PARAMS = {
   qr: { canonical: "la_qr", legacy: "cc_qr" },
   campaign: { canonical: "la_campaign", legacy: "cc_campaign" },
   variant: { canonical: "la_variant", legacy: "cc_variant" }
 } as const;
+
+export const lilyAttributionInputSchema = z.object({
+  la_qr: z.string().max(200).optional(),
+  la_campaign: z.string().max(200).optional(),
+  la_variant: z.string().max(200).optional(),
+  cc_qr: z.string().max(200).optional(),
+  cc_campaign: z.string().max(200).optional(),
+  cc_variant: z.string().max(200).optional()
+}).strict();
 
 export type CanonicalLilyAttribution = {
   laQr: string | null;
