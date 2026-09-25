@@ -1,11 +1,11 @@
-import crypto from "node:crypto";
 import path from "node:path";
 import { promises as fs, createReadStream } from "node:fs";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { requireLilyCsrf, requireLilySession } from "./auth";
+import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
+import { isActiveWindow, lilyConfigurationSchema, quoteLilyConfiguration } from "./configuration";
 
 const statusSchema = z.enum(["draft", "published", "paused"]);
 const activeStatusSchema = z.enum(["active", "paused"]);
@@ -110,16 +110,6 @@ const offerCreateSchema = z.object({
   if (value.minProjectedMarginBps < marginFloorBps) ctx.addIssue({ code: "custom", message: "Margem mínima de oferta deve ser pelo menos 10%." });
 });
 
-const configureItemSchema = z.object({
-  productId: idSchema,
-  sizeMl: sizeSchema,
-  flavorIds: z.array(idSchema).max(3).default([]),
-  addons: z.array(z.object({
-    addonId: idSchema,
-    quantity: z.number().int().min(1).max(2)
-  }).strict()).max(3).default([])
-}).strict();
-
 const catalogQuerySchema = z.object({
   q: z.string().trim().max(120).optional(),
   category: z.string().trim().max(100).optional(),
@@ -158,10 +148,6 @@ function safeObject(input: string | null | undefined) {
   }
 }
 
-function activeWindow(startsAt: Date | null, endsAt: Date | null, now = new Date()) {
-  return (!startsAt || startsAt <= now) && (!endsAt || endsAt >= now);
-}
-
 function uploadRoot() {
   return path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"));
 }
@@ -174,27 +160,6 @@ function assertMarginForPublish(status: string, projectedMarginBps: number | nul
   if (status === "published" && projectedMarginBps != null && projectedMarginBps < marginFloorBps) {
     throw new ApiError(400, "Margem projetada abaixo do piso CookLily de 10%.", { code: "LILY_MARGIN_FLOOR" });
   }
-}
-
-async function requireStaff(request: FastifyRequest, requireCsrf = false) {
-  const context = await requireLilySession(request);
-  if (context.user.role !== "staff" && context.user.role !== "admin") {
-    throw new ApiError(403, "Acesso restrito à equipe CookLily.", { code: "LILY_STAFF_REQUIRED" });
-  }
-  if (requireCsrf) requireLilyCsrf(request, context);
-  return context;
-}
-
-async function audit(actorUserId: string, action: string, entityType: string, entityId?: string | null, payload?: unknown) {
-  await lilyPrisma.lilyAdminAudit.create({
-    data: {
-      actorUserId,
-      action,
-      entityType,
-      entityId: entityId ?? null,
-      payloadJson: payload === undefined ? null : JSON.stringify(payload).slice(0, 12000)
-    }
-  });
 }
 
 const productInclude = {
@@ -228,7 +193,7 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
       projectedMarginBps: variant.projectedMarginBps
     }));
   const offers = product.offers
-    .filter((offer) => offer.status === "published" && activeWindow(offer.startsAt, offer.endsAt, now))
+    .filter((offer) => offer.status === "published" && isActiveWindow(offer.startsAt, offer.endsAt, now))
     .map((offer) => ({
       id: offer.id,
       name: offer.name,
@@ -409,7 +374,7 @@ async function publicCatalog(queryInput: unknown) {
       premium: flavor.premium
     })),
     combos: combos
-      .filter((combo) => activeWindow(combo.startsAt, combo.endsAt, now))
+      .filter((combo) => isActiveWindow(combo.startsAt, combo.endsAt, now))
       .map((combo) => ({
         id: combo.id,
         slug: combo.slug,
@@ -428,30 +393,6 @@ async function publicCatalog(queryInput: unknown) {
     offset: query.offset,
     nextOffset
   };
-}
-
-async function pairCompatible(flavorAId: string, flavorBId: string) {
-  if (flavorAId === flavorBId) return true;
-  const row = await lilyPrisma.lilyFlavorCompatibility.findUnique({
-    where: { flavorAId_flavorBId: { flavorAId, flavorBId } }
-  });
-  return row?.isCompatible === true;
-}
-
-async function validateFlavorSet(flavorIds: string[]) {
-  if (new Set(flavorIds).size !== flavorIds.length) {
-    throw new ApiError(400, "Não repita o mesmo sabor na combinação.", { code: "LILY_DUPLICATE_FLAVOR" });
-  }
-  for (let i = 0; i < flavorIds.length; i += 1) {
-    for (let j = i + 1; j < flavorIds.length; j += 1) {
-      if (!await pairCompatible(flavorIds[i]!, flavorIds[j]!)) {
-        throw new ApiError(400, "Esta combinação de sabores não está liberada.", {
-          code: "LILY_INCOMPATIBLE_FLAVORS",
-          flavors: [flavorIds[i], flavorIds[j]]
-        });
-      }
-    }
-  }
 }
 
 function patchObject<T extends Record<string, unknown>>(value: T) {
@@ -510,97 +451,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/public/configure-item", {
     config: { rateLimit: { max: 60, timeWindow: "1 minute" } }
   }, async (request) => {
-    const input = configureItemSchema.parse(request.body);
-    const product = await getProductById(input.productId);
-    if (!product || product.status !== "published") throw new ApiError(404, "Produto não encontrado.");
-    if (!product.isAvailable) throw new ApiError(409, "Produto esgotado.", { code: "LILY_PRODUCT_SOLD_OUT" });
-
-    const variant = product.variants.find((item) => item.sizeMl === input.sizeMl && item.status === "published");
-    if (!variant || !variant.isAvailable) throw new ApiError(409, "Tamanho indisponível.", { code: "LILY_VARIANT_UNAVAILABLE" });
-
-    let basePriceCents = variant.priceCents;
-    const selectedFlavors = product.flavorLinks
-      .map((link) => link.flavor)
-      .filter((flavor) => input.flavorIds.includes(flavor.id) && flavor.status === "published");
-
-    if (product.configurationType === "lilymix") {
-      if (input.flavorIds.length < 1 || input.flavorIds.length > 3 || selectedFlavors.length !== input.flavorIds.length) {
-        throw new ApiError(400, "Escolha de 1 a 3 sabores disponíveis.", { code: "LILY_FLAVOR_COUNT" });
-      }
-      await validateFlavorSet(input.flavorIds);
-      const tier = product.mixTiers.find((item) =>
-        item.status === "published" && item.sizeMl === input.sizeMl && item.flavorCount === input.flavorIds.length
-      );
-      if (!tier) throw new ApiError(400, "Preço não configurado para esta combinação.", { code: "LILY_TIER_MISSING" });
-      basePriceCents = tier.priceCents + selectedFlavors.reduce((sum, flavor) =>
-        sum + (input.sizeMl === 300 ? flavor.priceModifier300 : flavor.priceModifier500), 0);
-    } else if (input.flavorIds.length > 0) {
-      const fixedIds = new Set(product.flavorLinks.map((link) => link.flavorId));
-      if (input.flavorIds.some((id) => !fixedIds.has(id))) {
-        throw new ApiError(400, "Sabores do produto fixo não podem ser trocados.", { code: "LILY_FIXED_FLAVOR" });
-      }
-    }
-
-    const now = new Date();
-    const applicableOffer = product.offers.find((offer) =>
-      offer.status === "published"
-      && activeWindow(offer.startsAt, offer.endsAt, now)
-      && (!offer.variantId || offer.variantId === variant.id)
-      && offer.regularPriceCents === basePriceCents
-    );
-    if (applicableOffer) basePriceCents = applicableOffer.offerPriceCents;
-
-    const uniqueAddonIds = new Set(input.addons.map((item) => item.addonId));
-    if (uniqueAddonIds.size !== input.addons.length || uniqueAddonIds.size > 3) {
-      throw new ApiError(400, "Use no máximo 3 tipos diferentes de adicional.", { code: "LILY_ADDON_TYPES_LIMIT" });
-    }
-    const totalAddonUnits = input.addons.reduce((sum, item) => sum + item.quantity, 0);
-    if (totalAddonUnits > 4) throw new ApiError(400, "Limite de 4 porções adicionais por item.", { code: "LILY_ADDON_TOTAL_LIMIT" });
-
-    let addonPriceCents = 0;
-    const addonDetails: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }> = [];
-    for (const requested of input.addons) {
-      const link = product.addonLinks.find((item) => item.addonId === requested.addonId && item.allowed && item.addon.status === "published");
-      if (!link) throw new ApiError(400, "Adicional não permitido para este produto.", { code: "LILY_ADDON_NOT_ALLOWED" });
-      const limit = link.individualLimit ?? link.addon.individualLimit;
-      if (requested.quantity > limit) throw new ApiError(400, "Quantidade deste adicional excede o limite.", { code: "LILY_ADDON_INDIVIDUAL_LIMIT" });
-
-      if (product.configurationType === "lilymix" && link.addon.flavorId) {
-        for (const flavorId of input.flavorIds) {
-          if (!await pairCompatible(flavorId, link.addon.flavorId)) {
-            throw new ApiError(400, "Adicional incompatível com um dos sabores escolhidos.", { code: "LILY_ADDON_INCOMPATIBLE" });
-          }
-        }
-      }
-
-      const unitPriceCents = link.priceOverride ?? link.addon.priceCents;
-      addonPriceCents += unitPriceCents * requested.quantity;
-      addonDetails.push({ addonId: link.addonId, name: link.addon.name, quantity: requested.quantity, unitPriceCents });
-    }
-
-    const totalPriceCents = basePriceCents + addonPriceCents;
-    const canonical = JSON.stringify({
-      productId: product.id,
-      sizeMl: input.sizeMl,
-      flavorIds: [...input.flavorIds].sort(),
-      addons: [...input.addons].sort((a, b) => a.addonId.localeCompare(b.addonId))
-    });
-    const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
-
-    return {
-      configurationHash,
-      product: { id: product.id, slug: product.slug, name: product.displayName },
-      sizeMl: input.sizeMl,
-      flavors: selectedFlavors.map((flavor) => ({ id: flavor.id, name: flavor.name })),
-      addons: addonDetails,
-      basePriceCents,
-      addonPriceCents,
-      totalPriceCents
-    };
+    const input = lilyConfigurationSchema.parse(request.body);
+    return quoteLilyConfiguration(input);
   });
 
   app.get("/api/v1/lily/admin/catalog", async (request) => {
-    await requireStaff(request);
+    await requireLilyStaff(request);
     const [categories, products, flavors, addons, compatibilities, combos, offers, media] = await Promise.all([
       lilyPrisma.lilyCategory.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
       lilyPrisma.lilyProduct.findMany({ include: productInclude, orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }] }),
@@ -637,36 +493,36 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   });
 
   app.post("/api/v1/lily/admin/categories", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = categoryCreateSchema.parse(request.body);
     const created = await lilyPrisma.lilyCategory.create({ data: input });
-    await audit(context.user.id, "create", "category", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "category", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/categories/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = categoryCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
     const updated = await lilyPrisma.lilyCategory.update({ where: { id }, data: patchObject(input) });
-    await audit(context.user.id, "update", "category", id, input);
+    await auditLilyAdmin(context.user.id, "update", "category", id, input);
     return updated;
   });
 
   app.post("/api/v1/lily/admin/products", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = productCreateSchema.parse(request.body);
     const { tags, ...rest } = input;
     const created = await lilyPrisma.lilyProduct.create({
       data: { ...rest, tagsJson: JSON.stringify(tags) }
     });
-    await audit(context.user.id, "create", "product", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "product", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/products/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = productCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
@@ -675,24 +531,24 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       where: { id },
       data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
     });
-    await audit(context.user.id, "update", "product", id, input);
+    await auditLilyAdmin(context.user.id, "update", "product", id, input);
     return updated;
   });
 
   app.put("/api/v1/lily/admin/products/:id/flavors", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const { flavorIds } = z.object({ flavorIds: z.array(idSchema).max(30) }).parse(request.body);
     await lilyPrisma.$transaction([
       lilyPrisma.lilyProductFlavor.deleteMany({ where: { productId: id } }),
       lilyPrisma.lilyProductFlavor.createMany({ data: [...new Set(flavorIds)].map((flavorId) => ({ productId: id, flavorId })) })
     ]);
-    await audit(context.user.id, "replace-flavors", "product", id, { flavorIds });
+    await auditLilyAdmin(context.user.id, "replace-flavors", "product", id, { flavorIds });
     return { ok: true };
   });
 
   app.put("/api/v1/lily/admin/products/:id/addons", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const body = z.object({
       addons: z.array(z.object({
@@ -708,12 +564,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       lilyPrisma.lilyProductAddon.deleteMany({ where: { productId: id } }),
       lilyPrisma.lilyProductAddon.createMany({ data: body.addons.map((item) => ({ productId: id, ...item })) })
     ]);
-    await audit(context.user.id, "replace-addons", "product", id, body);
+    await auditLilyAdmin(context.user.id, "replace-addons", "product", id, body);
     return { ok: true };
   });
 
   app.put("/api/v1/lily/admin/products/:id/mix-tiers", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const body = z.object({
       tiers: z.array(z.object({
@@ -729,21 +585,21 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         data: body.tiers.map((tier, index) => ({ id: `tier-${id}-${tier.sizeMl}-${tier.flavorCount}-${index}`, productId: id, ...tier }))
       })
     ]);
-    await audit(context.user.id, "replace-mix-tiers", "product", id, body);
+    await auditLilyAdmin(context.user.id, "replace-mix-tiers", "product", id, body);
     return { ok: true };
   });
 
   app.post("/api/v1/lily/admin/variants", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = variantCreateSchema.parse(request.body);
     assertMarginForPublish(input.status, input.projectedMarginBps);
     const created = await lilyPrisma.lilyProductVariant.create({ data: input });
-    await audit(context.user.id, "create", "variant", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "variant", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/variants/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = variantCreateSchema.partial().omit({ productId: true }).parse(request.body);
     const input = patchFromRequest(parsed, request.body);
@@ -751,21 +607,21 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     if (!current) throw new ApiError(404, "Variante não encontrada.");
     assertMarginForPublish(input.status ?? current.status, input.projectedMarginBps ?? current.projectedMarginBps);
     const updated = await lilyPrisma.lilyProductVariant.update({ where: { id }, data: patchObject(input) });
-    await audit(context.user.id, "update", "variant", id, input);
+    await auditLilyAdmin(context.user.id, "update", "variant", id, input);
     return updated;
   });
 
   app.post("/api/v1/lily/admin/flavors", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = flavorCreateSchema.parse(request.body);
     const { tags, ...rest } = input;
     const created = await lilyPrisma.lilyFlavorComponent.create({ data: { ...rest, tagsJson: JSON.stringify(tags) } });
-    await audit(context.user.id, "create", "flavor", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "flavor", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/flavors/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = flavorCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
@@ -774,12 +630,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       where: { id },
       data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
     });
-    await audit(context.user.id, "update", "flavor", id, input);
+    await auditLilyAdmin(context.user.id, "update", "flavor", id, input);
     return updated;
   });
 
   app.put("/api/v1/lily/admin/compatibilities", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = z.object({
       flavorAId: idSchema,
       flavorBId: idSchema,
@@ -800,42 +656,42 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         create: { flavorAId: input.flavorBId, flavorBId: input.flavorAId, isCompatible: input.isCompatible }
       })
     ]);
-    await audit(context.user.id, "compatibility", "flavor", input.flavorAId, input);
+    await auditLilyAdmin(context.user.id, "compatibility", "flavor", input.flavorAId, input);
     return { ok: true };
   });
 
   app.post("/api/v1/lily/admin/addons", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = addonCreateSchema.parse(request.body);
     const created = await lilyPrisma.lilyAddon.create({ data: input });
-    await audit(context.user.id, "create", "addon", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "addon", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/addons/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = addonCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
     const updated = await lilyPrisma.lilyAddon.update({ where: { id }, data: patchObject(input) });
-    await audit(context.user.id, "update", "addon", id, input);
+    await auditLilyAdmin(context.user.id, "update", "addon", id, input);
     return updated;
   });
 
   app.post("/api/v1/lily/admin/combos", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = comboCreateSchema.parse(request.body);
     if (input.offerPriceCents >= input.regularPriceCents) throw new ApiError(400, "Combo precisa ter economia real.");
     const { rules, ...rest } = input;
     const created = await lilyPrisma.lilyCombo.create({
       data: { ...rest, savingsCents: input.regularPriceCents - input.offerPriceCents, rulesJson: JSON.stringify(rules) }
     });
-    await audit(context.user.id, "create", "combo", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "combo", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/combos/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = comboCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
@@ -853,12 +709,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         ...(rules ? { rulesJson: JSON.stringify(rules) } : {})
       }
     });
-    await audit(context.user.id, "update", "combo", id, input);
+    await auditLilyAdmin(context.user.id, "update", "combo", id, input);
     return updated;
   });
 
   app.post("/api/v1/lily/admin/offers", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const input = offerCreateSchema.parse(request.body);
     let productId = input.productId ?? null;
     if (input.variantId) {
@@ -874,12 +730,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const created = await lilyPrisma.lilyOffer.create({
       data: { ...input, productId, savingsCents: input.regularPriceCents - input.offerPriceCents }
     });
-    await audit(context.user.id, "create", "offer", created.id, input);
+    await auditLilyAdmin(context.user.id, "create", "offer", created.id, input);
     return reply.code(201).send(created);
   });
 
   app.patch("/api/v1/lily/admin/offers/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = offerCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
@@ -900,12 +756,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         savingsCents: regular - merged.offerPriceCents
       }
     });
-    await audit(context.user.id, "update", "offer", id, input);
+    await auditLilyAdmin(context.user.id, "update", "offer", id, input);
     return updated;
   });
 
   app.post("/api/v1/lily/admin/media", async (request, reply) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const part = await request.file();
     if (!part) throw new ApiError(400, "Envie uma imagem.");
     const extensionByMime: Record<string, string> = {
@@ -932,12 +788,12 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         status: "active"
       }
     });
-    await audit(context.user.id, "upload", "media", created.id, { originalName: created.originalName, mime: created.mime, size: created.size, sha256 });
+    await auditLilyAdmin(context.user.id, "upload", "media", created.id, { originalName: created.originalName, mime: created.mime, size: created.size, sha256 });
     return reply.code(201).send({ ...created, url: mediaUrl(created.id) });
   });
 
   app.patch("/api/v1/lily/admin/media/:id", async (request) => {
-    const context = await requireStaff(request, true);
+    const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const input = z.object({
       altText: z.string().trim().min(2).max(240).optional(),
@@ -945,7 +801,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       placeholder: z.boolean().optional()
     }).strict().parse(request.body);
     const updated = await lilyPrisma.lilyMediaAsset.update({ where: { id }, data: patchObject(input) });
-    await audit(context.user.id, "update", "media", id, input);
+    await auditLilyAdmin(context.user.id, "update", "media", id, input);
     return { ...updated, url: mediaUrl(updated.id) };
   });
 }
