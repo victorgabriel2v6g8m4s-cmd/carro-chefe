@@ -184,6 +184,10 @@ PHASE="tool-health"
 preflight npm run tools:status:check
 
 PHASE="post-gates-cleanliness"
+# Os testes Python geram caches não versionados; remover somente esse artefato conhecido.
+find tools -type d -name '__pycache__' -prune -exec rm -rf {} +
+find tools -type f -name '*.pyc' -delete
+
 if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
   fail "gates alteraram arquivos versionados/não ignorados"
