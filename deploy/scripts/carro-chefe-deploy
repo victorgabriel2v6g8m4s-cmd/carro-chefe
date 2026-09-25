@@ -11,6 +11,8 @@ SERVICE_GROUP="${CARRO_CHEFE_SERVICE_GROUP:-carrochefe}"
 BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-${DATA_DIR}/backups}"
 LOG_DIR="${CARRO_CHEFE_DEPLOY_LOG_DIR:-${DATA_DIR}/deploy-logs}"
 LOCK_FILE="${CARRO_CHEFE_DEPLOY_LOCK:-/run/lock/carro-chefe-deploy.lock}"
+READINESS_ATTEMPTS="${CARRO_CHEFE_READINESS_ATTEMPTS:-30}"
+READINESS_DELAY_SECONDS="${CARRO_CHEFE_READINESS_DELAY_SECONDS:-1}"
 
 usage() {
   cat <<'EOF'
@@ -250,23 +252,59 @@ systemctl reload nginx
 PHASE="restart-service"
 systemctl start "${SERVICE}"
 SERVICE_STOPPED=0
-[[ "$(systemctl is-active "${SERVICE}")" == "active" ]] || {
+
+wait_for_internal_health() {
+  local attempt
+  echo "Aguardando readiness do Fastify em 127.0.0.1:4173..."
+
+  for ((attempt=1; attempt<=READINESS_ATTEMPTS; attempt++)); do
+    if [[ "$(systemctl is-active "${SERVICE}" || true)" != "active" ]]; then
+      echo "Tentativa ${attempt}/${READINESS_ATTEMPTS}: serviço ainda não está active."
+    elif curl --fail --silent --show-error --max-time 2 \
+      http://127.0.0.1:4173/api/health >/tmp/carro-chefe-health.$ 2>/tmp/carro-chefe-health-error.$; then
+      cat /tmp/carro-chefe-health.$
+      echo
+      rm -f /tmp/carro-chefe-health.$ /tmp/carro-chefe-health-error.$
+      echo "readiness=ok attempt=${attempt}"
+      return 0
+    else
+      echo "Tentativa ${attempt}/${READINESS_ATTEMPTS}: aplicação ainda não respondeu ao health."
+    fi
+
+    sleep "${READINESS_DELAY_SECONDS}"
+  done
+
+  echo "Readiness não ficou saudável após ${READINESS_ATTEMPTS} tentativas."
   systemctl status "${SERVICE}" --no-pager -l || true
   journalctl -u "${SERVICE}" -n 120 --no-pager || true
-  fail "serviço não ficou ativo"
+  command -v ss >/dev/null 2>&1 && ss -ltnp | grep ':4173' || true
+  [[ -f /tmp/carro-chefe-health-error.$ ]] && cat /tmp/carro-chefe-health-error.$ || true
+  rm -f /tmp/carro-chefe-health.$ /tmp/carro-chefe-health-error.$
+  return 1
 }
 
+PHASE="readiness"
+wait_for_internal_health || fail "Fastify não ficou pronto dentro da janela de readiness"
+
 PHASE="health"
-curl --fail --silent --show-error http://127.0.0.1:4173/api/health
+curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4173/api/v1/lily/public/health
 echo
-curl --fail --silent --show-error http://127.0.0.1:4173/api/v1/lily/public/health
-echo
-curl --fail --silent --show-error http://127.0.0.1:4173/api/v1/lily/public/fulfillment
+curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4173/api/v1/lily/public/fulfillment
 echo
 
 PHASE="external-smoke"
-curl --fail --silent --show-error https://carrochefe.com/api/v1/lily/public/health
-echo
+external_ok=0
+for attempt in 1 2 3 4 5; do
+  if curl --fail --silent --show-error --max-time 8 \
+    https://carrochefe.com/api/v1/lily/public/health; then
+    echo
+    echo "external_smoke=ok attempt=${attempt}"
+    external_ok=1
+    break
+  fi
+  sleep 1
+done
+[[ "${external_ok}" -eq 1 ]] || fail "health HTTPS externo não respondeu após 5 tentativas"
 
 PHASE="evidence"
 EVIDENCE_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.evidence"
