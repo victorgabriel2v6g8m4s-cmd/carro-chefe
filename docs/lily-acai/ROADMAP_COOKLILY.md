@@ -52,7 +52,7 @@ Fechado em 24/09/2026:
 
 ## Entrega 05 — catálogo/admin
 
-**Status:** implementação técnica concluída e validada; deploy/QA visual pendentes.
+**Status:** implementação técnica concluída e validada; publicada na VPS para homologação conjunta com a Entrega 06; QA visual/funcional final pendente.
 
 Implementado fielmente ao cardápio canônico:
 
@@ -74,16 +74,30 @@ Validação técnica da Entrega 05: SHA `9e9c2e194076aa5a8dd3262e73528ac3689c889
 
 ## Entrega 06 — carrinho, endereço e pedido
 
-**Status:** próxima entrega.
+**Status:** implementação técnica concluída e validada; deploy/homologação pendentes.
 
-- montar pedido com configuração vinda da Entrega 05;
-- observações;
+Implementado:
+
+- carrinho persistido no navegador;
+- observações por item;
 - telefone obrigatório;
 - compra sem conta;
+- pedido associado à conta quando autenticado;
+- endereços salvos para clientes autenticados;
 - entrega e retirada;
-- horário, regiões, pedido mínimo e taxa configuráveis;
-- suporte a diferentes estratégias de cálculo de entrega;
-- integração futura com ERP.
+- horários, regiões, pedido mínimo e taxa configuráveis;
+- taxa fixa ou por região;
+- recotação server-side antes de criar pedido;
+- proteção contra preço/configuração stale;
+- Idempotency-Key + fingerprint para evitar duplicidade;
+- snapshots comerciais de pedido;
+- histórico autenticado com isolamento por usuário;
+- painel de fulfillment;
+- pedidos criados em `awaiting_payment`, sem fingir pagamento.
+
+Validação técnica da Entrega 06: SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`, CI Node 20/24 com 105 testes e CodeQL aprovados.
+
+Relatório: `docs/lily-acai/entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Entrega 07 — checkout/pagamento
 
