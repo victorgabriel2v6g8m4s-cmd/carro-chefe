@@ -133,3 +133,18 @@ SHA técnico validado para carrinho/pedidos:
 A migration `20260925100000_lily_orders` cria pedidos, itens, endereços, fulfillment e zonas. Os defaults deixam pedidos/retirada/entrega desligados.
 
 Depois da migration, configurar dados operacionais reais no painel e manter `ordersEnabled=false` até o smoke estar concluído.
+
+
+## Automatizador de release
+
+`deploy/scripts/carro-chefe-deploy` é o entrypoint recomendado na VPS depois da instalação inicial.
+
+Exemplo:
+
+```bash
+sudo carro-chefe-deploy da166683ab2d0e27acae23d9714ec8e824a02ac4
+```
+
+O script usa bancos temporários para gates, gera backups antes de migration, para o serviço antes de gravar SQLite, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
+
+Novos namespaces Nginx continuam exigindo revisão explícita; o script valida e falha antes da migration em vez de editar o proxy silenciosamente.
