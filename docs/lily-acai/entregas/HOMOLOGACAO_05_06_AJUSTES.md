@@ -272,7 +272,7 @@ Após QA em aparelho real, foram identificados conflitos de especificidade no CS
 
 ### Senha
 
-Novos cadastros exigem agora no mínimo **12 caracteres** e no máximo 128.
+Novos cadastros de clientes exigem no mínimo **8 caracteres** e no máximo 128.
 
 Contas existentes continuam autenticando com suas credenciais atuais.
 
@@ -281,7 +281,7 @@ O cadastro pede confirmação da senha no frontend.
 A página `/lilyacai/perfil` ganhou troca autenticada de senha:
 
 - exige senha atual;
-- nova senha exige 12–128 caracteres;
+- para `customer`, nova senha exige 8–128 caracteres; para `staff/admin`, 12–128 caracteres;
 - impede reutilizar exatamente a senha atual;
 - usa o mesmo scrypt já adotado pela autenticação;
 - revoga outras sessões ativas da conta;
@@ -344,3 +344,15 @@ A árvore desse SHA foi validada pelo commit técnico de gate `821e232cc9b685c3d
 - sintaxe Bash de `carro-chefe-deploy`, `lily-promote-user` e helper Nginx: success.
 
 Esse SHA substitui `10872e686c6c71c228ff8aef0e507a48deaaf912` como release recomendado do patch de homologação.
+
+
+## Correção de requisito — senha de cliente
+
+A política correta para contas padrão é:
+
+- `customer`: mínimo **8** caracteres, máximo 128;
+- `staff/admin`: ao definir uma nova senha, mínimo **12** caracteres, máximo 128.
+
+O cadastro público sempre cria `customer`, portanto aceita senha a partir de 8 caracteres.
+
+Importante: uma conta promovida de `customer` para `staff` mantém a credencial já existente, pois o hash não revela o comprimento original. A exigência de 12 caracteres é aplicada nas próximas trocas de senha da conta privilegiada. Um mecanismo futuro de upgrade obrigatório de credencial/MFA pode tornar essa política estritamente obrigatória imediatamente após promoção.
