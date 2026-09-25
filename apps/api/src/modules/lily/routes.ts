@@ -28,7 +28,7 @@ import {
 } from "./auth";
 
 const optionalName = z.string().trim().min(1).max(80).optional().nullable();
-const password = z.string().min(10).max(128);
+const password = z.string().min(12).max(128);
 const phone = z.string().trim().min(8).max(40);
 
 const registerSchema = z.object({
