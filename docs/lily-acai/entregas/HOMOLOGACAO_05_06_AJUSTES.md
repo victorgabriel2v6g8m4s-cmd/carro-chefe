@@ -546,3 +546,16 @@ Esta seção substitui a decisão anterior de expor o `featured` em uma vitrine 
 
 - links internos principais usam estado ativo visual via `NavLink`;
 - o usuário consegue identificar Cardápio, Ranking ou Painel como seção atual sem depender apenas do conteúdo da página.
+
+## Gate da hierarquia final do catálogo
+
+**SHA de release validado:** `675a3004b2980d18f013081e37dd3b70e2099675`
+
+- CI run `36178229554`: success;
+- CodeQL run `36178229558`: success;
+- Node 20: 23 arquivos / 116 testes;
+- Node 24: 23 arquivos / 116 testes;
+- builds de produção: success;
+- Tool Health, Workbook Snapshot, Excel Recipe Linux/Windows e Windows Supervisor: success.
+
+O PR técnico #77 foi utilizado somente para validar uma árvore Git idêntica e permanece fechado sem merge.
