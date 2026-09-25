@@ -45,7 +45,7 @@ function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminD
     <span className="eyebrow">Painel CookLily</span>
     <h1>Acesso staff necessário.</h1>
     <p>{state.error || "Entre com uma conta da equipe para administrar o catálogo."}</p>
-    <a className="button primary" href={`${import.meta.env.BASE_URL}entrar`}>Entrar</a>
+    <a className="button primary" href={`${import.meta.env.BASE_URL}entrar?next=${encodeURIComponent(window.location.pathname.replace(/^\/lilyacai/, "") || "/painel")}`}>Entrar</a>
   </section>;
   return <>{children(state)}</>;
 }
@@ -66,7 +66,7 @@ export function AdminHome() {
     <div className="admin-actions">
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Operação e configurações</a>
     </div>
   </section>}</AdminGate>;
 }
