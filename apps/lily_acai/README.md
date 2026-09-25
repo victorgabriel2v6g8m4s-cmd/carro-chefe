@@ -16,11 +16,20 @@ Frontend independente da operação CookLily.
 - `/lilyacai/entrar`;
 - `/lilyacai/privacidade`.
 
+## Rotas de compra/conta
+
+- `/lilyacai/carrinho`;
+- `/lilyacai/checkout`;
+- `/lilyacai/enderecos`;
+- `/lilyacai/pedidos`;
+- `/lilyacai/pedidos/:id`.
+
 ## Rotas staff
 
 - `/lilyacai/painel`;
 - `/lilyacai/painel/cardapio`;
-- `/lilyacai/painel/midias`.
+- `/lilyacai/painel/midias`;
+- `/lilyacai/painel/entrega`.
 
 O backend continua sendo a autoridade de autorização; esconder uma rota no frontend não substitui sessão/role/CSRF.
 
@@ -69,12 +78,39 @@ Permite alterar sem rebuild:
 - ofertas;
 - mídia.
 
+## Carrinho e checkout
+
+Entrega 06 adiciona:
+
+- carrinho persistido em `localStorage`;
+- produto e combo;
+- quantidade e observação;
+- cotação server-side;
+- compra guest;
+- telefone obrigatório;
+- retirada/entrega;
+- endereços salvos para conta autenticada;
+- Idempotency-Key;
+- histórico de pedidos do titular.
+
+O subtotal armazenado no carrinho é apenas snapshot de interface. O checkout recota no servidor imediatamente antes de criar o pedido.
+
+A tela de sucesso informa `awaiting_payment`; não existe confirmação de pagamento na Entrega 06.
+
+## Painel de entrega
+
+`/lilyacai/painel/entrega` configura abertura de pedidos, retirada, entrega, horário, pedido mínimo, taxa fixa e regiões.
+
+A operação nasce desligada e só deve ser aberta depois de preencher dados reais.
+
 ## Identidade
 
 Tema CookLily usa tokens `--cl-*`, logo oficial derivada e Summer / Amsterdam Four quando disponíveis, com fallbacks enquanto os binários licenciados estiverem adiados.
 
 ## Status
 
-Entrega 05 tecnicamente validada no SHA `9e9c2e194076aa5a8dd3262e73528ac3689c8896`.
+Entrega 05: publicada na VPS para homologação.
 
-Deploy real e QA visual permanecem separados da conclusão técnica.
+Entrega 06 tecnicamente validada no SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`, com 105 testes, build e CodeQL aprovados.
+
+Deploy e homologação conjunta 05/06 permanecem separados da conclusão técnica.
