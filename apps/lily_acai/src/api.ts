@@ -111,6 +111,8 @@ export type CatalogPayload = {
       flavors: Array<{ id: string; slug: string; name: string; premium: boolean }>;
     }>;
   }>;
+  weeklyProduct: CatalogProduct | null;
+  featuredProduct: CatalogProduct | null;
   products: CatalogProduct[];
   total: number;
   offset: number;
