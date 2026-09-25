@@ -216,3 +216,68 @@ Se schema for incompatível, seguir restauração de banco de `deploy/README.md`
 ## Evidência por publicação
 
 Registrar SHA, horário/fuso, backup, migrations, `nginx -t`, status systemd, health checks, smoke tests e SHA de rollback.
+
+
+## Deploy automatizado por SHA
+
+A partir da Entrega 06, o procedimento repetitivo foi encapsulado em:
+
+`deploy/scripts/carro-chefe-deploy`
+
+Instalação na VPS, feita uma vez:
+
+```bash
+cd /srv/carro-chefe/current
+git fetch origin --prune
+
+git show origin/feat/lily-entrega-06-pedidos:deploy/scripts/carro-chefe-deploy \
+  > /usr/local/sbin/carro-chefe-deploy
+
+chmod 0755 /usr/local/sbin/carro-chefe-deploy
+```
+
+Depois disso, uma publicação normal usa:
+
+```bash
+sudo carro-chefe-deploy <sha-tecnico-validado>
+```
+
+O script automatiza:
+
+1. lock para impedir dois deploys simultâneos;
+2. verificação de worktree limpo;
+3. `git fetch` e validação do SHA;
+4. precheck das rotas Nginx necessárias;
+5. checkout detached;
+6. `npm ci --include=dev` — necessário enquanto `npm start` depender de `tsx`;
+7. venv Python isolado para Excel Snapshot/Tool Health;
+8. migrations em bancos temporários;
+9. policy/check/tests/build/tool-health contra bancos temporários;
+10. backup consistente dos bancos reais;
+11. parada controlada do serviço para evitar lock SQLite;
+12. migrations core + Lily reais;
+13. correção de permissões;
+14. `nginx -t` e reload;
+15. start do serviço;
+16. health checks internos e HTTPS;
+17. log e arquivo de evidência em `/srv/carro-chefe/data/deploy-logs/`.
+
+### Fail-closed
+
+Antes de migration real, uma falha restaura o checkout anterior e, se necessário, religa o serviço.
+
+Depois que uma migration real começa, o script **não restaura banco automaticamente**. Essa decisão é intencional: rollback genérico de schema pode destruir dados ou deixar aplicação/schema incompatíveis. O script registra os backups e encerra para intervenção controlada.
+
+### O script nunca executa
+
+- `prisma migrate reset`;
+- seed de desenvolvimento;
+- `npm audit fix --force`;
+- overwrite automático do Nginx real;
+- rollback automático de banco.
+
+### Quando ainda haverá etapa manual
+
+Se uma entrega criar **novo namespace público no Nginx**, a configuração real precisa ser revisada uma vez antes do deploy. O deployer falha no precheck antes de tocar banco/serviço se as rotas esperadas estiverem ausentes.
+
+Alterações que usam namespaces já expostos normalmente ficam reduzidas ao comando único por SHA.
