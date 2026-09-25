@@ -331,8 +331,8 @@ function Cadastro() {
     <form className="auth-card" onSubmit={submit}>
       <label>Nome <span>opcional</span><input name="displayName" autoComplete="name" maxLength={80} /></label>
       <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
-      <label>Senha <span>mínimo 10 caracteres</span><input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
-      <label>Confirmar senha<input name="passwordConfirmation" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
+      <label>Senha <span>mínimo 12 caracteres</span><input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
+      <label>Confirmar senha<input name="passwordConfirmation" type="password" autoComplete="new-password" minLength={12} maxLength={128} required /></label>
       <label className="check"><input type="checkbox" required /> <span>Li e aceito os <Link to="/privacidade">termos operacionais e o aviso de privacidade</Link>.</span></label>
       <div className="optional-box"><strong>Preferências opcionais</strong>
         <label className="check"><input name="lilyMarketing" type="checkbox" /> <span>Quero receber novidades e ofertas da CookLily.</span></label>
