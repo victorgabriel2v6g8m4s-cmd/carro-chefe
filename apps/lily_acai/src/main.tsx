@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyAuthStatus, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
-import { CatalogPage, FeaturedCarousel } from "./catalog";
+import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
+import { CatalogPage, FeaturedProductSpotlight, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { CartPage } from "./features/cart/CartPage";
@@ -174,6 +174,8 @@ function Shell({ children }: { children: ReactNode }) {
 
 function Landing() {
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
+  const [weeklyProduct, setWeeklyProduct] = useState<CatalogProduct | null>(null);
+  const [featuredProduct, setFeaturedProduct] = useState<CatalogProduct | null>(null);
   const [state, setState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -183,6 +185,16 @@ function Landing() {
       .catch(() => {
         setState("error");
         setMessage("Não foi possível carregar o cadastro agora. Você ainda pode falar com a CookLily pelo WhatsApp.");
+      });
+
+    getLilyCatalog({ limit: 1 })
+      .then((payload) => {
+        setWeeklyProduct(payload.weeklyProduct);
+        setFeaturedProduct(payload.featuredProduct);
+      })
+      .catch(() => {
+        setWeeklyProduct(null);
+        setFeaturedProduct(null);
       });
   }, []);
 
@@ -224,6 +236,8 @@ function Landing() {
   const trackingText = encodeURIComponent("Olá! Vim pelo site da CookLily e gostaria de acompanhar meu pedido.");
   const trackingWhatsapp = config?.social.whatsappUrl ?? null;
   return <Shell>
+    <WeeklyProductBanner product={weeklyProduct} />
+
     <section className="landing-hero">
       <div className="landing-copy">
         <span className="eyebrow">CookLily · novidades no seu WhatsApp</span>
@@ -255,7 +269,7 @@ function Landing() {
         </button>
       </form>
     </section>
-    <FeaturedCarousel />
+    <FeaturedProductSpotlight product={featuredProduct} />
     <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       {trackingWhatsapp
