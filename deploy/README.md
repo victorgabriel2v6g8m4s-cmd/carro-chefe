@@ -22,6 +22,7 @@ Exemplo mínimo em `/etc/carro-chefe/carro-chefe.env`:
 
 ```env
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
+LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
 TRUST_PROXY=true
 PRODUCTION_AUTH_READY=false
 VITE_GA4_ID=
@@ -74,7 +75,10 @@ Faça o smoke test externo somente por HTTPS e confirme que:
 - `/gestao` retorna 404 no Nginx;
 - recusar analytics não carrega GA4/Clarity;
 - aceitar analytics carrega somente os IDs configurados;
-- QR mantém `cc_qr`, `cc_campaign` e `cc_variant` no cadastro.
+- CookLily aceita `cc_qr`/`cc_campaign`/`cc_variant` por compatibilidade e persiste o modelo canônico `la*`;
+- `/api/v1/lily/public/health` responde;
+- lead CookLily válido persiste no banco Lily e repetição não duplica;
+- sem opt-in promocional não há lead CookLily persistido.
 
 ## TLS e Nginx
 
@@ -100,3 +104,47 @@ Procedimento mínimo de restauração:
 6. executar health check e smoke test de cadastro em ambiente controlado.
 
 Antes de múltiplas réplicas, storage de rede ou arquitetura distribuída, migrar a persistência para PostgreSQL gerenciado.
+
+
+## CookLily — primeira publicação
+
+Antes da primeira publicação CookLily, além do banco principal, faça backup de `/srv/carro-chefe/data/lily-acai.db` se ele já existir. Aplique a migration Lily com `npm run db:deploy:lily`.
+
+Na Entrega 05, o Nginx também libera `/api/v1/lily/auth/*` e `/api/v1/lily/admin/*`.
+
+Na Entrega 06, liberar explicitamente antes do bloqueio genérico:
+
+```text
+/api/v1/lily/orders
+/api/v1/lily/orders/*
+/api/v1/lily/customer/*
+```
+
+A autorização continua no Fastify; o Nginx não substitui sessão, papel ou CSRF.
+
+A publicação deve usar um SHA imutável aprovado, nunca um `git pull` cego.
+
+## CookLily — Entrega 06
+
+SHA técnico validado para carrinho/pedidos:
+
+`da166683ab2d0e27acae23d9714ec8e824a02ac4`
+
+A migration `20260925100000_lily_orders` cria pedidos, itens, endereços, fulfillment e zonas. Os defaults deixam pedidos/retirada/entrega desligados.
+
+Depois da migration, configurar dados operacionais reais no painel e manter `ordersEnabled=false` até o smoke estar concluído.
+
+
+## Automatizador de release
+
+`deploy/scripts/carro-chefe-deploy` é o entrypoint recomendado na VPS depois da instalação inicial.
+
+Exemplo:
+
+```bash
+sudo carro-chefe-deploy da166683ab2d0e27acae23d9714ec8e824a02ac4
+```
+
+O script usa bancos temporários para gates, gera backups antes de migration, para o serviço antes de gravar SQLite, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
+
+Novos namespaces Nginx continuam exigindo revisão explícita; o script valida e falha antes da migration em vez de editar o proxy silenciosamente.

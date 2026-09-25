@@ -7,6 +7,7 @@ Este inventário cobre aplicações, scripts e utilitários mantidos pelo própr
 | `app-api` | `apps/api` | API Fastify, contratos HTTP, domínio, Prisma, SSE, webhooks, filas/execuções e integrações | completa | médio | nenhum direto/baixo para orquestração | não é checkout/fiscal/pagamento; produção exige autenticação e ambiente correto | 94 |
 | `app-gestao` | `apps/gestao` | Central Operacional: tarefas, decisões, riscos, compras, agentes, auditoria e memória operacional | completa | médio | nenhum direto/baixo | depende da API; exposição pública é bloqueada até autenticação adequada | 92 |
 | `app-site` | `apps/site` | site público, `/welcome`, cadastro de pré-lançamento, atribuição de campanha, analytics consentido e ponte para cardápio | completa | baixo/médio | nenhum direto/baixo | não implementa checkout; integração ERP depende de contrato/headers | 94 |
+| `app-lily` | `apps/lily_acai` | operação temporária Lily: frontend isolado, autenticação própria, consentimentos e futura jornada de pedido | em desenvolvimento | baixo/médio | nenhum direto/baixo | existe somente na branch `lily-acai`; não faz parte da proposta permanente do Carro Chefe; checkout ainda incompleto | 86 |
 | `app-qr` | `apps/qr_manipulator` | QR no navegador, styling, background/centro, tracking, PNG, projeto JSON e manifesto | em desenvolvimento | médio | nenhum direto/baixo | encoder v1–10 byte mode; falta evidência do teste automatizado de decodificação exigido pelo próprio critério de pronto | 82 |
 | `agent-policy` | `tools/agent-policy` | compilar/verificar manifesto de política, hashes, herança de `AGENTS.md` e preflight por agente/escopo | completa | baixo | nenhum direto/baixo | mudanças em fontes exigem rebuild do manifesto; não substitui regras integrais | 96 |
 | `agent-runtime` | `tools/agent-runtime.mjs` | runtime/orquestração local dos agentes e conexão com a Central conforme configuração | em desenvolvimento | médio/alto | médio/alto quando aciona agentes | depende de ambiente/serviços; cobertura dedicada precisa ser ampliada | 84 |
@@ -18,7 +19,7 @@ Este inventário cobre aplicações, scripts e utilitários mantidos pelo própr
 
 ## Componentes compartilhados
 
-`packages/contracts`, `packages/database` e `packages/ui` são bibliotecas internas de suporte, não ferramentas independentes. Sua saúde é coberta por typecheck, testes e builds do monorepo. Prisma/SQLite permanecem infraestrutura de persistência local da Central; o ERP futuro continua sendo a fonte transacional definida pelo projeto.
+`packages/contracts`, `packages/database`, `packages/lily-database` e `packages/ui` são bibliotecas internas de suporte, não ferramentas independentes. Sua saúde é coberta por typecheck, testes e builds do monorepo. Prisma/SQLite permanecem infraestrutura de persistência local da Central; o ERP futuro continua sendo a fonte transacional definida pelo projeto.
 
 ## Critério de maturidade
 
