@@ -119,6 +119,8 @@ required_nginx_patterns=(
   'location ^~ /api/v1/lily/admin/'
   'location = /api/v1/lily/orders'
   'location ^~ /api/v1/lily/orders/'
+  'location = /api/v1/lily/payments'
+  'location ^~ /api/v1/lily/payments/'
   'location ^~ /api/v1/lily/customer/'
   'location ^~ /api/ { return 404; }'
 )
