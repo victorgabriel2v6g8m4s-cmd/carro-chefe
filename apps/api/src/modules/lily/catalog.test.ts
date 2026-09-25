@@ -219,25 +219,84 @@ describe("CookLily catálogo", () => {
     expect(product.addons[0]).not.toHaveProperty("flavorId");
   });
 
-  it("montador de combo recebe opções elegíveis calculadas pelo servidor", async () => {
-    const response = await app.inject({
+  it("publica combo legado como preset com sabores selecionados e trava alterações do cliente", async () => {
+    const response = await app.inject({ method: "GET", url: "/api/v1/lily/public/catalog?limit=40" });
+    expect(response.statusCode).toBe(200);
+    const combo = response.json().combos.find((item: { id: string }) => item.id === "combo-dupla-lily");
+    expect(combo).toBeTruthy();
+    expect(combo.mode).toBe("preset");
+    expect(combo.presetSelections).toHaveLength(2);
+    expect(combo.presetSelections.every((selection: { product: unknown }) => Boolean(selection.product))).toBe(true);
+
+    const selections = combo.presetSelections.map((selection: any) => ({
+      productId: selection.productId,
+      sizeMl: selection.sizeMl,
+      flavorIds: selection.flavorIds,
+      addons: selection.addons
+    }));
+
+    const quoted = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/public/configure-combo",
+      payload: { comboId: combo.id, selections }
+    });
+    expect(quoted.statusCode).toBe(200);
+    expect(quoted.json().mode).toBe("preset");
+
+    const tampered = structuredClone(selections);
+    tampered[0].flavorIds = [];
+    const rejected = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/public/configure-combo",
+      payload: { comboId: combo.id, selections: tampered }
+    });
+    expect(rejected.statusCode).toBe(400);
+    expect(rejected.json().details.code).toBe("LILY_COMBO_PRESET_LOCKED");
+  });
+
+  it("montador de combo só abre quando o modo builder está habilitado", async () => {
+    const combo = await lilyPrisma.lilyCombo.findUnique({ where: { id: "combo-dupla-lily" } });
+    expect(combo).not.toBeNull();
+    const originalRules = combo!.rulesJson;
+    const rules = JSON.parse(originalRules);
+
+    const blocked = await app.inject({
       method: "GET",
       url: "/api/v1/lily/public/combos/combo-dupla-lily/builder"
     });
-    expect(response.statusCode).toBe(200);
-    const body = response.json();
-    expect(body.quantity).toBe(2);
-    expect(body.sizeMl).toBe(500);
-    expect(body.options.length).toBeGreaterThan(0);
-    for (const product of body.options) {
-      expect(product.tags).toContain("simples");
-      expect(product.configurationType).toBe("fixed");
-      expect(product.variants.some((variant: { sizeMl: number; isAvailable: boolean }) =>
-        variant.sizeMl === 500 && variant.isAvailable
-      )).toBe(true);
-      expect(product.variants[0]).not.toHaveProperty("projectedMarginBps");
+    expect(blocked.statusCode).toBe(409);
+    expect(blocked.json().details.code).toBe("LILY_COMBO_NOT_BUILDER");
+
+    try {
+      await lilyPrisma.lilyCombo.update({
+        where: { id: "combo-dupla-lily" },
+        data: { rulesJson: JSON.stringify({ ...rules, mode: "builder" }) }
+      });
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/v1/lily/public/combos/combo-dupla-lily/builder"
+      });
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.quantity).toBe(2);
+      expect(body.sizeMl).toBe(500);
+      expect(body.options.length).toBeGreaterThan(0);
+      for (const product of body.options) {
+        expect(product.tags).toContain("simples");
+        expect(product.configurationType).toBe("fixed");
+        expect(product.variants.some((variant: { sizeMl: number; isAvailable: boolean }) =>
+          variant.sizeMl === 500 && variant.isAvailable
+        )).toBe(true);
+        expect(product.variants[0]).not.toHaveProperty("projectedMarginBps");
+      }
+      expect(body.options.some((product: { slug: string }) => product.slug.includes("nutt"))).toBe(false);
+    } finally {
+      await lilyPrisma.lilyCombo.update({
+        where: { id: "combo-dupla-lily" },
+        data: { rulesJson: originalRules }
+      });
     }
-    expect(body.options.some((product: { slug: string }) => product.slug.includes("nutt"))).toBe(false);
   });
 
 });
