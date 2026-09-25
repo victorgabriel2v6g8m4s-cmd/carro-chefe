@@ -1434,3 +1434,258 @@ img, svg { max-width: 100%; }
     transition: none !important;
   }
 }
+
+
+/* Homologação — hierarquia final do cardápio */
+.topbar .desktop-nav a.active {
+  position: relative;
+  color: var(--cl-color-primary);
+}
+.topbar .desktop-nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--cl-color-primary);
+}
+.topbar .mobile-menu a.active:not(.mobile-menu-primary):not(.staff-menu-link) {
+  background: var(--cl-color-surface-strong);
+  color: var(--cl-color-primary);
+}
+
+.catalog-toolbar.catalog-toolbar-top {
+  position: sticky !important;
+  top: 76px !important;
+  z-index: 60;
+  margin: 0 -8px 10px;
+  padding: 10px 12px;
+  border-radius: 0 0 18px 18px;
+  border-top: 0;
+  background: rgb(255 247 250 / 96%);
+  box-shadow: 0 10px 30px rgb(68 4 45 / 10%);
+  backdrop-filter: blur(18px);
+}
+.catalog-toolbar-top + .catalog-hero {
+  padding-top: clamp(42px,7vw,78px);
+}
+
+/* Etiqueta discreta do produto de maior destaque na grade */
+.offer-badge,
+.featured-badge,
+.soldout-badge {
+  position: absolute;
+  z-index: 2;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.offer-badge {
+  top: 12px;
+  right: 12px;
+}
+.featured-badge {
+  top: 12px;
+  left: 12px;
+  background: rgb(74 6 43 / 90%);
+  color: white;
+  border: 1px solid rgb(255 255 255 / 30%);
+  box-shadow: 0 7px 18px rgb(33 8 26 / 18%);
+  backdrop-filter: blur(8px);
+}
+.soldout-badge {
+  right: 12px;
+  bottom: 12px;
+  top: auto;
+}
+.product-card:has(.featured-badge) {
+  border-color: rgb(130 0 35 / 21%);
+}
+
+/* Escolha da semana — banner compacto inspirado na homologação visual */
+.weekly-product-banner {
+  min-height: 188px;
+  grid-template-columns: 176px minmax(0,1fr);
+  margin: 10px 0 30px;
+  border-radius: 18px;
+  border: 0;
+  background:
+    radial-gradient(circle at 93% 48%, rgb(255 220 231 / 16%) 0 76px, transparent 77px),
+    radial-gradient(circle at 93% 48%, transparent 0 101px, rgb(255 220 231 / 9%) 102px 121px, transparent 122px),
+    linear-gradient(105deg, #5f0635 0%, #790c40 55%, #a54a70 100%);
+  box-shadow: 0 14px 36px rgb(68 4 45 / 14%);
+}
+.weekly-product-banner::after {
+  display: none;
+}
+.weekly-product-media {
+  min-height: 188px;
+  display: grid;
+  place-items: center;
+  padding: 15px 4px 15px 16px;
+  overflow: visible;
+}
+.weekly-product-photo {
+  width: 146px;
+  height: 146px;
+  padding: 5px;
+  overflow: hidden;
+  border: 2px solid rgb(255 213 226 / 60%);
+  border-radius: 50%;
+  background: #f9cada;
+  box-shadow: 0 10px 26px rgb(27 2 17 / 26%);
+}
+.weekly-product-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.weekly-product-copy {
+  grid-template-columns: minmax(0,1fr) auto auto;
+  grid-template-areas:
+    "kicker kicker kicker"
+    "title price cta";
+  align-content: center;
+  gap: 12px 22px;
+  padding: 24px 30px 24px 18px;
+}
+.weekly-product-kicker {
+  color: #ffd5e2;
+  font-size: clamp(15px,2.1vw,25px);
+  font-weight: 950;
+  letter-spacing: .18em;
+  line-height: 1;
+}
+.weekly-product-title strong {
+  color: white;
+  font-size: clamp(26px,3vw,40px);
+}
+.weekly-product-title span {
+  color: #f7d8e2;
+  font-size: 12px;
+}
+.weekly-product-price strong {
+  font-size: clamp(20px,2.2vw,27px);
+}
+.weekly-product-cta {
+  min-width: 126px;
+  padding-inline: 18px;
+  white-space: nowrap;
+}
+
+/* CTA exclusivo da landing; reutiliza a animação do CTA do slider */
+.landing-menu-cta {
+  width: fit-content;
+  min-width: 220px;
+  margin-top: 24px;
+  box-shadow: 0 14px 32px rgb(130 0 35 / 24%);
+}
+
+/* Carrossel vem somente depois da listagem de produtos */
+.catalog-sentinel + .combo-carousel {
+  margin-top: clamp(22px,5vw,52px);
+  padding-top: clamp(18px,4vw,38px);
+  border-top: 1px solid rgb(130 0 35 / 10%);
+}
+
+@media (max-width: 1100px) {
+  .catalog-toolbar.catalog-toolbar-top {
+    position: sticky !important;
+    top: 76px !important;
+    grid-template-columns: minmax(0,1fr) auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .catalog-toolbar.catalog-toolbar-top {
+    top: 62px !important;
+    margin: 0 -4px 8px;
+    padding: 8px;
+    border-radius: 0 0 14px 14px;
+  }
+  .catalog-toolbar-top + .catalog-hero {
+    padding-top: 24px;
+  }
+
+  .offer-badge,
+  .featured-badge,
+  .soldout-badge {
+    padding: 5px 7px;
+    font-size: 9px;
+  }
+  .featured-badge {
+    top: 7px;
+    left: 7px;
+  }
+  .offer-badge {
+    top: 7px;
+    right: 7px;
+  }
+
+  .weekly-product-banner {
+    min-height: 126px;
+    grid-template-columns: 106px minmax(0,1fr);
+    margin: 8px 0 19px;
+    border-radius: 15px;
+  }
+  .weekly-product-media {
+    min-height: 126px;
+    padding: 10px 2px 10px 10px;
+  }
+  .weekly-product-photo {
+    width: 92px;
+    height: 92px;
+    padding: 3px;
+  }
+  .weekly-product-copy {
+    grid-template-columns: minmax(0,1fr) auto;
+    grid-template-areas:
+      "kicker kicker"
+      "title price"
+      "cta cta";
+    gap: 5px 9px;
+    padding: 12px 12px 12px 9px;
+  }
+  .weekly-product-kicker {
+    font-size: clamp(11px,3.8vw,15px);
+    letter-spacing: .14em;
+  }
+  .weekly-product-title strong {
+    font-size: clamp(19px,6vw,25px);
+  }
+  .weekly-product-title span {
+    max-width: 44vw;
+    font-size: 9px;
+  }
+  .weekly-product-price strong {
+    font-size: 17px;
+  }
+  .weekly-product-cta {
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px 12px;
+  }
+  .landing-menu-cta {
+    width: 100%;
+    min-width: 0;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .weekly-product-banner {
+    grid-template-columns: 88px minmax(0,1fr);
+  }
+  .weekly-product-photo {
+    width: 76px;
+    height: 76px;
+  }
+  .weekly-product-title span {
+    display: none;
+  }
+}
