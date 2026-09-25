@@ -281,3 +281,35 @@ Depois que uma migration real começa, o script **não restaura banco automatica
 Se uma entrega criar **novo namespace público no Nginx**, a configuração real precisa ser revisada uma vez antes do deploy. O deployer falha no precheck antes de tocar banco/serviço se as rotas esperadas estiverem ausentes.
 
 Alterações que usam namespaces já expostos normalmente ficam reduzidas ao comando único por SHA.
+
+
+## Bootstrap único do Nginx para a Entrega 06
+
+Como a Entrega 06 abre os namespaces `/api/v1/lily/orders*` e `/api/v1/lily/customer/*`, existe um helper idempotente:
+
+`deploy/scripts/enable-lily-entrega06-nginx`
+
+Ele:
+
+- cria backup da configuração real;
+- não duplica blocos já presentes;
+- aborta se detectar configuração parcial;
+- insere as rotas somente antes do bloqueio genérico de `/api/`;
+- executa `nginx -t`;
+- restaura o backup automaticamente se o teste falhar;
+- recarrega o Nginx somente após validação.
+
+Instalação/execução na primeira publicação 06:
+
+```bash
+git show origin/feat/lily-entrega-06-pedidos:deploy/scripts/enable-lily-entrega06-nginx \
+  > /usr/local/sbin/enable-lily-entrega06-nginx
+chmod 0755 /usr/local/sbin/enable-lily-entrega06-nginx
+sudo enable-lily-entrega06-nginx
+```
+
+Depois desse bootstrap, o deploy da Entrega 06 e releases futuras que usem os mesmos namespaces fica reduzido a:
+
+```bash
+sudo carro-chefe-deploy <sha-tecnico-validado>
+```
