@@ -11,8 +11,8 @@ WORKBOOK = ROOT / "anexos/financeiro/carro chefe.xlsm"
 CLEAN_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-clean-custos-fixos.json"
 BLOCKED_RECIPE = ROOT / "tools/excel_recipe/examples/probe-v3a-blocked-configuracoes.json"
 
-EXPECTED_CLEAN_PLAN = "e2bbaf5c8c3eed17bd6b3234a2bbe5eb3bfe003e650add17688fb8047216e84b"
-EXPECTED_BLOCKED_PLAN = "b547ab76fa3e87eb2833bc8c08adec09787e40b2a9fe6176054424dd71f77d30"
+EXPECTED_CLEAN_PLAN = "dc022c05aafde883b149f0ac7c81722a2d3b6534c6ec6ec7cef13921f2d1995f"
+EXPECTED_BLOCKED_PLAN = "372af17d61e3c94fc37e8cdf53c605abc13e49025ef99307545832371e5e8963"
 EXPECTED_CLEAN_PARTS = {
     "xl/tables/table12.xml",
     "xl/worksheets/sheet9.xml",

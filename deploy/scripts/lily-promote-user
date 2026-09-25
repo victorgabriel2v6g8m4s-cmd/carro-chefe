@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
+
+usage() {
+  cat <<'EOF'
+Uso:
+  sudo lily-promote-user <telefone> [staff|admin]
+
+Exemplos:
+  sudo lily-promote-user 67999999999
+  sudo lily-promote-user +5567999999999 staff
+  sudo lily-promote-user 67999999999 admin
+
+Sem o segundo argumento, promove para staff.
+
+O comando:
+  - normaliza telefone brasileiro;
+  - exige usuário existente e ativo;
+  - nunca cria usuário;
+  - nunca altera senha;
+  - não permite downgrade;
+  - grava LilyAdminAudit;
+  - confirma o papel final.
+EOF
+}
+
+die() {
+  echo "ERRO: $*" >&2
+  exit 1
+}
+
+[[ ${EUID} -eq 0 ]] || die "execute como root/sudo"
+[[ $# -ge 1 && $# -le 2 ]] || { usage; exit 64; }
+command -v sqlite3 >/dev/null 2>&1 || die "sqlite3 não está instalado"
+[[ -f "${ENV_FILE}" ]] || die "arquivo de ambiente não encontrado: ${ENV_FILE}"
+
+RAW_PHONE="$1"
+TARGET_ROLE="${2:-staff}"
+[[ "${TARGET_ROLE}" == "staff" || "${TARGET_ROLE}" == "admin" ]] || die "papel permitido: staff ou admin"
+
+digits="$(printf '%s' "${RAW_PHONE}" | tr -cd '0-9')"
+if [[ "${digits}" == 55* && ( ${#digits} -eq 12 || ${#digits} -eq 13 ) ]]; then
+  digits="${digits:2}"
+fi
+
+[[ ${#digits} -eq 10 || ${#digits} -eq 11 ]] || die "telefone brasileiro inválido"
+[[ "${digits:0:1}" != "0" ]] || die "DDD inválido"
+subscriber="${digits:2}"
+[[ "${subscriber:0:1}" != "0" ]] || die "número inválido"
+if [[ ${#digits} -eq 11 && "${subscriber:0:1}" != "9" ]]; then
+  die "celular de 11 dígitos deve começar com 9 após o DDD"
+fi
+PHONE="+55${digits}"
+
+set -a
+# shellcheck disable=SC1090
+. "${ENV_FILE}"
+set +a
+: "${LILY_DATABASE_URL:?LILY_DATABASE_URL ausente no ambiente}"
+[[ "${LILY_DATABASE_URL}" == file:* ]] || die "LILY_DATABASE_URL deve apontar para SQLite local"
+DB="${LILY_DATABASE_URL#file:}"
+[[ -f "${DB}" ]] || die "banco Lily não encontrado: ${DB}"
+
+ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, phoneNormalized, role, status FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
+[[ -n "${ROW}" ]] || die "nenhuma conta CookLily encontrada para ${PHONE}"
+if [[ "$(printf '%s\n' "${ROW}" | wc -l)" -ne 1 ]]; then
+  die "mais de uma conta encontrada; promoção abortada"
+fi
+
+IFS='|' read -r USER_ID NORMALIZED CURRENT_ROLE STATUS <<< "${ROW}"
+[[ "${STATUS}" == "active" ]] || die "usuário não está ativo (status=${STATUS})"
+
+if [[ "${CURRENT_ROLE}" == "${TARGET_ROLE}" ]]; then
+  echo "Nenhuma alteração necessária."
+  printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${NORMALIZED}" "${CURRENT_ROLE}" "${STATUS}"
+  exit 0
+fi
+
+if [[ "${CURRENT_ROLE}" == "admin" && "${TARGET_ROLE}" == "staff" ]]; then
+  die "este comando não faz downgrade de admin para staff"
+fi
+
+if [[ "${CURRENT_ROLE}" != "customer" && ! ( "${CURRENT_ROLE}" == "staff" && "${TARGET_ROLE}" == "admin" ) ]]; then
+  die "transição não permitida: ${CURRENT_ROLE} -> ${TARGET_ROLE}"
+fi
+
+sqlite3 "${DB}" <<SQL
+.bail on
+BEGIN IMMEDIATE;
+UPDATE LilyUser
+SET role='${TARGET_ROLE}',
+    staffPasswordUpgradeRequired=1,
+    updatedAt=CURRENT_TIMESTAMP
+WHERE id='${USER_ID}' AND status='active';
+
+UPDATE LilySession
+SET revokedAt=CURRENT_TIMESTAMP
+WHERE userId='${USER_ID}' AND revokedAt IS NULL;
+
+INSERT INTO LilyAdminAudit (
+  id, actorUserId, action, entityType, entityId, payloadJson, createdAt
+) VALUES (
+  lower(hex(randomblob(16))),
+  'ops:cli',
+  'user.role.promote',
+  'LilyUser',
+  '${USER_ID}',
+  json_object(
+    'source','lily-promote-user',
+    'phone','${PHONE}',
+    'fromRole','${CURRENT_ROLE}',
+    'toRole','${TARGET_ROLE}'
+  ),
+  CURRENT_TIMESTAMP
+);
+COMMIT;
+SQL
+
+FINAL="$(sqlite3 -separator '|' "${DB}" "SELECT phoneNormalized, role, status FROM LilyUser WHERE id='${USER_ID}';")"
+IFS='|' read -r FINAL_PHONE FINAL_ROLE FINAL_STATUS <<< "${FINAL}"
+[[ "${FINAL_ROLE}" == "${TARGET_ROLE}" && "${FINAL_STATUS}" == "active" ]] || die "verificação pós-promoção falhou"
+
+echo "Promoção concluída."
+printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${FINAL_PHONE}" "${FINAL_ROLE}" "${FINAL_STATUS}"
+echo "A nova permissão vale na próxima requisição da sessão; não é necessário reiniciar o serviço."
+echo "A conta deverá trocar a senha antes de acessar funções administrativas."
