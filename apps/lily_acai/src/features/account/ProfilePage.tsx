@@ -143,6 +143,7 @@ export function ProfilePage() {
     try {
       const result = await changeLilyPassword({ currentPassword, newPassword }, session.csrfToken);
       form.reset();
+      await refresh();
       setMessage(result.otherSessionsRevoked > 0
         ? `Senha atualizada. ${result.otherSessionsRevoked} outra(s) sessão(ões) foram encerradas.`
         : "Senha atualizada.");
