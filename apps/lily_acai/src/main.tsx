@@ -1,7 +1,7 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { getLilyAuthStatus, getLilyConfig, getLilySession, loginLily, logoutLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type LilyPublicConfig } from "./api";
 import { CatalogPage, FeaturedCarousel } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -56,11 +56,9 @@ function AttributionCapture() {
 
 function Shell({ children }: { children: ReactNode }) {
   const cart = useCart();
-  const navigate = useNavigate();
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [logoutBusy, setLogoutBusy] = useState(false);
   const menuRef = useRef<HTMLElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -89,56 +87,44 @@ function Shell({ children }: { children: ReactNode }) {
   const isStaff = user ? ["staff", "admin"].includes(user.role) : false;
   const closeMenu = () => setMenuOpen(false);
 
-  async function handleLogout() {
-    if (logoutBusy) return;
-    setLogoutBusy(true);
-    try {
-      const session = await getLilySession();
-      await logoutLily(session.csrfToken);
-    } catch {
-      // Se a sessão já expirou, o resultado esperado na interface também é sair.
-    } finally {
-      setUser(null);
-      setMenuOpen(false);
-      setLogoutBusy(false);
-      navigate("/cardapio", { replace: true });
-    }
-  }
-
   return <div className="lily-shell">
     <header className="topbar">
-      <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
-        <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
-        <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
-      </Link>
-
-      <nav className="desktop-nav" aria-label="Navegação principal">
-        <Link to="/cardapio">Cardápio</Link>
-        <Link to="/ranking">Ranking</Link>
-        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
-        {isStaff && <Link to="/painel">Painel</Link>}
-        {user
-          ? <>
-              <Link className="account-link" to="/perfil"><ProfileBubble user={user} /><span>Minha conta</span></Link>
-              <button className="nav-button" type="button" onClick={handleLogout} disabled={logoutBusy}>{logoutBusy ? "Saindo..." : "Sair"}</button>
-            </>
-          : <>
-              <Link to="/entrar">Entrar</Link>
-              <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
-            </>}
-      </nav>
-
-      <div className="header-actions">
-        <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
-          <CartIcon />
-          {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
+      <div className="topbar-inner">
+        <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
+          <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
+          <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
         </Link>
-        <Link className="header-icon mobile-only" to={user ? "/perfil" : "/entrar"} aria-label={user ? "Abrir perfil" : "Entrar ou criar conta"}>
-          <ProfileBubble user={user} />
-        </Link>
-        <button ref={menuButtonRef} className="header-icon mobile-only" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
-          <MenuIcon />
-        </button>
+
+        <nav className="desktop-nav" aria-label="Navegação principal">
+          <Link to="/cardapio">Cardápio</Link>
+          <Link to="/ranking">Ranking</Link>
+          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
+          {isStaff && <Link to="/painel">Painel</Link>}
+        </nav>
+
+        <div className="header-actions">
+          {!user && <div className="auth-actions-desktop">
+            <Link to="/entrar">Entrar</Link>
+            <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
+          </div>}
+
+          {user
+            ? <Link className="header-icon profile-icon" to="/perfil" aria-label={user.displayName ? `Abrir perfil de ${user.displayName}` : "Abrir perfil"}>
+                <ProfileBubble user={user} />
+              </Link>
+            : <Link className="header-icon mobile-only" to="/entrar" aria-label="Entrar ou criar conta">
+                <ProfileBubble user={null} />
+              </Link>}
+
+          <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
+            <CartIcon />
+            {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
+          </Link>
+
+          <button ref={menuButtonRef} className="header-icon mobile-only" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
+            <MenuIcon />
+          </button>
+        </div>
       </div>
 
       {menuOpen && <>
@@ -155,7 +141,6 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
             <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
             <Link to="/enderecos" onClick={closeMenu}>Endereços</Link>
-            <button className="mobile-menu-action" type="button" onClick={handleLogout} disabled={logoutBusy}>{logoutBusy ? "Saindo..." : "Sair da conta"}</button>
           </> : <>
             <Link to="/entrar" onClick={closeMenu}>Entrar</Link>
             <Link className="mobile-menu-primary" to="/cadastro" onClick={closeMenu}>Criar conta</Link>
