@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   changeLilyPassword,
   getLilyProfile,
   getLilyRanking,
   getLilySession,
+  logoutLily,
   updateLilyProfile,
   uploadLilyProfileAvatar,
   type AuthPayload,
@@ -32,10 +33,12 @@ function AccountRequired() {
 }
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [profile, setProfile] = useState<LilyProfilePayload | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -107,6 +110,19 @@ export function ProfilePage() {
     }
   }
 
+  async function handleLogout() {
+    if (!session || logoutBusy) return;
+    setLogoutBusy(true);
+    setError("");
+    try {
+      await logoutLily(session.csrfToken);
+      navigate("/cardapio", { replace: true });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível sair da conta.");
+      setLogoutBusy(false);
+    }
+  }
+
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
@@ -145,11 +161,14 @@ export function ProfilePage() {
   return <section className="profile-page">
     <div className="profile-heading">
       <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
-      <div>
+      <div className="profile-heading-copy">
         <span className="eyebrow">Minha conta</span>
         <h1>{profile.user.displayName || "Seu perfil CookLily"}</h1>
         <p>{profile.user.phone}</p>
       </div>
+      <button className="button ghost profile-logout-button" type="button" onClick={handleLogout} disabled={logoutBusy}>
+        {logoutBusy ? "Saindo..." : "Sair da conta"}
+      </button>
     </div>
 
     <div className="profile-stats">
