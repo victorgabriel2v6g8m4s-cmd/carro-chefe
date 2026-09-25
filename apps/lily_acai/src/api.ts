@@ -180,6 +180,13 @@ export async function getLilySession() {
   return parseResponse<AuthPayload>(response);
 }
 
+export async function getLilyAuthStatus() {
+  const response = await fetch("/api/v1/lily/auth/status", {
+    credentials: "same-origin"
+  });
+  return parseResponse<{ user: AuthPayload["user"] | null }>(response);
+}
+
 export async function submitCookLilyLead(input: {
   phone: string;
   marketingConsent: true;
