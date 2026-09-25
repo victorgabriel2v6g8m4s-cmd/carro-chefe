@@ -12,6 +12,36 @@ function cookieFrom(response: { headers: Record<string, unknown> }) {
   return raw.split(";")[0];
 }
 
+async function register(phone: string, role: "customer" | "admin" = "customer") {
+  const secret = role === "admin" ? "senha-admin-equipe-2026" : "cliente08";
+  const response = await app.inject({
+    method: "POST",
+    url: "/api/v1/lily/auth/register",
+    headers: { origin },
+    payload: {
+      phone,
+      password: secret,
+      displayName: `Equipe ${phone.slice(-4)}`,
+      termsAccepted: true,
+      termsVersion: LILY_TERMS_VERSION,
+      privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+    }
+  });
+  expect(response.statusCode).toBe(201);
+  const cookie = cookieFrom(response);
+  const id = response.json().user.id;
+  if (role === "admin") {
+    await lilyPrisma.lilyUser.update({
+      where: { id },
+      data: { role: "admin", staffPasswordUpgradeRequired: false }
+    });
+  }
+  const me = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
+  expect(me.statusCode).toBe(200);
+  return { cookie, csrf: me.json().csrfToken, user: me.json().user, secret };
+}
+
 async function cleanup() {
   await lilyPrisma.lilyPaymentReconciliation.deleteMany();
   await lilyPrisma.lilyPaymentEvent.deleteMany();
