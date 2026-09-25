@@ -224,6 +224,7 @@ export async function lilyRoutes(app: FastifyInstance) {
       status: string;
       avatarMediaId: string | null;
       rankingOptIn: boolean;
+      staffPasswordUpgradeRequired: boolean;
     };
     try {
       created = await lilyPrisma.$transaction(async (tx) => {
