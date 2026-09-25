@@ -19,7 +19,10 @@ function AccountRequired() {
     <span className="eyebrow">Conta CookLily</span>
     <h1>Entre para acessar esta área.</h1>
     <p>Pedidos feitos como convidado não aparecem no histórico de uma conta criada depois.</p>
-    <Link className="button primary" to="/entrar">Entrar</Link>
+    <div className="account-cta-row">
+      <Link className="button primary" to="/entrar">Entrar</Link>
+      <Link className="button ghost" to="/cadastro">Criar conta</Link>
+    </div>
   </section>;
 }
 
