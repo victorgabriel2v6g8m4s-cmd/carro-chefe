@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   configureLilyCombo,
   configureLilyItem,
@@ -625,7 +625,7 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
     <div className="product-card-media">
       <ProductImage product={product} onOpen={onOpen} />
       {bestOffer && <span className="offer-badge">{money(bestOffer.savingsCents)} OFF</span>}
-      {product.weeklyHighlight && <span className="weekly-badge">Da semana</span>}
+      {product.featured && <span className="featured-badge">Mais pedido</span>}
       {product.soldOut && <span className="soldout-badge">Esgotado</span>}
     </div>
     <button className="product-card-body" type="button" onClick={onOpen}>
@@ -666,12 +666,14 @@ export function WeeklyProductBanner({
       </button>
     : <Link className="button primary weekly-product-cta" to="/cardapio">Ver no cardápio</Link>;
 
-  return <section className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Produto da semana">
+  return <section className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Escolha da semana">
     <div className="weekly-product-media">
-      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
+      <div className="weekly-product-photo">
+        <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
+      </div>
     </div>
     <div className="weekly-product-copy">
-      <span className="weekly-product-kicker">Produto da semana</span>
+      <span className="weekly-product-kicker">Escolha da semana</span>
       <div className="weekly-product-title">
         <strong>{product.displayName}</strong>
         {product.descriptiveName && <span>{product.descriptiveName}</span>}
@@ -682,42 +684,6 @@ export function WeeklyProductBanner({
         {price.savings != null && price.savings > 0 && <small>economize {money(price.savings)}</small>}
       </div>
       {product.soldOut ? <span className="weekly-product-status">Esgotado no momento</span> : cta}
-    </div>
-  </section>;
-}
-
-export function FeaturedProductSpotlight({
-  product,
-  onOpen
-}: {
-  product: CatalogProduct | null;
-  onOpen?: (product: CatalogProduct) => void;
-}) {
-  if (!product) return null;
-  const price = promotedPrice(product);
-  const flavorNames = product.flavors.map((flavor) => flavor.name).slice(0, 4);
-  const cta = onOpen
-    ? <button className="button primary featured-product-cta" type="button" onClick={() => onOpen(product)}>Quero experimentar</button>
-    : <Link className="button primary featured-product-cta" to="/cardapio">Quero experimentar</Link>;
-
-  return <section className={`featured-product-spotlight ${product.soldOut ? "is-sold-out" : ""}`} aria-labelledby="featured-product-title">
-    <div className="featured-product-media">
-      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
-      <span>Destaque CookLily</span>
-    </div>
-    <div className="featured-product-copy">
-      <span className="eyebrow">Escolha da casa</span>
-      <h2 id="featured-product-title">{product.displayName}</h2>
-      {product.descriptiveName && <strong className="featured-product-descriptor">{product.descriptiveName}</strong>}
-      {product.description && <p>{product.description}</p>}
-      {flavorNames.length > 0 && <div className="featured-product-flavors" aria-label="Sabores">
-        {flavorNames.map((flavor) => <span key={flavor}>{flavor}</span>)}
-      </div>}
-      <div className="featured-product-price">
-        {price.regular != null && <s>{money(price.regular)}</s>}
-        <strong>{price.current > 0 ? money(price.current) : "Em breve"}</strong>
-      </div>
-      {product.soldOut ? <span className="soldout-banner">Esgotado no momento</span> : cta}
     </div>
   </section>;
 }
@@ -742,8 +708,28 @@ const initialFilters: Filters = {
   offer: false
 };
 
+const filterParamKeys = ["q", "category", "subcategory", "flavor", "size", "availability", "offer"] as const;
+
+function filtersFromParams(params: URLSearchParams): Filters {
+  const availability = params.get("availability");
+  return {
+    q: params.get("q") ?? "",
+    category: params.get("category") ?? "",
+    subcategory: params.get("subcategory") ?? "",
+    flavor: params.get("flavor") ?? "",
+    size: params.get("size") ?? "",
+    availability: availability === "available" || availability === "soldout" ? availability : "all",
+    offer: params.get("offer") === "true"
+  };
+}
+
+function sameFilters(a: Filters, b: Filters) {
+  return filterParamKeys.every((key) => a[key] === b[key]);
+}
+
 export function CatalogPage() {
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [meta, setMeta] = useState<CatalogPayload | null>(null);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
@@ -764,6 +750,24 @@ export function CatalogPage() {
     offer: filters.offer ? "true" : undefined,
     limit: 12
   }), [filters]);
+
+  useEffect(() => {
+    const fromUrl = filtersFromParams(searchParams);
+    if (!sameFilters(fromUrl, filters)) setFilters(fromUrl);
+  }, [searchParams.toString()]);
+
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search);
+    for (const key of filterParamKeys) next.delete(key);
+    if (filters.q) next.set("q", filters.q);
+    if (filters.category) next.set("category", filters.category);
+    if (filters.subcategory) next.set("subcategory", filters.subcategory);
+    if (filters.flavor) next.set("flavor", filters.flavor);
+    if (filters.size) next.set("size", filters.size);
+    if (filters.availability !== "all") next.set("availability", filters.availability);
+    if (filters.offer) next.set("offer", "true");
+    setSearchParams(next, { replace: true });
+  }, [filters]);
 
   useEffect(() => {
     let cancelled = false;
@@ -823,15 +827,7 @@ export function CatalogPage() {
   ].filter(Boolean).length;
 
   return <>
-    <WeeklyProductBanner product={meta?.weeklyProduct ?? null} onOpen={setSelected} />
-
-    <section className="catalog-hero">
-      <span className="eyebrow">Cardápio CookLily</span>
-      <h1>Escolha pelo sabor. A gente cuida da cremosidade.</h1>
-      <p>Explore Batidas de Açaí e LilyShakes, combine sabores e veja os adicionais disponíveis para cada produto.</p>
-    </section>
-
-    <section className="catalog-toolbar" aria-label="Pesquisa e filtros">
+    <section className="catalog-toolbar catalog-toolbar-top" aria-label="Pesquisa e filtros">
       <label className="search-field">
         <span className="sr-only">Pesquisar</span>
         <input value={filters.q} onChange={(event) => setFilters((current) => ({ ...current, q: event.target.value }))} placeholder="Buscar sabor ou produto..." />
@@ -870,9 +866,13 @@ export function CatalogPage() {
       </div>}
     </section>
 
-    <FeaturedProductSpotlight product={meta?.featuredProduct ?? null} onOpen={setSelected} />
+    <section className="catalog-hero">
+      <span className="eyebrow">Cardápio CookLily</span>
+      <h1>Escolha pelo sabor. A gente cuida da cremosidade.</h1>
+      <p>Explore Batidas de Açaí e LilyShakes, combine sabores e veja os adicionais disponíveis para cada produto.</p>
+    </section>
 
-    {meta?.combos.length ? <ComboCarousel combos={meta.combos} onSelect={setSelectedCombo} /> : null}
+    <WeeklyProductBanner product={meta?.weeklyProduct ?? null} onOpen={setSelected} />
 
     {error && <p className="error" role="alert">{error}</p>}
     <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> produtos encontrados</div>
@@ -884,6 +884,9 @@ export function CatalogPage() {
       {loading && <span>Carregando...</span>}
       {!loading && nextOffset != null && <button className="button ghost" type="button" onClick={loadMore}>Carregar mais</button>}
     </div>
+
+    {meta?.combos.length ? <ComboCarousel combos={meta.combos} onSelect={setSelectedCombo} /> : null}
+
     {selected && <ProductConfigurator product={selected} onClose={() => setSelected(null)} />}
     {selectedCombo && <ComboConfigurator combo={selectedCombo} onClose={() => setSelectedCombo(null)} />}
   </>;
