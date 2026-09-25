@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { configureLilyItem, getLilyCatalog, type CatalogPayload, type CatalogProduct } from "./api";
+import { configureLilyCombo, configureLilyItem, getLilyCatalog, type CatalogPayload, type CatalogProduct } from "./api";
 import { useCart } from "./features/cart/CartContext";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -155,6 +155,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
         </button>}
         {quote && <button className="button primary" type="button" onClick={() => {
           cart.addItem({
+            kind: "product",
             productId: quote.product.id,
             productName: quote.product.name,
             variantId: quote.variant.id,
@@ -177,6 +178,157 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
       <button type="button" onClick={() => setFullscreen(false)} aria-label="Fechar imagem">×</button>
       <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
     </div>}
+  </div>;
+}
+
+
+type CatalogCombo = CatalogPayload["combos"][number];
+
+function ruleNumber(combo: CatalogCombo, key: string) {
+  const value = combo.rules[key];
+  return typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : null;
+}
+
+function ruleString(combo: CatalogCombo, key: string) {
+  const value = combo.rules[key];
+  return typeof value === "string" ? value : null;
+}
+
+function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: () => void }) {
+  const cart = useCart();
+  const quantity = ruleNumber(combo, "quantity") ?? 0;
+  const sizeMl = ruleNumber(combo, "sizeMl") ?? 0;
+  const category = ruleString(combo, "category") ?? "";
+  const subtype = ruleString(combo, "subtype");
+  const flavorCount = ruleNumber(combo, "flavorCount");
+  const [eligible, setEligible] = useState<CatalogProduct[]>([]);
+  const [selectionIds, setSelectionIds] = useState<string[]>([]);
+  const [quote, setQuote] = useState<Awaited<ReturnType<typeof configureLilyCombo>> | null>(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState("");
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBusy(true);
+    setError("");
+    getLilyCatalog({ category, availability: "available", limit: 60 })
+      .then((payload) => {
+        if (cancelled) return;
+        const candidates = payload.products.filter((product) =>
+          product.configurationType === "fixed"
+          && (!subtype || subtype !== "simple" || product.tags.includes("simples"))
+          && product.variants.some((variant) => variant.sizeMl === sizeMl && variant.isAvailable)
+          && (flavorCount == null || product.flavors.length === flavorCount)
+        );
+        setEligible(candidates);
+        setSelectionIds(Array.from({ length: quantity }, (_, index) => candidates[index % Math.max(candidates.length, 1)]?.id ?? ""));
+        if (candidates.length === 0) setError("Nenhum produto disponível atende às regras deste combo.");
+      })
+      .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as opções do combo."))
+      .finally(() => { if (!cancelled) setBusy(false); });
+    return () => { cancelled = true; };
+  }, [category, subtype, sizeMl, flavorCount, quantity]);
+
+  function setSlot(index: number, productId: string) {
+    setQuote(null);
+    setAdded(false);
+    setError("");
+    setSelectionIds((current) => current.map((value, currentIndex) => currentIndex === index ? productId : value));
+  }
+
+  async function calculate() {
+    const selectedProducts = selectionIds.map((id) => eligible.find((product) => product.id === id)).filter(Boolean) as CatalogProduct[];
+    if (selectedProducts.length !== quantity) {
+      setError("Escolha todos os itens do combo.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const result = await configureLilyCombo({
+        comboId: combo.id,
+        selections: selectedProducts.map((product) => ({
+          productId: product.id,
+          sizeMl,
+          flavorIds: product.flavors.map((flavor) => flavor.id),
+          addons: []
+        }))
+      });
+      setQuote(result);
+      setAdded(false);
+    } catch (cause) {
+      setQuote(null);
+      setError(cause instanceof Error ? cause.message : "Não foi possível validar este combo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <div className="product-modal-backdrop" role="presentation" onMouseDown={(event) => {
+    if (event.target === event.currentTarget) onClose();
+  }}>
+    <section className="product-modal combo-modal" role="dialog" aria-modal="true" aria-label={combo.name}>
+      <button className="modal-close" type="button" onClick={onClose} aria-label="Fechar">×</button>
+      <div className="product-modal-content combo-modal-content">
+        <span className="eyebrow">Combo CookLily</span>
+        <h2>{combo.name}</h2>
+        {combo.description && <p>{combo.description}</p>}
+        <div className="quote-card">
+          <span>Preço do combo</span>
+          <strong>{money(combo.offerPriceCents)}</strong>
+          <small><s>{money(combo.regularPriceCents)}</s> · economia anunciada {money(combo.savingsCents)}</small>
+        </div>
+
+        {Array.from({ length: quantity }, (_, index) => <label className="combo-slot" key={index}>
+          <span>Item {index + 1} · {sizeMl} ml</span>
+          <select value={selectionIds[index] ?? ""} disabled={busy || eligible.length === 0}
+            onChange={(event) => setSlot(index, event.target.value)}>
+            <option value="">Escolha um produto</option>
+            {eligible.map((product) => <option key={product.id} value={product.id}>{product.displayName}</option>)}
+          </select>
+        </label>)}
+
+        <small>O servidor confere categoria, tipo, tamanho, quantidade, disponibilidade e preço antes de aceitar o combo.</small>
+        {error && <p className="error" role="alert">{error}</p>}
+        {quote && <div className="quote-card">
+          <span>Combo validado</span>
+          <strong>{money(quote.totalPriceCents)}</strong>
+          <small>{quote.selections.map((selection) => selection.product.name).join(" + ")}</small>
+        </div>}
+        {!quote && <button className="button primary" type="button" disabled={busy || eligible.length === 0} onClick={() => void calculate()}>
+          {busy ? "Validando..." : "Validar combo"}
+        </button>}
+        {quote && <button className="button primary" type="button" disabled={added} onClick={() => {
+          cart.addItem({
+            kind: "combo",
+            productId: quote.combo.id,
+            productName: quote.combo.name,
+            variantId: "combo",
+            variantName: "Combo",
+            sizeMl: 0,
+            flavorIds: [],
+            flavors: [],
+            addons: [],
+            comboId: quote.combo.id,
+            comboSelections: quote.selections.map((selection) => ({
+              productId: selection.product.id,
+              productName: selection.product.name,
+              sizeMl: selection.sizeMl,
+              flavorIds: selection.flavors.map((flavor) => flavor.id),
+              flavors: selection.flavors,
+              addons: selection.addons,
+              configurationHash: selection.configurationHash
+            })),
+            configurationHash: quote.configurationHash,
+            unitPriceCents: quote.totalPriceCents
+          });
+          setAdded(true);
+        }}>
+          {added ? "Combo adicionado" : "Adicionar combo ao carrinho"}
+        </button>}
+      </div>
+    </section>
   </div>;
 }
 
@@ -278,6 +430,7 @@ export function CatalogPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
+  const [selectedCombo, setSelectedCombo] = useState<CatalogCombo | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
 
   const query = useMemo(() => ({
@@ -385,6 +538,7 @@ export function CatalogPage() {
         <strong>{combo.name}</strong>
         <small>{combo.description}</small>
         <span><s>{money(combo.regularPriceCents)}</s> {money(combo.offerPriceCents)}</span>
+        <button className="button ghost" type="button" onClick={() => setSelectedCombo(combo)}>Montar combo</button>
       </article>)}
     </section> : null}
 
@@ -399,5 +553,6 @@ export function CatalogPage() {
       {!loading && nextOffset != null && <button className="button ghost" type="button" onClick={loadMore}>Carregar mais</button>}
     </div>
     {selected && <ProductConfigurator product={selected} onClose={() => setSelected(null)} />}
+    {selectedCombo && <ComboConfigurator combo={selectedCombo} onClose={() => setSelectedCombo(null)} />}
   </>;
 }
