@@ -66,6 +66,7 @@ export function AdminHome() {
     <div className="admin-actions">
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
     </div>
   </section>}</AdminGate>;
 }
