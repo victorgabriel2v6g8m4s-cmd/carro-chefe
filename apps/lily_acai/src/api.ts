@@ -413,3 +413,20 @@ export async function getLilyRanking(limit = 20) {
   });
   return parseResponse<{ ranking: LilyRankingRow[] }>(response);
 }
+
+
+export async function changeLilyPassword(
+  input: { currentPassword: string; newPassword: string },
+  csrfToken: string
+) {
+  const response = await fetch("/api/v1/lily/customer/profile/password", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Lily-CSRF": csrfToken
+    },
+    body: JSON.stringify(input)
+  });
+  return parseResponse<{ changed: true; otherSessionsRevoked: number }>(response);
+}
