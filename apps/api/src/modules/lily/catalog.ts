@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import path from "node:path";
 import { promises as fs, createReadStream } from "node:fs";
 import type { FastifyInstance, FastifyRequest } from "fastify";
