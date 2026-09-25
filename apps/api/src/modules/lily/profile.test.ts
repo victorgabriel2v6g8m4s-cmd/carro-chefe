@@ -40,9 +40,7 @@ async function cleanup() {
   const users = await lilyPrisma.lilyUser.findMany({ where: { phoneNormalized: { in: testPhones } }, select: { id: true } });
   const userIds = users.map((user) => user.id);
   if (userIds.length) {
-    await lilyPrisma.lilyOrderStatusEvent.deleteMany({ where: { order: { userId: { in: userIds } } } });
-    await lilyPrisma.lilyOrderItemAddon.deleteMany({ where: { orderItem: { order: { userId: { in: userIds } } } } });
-    await lilyPrisma.lilyOrderItem.deleteMany({ where: { order: { userId: { in: userIds } } } });
+    // Itens, adicionais e eventos de status caem em cascata ao remover o pedido.
     await lilyPrisma.lilyOrder.deleteMany({ where: { userId: { in: userIds } } });
     await lilyPrisma.lilyLoyaltyEvent.deleteMany({ where: { userId: { in: userIds } } });
     await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: { in: userIds } } });
