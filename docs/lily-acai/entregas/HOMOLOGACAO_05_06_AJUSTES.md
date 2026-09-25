@@ -483,3 +483,16 @@ Os toggles agora são apresentados como:
 - `Produto da semana · banner exclusivo`.
 
 O estado local dos toggles é sincronizado após refresh do painel para que a troca de posição seja refletida imediatamente na interface.
+
+## Gate do banner semanal e vitrine do destaque
+
+**SHA de release validado:** `73bd29f8801d095354a05f2191a8d652e57bcf75`
+
+- CI run `36170721847`: success;
+- CodeQL run `36170721740`: success;
+- Node 20: 23 arquivos / 116 testes;
+- Node 24: success;
+- builds de produção: success;
+- Tool Health e gates auxiliares: success.
+
+O PR técnico #76 foi usado apenas como gate e permanece fechado sem merge.
