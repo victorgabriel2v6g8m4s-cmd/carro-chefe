@@ -10,6 +10,7 @@ import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
 import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
+import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
 
@@ -397,6 +398,7 @@ function App() {
     <Route path="/privacidade" element={<Privacidade />} />
     <Route path="/carrinho" element={<Shell><CartPage /></Shell>} />
     <Route path="/checkout" element={<Shell><CheckoutPage /></Shell>} />
+    <Route path="/pagamento/:orderId" element={<Shell><PaymentPage /></Shell>} />
     <Route path="/enderecos" element={<Shell><AddressesPage /></Shell>} />
     <Route path="/pedidos" element={<Shell><OrdersPage /></Shell>} />
     <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
