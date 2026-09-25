@@ -237,7 +237,7 @@ describe("CookLily perfil e fidelidade", () => {
       headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
       payload: {
         currentPassword: "senha-atual-incorreta",
-        newPassword: "nova-senha-cooklily-2026"
+        newPassword: "nova1234"
       }
     });
     expect(wrong.statusCode).toBe(401);
@@ -248,7 +248,7 @@ describe("CookLily perfil e fidelidade", () => {
       headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
       payload: {
         currentPassword: "senha-cooklily-perfil-2026",
-        newPassword: "nova-senha-cooklily-2026"
+        newPassword: "nova1234"
       }
     });
     expect(changed.statusCode).toBe(200);
@@ -273,9 +273,26 @@ describe("CookLily perfil e fidelidade", () => {
     const newLogin = await app.inject({
       method: "POST",
       url: "/api/v1/lily/auth/login",
-      payload: { phone: "67999970004", password: "nova-senha-cooklily-2026" }
+      payload: { phone: "67999970004", password: "nova1234" }
     });
     expect(newLogin.statusCode).toBe(200);
+
+    await lilyPrisma.lilyUser.update({
+      where: { id: account.user.id },
+      data: { role: "staff" }
+    });
+
+    const staffShortPassword = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
+      payload: {
+        currentPassword: "nova1234",
+        newPassword: "staff123"
+      }
+    });
+    expect(staffShortPassword.statusCode).toBe(400);
+    expect(staffShortPassword.json().details.code).toBe("LILY_STAFF_PASSWORD_POLICY");
   });
 
 });
