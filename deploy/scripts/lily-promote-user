@@ -63,18 +63,18 @@ set +a
 DB="${LILY_DATABASE_URL#file:}"
 [[ -f "${DB}" ]] || die "banco Lily não encontrado: ${DB}"
 
-ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, phoneNormalized, COALESCE(displayName,''), role, status FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
+ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, phoneNormalized, role, status FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
 [[ -n "${ROW}" ]] || die "nenhuma conta CookLily encontrada para ${PHONE}"
 if [[ "$(printf '%s\n' "${ROW}" | wc -l)" -ne 1 ]]; then
   die "mais de uma conta encontrada; promoção abortada"
 fi
 
-IFS='|' read -r USER_ID NORMALIZED DISPLAY_NAME CURRENT_ROLE STATUS <<< "${ROW}"
+IFS='|' read -r USER_ID NORMALIZED CURRENT_ROLE STATUS <<< "${ROW}"
 [[ "${STATUS}" == "active" ]] || die "usuário não está ativo (status=${STATUS})"
 
 if [[ "${CURRENT_ROLE}" == "${TARGET_ROLE}" ]]; then
   echo "Nenhuma alteração necessária."
-  printf 'telefone=%s\nnome=%s\nrole=%s\nstatus=%s\n' "${NORMALIZED}" "${DISPLAY_NAME:-"(sem nome)"}" "${CURRENT_ROLE}" "${STATUS}"
+  printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${NORMALIZED}" "${CURRENT_ROLE}" "${STATUS}"
   exit 0
 fi
 
@@ -112,10 +112,10 @@ INSERT INTO LilyAdminAudit (
 COMMIT;
 SQL
 
-FINAL="$(sqlite3 -separator '|' "${DB}" "SELECT phoneNormalized, COALESCE(displayName,''), role, status FROM LilyUser WHERE id='${USER_ID}';")"
-IFS='|' read -r FINAL_PHONE FINAL_NAME FINAL_ROLE FINAL_STATUS <<< "${FINAL}"
+FINAL="$(sqlite3 -separator '|' "${DB}" "SELECT phoneNormalized, role, status FROM LilyUser WHERE id='${USER_ID}';")"
+IFS='|' read -r FINAL_PHONE FINAL_ROLE FINAL_STATUS <<< "${FINAL}"
 [[ "${FINAL_ROLE}" == "${TARGET_ROLE}" && "${FINAL_STATUS}" == "active" ]] || die "verificação pós-promoção falhou"
 
 echo "Promoção concluída."
-printf 'telefone=%s\nnome=%s\nrole=%s\nstatus=%s\n' "${FINAL_PHONE}" "${FINAL_NAME:-"(sem nome)"}" "${FINAL_ROLE}" "${FINAL_STATUS}"
+printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${FINAL_PHONE}" "${FINAL_ROLE}" "${FINAL_STATUS}"
 echo "A nova permissão vale na próxima requisição da sessão; não é necessário reiniciar o serviço."
