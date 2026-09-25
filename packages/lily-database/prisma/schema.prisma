@@ -18,6 +18,8 @@ model LilyUser {
   updatedAt       DateTime            @updatedAt
   sessions        LilySession[]
   consents        LilyConsentRecord[]
+  addresses       LilyAddress[]
+  orders          LilyOrder[]
 
   @@index([status, createdAt])
 }
@@ -329,4 +331,134 @@ model LilyAdminAudit {
 
   @@index([actorUserId, createdAt])
   @@index([entityType, entityId, createdAt])
+}
+
+
+model LilyAddress {
+  id           String   @id @default(cuid())
+  userId       String
+  label        String?
+  postalCode   String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String
+  reference    String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDefault, createdAt])
+}
+
+model LilyOperationalSettings {
+  id                   String   @id @default("default")
+  ordersEnabled        Boolean  @default(false)
+  pickupEnabled        Boolean  @default(false)
+  deliveryEnabled      Boolean  @default(false)
+  minimumOrderCents    Int      @default(0)
+  deliveryStrategy     String   @default("flat")
+  flatDeliveryFeeCents Int      @default(0)
+  pickupAddressText    String?
+  pickupInstructions   String?
+  businessHoursJson    String   @default("[]")
+  timezone             String   @default("America/Campo_Grande")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model LilyDeliveryZone {
+  id                     String   @id @default(cuid())
+  name                   String
+  status                 String   @default("active")
+  feeCents               Int
+  minimumOrderCents      Int      @default(0)
+  neighborhoodsJson      String   @default("[]")
+  postalCodePrefixesJson String   @default("[]")
+  sortOrder              Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([status, sortOrder, name])
+}
+
+model LilyOrder {
+  id                  String                 @id @default(cuid())
+  orderNumber         String                 @unique
+  idempotencyKey      String                 @unique
+  requestFingerprint  String
+  userId              String?
+  phoneNormalized     String
+  fulfillmentType     String
+  status              String                 @default("awaiting_payment")
+  subtotalCents       Int
+  deliveryFeeCents    Int
+  discountTotalCents  Int                    @default(0)
+  grandTotalCents     Int
+  addressSnapshotJson String?
+  customerNote        String?
+  laQr                String?
+  laCampaign          String?
+  laVariant           String?
+  paidAt              DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  user                LilyUser?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items               LilyOrderItem[]
+  statusEvents        LilyOrderStatusEvent[]
+
+  @@index([userId, createdAt])
+  @@index([phoneNormalized, createdAt])
+  @@index([status, createdAt])
+}
+
+model LilyOrderItem {
+  id                        String               @id @default(cuid())
+  orderId                   String
+  productId                 String
+  variantId                 String
+  productNameSnapshot       String
+  variantNameSnapshot       String
+  sizeMl                    Int
+  configurationHash         String
+  configurationSnapshotJson String
+  flavorsSnapshotJson       String               @default("[]")
+  unitPriceSnapshotCents    Int
+  quantity                  Int
+  lineTotalCents            Int
+  customerNote              String?
+  order                     LilyOrder            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  addons                    LilyOrderItemAddon[]
+
+  @@index([orderId])
+  @@index([productId, variantId])
+}
+
+model LilyOrderItemAddon {
+  id                     String        @id @default(cuid())
+  orderItemId            String
+  addonId                String
+  addonNameSnapshot      String
+  unitPriceSnapshotCents Int
+  quantity               Int
+  orderItem              LilyOrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderItemId])
+  @@index([addonId])
+}
+
+model LilyOrderStatusEvent {
+  id         String    @id @default(cuid())
+  orderId    String
+  fromStatus String?
+  toStatus   String
+  actor      String
+  createdAt  DateTime  @default(now())
+  order      LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
 }
