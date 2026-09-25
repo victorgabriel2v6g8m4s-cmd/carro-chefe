@@ -405,6 +405,7 @@ model LilyOrder {
   orderNumber         String                 @unique
   idempotencyKey      String                 @unique
   requestFingerprint  String
+  guestAccessTokenHash String?
   userId              String?
   phoneNormalized     String
   fulfillmentType     String
