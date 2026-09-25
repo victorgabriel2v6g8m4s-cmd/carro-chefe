@@ -3,6 +3,7 @@
 PRAGMA foreign_keys=ON;
 
 ALTER TABLE "LilyUser" ADD COLUMN "staffPasswordUpgradeRequired" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "LilyOrder" ADD COLUMN "guestAccessTokenHash" TEXT;
 
 ALTER TABLE "LilyOperationalSettings" ADD COLUMN "paymentsEnabled" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "LilyOperationalSettings" ADD COLUMN "paymentProvider" TEXT NOT NULL DEFAULT 'manual';
