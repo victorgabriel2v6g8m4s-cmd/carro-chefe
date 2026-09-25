@@ -10,7 +10,8 @@ export const LILY_SHARE_VERSION = "lily-share-carro-chefe-v1";
 export const LILY_ANALYTICS_VERSION = "lily-analytics-v1";
 
 const SESSION_COOKIE = "lily_session";
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const CUSTOMER_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const STAFF_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const SCRYPT_N = 32768;
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
@@ -120,9 +121,17 @@ export function clearLilySessionCookie(request: FastifyRequest, reply: FastifyRe
 }
 
 export async function createLilySession(userId: string, request: FastifyRequest, reply: FastifyReply) {
+  const user = await lilyPrisma.lilyUser.findUnique({
+    where: { id: userId },
+    select: { role: true }
+  });
+  if (!user) throw new ApiError(401, "Usuário Lily não encontrado.", { code: "LILY_USER_NOT_FOUND" });
+  const ttlMs = user.role === "staff" || user.role === "admin"
+    ? STAFF_SESSION_TTL_MS
+    : CUSTOMER_SESSION_TTL_MS;
   const token = crypto.randomBytes(32).toString("base64url");
   const csrfToken = crypto.randomBytes(24).toString("base64url");
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+  const expiresAt = new Date(Date.now() + ttlMs);
   await lilyPrisma.lilySession.create({
     data: {
       userId,
@@ -131,7 +140,7 @@ export async function createLilySession(userId: string, request: FastifyRequest,
       expiresAt
     }
   });
-  reply.header("Set-Cookie", sessionCookie(token, Math.floor(SESSION_TTL_MS / 1000), requestUsesHttps(request)));
+  reply.header("Set-Cookie", sessionCookie(token, Math.floor(ttlMs / 1000), requestUsesHttps(request)));
   return { csrfToken, expiresAt };
 }
 
