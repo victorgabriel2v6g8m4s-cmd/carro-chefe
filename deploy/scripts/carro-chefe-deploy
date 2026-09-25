@@ -63,7 +63,7 @@ SERVICE_STOPPED=0
 MIGRATION_STARTED=0
 
 cleanup_on_error() {
-  status=$?
+  local status="${1:-$?}"
   echo
   echo "DEPLOY FALHOU | fase=${PHASE} | status=${status}"
   echo "release=${RELEASE_SHA}"
