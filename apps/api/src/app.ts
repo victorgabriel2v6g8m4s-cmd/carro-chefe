@@ -4,6 +4,7 @@ import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { configureSqlite } from "@carro-chefe/database";
+import { configureLilySqlite } from "@lily-acai/database";
 import { ApiError } from "./lib/errors";
 import { planRoutes } from "./modules/plan/routes";
 import { taskRoutes } from "./modules/tasks/routes";
@@ -19,6 +20,7 @@ import { referenceRoutes } from "./modules/references/routes";
 import { managementRoutes } from "./modules/management/routes";
 import { knowledgeRoutes } from "./modules/knowledge/routes";
 import { prelaunchRoutes } from "./modules/prelaunch/routes";
+import { lilyRoutes } from "./modules/lily/routes";
 import { containsLikelyEncodingLoss } from "./lib/text";
 import { config } from "./config";
 import { corsOrigin, protectSensitiveMutation } from "./security";
@@ -34,6 +36,7 @@ export async function buildApp() {
     trustProxy: config.trustProxy
   });
   await configureSqlite();
+  await configureLilySqlite();
   await app.register(cors, { origin: corsOrigin, credentials: false });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
   await app.register(rateLimit, {
@@ -78,6 +81,7 @@ export async function buildApp() {
   });
 
   await app.register(prelaunchRoutes);
+  await app.register(lilyRoutes);
   await app.register(planRoutes);
   await app.register(taskRoutes);
   await app.register(uiStateRoutes);

@@ -54,6 +54,7 @@ jobs:
       - name: Prepare database
         env:
           DATABASE_URL: file:./.runtime/ci.db
+          LILY_DATABASE_URL: file:./.runtime/lily-ci.db
         run: |
           mkdir -p .runtime
           npm run db:deploy
@@ -61,16 +62,19 @@ jobs:
       - name: Static checks
         env:
           DATABASE_URL: file:./.runtime/ci.db
+          LILY_DATABASE_URL: file:./.runtime/lily-ci.db
         run: npm run check
 
       - name: Tests
         env:
           DATABASE_URL: file:./.runtime/ci.db
+          LILY_DATABASE_URL: file:./.runtime/lily-ci.db
         run: npm test
 
       - name: Production builds
         env:
           DATABASE_URL: file:./.runtime/ci.db
+          LILY_DATABASE_URL: file:./.runtime/lily-ci.db
         run: npm run build
 
   workbook-snapshot:
