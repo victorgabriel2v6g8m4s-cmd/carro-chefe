@@ -68,6 +68,7 @@ export function AdminHome() {
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Operação e configurações</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pagamentos`}>Pagamentos</a>
+      {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/equipe`}>Equipe</a>}
     </div>
   </section>}</AdminGate>;
 }
