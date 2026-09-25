@@ -139,14 +139,14 @@ describe("Lily auth", () => {
     expect(after.statusCode).toBe(401);
   });
 
-  it("exige pelo menos 12 caracteres em novos cadastros", async () => {
+  it("exige pelo menos 8 caracteres em novos cadastros", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/lily/auth/register",
       headers: { origin },
       payload: {
         phone: "67999289188",
-        password: "12345678901",
+        password: "1234567",
         termsAccepted: true,
         termsVersion: LILY_TERMS_VERSION,
         privacyPolicyVersion: LILY_PRIVACY_VERSION,
