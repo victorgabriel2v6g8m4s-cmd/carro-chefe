@@ -1689,3 +1689,301 @@ img, svg { max-width: 100%; }
     display: none;
   }
 }
+
+
+/* Entrega 07 — pagamento e reconciliação */
+.payment-page {
+  width: min(1160px,calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(28px,5vw,64px) 0 70px;
+}
+.payment-layout {
+  display: grid;
+  grid-template-columns: minmax(0,1.35fr) minmax(260px,.65fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+.payment-start-card,
+.payment-status-card,
+.payment-security-card,
+.payment-settings-form,
+.payment-admin-card {
+  border: 1px solid rgb(130 0 35 / 12%);
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 14px 40px rgb(68 4 45 / 8%);
+}
+.payment-start-card {
+  max-width: 720px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: clamp(22px,4vw,36px);
+}
+.payment-start-card h2,
+.payment-status-card h2,
+.payment-settings-form h2 {
+  margin: 0;
+}
+.payment-status-card {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 14px;
+  padding: clamp(22px,4vw,38px);
+}
+.payment-security-card {
+  align-self: start;
+  padding: 22px;
+}
+.payment-security-card ul {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--cl-color-text-muted);
+  font-size: 13px;
+}
+.payment-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.status-pending {
+  background: #fff1cc;
+  color: #6a4500;
+}
+.status-approved {
+  background: #dcf7e8;
+  color: #125934;
+}
+.status-partially_refunded {
+  background: #f7e9ff;
+  color: #68318d;
+}
+.status-refunded,
+.status-cancelled,
+.status-failed {
+  background: #f4e7ec;
+  color: #6e2d47;
+}
+.payment-amount {
+  font-size: clamp(32px,5vw,48px);
+  color: var(--cl-color-secondary);
+}
+.pix-instructions {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgb(130 0 35 / 10%);
+  border-radius: 14px;
+  background: var(--cl-color-surface);
+}
+.pix-instructions pre {
+  max-width: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cl-color-secondary);
+}
+.payment-approved-card,
+.payment-refunded-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 16px;
+}
+.payment-approved-card {
+  border: 1px solid #b9e6ca;
+  background: #effbf4;
+}
+.payment-refunded-card {
+  border: 1px solid #decbd3;
+  background: #fbf4f7;
+}
+.security-upgrade-warning {
+  margin-bottom: 18px;
+}
+
+.payments-admin-page {
+  width: min(1220px,calc(100% - 32px));
+}
+.payment-settings-form {
+  display: grid;
+  gap: 13px;
+  margin: 20px 0;
+  padding: 20px;
+}
+.payment-settings-form textarea {
+  width: 100%;
+}
+.payment-admin-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 12px;
+}
+.payment-admin-toolbar label {
+  display: grid;
+  gap: 5px;
+}
+.payment-admin-list {
+  display: grid;
+  gap: 14px;
+}
+.payment-admin-card {
+  overflow: hidden;
+  padding: 18px;
+}
+.payment-admin-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.payment-admin-card > header > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.payment-admin-card > header > div:first-child > strong {
+  font-size: 20px;
+}
+.payment-admin-card > header small {
+  color: var(--cl-color-text-muted);
+}
+.payment-admin-amount {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  white-space: nowrap;
+}
+.payment-admin-amount > strong {
+  color: var(--cl-color-secondary);
+  font-size: 24px;
+}
+.payment-admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 14px 0;
+  padding: 10px 0;
+  border-top: 1px solid rgb(130 0 35 / 8%);
+  border-bottom: 1px solid rgb(130 0 35 / 8%);
+  color: var(--cl-color-text-muted);
+  font-size: 12px;
+}
+.payment-finance-form {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--cl-color-surface);
+}
+.payment-finance-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.payment-finance-form .wide {
+  grid-column: span 2;
+}
+.payment-finance-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.payment-reconciliation-details,
+.payment-admin-action {
+  margin-top: 10px;
+  border: 1px solid rgb(130 0 35 / 9%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.payment-reconciliation-details > summary,
+.payment-admin-action > summary {
+  cursor: pointer;
+  padding: 11px 13px;
+  font-weight: 850;
+}
+.reconciliation-row {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(4,1fr);
+  gap: 8px;
+  padding: 9px 13px;
+  border-top: 1px solid rgb(130 0 35 / 7%);
+  font-size: 12px;
+}
+.danger-zone > summary {
+  color: #8a274a;
+}
+
+@media (max-width: 900px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+  .payment-security-card {
+    order: -1;
+  }
+  .payment-finance-form {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .reconciliation-row {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .payment-page,
+  .payments-admin-page {
+    width: calc(100% - 20px);
+    padding-top: 22px;
+  }
+  .payment-status-card,
+  .payment-security-card,
+  .payment-start-card,
+  .payment-settings-form,
+  .payment-admin-card {
+    border-radius: 16px;
+  }
+  .payment-admin-card > header {
+    flex-direction: column;
+  }
+  .payment-admin-amount {
+    justify-items: start;
+  }
+  .payment-finance-form {
+    grid-template-columns: 1fr;
+  }
+  .payment-finance-form .wide {
+    grid-column: auto;
+  }
+  .payment-finance-actions {
+    grid-column: auto;
+    display: grid;
+  }
+  .payment-admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .reconciliation-row {
+    grid-template-columns: 1fr;
+  }
+}
