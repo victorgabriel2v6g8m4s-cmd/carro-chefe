@@ -37,6 +37,25 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 - Segurança alimentar, alvarás, tributação, venda de bebidas alcoólicas e acessibilidade física exigem validação por profissionais e órgãos locais antes da abertura.
 - Arquivos originais de marca são imutáveis. Derivados devem indicar origem, data e finalidade.
 
+## 3.1 Exceção estritamente isolada — CookLily (branch `lily-acai`)
+
+Esta seção existe **somente na branch `lily-acai`** e não altera a arquitetura transacional do Carro Chefe.
+
+O proprietário aprovou uma operação temporária e independente chamada **CookLily**, hospedada sob o mesmo domínio/VPS apenas para reduzir custo antes da inauguração. Para essa operação:
+
+- o namespace público é `/lilyacai/*`;
+- o namespace de API é `/api/v1/lily/*`;
+- o frontend pertence a `apps/lily_acai/*`;
+- o backend pertence a `apps/api/src/modules/lily/*`;
+- a persistência transacional pertence a `packages/lily-database/*` e a um banco dedicado;
+- pedidos e pagamentos da Lily podem ser implementados nesse domínio isolado e integrados a provedor de pagamento aprovado;
+- a regra de que pedidos e pagamentos pertencem ao ERP **continua integralmente válida para o Carro Chefe** e para `apps/site`, `/cardapio`, dados e fluxos da marca Carro Chefe;
+- contas, sessões, endereços, catálogo, pedidos, pagamentos, tracking e mídia Lily não podem ser gravados nas tabelas transacionais/operacionais do Carro Chefe;
+- consentimento para compartilhamento com o Carro Chefe não autoriza mistura de bases: qualquer transferência futura deve usar ponte/exportação explícita, minimizada e auditável;
+- identidade visual, conteúdo e documentação Lily permanecem separados e não transformam Lily em submarca ou proposta permanente do Carro Chefe.
+
+As regras globais de segurança, LGPD, testes, acessibilidade, segredos, autorização server-side e qualidade permanecem obrigatórias.
+
 ## 4. Identidade e experiência
 
 A linguagem visual parte dos ativos existentes: fundo preto/obsidiana, madeira escura, pergaminho, bronze e ouro fosco; corda e ornamentos coloniais; jipe com chapéu de chef; atmosfera artesanal e robusta.
