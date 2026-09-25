@@ -51,11 +51,19 @@ Decisões centrais:
 1. **Entrega 03 — Marca CookLily:** acervo, kit, tokens e rebranding integral.
 2. **Entrega 04 — Landing + WhatsApp + VPS:** captação de telefone para cupons/promoções, acompanhamento P0 pelo WhatsApp e primeira publicação.
 3. **Entrega 05 — Catálogo administrável:** implementação do cardápio definitivo, LilyMix, busca/filtros, mídia, ofertas e admin.
-4. **Entrega 06 — Carrinho/pedido:** montagem do pedido, endereço, entrega e retirada.
+4. **Entrega 06 — Carrinho/pedido:** implementação técnica concluída e validada; carrinho, endereços, fulfillment configurável, pedido guest/autenticado e histórico.
 5. **Entrega 07 — Checkout/pagamento:** pagamento e fechamento da venda digital.
 6. **Entregas 08–10:** painel de pedidos, tracking/analytics e hardening.
 
 O lançamento comercial digital completo exige a sequência 05–07.
+
+## Estado atual
+
+- Entrega 05: publicada na VPS; homologação funcional conjunta com a 06 pendente;
+- Entrega 06: SHA técnico validado `da166683ab2d0e27acae23d9714ec8e824a02ac4`, CI/CodeQL aprovados; deploy pendente;
+- Entrega 07: ainda não iniciada; pedidos da 06 permanecem `awaiting_payment`.
+
+Relatório da Entrega 06: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Documentos principais
 
