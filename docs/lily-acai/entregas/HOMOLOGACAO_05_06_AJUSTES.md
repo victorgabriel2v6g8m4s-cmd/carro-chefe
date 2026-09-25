@@ -447,3 +447,39 @@ Um combo preset inválido é omitido da vitrine pública em vez de derrubar todo
 - Tool Health e gates auxiliares: success.
 
 O primeiro gate desta rodada detectou dois testes antigos que assumiam combo builder por padrão. Eles foram corrigidos para ativar explicitamente `mode=builder`, preservando `preset` como comportamento padrão da vitrine.
+
+## Produto da semana e produto destaque
+
+A hierarquia promocional foi separada em duas posições distintas e administráveis pelos campos já existentes do produto.
+
+### Produto da semana
+
+- `weeklyHighlight=true` representa uma posição exclusiva;
+- ao ativar outro produto, o anterior é desmarcado automaticamente no backend;
+- aparece como banner promocional no topo da landing page;
+- aparece como banner promocional no topo do cardápio;
+- o banner usa capa, nome, nome descritivo, oferta/preço atual e CTA;
+- no mobile o banner é compacto para não consumir a primeira dobra;
+- produto esgotado continua identificável, mas o CTA comercial é substituído pelo estado de indisponibilidade.
+
+### Produto destaque
+
+- `featured=true` também representa uma posição exclusiva;
+- ao escolher um novo destaque, o anterior é desmarcado automaticamente;
+- recebe uma vitrine editorial própria, separada da grade comum;
+- a vitrine é usada tanto na landing quanto no cardápio;
+- apresenta capa grande, nome, descrição, sabores, preço e CTA;
+- o produto continua existindo na grade comum para manter busca, filtros e navegação consistentes.
+
+### API e filtros
+
+`weeklyProduct` e `featuredProduct` passaram a ser campos de primeiro nível do payload público do catálogo. Eles são calculados sobre o catálogo completo e não sobre a página filtrada, portanto uma busca/filtro não faz as posições promocionais desaparecerem.
+
+### Painel
+
+Os toggles agora são apresentados como:
+
+- `Produto destaque · posição exclusiva`;
+- `Produto da semana · banner exclusivo`.
+
+O estado local dos toggles é sincronizado após refresh do painel para que a troca de posição seja refletida imediatamente na interface.
