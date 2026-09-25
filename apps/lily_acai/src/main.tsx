@@ -4,6 +4,11 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate } from "react
 import { getLilyConfig, loginLily, registerLily, submitCookLilyLead } from "./api";
 import { CatalogPage, FeaturedCarousel } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
+import { CartProvider, useCart } from "./features/cart/CartContext";
+import { CartPage } from "./features/cart/CartPage";
+import { CheckoutPage } from "./features/checkout/CheckoutPage";
+import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
+import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
 
@@ -22,6 +27,7 @@ function AttributionCapture() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
+  const cart = useCart();
   return <div className="lily-shell">
     <header className="topbar">
       <Link className="brand" to="/cardapio" aria-label="CookLily — início">
@@ -31,6 +37,7 @@ function Shell({ children }: { children: ReactNode }) {
       <nav aria-label="Navegação principal">
         <Link to="/">Início</Link>
         <Link to="/cardapio">Cardápio</Link>
+        <Link to="/carrinho">Carrinho{cart.itemCount > 0 ? ` (${cart.itemCount})` : ""}</Link>
         <a href={whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
       </nav>
     </header>
@@ -244,13 +251,19 @@ function App() {
     <Route path="/cadastro" element={<Cadastro />} />
     <Route path="/entrar" element={<Entrar />} />
     <Route path="/privacidade" element={<Privacidade />} />
+    <Route path="/carrinho" element={<Shell><CartPage /></Shell>} />
+    <Route path="/checkout" element={<Shell><CheckoutPage /></Shell>} />
+    <Route path="/enderecos" element={<Shell><AddressesPage /></Shell>} />
+    <Route path="/pedidos" element={<Shell><OrdersPage /></Shell>} />
+    <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
+    <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></>;
 }
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode><BrowserRouter basename="/lilyacai"><App /></BrowserRouter></StrictMode>
+  <StrictMode><BrowserRouter basename="/lilyacai"><CartProvider><App /></CartProvider></BrowserRouter></StrictMode>
 );
