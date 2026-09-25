@@ -6,6 +6,7 @@ export type AuthPayload = {
     role: string;
     avatarUrl: string | null;
     rankingOptIn: boolean;
+    staffPasswordUpgradeRequired: boolean;
   };
   csrfToken: string;
   sessionExpiresAt: string;
