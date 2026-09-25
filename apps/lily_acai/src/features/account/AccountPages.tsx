@@ -139,6 +139,12 @@ export function OrderDetailPage() {
       </article>)}
       <div className="checkout-total"><span>Total</span><strong>{money(order.grandTotalCents)}</strong></div>
     </div>
-    {order.status === "awaiting_payment" && <div className="payment-pending-card"><strong>Pagamento ainda não integrado</strong><p>A Entrega 07 será responsável por pagamento e reconciliação.</p></div>}
+    {order.status === "awaiting_payment" && <div className="payment-pending-card">
+      <strong>Aguardando pagamento</strong>
+      <p>Finalize ou acompanhe o pagamento deste pedido.</p>
+      <Link className="button primary" to={`/pagamento/${order.id}`}>Ir para pagamento</Link>
+    </div>}
+    {order.status === "paid" && <div className="payment-approved-card"><strong>Pagamento confirmado</strong><p>O pedido já pode seguir para produção.</p></div>}
+    {order.status === "refunded" && <div className="payment-refunded-card"><strong>Pagamento estornado</strong><p>O pagamento deste pedido foi estornado.</p></div>}
   </section>;
 }
