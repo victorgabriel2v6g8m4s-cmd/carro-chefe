@@ -30,6 +30,7 @@ export type LilySessionContext = {
     status: string;
     avatarMediaId: string | null;
     rankingOptIn: boolean;
+    staffPasswordUpgradeRequired: boolean;
   };
 };
 
@@ -158,7 +159,8 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
       role: record.user.role,
       status: record.user.status,
       avatarMediaId: record.user.avatarMediaId,
-      rankingOptIn: record.user.rankingOptIn
+      rankingOptIn: record.user.rankingOptIn,
+      staffPasswordUpgradeRequired: record.user.staffPasswordUpgradeRequired
     }
   };
 }
@@ -207,7 +209,8 @@ export function publicLilyUser(user: LilySessionContext["user"]) {
     displayName: user.displayName,
     role: user.role,
     avatarUrl: user.avatarMediaId ? `/api/v1/lily/public/media/${encodeURIComponent(user.avatarMediaId)}` : null,
-    rankingOptIn: user.rankingOptIn
+    rankingOptIn: user.rankingOptIn,
+    staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired
   };
 }
 
