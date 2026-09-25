@@ -171,6 +171,103 @@ function parseTags(input: string) {
   }
 }
 
+export type LilyComboMode = "preset" | "builder";
+
+export function lilyComboModeFromRules(rules: Record<string, unknown>): LilyComboMode {
+  return rules.mode === "builder" ? "builder" : "preset";
+}
+
+function canonicalSelection(input: LilyConfigurationInput) {
+  return JSON.stringify({
+    productId: input.productId,
+    sizeMl: input.sizeMl,
+    flavorIds: [...input.flavorIds].sort(),
+    addons: [...input.addons]
+      .map((addon) => ({ addonId: addon.addonId, quantity: addon.quantity }))
+      .sort((a, b) => a.addonId.localeCompare(b.addonId))
+  });
+}
+
+export async function resolveLilyComboPresetSelections(combo: { rulesJson: string }) {
+  const rules = parseComboRules(combo.rulesJson);
+  if (lilyComboModeFromRules(rules) !== "preset") return null;
+
+  const products = await lilyPrisma.lilyProduct.findMany({
+    where: { status: "published", isAvailable: true },
+    include: {
+      category: { include: { parent: true } },
+      variants: { orderBy: [{ sortOrder: "asc" }, { sizeMl: "asc" }] },
+      flavorLinks: { include: { flavor: true } }
+    },
+    orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }]
+  });
+
+  const byId = new Map(products.map((product) => [product.id, product]));
+  const explicit = Array.isArray(rules.presetSelections) ? rules.presetSelections : [];
+  const explicitSelections = explicit.flatMap((candidate) => {
+    const parsed = lilyConfigurationSchema.safeParse(candidate);
+    if (!parsed.success) return [];
+    const product = byId.get(parsed.data.productId);
+    if (!product) return [];
+    const flavorIds = parsed.data.flavorIds.length
+      ? parsed.data.flavorIds
+      : product.configurationType === "fixed"
+        ? product.flavorLinks.filter((link) => link.flavor.status === "published").map((link) => link.flavorId)
+        : [];
+    return [{ ...parsed.data, flavorIds }];
+  });
+
+  if (explicitSelections.length) return explicitSelections;
+
+  const quantityRaw = typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : 1;
+  const quantity = Math.min(5, Math.max(1, quantityRaw));
+  const requestedSize = typeof rules.sizeMl === "number" ? Math.trunc(rules.sizeMl) : null;
+  const requestedFlavorCount = typeof rules.flavorCount === "number" ? Math.trunc(rules.flavorCount) : null;
+  const category = typeof rules.category === "string" ? rules.category : null;
+  const subtype = typeof rules.subtype === "string" ? rules.subtype : null;
+
+  const eligible = products.flatMap((product) => {
+    const rootCategory = product.category.parent?.slug ?? product.category.slug;
+    if (category && rootCategory !== category) return [];
+    if (subtype === "simple" && !parseTags(product.tagsJson).includes("simples")) return [];
+
+    const variant = requestedSize
+      ? product.variants.find((item) => item.sizeMl === requestedSize && item.status === "published" && item.isAvailable)
+      : product.variants.find((item) => item.status === "published" && item.isAvailable);
+    if (!variant) return [];
+
+    const availableFlavorIds = product.flavorLinks
+      .filter((link) => link.flavor.status === "published")
+      .map((link) => link.flavorId);
+
+    let flavorIds: string[] = [];
+    if (product.configurationType === "fixed") {
+      flavorIds = availableFlavorIds;
+    } else {
+      const count = Math.min(3, Math.max(1, requestedFlavorCount ?? 1));
+      flavorIds = availableFlavorIds.slice(0, count);
+      if (flavorIds.length !== count) return [];
+    }
+
+    if (requestedFlavorCount != null && flavorIds.length !== requestedFlavorCount) return [];
+
+    return [{
+      productId: product.id,
+      sizeMl: variant.sizeMl,
+      flavorIds,
+      addons: []
+    } satisfies LilyConfigurationInput];
+  });
+
+  if (!eligible.length) {
+    throw new ApiError(422, "Combo pré-selecionado não possui produtos elegíveis.", {
+      code: "LILY_COMBO_PRESET_EMPTY"
+    });
+  }
+
+  return Array.from({ length: quantity }, (_, index) => eligible[index % eligible.length]!);
+}
+
 export async function quoteLilyComboConfiguration(input: LilyComboConfigurationInput) {
   const combo = await lilyPrisma.lilyCombo.findUnique({ where: { id: input.comboId } });
   if (!combo || combo.status !== "published" || !isActiveWindow(combo.startsAt, combo.endsAt)) {
@@ -178,16 +275,32 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
   }
 
   const rules = parseComboRules(combo.rulesJson);
-  const requiredQuantity = typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : null;
-  if (!requiredQuantity || input.selections.length !== requiredQuantity) {
+  const mode = lilyComboModeFromRules(rules);
+  const presetSelections = mode === "preset" ? await resolveLilyComboPresetSelections(combo) : null;
+  const requestedSelections = presetSelections ?? input.selections;
+  const requiredQuantity = presetSelections?.length
+    ?? (typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : null);
+
+  if (!requiredQuantity || requestedSelections.length !== requiredQuantity) {
     throw new ApiError(400, "Quantidade de itens do combo inválida.", {
       code: "LILY_COMBO_QUANTITY",
       requiredQuantity
     });
   }
 
+  if (presetSelections) {
+    if (input.selections.length !== presetSelections.length
+      || input.selections.some((selection, index) =>
+        canonicalSelection(selection) !== canonicalSelection(presetSelections[index]!)
+      )) {
+      throw new ApiError(400, "Este combo possui produtos e sabores predefinidos.", {
+        code: "LILY_COMBO_PRESET_LOCKED"
+      });
+    }
+  }
+
   const selections: Array<Awaited<ReturnType<typeof quoteLilyConfiguration>>> = [];
-  for (const selection of input.selections) {
+  for (const selection of requestedSelections) {
     const quoted = await quoteLilyConfiguration(selection);
     const product = await lilyPrisma.lilyProduct.findUnique({
       where: { id: quoted.product.id },
@@ -220,6 +333,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
   const totalPriceCents = comboBasePriceCents + addonPriceCents;
   const canonical = JSON.stringify({
     comboId: combo.id,
+    mode,
     selections: selections.map((item) => item.configurationHash).sort()
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
@@ -233,6 +347,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
       name: combo.name,
       description: combo.description
     },
+    mode,
     selections,
     regularPriceCents: Math.min(combo.regularPriceCents, componentBasePriceCents),
     basePriceCents: comboBasePriceCents,
