@@ -44,6 +44,7 @@ function serializeMember(user: any) {
     role: user.role,
     status: user.status,
     staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
+    mfaEnabled: user.mfaEnabled,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     activeSessions: Array.isArray(user.sessions) ? user.sessions.length : 0
