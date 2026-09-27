@@ -102,7 +102,7 @@ Relatório: `docs/lily-acai/entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Entrega 07 — checkout/pagamento
 
-**Status:** implementação presente na linha canônica; novo gate completo pendente.
+**Status:** implementação técnica aprovada no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy e homologação operacional pendentes.
 
 Implementado:
 
@@ -119,7 +119,7 @@ Implementado:
 - gestão de equipe;
 - upgrade obrigatório de senha para contas privilegiadas.
 
-O primeiro gate `gate/lily-entrega-07-v1` teve CodeQL aprovado, mas CI falhou em TypeScript porque `serializeOrder` foi passado diretamente a `Array.map`, fazendo o índice do map conflitar com o segundo parâmetro opcional do serializer. O mesmo erro fez o Tool Health reportar falha no `app-api`. A correção está aplicada em `cooklily/canonical`; a Entrega 07 só pode ser declarada aprovada após novo CI Node 20/24, testes, builds e CodeQL verdes.
+O primeiro gate `gate/lily-entrega-07-v1` falhou em TypeScript porque `serializeOrder` foi passado diretamente a `Array.map`, fazendo o índice do map conflitar com o segundo parâmetro opcional do serializer. O mesmo erro fez o Tool Health reportar falha no `app-api`. A correção foi aplicada em `cooklily/canonical` e revalidada com sucesso: CI `36330633129`, CodeQL `36330633098`, 25 arquivos de teste / 122 testes em Node 20 e Node 24, builds e Tool Health aprovados.
 
 Ainda pendente:
 
