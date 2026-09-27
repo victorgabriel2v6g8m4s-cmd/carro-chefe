@@ -5,6 +5,7 @@ import {
   configureLilyItem,
   getLilyCatalog,
   getLilyComboBuilder,
+  getLilyProductBySlug,
   type CatalogPayload,
   type CatalogProduct,
   type ComboBuilderPayload
@@ -664,7 +665,7 @@ export function WeeklyProductBanner({
     ? <button className="button primary weekly-product-cta" type="button" onClick={() => onOpen(product)}>
         Ver produto
       </button>
-    : <Link className="button primary weekly-product-cta" to="/cardapio">Ver no cardápio</Link>;
+    : <Link className="button primary weekly-product-cta" to={`/cardapio?produto=${encodeURIComponent(product.slug)}`}>Ver no cardápio</Link>;
 
   return <section className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Escolha da semana">
     <div className="weekly-product-media">
@@ -726,6 +727,7 @@ function filtersFromParams(params: URLSearchParams): Filters {
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => filtersFromParams(searchParams), [searchParams.toString()]);
+  const productSlug = searchParams.get("produto")?.trim() ?? "";
 
   function setFilters(nextValue: Filters | ((current: Filters) => Filters)) {
     const nextFilters = typeof nextValue === "function" ? nextValue(filters) : nextValue;
@@ -749,6 +751,20 @@ export function CatalogPage() {
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
   const [selectedCombo, setSelectedCombo] = useState<CatalogCombo | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
+
+  function openProduct(product: CatalogProduct) {
+    const next = new URLSearchParams(searchParams);
+    next.set("produto", product.slug);
+    setSearchParams(next);
+    setSelected(product);
+  }
+
+  function closeProduct() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("produto");
+    setSearchParams(next, { replace: true });
+    setSelected(null);
+  }
 
   const query = useMemo(() => ({
     q: filters.q || undefined,
@@ -797,6 +813,35 @@ export function CatalogPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!productSlug) {
+      setSelected(null);
+      return;
+    }
+    if (selected?.slug === productSlug) return;
+
+    const loaded = products.find((product) => product.slug === productSlug)
+      ?? (meta?.weeklyProduct?.slug === productSlug ? meta.weeklyProduct : null)
+      ?? (meta?.featuredProduct?.slug === productSlug ? meta.featuredProduct : null);
+    if (loaded) {
+      setSelected(loaded);
+      return;
+    }
+
+    let cancelled = false;
+    getLilyProductBySlug(productSlug)
+      .then((product) => {
+        if (!cancelled) setSelected(product);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSelected(null);
+          setError("O produto deste link não está disponível no cardápio.");
+        }
+      });
+    return () => { cancelled = true; };
+  }, [productSlug, products, meta, selected?.slug]);
 
   useEffect(() => {
     const node = sentinel.current;
@@ -864,12 +909,12 @@ export function CatalogPage() {
       <p>Explore Batidas de Açaí e LilyShakes, combine sabores e veja os adicionais disponíveis para cada produto.</p>
     </section>
 
-    <WeeklyProductBanner product={meta?.weeklyProduct ?? null} onOpen={setSelected} />
+    <WeeklyProductBanner product={meta?.weeklyProduct ?? null} onOpen={openProduct} />
 
     {error && <p className="error" role="alert">{error}</p>}
     <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> produtos encontrados</div>
     <section className="catalog-grid" aria-live="polite">
-      {products.map((product) => <ProductCard key={product.id} product={product} onOpen={() => setSelected(product)} />)}
+      {products.map((product) => <ProductCard key={product.id} product={product} onOpen={() => openProduct(product)} />)}
     </section>
     {!loading && products.length === 0 && <section className="empty-state"><h2>Nenhum produto com esses filtros.</h2><p>Tente limpar um filtro ou pesquisar outro sabor.</p></section>}
     <div className="catalog-sentinel" ref={sentinel}>
@@ -879,7 +924,7 @@ export function CatalogPage() {
 
     {meta?.combos.length ? <ComboCarousel combos={meta.combos} onSelect={setSelectedCombo} /> : null}
 
-    {selected && <ProductConfigurator product={selected} onClose={() => setSelected(null)} />}
+    {selected && <ProductConfigurator product={selected} onClose={closeProduct} />}
     {selectedCombo && <ComboConfigurator combo={selectedCombo} onClose={() => setSelectedCombo(null)} />}
   </>;
 }
