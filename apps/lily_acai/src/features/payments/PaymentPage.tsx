@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import {
   createLilyPayment,
@@ -168,6 +168,8 @@ export function storeGuestOrderToken(orderId: string, token: string) {
 
 export function PaymentPage() {
   const { orderId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const homologation = searchParams.get("homologacao") === "1";
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [config, setConfig] = useState<LilyPaymentConfig | null>(null);
   const [order, setOrder] = useState<LilyPaymentOrderContext | null>(null);
@@ -210,7 +212,7 @@ export function PaymentPage() {
     let cancelled = false;
     void access().then(async (current) => {
       const [paymentConfig, result] = await Promise.all([
-        getLilyPaymentConfig(),
+        getLilyPaymentConfig({ session: current, homologation }),
         getOrderPayments({ orderId, session: current, guestAccessToken })
       ]);
       if (cancelled) return;
@@ -256,6 +258,7 @@ export function PaymentPage() {
         idempotencyKey: paymentIdempotencyKey(orderId, input.method),
         session,
         guestAccessToken,
+        homologation,
         ...(input.payer ? { payer: input.payer } : {}),
         ...(input.card ? { card: input.card } : {})
       });
@@ -329,6 +332,11 @@ export function PaymentPage() {
         ? <Link className="button ghost" to="/pedidos">Meus pedidos</Link>
         : <Link className="button ghost" to="/cardapio">Cardápio</Link>}
     </div>
+
+    {homologation && <div className="operation-warning homologation-banner">
+      <strong>Modo de homologação ativo.</strong>
+      <p>Este pedido está marcado como teste. A operação pública pode continuar fechada enquanto você valida o gateway.</p>
+    </div>}
 
     {!config?.enabled && <div className="operation-warning">
       <strong>Pagamento ainda não habilitado pela equipe.</strong>
