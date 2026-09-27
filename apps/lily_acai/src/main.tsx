@@ -72,13 +72,28 @@ function Shell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const firstFocusable = menuRef.current?.querySelector<HTMLElement>("a,button");
-    window.setTimeout(() => firstFocusable?.focus(), 0);
+    const focusableSelector = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])';
+    const focusables = () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>(focusableSelector) ?? []);
+    window.setTimeout(() => focusables()[0]?.focus(), 0);
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setMenuOpen(false);
-      window.setTimeout(() => menuButtonRef.current?.focus(), 0);
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        window.setTimeout(() => menuButtonRef.current?.focus(), 0);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
 
     document.addEventListener("keydown", onKeyDown);
