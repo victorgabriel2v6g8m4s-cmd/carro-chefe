@@ -162,9 +162,9 @@ Já existe atribuição `la_*`/legado `cc_*` e persistência canônica sem PII e
 - backup/restore;
 - performance;
 - QA operacional e mobile;
-- MFA de staff/admin;
-- recuperação segura de senha;
-- eliminação de overflows mascarados;
+- MFA de staff/admin: **implementada tecnicamente; enrollment/deploy pendentes**;
+- recuperação segura de senha: pendente;
+- overflows mascarados: **correção estrutural implementada; QA visual pendente**;
 - revalidação dos 40 achados de UX/segurança/admin em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
 ## Sincronizações paralelas
@@ -178,3 +178,20 @@ Antes do lançamento comercial completo:
 - configurar dados operacionais no sistema, não na documentação.
 
 Cada deploy exige gates completos, backup/rollback e autorização explícita para o SHA exato.
+
+
+## Patch P0 — 27/09/2026
+
+Runtime `0f3e894f4993eea1c07aed881bad4ea4525e1674` validado com CI/CodeQL verdes, 131 testes em Node 20/24.
+
+Entregue:
+
+- correção estrutural do overflow mobile;
+- carrossel sem alargamento artificial da viewport;
+- guardas automatizadas de header/menu/hierarquia/logout;
+- MFA TOTP obrigatório para staff/admin;
+- segredo TOTP cifrado com AES-256-GCM;
+- recovery codes de uso único armazenados como hash;
+- deploy fail-closed sem chave MFA de produção.
+
+Documento: `entregas/P0_UX_SEGURANCA_2026-09-27.md`.
