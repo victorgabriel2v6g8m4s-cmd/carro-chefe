@@ -134,6 +134,13 @@ Entrega 06:
 /api/v1/lily/customer/*
 ```
 
+Entrega 07:
+
+```text
+/api/v1/lily/payments
+/api/v1/lily/payments/*
+```
+
 As rotas acima precisam aparecer antes do bloqueio genérico de `/api/`.
 
 Depois de alterar proxy:
@@ -324,6 +331,49 @@ sudo carro-chefe-deploy <sha-tecnico-validado>
 ```
 
 
+## Bootstrap único do Nginx para a Entrega 07
+
+A Entrega 07 abre os namespaces de pagamentos:
+
+```text
+/api/v1/lily/payments
+/api/v1/lily/payments/*
+```
+
+O helper idempotente é:
+
+`deploy/scripts/enable-lily-entrega07-nginx`
+
+Ele cria backup, rejeita configuração parcial, insere os dois blocos somente antes do bloqueio genérico `/api/`, executa `nginx -t`, restaura o backup se a validação falhar e só então recarrega o Nginx.
+
+Na VPS, instale a versão aprovada do helper a partir do SHA operacional validado:
+
+```bash
+cd /srv/carro-chefe/current
+git fetch origin --prune
+
+NGINX_HELPER_SHA="<sha-operacional-validado>"
+
+git show "${NGINX_HELPER_SHA}:deploy/scripts/enable-lily-entrega07-nginx" \
+  > /tmp/enable-lily-entrega07-nginx
+
+bash -n /tmp/enable-lily-entrega07-nginx
+install -m 0755 /tmp/enable-lily-entrega07-nginx /usr/local/sbin/enable-lily-entrega07-nginx
+rm -f /tmp/enable-lily-entrega07-nginx
+
+sudo enable-lily-entrega07-nginx
+```
+
+Depois confirme:
+
+```bash
+grep -F "location = /api/v1/lily/payments" /etc/nginx/sites-available/carrochefe.com
+grep -F "location ^~ /api/v1/lily/payments/" /etc/nginx/sites-available/carrochefe.com
+sudo nginx -t
+```
+
+Só depois repetir o `carro-chefe-deploy`.
+
 ## Readiness após restart
 
 O deployer não trata mais `systemctl is-active` como prova suficiente de que a API já está pronta.
@@ -420,7 +470,50 @@ Gere a chave somente na VPS e grave-a no arquivo de ambiente sem imprimi-la:
 ```bash
 ENV_FILE=/etc/carro-chefe/carro-chefe.env
 
-if ! grep -Eq '^LILY_MFA_ENCRYPTION_KEY=.+ "${ENV_FILE}"; then
+if ! grep -Eq '^LILY_MFA_ENCRYPTION_KEY=.+
+  KEY="$(node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))")"
+
+  if grep -q '^LILY_MFA_ENCRYPTION_KEY=' "${ENV_FILE}"; then
+    sed -i "s|^LILY_MFA_ENCRYPTION_KEY=.*$|LILY_MFA_ENCRYPTION_KEY=${KEY}|" "${ENV_FILE}"
+  else
+    printf '\nLILY_MFA_ENCRYPTION_KEY=%s\n' "${KEY}" >> "${ENV_FILE}"
+  fi
+
+  unset KEY
+fi
+
+chmod 600 "${ENV_FILE}"
+
+set -a
+. "${ENV_FILE}"
+set +a
+node -e 'const k=Buffer.from(process.env.LILY_MFA_ENCRYPTION_KEY||"","base64url"); if(k.length!==32) process.exit(1); console.log("mfa_key=ok")'
+```
+
+Não substituir uma chave MFA já válida em releases futuros: contas já provisionadas dependem dela para descriptografar o segredo TOTP.
+
+### Runtime aprovado para a próxima tentativa
+
+`bf72060e156775f3114c5fd91c5555c412894d3c`
+
+Evidências:
+
+- CI `36352209781`: success;
+- CodeQL `36352209735`: success;
+- Node 20: 27 arquivos / 139 testes;
+- Node 24: 27 arquivos / 139 testes;
+- `mfa.test.ts`: 4/4 success;
+- `deploy-scripts.test.ts`: 4/4 success;
+- builds, Tool Health e gates auxiliares: success.
+
+Depois do bootstrap do deployer e da chave:
+
+```bash
+sudo carro-chefe-deploy bf72060e156775f3114c5fd91c5555c412894d3c
+```
+
+Não usar `547985824...`, `4ec675fa...` ou a cabeça documental posterior da branch para esta publicação.
+ "${ENV_FILE}"; then
   KEY="$(node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))")"
 
   if grep -q '^LILY_MFA_ENCRYPTION_KEY=' "${ENV_FILE}"; then
