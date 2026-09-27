@@ -22,7 +22,11 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain("width: min(330px,calc(100% - 20px))");
     expect(mainSource).toContain('className="mobile-menu-backdrop"');
     expect(mainSource).toContain('onClick={closeMenu}');
-    expect(mainSource).toContain('event.key !== "Escape"');
+    expect(mainSource).toContain('event.key === "Escape"');
+    expect(mainSource).toContain('event.key !== "Tab"');
+    expect(mainSource).toContain("querySelectorAll<HTMLElement>(focusableSelector)");
+    expect(mainSource).toContain("last.focus()");
+    expect(mainSource).toContain("first.focus()");
   });
 
   it("prioriza produtos antes dos combos no cardápio", () => {
@@ -41,9 +45,22 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain("flex-basis: calc(100% - 22px)");
   });
 
-  it("mantém logout acessível no perfil", () => {
+  it("mantém alvos de toque críticos com pelo menos 44px", () => {
+    expect(css).toContain(".combo-carousel-controls button {\n  width: 44px;\n  height: 44px;");
+    expect(css).not.toContain(".combo-carousel-controls button { width: 36px; height: 36px; }");
+    expect(css).toContain(".header-icon { width: 44px; height: 44px; min-width: 44px; }");
+  });
+
+  it("mantém configurações da loja separadas de entrega", () => {
+    expect(mainSource).toContain('path="/painel/configuracoes"');
+    expect(mainSource).toContain("AdminStoreSettingsPage");
+  });
+
+  it("mantém logout e controle explícito de sessões acessíveis no perfil", () => {
     expect(profileSource).toContain("async function handleLogout()");
     expect(profileSource).toContain("await logoutLily(session.csrfToken)");
     expect(profileSource).toContain("Sair da conta");
+    expect(profileSource).toContain("Encerrar outras sessões");
+    expect(profileSource).toContain("revokeOtherLilySessions");
   });
 });
