@@ -19,13 +19,13 @@ Status usados:
 
 | ID | Pendência | Estado na consolidação | Critério de aceite |
 |---|---|---|---|
-| UX-001 | Header mobile exibe navegação desktop junto de carrinho/avatar/hambúrguer. | **CANDIDATO / REVALIDAR.** O CSS canônico contém `.topbar .desktop-nav { display: none; }` abaixo de 760 px, mas houve regressão observada em QA. | Em 320–760 px, somente marca, conta, carrinho e hambúrguer ficam no header; nenhuma navegação desktop é renderizada/visível. |
-| UX-002 | Menu hambúrguer extrapola lateralmente e corta “WhatsApp”. | **CANDIDATO / REVALIDAR.** O drawer canônico limita largura a `min(330px, calc(100vw - 20px))`, mas precisa de teste em aparelhos reais. | Nenhum item é cortado em 320 px ou mais; todos os links são tocáveis e legíveis sem scroll horizontal. |
-| UX-003 | `overflow-x: hidden` mascara overflow estrutural. | **ABERTA.** Ainda existe regra global `html, body, #root { ... overflow-x: hidden; }`. | Remover a dependência de corte global, identificar/eliminar o elemento que excede a viewport e manter apenas proteção não destrutiva após prova de ausência de overflow. |
-| UX-004 | Combos deveriam ser carrossel horizontal com pista do próximo card. | **CANDIDATO / REVALIDAR.** Há `ComboCarousel` com scroll-snap e imagens na linha canônica. | Mobile mostra um combo principal + parte do próximo, com gesto horizontal, snap e sem empurrar produtos várias telas para baixo. |
-| UX-005 | Prioridade comercial invertida: hero/busca/combos empurram produtos abaixo da dobra. | **CANDIDATO / REVALIDAR.** O canônico põe busca, hero compacto, escolha da semana, contador/grid e só então combos. | Primeira navegação mobile chega ao grid rapidamente; combos não bloqueiam a descoberta dos produtos. |
-| SEC-001 | Falta logout acessível na interface. | **CANDIDATO / REVALIDAR.** Existe “Sair da conta” em `/perfil` chamando o endpoint de logout. | Usuário autenticado consegue encerrar sessão pela UI em no máximo dois passos, e a sessão deixa de ser válida. |
-| SEC-002 | Staff/admin sem MFA. | **ABERTA — P0 para staff.** | Definir TOTP ou WebAuthn, recuperação segura, provisionamento e armazenamento de segredos; exigir segundo fator para funções privilegiadas. |
+| UX-001 | Header mobile exibe navegação desktop junto de carrinho/avatar/hambúrguer. | **IMPLEMENTADO TECNICAMENTE / QA REAL PENDENTE.** Breakpoint mobile esconde desktop-nav e teste estrutural protege a regra. | Em 320–760 px, somente marca, conta, carrinho e hambúrguer ficam no header; nenhuma navegação desktop é renderizada/visível. |
+| UX-002 | Menu hambúrguer extrapola lateralmente e corta “WhatsApp”. | **IMPLEMENTADO TECNICAMENTE / QA REAL PENDENTE.** Drawer usa largura limitada ao contêiner/viewport, sem `100vw`, e mantém itens em largura integral. | Nenhum item é cortado em 320 px ou mais; todos os links são tocáveis e legíveis sem scroll horizontal. |
+| UX-003 | `overflow-x: hidden` mascara overflow estrutural. | **RESOLVIDA TECNICAMENTE.** Corte global e `overflow: clip` do main foram removidos; carrossel deixou de alargar a página; teste impede regressão. QA real ainda verifica outras telas. | Remover a dependência de corte global, identificar/eliminar o elemento que excede a viewport e manter apenas proteção não destrutiva após prova de ausência de overflow. |
+| UX-004 | Combos deveriam ser carrossel horizontal com pista do próximo card. | **IMPLEMENTADO TECNICAMENTE / QA REAL PENDENTE.** ComboCarousel usa scroll-snap e o peek vem do tamanho do slide, sem exceder a página. | Mobile mostra um combo principal + parte do próximo, com gesto horizontal, snap e sem empurrar produtos várias telas para baixo. |
+| UX-005 | Prioridade comercial invertida: hero/busca/combos empurram produtos abaixo da dobra. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** Ordem é busca → hero compacto → escolha da semana → contador/grid → combos e existe teste de ordem. | Primeira navegação mobile chega ao grid rapidamente; combos não bloqueiam a descoberta dos produtos. |
+| SEC-001 | Falta logout acessível na interface. | **RESOLVIDA TECNICAMENTE.** “Sair da conta” existe no perfil; teste estrutural protege a UI e auth.test cobre CSRF/revogação. | Usuário autenticado consegue encerrar sessão pela UI em no máximo dois passos, e a sessão deixa de ser válida. |
+| SEC-002 | Staff/admin sem MFA. | **RESOLVIDA TECNICAMENTE / DEPLOY E ENROLLMENT PENDENTES.** TOTP obrigatório por sessão, segredo AES-256-GCM, recovery codes hashed/one-time e deploy fail-closed sem chave. | Definir TOTP ou WebAuthn, recuperação segura, provisionamento e armazenamento de segredos; exigir segundo fator para funções privilegiadas. |
 
 ## P1
 
@@ -91,3 +91,18 @@ Além dos 40 achados acima:
 5. P1 administrativos/autenticação.
 6. P2 de catálogo/conteúdo.
 7. Entregas 08–10.
+
+
+## Evidência do patch P0
+
+Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674`.
+
+- CI `36332050698`: success;
+- CodeQL `36332050747`: success;
+- Node 20: 27 arquivos / 131 testes;
+- Node 24: 27 arquivos / 131 testes;
+- Tool Health: success.
+
+Relatório técnico: `entregas/P0_UX_SEGURANCA_2026-09-27.md`.
+
+Os P0 de implementação foram tratados. Itens marcados **QA REAL PENDENTE** não devem ser considerados homologados visualmente até teste em aparelhos reais após deploy.
