@@ -102,13 +102,16 @@ function MercadoPagoCardBrick(props: {
       if (disposed || !window.MercadoPago) return;
       const mp = new window.MercadoPago(props.publicKey, { locale: "pt-BR" });
       const bricks = mp.bricks();
-      controller = await bricks.create("cardPayment", "cooklily-card-payment", {
+      const createdController = await bricks.create("cardPayment", "cooklily-card-payment", {
         initialization: {
           amount: props.amountCents / 100
         },
         customization: {
           paymentMethods: {
-            maxInstallments: 12
+            maxInstallments: 12,
+            types: {
+              excluded: ["debit_card", "prepaid_card"]
+            }
           }
         },
         callbacks: {
@@ -138,6 +141,11 @@ function MercadoPagoCardBrick(props: {
           }
         }
       });
+      if (disposed) {
+        if (createdController.unmount) await createdController.unmount();
+        return;
+      }
+      controller = createdController;
     }).catch((cause) => {
       errorRef.current(cause instanceof Error ? cause.message : "Falha ao carregar checkout seguro.");
     });
