@@ -2,7 +2,7 @@
 
 ## Status
 
-**Implementação presente; aprovação técnica pendente de novo gate.**
+**Implementação técnica aprovada; deploy e homologação operacional pendentes.**
 
 A Entrega 07 parte da linha homologada das Entregas 05/06 e adiciona o domínio financeiro sem misturar credenciais ou dados de cartão ao restante da plataforma.
 
@@ -28,7 +28,19 @@ orders.map((order) => serializeOrder(order))
 
 O Tool Health falhou em cascata porque o check `app-api` executa o mesmo TypeScript. Não foi identificada, naquele gate, uma falha independente do domínio de pagamentos no Tool Health.
 
-A entrega continua **não aprovada** até CI Node 20/24, testes, builds, Tool Health e CodeQL passarem novamente na árvore canônica.
+A correção foi revalidada com sucesso no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`:
+
+- CI run `36330633129`: **success**;
+- CodeQL run `36330633098`: **success**;
+- Node 20: 25 arquivos / **122 testes** — success;
+- Node 24: 25 arquivos / **122 testes** — success;
+- builds de produção — success;
+- Tool Health / Linux — success;
+- Workbook Snapshot — success;
+- Excel Recipe Linux/Windows — success;
+- Windows Supervisor — success.
+
+Commits posteriores ao SHA acima, até esta atualização, alteram somente documentação e não o runtime validado.
 
 ## Objetivo
 
