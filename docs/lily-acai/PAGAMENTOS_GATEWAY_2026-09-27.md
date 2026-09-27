@@ -43,13 +43,14 @@ O provider `manual` permanece disponível como fallback operacional, mas não é
 
 | Processador | Pix publicado | Cartão à vista publicado | Integração / observações |
 | --- | ---: | ---: | --- |
-| Mercado Pago | A taxa exata do Checkout deve ser confirmada na conta; páginas públicas de outros produtos exibem condições que não devem ser tratadas como tarifa contratual do Checkout | Varia conforme condição/prazo da conta | Checkout Transparente, Orders API recomendada, Pix, cartão tokenizado, webhooks assinados, refund API |
+| Mercado Pago | 0,99% em Pix na referência pública de vendas online consultada | Cartão: 4,99% na hora/14 dias; 3,99% em 30 dias na referência pública consultada | Checkout Transparente, Orders API recomendada, Pix, cartão tokenizado, webhooks assinados, refund API |
 | Pagar.me / Stone | 0,99% na oferta Essencial consultada | 4,19% no Checkout Stone à vista | API + dashboard; antifraude incluído na oferta publicada; opção Flex com taxas customizadas |
 | Asaas | R$ 1,99 por transação recebida na tarifa padrão exibida; promoção de R$ 0,99 por 3 meses na página consultada | R$ 0,49 + 2,99% padrão à vista; promoção de R$ 0,49 + 1,99% por 3 meses | API, checkout transparente, split e tokenização; taxa fixa pesa mais em tickets baixos |
 | Efí Bank | 1,19% para Pix via API/QR dinâmico/Pix Cob | Não foi usado como referência principal de cartão neste levantamento | Forte oferta Pix/API; Pix Automático publicado a R$ 3,50 por Pix liquidado |
 
 Fontes oficiais consultadas:
 
+- Mercado Pago taxas de vendas online: https://www.mercadopago.com.br/blog/quanto-custa-vender-on-line-com-mercado-pago
 - Mercado Pago Checkout Transparente / Orders API: https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api/overview
 - Mercado Pago Pix via Orders: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/pix
 - Mercado Pago Webhooks / orders: https://www.mercadopago.com.br/developers/pt/docs/automatic-payments-orders/notifications/orders
@@ -61,7 +62,7 @@ Fontes oficiais consultadas:
 
 Exemplo meramente matemático, usando as taxas públicas acima e sem considerar antecipação ou condições negociadas:
 
-| Ticket | Pagar.me Pix 0,99% | Efí Pix 1,19% | Asaas Pix padrão R$ 1,99 |
+| Ticket | Mercado Pago / Pagar.me Pix 0,99% | Efí Pix 1,19% | Asaas Pix padrão R$ 1,99 |
 | ---: | ---: | ---: | ---: |
 | R$ 20 | ~R$ 0,20 | ~R$ 0,24 | R$ 1,99 (~9,95%) |
 | R$ 30 | ~R$ 0,30 | ~R$ 0,36 | R$ 1,99 (~6,63%) |
@@ -82,7 +83,7 @@ A escolha inicial não significa dependência permanente. O adapter foi prioriza
 - cancelamento/refund por API;
 - operação sem redirecionar o checkout principal para outro domínio.
 
-A tarifa real da conta deve ser conferida depois que a conta/aplicação do estabelecimento estiver aprovada. Se a condição comercial ficar pior que Pagar.me/Stone ou outro provider, o contrato `PaymentProvider` permite adicionar outro adapter sem alterar pedidos, telas administrativas, histórico ou modelo de reconciliação.
+A referência pública consultada coloca Pix em 0,99% e cartão entre 3,99% e 4,99% conforme prazo de recebimento. A tarifa real da conta deve ser conferida depois que a conta/aplicação do estabelecimento estiver aprovada. Se a condição comercial ficar pior que Pagar.me/Stone ou outro provider, o contrato `PaymentProvider` permite adicionar outro adapter sem alterar pedidos, telas administrativas, histórico ou modelo de reconciliação.
 
 ## Segurança implementada
 
