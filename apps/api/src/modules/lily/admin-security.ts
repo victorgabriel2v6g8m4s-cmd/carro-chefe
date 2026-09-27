@@ -13,6 +13,16 @@ export async function requireLilyStaff(request: FastifyRequest, requireCsrf = fa
       code: "LILY_STAFF_PASSWORD_UPGRADE_REQUIRED"
     });
   }
+  if (!context.user.mfaEnabled) {
+    throw new ApiError(403, "Configure MFA antes de acessar funções administrativas.", {
+      code: "LILY_STAFF_MFA_SETUP_REQUIRED"
+    });
+  }
+  if (!context.session.mfaVerifiedAt) {
+    throw new ApiError(403, "Confirme o segundo fator antes de acessar funções administrativas.", {
+      code: "LILY_STAFF_MFA_REQUIRED"
+    });
+  }
   if (requireCsrf) requireLilyCsrf(request, context);
   return context;
 }
