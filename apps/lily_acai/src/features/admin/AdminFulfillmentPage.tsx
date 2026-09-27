@@ -23,12 +23,6 @@ type AdminFulfillmentPayload = {
     flatDeliveryFeeCents: number;
     pickupAddressText: string | null;
     pickupInstructions: string | null;
-    instagramHandle: string;
-    whatsappPhone: string;
-    publicAddressText: string | null;
-    loyaltyOrderCentsPerPoint: number;
-    loyaltyCampaignBonusPoints: number;
-    loyaltyCouponBonusPoints: number;
     timezone: string;
     businessHours: BusinessHour[];
   };
@@ -101,12 +95,6 @@ export function AdminFulfillmentPage() {
         flatDeliveryFeeCents: parseMoney(String(form.get("flatFee") || "0")),
         pickupAddressText: String(form.get("pickupAddress") || "") || null,
         pickupInstructions: String(form.get("pickupInstructions") || "") || null,
-        instagramHandle: String(form.get("instagramHandle") || "").trim(),
-        whatsappPhone: String(form.get("whatsappPhone") || "").trim(),
-        publicAddressText: String(form.get("publicAddressText") || "") || null,
-        loyaltyOrderCentsPerPoint: Math.max(1, Number(form.get("loyaltyOrderCentsPerPoint") || 100)),
-        loyaltyCampaignBonusPoints: Math.max(0, Number(form.get("loyaltyCampaignBonusPoints") || 0)),
-        loyaltyCouponBonusPoints: Math.max(0, Number(form.get("loyaltyCouponBonusPoints") || 0)),
         businessHours,
         timezone: "America/Campo_Grande"
       });
@@ -140,7 +128,7 @@ export function AdminFulfillmentPage() {
 
   return <section className="admin-page wide">
     <div className="admin-heading">
-      <div><span className="eyebrow">CookLily · administração</span><h1>Operação e configurações</h1><p>Gerencie pedidos, entrega, retirada, canais públicos e fidelidade sem alterar código.</p></div>
+      <div><span className="eyebrow">CookLily · administração</span><h1>Entrega e retirada</h1><p>Gerencie abertura de pedidos, horários, retirada, taxas e regiões de entrega.</p></div>
       <div className="admin-actions"><a className="button ghost" href={import.meta.env.BASE_URL + "painel"}>Resumo</a><a className="button ghost" href={import.meta.env.BASE_URL + "checkout"} target="_blank" rel="noreferrer">Preview checkout</a></div>
     </div>
     {error && <p className="error" role="alert">{error}</p>}
@@ -164,26 +152,6 @@ export function AdminFulfillmentPage() {
       </section>
 
       <section className="checkout-section">
-        <h2>Canais públicos</h2>
-        <p>Esses dados alimentam header, rodapé, WhatsApp, Instagram e endereço público sem alterar código.</p>
-        <div className="admin-form-grid">
-          <label>Instagram<input name="instagramHandle" defaultValue={settings.instagramHandle} placeholder="acai._lily" /></label>
-          <label>WhatsApp<input name="whatsappPhone" defaultValue={settings.whatsappPhone} placeholder="+5567999999999" /></label>
-          <label className="admin-span">Endereço público<input name="publicAddressText" defaultValue={settings.publicAddressText ?? ""} placeholder="Endereço exibido ao cliente" /></label>
-        </div>
-      </section>
-
-      <section className="checkout-section">
-        <h2>Ranking e pontos</h2>
-        <p>Compras só pontuam quando o pedido estiver pago/concluído. Campanhas usam o tracking la_campaign. Cupons usam o ledger de fidelidade quando integrados.</p>
-        <div className="admin-form-grid">
-          <label>Centavos por ponto<input name="loyaltyOrderCentsPerPoint" type="number" min="1" step="1" defaultValue={settings.loyaltyOrderCentsPerPoint} /></label>
-          <label>Bônus por campanha<input name="loyaltyCampaignBonusPoints" type="number" min="0" step="1" defaultValue={settings.loyaltyCampaignBonusPoints} /></label>
-          <label>Bônus por cupom<input name="loyaltyCouponBonusPoints" type="number" min="0" step="1" defaultValue={settings.loyaltyCouponBonusPoints} /></label>
-        </div>
-      </section>
-
-      <section className="checkout-section">
         <h2>Horários</h2>
         <p>Fuso fixo da operação: America/Campo_Grande.</p>
         <div className="hours-grid">
@@ -197,7 +165,7 @@ export function AdminFulfillmentPage() {
           })}
         </div>
       </section>
-      <button className="button primary" type="submit">Salvar configurações</button>
+      <button className="button primary" type="submit">Salvar entrega e retirada</button>
     </form>
 
     <section className="checkout-section admin-zones">
