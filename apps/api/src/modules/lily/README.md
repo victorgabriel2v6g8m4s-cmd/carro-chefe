@@ -84,9 +84,14 @@ Guest pode criar pedido com telefone obrigatório. Quando há sessão, o pedido 
 
 Pedidos da Entrega 06 nascem em `awaiting_payment`; pagamento pertence à Entrega 07.
 
-## Fulfillment e endereços
+## Fulfillment, configurações e endereços
 
-`fulfillment.ts` administra abertura de pedidos, retirada, entrega, horários, pedido mínimo, taxa fixa e regiões.
+`fulfillment.ts` separa dois domínios administrativos:
+
+- `/api/v1/lily/admin/fulfillment`: pedidos, retirada, entrega, horários, taxas e regiões;
+- `/api/v1/lily/admin/store-settings`: Instagram, WhatsApp, endereço público e regras de fidelidade.
+
+Os schemas são estritos para impedir mistura semântica entre os dois painéis.
 
 `addresses.ts` oferece CRUD de endereços somente para o titular autenticado, com CSRF em mutações.
 
@@ -124,9 +129,15 @@ SHA técnico: `da166683ab2d0e27acae23d9714ec8e824a02ac4`
 - build: success;
 - CodeQL: success.
 
-## Próximo escopo
+## Segurança de conta e sessões
 
-Entrega 07 integra pagamento/reconciliação sobre pedidos `awaiting_payment`.
+O titular pode consultar somente as próprias sessões em `/api/v1/lily/customer/security/sessions` e revogar explicitamente as demais em `/api/v1/lily/customer/security/sessions/revoke-others`.
+
+A API não retorna token, hash de token ou hash CSRF na listagem.
+
+## Estado atual
+
+Entregas 06 e 07 já possuem implementação técnica validada na linha canônica. O patch P1/P2 validado no runtime `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0` adiciona separação de configurações, controle de sessões e suporte ao deep-link público de produto já servido por `GET /public/products/:slug`.
 
 
 ## MFA da equipe
