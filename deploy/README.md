@@ -23,6 +23,7 @@ Exemplo mínimo em `/etc/carro-chefe/carro-chefe.env`:
 ```env
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
 LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
+LILY_MFA_ENCRYPTION_KEY=<32-bytes-aleatorios-em-base64url>
 TRUST_PROXY=true
 PRODUCTION_AUTH_READY=false
 VITE_GA4_ID=
