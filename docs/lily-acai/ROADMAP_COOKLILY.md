@@ -163,8 +163,12 @@ Já existe atribuição `la_*`/legado `cc_*` e persistência canônica sem PII e
 - performance;
 - QA operacional e mobile;
 - MFA de staff/admin: **implementada tecnicamente; enrollment/deploy pendentes**;
-- recuperação segura de senha: pendente;
+- recuperação segura de senha: pendente por falta de canal de verificação aprovado;
 - overflows mascarados: **correção estrutural implementada; QA visual pendente**;
+- focus trap e alvos de toque críticos: **implementados tecnicamente; QA real pendente**;
+- controle explícito de outras sessões: **implementado tecnicamente**;
+- Configurações da loja separada de fulfillment: **implementada tecnicamente**;
+- deep-link de produto por slug: **implementado tecnicamente; QA real pendente**;
 - revalidação dos 40 achados de UX/segurança/admin em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
 ## Sincronizações paralelas
@@ -195,3 +199,18 @@ Entregue:
 - deploy fail-closed sem chave MFA de produção.
 
 Documento: `entregas/P0_UX_SEGURANCA_2026-09-27.md`.
+
+
+## Patch P1/P2 — 27/09/2026
+
+Runtime `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0` validado com CI/CodeQL verdes e 136 testes em Node 20/24.
+
+Entregue:
+
+- focus trap do menu mobile;
+- alvos críticos de toque >=44 px;
+- página Configurações da loja e API dedicada;
+- sessões visíveis para o titular e revogação explícita das demais;
+- deep-link de produto `?produto=<slug>`.
+
+Documento: `entregas/P1_UX_CONTA_ADMIN_2026-09-27.md`.
