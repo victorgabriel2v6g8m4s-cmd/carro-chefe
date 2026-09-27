@@ -19,6 +19,16 @@ describe("scripts operacionais CookLily", () => {
     }
   });
 
+  it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    expect(deployer).toContain('git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy"');
+    expect(deployer).toContain('CARRO_CHEFE_DEPLOY_REEXEC');
+    expect(deployer).toContain('sha256sum "$0"');
+    expect(deployer).toContain('exec env CARRO_CHEFE_DEPLOY_REEXEC=1');
+    expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="nginx-precheck"'));
+    expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="backup"'));
+  });
+
   it("força NODE_ENV=test somente durante a suíte de preflight", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     expect(deployer).toContain('preflight env NODE_ENV=test npm test');
