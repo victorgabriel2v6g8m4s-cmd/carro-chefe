@@ -102,13 +102,18 @@ Relatório: `docs/lily-acai/entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Entrega 07 — checkout/pagamento
 
-**Status:** implementação técnica aprovada no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy e homologação operacional pendentes.
+**Status:** domínio financeiro e adapter automático Mercado Pago implementados na linha canônica; pagamentos continuam fail-closed e deploy/homologação operacional dependem de gate do SHA exato e credenciais reais.
 
 Implementado:
 
 - checkout/pagamento sobre pedidos `awaiting_payment`;
 - contrato `LilyPaymentProvider`;
-- Pix manual reconciliável como primeiro adaptador;
+- Pix manual reconciliável como fallback;
+- adapter `mercado_pago` sobre Orders API;
+- Pix automático com QR Code/Copia e Cola;
+- cartão tokenizado via Card Payment Brick, sem PAN/CVV no backend;
+- webhook assinado com refetch autoritativo;
+- cancelamento e estorno via provider;
 - idempotência de pagamento;
 - acesso guest por token seguro;
 - painel financeiro;
@@ -123,8 +128,10 @@ O primeiro gate `gate/lily-entrega-07-v1` falhou em TypeScript porque `serialize
 
 Ainda pendente:
 
-- decisão/credenciais de provedor automático, se desejado;
-- smoke real de venda;
+- criar/aprovar conta e aplicação Mercado Pago;
+- configurar Public Key, Access Token, chave Pix e Webhook Secret;
+- conferir taxas contratuais;
+- smoke real de Pix/cartão;
 - deploy/homologação da linha canônica.
 
 **Gate de lançamento comercial digital:** Entregas 05–07 prontas, publicadas e homologadas.
