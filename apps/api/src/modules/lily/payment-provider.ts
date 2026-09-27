@@ -60,6 +60,7 @@ export type LilyPaymentProviderRemoteState = {
   providerStatusDetail: string | null;
   paidCents: number | null;
   refundedCents: number;
+  operationReference?: string | null;
   data: LilyPaymentProviderData;
 };
 
