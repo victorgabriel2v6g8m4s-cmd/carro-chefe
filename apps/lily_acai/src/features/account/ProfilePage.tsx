@@ -2,13 +2,18 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   changeLilyPassword,
+  confirmLilyMfaSetup,
+  getLilyMfaStatus,
   getLilyProfile,
   getLilyRanking,
   getLilySession,
   logoutLily,
+  startLilyMfaSetup,
   updateLilyProfile,
   uploadLilyProfileAvatar,
+  verifyLilyMfa,
   type AuthPayload,
+  type LilyMfaStatus,
   type LilyProfilePayload,
   type LilyRankingRow
 } from "../../api";
@@ -39,6 +44,9 @@ export function ProfilePage() {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
+  const [mfaStatus, setMfaStatus] = useState<LilyMfaStatus | null>(null);
+  const [mfaSetup, setMfaSetup] = useState<{ secret: string; otpauthUri: string } | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -46,6 +54,11 @@ export function ProfilePage() {
     const current = await getLilySession();
     setSession(current);
     setProfile(await getLilyProfile());
+    if (["staff", "admin"].includes(current.user.role)) {
+      setMfaStatus(await getLilyMfaStatus());
+    } else {
+      setMfaStatus(null);
+    }
   }
 
   useEffect(() => {
@@ -123,6 +136,68 @@ export function ProfilePage() {
     }
   }
 
+  async function startMfa(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setRecoveryCodes([]);
+    try {
+      const setup = await startLilyMfaSetup(String(data.get("currentPassword") || ""), session.csrfToken);
+      setMfaSetup(setup);
+      setMessage("MFA iniciada. Cadastre a chave no autenticador e confirme o código de 6 dígitos.");
+      event.currentTarget.reset();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível iniciar o MFA.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmMfa(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await confirmLilyMfaSetup(String(data.get("code") || ""), session.csrfToken);
+      setRecoveryCodes(result.recoveryCodes);
+      setMfaSetup(null);
+      await refresh();
+      setMessage("MFA ativada. Guarde os códigos de recuperação em local seguro; eles aparecem somente agora.");
+      event.currentTarget.reset();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível confirmar o MFA.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyMfa(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session) return;
+    const data = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await verifyLilyMfa(String(data.get("code") || ""), session.csrfToken);
+      await refresh();
+      setMessage(result.method === "recovery"
+        ? `Segundo fator confirmado com código de recuperação. Restam ${result.recoveryCodesRemaining}.`
+        : "Segundo fator confirmado.");
+      event.currentTarget.reset();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível confirmar o segundo fator.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
@@ -158,11 +233,22 @@ export function ProfilePage() {
   if (!session || !profile) return <AccountRequired />;
 
   const passwordMinimum = ["staff", "admin"].includes(session.user.role) ? 12 : 8;
+  const privileged = ["staff", "admin"].includes(session.user.role);
+  const nextPathRaw = new URLSearchParams(window.location.search).get("next");
+  const nextPath = nextPathRaw && nextPathRaw.startsWith("/painel") && !nextPathRaw.startsWith("//") ? nextPathRaw : null;
 
   return <section className="profile-page">
     {session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
       <strong>Atualização de senha obrigatória.</strong>
-      <p>Sua conta foi promovida para a equipe. Defina abaixo uma nova senha com pelo menos 12 caracteres antes de acessar o painel administrativo.</p>
+      <p>Sua conta foi promovida para a equipe. Defina abaixo uma nova senha com pelo menos 12 caracteres antes de configurar o segundo fator.</p>
+    </div>}
+    {privileged && mfaStatus?.setupRequired && !session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
+      <strong>MFA obrigatória para a equipe.</strong>
+      <p>Configure um autenticador TOTP antes de acessar o painel administrativo.</p>
+    </div>}
+    {privileged && mfaStatus?.enabled && !mfaStatus.verified && <div className="operation-warning security-upgrade-warning">
+      <strong>Confirme o segundo fator.</strong>
+      <p>Digite o código do autenticador ou um código de recuperação para liberar funções administrativas nesta sessão.</p>
     </div>}
 
     <div className="profile-heading">
@@ -202,6 +288,51 @@ export function ProfilePage() {
         <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required />
         <button className="button ghost" type="submit" disabled={busy}>{busy ? "Enviando..." : "Atualizar foto"}</button>
       </form>
+
+      {privileged && <section className="checkout-section security-mfa-section">
+        <h2>Autenticação em dois fatores</h2>
+        {mfaStatus?.enabled
+          ? <>
+              <p>MFA está ativa. {mfaStatus.verified ? "Esta sessão já confirmou o segundo fator." : "Confirme o código para liberar o painel."}</p>
+              {!mfaStatus.verified && <form onSubmit={verifyMfa}>
+                <label>Código do autenticador ou recuperação
+                  <input name="code" inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={32} required />
+                </label>
+                <button className="button primary" type="submit" disabled={busy}>{busy ? "Verificando..." : "Confirmar segundo fator"}</button>
+              </form>}
+              <small>{mfaStatus.recoveryCodesRemaining} código(s) de recuperação ainda disponíveis.</small>
+            </>
+          : session.user.staffPasswordUpgradeRequired
+            ? <p>Troque sua senha primeiro; depois a configuração do MFA será liberada.</p>
+            : <>
+                <p>Use um aplicativo autenticador compatível com TOTP. A chave é cifrada no banco; nunca é gravada no repositório.</p>
+                {!mfaSetup && <form onSubmit={startMfa}>
+                  <label>Senha atual
+                    <input name="currentPassword" type="password" autoComplete="current-password" required />
+                  </label>
+                  <button className="button primary" type="submit" disabled={busy}>{busy ? "Preparando..." : "Configurar MFA"}</button>
+                </form>}
+                {mfaSetup && <>
+                  <div className="mfa-secret-box">
+                    <strong>Chave do autenticador</strong>
+                    <code>{mfaSetup.secret}</code>
+                    <small>Conta: CookLily · TOTP · 6 dígitos · período de 30 segundos.</small>
+                  </div>
+                  <form onSubmit={confirmMfa}>
+                    <label>Código de 6 dígitos
+                      <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
+                    </label>
+                    <button className="button primary" type="submit" disabled={busy}>{busy ? "Confirmando..." : "Ativar MFA"}</button>
+                  </form>
+                </>}
+              </>}
+        {recoveryCodes.length > 0 && <div className="mfa-recovery-box" role="status">
+          <strong>Códigos de recuperação — copie agora</strong>
+          <p>Cada código funciona uma única vez.</p>
+          <div>{recoveryCodes.map((code) => <code key={code}>{code}</code>)}</div>
+        </div>}
+        {nextPath && mfaStatus?.verified && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
+      </section>}
 
       <form className="checkout-section" onSubmit={changePassword}>
         <h2>Segurança</h2>
