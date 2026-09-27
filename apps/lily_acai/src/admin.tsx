@@ -66,7 +66,8 @@ export function AdminHome() {
     <div className="admin-actions">
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Operação e configurações</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pagamentos`}>Pagamentos</a>
       {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/equipe`}>Equipe</a>}
     </div>
