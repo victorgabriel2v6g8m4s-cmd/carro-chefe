@@ -7,6 +7,7 @@ export type AuthPayload = {
     avatarUrl: string | null;
     rankingOptIn: boolean;
     staffPasswordUpgradeRequired: boolean;
+    mfaEnabled: boolean;
   };
   csrfToken: string;
   sessionExpiresAt: string;
@@ -16,6 +17,12 @@ export type AuthPayload = {
     recordedAt: string;
     revokedAt: string | null;
   }>;
+  mfa?: {
+    required: boolean;
+    enabled: boolean;
+    verified: boolean;
+    setupRequired: boolean;
+  };
 };
 
 export type CatalogVariant = {
@@ -443,4 +450,59 @@ export async function changeLilyPassword(
     body: JSON.stringify(input)
   });
   return parseResponse<{ changed: true; otherSessionsRevoked: number }>(response);
+}
+
+
+export type LilyMfaStatus = {
+  required: boolean;
+  enabled: boolean;
+  verified: boolean;
+  setupRequired: boolean;
+  recoveryCodesRemaining: number;
+};
+
+export async function getLilyMfaStatus() {
+  const response = await fetch("/api/v1/lily/customer/security/mfa/status", {
+    credentials: "same-origin"
+  });
+  return parseResponse<LilyMfaStatus>(response);
+}
+
+export async function startLilyMfaSetup(currentPassword: string, csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/security/mfa/setup", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Lily-CSRF": csrfToken
+    },
+    body: JSON.stringify({ currentPassword })
+  });
+  return parseResponse<{ secret: string; otpauthUri: string }>(response);
+}
+
+export async function confirmLilyMfaSetup(code: string, csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/security/mfa/confirm", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Lily-CSRF": csrfToken
+    },
+    body: JSON.stringify({ code })
+  });
+  return parseResponse<{ enabled: true; verified: true; recoveryCodes: string[] }>(response);
+}
+
+export async function verifyLilyMfa(code: string, csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/security/mfa/verify", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Lily-CSRF": csrfToken
+    },
+    body: JSON.stringify({ code })
+  });
+  return parseResponse<{ verified: true; method: "totp" | "recovery"; recoveryCodesRemaining: number }>(response);
 }
