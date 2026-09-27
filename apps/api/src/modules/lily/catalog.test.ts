@@ -28,8 +28,16 @@ async function register(role: "customer" | "staff" = "customer") {
     }
   });
   const cookie = cookieFrom(response);
+  const userId = response.json().user.id;
   if (role === "staff") {
-    await lilyPrisma.lilyUser.update({ where: { phoneNormalized: "+5567999990001" }, data: { role: "staff" } });
+    await lilyPrisma.lilyUser.update({
+      where: { id: userId },
+      data: { role: "staff", mfaEnabled: true }
+    });
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId },
+      data: { mfaVerifiedAt: new Date() }
+    });
   }
   const me = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
   return { cookie, csrf: me.json().csrfToken };
