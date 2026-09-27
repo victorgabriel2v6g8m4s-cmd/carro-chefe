@@ -3,7 +3,8 @@
 **Nome público definitivo:** CookLily  
 **Wordmark oficial:** cookLily  
 **Linha de gelato:** LilyShake / LilyShakes  
-**Branch exclusiva:** lily-acai  
+**Base histórica:** `lily-acai`  
+**Branch canônica de integração:** `cooklily/canonical`  
 **Namespaces técnicos preservados:** /lilyacai/, /api/v1/lily/, lily-acai.db.
 
 ## Entrega 03 — marca e rebranding
@@ -101,37 +102,70 @@ Relatório: `docs/lily-acai/entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Entrega 07 — checkout/pagamento
 
-- checkout online;
-- provedor de pagamento;
-- reconciliação;
-- benefício opcional de conta limitado a 5% do lucro líquido estimado do pedido;
-- smoke de venda digital completa.
+**Status:** implementação presente na linha canônica; novo gate completo pendente.
 
-**Gate de lançamento comercial digital:** Entregas 05–07 prontas e homologadas.
+Implementado:
+
+- checkout/pagamento sobre pedidos `awaiting_payment`;
+- contrato `LilyPaymentProvider`;
+- Pix manual reconciliável como primeiro adaptador;
+- idempotência de pagamento;
+- acesso guest por token seguro;
+- painel financeiro;
+- reconciliação de bruto/taxa/líquido e divergências;
+- cancelamento e estorno parcial/integral;
+- transição transacional de pedido para `paid`;
+- separação real `staff`/`admin`;
+- gestão de equipe;
+- upgrade obrigatório de senha para contas privilegiadas.
+
+O primeiro gate `gate/lily-entrega-07-v1` teve CodeQL aprovado, mas CI falhou em TypeScript porque `serializeOrder` foi passado diretamente a `Array.map`, fazendo o índice do map conflitar com o segundo parâmetro opcional do serializer. O mesmo erro fez o Tool Health reportar falha no `app-api`. A correção está aplicada em `cooklily/canonical`; a Entrega 07 só pode ser declarada aprovada após novo CI Node 20/24, testes, builds e CodeQL verdes.
+
+Ainda pendente:
+
+- decisão/credenciais de provedor automático, se desejado;
+- smoke real de venda;
+- deploy/homologação da linha canônica.
+
+**Gate de lançamento comercial digital:** Entregas 05–07 prontas, publicadas e homologadas.
 
 ## Entrega 08 — painel de pedidos
 
-- fila;
-- status;
-- operação;
+**Status:** parcial.
+
+Já existe configuração de fulfillment e base operacional de pedidos. Ainda falta fechar a entrega como domínio operacional completo:
+
+- fila operacional;
+- gestão explícita de status;
 - acompanhamento site/WhatsApp;
+- rotinas de operação;
 - integração posterior com ERP.
 
 ## Entrega 09 — tracking e analytics first-party
 
+**Status:** parcial.
+
+Já existe atribuição `la_*`/legado `cc_*` e persistência canônica sem PII em URL. Falta consolidar analytics first-party completo:
+
 - manter QR físico atual;
-- tracking digital discriminativo;
 - produto, variante, combinação, adicionais, campanha, origem, superfície e pedido;
-- sem PII em URL.
+- funis e eventos de navegação/compra;
+- relatórios operacionais e de marketing.
 
 ## Entrega 10 — QA, observabilidade e hardening
+
+**Status:** em aberto, com backlog formalizado.
 
 - acessibilidade;
 - observabilidade;
 - segurança;
 - backup/restore;
 - performance;
-- QA operacional.
+- QA operacional e mobile;
+- MFA de staff/admin;
+- recuperação segura de senha;
+- eliminação de overflows mascarados;
+- revalidação dos 40 achados de UX/segurança/admin em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
 ## Sincronizações paralelas
 
