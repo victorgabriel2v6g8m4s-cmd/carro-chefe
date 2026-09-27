@@ -185,7 +185,10 @@ PHASE="static-checks"
 preflight npm run check
 
 PHASE="tests"
-preflight npm test
+# A suíte Vitest precisa de semântica de teste estável mesmo quando o arquivo de
+# ambiente da VPS define NODE_ENV=production. Build/migrations continuam usando
+# a configuração real de produção; somente a execução da suíte força test.
+preflight env NODE_ENV=test npm test
 
 PHASE="build"
 preflight npm run build
