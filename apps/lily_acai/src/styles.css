@@ -1726,6 +1726,39 @@ img, svg { max-width: 100%; }
 .payment-settings-form h2 {
   margin: 0;
 }
+.payment-method-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.payment-email {
+  width: min(100%,460px);
+  display: grid;
+  gap: 6px;
+}
+.payment-email input {
+  width: 100%;
+}
+.card-brick-shell {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+#cooklily-card-payment {
+  width: 100%;
+  min-width: 0;
+}
+.card-brick-shell small {
+  color: var(--cl-color-text-muted);
+  line-height: 1.5;
+}
+.pix-qr-code {
+  display: block;
+  width: min(280px,100%);
+  height: auto;
+  border-radius: 14px;
+}
 .payment-status-card {
   display: grid;
   align-content: start;
