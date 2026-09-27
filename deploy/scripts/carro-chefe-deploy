@@ -142,6 +142,9 @@ set +a
 [[ -n "${DATABASE_URL:-}" ]] || fail "DATABASE_URL ausente"
 [[ -n "${LILY_DATABASE_URL:-}" ]] || fail "LILY_DATABASE_URL ausente"
 [[ -n "${LILY_UPLOAD_DIR:-}" ]] || fail "LILY_UPLOAD_DIR ausente"
+[[ -n "${LILY_MFA_ENCRYPTION_KEY:-}" ]] || fail "LILY_MFA_ENCRYPTION_KEY ausente"
+node -e 'const value=process.env.LILY_MFA_ENCRYPTION_KEY||""; const key=Buffer.from(value,"base64url"); if (key.length !== 32) process.exit(1);' \
+  || fail "LILY_MFA_ENCRYPTION_KEY deve conter 32 bytes em base64url"
 
 [[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "DATABASE_URL fora do volume esperado"
 [[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "LILY_DATABASE_URL fora do volume esperado"
