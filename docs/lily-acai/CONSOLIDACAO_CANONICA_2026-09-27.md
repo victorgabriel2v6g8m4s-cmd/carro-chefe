@@ -68,10 +68,21 @@ O Tool Health falhou pelo mesmo motivo, pois `app-api` executa o check TypeScrip
 ### Gate de revalidação
 
 PR técnico: **#80**  
-CI: **run 36330633129**  
-CodeQL: **run 36330633098**
+Runtime validado: `4b111c2e26b234d83111a58a9b20ef34f773a97a`  
+CI: **run 36330633129 — success**  
+CodeQL: **run 36330633098 — success**
 
-O resultado final deve ser registrado neste arquivo e em `entregas/ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md` antes de declarar a Entrega 07 aprovada.
+Resultados:
+
+- Node 20: 25 arquivos / 122 testes — success;
+- Node 24: 25 arquivos / 122 testes — success;
+- builds — success;
+- Tool Health / Linux — success;
+- Workbook Snapshot — success;
+- Excel Recipe Linux/Windows — success;
+- Windows Supervisor — success.
+
+A Entrega 07 está tecnicamente aprovada nesse runtime. Isso não autoriza deploy, habilitação de pagamentos ou encerramento do backlog de QA.
 
 ## Backlog canônico
 
