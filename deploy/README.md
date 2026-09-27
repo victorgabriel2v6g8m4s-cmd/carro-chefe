@@ -148,6 +148,10 @@ sudo carro-chefe-deploy da166683ab2d0e27acae23d9714ec8e824a02ac4
 
 O script usa bancos temporários para gates, gera backups antes de migration, para o serviço antes de gravar SQLite, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
 
+Depois do `git fetch`, o deployer compara sua própria versão com `deploy/scripts/carro-chefe-deploy` do SHA solicitado. Se divergirem, ele reexecuta automaticamente a versão contida no release antes de checkout, gates, backup ou migrations. Isso evita que um binário antigo em `/usr/local/sbin` valide um release novo com lógica de deploy obsoleta.
+
+Uma VPS que ainda possui um deployer anterior a esse mecanismo precisa de um bootstrap manual único, documentado em `docs/lily-acai/DEPLOY_VPS.md`.
+
 Novos namespaces Nginx continuam exigindo revisão explícita; o script valida e falha antes da migration em vez de editar o proxy silenciosamente.
 
 
