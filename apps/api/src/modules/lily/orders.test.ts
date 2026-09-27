@@ -233,6 +233,56 @@ describe("CookLily Entrega 06", () => {
     expect(await lilyPrisma.lilyAdminAudit.count({ where: { entityType: "fulfillment-settings" } })).toBe(1);
   });
 
+  it("separa configurações da loja do domínio de entrega e exige CSRF", async () => {
+    const staff = await register("67999992011", "staff");
+
+    const mixed = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/fulfillment",
+      headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+      payload: { instagramHandle: "nao-deve-entrar-aqui" }
+    });
+    expect(mixed.statusCode).toBe(400);
+
+    const rejected = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/store-settings",
+      headers: { origin, cookie: staff.cookie },
+      payload: { instagramHandle: "cooklily.teste" }
+    });
+    expect(rejected.statusCode).toBe(403);
+    expect(rejected.json().details.code).toBe("LILY_CSRF_REQUIRED");
+
+    const updated = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/store-settings",
+      headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+      payload: {
+        instagramHandle: "@cooklily.teste",
+        whatsappPhone: "+5567999991111",
+        publicAddressText: "Rua Loja, 123",
+        loyaltyOrderCentsPerPoint: 250,
+        loyaltyCampaignBonusPoints: 12,
+        loyaltyCouponBonusPoints: 8
+      }
+    });
+    expect(updated.statusCode).toBe(200);
+    expect(updated.json()).toMatchObject({
+      instagramHandle: "cooklily.teste",
+      whatsappPhone: "+5567999991111",
+      publicAddressText: "Rua Loja, 123",
+      loyaltyOrderCentsPerPoint: 250,
+      loyaltyCampaignBonusPoints: 12,
+      loyaltyCouponBonusPoints: 8
+    });
+
+    const publicConfig = await app.inject({ method: "GET", url: "/api/v1/lily/public/config" });
+    expect(publicConfig.statusCode).toBe(200);
+    expect(publicConfig.json().social.instagramHandle).toBe("cooklily.teste");
+    expect(publicConfig.json().store.address).toBe("Rua Loja, 123");
+    expect(await lilyPrisma.lilyAdminAudit.count({ where: { entityType: "store-settings" } })).toBe(1);
+  });
+
   it("recalcula item, pedido mínimo e taxa fixa no servidor", async () => {
     await enableFlatOperation();
     const pickup = await quoteSol("pickup");
