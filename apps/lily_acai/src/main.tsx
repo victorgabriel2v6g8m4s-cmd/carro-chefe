@@ -358,8 +358,12 @@ function Entrar() {
     setError("");
     const form = new FormData(event.currentTarget);
     try {
-      await loginLily({ phone: String(form.get("phone") ?? ""), password: String(form.get("password") ?? "") });
-      navigate(nextPath, { replace: true });
+      const authenticated = await loginLily({ phone: String(form.get("phone") ?? ""), password: String(form.get("password") ?? "") });
+      if (authenticated.mfa?.required && !authenticated.mfa.verified) {
+        navigate(`/perfil?next=${encodeURIComponent(nextPath)}`, { replace: true });
+      } else {
+        navigate(nextPath, { replace: true });
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao entrar.");
     } finally {
