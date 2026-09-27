@@ -407,7 +407,7 @@ function Privacidade() {
     <h2>O que é necessário</h2><p>Para manter uma conta, usamos o telefone informado, hash da senha, registros técnicos de sessão e o aceite dos termos aplicáveis. Senhas e tokens de sessão não são armazenados em texto puro.</p>
     <h2>Escolhas opcionais</h2><p>Marketing CookLily, analytics não essencial e compartilhamento com o Carro Chefe são escolhas independentes. Recusar qualquer uma delas não impede cadastro nem compra.</p>
     <h2>Compartilhamento</h2><p>Consentir com compartilhamento não mistura automaticamente as bases. Qualquer transferência futura deverá selecionar somente dados permitidos por finalidade e consentimento vigente.</p>
-    <h2>Pagamentos</h2><p>A aplicação não armazena número de cartão ou CVV. Nesta entrega, o pagamento disponível é Pix com confirmação e reconciliação operacional quando habilitado pela equipe. Um provedor automático só será conectado depois de aprovação específica, sem ampliar desnecessariamente os dados financeiros mantidos pela CookLily.</p>
+    <h2>Pagamentos</h2><p>A CookLily mantém pedido, status, auditoria e reconciliação, mas utiliza processadores externos para movimentar pagamentos. Número do cartão e CVV são capturados e tokenizados pelo processador e não passam pela API CookLily. O sistema mantém apenas identificadores, status e dados operacionais necessários para vincular o pagamento ao pedido, cancelar, reconciliar e estornar.</p>
   </article></Shell>;
 }
 
