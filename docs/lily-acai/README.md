@@ -67,7 +67,8 @@ O lançamento comercial digital completo exige a sequência 05–07.
 - Entrega 07: domínio de pagamento/reconciliação implementado e **tecnicamente aprovado** no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` passaram, com 122 testes em Node 20 e Node 24; deploy/QA operacional ainda pendentes;
 - pagamentos continuam fechados por padrão e o provedor automático ainda não foi escolhido;
 - backlog UX/segurança/admin consolidado em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`;
-- patch P0 mobile + MFA validado no runtime `0f3e894f4993eea1c07aed881bad4ea4525e1674` (CI `36332050698`, CodeQL `36332050747`, 131 testes Node 20/24); QA visual/deploy/enrollment permanecem separados.
+- patch P0 mobile + MFA validado no runtime `0f3e894f4993eea1c07aed881bad4ea4525e1674` (CI `36332050698`, CodeQL `36332050747`, 131 testes Node 20/24); QA visual/deploy/enrollment permanecem separados;
+- patch P1/P2 de acessibilidade, Configurações da loja, sessões e deep-link validado no runtime `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0` (CI `36334839141`, CodeQL `36334839168`, 136 testes Node 20/24); recuperação de senha continua aberta.
 
 Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md` e `entregas/ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
 
@@ -83,4 +84,5 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md` e `entregas/ENTREGA_07_PA
 - PENDENCIAS_UX_SEGURANCA_2026-09-27.md;
 - CONSOLIDACAO_CANONICA_2026-09-27.md;
 - entregas/P0_UX_SEGURANCA_2026-09-27.md;
+- entregas/P1_UX_CONTA_ADMIN_2026-09-27.md;
 - entregas/.
