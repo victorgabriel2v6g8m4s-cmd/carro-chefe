@@ -46,7 +46,12 @@ async function register(phone: string, role: "customer" | "staff" | "admin" = "c
   return { cookie, csrf: me.json().csrfToken, user: me.json().user };
 }
 
-async function createOrder(input: { userId?: string; phone?: string; guestToken?: string } = {}) {
+async function createOrder(input: {
+  userId?: string;
+  phone?: string;
+  guestToken?: string;
+  isHomologation?: boolean;
+} = {}) {
   const suffix = crypto.randomBytes(5).toString("hex");
   return lilyPrisma.lilyOrder.create({
     data: {
@@ -60,6 +65,7 @@ async function createOrder(input: { userId?: string; phone?: string; guestToken?
       phoneNormalized: input.phone ?? "+5567999907000",
       fulfillmentType: "pickup",
       status: "awaiting_payment",
+      isHomologation: input.isHomologation ?? false,
       subtotalCents: 2500,
       deliveryFeeCents: 0,
       discountTotalCents: 0,
@@ -168,6 +174,71 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     expect(config.json().enabled).toBe(true);
     expect(config.json().methods).toEqual([{ id: "manual_pix", label: "Pix", confirmation: "manual" }]);
     expect(config.json()).not.toHaveProperty("manualPixInstructions");
+  });
+
+  it("permite pagamento de homologação sem abrir pagamentos ao público", async () => {
+    const admin = await register("67999907009", "admin");
+    await lilyPrisma.lilyOperationalSettings.update({
+      where: { id: "default" },
+      data: {
+        paymentsEnabled: false,
+        paymentProvider: "manual",
+        manualPixEnabled: true,
+        manualPixInstructions: "PIX HOMOLOGAÇÃO"
+      }
+    });
+    const order = await createOrder({
+      userId: admin.user.id,
+      phone: admin.user.phone,
+      isHomologation: true
+    });
+
+    const publicConfig = await app.inject({ method: "GET", url: "/api/v1/lily/public/payments/config" });
+    expect(publicConfig.statusCode).toBe(200);
+    expect(publicConfig.json().enabled).toBe(false);
+    expect(publicConfig.json().methods).toEqual([]);
+
+    const homologationConfig = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/public/payments/config",
+      headers: { cookie: admin.cookie, "x-lily-homologation": "1" }
+    });
+    expect(homologationConfig.statusCode).toBe(200);
+    expect(homologationConfig.json().enabled).toBe(true);
+    expect(homologationConfig.json().homologation).toBe(true);
+    expect(homologationConfig.json().methods).toEqual([
+      { id: "manual_pix", label: "Pix", confirmation: "manual" }
+    ]);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/payments",
+      headers: {
+        origin,
+        cookie: admin.cookie,
+        "x-lily-csrf": admin.csrf,
+        "x-lily-homologation": "1",
+        "idempotency-key": "homologation-payment-test-0001"
+      },
+      payload: { orderId: order.id, method: "manual_pix" }
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().isHomologation).toBe(true);
+    expect(created.json().status).toBe("pending");
+
+    const publicStillClosed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/payments",
+      headers: {
+        origin,
+        cookie: admin.cookie,
+        "x-lily-csrf": admin.csrf,
+        "idempotency-key": "homologation-payment-public-0001"
+      },
+      payload: { orderId: order.id, method: "manual_pix" }
+    });
+    expect(publicStillClosed.statusCode).toBe(503);
+    expect(publicStillClosed.json().details.code).toBe("LILY_PAYMENTS_DISABLED");
   });
 
   it("protege pedido guest com token e cria pagamento idempotente sem vazar reconciliação interna", async () => {
