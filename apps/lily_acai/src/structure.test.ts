@@ -56,6 +56,15 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(mainSource).toContain("AdminStoreSettingsPage");
   });
 
+  it("mantém deep-link estável para abrir produto por slug", () => {
+    expect(catalogSource).toContain('/cardapio?produto=');
+    expect(catalogSource).toContain('searchParams.get("produto")');
+    expect(catalogSource).toContain('getLilyProductBySlug(productSlug)');
+    expect(catalogSource).toContain('next.set("produto", product.slug)');
+    expect(catalogSource).toContain('next.delete("produto")');
+    expect(catalogSource).toContain('onClose={closeProduct}');
+  });
+
   it("mantém logout e controle explícito de sessões acessíveis no perfil", () => {
     expect(profileSource).toContain("async function handleLogout()");
     expect(profileSource).toContain("await logoutLily(session.csrfToken)");
