@@ -10,6 +10,7 @@ import { lilyOrderRoutes } from "./orders";
 import { lilyProfileRoutes } from "./profile";
 import { lilyPaymentRoutes } from "./payments";
 import { lilyTeamRoutes } from "./team";
+import { lilyMfaRoutes } from "./mfa";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -269,22 +270,36 @@ export async function lilyRoutes(app: FastifyInstance) {
       throw new ApiError(401, "Telefone ou senha inválidos.", { code: "LILY_INVALID_CREDENTIALS" });
     }
     const session = await createLilySession(user.id, request, reply);
+    const privileged = user.role === "staff" || user.role === "admin";
     return {
       user: publicLilyUser(user),
       csrfToken: session.csrfToken,
       sessionExpiresAt: session.expiresAt,
-      consents: await getConsentSnapshot(user.id)
+      consents: await getConsentSnapshot(user.id),
+      mfa: {
+        required: privileged,
+        enabled: user.mfaEnabled,
+        verified: !privileged,
+        setupRequired: privileged && !user.mfaEnabled
+      }
     };
   });
 
   app.get("/api/v1/lily/auth/me", async (request) => {
     const context = await requireLilySession(request);
     const csrfToken = await rotateLilyCsrf(context.session.id);
+    const privileged = context.user.role === "staff" || context.user.role === "admin";
     return {
       user: publicLilyUser(context.user),
       csrfToken,
       sessionExpiresAt: context.session.expiresAt,
-      consents: await getConsentSnapshot(context.user.id)
+      consents: await getConsentSnapshot(context.user.id),
+      mfa: {
+        required: privileged,
+        enabled: context.user.mfaEnabled,
+        verified: !privileged || Boolean(context.session.mfaVerifiedAt),
+        setupRequired: privileged && !context.user.mfaEnabled
+      }
     };
   });
 
@@ -308,4 +323,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyPaymentRoutes);
   await app.register(lilyTeamRoutes);
   await app.register(lilyProfileRoutes);
+  await app.register(lilyMfaRoutes);
 }
