@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
@@ -106,10 +106,20 @@ beforeEach(async () => {
       paymentsEnabled: false,
       paymentProvider: "manual",
       manualPixEnabled: false,
-      manualPixInstructions: null
+      manualPixInstructions: null,
+      mercadoPagoPixEnabled: false,
+      mercadoPagoCardEnabled: false
     },
     create: { id: "default" }
   });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  delete process.env.MERCADO_PAGO_ACCESS_TOKEN;
+  delete process.env.MERCADO_PAGO_PUBLIC_KEY;
+  delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+  delete process.env.MERCADO_PAGO_API_BASE_URL;
 });
 
 afterAll(async () => {
@@ -209,6 +219,165 @@ describe("CookLily Entrega 07 — pagamentos", () => {
       headers: { "x-lily-order-token": "token-incorreto" }
     });
     expect(wrongToken.statusCode).toBe(401);
+  });
+
+  it("não permite abrir Mercado Pago sem as credenciais necessárias", async () => {
+    const admin = await register("67999907008", "admin");
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/payments/settings",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: {
+        paymentsEnabled: true,
+        paymentProvider: "mercado_pago",
+        mercadoPagoPixEnabled: true,
+        mercadoPagoCardEnabled: false
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().details.code).toBe("LILY_MERCADO_PAGO_PIX_CONFIGURATION_REQUIRED");
+  });
+
+  it("webhook assinado reconfirma no provider, paga uma vez e deduplica evento", async () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-ACCESS";
+    process.env.MERCADO_PAGO_PUBLIC_KEY = "TEST-PUBLIC";
+    process.env.MERCADO_PAGO_WEBHOOK_SECRET = "webhook-integration-secret";
+    process.env.MERCADO_PAGO_API_BASE_URL = "https://mercado-pago.test";
+
+    const order = await createOrder();
+    const payment = await lilyPrisma.lilyPayment.create({
+      data: {
+        orderId: order.id,
+        idempotencyKey: "webhook-integration-payment-0001",
+        provider: "mercado_pago",
+        method: "pix",
+        status: "pending",
+        amountCents: 2500,
+        currency: "BRL",
+        providerPaymentId: "ORDER-MP-WEBHOOK-1"
+      }
+    });
+
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: "ORDER-MP-WEBHOOK-1",
+      status: "processed",
+      status_detail: "accredited",
+      total_amount: "25.00",
+      transactions: {
+        payments: [{
+          id: "PAYMENT-MP-WEBHOOK-1",
+          status: "processed",
+          status_detail: "accredited",
+          amount: "25.00",
+          paid_amount: "25.00",
+          payment_method: { id: "pix", type: "bank_transfer" }
+        }]
+      }
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const dataId = "ORDER-MP-WEBHOOK-1";
+    const requestId = "request-webhook-integration-1";
+    const ts = "1790546500";
+    const template = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`;
+    const digest = crypto.createHmac("sha256", "webhook-integration-secret").update(template).digest("hex");
+    const headers = {
+      "x-request-id": requestId,
+      "x-signature": `ts=${ts},v1=${digest}`
+    };
+
+    const first = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/payments/webhooks/mercado-pago?data.id=${encodeURIComponent(dataId)}&type=order`,
+      headers,
+      payload: { type: "order", data: { id: dataId } }
+    });
+    expect(first.statusCode).toBe(204);
+
+    const updatedPayment = await lilyPrisma.lilyPayment.findUnique({ where: { id: payment.id } });
+    const updatedOrder = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(updatedPayment?.status).toBe("approved");
+    expect(updatedPayment?.providerReference).toBe("PAYMENT-MP-WEBHOOK-1");
+    expect(updatedOrder?.status).toBe("paid");
+    expect(updatedOrder?.paidAt).not.toBeNull();
+
+    const second = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/payments/webhooks/mercado-pago?data.id=${encodeURIComponent(dataId)}&type=order`,
+      headers,
+      payload: { type: "order", data: { id: dataId } }
+    });
+    expect(second.statusCode).toBe(204);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const events = await lilyPrisma.lilyPaymentEvent.findMany({
+      where: { paymentId: payment.id, providerEventId: `mercado_pago:${requestId}:${dataId}` }
+    });
+    expect(events).toHaveLength(1);
+  });
+
+  it("não paga pedido quando o provider aprova valor divergente", async () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-ACCESS";
+    process.env.MERCADO_PAGO_WEBHOOK_SECRET = "webhook-mismatch-secret";
+    process.env.MERCADO_PAGO_API_BASE_URL = "https://mercado-pago.test";
+
+    const order = await createOrder();
+    const payment = await lilyPrisma.lilyPayment.create({
+      data: {
+        orderId: order.id,
+        idempotencyKey: "webhook-mismatch-payment-0001",
+        provider: "mercado_pago",
+        method: "pix",
+        status: "pending",
+        amountCents: 2500,
+        currency: "BRL",
+        providerPaymentId: "ORDER-MP-MISMATCH-1"
+      }
+    });
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: "ORDER-MP-MISMATCH-1",
+      status: "processed",
+      status_detail: "accredited",
+      total_amount: "24.00",
+      transactions: {
+        payments: [{
+          id: "PAYMENT-MP-MISMATCH-1",
+          status: "processed",
+          status_detail: "accredited",
+          amount: "24.00",
+          paid_amount: "24.00",
+          payment_method: { id: "pix", type: "bank_transfer" }
+        }]
+      }
+    }), { status: 200, headers: { "Content-Type": "application/json" } })));
+
+    const dataId = "ORDER-MP-MISMATCH-1";
+    const requestId = "request-webhook-mismatch-1";
+    const ts = "1790546510";
+    const template = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`;
+    const digest = crypto.createHmac("sha256", "webhook-mismatch-secret").update(template).digest("hex");
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/payments/webhooks/mercado-pago?data.id=${encodeURIComponent(dataId)}&type=order`,
+      headers: {
+        "x-request-id": requestId,
+        "x-signature": `ts=${ts},v1=${digest}`
+      },
+      payload: { type: "order", data: { id: dataId } }
+    });
+    expect(response.statusCode).toBe(204);
+
+    const updatedPayment = await lilyPrisma.lilyPayment.findUnique({ where: { id: payment.id } });
+    const updatedOrder = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    const reconciliation = await lilyPrisma.lilyPaymentReconciliation.findFirst({ where: { paymentId: payment.id } });
+    expect(updatedPayment?.status).toBe("pending");
+    expect(updatedOrder?.status).toBe("awaiting_payment");
+    expect(reconciliation?.status).toBe("discrepant");
+    expect(reconciliation?.discrepancyCents).toBe(-100);
   });
 
   it("aprova somente por admin, reconcilia, detecta divergência e suporta estorno parcial e total", async () => {
