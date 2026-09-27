@@ -61,9 +61,10 @@
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
-| LILY-PEND-034 | Segurança de contas | **MFA staff/admin resolvida tecnicamente** com TOTP/recovery; recuperação de senha continua aberta; revogação dedicada de sessões continua parcial | segurança |
-| LILY-PEND-035 | Configurações da loja | separar canais/endereço/fidelidade da página de entrega/retirada | administração |
-| LILY-PEND-036 | Deep-link de produto | definir link estável que abra/posicione o produto correto no cardápio | conversão |
+| LILY-PEND-034 | Segurança de contas | **MFA staff/admin e revogação dedicada de outras sessões resolvidas tecnicamente**; recuperação de senha continua aberta por falta de canal de verificação aprovado | segurança |
+| LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
+| LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
+| LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
