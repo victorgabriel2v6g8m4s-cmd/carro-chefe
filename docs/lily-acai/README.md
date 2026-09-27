@@ -6,7 +6,8 @@ O nome público definitivo da marca é **CookLily**. No ativo visual oficial, o 
 
 Identificadores técnicos preservados por compatibilidade:
 
-- branch lily-acai;
+- branch histórica/base: `lily-acai`;
+- branch canônica de integração atual: `cooklily/canonical`;
 - documentação docs/lily-acai/;
 - frontend apps/lily_acai/;
 - URL pública /lilyacai/*;
@@ -59,11 +60,15 @@ O lançamento comercial digital completo exige a sequência 05–07.
 
 ## Estado atual
 
-- Entrega 05: publicada na VPS; homologação funcional conjunta com a 06 pendente;
-- Entrega 06: SHA técnico validado `da166683ab2d0e27acae23d9714ec8e824a02ac4`, CI/CodeQL aprovados; deploy pendente;
-- Entrega 07: ainda não iniciada; pedidos da 06 permanecem `awaiting_payment`.
+- a linha de desenvolvimento foi consolidada em `cooklily/canonical`; `lily-acai` permanece como base histórica;
+- Entrega 05: publicada na VPS, mas a homologação final deve ser repetida contra a linha canônica;
+- Entrega 06: implementação técnica validada no SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`; deploy/homologação da linha consolidada ainda pendentes;
+- patches de homologação 05/06: incorporados na linha canônica, porém os achados de QA mobile devem ser revalidados em aparelhos reais;
+- Entrega 07: domínio de pagamento/reconciliação já implementado; o primeiro gate teve CodeQL verde e CI vermelho por erro de tipagem no serializer de pedidos; a correção foi aplicada em `cooklily/canonical` e exige novo gate completo;
+- pagamentos continuam fechados por padrão e o provedor automático ainda não foi escolhido;
+- backlog UX/segurança/admin consolidado em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
-Relatório da Entrega 06: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
+Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md` e `entregas/ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
 
 ## Documentos principais
 
@@ -74,4 +79,5 @@ Relatório da Entrega 06: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 - TRACKING_COMPATIBILIDADE.md;
 - DEPLOY_VPS.md;
 - DECISOES_PENDENCIAS.md;
+- PENDENCIAS_UX_SEGURANCA_2026-09-27.md;
 - entregas/.
