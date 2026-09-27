@@ -506,3 +506,29 @@ export async function verifyLilyMfa(code: string, csrfToken: string) {
   });
   return parseResponse<{ verified: true; method: "totp" | "recovery"; recoveryCodesRemaining: number }>(response);
 }
+
+
+export type LilySessionRow = {
+  id: string;
+  current: boolean;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  mfaVerified: boolean;
+};
+
+export async function getLilySessions() {
+  const response = await fetch("/api/v1/lily/customer/security/sessions", {
+    credentials: "same-origin"
+  });
+  return parseResponse<{ sessions: LilySessionRow[] }>(response);
+}
+
+export async function revokeOtherLilySessions(csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/security/sessions/revoke-others", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "X-Lily-CSRF": csrfToken }
+  });
+  return parseResponse<{ revoked: number }>(response);
+}
