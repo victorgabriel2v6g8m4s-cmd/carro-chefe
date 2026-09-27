@@ -2,9 +2,33 @@
 
 ## Status
 
-Implementação técnica em validação.
+**Implementação presente; aprovação técnica pendente de novo gate.**
 
 A Entrega 07 parte da linha homologada das Entregas 05/06 e adiciona o domínio financeiro sem misturar credenciais ou dados de cartão ao restante da plataforma.
+
+### Gate v1
+
+O gate `gate/lily-entrega-07-v1` não aprovou a entrega:
+
+- CodeQL: **success**;
+- Quality / Node 20: **failure** em static checks;
+- Quality / Node 24: **failure** em static checks;
+- Tool Health / Linux: **failure** no check `app-api`;
+- demais jobs auxiliares observados: success.
+
+Causa raiz confirmada no log:
+
+`apps/api/src/modules/lily/orders.ts` passava `serializeOrder` diretamente para `orders.map`. Como o serializer possui segundo parâmetro opcional `guestAccessToken`, o TypeScript interpretava o índice numérico fornecido por `Array.map` como esse segundo argumento e rejeitava a assinatura.
+
+Correção aplicada na branch canônica `cooklily/canonical`:
+
+```ts
+orders.map((order) => serializeOrder(order))
+```
+
+O Tool Health falhou em cascata porque o check `app-api` executa o mesmo TypeScript. Não foi identificada, naquele gate, uma falha independente do domínio de pagamentos no Tool Health.
+
+A entrega continua **não aprovada** até CI Node 20/24, testes, builds, Tool Health e CodeQL passarem novamente na árvore canônica.
 
 ## Objetivo
 
@@ -341,6 +365,8 @@ O deployer valida a presença desses blocos e falha fechado se o Nginx live não
 O script de deploy não sobrescreve Nginx automaticamente.
 
 ## Pendências que permanecem
+
+O backlog de UX, segurança e administração levantado em 27/09/2026 está consolidado em `../PENDENCIAS_UX_SEGURANCA_2026-09-27.md`. Os P0 devem ser tratados/revalidados antes de declarar prontidão comercial.
 
 ### Provedor automático
 
