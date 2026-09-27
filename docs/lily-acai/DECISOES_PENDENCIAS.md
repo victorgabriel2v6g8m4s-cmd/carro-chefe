@@ -40,7 +40,7 @@
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | definir/integrar credenciais do provedor | Entrega 07 |
+| LILY-PEND-013 | Pagamento | domínio de pagamento/Pix manual implementado; novo gate completo pendente; provedor automático e credenciais ainda sem decisão | Entrega 07 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
@@ -57,9 +57,23 @@
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
 | LILY-PEND-028 | Alergênicos | criar configuração específica antes da venda comercial completa | compliance |
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
-| LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação permanecem para 07 | Entregas 06–07 |
+| LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação implementados na 07, aguardando gate/deploy/homologação | Entregas 06–07 |
+| LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
+| LILY-PEND-032 | Gate Entrega 07 | corrigir/revalidar CI após falha TypeScript do serializer de pedidos; Tool Health falhou em cascata pelo mesmo `app-api` | bloqueia aprovação da 07 |
+| LILY-PEND-033 | QA UX/mobile | 40 achados consolidados em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`; P0 deve ser revalidado em aparelhos reais após deploy | lançamento |
+| LILY-PEND-034 | Segurança de contas | MFA staff/admin e recuperação segura de senha continuam abertas; revogação dedicada de sessões é parcial | segurança |
+| LILY-PEND-035 | Configurações da loja | separar canais/endereço/fidelidade da página de entrega/retirada | administração |
+| LILY-PEND-036 | Deep-link de produto | definir link estável que abra/posicione o produto correto no cardápio | conversão |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
+
+## Backlog detalhado de UX, segurança e administração
+
+A lista canônica dos 40 achados de homologação/QA de 27/09/2026 é:
+
+`docs/lily-acai/PENDENCIAS_UX_SEGURANCA_2026-09-27.md`
+
+Itens que já possuem correção no código continuam marcados como **CANDIDATO / REVALIDAR** até prova em deploy real; não fechar pendência apenas com evidência documental ou CSS aparentemente correto.
 
 ## Fonte canônica do cardápio
 
