@@ -29,9 +29,16 @@ async function register(phone: string, role: "customer" | "staff" = "customer") 
   });
   expect(response.statusCode).toBe(201);
   const cookie = cookieFrom(response);
+  const userId = response.json().user.id;
   if (role === "staff") {
-    const normalized = response.json().user.phone;
-    await lilyPrisma.lilyUser.update({ where: { phoneNormalized: normalized }, data: { role: "staff" } });
+    await lilyPrisma.lilyUser.update({
+      where: { id: userId },
+      data: { role: "staff", mfaEnabled: true }
+    });
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId },
+      data: { mfaVerifiedAt: new Date() }
+    });
   }
   const me = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
   expect(me.statusCode).toBe(200);
