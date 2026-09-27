@@ -2178,3 +2178,43 @@ img, svg { max-width: 100%; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Sessões da conta */
+.account-sessions-section {
+  display: grid;
+  gap: 12px;
+}
+.account-session-list {
+  display: grid;
+  gap: 8px;
+}
+.account-session-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgb(130 0 35 / 11%);
+  border-radius: 12px;
+  background: var(--cl-color-surface);
+}
+.account-session-list article.is-current {
+  border-color: rgb(130 0 35 / 28%);
+  background: var(--cl-color-surface-strong);
+}
+.account-session-list article > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.account-session-list small {
+  color: var(--cl-color-text-muted);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  .account-session-list article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
