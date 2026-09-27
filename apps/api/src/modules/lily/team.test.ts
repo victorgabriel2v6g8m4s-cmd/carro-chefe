@@ -183,6 +183,23 @@ describe("CookLily gestão de equipe e RBAC", () => {
     });
     expect(changed.statusCode).toBe(200);
 
+    const mfaBlocked = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/catalog",
+      headers: { cookie: privileged.cookie }
+    });
+    expect(mfaBlocked.statusCode).toBe(403);
+    expect(mfaBlocked.json().details.code).toBe("LILY_STAFF_MFA_SETUP_REQUIRED");
+
+    await lilyPrisma.lilyUser.update({
+      where: { id: customer.user.id },
+      data: { mfaEnabled: true }
+    });
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId: customer.user.id, revokedAt: null },
+      data: { mfaVerifiedAt: new Date() }
+    });
+
     const allowed = await app.inject({
       method: "GET",
       url: "/api/v1/lily/admin/catalog",
