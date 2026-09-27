@@ -84,6 +84,16 @@ const paymentInclude = {
   reconciliations: { orderBy: { createdAt: "desc" as const } }
 };
 
+function homologationRequested(request: FastifyRequest) {
+  return request.headers["x-lily-homologation"] === "1";
+}
+
+async function requirePaymentHomologation(request: FastifyRequest, requireCsrf = false) {
+  if (!homologationRequested(request)) return false;
+  await requireLilyStaff(request, requireCsrf);
+  return true;
+}
+
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -151,6 +161,7 @@ function serializePayment(payment: any, internal = false) {
     id: payment.id,
     orderId: payment.orderId,
     orderNumber: payment.order?.orderNumber ?? null,
+    isHomologation: Boolean(payment.order?.isHomologation),
     provider: payment.provider,
     method: payment.method,
     status: payment.status,
@@ -348,8 +359,11 @@ async function applyRemotePaymentState(
   });
 }
 
-function paymentMethods(settings: Awaited<ReturnType<typeof getLilyOperationalSettings>>) {
-  if (!settings.paymentsEnabled) return [];
+function paymentMethods(
+  settings: Awaited<ReturnType<typeof getLilyOperationalSettings>>,
+  options: { allowDisabled?: boolean } = {}
+) {
+  if (!settings.paymentsEnabled && !options.allowDisabled) return [];
 
   if (settings.paymentProvider === "manual") {
     return settings.manualPixEnabled && settings.manualPixInstructions?.trim()
@@ -373,12 +387,14 @@ function paymentMethods(settings: Awaited<ReturnType<typeof getLilyOperationalSe
 }
 
 export async function lilyPaymentRoutes(app: FastifyInstance) {
-  app.get("/api/v1/lily/public/payments/config", async () => {
+  app.get("/api/v1/lily/public/payments/config", async (request) => {
+    const isHomologation = await requirePaymentHomologation(request);
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
-    const methods = paymentMethods(settings);
+    const methods = paymentMethods(settings, { allowDisabled: isHomologation });
     return {
-      enabled: settings.paymentsEnabled,
+      enabled: settings.paymentsEnabled || isHomologation,
+      homologation: isHomologation,
       provider: settings.paymentProvider,
       providerConfigured: methods.length > 0,
       publicKey: settings.paymentProvider === "mercado_pago" ? mercadoPago.publicKey : null,
@@ -393,6 +409,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       id: access.order.id,
       orderNumber: access.order.orderNumber,
       status: access.order.status,
+      isHomologation: access.order.isHomologation,
       amountCents: access.order.grandTotalCents,
       currency: "BRL"
     };
@@ -404,10 +421,16 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const input = createPaymentSchema.parse(request.body);
     const idempotencyKey = readIdempotencyKey(request);
     const access = await requireOrderPaymentAccess(request, input.orderId, true);
+    const isHomologation = await requirePaymentHomologation(request, true);
+    if (isHomologation && !access.order.isHomologation) {
+      throw new ApiError(409, "Modo de homologação exige um pedido de homologação.", {
+        code: "LILY_PAYMENT_HOMOLOGATION_ORDER_REQUIRED"
+      });
+    }
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
 
-    if (!settings.paymentsEnabled) {
+    if (!settings.paymentsEnabled && !isHomologation) {
       throw new ApiError(503, "Pagamentos online ainda não estão habilitados.", { code: "LILY_PAYMENTS_DISABLED" });
     }
 
