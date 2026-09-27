@@ -4,6 +4,7 @@ export type LilyPaymentMethod = "manual_pix" | "pix" | "credit_card";
 
 export type LilyPaymentConfig = {
   enabled: boolean;
+  homologation: boolean;
   provider: "manual" | "mercado_pago";
   providerConfigured: boolean;
   publicKey: string | null;
@@ -27,9 +28,11 @@ export type LilyPayment = {
   id: string;
   orderId: string;
   orderNumber: string | null;
+  isHomologation: boolean;
   provider: string;
   method: string;
   status: string;
+  isHomologation: boolean;
   amountCents: number;
   currency: string;
   instructions: string | null;
@@ -94,15 +97,22 @@ export type AdminPayment = Omit<LilyPayment, "events" | "reconciliations"> & {
   };
 };
 
-function accessHeaders(input: { session?: AuthPayload | null; guestAccessToken?: string | null }, mutate = false) {
+function accessHeaders(
+  input: { session?: AuthPayload | null; guestAccessToken?: string | null; homologation?: boolean },
+  mutate = false
+) {
   const headers: Record<string, string> = {};
   if (input.guestAccessToken) headers["X-Lily-Order-Token"] = input.guestAccessToken;
+  if (input.homologation) headers["X-Lily-Homologation"] = "1";
   if (mutate && input.session) headers["X-Lily-CSRF"] = input.session.csrfToken;
   return headers;
 }
 
-export async function getLilyPaymentConfig() {
-  const response = await fetch("/api/v1/lily/public/payments/config", { credentials: "same-origin" });
+export async function getLilyPaymentConfig(input: { session?: AuthPayload | null; homologation?: boolean } = {}) {
+  const response = await fetch("/api/v1/lily/public/payments/config", {
+    credentials: "same-origin",
+    headers: accessHeaders(input)
+  });
   return parseResponse<LilyPaymentConfig>(response);
 }
 
@@ -127,6 +137,7 @@ export async function createLilyPayment(input: {
   idempotencyKey: string;
   session?: AuthPayload | null;
   guestAccessToken?: string | null;
+  homologation?: boolean;
   payer?: {
     email: string;
     identification?: { type: string; number: string };
