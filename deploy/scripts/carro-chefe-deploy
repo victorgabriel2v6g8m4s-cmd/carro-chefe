@@ -45,7 +45,7 @@ early_die() {
 RELEASE_SHA="$1"
 [[ "${RELEASE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]] || early_die "release SHA deve ter 40 caracteres hexadecimais"
 
-for command in git npm node sqlite3 systemctl nginx curl python3 flock tee sha256sum; do
+for command in git npm node sqlite3 systemctl nginx curl python3 flock tee sha256sum readlink; do
   command -v "${command}" >/dev/null 2>&1 || early_die "comando obrigatório ausente: ${command}"
 done
 
@@ -53,9 +53,15 @@ done
 [[ -f "${ENV_FILE}" ]] || early_die "arquivo de ambiente ausente: ${ENV_FILE}"
 [[ -f "${NGINX_CONF}" ]] || early_die "configuração Nginx ausente: ${NGINX_CONF}"
 
+DEPLOYER_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+
 mkdir -p "${BACKUP_DIR}" "${LOG_DIR}"
-exec 9>"${LOCK_FILE}"
-flock -n 9 || early_die "outro deploy já está em execução"
+if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
+  exec 9>"${LOCK_FILE}"
+  flock -n 9 || early_die "outro deploy já está em execução"
+else
+  [[ -e "/proc/$/fd/9" ]] || early_die "reexec do deployer sem lock herdado"
+fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.log"
@@ -123,7 +129,7 @@ if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
   chmod 0700 "${TARGET_DEPLOYER_TMP}"
   bash -n "${TARGET_DEPLOYER_TMP}" || fail "deployer do release possui sintaxe Bash inválida"
 
-  CURRENT_DEPLOYER_SHA="$(sha256sum "$0" | awk '{print $1}')"
+  CURRENT_DEPLOYER_SHA="$(sha256sum "${DEPLOYER_PATH}" | awk '{print $1}')"
   TARGET_DEPLOYER_SHA="$(sha256sum "${TARGET_DEPLOYER_TMP}" | awk '{print $1}')"
   if [[ "${CURRENT_DEPLOYER_SHA}" != "${TARGET_DEPLOYER_SHA}" ]]; then
     echo "deployer_update=reexec target=${RELEASE_SHA} current_sha256=${CURRENT_DEPLOYER_SHA} target_sha256=${TARGET_DEPLOYER_SHA}"
