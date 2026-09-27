@@ -250,12 +250,18 @@ export async function createMercadoPagoPayment(
   });
 
   const remote = mercadoPagoState(order);
+  const createStatus = remote.status === "approved"
+    || remote.status === "partially_refunded"
+    || remote.status === "refunded"
+    ? "approved"
+    : remote.status === "failed" || remote.status === "cancelled"
+      ? "failed"
+      : "pending";
+
   return {
     providerPaymentId: remote.providerPaymentId,
     providerReference: remote.providerReference,
-    status: remote.status === "partially_refunded" || remote.status === "refunded"
-      ? "approved"
-      : remote.status,
+    status: createStatus,
     paidCents: remote.paidCents,
     instructions: input.method === "pix" ? remote.data.qrCode : null,
     expiresAt: input.method === "pix" ? new Date(Date.now() + 30 * 60 * 1000) : null,
