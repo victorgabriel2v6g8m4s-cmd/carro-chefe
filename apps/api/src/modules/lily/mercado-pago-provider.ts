@@ -264,7 +264,9 @@ export async function createMercadoPagoPayment(
 
 export async function getMercadoPagoPayment(providerPaymentId: string) {
   const order = await mercadoPagoRequest(`/v1/orders/${encodeURIComponent(providerPaymentId)}`);
-  return mercadoPagoState(order);
+  const state = mercadoPagoState(order);
+  const refundReference = order.transactions?.refunds?.at(-1)?.id ?? null;
+  return { ...state, operationReference: refundReference };
 }
 
 export async function cancelMercadoPagoPayment(providerPaymentId: string, idempotencyKey: string) {
