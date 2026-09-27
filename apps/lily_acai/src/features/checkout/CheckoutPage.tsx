@@ -42,6 +42,7 @@ export function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const [saveAddress, setSaveAddress] = useState(false);
+  const [homologation, setHomologation] = useState(false);
   const [quote, setQuote] = useState<OrderQuote | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -70,6 +71,13 @@ export function CheckoutPage() {
     }).catch(() => setSession(null));
   }, []);
 
+  const canHomologate = Boolean(
+    session
+    && ["staff", "admin"].includes(session.user.role)
+    && session.mfa?.verified
+    && !session.user.staffPasswordUpgradeRequired
+  );
+
   const cartSignature = useMemo(() => JSON.stringify(cart.items.map((item) => ({
     id: item.id,
     quantity: item.quantity,
@@ -95,7 +103,8 @@ export function CheckoutPage() {
       const result = await quoteOrder({
         fulfillmentType,
         address: deliveryAddress(),
-        items: cart.items
+        items: cart.items,
+        homologation
       });
       setQuote(result);
       return result;
@@ -117,7 +126,8 @@ export function CheckoutPage() {
       const freshQuote = await quoteOrder({
         fulfillmentType,
         address: deliveryAddress(),
-        items: cart.items
+        items: cart.items,
+        homologation
       });
       setQuote(freshQuote);
       const key = idempotencyKey ?? `cooklily:${crypto.randomUUID()}`;
@@ -131,7 +141,8 @@ export function CheckoutPage() {
         quote: freshQuote,
         attribution: attributionForApi(readStoredCookLilyAttribution()),
         session,
-        idempotencyKey: key
+        idempotencyKey: key,
+        homologation
       });
       if (order.guestAccessToken) storeGuestOrderToken(order.id, order.guestAccessToken);
 
@@ -146,7 +157,7 @@ export function CheckoutPage() {
       }
 
       cart.clear();
-      navigate(`/pagamento/${order.id}`, { replace: true });
+      navigate(`/pagamento/${order.id}${homologation ? "?homologacao=1" : ""}`, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível criar o pedido.");
     } finally {
@@ -176,7 +187,22 @@ export function CheckoutPage() {
 
     {settings && (!settings.ordersEnabled || !settings.openNow) && <div className="operation-warning">
       <strong>Pedidos online indisponíveis agora.</strong>
-      <p>{!settings.ordersEnabled ? "A operação ainda não foi habilitada pela equipe." : "Estamos fora do horário configurado para pedidos."}</p>
+      <p>{!settings.ordersEnabled ? "A operação pública ainda não foi habilitada pela equipe." : "Estamos fora do horário configurado para pedidos."}</p>
+      {canHomologate && <label className="check homologation-toggle">
+        <input
+          type="checkbox"
+          checked={homologation}
+          onChange={(event) => {
+            setHomologation(event.target.checked);
+            setQuote(null);
+            setIdempotencyKey(null);
+          }}
+        />
+        <span><strong>Modo de homologação</strong> — testar pedido e pagamento sem abrir a loja ao público.</span>
+      </label>}
+      {session && ["staff", "admin"].includes(session.user.role) && !canHomologate && <small>
+        Para usar a homologação, conclua a troca de senha exigida e valide o MFA desta sessão.
+      </small>}
     </div>}
 
     <form className="checkout-layout" onSubmit={submit}>
@@ -253,13 +279,18 @@ export function CheckoutPage() {
           <div className="checkout-line"><span>Entrega</span><strong>{money(quote.deliveryFeeCents)}</strong></div>
           <div className="checkout-total"><span>Total</span><strong>{money(quote.grandTotalCents)}</strong></div>
         </> : <p className="price-warning">O valor atual do carrinho é apenas referência. Calcule para validar o total vigente.</p>}
-        <button className="button ghost" type="button" disabled={busy || !settings?.ordersEnabled} onClick={() => void calculate()}>
+        <button className="button ghost" type="button"
+          disabled={busy || (!homologation && !settings?.ordersEnabled)}
+          onClick={() => void calculate()}>
           {busy ? "Calculando..." : "Recalcular total"}
         </button>
-        <button className="button primary" type="submit" disabled={busy || !settings?.ordersEnabled || !settings?.openNow}>
+        <button className="button primary" type="submit"
+          disabled={busy || (!homologation && (!settings?.ordersEnabled || !settings?.openNow))}>
           {busy ? "Criando..." : "Continuar para pagamento"}
         </button>
-        <small>O pedido será criado como aguardando pagamento e você seguirá para a etapa de pagamento.</small>
+        <small>{homologation
+          ? "Pedido de homologação: fica identificado como teste e não exige abertura pública da operação."
+          : "O pedido será criado como aguardando pagamento e você seguirá para a etapa de pagamento."}</small>
       </aside>
     </form>
   </section>;
