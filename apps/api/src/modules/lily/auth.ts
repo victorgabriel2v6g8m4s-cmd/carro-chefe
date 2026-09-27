@@ -22,6 +22,7 @@ export type LilySessionContext = {
     id: string;
     csrfTokenHash: string;
     expiresAt: Date;
+    mfaVerifiedAt: Date | null;
   };
   user: {
     id: string;
@@ -32,6 +33,7 @@ export type LilySessionContext = {
     avatarMediaId: string | null;
     rankingOptIn: boolean;
     staffPasswordUpgradeRequired: boolean;
+    mfaEnabled: boolean;
   };
 };
 
@@ -159,7 +161,8 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
     session: {
       id: record.id,
       csrfTokenHash: record.csrfTokenHash,
-      expiresAt: record.expiresAt
+      expiresAt: record.expiresAt,
+      mfaVerifiedAt: record.mfaVerifiedAt
     },
     user: {
       id: record.user.id,
@@ -169,7 +172,8 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
       status: record.user.status,
       avatarMediaId: record.user.avatarMediaId,
       rankingOptIn: record.user.rankingOptIn,
-      staffPasswordUpgradeRequired: record.user.staffPasswordUpgradeRequired
+      staffPasswordUpgradeRequired: record.user.staffPasswordUpgradeRequired,
+      mfaEnabled: record.user.mfaEnabled
     }
   };
 }
@@ -219,7 +223,8 @@ export function publicLilyUser(user: LilySessionContext["user"]) {
     role: user.role,
     avatarUrl: user.avatarMediaId ? `/api/v1/lily/public/media/${encodeURIComponent(user.avatarMediaId)}` : null,
     rankingOptIn: user.rankingOptIn,
-    staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired
+    staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
+    mfaEnabled: user.mfaEnabled
   };
 }
 
