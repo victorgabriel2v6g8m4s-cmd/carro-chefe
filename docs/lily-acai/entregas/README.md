@@ -93,3 +93,18 @@ A correção foi revalidada com sucesso no runtime SHA `4b111c2e26b234d83111a58a
 A Entrega 07 está tecnicamente aprovada, mas isso não autoriza deploy nem encerra QA operacional/mobile.
 
 Backlog de homologação: `../PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
+
+
+## Patch P0 — UX mobile e MFA
+
+Documento: `P0_UX_SEGURANCA_2026-09-27.md`.
+
+Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674`.
+
+- CI `36332050698`: success;
+- CodeQL `36332050747`: success;
+- Node 20: 27 arquivos / 131 testes;
+- Node 24: 27 arquivos / 131 testes;
+- Tool Health e gates auxiliares: success.
+
+O patch trata os P0 de implementação. QA visual em aparelhos reais e enrollment MFA na VPS continuam como homologação operacional, não como dívida de código.
