@@ -25,6 +25,10 @@ model LilyUser {
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
   staffPasswordUpgradeRequired Boolean @default(false)
+  mfaEnabled                  Boolean  @default(false)
+  mfaSecretEncrypted          String?
+  mfaRecoveryCodesJson        String   @default("[]")
+  mfaEnrolledAt               DateTime?
 
   @@index([status, createdAt])
 }
@@ -36,6 +40,7 @@ model LilySession {
   csrfTokenHash String
   expiresAt     DateTime
   revokedAt     DateTime?
+  mfaVerifiedAt DateTime?
   lastSeenAt    DateTime  @default(now())
   createdAt     DateTime  @default(now())
   user          LilyUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
