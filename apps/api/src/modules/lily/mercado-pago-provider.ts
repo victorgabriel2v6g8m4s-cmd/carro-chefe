@@ -300,7 +300,9 @@ export async function refundMercadoPagoPayment(input: LilyPaymentProviderRefundI
       body
     }
   );
-  return mercadoPagoState(order);
+  const state = mercadoPagoState(order);
+  const refundReference = order.transactions?.refunds?.at(-1)?.id ?? null;
+  return { ...state, operationReference: refundReference };
 }
 
 function parseSignature(value: string) {
