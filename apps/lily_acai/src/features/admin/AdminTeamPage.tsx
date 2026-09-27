@@ -40,7 +40,7 @@ export function AdminTeamPage() {
         role: String(data.get("role") || "staff") as "staff" | "admin"
       }, session.csrfToken);
       form.reset();
-      setMessage(`${member.phone} promovido para ${member.role}. A conta precisa atualizar a senha antes de usar funções administrativas.`);
+      setMessage(`${member.phone} promovido para ${member.role}. A conta precisa atualizar a senha e configurar MFA antes de usar funções administrativas.`);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível promover a conta.");
@@ -78,7 +78,7 @@ export function AdminTeamPage() {
       <div>
         <span className="eyebrow">Segurança e permissões</span>
         <h1>Equipe CookLily</h1>
-        <p>Crie a conta pelo fluxo normal e promova aqui. Promoções exigem troca de senha antes do primeiro acesso administrativo.</p>
+        <p>Crie a conta pelo fluxo normal e promova aqui. Promoções exigem troca de senha e MFA antes do primeiro acesso administrativo.</p>
       </div>
       <Link className="button ghost" to="/painel">Painel</Link>
     </div>
@@ -125,6 +125,7 @@ export function AdminTeamPage() {
             <span className={`team-role role-${member.role}`}>{member.role}</span>
             <span className={member.status === "active" ? "state-live" : "state-off"}>{member.status}</span>
             {member.staffPasswordUpgradeRequired && <span className="team-password-warning">senha pendente</span>}
+            {member.role !== "customer" && <span className={member.mfaEnabled ? "state-live" : "team-password-warning"}>{member.mfaEnabled ? "MFA ativa" : "MFA pendente"}</span>}
           </div>
         </div>
         <div className="team-member-meta">
