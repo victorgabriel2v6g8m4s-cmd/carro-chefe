@@ -84,3 +84,12 @@ Antes de aplicar migrations na VPS:
 3. executar `npm run db:deploy:lily`;
 4. realizar smoke;
 5. manter rollback disponível.
+
+
+## MFA privilegiado
+
+Migration `20260927160000_lily_staff_mfa`.
+
+`LilyUser` registra estado de enrollment, segredo cifrado e hashes de recovery codes. `LilySession.mfaVerifiedAt` diferencia sessão autenticada por senha de sessão privilegiada com segundo fator confirmado.
+
+O banco nunca persiste segredo TOTP em texto puro nem recovery code bruto. A chave de cifra pertence ao ambiente de produção e não ao banco/Git.
