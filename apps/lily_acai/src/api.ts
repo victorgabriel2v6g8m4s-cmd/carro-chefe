@@ -245,6 +245,13 @@ export async function getLilyCatalog(params: Record<string, string | number | bo
   return parseResponse<CatalogPayload>(response);
 }
 
+export async function getLilyProductBySlug(slug: string) {
+  const response = await fetch(`/api/v1/lily/public/products/${encodeURIComponent(slug)}`, {
+    credentials: "same-origin"
+  });
+  return parseResponse<CatalogProduct>(response);
+}
+
 export async function configureLilyItem(input: {
   productId: string;
   sizeMl: number;
