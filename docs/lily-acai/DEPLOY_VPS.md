@@ -369,40 +369,97 @@ Antes de liberar acesso administrativo após a migration `20260927160000_lily_st
 - `LILY_MFA_ENCRYPTION_KEY` não aparece em bundle, logs de aplicação ou Git.
 
 
-## Incidente de preflight MFA — 27/09/2026
+## Incidentes de preflight MFA e deployer instalado — 27/09/2026
 
-Tentativa de deploy do SHA `54798582450c7b76b4c624e4a44c203c022533f0` falhou com segurança na fase `tests`, antes de qualquer migration real.
+Duas tentativas falharam com segurança na fase `tests`, antes de qualquer migration real, e restauraram automaticamente o checkout anterior `675a3004b2980d18f013081e37dd3b70e2099675`.
 
-Sintoma:
+A segunda tentativa confirmou duas causas operacionais distintas:
 
-- `mfa.test.ts`: setup MFA retornou 500 quando a suíte herdou `NODE_ENV=production` do ambiente da VPS;
-- o teste seguinte tentou usar o segredo ausente e gerou um `TypeError` secundário;
-- o deployer restaurou automaticamente o checkout anterior `675a3004b2980d18f013081e37dd3b70e2099675`.
+1. `/usr/local/sbin/carro-chefe-deploy` ainda era uma versão antiga. O comando recebeu um SHA novo, mas o código do próprio deployer executado continuou sendo o binário antigo, portanto a correção `NODE_ENV=test` versionada no release não foi usada;
+2. `/etc/carro-chefe/carro-chefe.env` ainda não possuía `LILY_MFA_ENCRYPTION_KEY`, e o caminho MFA falhou fechado quando executado com semântica de produção.
 
-Correção:
+### Correção estrutural
 
-- somente a etapa de testes do preflight passa a usar `NODE_ENV=test`;
-- migrations, static checks e builds continuam usando a configuração real de produção;
-- existe teste explícito do caminho MFA com `NODE_ENV=production` e chave válida;
-- o teste valida o status do setup antes de consumir o segredo.
+O deployer agora, imediatamente após `git fetch` e antes de Nginx, checkout, gates, backup ou migrations:
 
-Runtime corrigido e validado:
+- extrai `deploy/scripts/carro-chefe-deploy` do SHA alvo;
+- compara o checksum com a versão em execução;
+- se houver diferença, reexecuta exatamente a versão contida no release;
+- preserva o lock de deploy através do `exec`;
+- impede loop com `CARRO_CHEFE_DEPLOY_REEXEC`.
 
-`4ec675fa0ff600c96bc423b95e21bd0f19fe4407`
+A suíte de preflight continua usando explicitamente `NODE_ENV=test`. Um teste separado exercita o MFA com `NODE_ENV=production` e chave válida.
+
+### Bootstrap único desta VPS
+
+Como o binário atualmente instalado é anterior ao mecanismo de auto-reexec, atualize-o uma vez antes do próximo deploy:
+
+```bash
+cd /srv/carro-chefe/current
+git fetch origin --prune
+
+RELEASE_SHA="bf72060e156775f3114c5fd91c5555c412894d3c"
+
+git cat-file -e "${RELEASE_SHA}^{commit}"
+git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy" > /tmp/carro-chefe-deploy
+bash -n /tmp/carro-chefe-deploy
+
+install -m 0755 /tmp/carro-chefe-deploy /usr/local/sbin/carro-chefe-deploy
+rm -f /tmp/carro-chefe-deploy
+
+EXPECTED="$(git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy" | sha256sum | awk '{print $1}')"
+ACTUAL="$(sha256sum /usr/local/sbin/carro-chefe-deploy | awk '{print $1}')"
+test "${EXPECTED}" = "${ACTUAL}" || { echo "ERRO: deployer instalado diverge do release"; exit 1; }
+echo "deployer_bootstrap=ok"
+```
+
+### Chave MFA
+
+Gere a chave somente na VPS e grave-a no arquivo de ambiente sem imprimi-la:
+
+```bash
+ENV_FILE=/etc/carro-chefe/carro-chefe.env
+
+if ! grep -Eq '^LILY_MFA_ENCRYPTION_KEY=.+ "${ENV_FILE}"; then
+  KEY="$(node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))")"
+
+  if grep -q '^LILY_MFA_ENCRYPTION_KEY=' "${ENV_FILE}"; then
+    sed -i "s|^LILY_MFA_ENCRYPTION_KEY=.*$|LILY_MFA_ENCRYPTION_KEY=${KEY}|" "${ENV_FILE}"
+  else
+    printf '\nLILY_MFA_ENCRYPTION_KEY=%s\n' "${KEY}" >> "${ENV_FILE}"
+  fi
+
+  unset KEY
+fi
+
+chmod 600 "${ENV_FILE}"
+
+set -a
+. "${ENV_FILE}"
+set +a
+node -e 'const k=Buffer.from(process.env.LILY_MFA_ENCRYPTION_KEY||"","base64url"); if(k.length!==32) process.exit(1); console.log("mfa_key=ok")'
+```
+
+Não substituir uma chave MFA já válida em releases futuros: contas já provisionadas dependem dela para descriptografar o segredo TOTP.
+
+### Runtime aprovado para a próxima tentativa
+
+`bf72060e156775f3114c5fd91c5555c412894d3c`
 
 Evidências:
 
-- CI `36348076031`: success;
-- CodeQL `36348076037`: success;
-- Node 20: 27 arquivos / 138 testes;
-- Node 24: 27 arquivos / 138 testes;
-- `mfa.test.ts`: 4 testes aprovados nas duas matrizes;
-- builds e Tool Health: success.
+- CI `36352209781`: success;
+- CodeQL `36352209735`: success;
+- Node 20: 27 arquivos / 139 testes;
+- Node 24: 27 arquivos / 139 testes;
+- `mfa.test.ts`: 4/4 success;
+- `deploy-scripts.test.ts`: 4/4 success;
+- builds, Tool Health e gates auxiliares: success.
 
-Próxima tentativa de deploy deve usar exatamente:
+Depois do bootstrap do deployer e da chave:
 
 ```bash
-sudo carro-chefe-deploy 4ec675fa0ff600c96bc423b95e21bd0f19fe4407
+sudo carro-chefe-deploy bf72060e156775f3114c5fd91c5555c412894d3c
 ```
 
-Não usar o SHA documental `547985824...` nem a cabeça posterior da branch para esta publicação sem novo gate completo.
+Não usar `547985824...`, `4ec675fa...` ou a cabeça documental posterior da branch para esta publicação.
