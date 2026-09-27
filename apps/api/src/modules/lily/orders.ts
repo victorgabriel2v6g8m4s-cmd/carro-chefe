@@ -418,7 +418,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       orderBy: { createdAt: "desc" },
       take: 50
     });
-    return { orders: orders.map(serializeOrder) };
+    return { orders: orders.map((order) => serializeOrder(order)) };
   });
 
   app.get("/api/v1/lily/customer/orders/:id", async (request) => {
