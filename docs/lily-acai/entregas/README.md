@@ -10,7 +10,7 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 | 04 | Landing, leads, WhatsApp e primeira publicação | implementada e publicada; revalidar junto da linha canônica |
 | 05 | Catálogo, mídia, admin, cardápio dinâmico e publicação | publicada na VPS; homologação conjunta com 06 pendente |
 | 06 | Carrinho, endereço e criação de pedido | **implementação técnica concluída e validada; deploy/homologação pendentes** |
-| 07 | Pagamento e reconciliação | **implementação presente; primeiro gate teve CodeQL verde e CI vermelho; correção aplicada na branch canônica e novo gate pendente** |
+| 07 | Pagamento e reconciliação | **implementação técnica aprovada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy/homologação pendentes** |
 | 08 | Painel de pedidos | parcial: fulfillment/configuração existem; fila/operação completa pendente |
 | 09 | Tracking QR e analytics first-party | parcial: attribution `la_*` existe; analytics completo pendente |
 | 10 | QA operacional, acessibilidade, observabilidade e hardening | backlog aberto; 40 achados de UX/segurança/admin formalizados |
@@ -81,6 +81,15 @@ O primeiro gate da Entrega 07 (`gate/lily-entrega-07-v1`) apresentou:
 - causa raiz: `orders.map(serializeOrder)` fazia o índice de `Array.map` ser interpretado como o segundo parâmetro opcional `guestAccessToken` do serializer;
 - correção canônica: usar callback explícito `orders.map((order) => serializeOrder(order))`.
 
-A Entrega 07 continua **não aprovada** até o novo gate completo ficar verde.
+A correção foi revalidada com sucesso no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`:
+
+- CI run `36330633129`: **success**;
+- CodeQL run `36330633098`: **success**;
+- Quality Node 20: **122 testes / 25 arquivos**, build success;
+- Quality Node 24: **122 testes / 25 arquivos**, build success;
+- Tool Health / Linux: **success**;
+- Workbook Snapshot, Excel Recipe Linux/Windows e Windows Supervisor: **success**.
+
+A Entrega 07 está tecnicamente aprovada, mas isso não autoriza deploy nem encerra QA operacional/mobile.
 
 Backlog de homologação: `../PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
