@@ -83,6 +83,7 @@ export type LilyOrder = {
   orderNumber: string;
   fulfillmentType: "pickup" | "delivery";
   status: string;
+  isHomologation: boolean;
   subtotalCents: number;
   deliveryFeeCents: number;
   discountTotalCents: number;
@@ -151,11 +152,15 @@ export async function quoteOrder(input: {
   fulfillmentType: "pickup" | "delivery";
   address?: LilyAddressInput;
   items: CartItem[];
+  homologation?: boolean;
 }) {
   const response = await fetch("/api/v1/lily/orders/quote", {
     method: "POST",
     credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(input.homologation ? { "X-Lily-Homologation": "1" } : {})
+    },
     body: JSON.stringify({
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
@@ -175,10 +180,12 @@ export async function createOrder(input: {
   attribution?: Record<string, string>;
   session?: AuthPayload | null;
   idempotencyKey: string;
+  homologation?: boolean;
 }) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "Idempotency-Key": input.idempotencyKey
+    "Idempotency-Key": input.idempotencyKey,
+    ...(input.homologation ? { "X-Lily-Homologation": "1" } : {})
   };
   if (input.session) headers["X-Lily-CSRF"] = input.session.csrfToken;
 
