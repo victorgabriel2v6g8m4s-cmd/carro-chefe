@@ -40,7 +40,7 @@
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | domínio de pagamento/Pix manual implementado; novo gate completo pendente; provedor automático e credenciais ainda sem decisão | Entrega 07 |
+| LILY-PEND-013 | Pagamento | domínio de pagamento/Pix manual implementado e gate técnico aprovado; provedor automático e credenciais ainda sem decisão; deploy/homologação pendentes | Entrega 07 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
@@ -59,7 +59,7 @@
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
 | LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação implementados na 07, aguardando gate/deploy/homologação | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
-| LILY-PEND-032 | Gate Entrega 07 | corrigir/revalidar CI após falha TypeScript do serializer de pedidos; Tool Health falhou em cascata pelo mesmo `app-api` | bloqueia aprovação da 07 |
+| LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | 40 achados consolidados em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`; P0 deve ser revalidado em aparelhos reais após deploy | lançamento |
 | LILY-PEND-034 | Segurança de contas | MFA staff/admin e recuperação segura de senha continuam abertas; revogação dedicada de sessões é parcial | segurança |
 | LILY-PEND-035 | Configurações da loja | separar canais/endereço/fidelidade da página de entrega/retirada | administração |
