@@ -556,3 +556,63 @@ sudo carro-chefe-deploy bf72060e156775f3114c5fd91c5555c412894d3c
 ```
 
 Não usar `547985824...`, `4ec675fa...` ou a cabeça documental posterior da branch para esta publicação.
+
+
+## Homologação do gateway Mercado Pago
+
+A integração automática foi implementada de forma fail-closed e não cria nem ativa uma conta no processador.
+
+Antes de selecionar `mercado_pago` no painel:
+
+1. criar/aprovar a conta do estabelecimento no Mercado Pago;
+2. criar a aplicação em Mercado Pago Developers;
+3. habilitar o Checkout Transparente e cadastrar a chave Pix exigida pelo processador;
+4. obter as credenciais produtivas `Public Key` e `Access Token`;
+5. em **Webhooks**, configurar notificações de **Orders** para:
+
+```text
+https://carrochefe.com/api/v1/lily/payments/webhooks/mercado-pago
+```
+
+6. copiar a chave secreta gerada para validação das notificações;
+7. adicionar manualmente em `/etc/carro-chefe/carro-chefe.env`, sem versionar os valores:
+
+```env
+MERCADO_PAGO_PUBLIC_KEY=<public-key-produtiva>
+MERCADO_PAGO_ACCESS_TOKEN=<access-token-produtivo>
+MERCADO_PAGO_WEBHOOK_SECRET=<secret-do-webhook>
+```
+
+8. manter o arquivo com permissões restritas;
+9. fazer novo deploy/restart para o processo receber as variáveis;
+10. acessar `/lilyacai/painel/pagamentos` e confirmar que o painel mostra as três credenciais como configuradas;
+11. homologar Pix e cartão em operação controlada;
+12. somente depois habilitar os métodos e, por último, `paymentsEnabled`.
+
+### Segurança operacional
+
+- `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` nunca podem entrar em Git, logs, bundle Vite ou navegador;
+- somente `MERCADO_PAGO_PUBLIC_KEY` pode ser enviada ao frontend;
+- o endpoint de webhook fica coberto pelo namespace Nginx `/api/v1/lily/payments/`;
+- o backend valida `x-signature` + `x-request-id` + `data.id` e consulta a Order diretamente no Mercado Pago antes de alterar o banco;
+- a aprovação automática exige que o valor confirmado pelo provider seja exatamente o total do pedido;
+- o painel não permite confirmação manual de pagamento de provider automático;
+- cancelamentos e estornos automáticos chamam primeiro o provider;
+- `paymentsEnabled`, Pix Mercado Pago e cartão Mercado Pago permanecem desligados até homologação.
+
+### Smoke mínimo do gateway
+
+Com uma conta/configuração de teste ou cobrança controlada:
+
+- configuração pública nunca expõe Access Token nem Webhook Secret;
+- Pix gera QR Code/Copia e Cola vinculado ao pedido correto;
+- repetir a mesma criação com a mesma idempotência não duplica cobrança;
+- webhook com assinatura inválida retorna 401;
+- webhook válido é deduplicado;
+- pagamento aprovado com valor exato muda pedido de `awaiting_payment` para `paid`;
+- valor divergente não paga o pedido e cria reconciliação `discrepant`;
+- cartão é criado somente com token do Brick; PAN/CVV não chegam ao backend;
+- estorno parcial mantém pedido pago e registra saldo estornado;
+- estorno total muda pagamento/pedido para `refunded`.
+
+Veja também `docs/lily-acai/PAGAMENTOS_GATEWAY_2026-09-27.md`.
