@@ -8,6 +8,7 @@ const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
+const paymentSource = readFileSync(resolve(sourceDirectory, "features/payments/PaymentPage.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("não mascara overflow horizontal globalmente", () => {
@@ -71,5 +72,20 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(profileSource).toContain("Sair da conta");
     expect(profileSource).toContain("Encerrar outras sessões");
     expect(profileSource).toContain("revokeOtherLilySessions");
+  });
+
+  it("tokeniza cartão no Brick sem criar campos próprios de PAN/CVV", () => {
+    expect(paymentSource).toContain("https://sdk.mercadopago.com/js/v2");
+    expect(paymentSource).toContain('bricks.create("cardPayment"');
+    expect(paymentSource).toContain("payment_method_id");
+    expect(paymentSource).toContain("formData?.token");
+    expect(paymentSource).not.toMatch(/name=["'](?:card_number|security_code|cvv)["']/i);
+  });
+
+  it("exibe QR Pix e não expõe credenciais privadas no frontend", () => {
+    expect(paymentSource).toContain("providerData?.qrCodeBase64");
+    expect(paymentSource).toContain("providerData?.qrCode");
+    expect(paymentSource).not.toContain("MERCADO_PAGO_ACCESS_TOKEN");
+    expect(paymentSource).not.toContain("MERCADO_PAGO_WEBHOOK_SECRET");
   });
 });
