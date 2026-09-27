@@ -417,6 +417,7 @@ model LilyOrder {
   phoneNormalized     String
   fulfillmentType     String
   status              String                 @default("awaiting_payment")
+  isHomologation      Boolean                @default(false)
   subtotalCents       Int
   deliveryFeeCents    Int
   discountTotalCents  Int                    @default(0)
