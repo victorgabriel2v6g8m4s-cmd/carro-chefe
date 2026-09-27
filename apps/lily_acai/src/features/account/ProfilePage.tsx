@@ -7,7 +7,9 @@ import {
   getLilyProfile,
   getLilyRanking,
   getLilySession,
+  getLilySessions,
   logoutLily,
+  revokeOtherLilySessions,
   startLilyMfaSetup,
   updateLilyProfile,
   uploadLilyProfileAvatar,
@@ -15,7 +17,8 @@ import {
   type AuthPayload,
   type LilyMfaStatus,
   type LilyProfilePayload,
-  type LilyRankingRow
+  type LilyRankingRow,
+  type LilySessionRow
 } from "../../api";
 
 function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
@@ -47,13 +50,16 @@ export function ProfilePage() {
   const [mfaStatus, setMfaStatus] = useState<LilyMfaStatus | null>(null);
   const [mfaSetup, setMfaSetup] = useState<{ secret: string; otpauthUri: string } | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [sessions, setSessions] = useState<LilySessionRow[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   async function refresh() {
     const current = await getLilySession();
     setSession(current);
-    setProfile(await getLilyProfile());
+    const [nextProfile, sessionPayload] = await Promise.all([getLilyProfile(), getLilySessions()]);
+    setProfile(nextProfile);
+    setSessions(sessionPayload.sessions);
     if (["staff", "admin"].includes(current.user.role)) {
       setMfaStatus(await getLilyMfaStatus());
     } else {
@@ -198,6 +204,24 @@ export function ProfilePage() {
     }
   }
 
+  async function revokeOtherSessions() {
+    if (!session || busy) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await revokeOtherLilySessions(session.csrfToken);
+      await refresh();
+      setMessage(result.revoked > 0
+        ? `${result.revoked} outra(s) sessão(ões) encerrada(s).`
+        : "Não havia outras sessões ativas.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível encerrar as outras sessões.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
@@ -333,6 +357,24 @@ export function ProfilePage() {
         </div>}
         {nextPath && mfaStatus?.verified && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
       </section>}
+
+      <section className="checkout-section account-sessions-section">
+        <h2>Sessões da conta</h2>
+        <p>Revise onde sua conta está ativa e encerre todas as outras sessões sem desconectar este dispositivo.</p>
+        <div className="account-session-list">
+          {sessions.map((item) => <article key={item.id} className={item.current ? "is-current" : ""}>
+            <div>
+              <strong>{item.current ? "Esta sessão" : "Outra sessão"}</strong>
+              <small>Última atividade: {new Date(item.lastSeenAt).toLocaleString("pt-BR")}</small>
+              <small>Expira: {new Date(item.expiresAt).toLocaleString("pt-BR")}</small>
+            </div>
+            {privileged && <span className={item.mfaVerified ? "state-live" : "state-off"}>{item.mfaVerified ? "MFA confirmada" : "MFA pendente"}</span>}
+          </article>)}
+        </div>
+        <button className="button ghost" type="button" onClick={() => void revokeOtherSessions()} disabled={busy || sessions.filter((item) => !item.current).length === 0}>
+          Encerrar outras sessões
+        </button>
+      </section>
 
       <form className="checkout-section" onSubmit={changePassword}>
         <h2>Segurança</h2>
