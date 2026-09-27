@@ -191,13 +191,14 @@ function serializeZone(zone: {
 
 export async function resolveLilyFulfillment(
   fulfillmentType: "pickup" | "delivery",
-  address?: { postalCode: string; neighborhood: string }
+  address?: { postalCode: string; neighborhood: string },
+  options: { allowClosed?: boolean } = {}
 ) {
   const settings = await getLilyOperationalSettings();
-  if (!settings.ordersEnabled) {
+  if (!options.allowClosed && !settings.ordersEnabled) {
     throw new ApiError(409, "Pedidos online estão pausados no momento.", { code: "LILY_ORDERS_DISABLED" });
   }
-  if (!lilyOpenNow(settings)) {
+  if (!options.allowClosed && !lilyOpenNow(settings)) {
     throw new ApiError(409, "A CookLily está fora do horário configurado para pedidos.", { code: "LILY_OUTSIDE_BUSINESS_HOURS" });
   }
 
