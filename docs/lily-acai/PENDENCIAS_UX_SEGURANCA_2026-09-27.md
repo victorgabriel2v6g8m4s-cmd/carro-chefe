@@ -40,19 +40,19 @@ Status usados:
 | UX-012 | Menu aberto cobre conteúdo sem backdrop. | **CANDIDATO / REVALIDAR.** Backdrop implementado. | Drawer aberto possui backdrop claro e bloqueia interação acidental com conteúdo abaixo. |
 | UX-013 | Menu não fecha clicando fora. | **CANDIDATO / REVALIDAR.** Backdrop chama `closeMenu`. | Clique/toque fora fecha o drawer. |
 | UX-014 | Menu não fecha com Escape. | **CANDIDATO / REVALIDAR.** Listener de `Escape` implementado. | Escape fecha o drawer e devolve foco ao botão do menu. |
-| A11Y-001 | Falta tratamento de foco/focus trap no menu. | **PARCIAL.** O foco inicial e retorno ao botão existem, mas não há focus trap explícito. | Tab/Shift+Tab não escapam de forma confusa do drawer aberto; foco é restaurado no fechamento. |
-| A11Y-002 | Botões mobile de 40×40 px. | **CANDIDATO / REVALIDAR.** Header usa 44×44 px; alguns CTAs de combo ainda usam 40/42 px. | Controles interativos principais têm alvo mínimo 44×44 px, salvo exceção devidamente justificada. |
+| A11Y-001 | Falta tratamento de foco/focus trap no menu. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** Drawer cicla Tab/Shift+Tab entre primeiro/último controle, mantém Escape e restaura foco no botão. | Tab/Shift+Tab não escapam de forma confusa do drawer aberto; foco é restaurado no fechamento. |
+| A11Y-002 | Botões mobile de 40×40 px. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** Header e controles críticos do carrossel usam no mínimo 44×44 px; teste estrutural impede regressão. | Controles interativos principais têm alvo mínimo 44×44 px, salvo exceção devidamente justificada. |
 | UX-015 | “Criar conta” quebra em duas linhas no menu. | **CANDIDATO / REVALIDAR.** Drawer vertical dá largura total ao link. | CTA permanece legível sem quebra inadequada em 320 px. |
 | CSS-001 | Regra genérica escondia o primeiro link “Início”. | **CANDIDATO / REVALIDAR.** A regra genérica antiga não está presente na linha canônica. | Nenhum seletor genérico de `nav:first-child` afeta menus independentes. |
 | ADM-001 | Staff não via “Painel administrativo” no menu. | **CANDIDATO / REVALIDAR.** Link condicional para staff/admin existe no drawer. | Staff/admin encontra o painel pela navegação sem digitar URL. |
 | AUTH-001 | Login administrativo não preservava destino. | **CANDIDATO / REVALIDAR.** Login usa `?next=` validado e páginas administrativas geram destino. | Acesso a `/painel/*` sem sessão -> login -> volta ao destino original. |
-| ADM-002 | Instagram, WhatsApp, endereço e fidelidade misturados em “Entrega e retirada”. | **ABERTA.** A tela ainda se chama “Operação e configurações” dentro de `/painel/entrega`. | Criar página **Configurações da loja** para identidade/canais/endereço/fidelidade; manter entrega/retirada só com fulfillment. |
+| ADM-002 | Instagram, WhatsApp, endereço e fidelidade misturados em “Entrega e retirada”. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** `/painel/configuracoes` e `/admin/store-settings` concentram canais/endereço público/fidelidade; fulfillment ficou separado. | Criar página **Configurações da loja** para identidade/canais/endereço/fidelidade; manter entrega/retirada só com fulfillment. |
 | ADM-003 | Não há gerenciamento de equipe. | **CANDIDATO / REVALIDAR.** Existe `/painel/equipe` admin-only para promoção, papel, suspensão e sessões. | Admin gerencia equipe sem editar SQLite e toda mutação gera auditoria. |
 | SEC-003 | `staff` e `admin` sem distinção real. | **CANDIDATO / REVALIDAR.** Entrega 07 separa leitura/operação de mutações financeiras/equipe. | Testes provam menor privilégio: staff não executa ações exclusivas de admin. |
 | AUTH-002 | Cadastro não confirma senha. | **CANDIDATO / REVALIDAR.** Campo de confirmação existe. | Cadastro bloqueia senhas divergentes antes do envio. |
 | AUTH-003 | Não existe “Esqueci minha senha”. | **ABERTA.** | Definir canal de verificação confiável e implementar recuperação sem permitir takeover por mero conhecimento do telefone. |
 | AUTH-004 | Não existe alterar senha. | **CANDIDATO / REVALIDAR.** Perfil oferece troca autenticada de senha. | Cliente e equipe conseguem trocar senha; política de 8/12 caracteres aplicada. |
-| SEC-004 | Não existe encerrar outras sessões. | **PARCIAL.** Trocar senha revoga outras sessões, mas não existe controle dedicado de sessões. | Criar ação explícita “Encerrar outras sessões” e, idealmente, listar/revogar sessões privilegiadas individualmente. |
+| SEC-004 | Não existe encerrar outras sessões. | **RESOLVIDA TECNICAMENTE.** Perfil lista somente sessões da própria conta e possui ação explícita “Encerrar outras sessões”; a sessão atual é preservada e a mutação exige CSRF. | Criar ação explícita “Encerrar outras sessões” e, idealmente, listar/revogar sessões privilegiadas individualmente. |
 
 ## P2
 
@@ -68,19 +68,18 @@ Status usados:
 | CAT-006 | CTA de combo desproporcionalmente grande. | **CANDIDATO / REVALIDAR.** CTA foi compactado, porém alguns alvos ainda precisam cumprir 44 px. | CTA visualmente proporcional ao conteúdo e com alvo de toque adequado. |
 | CAT-007 | Busca + filtros ocupam espaço vertical excessivo. | **CANDIDATO / REVALIDAR.** Barra sticky + filtros recolhíveis implementados. | Busca fica compacta/sticky; filtros expandem somente sob demanda. |
 | CAT-008 | Grid em duas colunas fica enterrado atrás dos combos. | **CANDIDATO / REVALIDAR.** Ordem atual coloca grid antes do carrossel. | Em mobile, produtos aparecem antes da seção de combos e duas colunas permanecem utilizáveis. |
-| CAT-009 | Link de destaque não abre diretamente o produto/modal. | **ABERTA / REFORMULADA.** O canônico já não usa o hash antigo, porém o CTA da escolha da semana na landing ainda leva genericamente a `/cardapio`. | Definir deep-link estável de produto (slug/query/rota) e abrir/rolar para o produto correto sem depender de hash ignorado. |
+| CAT-009 | Link de destaque não abre diretamente o produto/modal. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** O contrato usa `?produto=<slug>`; abre por slug mesmo fora da primeira página e fechar o modal preserva filtros. | Definir deep-link estável de produto (slug/query/rota) e abrir/rolar para o produto correto sem depender de hash ignorado. |
 
 ## Pendências técnicas paralelas
 
 Além dos 40 achados acima:
 
-1. corrigir e validar novamente o gate da Entrega 07;
+1. Entrega 07 está tecnicamente aprovada; ainda falta deploy/homologação operacional;
 2. selecionar/integrar provedor automático de pagamento ou formalizar Pix manual como fase inicial;
 3. publicar e homologar a linha canônica na VPS por SHA imutável;
-4. separar a página **Configurações da loja** de fulfillment;
-5. concluir MFA e recuperação de senha antes de ampliar a equipe;
-6. sincronizar workbook financeiro, alergênicos e fotografias restantes;
-7. completar Entregas 08–10: operação de pedidos, analytics first-party e hardening.
+4. definir canal seguro de verificação para recuperação de senha;
+5. sincronizar workbook financeiro, alergênicos e fotografias restantes;
+6. completar Entregas 08–10: operação de pedidos, analytics first-party e hardening.
 
 ## Ordem recomendada de execução
 
@@ -106,3 +105,15 @@ Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674`.
 Relatório técnico: `entregas/P0_UX_SEGURANCA_2026-09-27.md`.
 
 Os P0 de implementação foram tratados. Itens marcados **QA REAL PENDENTE** não devem ser considerados homologados visualmente até teste em aparelhos reais após deploy.
+
+
+## Evidência da retomada P1/P2
+
+Runtime validado: `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0`.
+
+- CI `36334839141`: success;
+- CodeQL `36334839168`: success;
+- Node 20/24: 27 arquivos / 136 testes;
+- builds e Tool Health: success.
+
+Relatório: `entregas/P1_UX_CONTA_ADMIN_2026-09-27.md`.
