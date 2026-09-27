@@ -64,7 +64,7 @@ O lançamento comercial digital completo exige a sequência 05–07.
 - Entrega 05: publicada na VPS, mas a homologação final deve ser repetida contra a linha canônica;
 - Entrega 06: implementação técnica validada no SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`; deploy/homologação da linha consolidada ainda pendentes;
 - patches de homologação 05/06: incorporados na linha canônica, porém os achados de QA mobile devem ser revalidados em aparelhos reais;
-- Entrega 07: domínio de pagamento/reconciliação já implementado; o primeiro gate teve CodeQL verde e CI vermelho por erro de tipagem no serializer de pedidos; a correção foi aplicada em `cooklily/canonical` e exige novo gate completo;
+- Entrega 07: domínio de pagamento/reconciliação implementado e **tecnicamente aprovado** no runtime SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` passaram, com 122 testes em Node 20 e Node 24; deploy/QA operacional ainda pendentes;
 - pagamentos continuam fechados por padrão e o provedor automático ainda não foi escolhido;
 - backlog UX/segurança/admin consolidado em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
