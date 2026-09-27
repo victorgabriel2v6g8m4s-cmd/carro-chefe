@@ -52,11 +52,20 @@ Se houver alteração local inesperada, interromper.
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
 LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
 LILY_UPLOAD_DIR=/srv/carro-chefe/data/lily-acai/uploads
+LILY_MFA_ENCRYPTION_KEY=<32-bytes-aleatorios-em-base64url>
 TRUST_PROXY=true
 NODE_ENV=production
 ```
 
 Segredos nunca usam `VITE_*`.
+
+A partir do MFA de staff/admin, `LILY_MFA_ENCRYPTION_KEY` é obrigatória em produção e o deployer falha antes de migrations se ela estiver ausente ou inválida. Gere uma vez na VPS e preserve a mesma chave enquanto existirem contas com MFA configurada:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+```
+
+Grave o valor somente em `/etc/carro-chefe/carro-chefe.env`, com permissões restritas. Não versione, não troque a chave sem plano de rotação e backup: ela cifra os segredos TOTP persistidos no banco Lily.
 
 ## Backup antes de migration
 
@@ -342,3 +351,19 @@ Se a aplicação não ficar pronta dentro da janela, o deploy falha mostrando au
 O smoke HTTPS externo também possui tentativas curtas para tolerar pequenos atrasos depois do reload/restart.
 
 Esse comportamento evita falso negativo como o observado na primeira publicação da Entrega 06, em que migrations e restart concluíram mas o primeiro `curl` ocorreu antes do Fastify começar a escutar.
+
+
+## Smoke de segurança — MFA staff/admin
+
+Antes de liberar acesso administrativo após a migration `20260927160000_lily_staff_mfa`:
+
+- login de customer continua sem MFA;
+- conta promovida para staff/admin exige troca de senha quando aplicável;
+- staff/admin sem MFA recebe `LILY_STAFF_MFA_SETUP_REQUIRED` nas rotas administrativas;
+- configuração TOTP exige senha atual e CSRF;
+- segredo TOTP persistido não aparece em texto puro no banco;
+- confirmação inicial emite códigos de recuperação somente uma vez;
+- nova sessão staff/admin recebe `LILY_STAFF_MFA_REQUIRED` até confirmar TOTP ou recovery code;
+- recovery code usado uma vez não funciona novamente;
+- após MFA válida, permissões staff/admin continuam respeitando RBAC;
+- `LILY_MFA_ENCRYPTION_KEY` não aparece em bundle, logs de aplicação ou Git.
