@@ -23,7 +23,9 @@ describe("scripts operacionais CookLily", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     expect(deployer).toContain('git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy"');
     expect(deployer).toContain('CARRO_CHEFE_DEPLOY_REEXEC');
-    expect(deployer).toContain('sha256sum "$0"');
+    expect(deployer).toContain('DEPLOYER_PATH="$(readlink -f "${BASH_SOURCE[0]}")"');
+    expect(deployer).toContain('sha256sum "${DEPLOYER_PATH}"');
+    expect(deployer).toContain('reexec do deployer sem lock herdado');
     expect(deployer).toContain('exec env CARRO_CHEFE_DEPLOY_REEXEC=1');
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="nginx-precheck"'));
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="backup"'));
