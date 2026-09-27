@@ -83,13 +83,12 @@ Além dos 40 achados acima:
 
 ## Ordem recomendada de execução
 
-1. **Gate técnico da Entrega 07** verde.
-2. **P0 mobile + P0 segurança** e QA em 320/360/390/430/768 px.
-3. Deploy controlado da linha canônica.
-4. Revalidação dos itens marcados **CANDIDATO / REVALIDAR**.
-5. P1 administrativos/autenticação.
-6. P2 de catálogo/conteúdo.
-7. Entregas 08–10.
+1. preparar deploy controlado da linha canônica com chave MFA e backups;
+2. homologar P0/P1 em 320/360/390/430/768 px e teclado;
+3. revalidar itens ainda marcados **CANDIDATO / REVALIDAR**;
+4. decidir canal seguro para recuperação de senha;
+5. concluir mídia/fotografia e sincronizações financeiras/alergênicos;
+6. avançar Entregas 08–10: operação de pedidos, analytics e hardening.
 
 
 ## Evidência do patch P0
