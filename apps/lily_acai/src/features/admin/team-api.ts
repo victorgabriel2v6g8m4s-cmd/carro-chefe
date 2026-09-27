@@ -7,6 +7,7 @@ export type LilyTeamMember = {
   role: "customer" | "staff" | "admin";
   status: "active" | "suspended";
   staffPasswordUpgradeRequired: boolean;
+  mfaEnabled: boolean;
   createdAt: string;
   updatedAt: string;
   activeSessions: number;
