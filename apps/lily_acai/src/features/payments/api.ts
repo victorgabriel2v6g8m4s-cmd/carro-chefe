@@ -1,9 +1,26 @@
 import { parseResponse, type AuthPayload } from "../../api";
 
+export type LilyPaymentMethod = "manual_pix" | "pix" | "credit_card";
+
 export type LilyPaymentConfig = {
   enabled: boolean;
+  provider: "manual" | "mercado_pago";
   providerConfigured: boolean;
-  methods: Array<{ id: "manual_pix"; label: string; confirmation: "manual" }>;
+  publicKey: string | null;
+  methods: Array<{
+    id: LilyPaymentMethod;
+    label: string;
+    confirmation: "manual" | "automatic";
+  }>;
+};
+
+export type LilyPaymentProviderData = {
+  ticketUrl: string | null;
+  qrCode: string | null;
+  qrCodeBase64: string | null;
+  paymentMethodId: string | null;
+  paymentMethodType: string | null;
+  installments: number | null;
 };
 
 export type LilyPayment = {
@@ -16,6 +33,7 @@ export type LilyPayment = {
   amountCents: number;
   currency: string;
   instructions: string | null;
+  providerData: LilyPaymentProviderData | null;
   expiresAt: string | null;
   approvedAt: string | null;
   failedAt: string | null;
@@ -34,6 +52,14 @@ export type LilyPayment = {
     status: string;
     createdAt: string;
   }>;
+};
+
+export type LilyPaymentOrderContext = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  amountCents: number;
+  currency: "BRL";
 };
 
 type AdminReconciliation = {
@@ -80,12 +106,36 @@ export async function getLilyPaymentConfig() {
   return parseResponse<LilyPaymentConfig>(response);
 }
 
+export async function getLilyPaymentContext(input: {
+  orderId: string;
+  session?: AuthPayload | null;
+  guestAccessToken?: string | null;
+}) {
+  const response = await fetch(
+    `/api/v1/lily/orders/${encodeURIComponent(input.orderId)}/payment-context`,
+    {
+      credentials: "same-origin",
+      headers: accessHeaders(input)
+    }
+  );
+  return parseResponse<LilyPaymentOrderContext>(response);
+}
+
 export async function createLilyPayment(input: {
   orderId: string;
-  method: "manual_pix";
+  method: LilyPaymentMethod;
   idempotencyKey: string;
   session?: AuthPayload | null;
   guestAccessToken?: string | null;
+  payer?: {
+    email: string;
+    identification?: { type: string; number: string };
+  };
+  card?: {
+    token: string;
+    paymentMethodId: string;
+    installments: number;
+  };
 }) {
   const response = await fetch("/api/v1/lily/payments", {
     method: "POST",
@@ -95,7 +145,12 @@ export async function createLilyPayment(input: {
       "Idempotency-Key": input.idempotencyKey,
       ...accessHeaders(input, true)
     },
-    body: JSON.stringify({ orderId: input.orderId, method: input.method })
+    body: JSON.stringify({
+      orderId: input.orderId,
+      method: input.method,
+      ...(input.payer ? { payer: input.payer } : {}),
+      ...(input.card ? { card: input.card } : {})
+    })
   });
   return parseResponse<LilyPayment>(response);
 }
@@ -121,14 +176,23 @@ export async function getOrderPayments(input: {
     credentials: "same-origin",
     headers: accessHeaders(input)
   });
-  return parseResponse<{ payments: LilyPayment[] }>(response);
+  return parseResponse<{ order: LilyPaymentOrderContext; payments: LilyPayment[] }>(response);
 }
 
 export type AdminPaymentSettings = {
   paymentsEnabled: boolean;
-  paymentProvider: "manual";
+  paymentProvider: "manual" | "mercado_pago";
   manualPixEnabled: boolean;
   manualPixInstructions: string | null;
+  mercadoPagoPixEnabled: boolean;
+  mercadoPagoCardEnabled: boolean;
+  mercadoPago: {
+    accessTokenConfigured: boolean;
+    publicKeyConfigured: boolean;
+    webhookSecretConfigured: boolean;
+    pixReady: boolean;
+    cardReady: boolean;
+  };
 };
 
 export async function getAdminPaymentSettings() {
@@ -136,7 +200,7 @@ export async function getAdminPaymentSettings() {
   return parseResponse<AdminPaymentSettings>(response);
 }
 
-export async function saveAdminPaymentSettings(input: AdminPaymentSettings, csrfToken: string) {
+export async function saveAdminPaymentSettings(input: Omit<AdminPaymentSettings, "mercadoPago">, csrfToken: string) {
   const response = await fetch("/api/v1/lily/admin/payments/settings", {
     method: "PATCH",
     credentials: "same-origin",
@@ -197,7 +261,7 @@ export async function reconcileAdminPayment(
 
 export async function refundAdminPayment(
   paymentId: string,
-  input: { amountCents: number; providerReference: string; note?: string | null },
+  input: { amountCents: number; providerReference?: string | null; note?: string | null },
   csrfToken: string
 ) {
   const response = await fetch(`/api/v1/lily/admin/payments/${encodeURIComponent(paymentId)}/refund`, {
