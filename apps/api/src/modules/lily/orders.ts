@@ -4,6 +4,7 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
+import { requireLilyStaff } from "./admin-security";
 import { getOptionalLilySession, normalizeLilyPhone, requireLilyCsrf, requireLilySession } from "./auth";
 import { lilyAddressInputSchema, normalizeLilyAddress } from "./addresses";
 import {
@@ -93,9 +94,9 @@ async function quoteItems(items: QuoteItemInput[]) {
   }));
 }
 
-async function calculateQuote(input: z.infer<typeof quoteSchema>) {
+async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { allowClosed?: boolean } = {}) {
   const address = input.address ? normalizeLilyAddress(input.address) : undefined;
-  const fulfillment = await resolveLilyFulfillment(input.fulfillmentType, address);
+  const fulfillment = await resolveLilyFulfillment(input.fulfillmentType, address, options);
   const items = await quoteItems(input.items);
   const subtotalCents = items.reduce((sum, item) => sum + item.lineTotalCents, 0);
   if (subtotalCents < fulfillment.minimumOrderCents) {
@@ -121,6 +122,7 @@ function fingerprint(input: {
   phoneNormalized: string;
   order: OrderInput;
   address: ReturnType<typeof normalizeLilyAddress> | null;
+  isHomologation: boolean;
 }) {
   const canonical = {
     userId: input.userId,
@@ -129,7 +131,8 @@ function fingerprint(input: {
     address: input.address,
     customerNote: input.order.customerNote?.trim() || null,
     items: input.order.items,
-    attribution: normalizeLilyAttribution(input.order.attribution ?? {})
+    attribution: normalizeLilyAttribution(input.order.attribution ?? {}),
+    isHomologation: input.isHomologation
   };
   return crypto.createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
 }
@@ -154,6 +157,7 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
     orderNumber: order.orderNumber,
     fulfillmentType: order.fulfillmentType,
     status: order.status,
+    isHomologation: order.isHomologation,
     subtotalCents: order.subtotalCents,
     deliveryFeeCents: order.deliveryFeeCents,
     discountTotalCents: order.discountTotalCents,
@@ -199,6 +203,16 @@ function createGuestAccessToken() {
   return { token, hash };
 }
 
+function homologationRequested(request: FastifyRequest) {
+  return request.headers["x-lily-homologation"] === "1";
+}
+
+async function requireHomologationAccess(request: FastifyRequest, requireCsrf = false) {
+  if (!homologationRequested(request)) return false;
+  await requireLilyStaff(request, requireCsrf);
+  return true;
+}
+
 function readIdempotencyKey(request: FastifyRequest) {
   const raw = request.headers["idempotency-key"];
   const value = typeof raw === "string" ? raw.trim() : "";
@@ -232,7 +246,10 @@ function withoutExpectations(item: z.infer<typeof orderItemSchema>): QuoteItemIn
 export async function lilyOrderRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/orders/quote", {
     config: { rateLimit: { max: 40, timeWindow: "1 minute" } }
-  }, async (request) => calculateQuote(quoteSchema.parse(request.body)));
+  }, async (request) => {
+    const isHomologation = await requireHomologationAccess(request);
+    return calculateQuote(quoteSchema.parse(request.body), { allowClosed: isHomologation });
+  });
 
   app.post("/api/v1/lily/orders", {
     config: { rateLimit: { max: 8, timeWindow: "1 minute" } }
@@ -241,6 +258,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     const idempotencyKey = readIdempotencyKey(request);
     const context = await getOptionalLilySession(request);
     if (context) requireLilyCsrf(request, context);
+    const isHomologation = await requireHomologationAccess(request, true);
 
     const phoneNormalized = normalizeLilyPhone(input.phone);
     if (!phoneNormalized) throw new ApiError(400, "Telefone inválido.", { code: "LILY_INVALID_PHONE" });
@@ -249,7 +267,8 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       userId: context?.user.id ?? null,
       phoneNormalized,
       order: input,
-      address
+      address,
+      isHomologation
     });
 
     const existing = await lilyPrisma.lilyOrder.findUnique({ where: { idempotencyKey }, include: orderInclude });
@@ -273,7 +292,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       fulfillmentType: input.fulfillmentType,
       address: input.address,
       items: input.items.map(withoutExpectations)
-    });
+    }, { allowClosed: isHomologation });
 
     for (let index = 0; index < input.items.length; index += 1) {
       const expected = input.items[index]!;
@@ -307,6 +326,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           phoneNormalized,
           fulfillmentType: input.fulfillmentType,
           status: "awaiting_payment",
+          isHomologation,
           subtotalCents: quote.subtotalCents,
           deliveryFeeCents: quote.deliveryFeeCents,
           discountTotalCents: 0,
@@ -383,7 +403,9 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
             create: {
               fromStatus: null,
               toStatus: "awaiting_payment",
-              actor: context ? `customer:${context.user.id}` : "guest"
+              actor: isHomologation
+                ? `homologation:${context!.user.id}`
+                : context ? `customer:${context.user.id}` : "guest"
             }
           }
         },
