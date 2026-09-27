@@ -34,7 +34,11 @@ async function register(phone: string, role: "customer" | "staff" | "admin" = "c
   if (role !== "customer") {
     await lilyPrisma.lilyUser.update({
       where: { id: userId },
-      data: { role, staffPasswordUpgradeRequired: false }
+      data: { role, staffPasswordUpgradeRequired: false, mfaEnabled: true }
+    });
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId },
+      data: { mfaVerifiedAt: new Date() }
     });
   }
   const me = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
