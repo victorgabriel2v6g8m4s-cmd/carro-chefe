@@ -10,13 +10,24 @@ describe("scripts operacionais CookLily", () => {
     for (const relative of [
       "deploy/scripts/carro-chefe-deploy",
       "deploy/scripts/lily-promote-user",
-      "deploy/scripts/enable-lily-entrega06-nginx"
+      "deploy/scripts/enable-lily-entrega06-nginx",
+      "deploy/scripts/enable-lily-entrega07-nginx"
     ]) {
       const result = spawnSync("bash", ["-n", path.join(root, relative)], {
         encoding: "utf8"
       });
       expect(result.status, `${relative}: ${result.stderr || result.stdout}`).toBe(0);
     }
+  });
+
+  it("mantém bootstrap Nginx da Entrega 07 idempotente e fail-closed", () => {
+    const helper = readFileSync(path.join(root, "deploy/scripts/enable-lily-entrega07-nginx"), "utf8");
+    expect(helper).toContain("location = /api/v1/lily/payments");
+    expect(helper).toContain("location ^~ /api/v1/lily/payments/");
+    expect(helper).toContain("Configuração parcial detectada");
+    expect(helper).toContain("nginx -t falhou; restaurando backup");
+    expect(helper).toContain("systemctl reload nginx");
+    expect(helper.indexOf("location = /api/v1/lily/payments")).toBeLessThan(helper.indexOf('marker = "    location ^~ /api/ { return 404; }"'));
   });
 
   it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {
