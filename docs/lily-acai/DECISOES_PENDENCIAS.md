@@ -40,7 +40,7 @@
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | domínio de pagamento/Pix manual implementado e gate técnico aprovado; provedor automático e credenciais ainda sem decisão; deploy/homologação pendentes | Entrega 07 |
+| LILY-PEND-013 | Pagamento | **provedor automático decidido tecnicamente:** camada própria + adapter Mercado Pago; Pix/cartão/webhook/refund implementados; criar conta, informar credenciais, homologar taxas e fazer deploy continuam pendentes | Entrega 07 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
@@ -57,7 +57,7 @@
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
 | LILY-PEND-028 | Alergênicos | criar configuração específica antes da venda comercial completa | compliance |
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
-| LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação implementados na 07, aguardando gate/deploy/homologação | Entregas 06–07 |
+| LILY-PEND-030 | Checkout | carrinho, entrega/retirada, pedido e domínio financeiro concluídos; gateway automático Mercado Pago integrado sem ativação por default; resta deploy/homologação comercial | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
