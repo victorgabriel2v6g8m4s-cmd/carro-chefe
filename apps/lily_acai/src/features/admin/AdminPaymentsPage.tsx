@@ -18,7 +18,7 @@ function money(cents: number) {
 }
 
 function parseMoney(value: FormDataEntryValue | null) {
-  const normalized = String(value ?? "").trim().replace(/./g, "").replace(",", ".");
+  const normalized = String(value ?? "").trim().replace(/\./g, "").replace(",", ".");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? Math.round(parsed * 100) : 0;
 }
@@ -85,9 +85,11 @@ export function AdminPaymentsPage() {
     try {
       const updated = await saveAdminPaymentSettings({
         paymentsEnabled: form.get("paymentsEnabled") === "on",
-        paymentProvider: "manual",
+        paymentProvider: form.get("paymentProvider") === "mercado_pago" ? "mercado_pago" : "manual",
         manualPixEnabled: form.get("manualPixEnabled") === "on",
-        manualPixInstructions: String(form.get("manualPixInstructions") || "") || null
+        manualPixInstructions: String(form.get("manualPixInstructions") || "") || null,
+        mercadoPagoPixEnabled: form.get("mercadoPagoPixEnabled") === "on",
+        mercadoPagoCardEnabled: form.get("mercadoPagoCardEnabled") === "on"
       }, session.csrfToken);
       setSettings(updated);
       setMessage("Configuração financeira atualizada.");
@@ -107,7 +109,7 @@ export function AdminPaymentsPage() {
     setMessage("");
     try {
       await confirmAdminPayment(payment.id, {
-        providerReference: String(form.get("providerReference") || ""),
+        providerReference: String(form.get("providerReference") || "") || null,
         reportedGrossCents: parseMoney(form.get("reportedGross")),
         feeCents: parseMoney(form.get("fee")),
         netCents: parseMoney(form.get("net")),
@@ -181,7 +183,7 @@ export function AdminPaymentsPage() {
       <div>
         <span className="eyebrow">Entrega 07 · financeiro</span>
         <h1>Pagamentos e reconciliação</h1>
-        <p>Pix manual auditável enquanto um provedor automático não for aprovado. Nenhum cartão é armazenado.</p>
+        <p>Camada financeira própria com Pix manual ou Mercado Pago. Cartões são tokenizados pelo processador e nunca armazenados pela CookLily.</p>
       </div>
       <Link className="button ghost" to="/painel">Painel</Link>
     </div>
@@ -200,21 +202,60 @@ export function AdminPaymentsPage() {
     <form className="checkout-section payment-settings-form" onSubmit={saveSettings}>
       <div>
         <h2>Configuração</h2>
-        <p>O modo atual é manual. Ativar pagamentos exige instruções Pix preenchidas. Trocar para um gateway automático será feito por adaptador, sem reescrever pedidos.</p>
+        <p>O domínio de pedidos e pagamentos continua na CookLily. O processador pode ser trocado sem reescrever checkout, histórico ou reconciliação.</p>
       </div>
+
+      <label>Processador
+        <select name="paymentProvider" defaultValue={settings.paymentProvider} disabled={!isAdmin}>
+          <option value="manual">Pix manual</option>
+          <option value="mercado_pago">Mercado Pago</option>
+        </select>
+      </label>
+
+      <div className="optional-box">
+        <strong>Mercado Pago · credenciais da VPS</strong>
+        <span>Access Token: <b className={settings.mercadoPago.accessTokenConfigured ? "state-live" : "state-off"}>
+          {settings.mercadoPago.accessTokenConfigured ? "configurado" : "ausente"}
+        </b></span>
+        <span>Public Key: <b className={settings.mercadoPago.publicKeyConfigured ? "state-live" : "state-off"}>
+          {settings.mercadoPago.publicKeyConfigured ? "configurada" : "ausente"}
+        </b></span>
+        <span>Webhook secret: <b className={settings.mercadoPago.webhookSecretConfigured ? "state-live" : "state-off"}>
+          {settings.mercadoPago.webhookSecretConfigured ? "configurado" : "ausente"}
+        </b></span>
+        <small>As credenciais não são armazenadas no banco nem exibidas no painel; este bloco mostra somente se estão presentes no ambiente do servidor.</small>
+      </div>
+
       <label className="check">
         <input name="paymentsEnabled" type="checkbox" defaultChecked={settings.paymentsEnabled} disabled={!isAdmin} />
         <span>Pagamentos habilitados</span>
       </label>
-      <label className="check">
-        <input name="manualPixEnabled" type="checkbox" defaultChecked={settings.manualPixEnabled} disabled={!isAdmin} />
-        <span>Pix manual habilitado</span>
-      </label>
-      <label>Instruções Pix
-        <textarea name="manualPixInstructions" rows={5} defaultValue={settings.manualPixInstructions ?? ""} disabled={!isAdmin}
-          placeholder="Ex.: chave Pix, favorecido e instrução para identificação. Não inclua segredos administrativos." />
-      </label>
-      <small>Essas instruções são copiadas para o snapshot do pagamento no momento da criação.</small>
+
+      <fieldset className="checkout-section">
+        <legend>Mercado Pago</legend>
+        <label className="check">
+          <input name="mercadoPagoPixEnabled" type="checkbox" defaultChecked={settings.mercadoPagoPixEnabled} disabled={!isAdmin} />
+          <span>Pix automático {settings.mercadoPago.pixReady ? "· pronto" : "· aguardando credenciais"}</span>
+        </label>
+        <label className="check">
+          <input name="mercadoPagoCardEnabled" type="checkbox" defaultChecked={settings.mercadoPagoCardEnabled} disabled={!isAdmin} />
+          <span>Cartão de crédito {settings.mercadoPago.cardReady ? "· pronto" : "· aguardando credenciais"}</span>
+        </label>
+      </fieldset>
+
+      <fieldset className="checkout-section">
+        <legend>Fallback manual</legend>
+        <label className="check">
+          <input name="manualPixEnabled" type="checkbox" defaultChecked={settings.manualPixEnabled} disabled={!isAdmin} />
+          <span>Pix manual habilitado</span>
+        </label>
+        <label>Instruções Pix
+          <textarea name="manualPixInstructions" rows={5} defaultValue={settings.manualPixInstructions ?? ""} disabled={!isAdmin}
+            placeholder="Ex.: chave Pix, favorecido e instrução para identificação. Não inclua segredos administrativos." />
+        </label>
+        <small>Usado somente quando o processador selecionado for Pix manual.</small>
+      </fieldset>
+
       {isAdmin && <button className="button primary" type="submit" disabled={busyId === "settings"}>
         {busyId === "settings" ? "Salvando..." : "Salvar configuração"}
       </button>}
@@ -260,7 +301,8 @@ export function AdminPaymentsPage() {
           </header>
 
           <div className="payment-admin-meta">
-            <span>método: <strong>{payment.method === "manual_pix" ? "Pix manual" : payment.method}</strong></span>
+            <span>processador: <strong>{payment.provider === "mercado_pago" ? "Mercado Pago" : "Manual"}</strong></span>
+            <span>método: <strong>{payment.method === "manual_pix" ? "Pix manual" : payment.method === "pix" ? "Pix" : payment.method === "credit_card" ? "Cartão" : payment.method}</strong></span>
             <span>pedido: <strong>{statusLabel(payment.order.status)}</strong></span>
             {payment.providerReference && <span>referência: <strong>{payment.providerReference}</strong></span>}
             {latestRecon && <span>reconciliação: <strong className={latestRecon.status === "matched" ? "state-live" : "state-off"}>
@@ -268,7 +310,7 @@ export function AdminPaymentsPage() {
             </strong></span>}
           </div>
 
-          {payment.status === "pending" && isAdmin && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
+          {payment.status === "pending" && isAdmin && payment.provider === "manual" && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
             <h3>Confirmar entrada</h3>
             <label>Referência bancária<input name="providerReference" required placeholder="ID/identificador do comprovante no extrato" /></label>
             <label>Bruto<input name="reportedGross" defaultValue={moneyInput(payment.amountCents)} inputMode="decimal" required /></label>
@@ -291,6 +333,23 @@ export function AdminPaymentsPage() {
               }}>Cancelar cobrança</button>
             </div>
           </form>}
+
+          {payment.status === "pending" && isAdmin && payment.provider !== "manual" && <div className="payment-finance-form">
+            <h3>Confirmação automática</h3>
+            <p>Este pagamento só pode ser aprovado pelo processador. O painel não possui ação para forçar aprovação.</p>
+            <button className="button ghost" type="button" disabled={busyId === payment.id} onClick={async () => {
+              setBusyId(payment.id);
+              setError("");
+              try {
+                await cancelAdminPayment(payment.id, session.csrfToken);
+                await refresh();
+              } catch (cause) {
+                setError(cause instanceof Error ? cause.message : "Não foi possível cancelar no processador.");
+              } finally {
+                setBusyId("");
+              }
+            }}>Cancelar no processador</button>
+          </div>}
 
           {["approved", "partially_refunded", "refunded"].includes(payment.status) && <details className="payment-reconciliation-details">
             <summary>Histórico de reconciliação ({payment.reconciliations.length})</summary>
@@ -317,12 +376,17 @@ export function AdminPaymentsPage() {
             </details>
 
             <details className="payment-admin-action danger-zone">
-              <summary>Registrar estorno confirmado</summary>
+              <summary>{payment.provider === "manual" ? "Registrar estorno confirmado" : "Solicitar estorno ao processador"}</summary>
               <form className="payment-finance-form" onSubmit={(event) => void refund(event, payment)}>
                 <label>Valor<input name="amount" defaultValue={moneyInput(remaining)} inputMode="decimal" required /></label>
-                <label>Referência do estorno<input name="providerReference" required /></label>
+                <label>Referência do estorno
+                  <input name="providerReference" required={payment.provider === "manual"} disabled={payment.provider !== "manual"}
+                    placeholder={payment.provider === "manual" ? "Referência no extrato" : "Gerada automaticamente"} />
+                </label>
                 <label className="wide">Observação<input name="note" /></label>
-                <button className="button ghost" type="submit" disabled={busyId === payment.id}>Registrar estorno</button>
+                <button className="button ghost" type="submit" disabled={busyId === payment.id}>
+                  {payment.provider === "manual" ? "Registrar estorno" : "Solicitar estorno"}
+                </button>
               </form>
             </details>
           </>}
