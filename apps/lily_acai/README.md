@@ -114,3 +114,12 @@ Entrega 05: publicada na VPS para homologação.
 Entrega 06 tecnicamente validada no SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`, com 105 testes, build e CodeQL aprovados.
 
 Deploy e homologação conjunta 05/06 permanecem separados da conclusão técnica.
+
+
+## P0 mobile e segurança — 27/09/2026
+
+A linha canônica removeu o mascaramento global de overflow e o alargamento artificial do carrossel. Testes estruturais protegem header mobile, drawer, ordem de catálogo, scroll-snap e logout.
+
+Contas `staff/admin` agora exigem MFA TOTP. O fluxo de login envia a conta privilegiada para `/perfil` quando é necessário configurar ou verificar o segundo fator e preserva `?next=/painel...` para continuar ao destino após a confirmação.
+
+Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674` — 131 testes em Node 20/24, CI e CodeQL aprovados.
