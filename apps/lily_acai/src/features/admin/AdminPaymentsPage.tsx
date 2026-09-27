@@ -109,7 +109,7 @@ export function AdminPaymentsPage() {
     setMessage("");
     try {
       await confirmAdminPayment(payment.id, {
-        providerReference: String(form.get("providerReference") || "") || null,
+        providerReference: String(form.get("providerReference") || ""),
         reportedGrossCents: parseMoney(form.get("reportedGross")),
         feeCents: parseMoney(form.get("fee")),
         netCents: parseMoney(form.get("net")),
@@ -158,7 +158,7 @@ export function AdminPaymentsPage() {
     try {
       await refundAdminPayment(payment.id, {
         amountCents: parseMoney(form.get("amount")),
-        providerReference: String(form.get("providerReference") || ""),
+        providerReference: String(form.get("providerReference") || "") || null,
         note: String(form.get("note") || "") || null
       }, session.csrfToken);
       setMessage(`Estorno registrado para ${payment.order.orderNumber}.`);
