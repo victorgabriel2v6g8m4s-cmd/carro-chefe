@@ -142,6 +142,7 @@ describe("CookLily MFA staff/admin", () => {
       headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
       payload: { currentPassword: admin.password }
     });
+    expect(setup.statusCode).toBe(200);
     const secret = setup.json().secret as string;
     const confirm = await app.inject({
       method: "POST",
@@ -202,6 +203,34 @@ describe("CookLily MFA staff/admin", () => {
     });
     expect(totp.statusCode).toBe(200);
     expect(totp.json().method).toBe("totp");
+  });
+
+  it("configura MFA com semântica de produção quando a chave de criptografia é válida", async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousKey = process.env.LILY_MFA_ENCRYPTION_KEY;
+    process.env.NODE_ENV = "production";
+    process.env.LILY_MFA_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64url");
+
+    try {
+      const admin = await registerAdmin();
+      const setup = await app.inject({
+        method: "POST",
+        url: "/api/v1/lily/customer/security/mfa/setup",
+        headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+        payload: { currentPassword: admin.password }
+      });
+      expect(setup.statusCode).toBe(200);
+      expect(setup.json().secret).toMatch(/^[A-Z2-7]+$/);
+
+      const stored = await lilyPrisma.lilyUser.findUnique({ where: { id: admin.userId } });
+      expect(stored?.mfaSecretEncrypted).toBeTruthy();
+      expect(stored?.mfaSecretEncrypted).not.toContain(setup.json().secret);
+    } finally {
+      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousNodeEnv;
+      if (previousKey === undefined) delete process.env.LILY_MFA_ENCRYPTION_KEY;
+      else process.env.LILY_MFA_ENCRYPTION_KEY = previousKey;
+    }
   });
 
   it("não exige MFA para customer", async () => {
