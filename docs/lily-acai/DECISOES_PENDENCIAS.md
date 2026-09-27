@@ -60,8 +60,8 @@
 | LILY-PEND-030 | Checkout | carrinho, entrega/retirada e criação de pedido concluídos na 06; pagamento/reconciliação implementados na 07, aguardando gate/deploy/homologação | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
-| LILY-PEND-033 | QA UX/mobile | 40 achados consolidados em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`; P0 deve ser revalidado em aparelhos reais após deploy | lançamento |
-| LILY-PEND-034 | Segurança de contas | MFA staff/admin e recuperação segura de senha continuam abertas; revogação dedicada de sessões é parcial | segurança |
+| LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
+| LILY-PEND-034 | Segurança de contas | **MFA staff/admin resolvida tecnicamente** com TOTP/recovery; recuperação de senha continua aberta; revogação dedicada de sessões continua parcial | segurança |
 | LILY-PEND-035 | Configurações da loja | separar canais/endereço/fidelidade da página de entrega/retirada | administração |
 | LILY-PEND-036 | Deep-link de produto | definir link estável que abra/posicione o produto correto no cardápio | conversão |
 
