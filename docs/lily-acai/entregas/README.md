@@ -7,13 +7,13 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 | 01 | Fundação, isolamento e governança | concluída |
 | 02 | Scaffold, banco base, autenticação e consentimentos | concluída |
 | 03 | Logo oficial, kit de marca e rebranding integral | implementação técnica concluída; QA visual pendente |
-| 04 | Landing, leads, WhatsApp e primeira publicação | implementação concluída; deploy pendente |
+| 04 | Landing, leads, WhatsApp e primeira publicação | implementada e publicada; revalidar junto da linha canônica |
 | 05 | Catálogo, mídia, admin, cardápio dinâmico e publicação | publicada na VPS; homologação conjunta com 06 pendente |
 | 06 | Carrinho, endereço e criação de pedido | **implementação técnica concluída e validada; deploy/homologação pendentes** |
-| 07 | Pagamento e reconciliação | não iniciada |
-| 08 | Painel de pedidos | não iniciada |
-| 09 | Tracking QR e analytics first-party | não iniciada |
-| 10 | QA operacional, acessibilidade, observabilidade e hardening | não iniciada |
+| 07 | Pagamento e reconciliação | **implementação presente; primeiro gate teve CodeQL verde e CI vermelho; correção aplicada na branch canônica e novo gate pendente** |
+| 08 | Painel de pedidos | parcial: fulfillment/configuração existem; fila/operação completa pendente |
+| 09 | Tracking QR e analytics first-party | parcial: attribution `la_*` existe; analytics completo pendente |
+| 10 | QA operacional, acessibilidade, observabilidade e hardening | backlog aberto; 40 achados de UX/segurança/admin formalizados |
 
 Planos e relatórios:
 
@@ -59,10 +59,28 @@ Validação técnica:
 
 ## Entrega 07 — pagamento e reconciliação
 
-Branch: `feat/lily-entrega-07-pagamentos`.
+Linha de origem: `feat/lily-entrega-07-pagamentos`. Integração atual: `cooklily/canonical`.
 
 A implementação inclui domínio de pagamentos, Pix manual reconciliável, painel financeiro, estados/estornos, guest token, RBAC real, gestão de equipe e upgrade obrigatório de senha para contas privilegiadas.
 
 O gateway automático continua condicionado à escolha/aprovação do provedor. A migration mantém pagamentos desabilitados por padrão.
 
 Documento canônico: `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
+
+
+## Consolidação canônica — 27/09/2026
+
+A CookLily passa a ter uma linha explícita de integração em `cooklily/canonical`, criada sobre a árvore mais avançada da Entrega 07. A branch `lily-acai` permanece como base histórica e não deve ser usada isoladamente para inferir o estado atual.
+
+O primeiro gate da Entrega 07 (`gate/lily-entrega-07-v1`) apresentou:
+
+- CodeQL: **success**;
+- Quality Node 20: **failure** em static check;
+- Quality Node 24: **failure** em static check;
+- Tool Health / Linux: **failure** porque o check `app-api` executa o mesmo TypeScript;
+- causa raiz: `orders.map(serializeOrder)` fazia o índice de `Array.map` ser interpretado como o segundo parâmetro opcional `guestAccessToken` do serializer;
+- correção canônica: usar callback explícito `orders.map((order) => serializeOrder(order))`.
+
+A Entrega 07 continua **não aprovada** até o novo gate completo ficar verde.
+
+Backlog de homologação: `../PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
