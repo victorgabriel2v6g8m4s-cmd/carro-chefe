@@ -217,6 +217,65 @@ describe("CookLily perfil e fidelidade", () => {
     expect(row.points).toBe(32);
   });
 
+  it("lista somente as próprias sessões e permite encerrar as outras explicitamente", async () => {
+    const account = await register("67999970004", "Cliente Sessões");
+    const secondLogin = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/login",
+      headers: { origin },
+      payload: {
+        phone: "67999970004",
+        password: "senha-cooklily-perfil-2026"
+      }
+    });
+    expect(secondLogin.statusCode).toBe(200);
+    const secondCookie = cookieFrom(secondLogin);
+
+    const sessions = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/customer/security/sessions",
+      headers: { cookie: account.cookie }
+    });
+    expect(sessions.statusCode).toBe(200);
+    expect(sessions.json().sessions).toHaveLength(2);
+    expect(sessions.json().sessions.filter((item: { current: boolean }) => item.current)).toHaveLength(1);
+    for (const item of sessions.json().sessions) {
+      expect(item).not.toHaveProperty("tokenHash");
+      expect(item).not.toHaveProperty("csrfTokenHash");
+    }
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/security/sessions/revoke-others",
+      headers: { origin, cookie: account.cookie }
+    });
+    expect(rejected.statusCode).toBe(403);
+    expect(rejected.json().details.code).toBe("LILY_CSRF_REQUIRED");
+
+    const revoked = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/security/sessions/revoke-others",
+      headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf }
+    });
+    expect(revoked.statusCode).toBe(200);
+    expect(revoked.json().revoked).toBeGreaterThanOrEqual(1);
+
+    const currentStillWorks = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/me",
+      headers: { cookie: account.cookie }
+    });
+    expect(currentStillWorks.statusCode).toBe(200);
+
+    const otherRevoked = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/status",
+      headers: { cookie: secondCookie }
+    });
+    expect(otherRevoked.statusCode).toBe(200);
+    expect(otherRevoked.json().user).toBeNull();
+  });
+
   it("troca senha autenticada, exige senha atual e revoga outras sessões", async () => {
     const account = await register("67999970004", "Cliente Segurança");
 
