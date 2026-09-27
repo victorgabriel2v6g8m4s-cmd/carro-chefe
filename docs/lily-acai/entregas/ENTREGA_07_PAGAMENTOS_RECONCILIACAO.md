@@ -57,17 +57,24 @@ Transformar o pedido `awaiting_payment` da Entrega 06 em um fluxo financeiro aud
 
 ## Decisão de provedor
 
-O repositório ainda não possui uma decisão canônica de adquirente/gateway nem credenciais de produção.
+A decisão atual é manter **o domínio financeiro próprio da CookLily** e usar processadores externos por adapters.
 
-Existem referências exploratórias a provedores em documentos de tecnologia, mas nenhuma escolha aprovada para a CookLily.
+Contrato:
 
-Por isso esta entrega **não escolhe um fornecedor comercial em nome da operação**.
+`LilyPaymentProvider`
 
-Foi criado um contrato `LilyPaymentProvider` e o primeiro adaptador é `manual`, com Pix de confirmação operacional.
+Adapters atuais:
 
-Isso permite homologar pedido, pagamento, estado, reconciliação, RBAC, UX e contabilidade antes de conectar um gateway automático.
+- `manual`: Pix com confirmação operacional, preservado como fallback;
+- `mercado_pago`: Checkout Transparente / Orders API para Pix automático e cartão tokenizado.
 
-Quando um provedor for aprovado, deve ser adicionado como novo adaptador sem reescrever carrinho, pedido, reconciliação ou telas do cliente.
+Mercado Pago é o primeiro provider automático por decisão técnica desta rodada, mas o sistema não fica acoplado a ele: pedido, pagamento, reconciliação, eventos, RBAC, painel e UX continuam independentes do fornecedor.
+
+O levantamento comercial e técnico está em:
+
+`../PAGAMENTOS_GATEWAY_2026-09-27.md`
+
+Credenciais reais continuam fora do Git e a conta do processador precisa ser criada/homologada pelo proprietário.
 
 ## Estado inicial seguro
 
@@ -76,7 +83,11 @@ A migration mantém:
 - `paymentsEnabled=false`;
 - `paymentProvider=manual`;
 - `manualPixEnabled=false`;
-- instruções Pix vazias.
+- instruções Pix vazias;
+- `mercadoPagoPixEnabled=false`;
+- `mercadoPagoCardEnabled=false`.
+
+A migration adicional `20260927221000_lily_mercado_pago_gateway` preserva esses defaults fail-closed.
 
 Portanto, publicar a migration **não abre cobrança**.
 
@@ -144,6 +155,28 @@ O `orderId` sozinho não concede acesso ao pagamento guest.
 
 ## Métodos atuais
 
+### Pix automático — Mercado Pago
+
+Método: `pix`.
+
+Fluxo:
+
+1. cliente informa o e-mail exigido pelo processador;
+2. backend cria uma Order com `X-Idempotency-Key`;
+3. provider retorna QR Code/Copia e Cola;
+4. navegador exibe somente dados públicos da cobrança;
+5. webhook assinado informa atualização;
+6. backend valida HMAC e consulta novamente a Order diretamente no provider;
+7. somente valor aprovado igual ao total esperado move o pedido para `paid`.
+
+### Cartão de crédito — Mercado Pago
+
+Método: `credit_card`.
+
+O frontend usa o Card Payment Brick do Mercado Pago. PAN/CVV são capturados/tokenizados pelo processador e não passam pela API CookLily.
+
+A API recebe apenas token descartável, método, parcelas e dados mínimos do pagador necessários à cobrança.
+
 ### Pix manual
 
 Método: `manual_pix`.
@@ -170,10 +203,12 @@ O botão do cliente **não aprova pagamento**.
 Informa somente:
 
 - pagamentos habilitados;
+- provider selecionado;
 - se existe configuração utilizável;
-- métodos disponíveis.
+- métodos disponíveis;
+- Public Key quando o provider selecionado for Mercado Pago.
 
-Não expõe chave/instruções Pix publicamente.
+Nunca expõe Access Token ou Webhook Secret.
 
 ### Criar pagamento
 
@@ -189,9 +224,21 @@ Exige:
 
 `GET /api/v1/lily/payments/:id`
 
+### Contexto mínimo de pagamento
+
+`GET /api/v1/lily/orders/:orderId/payment-context`
+
+Retorna somente número do pedido, estado, valor e moeda para montar o checkout sem expor itens/endereço de um pedido guest.
+
 ### Pagamentos de um pedido
 
 `GET /api/v1/lily/orders/:orderId/payments`
+
+### Webhook Mercado Pago
+
+`POST /api/v1/lily/payments/webhooks/mercado-pago`
+
+Exige assinatura válida e usa `data.id` somente como ponte para refetch autoritativo no provider.
 
 O contrato do cliente não expõe:
 
@@ -266,13 +313,14 @@ O checkout redireciona para ela após criar o pedido.
 A tela:
 
 - mostra estado do pagamento;
-- inicia Pix somente se habilitado;
-- exibe as instruções congeladas;
-- permite copiar instruções;
-- possui ação “Já paguei · verificar status”;
+- permite escolher Pix/cartão conforme configuração;
+- gera e exibe QR Code/Copia e Cola no Pix automático;
+- preserva Pix manual como fallback;
+- monta o Card Payment Brick oficial para tokenização;
 - consulta automaticamente pagamento pendente;
-- reflete aprovação/estorno;
-- explica que a CookLily não solicita cartão/CVV.
+- reflete aprovação, cancelamento e estorno;
+- permite nova tentativa depois de falha/cancelamento;
+- explica que número do cartão e CVV são tokenizados pelo processador e não passam pela API CookLily.
 
 ## Painel financeiro
 
@@ -288,12 +336,14 @@ Acesso de leitura.
 
 Pode:
 
-- configurar/habilitar pagamentos;
-- configurar Pix manual;
-- confirmar entrada;
-- cancelar cobrança pendente;
+- escolher provider manual ou Mercado Pago;
+- visualizar apenas o estado de presença das credenciais da VPS, nunca seus valores;
+- habilitar Pix/cartão separadamente;
+- configurar Pix manual como fallback;
+- confirmar entrada somente no provider manual;
+- cancelar cobrança pendente (via provider quando automático);
 - reconciliar;
-- registrar estorno parcial/integral.
+- solicitar estorno parcial/integral ao provider automático ou registrar referência no modo manual.
 
 KPIs:
 
@@ -363,6 +413,15 @@ A aplicação não armazena:
 
 Pix manual usa apenas instruções operacionais configuradas pela equipe e referência financeira informada pelo admin após conferência.
 
+No Mercado Pago:
+
+- Access Token e Webhook Secret permanecem exclusivamente no backend/VPS;
+- somente Public Key pode ir ao navegador;
+- webhook exige HMAC;
+- o body do webhook não é tratado como verdade financeira: o backend refaz a consulta ao provider;
+- aprovação automática exige valor exato;
+- confirmação manual de cobrança automática é bloqueada.
+
 O frontend do cliente não recebe notas/referências internas da conciliação.
 
 ## Nginx
@@ -380,24 +439,25 @@ O script de deploy não sobrescreve Nginx automaticamente.
 
 O backlog de UX, segurança e administração levantado em 27/09/2026 está consolidado em `../PENDENCIAS_UX_SEGURANCA_2026-09-27.md`. Os P0 devem ser tratados/revalidados antes de declarar prontidão comercial.
 
-### Provedor automático
+### Homologação comercial do provider
 
-Bloqueado por decisão comercial/técnica de fornecedor e credenciais.
+O adapter Mercado Pago está implementado tecnicamente. Continua pendente somente o que depende da conta real do estabelecimento:
 
-Quando aprovado:
+- criação/aprovação da conta;
+- aplicação em Mercado Pago Developers;
+- Public Key e Access Token produtivos;
+- chave Pix;
+- configuração do webhook de Orders;
+- Webhook Secret;
+- teste controlado;
+- conferência das taxas contratuais;
+- ativação explícita no painel.
 
-- implementar adapter;
-- validar assinatura de webhook;
-- mapear estados do provedor;
-- deduplicar por `providerEventId`;
-- confirmar pagamento somente por evidência autenticada do provedor;
-- homologar sandbox antes da produção.
+Detalhes: `../PAGAMENTOS_GATEWAY_2026-09-27.md` e `../DEPLOY_VPS.md`.
 
 ### MFA de staff/admin
 
-Continua recomendado antes de ampliar significativamente a equipe.
-
-Implementação segura exige definir método (TOTP/WebAuthn), provisionamento, recuperação e armazenamento/encriptação dos segredos.
+MFA TOTP para staff/admin já foi implementado em etapa posterior, com segredo cifrado, recovery codes de uso único e segundo fator por nova sessão privilegiada. A homologação real de contas privilegiadas continua necessária no deploy.
 
 ### Recuperação de senha
 
@@ -415,9 +475,13 @@ A Entrega 07 só pode ser considerada tecnicamente aprovada quando:
 - guest token é obrigatório;
 - customer só acessa os próprios pagamentos;
 - staff não confirma/refunda;
-- admin confirma e pedido vira paid;
+- admin confirma manualmente apenas provider manual;
+- webhook assinado de provider automático é validado e deduplicado;
+- provider automático não aceita aprovação forçada pelo painel;
+- valor aprovado divergente não paga pedido;
+- cartão usa token do Brick sem PAN/CVV no backend;
 - reconciliação matched/discrepant passa;
-- estorno parcial/integral passa;
+- estorno parcial/integral passa no provider e no estado local;
 - dados internos financeiros não vazam ao cliente;
 - promoção de equipe exige upgrade de senha;
 - sessão privilegiada tem TTL reduzido;
@@ -433,3 +497,5 @@ A Entrega 07 **não deve ser publicada** até:
 4. migration ser incluída no backup/deploy automatizado.
 
 Mesmo após deploy, pagamentos continuarão fechados até um admin habilitá-los no painel.
+
+Para Mercado Pago, a habilitação também falha fechada se as credenciais necessárias não estiverem presentes na VPS. O runbook `../DEPLOY_VPS.md` contém a sequência de homologação e o webhook produtivo.
