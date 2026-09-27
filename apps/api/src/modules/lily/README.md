@@ -127,3 +127,17 @@ SHA técnico: `da166683ab2d0e27acae23d9714ec8e824a02ac4`
 ## Próximo escopo
 
 Entrega 07 integra pagamento/reconciliação sobre pedidos `awaiting_payment`.
+
+
+## MFA da equipe
+
+Staff/admin exigem segundo fator TOTP antes de qualquer rota administrativa.
+
+- segredo TOTP cifrado com AES-256-GCM;
+- produção exige `LILY_MFA_ENCRYPTION_KEY` de 32 bytes base64url;
+- recovery codes persistem somente como hash e são de uso único;
+- cada nova sessão privilegiada precisa verificar TOTP/recovery;
+- customer não exige MFA;
+- senha sem MFA não concede funções administrativas.
+
+Rotas de provisionamento/verificação ficam em `/api/v1/lily/customer/security/mfa/*`, permitindo que uma conta promovida configure o fator antes de obter acesso ao namespace admin.
