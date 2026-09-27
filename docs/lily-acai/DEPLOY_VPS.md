@@ -367,3 +367,42 @@ Antes de liberar acesso administrativo após a migration `20260927160000_lily_st
 - recovery code usado uma vez não funciona novamente;
 - após MFA válida, permissões staff/admin continuam respeitando RBAC;
 - `LILY_MFA_ENCRYPTION_KEY` não aparece em bundle, logs de aplicação ou Git.
+
+
+## Incidente de preflight MFA — 27/09/2026
+
+Tentativa de deploy do SHA `54798582450c7b76b4c624e4a44c203c022533f0` falhou com segurança na fase `tests`, antes de qualquer migration real.
+
+Sintoma:
+
+- `mfa.test.ts`: setup MFA retornou 500 quando a suíte herdou `NODE_ENV=production` do ambiente da VPS;
+- o teste seguinte tentou usar o segredo ausente e gerou um `TypeError` secundário;
+- o deployer restaurou automaticamente o checkout anterior `675a3004b2980d18f013081e37dd3b70e2099675`.
+
+Correção:
+
+- somente a etapa de testes do preflight passa a usar `NODE_ENV=test`;
+- migrations, static checks e builds continuam usando a configuração real de produção;
+- existe teste explícito do caminho MFA com `NODE_ENV=production` e chave válida;
+- o teste valida o status do setup antes de consumir o segredo.
+
+Runtime corrigido e validado:
+
+`4ec675fa0ff600c96bc423b95e21bd0f19fe4407`
+
+Evidências:
+
+- CI `36348076031`: success;
+- CodeQL `36348076037`: success;
+- Node 20: 27 arquivos / 138 testes;
+- Node 24: 27 arquivos / 138 testes;
+- `mfa.test.ts`: 4 testes aprovados nas duas matrizes;
+- builds e Tool Health: success.
+
+Próxima tentativa de deploy deve usar exatamente:
+
+```bash
+sudo carro-chefe-deploy 4ec675fa0ff600c96bc423b95e21bd0f19fe4407
+```
+
+Não usar o SHA documental `547985824...` nem a cabeça posterior da branch para esta publicação sem novo gate completo.
