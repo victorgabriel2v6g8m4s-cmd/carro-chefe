@@ -205,6 +205,77 @@ describe("CookLily Entrega 06", () => {
     expect(quote.json().details.code).toBe("LILY_ORDERS_DISABLED");
   });
 
+  it("permite homologação MFA-gated sem abrir pedidos ao público", async () => {
+    const staff = await register("67999992021", "staff");
+    await lilyPrisma.lilyOperationalSettings.update({
+      where: { id: "default" },
+      data: {
+        ordersEnabled: false,
+        pickupEnabled: true,
+        pickupAddressText: "Retirada homologação",
+        businessHoursJson: "[]"
+      }
+    });
+
+    const publicQuote = await quoteSol();
+    expect(publicQuote.statusCode).toBe(409);
+    expect(publicQuote.json().details.code).toBe("LILY_ORDERS_DISABLED");
+
+    const spoofed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders/quote",
+      headers: { "x-lily-homologation": "1" },
+      payload: {
+        fulfillmentType: "pickup",
+        items: [{
+          productId: "prod-acai-sol-lily",
+          sizeMl: 300,
+          flavorIds: [],
+          addons: [],
+          quantity: 1
+        }]
+      }
+    });
+    expect(spoofed.statusCode).toBe(401);
+
+    const quote = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders/quote",
+      headers: { cookie: staff.cookie, "x-lily-homologation": "1" },
+      payload: {
+        fulfillmentType: "pickup",
+        items: [{
+          productId: "prod-acai-sol-lily",
+          sizeMl: 300,
+          flavorIds: [],
+          addons: [],
+          quantity: 1
+        }]
+      }
+    });
+    expect(quote.statusCode).toBe(200);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders",
+      headers: {
+        origin,
+        cookie: staff.cookie,
+        "x-lily-csrf": staff.csrf,
+        "x-lily-homologation": "1",
+        "idempotency-key": "homologation-order-test-0001"
+      },
+      payload: await createPayloadFromQuote(quote.json(), staff.user.phone)
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().isHomologation).toBe(true);
+
+    const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: created.json().id } });
+    expect(stored?.isHomologation).toBe(true);
+    expect(await lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" } }))
+      .toMatchObject({ ordersEnabled: false });
+  });
+
   it("protege configuração operacional com staff e CSRF", async () => {
     const staff = await register("67999992001", "staff");
 
