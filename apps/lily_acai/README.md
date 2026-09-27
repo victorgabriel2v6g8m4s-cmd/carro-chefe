@@ -29,7 +29,10 @@ Frontend independente da operação CookLily.
 - `/lilyacai/painel`;
 - `/lilyacai/painel/cardapio`;
 - `/lilyacai/painel/midias`;
-- `/lilyacai/painel/entrega`.
+- `/lilyacai/painel/entrega`;
+- `/lilyacai/painel/configuracoes`;
+- `/lilyacai/painel/pagamentos`;
+- `/lilyacai/painel/equipe` — admin.
 
 O backend continua sendo a autoridade de autorização; esconder uma rota no frontend não substitui sessão/role/CSRF.
 
@@ -99,7 +102,9 @@ A tela de sucesso informa `awaiting_payment`; não existe confirmação de pagam
 
 ## Painel de entrega
 
-`/lilyacai/painel/entrega` configura abertura de pedidos, retirada, entrega, horário, pedido mínimo, taxa fixa e regiões.
+`/lilyacai/painel/entrega` configura somente fulfillment: abertura de pedidos, retirada, entrega, horário, pedido mínimo, taxa e regiões.
+
+`/lilyacai/painel/configuracoes` concentra Instagram, WhatsApp, endereço público e regras de fidelidade.
 
 A operação nasce desligada e só deve ser aberta depois de preencher dados reais.
 
@@ -123,3 +128,15 @@ A linha canônica removeu o mascaramento global de overflow e o alargamento arti
 Contas `staff/admin` agora exigem MFA TOTP. O fluxo de login envia a conta privilegiada para `/perfil` quando é necessário configurar ou verificar o segundo fator e preserva `?next=/painel...` para continuar ao destino após a confirmação.
 
 Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674` — 131 testes em Node 20/24, CI e CodeQL aprovados.
+
+
+## Patch P1/P2 — 27/09/2026
+
+- drawer mobile possui focus trap;
+- alvos críticos de toque usam pelo menos 44 px;
+- perfil lista sessões da conta e permite encerrar as demais;
+- Configurações da loja foram separadas de entrega/retirada;
+- links de produto usam `/cardapio?produto=<slug>` e abrem o modal correto mesmo fora da primeira página;
+- busca e filtros permanecem na URL quando o produto é aberto/fechado.
+
+Runtime validado: `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0` — 136 testes em Node 20/24, CI e CodeQL aprovados.
