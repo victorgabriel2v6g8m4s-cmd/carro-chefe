@@ -47,6 +47,7 @@ export type LilyPaymentProviderCreateResult = {
   providerPaymentId: string | null;
   providerReference: string | null;
   status: "pending" | "approved" | "failed";
+  paidCents: number | null;
   instructions: string | null;
   expiresAt: Date | null;
   providerData: LilyPaymentProviderData | null;
@@ -88,6 +89,7 @@ class ManualPaymentProvider implements LilyPaymentProvider {
       providerPaymentId: null,
       providerReference: null,
       status: "pending",
+      paidCents: null,
       instructions: input.instructions ?? null,
       expiresAt: null,
       providerData: null
