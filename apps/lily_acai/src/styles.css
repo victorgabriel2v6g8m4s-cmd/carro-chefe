@@ -2137,3 +2137,44 @@ img, svg { max-width: 100%; }
     flex-direction: column;
   }
 }
+
+
+/* Segurança de conta — MFA privilegiado */
+.security-mfa-section {
+  display: grid;
+  gap: 14px;
+}
+.security-mfa-section form {
+  display: grid;
+  gap: 12px;
+}
+.mfa-secret-box,
+.mfa-recovery-box {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgb(130 0 35 / 13%);
+  border-radius: var(--cl-radius-md);
+  background: var(--cl-color-surface-strong);
+}
+.mfa-secret-box code,
+.mfa-recovery-box code {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.mfa-recovery-box > div {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 7px;
+}
+.mfa-recovery-box code {
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: white;
+  border: 1px solid rgb(130 0 35 / 10%);
+}
+@media (max-width: 520px) {
+  .mfa-recovery-box > div {
+    grid-template-columns: 1fr;
+  }
+}
