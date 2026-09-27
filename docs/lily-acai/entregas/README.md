@@ -13,7 +13,7 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 | 07 | Pagamento e reconciliação | **implementação técnica aprovada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy/homologação pendentes** |
 | 08 | Painel de pedidos | parcial: fulfillment/configuração existem; fila/operação completa pendente |
 | 09 | Tracking QR e analytics first-party | parcial: attribution `la_*` existe; analytics completo pendente |
-| 10 | QA operacional, acessibilidade, observabilidade e hardening | backlog aberto; 40 achados de UX/segurança/admin formalizados |
+| 10 | QA operacional, acessibilidade, observabilidade e hardening | P0/P1 técnicos avançados; QA real, recuperação de senha, observabilidade e demais hardening continuam abertos |
 
 Planos e relatórios:
 
@@ -22,7 +22,9 @@ Planos e relatórios:
 - `ENTREGA_05_CATALOGO_PUBLICACAO.md`;
 - `ENTREGA_06_CARRINHO_PEDIDOS.md`;
 - `HOMOLOGACAO_05_06_AJUSTES.md`;
-- `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`.
+- `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`;
+- `P0_UX_SEGURANCA_2026-09-27.md`;
+- `P1_UX_CONTA_ADMIN_2026-09-27.md`.
 
 Validação técnica da Entrega 05:
 
@@ -108,3 +110,18 @@ Runtime validado: `0f3e894f4993eea1c07aed881bad4ea4525e1674`.
 - Tool Health e gates auxiliares: success.
 
 O patch trata os P0 de implementação. QA visual em aparelhos reais e enrollment MFA na VPS continuam como homologação operacional, não como dívida de código.
+
+
+## Patch P1 — UX, conta e administração
+
+Documento: `P1_UX_CONTA_ADMIN_2026-09-27.md`.
+
+Runtime validado: `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0`.
+
+- CI `36334839141`: success;
+- CodeQL `36334839168`: success;
+- Node 20: 27 arquivos / 136 testes;
+- Node 24: 27 arquivos / 136 testes;
+- builds e Tool Health: success.
+
+Entregue tecnicamente: focus trap, alvos de toque críticos 44 px, Configurações da loja separada de fulfillment, controle explícito de sessões e deep-link de produto. Recuperação de senha continua pendente por depender de canal seguro de verificação.
