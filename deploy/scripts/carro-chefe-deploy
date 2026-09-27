@@ -112,6 +112,28 @@ git fetch origin --prune
 git cat-file -e "${RELEASE_SHA}^{commit}" || fail "SHA não existe no repositório local após fetch"
 git show --no-patch --format='release_commit=%H %s' "${RELEASE_SHA}"
 
+# O entrypoint instalado em /usr/local/sbin pode ser mais antigo que o release.
+# Depois do fetch, compare este processo com o deployer versionado no SHA alvo.
+# Se forem diferentes, extraia para /tmp e reexecute exatamente a versão do release.
+# O guard evita loop infinito. Nenhuma migration real ocorreu neste ponto.
+if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
+  TARGET_DEPLOYER_TMP="/tmp/carro-chefe-deploy-${RELEASE_SHA}"
+  git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy" > "${TARGET_DEPLOYER_TMP}" \
+    || fail "release não contém deploy/scripts/carro-chefe-deploy"
+  chmod 0700 "${TARGET_DEPLOYER_TMP}"
+  bash -n "${TARGET_DEPLOYER_TMP}" || fail "deployer do release possui sintaxe Bash inválida"
+
+  CURRENT_DEPLOYER_SHA="$(sha256sum "$0" | awk '{print $1}')"
+  TARGET_DEPLOYER_SHA="$(sha256sum "${TARGET_DEPLOYER_TMP}" | awk '{print $1}')"
+  if [[ "${CURRENT_DEPLOYER_SHA}" != "${TARGET_DEPLOYER_SHA}" ]]; then
+    echo "deployer_update=reexec target=${RELEASE_SHA} current_sha256=${CURRENT_DEPLOYER_SHA} target_sha256=${TARGET_DEPLOYER_SHA}"
+    exec env CARRO_CHEFE_DEPLOY_REEXEC=1 "${TARGET_DEPLOYER_TMP}" "${RELEASE_SHA}"
+  fi
+  rm -f "${TARGET_DEPLOYER_TMP}"
+else
+  echo "deployer_update=reexec_ok release=${RELEASE_SHA}"
+fi
+
 PHASE="nginx-precheck"
 required_nginx_patterns=(
   'location ^~ /api/v1/lily/public/'
