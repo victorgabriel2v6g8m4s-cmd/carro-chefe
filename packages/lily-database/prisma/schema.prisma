@@ -386,6 +386,8 @@ model LilyOperationalSettings {
   paymentProvider           String   @default("manual")
   manualPixEnabled          Boolean  @default(false)
   manualPixInstructions     String?
+  mercadoPagoPixEnabled     Boolean  @default(false)
+  mercadoPagoCardEnabled    Boolean  @default(false)
   createdAt                 DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -497,6 +499,7 @@ model LilyPayment {
   currency             String   @default("BRL")
   providerPaymentId    String?
   providerReference    String?
+  providerDataJson      String?
   instructionsSnapshot String?
   expiresAt            DateTime?
   approvedAt           DateTime?
