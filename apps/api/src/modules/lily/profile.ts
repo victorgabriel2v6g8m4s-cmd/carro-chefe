@@ -189,6 +189,52 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
     const context = await requireLilySession(request);
     return profilePayload(context.user.id);
   });
+  app.get("/api/v1/lily/customer/security/sessions", async (request) => {
+    const context = await requireLilySession(request);
+    const now = new Date();
+    const sessions = await lilyPrisma.lilySession.findMany({
+      where: {
+        userId: context.user.id,
+        revokedAt: null,
+        expiresAt: { gt: now }
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        lastSeenAt: true,
+        expiresAt: true,
+        mfaVerifiedAt: true
+      },
+      orderBy: { lastSeenAt: "desc" }
+    });
+    return {
+      sessions: sessions.map((session) => ({
+        id: session.id,
+        current: session.id === context.session.id,
+        createdAt: session.createdAt,
+        lastSeenAt: session.lastSeenAt,
+        expiresAt: session.expiresAt,
+        mfaVerified: Boolean(session.mfaVerifiedAt)
+      }))
+    };
+  });
+
+  app.post("/api/v1/lily/customer/security/sessions/revoke-others", {
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } }
+  }, async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const revoked = await lilyPrisma.lilySession.updateMany({
+      where: {
+        userId: context.user.id,
+        id: { not: context.session.id },
+        revokedAt: null
+      },
+      data: { revokedAt: new Date() }
+    });
+    return { revoked: revoked.count };
+  });
+
 
   app.patch("/api/v1/lily/customer/profile", async (request) => {
     const context = await requireLilySession(request);
