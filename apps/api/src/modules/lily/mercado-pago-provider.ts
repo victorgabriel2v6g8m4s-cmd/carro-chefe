@@ -256,6 +256,7 @@ export async function createMercadoPagoPayment(
     status: remote.status === "partially_refunded" || remote.status === "refunded"
       ? "approved"
       : remote.status,
+    paidCents: remote.paidCents,
     instructions: input.method === "pix" ? remote.data.qrCode : null,
     expiresAt: input.method === "pix" ? new Date(Date.now() + 30 * 60 * 1000) : null,
     providerData: remote.data
