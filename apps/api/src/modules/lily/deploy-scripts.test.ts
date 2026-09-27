@@ -19,6 +19,11 @@ describe("scripts operacionais CookLily", () => {
     }
   });
 
+  it("força NODE_ENV=test somente durante a suíte de preflight", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    expect(deployer).toContain('preflight env NODE_ENV=test npm test');
+  });
+
   it("faz deploy falhar fechado sem chave MFA de produção", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     expect(deployer).toContain("LILY_MFA_ENCRYPTION_KEY ausente");
