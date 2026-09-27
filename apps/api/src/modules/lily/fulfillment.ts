@@ -28,15 +28,20 @@ const settingsPatchSchema = z.object({
   flatDeliveryFeeCents: moneySchema.optional(),
   pickupAddressText: z.string().trim().max(500).nullable().optional(),
   pickupInstructions: z.string().trim().max(1000).nullable().optional(),
+  businessHours: businessHoursSchema.optional(),
+  timezone: z.literal("America/Campo_Grande").optional()
+}).strict();
+
+const storeSettingsPatchSchema = z.object({
   instagramHandle: z.string().trim().min(1).max(30).regex(/^@?[A-Za-z0-9._]+$/).optional(),
   whatsappPhone: z.string().trim().min(8).max(24).regex(/^\+?[0-9 ()-]+$/).optional(),
   publicAddressText: z.string().trim().max(500).nullable().optional(),
   loyaltyOrderCentsPerPoint: z.number().int().min(1).max(100000).optional(),
   loyaltyCampaignBonusPoints: z.number().int().min(0).max(100000).optional(),
-  loyaltyCouponBonusPoints: z.number().int().min(0).max(100000).optional(),
-  businessHours: businessHoursSchema.optional(),
-  timezone: z.literal("America/Campo_Grande").optional()
-}).strict();
+  loyaltyCouponBonusPoints: z.number().int().min(0).max(100000).optional()
+}).strict().refine((value) => Object.keys(value).length > 0, {
+  message: "Informe pelo menos uma configuração da loja."
+});
 
 const zoneCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -126,6 +131,32 @@ export function lilyOpenNow(
   } catch {
     return false;
   }
+}
+
+function serializeFulfillmentSettings(settings: Awaited<ReturnType<typeof getLilyOperationalSettings>>) {
+  return {
+    ordersEnabled: settings.ordersEnabled,
+    pickupEnabled: settings.pickupEnabled,
+    deliveryEnabled: settings.deliveryEnabled,
+    minimumOrderCents: settings.minimumOrderCents,
+    deliveryStrategy: settings.deliveryStrategy,
+    flatDeliveryFeeCents: settings.flatDeliveryFeeCents,
+    pickupAddressText: settings.pickupAddressText,
+    pickupInstructions: settings.pickupInstructions,
+    businessHours: parseBusinessHours(settings.businessHoursJson),
+    timezone: settings.timezone
+  };
+}
+
+function serializeStoreSettings(settings: Awaited<ReturnType<typeof getLilyOperationalSettings>>) {
+  return {
+    instagramHandle: settings.instagramHandle,
+    whatsappPhone: settings.whatsappPhone,
+    publicAddressText: settings.publicAddressText,
+    loyaltyOrderCentsPerPoint: settings.loyaltyOrderCentsPerPoint,
+    loyaltyCampaignBonusPoints: settings.loyaltyCampaignBonusPoints,
+    loyaltyCouponBonusPoints: settings.loyaltyCouponBonusPoints
+  };
 }
 
 function normalizeNeighborhood(value: string) {
@@ -262,7 +293,7 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
     });
     return {
-      settings: { ...settings, businessHours: parseBusinessHours(settings.businessHoursJson) },
+      settings: serializeFulfillmentSettings(settings),
       zones: zones.map(serializeZone)
     };
   });
@@ -295,18 +326,35 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
         ...(input.flatDeliveryFeeCents === undefined ? {} : { flatDeliveryFeeCents: input.flatDeliveryFeeCents }),
         ...(input.pickupAddressText === undefined ? {} : { pickupAddressText: input.pickupAddressText || null }),
         ...(input.pickupInstructions === undefined ? {} : { pickupInstructions: input.pickupInstructions || null }),
-        ...(input.instagramHandle === undefined ? {} : { instagramHandle: input.instagramHandle.replace(/^@+/, "") }),
-        ...(input.whatsappPhone === undefined ? {} : { whatsappPhone: input.whatsappPhone.trim() }),
-        ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
-        ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
-        ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
-        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints }),
         ...(input.businessHours === undefined ? {} : { businessHoursJson: JSON.stringify(input.businessHours) }),
         ...(input.timezone === undefined ? {} : { timezone: input.timezone })
       }
     });
     await auditLilyAdmin(context.user.id, "update", "fulfillment-settings", SETTINGS_ID, input);
-    return { ...updated, businessHours: parseBusinessHours(updated.businessHoursJson) };
+    return serializeFulfillmentSettings(updated);
+  });
+
+  app.get("/api/v1/lily/admin/store-settings", async (request) => {
+    await requireLilyStaff(request);
+    return serializeStoreSettings(await getLilyOperationalSettings());
+  });
+
+  app.patch("/api/v1/lily/admin/store-settings", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const input = storeSettingsPatchSchema.parse(request.body);
+    const updated = await lilyPrisma.lilyOperationalSettings.update({
+      where: { id: SETTINGS_ID },
+      data: {
+        ...(input.instagramHandle === undefined ? {} : { instagramHandle: input.instagramHandle.replace(/^@+/, "") }),
+        ...(input.whatsappPhone === undefined ? {} : { whatsappPhone: input.whatsappPhone.trim() }),
+        ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
+        ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
+        ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
+        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints })
+      }
+    });
+    await auditLilyAdmin(context.user.id, "update", "store-settings", SETTINGS_ID, input);
+    return serializeStoreSettings(updated);
   });
 
   app.post("/api/v1/lily/admin/delivery-zones", async (request, reply) => {
