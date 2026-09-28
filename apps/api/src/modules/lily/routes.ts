@@ -19,6 +19,7 @@ import {
   LILY_TERMS_VERSION,
   clearLilySessionCookie,
   createLilySession,
+  currentLilyCsrfToken,
   getConsentSnapshot,
   getOptionalLilySession,
   hashPassword,
@@ -26,7 +27,6 @@ import {
   publicLilyUser,
   requireLilyCsrf,
   requireLilySession,
-  rotateLilyCsrf,
   verifyPassword
 } from "./auth";
 
@@ -288,7 +288,7 @@ export async function lilyRoutes(app: FastifyInstance) {
 
   app.get("/api/v1/lily/auth/me", async (request) => {
     const context = await requireLilySession(request);
-    const csrfToken = await rotateLilyCsrf(context.session.id);
+    const csrfToken = await currentLilyCsrfToken(request, context);
     const privileged = context.user.role === "staff" || context.user.role === "admin";
     return {
       user: publicLilyUser(context.user),
