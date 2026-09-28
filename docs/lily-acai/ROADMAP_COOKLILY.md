@@ -224,14 +224,22 @@ Limitação consciente da primeira fase:
 
 ### 11B — domínio operacional
 
-Próximo bloco:
+**Status:** primeira versão implementada; gate técnico pendente.
 
-- separar financeiro de produção/logística;
-- estágio operacional do pedido;
-- eventos operacionais;
-- regras de transição;
-- fila da cozinha;
-- APIs staff.
+- [x] separar financeiro de produção/logística;
+- [x] adicionar `operationStatus` ao pedido;
+- [x] adicionar eventos operacionais próprios;
+- [x] API de fila da cozinha em namespace administrativo existente;
+- [x] RBAC staff/admin + MFA + CSRF;
+- [x] impedir montagem antes de pagamento confirmado;
+- [x] avanço otimista com proteção contra conflito concorrente;
+- [x] painel `/painel/cozinha` em quatro colunas;
+- [x] polling operacional a cada 5 segundos;
+- [x] omitir telefone/endereço da API da cozinha;
+- [ ] QA real em tablet/celular;
+- [ ] SLA/alertas de atraso;
+- [ ] impressão;
+- [ ] integração com a etapa logística da Entrega 11D.
 
 ### 11C — cliente
 
