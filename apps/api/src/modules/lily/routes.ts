@@ -273,7 +273,7 @@ export async function lilyRoutes(app: FastifyInstance) {
       throw new ApiError(401, "Telefone ou senha inválidos.", { code: "LILY_INVALID_CREDENTIALS" });
     }
     const session = await createLilySession(user.id, request, reply);
-    const privileged = user.role === "staff" || user.role === "admin";
+    const privileged = ["staff", "courier", "admin"].includes(user.role);
     return {
       user: publicLilyUser(user),
       csrfToken: session.csrfToken,
@@ -291,7 +291,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/auth/me", async (request) => {
     const context = await requireLilySession(request);
     const csrfToken = await currentLilyCsrfToken(request, context);
-    const privileged = context.user.role === "staff" || context.user.role === "admin";
+    const privileged = ["staff", "courier", "admin"].includes(context.user.role);
     return {
       user: publicLilyUser(context.user),
       csrfToken,
