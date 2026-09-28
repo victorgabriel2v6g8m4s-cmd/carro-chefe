@@ -143,7 +143,8 @@ function orderNumber() {
 
 const orderInclude = {
   items: { include: { addons: true } },
-  statusEvents: { orderBy: { createdAt: "asc" as const } }
+  statusEvents: { orderBy: { createdAt: "asc" as const } },
+  operationEvents: { orderBy: { createdAt: "asc" as const } }
 };
 
 async function findOrderById(id: string) {
@@ -157,6 +158,8 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
     orderNumber: order.orderNumber,
     fulfillmentType: order.fulfillmentType,
     status: order.status,
+    operationStatus: order.operationStatus,
+    operationUpdatedAt: order.operationUpdatedAt,
     isHomologation: order.isHomologation,
     subtotalCents: order.subtotalCents,
     deliveryFeeCents: order.deliveryFeeCents,
@@ -192,6 +195,13 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
       fromStatus: event.fromStatus,
       toStatus: event.toStatus,
       actor: event.actor,
+      createdAt: event.createdAt
+    })),
+    operationEvents: order.operationEvents.map((event) => ({
+      fromStatus: event.fromStatus,
+      toStatus: event.toStatus,
+      actor: event.actor,
+      note: event.note,
       createdAt: event.createdAt
     }))
   };
@@ -326,6 +336,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           phoneNormalized,
           fulfillmentType: input.fulfillmentType,
           status: "awaiting_payment",
+          operationStatus: "received",
           isHomologation,
           subtotalCents: quote.subtotalCents,
           deliveryFeeCents: quote.deliveryFeeCents,
@@ -406,6 +417,13 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
               actor: isHomologation
                 ? `homologation:${context!.user.id}`
                 : context ? `customer:${context.user.id}` : "guest"
+            }
+          },
+          operationEvents: {
+            create: {
+              fromStatus: null,
+              toStatus: "received",
+              actor: "system:order_created"
             }
           }
         },
