@@ -8,6 +8,7 @@ import { CartProvider, useCart } from "./features/cart/CartContext";
 import { CartPage } from "./features/cart/CartPage";
 import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
+import { GuestOrderTrackingPage } from "./features/orders/GuestOrderTrackingPage";
 import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
 import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
@@ -437,6 +438,7 @@ function App() {
     <Route path="/enderecos" element={<Shell><AddressesPage /></Shell>} />
     <Route path="/pedidos" element={<Shell><OrdersPage /></Shell>} />
     <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
+    <Route path="/acompanhar/:id" element={<Shell><GuestOrderTrackingPage /></Shell>} />
     <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
     <Route path="/ranking" element={<Shell><RankingPage /></Shell>} />
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
