@@ -85,7 +85,11 @@ export function AdminPaymentsPage() {
     try {
       const updated = await saveAdminPaymentSettings({
         paymentsEnabled: form.get("paymentsEnabled") === "on",
-        paymentProvider: form.get("paymentProvider") === "mercado_pago" ? "mercado_pago" : "manual",
+        paymentProvider: form.get("paymentProvider") === "mercado_pago"
+          ? "mercado_pago"
+          : form.get("paymentProvider") === "cooklily_pix"
+            ? "cooklily_pix"
+            : "manual",
         manualPixEnabled: form.get("manualPixEnabled") === "on",
         manualPixInstructions: String(form.get("manualPixInstructions") || "") || null,
         mercadoPagoPixEnabled: form.get("mercadoPagoPixEnabled") === "on",
@@ -208,9 +212,24 @@ export function AdminPaymentsPage() {
       <label>Processador
         <select name="paymentProvider" defaultValue={settings.paymentProvider} disabled={!isAdmin}>
           <option value="manual">Pix manual</option>
+          <option value="cooklily_pix">Pix CookLily</option>
           <option value="mercado_pago">Mercado Pago</option>
         </select>
       </label>
+
+      <div className="optional-box">
+        <strong>Pix CookLily · configuração da VPS</strong>
+        <span>Chave Pix: <b className={settings.cookLilyPix.keyConfigured ? "state-live" : "state-off"}>
+          {settings.cookLilyPix.keyConfigured ? "configurada" : "ausente"}
+        </b></span>
+        <span>Nome do recebedor: <b className={settings.cookLilyPix.merchantNameConfigured ? "state-live" : "state-off"}>
+          {settings.cookLilyPix.merchantNameConfigured ? "configurado" : "ausente"}
+        </b></span>
+        <span>Cidade: <b className={settings.cookLilyPix.merchantCityConfigured ? "state-live" : "state-off"}>
+          {settings.cookLilyPix.merchantCityConfigured ? "configurada" : "ausente"}
+        </b></span>
+        <small>O Pix Copia e Cola é gerado pela própria API CookLily. Nesta primeira fase, a confirmação financeira ainda é feita pela equipe após conferir a entrada.</small>
+      </div>
 
       <div className="optional-box">
         <strong>Mercado Pago · credenciais da VPS</strong>
@@ -301,7 +320,13 @@ export function AdminPaymentsPage() {
           </header>
 
           <div className="payment-admin-meta">
-            <span>processador: <strong>{payment.provider === "mercado_pago" ? "Mercado Pago" : "Manual"}</strong></span>
+            <span>processador: <strong>{
+              payment.provider === "mercado_pago"
+                ? "Mercado Pago"
+                : payment.provider === "cooklily_pix"
+                  ? "Pix CookLily"
+                  : "Manual"
+            }</strong></span>
             <span>método: <strong>{payment.method === "manual_pix" ? "Pix manual" : payment.method === "pix" ? "Pix" : payment.method === "credit_card" ? "Cartão" : payment.method}</strong></span>
             <span>pedido: <strong>{statusLabel(payment.order.status)}</strong></span>
             {payment.providerReference && <span>referência: <strong>{payment.providerReference}</strong></span>}
@@ -310,7 +335,7 @@ export function AdminPaymentsPage() {
             </strong></span>}
           </div>
 
-          {payment.status === "pending" && isAdmin && payment.provider === "manual" && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
+          {payment.status === "pending" && isAdmin && ["manual", "cooklily_pix"].includes(payment.provider) && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
             <h3>Confirmar entrada</h3>
             <label>Referência bancária<input name="providerReference" required placeholder="ID/identificador do comprovante no extrato" /></label>
             <label>Bruto<input name="reportedGross" defaultValue={moneyInput(payment.amountCents)} inputMode="decimal" required /></label>
@@ -334,7 +359,7 @@ export function AdminPaymentsPage() {
             </div>
           </form>}
 
-          {payment.status === "pending" && isAdmin && payment.provider !== "manual" && <div className="payment-finance-form">
+          {payment.status === "pending" && isAdmin && payment.provider === "mercado_pago" && <div className="payment-finance-form">
             <h3>Confirmação automática</h3>
             <p>Este pagamento só pode ser aprovado pelo processador. O painel não possui ação para forçar aprovação.</p>
             <button className="button ghost" type="button" disabled={busyId === payment.id} onClick={async () => {
@@ -376,16 +401,16 @@ export function AdminPaymentsPage() {
             </details>
 
             <details className="payment-admin-action danger-zone">
-              <summary>{payment.provider === "manual" ? "Registrar estorno confirmado" : "Solicitar estorno ao processador"}</summary>
+              <summary>{payment.provider === "mercado_pago" ? "Solicitar estorno ao processador" : "Registrar estorno confirmado"}</summary>
               <form className="payment-finance-form" onSubmit={(event) => void refund(event, payment)}>
                 <label>Valor<input name="amount" defaultValue={moneyInput(remaining)} inputMode="decimal" required /></label>
                 <label>Referência do estorno
-                  <input name="providerReference" required={payment.provider === "manual"} disabled={payment.provider !== "manual"}
-                    placeholder={payment.provider === "manual" ? "Referência no extrato" : "Gerada automaticamente"} />
+                  <input name="providerReference" required={payment.provider !== "mercado_pago"} disabled={payment.provider === "mercado_pago"}
+                    placeholder={payment.provider === "mercado_pago" ? "Gerada automaticamente" : "Referência no extrato"} />
                 </label>
                 <label className="wide">Observação<input name="note" /></label>
                 <button className="button ghost" type="submit" disabled={busyId === payment.id}>
-                  {payment.provider === "manual" ? "Registrar estorno" : "Solicitar estorno"}
+                  {payment.provider === "mercado_pago" ? "Solicitar estorno" : "Registrar estorno"}
                 </button>
               </form>
             </details>
