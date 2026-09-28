@@ -8,6 +8,7 @@ export type LilyPaymentConfig = {
   provider: "manual" | "cooklily_pix" | "mercado_pago";
   providerConfigured: boolean;
   publicKey: string | null;
+  cookLilyPixConfigured: boolean;
   methods: Array<{
     id: LilyPaymentMethod;
     label: string;
@@ -217,7 +218,10 @@ export async function getAdminPaymentSettings() {
   return parseResponse<AdminPaymentSettings>(response);
 }
 
-export async function saveAdminPaymentSettings(input: Omit<AdminPaymentSettings, "mercadoPago">, csrfToken: string) {
+export async function saveAdminPaymentSettings(
+  input: Omit<AdminPaymentSettings, "mercadoPago" | "cookLilyPix">,
+  csrfToken: string
+) {
   const response = await fetch("/api/v1/lily/admin/payments/settings", {
     method: "PATCH",
     credentials: "same-origin",
