@@ -93,7 +93,7 @@ describe("Lily auth", () => {
     expect(login.statusCode).toBe(401);
   });
 
-  it("autentica, rotaciona CSRF em me e exige CSRF no logout", async () => {
+  it("mantém CSRF estável em consultas concorrentes de sessão e exige CSRF no logout", async () => {
     const register = await app.inject({
       method: "POST",
       url: "/api/v1/lily/auth/register",
@@ -107,15 +107,18 @@ describe("Lily auth", () => {
         consents: { lilyMarketing: true, shareWithCarroChefe: false, analyticsOptional: false }
       }
     });
+    expect(register.statusCode).toBe(201);
     const cookie = cookieFrom(register);
-    const me = await app.inject({
-      method: "GET",
-      url: "/api/v1/lily/auth/me",
-      headers: { cookie }
-    });
-    expect(me.statusCode).toBe(200);
-    const csrfToken = me.json().csrfToken;
-    expect(typeof csrfToken).toBe("string");
+    const initialCsrf = register.json().csrfToken;
+
+    const [meA, meB] = await Promise.all([
+      app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } }),
+      app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } })
+    ]);
+    expect(meA.statusCode).toBe(200);
+    expect(meB.statusCode).toBe(200);
+    expect(meA.json().csrfToken).toBe(initialCsrf);
+    expect(meB.json().csrfToken).toBe(initialCsrf);
 
     const rejected = await app.inject({
       method: "POST",
@@ -127,7 +130,7 @@ describe("Lily auth", () => {
     const logout = await app.inject({
       method: "POST",
       url: "/api/v1/lily/auth/logout",
-      headers: { origin, cookie, "x-lily-csrf": csrfToken }
+      headers: { origin, cookie, "x-lily-csrf": meA.json().csrfToken }
     });
     expect(logout.statusCode).toBe(204);
 
@@ -137,6 +140,44 @@ describe("Lily auth", () => {
       headers: { cookie }
     });
     expect(after.statusCode).toBe(401);
+  });
+
+  it("repara sessão legada para CSRF determinístico sem exigir novo login", async () => {
+    const register = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/register",
+      headers: { origin },
+      payload: {
+        phone: "67999289197",
+        password: "senha-lily-segura-2026",
+        termsAccepted: true,
+        termsVersion: LILY_TERMS_VERSION,
+        privacyPolicyVersion: LILY_PRIVACY_VERSION,
+        consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+      }
+    });
+    expect(register.statusCode).toBe(201);
+    const cookie = cookieFrom(register);
+    const userId = register.json().user.id;
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId },
+      data: { csrfTokenHash: "0".repeat(64) }
+    });
+
+    const [meA, meB] = await Promise.all([
+      app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } }),
+      app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } })
+    ]);
+    expect(meA.statusCode).toBe(200);
+    expect(meB.statusCode).toBe(200);
+    expect(meA.json().csrfToken).toBe(meB.json().csrfToken);
+
+    const logout = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/auth/logout",
+      headers: { origin, cookie, "x-lily-csrf": meA.json().csrfToken }
+    });
+    expect(logout.statusCode).toBe(204);
   });
 
   it("exige pelo menos 8 caracteres em novos cadastros", async () => {
