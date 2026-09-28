@@ -400,7 +400,6 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
     const cookLilyPix = cookLilyPixConfiguration();
-    const cookLilyPix = cookLilyPixConfiguration();
     const methods = paymentMethods(settings, { allowDisabled: isHomologation });
     return {
       enabled: settings.paymentsEnabled || isHomologation,
@@ -440,6 +439,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     }
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
+    const cookLilyPix = cookLilyPixConfiguration();
 
     if (!settings.paymentsEnabled && !isHomologation) {
       throw new ApiError(503, "Pagamentos online ainda não estão habilitados.", { code: "LILY_PAYMENTS_DISABLED" });
