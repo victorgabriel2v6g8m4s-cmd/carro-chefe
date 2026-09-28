@@ -1,3 +1,4 @@
+import { createCookLilyPixPayment } from "./cooklily-pix-provider";
 import {
   cancelMercadoPagoPayment,
   createMercadoPagoPayment,
@@ -99,6 +100,11 @@ class ManualPaymentProvider implements LilyPaymentProvider {
 
 const manual = new ManualPaymentProvider();
 
+const cookLilyPix: LilyPaymentProvider = {
+  id: "cooklily_pix",
+  createPayment: createCookLilyPixPayment
+};
+
 const mercadoPago: LilyPaymentProvider = {
   id: "mercado_pago",
   createPayment: createMercadoPagoPayment,
@@ -109,6 +115,7 @@ const mercadoPago: LilyPaymentProvider = {
 
 export function lilyPaymentProvider(id: string): LilyPaymentProvider {
   if (id === "manual") return manual;
+  if (id === "cooklily_pix") return cookLilyPix;
   if (id === "mercado_pago") return mercadoPago;
   throw new Error(`Provedor de pagamento não configurado/suportado: ${id}`);
 }
