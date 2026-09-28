@@ -401,6 +401,113 @@ describe("CookLily Entrega 06", () => {
     expect(persisted?.laCampaign).toBe("entrega-06-test");
   });
 
+  it("expõe tracking guest somente com capability token válido e minimiza PII", async () => {
+    await enableFlatOperation();
+    const quoteResponse = await quoteSol("delivery", deliveryAddress());
+    expect(quoteResponse.statusCode).toBe(200);
+    const basePayload = await createPayloadFromQuote(quoteResponse.json());
+    const payload = {
+      ...basePayload,
+      fulfillmentType: "delivery",
+      address: deliveryAddress()
+    };
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders",
+      headers: {
+        origin,
+        "idempotency-key": "cooklily:test:guest:tracking:01"
+      },
+      payload
+    });
+    expect(created.statusCode).toBe(201);
+    const orderId = created.json().id as string;
+    const token = created.json().guestAccessToken as string;
+    expect(token).toMatch(/^[A-Za-z0-9_-]{40,}$/);
+
+    const missing = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/public/orders/${orderId}/tracking`
+    });
+    expect(missing.statusCode).toBe(404);
+    expect(missing.json().details.code).toBe("LILY_GUEST_ORDER_NOT_FOUND");
+
+    const invalid = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/public/orders/${orderId}/tracking`,
+      headers: { "x-lily-order-token": "A".repeat(43) }
+    });
+    expect(invalid.statusCode).toBe(404);
+    expect(invalid.json().details.code).toBe("LILY_GUEST_ORDER_NOT_FOUND");
+
+    const unknown = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/public/orders/unknown-order/tracking",
+      headers: { "x-lily-order-token": token }
+    });
+    expect(unknown.statusCode).toBe(404);
+    expect(unknown.json().details.code).toBe("LILY_GUEST_ORDER_NOT_FOUND");
+
+    const tracked = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/public/orders/${orderId}/tracking`,
+      headers: { "x-lily-order-token": token }
+    });
+    expect(tracked.statusCode).toBe(200);
+    expect(tracked.headers["cache-control"]).toContain("no-store");
+    expect(tracked.headers["referrer-policy"]).toBe("no-referrer");
+    expect(tracked.json()).toMatchObject({
+      id: orderId,
+      fulfillmentType: "delivery",
+      status: "awaiting_payment",
+      deliveryStatus: "not_ready"
+    });
+    expect(tracked.json().deliveryCode).toBeUndefined();
+
+    const serialized = JSON.stringify(tracked.json());
+    expect(serialized).not.toContain("Rua Teste");
+    expect(serialized).not.toContain("79002000");
+    expect(serialized).not.toContain("67999991111");
+    expect(serialized).not.toContain("entrega-06-test");
+    expect(serialized).not.toContain('"actor"');
+    expect(serialized).not.toContain('"note"');
+    expect(serialized).not.toContain("configurationHash");
+
+    await lilyPrisma.lilyOrder.update({
+      where: { id: orderId },
+      data: {
+        status: "paid",
+        operationStatus: "ready_for_dispatch",
+        deliveryStatus: "picked_up",
+        deliveryUpdatedAt: new Date()
+      }
+    });
+
+    const inRoute = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/public/orders/${orderId}/tracking`,
+      headers: { "x-lily-order-token": token }
+    });
+    expect(inRoute.statusCode).toBe(200);
+    expect(inRoute.json().deliveryCode).toMatch(/^\d{6}$/);
+
+    await lilyPrisma.lilyOrder.update({
+      where: { id: orderId },
+      data: {
+        deliveryStatus: "delivered",
+        deliveryUpdatedAt: new Date()
+      }
+    });
+    const delivered = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/public/orders/${orderId}/tracking`,
+      headers: { "x-lily-order-token": token }
+    });
+    expect(delivered.statusCode).toBe(200);
+    expect(delivered.json().deliveryCode).toBeUndefined();
+  });
+
   it("rejeita reutilização da chave idempotente com pedido diferente", async () => {
     await enableFlatOperation();
     const quoteResponse = await quoteSol();
