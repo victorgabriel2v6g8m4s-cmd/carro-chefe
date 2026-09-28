@@ -39,7 +39,7 @@ export type KitchenOrder = {
 };
 
 export async function getKitchenOrders() {
-  const response = await fetch("/api/v1/lily/staff/orders/operations", {
+  const response = await fetch("/api/v1/lily/admin/kitchen/orders", {
     credentials: "same-origin"
   });
   return parseResponse<{
@@ -54,7 +54,7 @@ export async function advanceKitchenOrder(
   note?: string | null
 ) {
   const response = await fetch(
-    `/api/v1/lily/staff/orders/${encodeURIComponent(id)}/operation/advance`,
+    `/api/v1/lily/admin/kitchen/orders/${encodeURIComponent(id)}/advance`,
     {
       method: "POST",
       credentials: "same-origin",
