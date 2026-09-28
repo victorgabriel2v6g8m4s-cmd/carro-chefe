@@ -13,6 +13,7 @@ import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
+import { KitchenPage } from "./features/operations/KitchenPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
@@ -432,6 +433,7 @@ function App() {
     <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
+    <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></>;
