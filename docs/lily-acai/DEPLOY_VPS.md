@@ -655,3 +655,99 @@ Durante homologação, `paymentsEnabled` pode permanecer desligado e o modo de h
 10. conferir transição do pedido para pago e reconciliação.
 
 Não ativar em produção antes de validar a chave Pix real e a tabela de tarifas da conta recebedora.
+
+
+## Bootstrap Nginx e segredo logístico — Entrega 11D
+
+A Entrega 11D cria o namespace autenticado:
+
+```text
+/api/v1/lily/courier/*
+```
+
+O Nginx real precisa desse bloco antes do bloqueio genérico `/api/`. O helper versionado é:
+
+`deploy/scripts/enable-lily-entrega11-nginx`
+
+**Não execute um SHA da Entrega 11D antes de ele passar pelo gate final.** Depois que houver um SHA técnico validado, o bootstrap é:
+
+```bash
+cd /srv/carro-chefe/current
+git fetch origin --prune
+
+RELEASE_SHA="<sha-tecnico-validado-entrega11d>"
+
+git cat-file -e "${RELEASE_SHA}^{commit}"
+git show "${RELEASE_SHA}:deploy/scripts/enable-lily-entrega11-nginx"   > /tmp/enable-lily-entrega11-nginx
+
+bash -n /tmp/enable-lily-entrega11-nginx
+install -m 0755 /tmp/enable-lily-entrega11-nginx /usr/local/sbin/enable-lily-entrega11-nginx
+rm -f /tmp/enable-lily-entrega11-nginx
+
+sudo enable-lily-entrega11-nginx
+
+grep -F "location ^~ /api/v1/lily/courier/" /etc/nginx/sites-available/carrochefe.com
+sudo nginx -t
+```
+
+### Segredo dos códigos de coleta/entrega
+
+Os códigos de seis dígitos não são persistidos no banco. O backend os deriva por HMAC a partir do ID do pedido e de um segredo exclusivo da VPS.
+
+Crie uma chave independente:
+
+```bash
+ENV_FILE=/etc/carro-chefe/carro-chefe.env
+
+if ! grep -Eq '^COOKLILY_LOGISTICS_CODE_KEY=.+$' "${ENV_FILE}"; then
+  KEY="$(node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))")"
+
+  if grep -q '^COOKLILY_LOGISTICS_CODE_KEY=' "${ENV_FILE}"; then
+    sed -i "s|^COOKLILY_LOGISTICS_CODE_KEY=.*$|COOKLILY_LOGISTICS_CODE_KEY=${KEY}|" "${ENV_FILE}"
+  else
+    printf '\nCOOKLILY_LOGISTICS_CODE_KEY=%s\n' "${KEY}" >> "${ENV_FILE}"
+  fi
+
+  unset KEY
+fi
+
+chmod 600 "${ENV_FILE}"
+
+set -a
+. "${ENV_FILE}"
+set +a
+node -e 'const k=Buffer.from(process.env.COOKLILY_LOGISTICS_CODE_KEY||"","base64url"); if(k.length!==32) process.exit(1); console.log("logistics_code_key=ok")'
+```
+
+Não imprima nem versione a chave. Não troque uma chave válida enquanto houver pedidos de entrega em andamento; a troca muda os códigos derivados.
+
+O deployer da Entrega 11D falha **antes de migrations reais** quando:
+
+- o bloco Nginx `/api/v1/lily/courier/` não existe;
+- `COOKLILY_LOGISTICS_CODE_KEY` está ausente;
+- a chave não decodifica para exatamente 32 bytes.
+
+### Smoke após publicação
+
+Com contas de teste/controladas:
+
+1. promover uma conta para `courier`;
+2. trocar a senha conforme a política privilegiada;
+3. configurar/confirmar MFA;
+4. confirmar que courier não acessa catálogo, financeiro nem equipe;
+5. pagar um pedido de entrega;
+6. avançar a cozinha até pronto para despacho;
+7. confirmar que o pedido surge na fila do entregador sem rua/número;
+8. aceitar e confirmar que somente o responsável passa a ver endereço completo;
+9. tentar aceitar com um segundo courier e obter conflito;
+10. marcar chegada na coleta;
+11. usar código incorreto e confirmar falha sem avanço;
+12. usar o código de coleta mostrado na cozinha;
+13. sair da coleta;
+14. confirmar que o cliente enxerga o avanço e o código de entrega;
+15. marcar chegada no destino;
+16. testar código incorreto;
+17. confirmar o código correto do cliente;
+18. sair do local de entrega;
+19. conferir `LilyOrderDeliveryEvent`, `completedAt` e auditorias;
+20. confirmar que nenhum código/segredo aparece em logs, Git ou bundle frontend.
