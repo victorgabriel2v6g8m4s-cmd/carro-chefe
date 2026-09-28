@@ -2478,3 +2478,189 @@ img, svg { max-width: 100%; }
     flex-direction: column;
   }
 }
+
+
+.delivery-code-card,
+.kitchen-pickup-code {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 20px;
+  background: var(--cl-color-surface);
+}
+
+.delivery-code-card > strong,
+.kitchen-pickup-code > strong {
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+
+.delivery-code-card p,
+.kitchen-pickup-code p {
+  margin: 0;
+  color: var(--cl-color-text-muted);
+}
+
+.courier-page {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 72px;
+  display: grid;
+  gap: 28px;
+}
+
+.courier-heading,
+.courier-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.courier-heading h1,
+.courier-section-heading h2 {
+  margin: 4px 0 0;
+}
+
+.courier-section {
+  display: grid;
+  gap: 16px;
+}
+
+.courier-section-heading > span {
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 999px;
+  background: var(--cl-color-surface);
+  font-weight: 800;
+}
+
+.courier-delivery-list,
+.courier-available-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.courier-delivery-card,
+.courier-available-card {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 24px;
+  background: var(--cl-color-surface);
+}
+
+.courier-delivery-card > header,
+.courier-available-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.courier-delivery-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.courier-delivery-card > header > div,
+.courier-available-card > div {
+  display: grid;
+  gap: 5px;
+}
+
+.courier-route-box {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--cl-color-surface-soft);
+}
+
+.courier-route-box small {
+  color: var(--cl-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.courier-route-box em {
+  color: var(--cl-color-text-muted);
+  font-style: normal;
+}
+
+.courier-mini-timeline {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.courier-mini-timeline li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--cl-color-text-muted);
+}
+
+.courier-mini-timeline li strong {
+  color: var(--cl-color-text);
+}
+
+.courier-action-form {
+  display: grid;
+  gap: 12px;
+}
+
+.courier-action-form label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.courier-action-form input {
+  min-height: 52px;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.courier-available-card {
+  display: grid;
+  align-items: center;
+}
+
+@media (min-width: 760px) {
+  .courier-available-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .courier-page {
+    width: min(100% - 20px, 1120px);
+    padding-top: 22px;
+  }
+
+  .courier-heading,
+  .courier-section-heading,
+  .courier-delivery-card > header,
+  .courier-available-card {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .courier-heading .button,
+  .courier-available-card .button,
+  .courier-action-form .button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
