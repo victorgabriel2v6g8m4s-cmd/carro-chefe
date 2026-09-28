@@ -84,7 +84,7 @@ function serializeKitchenOrder(order: any) {
 }
 
 export async function lilyOperationsRoutes(app: FastifyInstance) {
-  app.get("/api/v1/lily/staff/orders/operations", async (request) => {
+  app.get("/api/v1/lily/admin/kitchen/orders", async (request) => {
     await requireLilyStaff(request);
 
     const query = z.object({
@@ -110,7 +110,7 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post("/api/v1/lily/staff/orders/:id/operation/advance", {
+  app.post("/api/v1/lily/admin/kitchen/orders/:id/advance", {
     config: { rateLimit: { max: 120, timeWindow: "1 minute" } }
   }, async (request) => {
     const context = await requireLilyStaff(request, true);
