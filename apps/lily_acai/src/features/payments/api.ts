@@ -5,7 +5,7 @@ export type LilyPaymentMethod = "manual_pix" | "pix" | "credit_card";
 export type LilyPaymentConfig = {
   enabled: boolean;
   homologation: boolean;
-  provider: "manual" | "mercado_pago";
+  provider: "manual" | "cooklily_pix" | "mercado_pago";
   providerConfigured: boolean;
   publicKey: string | null;
   methods: Array<{
@@ -192,11 +192,17 @@ export async function getOrderPayments(input: {
 
 export type AdminPaymentSettings = {
   paymentsEnabled: boolean;
-  paymentProvider: "manual" | "mercado_pago";
+  paymentProvider: "manual" | "cooklily_pix" | "mercado_pago";
   manualPixEnabled: boolean;
   manualPixInstructions: string | null;
   mercadoPagoPixEnabled: boolean;
   mercadoPagoCardEnabled: boolean;
+  cookLilyPix: {
+    keyConfigured: boolean;
+    merchantNameConfigured: boolean;
+    merchantCityConfigured: boolean;
+    ready: boolean;
+  };
   mercadoPago: {
     accessTokenConfigured: boolean;
     publicKeyConfigured: boolean;
