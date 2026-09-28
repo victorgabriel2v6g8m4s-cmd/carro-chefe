@@ -52,7 +52,7 @@ describe("CookLily Pix próprio", () => {
     });
 
     expect(payload).toContain("540525.90");
-    expect(payload).toContain("62091208CLABC123");
+    expect(payload).toContain("62120508CLABC123");
     expect(payload).toContain("0014br.gov.bcb.pix");
 
     const withoutCrc = payload.slice(0, -4);
