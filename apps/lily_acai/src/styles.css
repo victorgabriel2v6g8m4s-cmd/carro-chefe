@@ -2799,3 +2799,50 @@ img, svg { max-width: 100%; }
     grid-column: auto;
   }
 }
+
+
+/* Entrega 11F — tracking guest seguro */
+.guest-tracking-page {
+  display: grid;
+  gap: 18px;
+}
+.guest-tracking-summary,
+.guest-tracking-security-note {
+  padding: 18px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 18px;
+  background: var(--cl-color-surface);
+}
+.guest-tracking-items {
+  display: grid;
+  gap: 10px;
+}
+.guest-tracking-items > article {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--cl-color-border);
+}
+.guest-tracking-items > article > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.guest-tracking-items small,
+.guest-tracking-security-note p {
+  color: var(--cl-color-text-muted);
+}
+.guest-tracking-security-note {
+  display: grid;
+  gap: 5px;
+}
+.guest-tracking-security-note p {
+  margin: 0;
+}
+@media (max-width: 520px) {
+  .guest-tracking-items > article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

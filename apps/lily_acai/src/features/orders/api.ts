@@ -131,6 +131,35 @@ export type LilyOrder = {
   }>;
 };
 
+export type LilyGuestTrackingOrder = {
+  id: string;
+  orderNumber: string;
+  fulfillmentType: "pickup" | "delivery";
+  status: string;
+  operationStatus: string;
+  operationUpdatedAt: string;
+  deliveryStatus: string;
+  deliveryUpdatedAt: string | null;
+  deliveryCode?: string;
+  isHomologation: boolean;
+  grandTotalCents: number;
+  createdAt: string;
+  items: Array<{
+    id: string;
+    kind: "product" | "combo";
+    productName: string;
+    variantName: string;
+    sizeMl: number;
+    quantity: number;
+    lineTotalCents: number;
+    flavors: Array<{ name: string }>;
+    addons: Array<{ name: string; quantity: number }>;
+  }>;
+  statusEvents: Array<{ toStatus: string; createdAt: string }>;
+  operationEvents: Array<{ toStatus: string; createdAt: string }>;
+  deliveryEvents: Array<{ toStatus: string; createdAt: string }>;
+};
+
 function selectionPayload(selection: NonNullable<CartItem["comboSelections"]>[number]) {
   return {
     productId: selection.productId,
@@ -251,4 +280,17 @@ export async function getCustomerOrders() {
 export async function getCustomerOrder(id: string) {
   const response = await fetch(`/api/v1/lily/customer/orders/${encodeURIComponent(id)}`, { credentials: "same-origin" });
   return parseResponse<LilyOrder>(response);
+}
+
+
+export async function getGuestOrderTracking(orderId: string, guestAccessToken: string) {
+  const response = await fetch(
+    `/api/v1/lily/public/orders/${encodeURIComponent(orderId)}/tracking`,
+    {
+      credentials: "same-origin",
+      headers: { "X-Lily-Order-Token": guestAccessToken },
+      cache: "no-store"
+    }
+  );
+  return parseResponse<LilyGuestTrackingOrder>(response);
 }

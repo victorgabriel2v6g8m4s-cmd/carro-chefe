@@ -309,15 +309,19 @@ O papel `courier` deve ter acesso mínimo:
 - [x] reatribuição/devolução por admin;
 - [x] bloquear reatribuição após `picked_up`;
 - [x] histórico courier/admin com endereço minimizado;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36413414854`, CodeQL `36413414990`;
 - [ ] QA real multiusuário.
 
 ### Fase 11F — tracking guest seguro
-- [ ] token opaco em header;
-- [ ] resposta minimizada;
-- [ ] proteção contra enumeração/cache;
-- [ ] polling da página guest;
-- [ ] código de entrega somente nas etapas permitidas.
+- [x] token opaco em header;
+- [x] hash persistido e comparação timing-safe;
+- [x] resposta minimizada;
+- [x] proteção contra enumeração/cache/indexação;
+- [x] polling da página guest;
+- [x] código de entrega somente nas etapas permitidas;
+- [x] CTA do pagamento guest para acompanhamento;
+- [ ] gate CI/CodeQL;
+- [ ] QA real de navegador/mobile.
 
 ### Fase 11G — ETA e mapas
 - [ ] escolher provider gratuito/baixo custo;

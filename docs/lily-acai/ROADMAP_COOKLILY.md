@@ -290,7 +290,7 @@ Limitação consciente da primeira fase:
 
 ### 11E — recusa, desistência, reatribuição e histórico
 
-**Status:** implementação candidata em branch de entrega; CI/CodeQL e QA real pendentes.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #92. Runtime validado `ddda7af8648bf9bf69ab80f3ee2224e5a7d6dd77`; CI `36413414854` e CodeQL `36413414990`: success. QA real multiusuário permanece pendente.
 
 - [x] novo `LilyDeliveryAssignment` com backfill;
 - [x] índice parcial garantindo no máximo um vínculo ativo por pedido;
@@ -305,20 +305,29 @@ Limitação consciente da primeira fase:
 - [x] minimização de endereço no histórico;
 - [x] painel admin `/painel/entregas`;
 - [x] UX de recusa/desistência no painel `/entregas`;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36413414854`, CodeQL `36413414990`;
 - [ ] QA real multiusuário.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-28.md`.
 
 ### 11F — tracking seguro de pedidos guest
 
-**Status:** próxima tranche.
+**Status:** implementação candidata; gate pendente.
 
-- [ ] endpoint de tracking protegido pelo token opaco já emitido no checkout;
-- [ ] resposta minimizada sem telefone/endereço/notas internas;
-- [ ] proteção contra enumeração e cache;
-- [ ] código de entrega somente nas etapas permitidas;
-- [ ] página guest com polling.
+- [x] endpoint de tracking protegido pelo token opaco já emitido no checkout;
+- [x] token somente em header, nunca em query;
+- [x] comparação de hash em tempo constante;
+- [x] resposta uniforme contra enumeração;
+- [x] `no-store`, `no-referrer` e `noindex`;
+- [x] resposta minimizada sem telefone/endereço/notas internas/atores;
+- [x] código de entrega somente nas etapas permitidas, validado no backend;
+- [x] página guest com polling de 10 s;
+- [x] CTA pagamento -> acompanhamento;
+- [x] teste automatizado de capability e minimização;
+- [ ] gate CI/CodeQL;
+- [ ] QA real de navegador/mobile.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11F_TRACKING_GUEST_2026-09-28.md`.
 
 ### 11G — ETA/mapas
 
