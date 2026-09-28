@@ -417,6 +417,7 @@ describe("CookLily Entrega 06", () => {
       url: "/api/v1/lily/orders",
       headers: {
         origin,
+        "x-forwarded-for": "127.0.0.245",
         "idempotency-key": "cooklily:test:guest:tracking:01"
       },
       payload
