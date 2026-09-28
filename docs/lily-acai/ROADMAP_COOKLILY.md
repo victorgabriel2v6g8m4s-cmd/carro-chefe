@@ -224,7 +224,7 @@ Limitação consciente da primeira fase:
 
 ### 11B — domínio operacional
 
-**Status:** primeira versão implementada; gate técnico pendente.
+**Status:** primeira versão implementada e validada tecnicamente no runtime `8a9dbb2147f5bdee70e1a981cf2c03e0b183f9b9` (CI `36371053349`, CodeQL `36371053318`, 164 testes Node 20/24).
 
 - [x] separar financeiro de produção/logística;
 - [x] adicionar `operationStatus` ao pedido;
@@ -239,29 +239,52 @@ Limitação consciente da primeira fase:
 - [ ] QA real em tablet/celular;
 - [ ] SLA/alertas de atraso;
 - [ ] impressão;
-- [ ] integração com a etapa logística da Entrega 11D.
+- [x] integração inicial com a etapa logística: ao ficar pronto para despacho, pedido de entrega entra em `waiting_courier`;
+- [ ] QA real em operação de cozinha + entregador.
 
 ### 11C — cliente
 
-Próximo bloco:
+**Status:** primeira versão implementada; nova integração logística em gate.
 
-- linha do tempo do pedido;
-- pagamento + produção + entrega;
-- código de entrega;
-- atualização periódica/SSE.
+- [x] página de pedidos e detalhe autenticado;
+- [x] polling do detalhe a cada 10 segundos;
+- [x] timeline combinando eventos financeiros e de produção;
+- [x] timeline preparada para eventos de entrega;
+- [x] status legível por etapa;
+- [x] código de entrega derivado e exibido somente quando a entrega já está em rota/chegada;
+- [ ] guest tracking por token fora da sessão;
+- [ ] SSE/WebSocket se polling deixar de ser suficiente;
+- [ ] ETA/mapa;
+- [ ] notificações WhatsApp/push.
 
 ### 11D — entregador
 
-Próximo bloco:
+**Status:** implementação funcional candidata a gate técnico; não publicar antes de CI + CodeQL do SHA final.
 
-- papel `courier`;
-- aceitar entrega de forma atômica;
-- chegou na coleta;
-- código de coleta;
-- saiu da coleta;
-- chegou no destino;
-- código de entrega;
-- finalização/saída.
+- [x] papel mínimo `courier`, separado de staff/admin;
+- [x] senha privilegiada + MFA obrigatório + sessão privilegiada;
+- [x] gestão de courier pelo painel e por `lily-promote-user`;
+- [x] namespace `/api/v1/lily/courier/*`;
+- [x] fila com somente pedidos pagos e liberados pela cozinha;
+- [x] endereço reduzido antes do aceite;
+- [x] endereço completo somente para o entregador responsável;
+- [x] aceite atômico, impedindo dois entregadores no mesmo pedido;
+- [x] “cheguei na coleta”;
+- [x] confirmação do código de coleta;
+- [x] “saí do local de coleta”;
+- [x] “cheguei no local de entrega”;
+- [x] confirmação do código de entrega;
+- [x] “saí do local de entrega”;
+- [x] códigos de 6 dígitos derivados por HMAC, sem plaintext persistido;
+- [x] tentativas inválidas auditadas e limitadas;
+- [x] painel mobile `/entregas`;
+- [x] eventos logísticos separados do financeiro e da cozinha;
+- [x] helper Nginx da Entrega 11D;
+- [x] deploy fail-closed sem `COOKLILY_LOGISTICS_CODE_KEY`;
+- [ ] gate CI/CodeQL do candidato final;
+- [ ] QA real em dois celulares/contas simultâneas;
+- [ ] cancelamento/reatribuição operacional controlada;
+- [ ] histórico completo de entregas para courier/admin.
 
 Documento detalhado:
 
