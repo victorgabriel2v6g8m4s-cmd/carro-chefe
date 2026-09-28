@@ -282,7 +282,7 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
       throw new ApiError(400, "A nova senha precisa ser diferente da senha atual.", { code: "LILY_PASSWORD_REUSE" });
     }
 
-    if (["staff", "admin"].includes(context.user.role) && input.newPassword.length < 12) {
+    if (["staff", "courier", "admin"].includes(context.user.role) && input.newPassword.length < 12) {
       throw new ApiError(400, "Contas da equipe exigem senha com pelo menos 12 caracteres.", {
         code: "LILY_STAFF_PASSWORD_POLICY"
       });
@@ -295,7 +295,7 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
         where: { id: context.user.id },
         data: {
           passwordHash: nextHash,
-          ...(context.user.role === "staff" || context.user.role === "admin"
+          ...(["staff", "courier", "admin"].includes(context.user.role)
             ? { staffPasswordUpgradeRequired: false }
             : {})
         }
