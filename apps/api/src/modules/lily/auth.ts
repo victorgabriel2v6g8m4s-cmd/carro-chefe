@@ -92,6 +92,10 @@ function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function csrfTokenForSessionToken(sessionToken: string) {
+  return crypto.createHash("sha256").update(`lily-csrf-v1:${sessionToken}`).digest("base64url");
+}
+
 function readCookie(request: FastifyRequest, name: string) {
   const header = request.headers.cookie;
   if (!header) return null;
@@ -132,7 +136,7 @@ export async function createLilySession(userId: string, request: FastifyRequest,
     ? STAFF_SESSION_TTL_MS
     : CUSTOMER_SESSION_TTL_MS;
   const token = crypto.randomBytes(32).toString("base64url");
-  const csrfToken = crypto.randomBytes(24).toString("base64url");
+  const csrfToken = csrfTokenForSessionToken(token);
   const expiresAt = new Date(Date.now() + ttlMs);
   await lilyPrisma.lilySession.create({
     data: {
@@ -192,13 +196,23 @@ export async function requireLilySession(request: FastifyRequest): Promise<LilyS
   return context;
 }
 
-export async function rotateLilyCsrf(sessionId: string) {
-  const token = crypto.randomBytes(24).toString("base64url");
-  await lilyPrisma.lilySession.update({
-    where: { id: sessionId },
-    data: { csrfTokenHash: hashToken(token) }
-  });
-  return token;
+export async function currentLilyCsrfToken(request: FastifyRequest, context: LilySessionContext) {
+  const sessionToken = readCookie(request, SESSION_COOKIE);
+  if (!sessionToken) throw new ApiError(401, "Sessão Lily necessária.", { code: "LILY_AUTH_REQUIRED" });
+
+  const csrfToken = csrfTokenForSessionToken(sessionToken);
+  const expectedHash = hashToken(csrfToken);
+
+  // Compatibilidade com sessões emitidas antes do CSRF determinístico.
+  // Todas as chamadas concorrentes convergem para o mesmo hash, sem invalidar umas às outras.
+  if (context.session.csrfTokenHash !== expectedHash) {
+    await lilyPrisma.lilySession.update({
+      where: { id: context.session.id },
+      data: { csrfTokenHash: expectedHash }
+    });
+  }
+
+  return csrfToken;
 }
 
 export function requireLilyCsrf(request: FastifyRequest, context: LilySessionContext) {
@@ -206,11 +220,15 @@ export function requireLilyCsrf(request: FastifyRequest, context: LilySessionCon
   if (typeof supplied !== "string") {
     throw new ApiError(403, "Token CSRF ausente.", { code: "LILY_CSRF_REQUIRED" });
   }
-  const actual = hashToken(supplied);
-  const expected = context.session.csrfTokenHash;
-  const actualBuffer = Buffer.from(actual);
-  const expectedBuffer = Buffer.from(expected);
-  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {
+
+  const sessionToken = readCookie(request, SESSION_COOKIE);
+  if (!sessionToken) {
+    throw new ApiError(401, "Sessão Lily necessária.", { code: "LILY_AUTH_REQUIRED" });
+  }
+
+  const actual = Buffer.from(hashToken(supplied));
+  const expected = Buffer.from(hashToken(csrfTokenForSessionToken(sessionToken)));
+  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
     throw new ApiError(403, "Token CSRF inválido.", { code: "LILY_CSRF_INVALID" });
   }
 }
