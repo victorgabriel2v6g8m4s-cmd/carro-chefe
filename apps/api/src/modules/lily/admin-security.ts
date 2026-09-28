@@ -3,28 +3,52 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { requireLilyCsrf, requireLilySession } from "./auth";
 
-export async function requireLilyStaff(request: FastifyRequest, requireCsrf = false) {
+
+async function requirePrivilegedRole(
+  request: FastifyRequest,
+  allowedRoles: string[],
+  roleError: { message: string; code: string },
+  requireCsrf = false
+) {
   const context = await requireLilySession(request);
-  if (context.user.role !== "staff" && context.user.role !== "admin") {
-    throw new ApiError(403, "Acesso restrito à equipe CookLily.", { code: "LILY_STAFF_REQUIRED" });
+  if (!allowedRoles.includes(context.user.role)) {
+    throw new ApiError(403, roleError.message, { code: roleError.code });
   }
   if (context.user.staffPasswordUpgradeRequired) {
-    throw new ApiError(403, "Atualize sua senha antes de acessar funções administrativas.", {
+    throw new ApiError(403, "Atualize sua senha antes de acessar funções operacionais.", {
       code: "LILY_STAFF_PASSWORD_UPGRADE_REQUIRED"
     });
   }
   if (!context.user.mfaEnabled) {
-    throw new ApiError(403, "Configure MFA antes de acessar funções administrativas.", {
+    throw new ApiError(403, "Configure MFA antes de acessar funções operacionais.", {
       code: "LILY_STAFF_MFA_SETUP_REQUIRED"
     });
   }
   if (!context.session.mfaVerifiedAt) {
-    throw new ApiError(403, "Confirme o segundo fator antes de acessar funções administrativas.", {
+    throw new ApiError(403, "Confirme o segundo fator antes de acessar funções operacionais.", {
       code: "LILY_STAFF_MFA_REQUIRED"
     });
   }
   if (requireCsrf) requireLilyCsrf(request, context);
   return context;
+}
+
+export async function requireLilyStaff(request: FastifyRequest, requireCsrf = false) {
+  return requirePrivilegedRole(
+    request,
+    ["staff", "admin"],
+    { message: "Acesso restrito à equipe CookLily.", code: "LILY_STAFF_REQUIRED" },
+    requireCsrf
+  );
+}
+
+export async function requireLilyCourier(request: FastifyRequest, requireCsrf = false) {
+  return requirePrivilegedRole(
+    request,
+    ["courier", "admin"],
+    { message: "Acesso restrito aos entregadores CookLily.", code: "LILY_COURIER_REQUIRED" },
+    requireCsrf
+  );
 }
 
 export async function auditLilyAdmin(
