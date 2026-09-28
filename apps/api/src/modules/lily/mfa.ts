@@ -20,7 +20,7 @@ const codeSchema = z.object({
 }).strict();
 
 function isPrivileged(role: string) {
-  return role === "staff" || role === "admin";
+  return role === "staff" || role === "courier" || role === "admin";
 }
 
 function requirePrivilegedRole(role: string) {
