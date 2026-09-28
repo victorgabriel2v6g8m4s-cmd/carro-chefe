@@ -6,11 +6,12 @@ ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
 usage() {
   cat <<'EOF'
 Uso:
-  sudo lily-promote-user <telefone> [staff|admin]
+  sudo lily-promote-user <telefone> [staff|courier|admin]
 
 Exemplos:
   sudo lily-promote-user 67999999999
   sudo lily-promote-user +5567999999999 staff
+  sudo lily-promote-user 67999999999 courier
   sudo lily-promote-user 67999999999 admin
 
 Sem o segundo argumento, promove para staff.
@@ -38,7 +39,7 @@ command -v sqlite3 >/dev/null 2>&1 || die "sqlite3 não está instalado"
 
 RAW_PHONE="$1"
 TARGET_ROLE="${2:-staff}"
-[[ "${TARGET_ROLE}" == "staff" || "${TARGET_ROLE}" == "admin" ]] || die "papel permitido: staff ou admin"
+[[ "${TARGET_ROLE}" == "staff" || "${TARGET_ROLE}" == "courier" || "${TARGET_ROLE}" == "admin" ]] || die "papel permitido: staff, courier ou admin"
 
 digits="$(printf '%s' "${RAW_PHONE}" | tr -cd '0-9')"
 if [[ "${digits}" == 55* && ( ${#digits} -eq 12 || ${#digits} -eq 13 ) ]]; then
@@ -78,11 +79,12 @@ if [[ "${CURRENT_ROLE}" == "${TARGET_ROLE}" ]]; then
   exit 0
 fi
 
-if [[ "${CURRENT_ROLE}" == "admin" && "${TARGET_ROLE}" == "staff" ]]; then
-  die "este comando não faz downgrade de admin para staff"
+if [[ "${CURRENT_ROLE}" == "admin" && "${TARGET_ROLE}" != "admin" ]]; then
+  die "este comando não faz downgrade de admin"
 fi
 
-if [[ "${CURRENT_ROLE}" != "customer" && ! ( "${CURRENT_ROLE}" == "staff" && "${TARGET_ROLE}" == "admin" ) ]]; then
+if [[ "${CURRENT_ROLE}" != "customer" \
+  && ! ( "${TARGET_ROLE}" == "admin" && ( "${CURRENT_ROLE}" == "staff" || "${CURRENT_ROLE}" == "courier" ) ) ]]; then
   die "transição não permitida: ${CURRENT_ROLE} -> ${TARGET_ROLE}"
 fi
 
@@ -125,4 +127,4 @@ IFS='|' read -r FINAL_PHONE FINAL_ROLE FINAL_STATUS <<< "${FINAL}"
 echo "Promoção concluída."
 printf 'telefone=%s\nrole=%s\nstatus=%s\n' "${FINAL_PHONE}" "${FINAL_ROLE}" "${FINAL_STATUS}"
 echo "A nova permissão vale na próxima requisição da sessão; não é necessário reiniciar o serviço."
-echo "A conta deverá trocar a senha antes de acessar funções administrativas."
+echo "A conta deverá trocar a senha e configurar MFA antes de acessar funções operacionais privilegiadas."
