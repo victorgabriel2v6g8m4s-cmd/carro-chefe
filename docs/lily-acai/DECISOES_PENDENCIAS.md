@@ -65,14 +65,17 @@
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
 | LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
-| LILY-PEND-038 | Pix próprio | **em implementação:** adapter `cooklily_pix`, BR Code estático, valor e txid gerados internamente; configurar chave/nome/cidade na VPS e homologar com banco recebedor | Entrega 11A |
+| LILY-PEND-038 | Pix próprio | **implementado tecnicamente:** adapter `cooklily_pix`, BR Code estático, valor e txid gerados internamente; falta configurar chave/nome/cidade reais na VPS e homologar com banco recebedor | Entrega 11A |
 | LILY-PEND-039 | Conciliação Pix próprio | escolher/integrar API bancária ou extrato com webhook depois de definir a conta PJ; até lá confirmação é operacional | Entrega 11A/11E |
-| LILY-PEND-040 | Painel do cliente | evoluir Meus Pedidos para timeline de pagamento, produção e entrega | Entrega 11C |
-| LILY-PEND-041 | Painel cozinha | primeira fila operacional implementada com estado separado, eventos, bloqueio por pagamento e painel; QA real, SLA, alertas e impressão ainda pendentes | Entrega 11B |
-| LILY-PEND-042 | Entregador | criar papel mínimo `courier`, fila, aceite, coleta/entrega e códigos | Entrega 11D |
-| LILY-PEND-043 | Códigos logísticos | gerar/armazenar hash de códigos de coleta e entrega, limitar tentativas e auditar falhas | Entrega 11D |
+| LILY-PEND-040 | Painel do cliente | **primeira versão implementada:** timeline combina pagamento, produção e entrega; polling e código de entrega; faltam guest tracking, ETA/mapa e notificações | Entrega 11C |
+| LILY-PEND-041 | Painel cozinha | primeira fila operacional validada tecnicamente em `8a9dbb...`; já libera automaticamente pedidos de entrega para a fila de courier; QA real, SLA, alertas e impressão ainda pendentes | Entrega 11B |
+| LILY-PEND-042 | Entregador | **candidato implementado:** papel `courier`, MFA, fila, aceite atômico e todas as etapas coleta→entrega; falta gate final e QA real | Entrega 11D |
+| LILY-PEND-043 | Códigos logísticos | **implementado como derivação HMAC:** não persiste plaintext/hash por pedido; segredo de 32 bytes na VPS deriva códigos estáveis, tentativas inválidas têm rate limit e auditoria; falta homologação real | Entrega 11D |
 | LILY-PEND-044 | Rotas/ETA | selecionar serviço barato/gratuito de mapas/rotas somente depois do fluxo operacional básico | Entrega 11E |
 | LILY-PEND-045 | WhatsApp operacional | automatizar mensagens por etapa sem expor PII e respeitando consentimentos/regras do provedor | Entrega 11E |
+| LILY-PEND-046 | Reatribuição/cancelamento de entrega | definir fluxo seguro para courier desistir, admin reatribuir e pedido retornar à fila sem apagar histórico | Entrega 11D |
+| LILY-PEND-047 | Guest tracking | permitir acompanhamento seguro de pedido guest com token opaco sem exigir criação posterior de conta | Entrega 11C |
+| LILY-PEND-048 | QA logística real | testar duas contas courier concorrentes, cozinha e cliente em celulares reais antes de abrir a operação | Entrega 11D |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
