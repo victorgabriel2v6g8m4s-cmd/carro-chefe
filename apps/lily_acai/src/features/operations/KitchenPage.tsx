@@ -125,6 +125,14 @@ function KitchenCard(props: {
       <strong>Observação do pedido:</strong> {order.customerNote}
     </p>}
 
+    {finalKitchenStage && order.fulfillmentType === "delivery" && <div className="kitchen-pickup-code">
+      <span>Código de coleta</span>
+      {order.pickupCode
+        ? <strong>{order.pickupCode}</strong>
+        : <small>Configure a chave de códigos logísticos na VPS.</small>}
+      <p>Informe este código ao entregador somente quando ele estiver no local de coleta.</p>
+    </div>}
+
     <button
       className={finalKitchenStage ? "button ghost" : "button primary"}
       type="button"
