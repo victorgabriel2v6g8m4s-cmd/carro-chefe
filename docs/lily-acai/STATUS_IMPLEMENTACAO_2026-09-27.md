@@ -3,7 +3,7 @@
 **Data:** 27/09/2026  
 **Branch canônica:** `cooklily/canonical`  
 **Último runtime tecnicamente validado:** `8a9dbb2147f5bdee70e1a981cf2c03e0b183f9b9` — cozinha/estado operacional, CI `36371053349`, CodeQL `36371053318`, 164 testes Node 20/24.  
-**Entrega 11D:** implementação de logística/entregador em candidato posterior, ainda aguardando novo gate completo.
+**Entrega 11D:** logística/entregador validada no runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`, CI `36409871119`, CodeQL `36409871166`, 172/172 testes em Node 20 e Node 24.
 
 Este documento consolida o que já foi feito, o que já foi configurado pelo operador e o que continua pendente. Não contém segredos, tokens, chaves privadas ou credenciais.
 
@@ -215,7 +215,7 @@ Validado no runtime `8a9dbb2147f5bdee70e1a981cf2c03e0b183f9b9`:
 - painel da cozinha com polling e conflito otimista;
 - API da cozinha sem telefone/endereço do cliente.
 
-Candidato da Entrega 11D, ainda sem SHA final validado:
+Entrega 11D validada tecnicamente em `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`:
 
 - estado logístico separado;
 - fila de entregas somente depois de pagamento + liberação da cozinha;
