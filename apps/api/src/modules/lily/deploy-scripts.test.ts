@@ -11,7 +11,8 @@ describe("scripts operacionais CookLily", () => {
       "deploy/scripts/carro-chefe-deploy",
       "deploy/scripts/lily-promote-user",
       "deploy/scripts/enable-lily-entrega06-nginx",
-      "deploy/scripts/enable-lily-entrega07-nginx"
+      "deploy/scripts/enable-lily-entrega07-nginx",
+      "deploy/scripts/enable-lily-entrega11-nginx"
     ]) {
       const result = spawnSync("bash", ["-n", path.join(root, relative)], {
         encoding: "utf8"
@@ -28,6 +29,17 @@ describe("scripts operacionais CookLily", () => {
     expect(helper).toContain("nginx -t falhou; restaurando backup");
     expect(helper).toContain("systemctl reload nginx");
     expect(helper.indexOf("location = /api/v1/lily/payments")).toBeLessThan(helper.indexOf('marker = "    location ^~ /api/ { return 404; }"'));
+  });
+
+  it("mantém bootstrap Nginx da Entrega 11D idempotente e fail-closed", () => {
+    const helper = readFileSync(path.join(root, "deploy/scripts/enable-lily-entrega11-nginx"), "utf8");
+    expect(helper).toContain("location ^~ /api/v1/lily/courier/");
+    expect(helper).toContain('marker = "    location ^~ /api/ { return 404; }"');
+    expect(helper).toContain("nginx -t falhou; restaurando backup");
+    expect(helper).toContain("systemctl reload nginx");
+    expect(helper.indexOf("location ^~ /api/v1/lily/courier/")).toBeLessThan(
+      helper.indexOf('marker = "    location ^~ /api/ { return 404; }"')
+    );
   });
 
   it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {
@@ -47,9 +59,11 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain('preflight env NODE_ENV=test npm test');
   });
 
-  it("faz deploy falhar fechado sem chave MFA de produção", () => {
+  it("faz deploy falhar fechado sem chaves de segurança de produção", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     expect(deployer).toContain("LILY_MFA_ENCRYPTION_KEY ausente");
-    expect(deployer).toContain("32 bytes em base64url");
+    expect(deployer).toContain("COOKLILY_LOGISTICS_CODE_KEY ausente");
+    expect(deployer).toContain("COOKLILY_LOGISTICS_CODE_KEY deve conter 32 bytes em base64url");
+    expect(deployer).toContain("'location ^~ /api/v1/lily/courier/'");
   });
 });
