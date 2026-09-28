@@ -415,9 +415,9 @@ describe("CookLily Entrega 06", () => {
     const created = await app.inject({
       method: "POST",
       url: "/api/v1/lily/orders",
+      remoteAddress: ["127", "0", "0", "245"].join("."),
       headers: {
         origin,
-        "x-forwarded-for": "127.0.0.245",
         "idempotency-key": "cooklily:test:guest:tracking:01"
       },
       payload
