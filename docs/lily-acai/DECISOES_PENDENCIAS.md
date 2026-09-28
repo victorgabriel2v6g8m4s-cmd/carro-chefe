@@ -65,6 +65,14 @@
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
 | LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
+| LILY-PEND-038 | Pix próprio | **em implementação:** adapter `cooklily_pix`, BR Code estático, valor e txid gerados internamente; configurar chave/nome/cidade na VPS e homologar com banco recebedor | Entrega 11A |
+| LILY-PEND-039 | Conciliação Pix próprio | escolher/integrar API bancária ou extrato com webhook depois de definir a conta PJ; até lá confirmação é operacional | Entrega 11A/11E |
+| LILY-PEND-040 | Painel do cliente | evoluir Meus Pedidos para timeline de pagamento, produção e entrega | Entrega 11C |
+| LILY-PEND-041 | Painel cozinha | fila por estágio, ações de avanço, SLA e auditoria | Entrega 11B |
+| LILY-PEND-042 | Entregador | criar papel mínimo `courier`, fila, aceite, coleta/entrega e códigos | Entrega 11D |
+| LILY-PEND-043 | Códigos logísticos | gerar/armazenar hash de códigos de coleta e entrega, limitar tentativas e auditar falhas | Entrega 11D |
+| LILY-PEND-044 | Rotas/ETA | selecionar serviço barato/gratuito de mapas/rotas somente depois do fluxo operacional básico | Entrega 11E |
+| LILY-PEND-045 | WhatsApp operacional | automatizar mensagens por etapa sem expor PII e respeitando consentimentos/regras do provedor | Entrega 11E |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
