@@ -144,16 +144,16 @@ A tela do cliente usa esses eventos para montar a linha do tempo.
 - visível para cozinha/staff;
 - informado ao entregador apenas no local;
 - entregador precisa confirmar o código para marcar `picked_up`;
-- armazenar somente hash quando possível.
+- não persistir o código: derivá-lo por HMAC a partir do pedido + segredo exclusivo da VPS;
 
 ### Código de entrega
 
 - gerado por pedido;
 - visível ao cliente;
 - entregador precisa informar para marcar `delivered`;
-- armazenar hash;
+- não persistir o código: derivá-lo por HMAC a partir do pedido + segredo exclusivo da VPS;
 - limitar tentativas;
-- auditar falhas.
+- auditar falhas sem registrar o código informado.
 
 ## Painel do cliente
 
@@ -229,15 +229,14 @@ Ações:
 
 ## Perfis e permissões
 
-Papéis futuros:
+Papéis atuais/relevantes:
 
 - customer;
 - staff;
-- kitchen;
 - courier;
 - admin.
 
-Até a migração de papéis estar pronta, cozinha pode operar com `staff`.
+A cozinha continua operando com `staff`; o papel `courier` já foi implementado com escopo próprio. Um papel `kitchen` dedicado só será criado se houver necessidade real de separar permissões além de staff.
 
 O papel `courier` deve ter acesso mínimo:
 
@@ -252,37 +251,52 @@ O papel `courier` deve ter acesso mínimo:
 ### Fase 11A — documentação e Pix próprio
 - [x] consolidar estado atual;
 - [x] definir arquitetura;
-- [ ] implementar gerador BR Code;
-- [ ] adicionar provider `cooklily_pix`;
-- [ ] configuração fail-closed;
-- [ ] testes oficiais de payload/CRC;
-- [ ] integrar tela de pagamento;
-- [ ] integrar painel financeiro;
-- [ ] homologar com uma chave Pix real.
+- [x] implementar gerador BR Code;
+- [x] adicionar provider `cooklily_pix`;
+- [x] configuração fail-closed;
+- [x] testes oficiais de payload/CRC;
+- [x] integrar tela de pagamento;
+- [x] integrar painel financeiro;
+- [ ] homologar com uma chave Pix real;
+- [ ] escolher integração bancária para conciliação automática.
 
 ### Fase 11B — domínio operacional
-- [ ] adicionar estágio operacional;
-- [ ] adicionar eventos operacionais;
-- [ ] APIs de fila;
-- [ ] regras de transição;
-- [ ] impedir preparação antes do pagamento, salvo override explícito;
-- [ ] painel inicial da cozinha.
+- [x] adicionar estágio operacional;
+- [x] adicionar eventos operacionais;
+- [x] APIs de fila;
+- [x] regras de transição;
+- [x] impedir preparação antes do pagamento;
+- [x] painel inicial da cozinha;
+- [x] handoff cozinha → fila logística;
+- [ ] QA real/SLA/alertas/impressão.
 
 ### Fase 11C — acompanhamento do cliente
-- [ ] timeline;
-- [ ] polling/SSE;
-- [ ] código de entrega;
-- [ ] histórico legível;
-- [ ] mensagens por etapa.
+- [x] timeline financeira;
+- [x] eventos da cozinha;
+- [x] eventos logísticos;
+- [x] polling;
+- [x] código de entrega;
+- [x] status legíveis;
+- [ ] guest tracking por token;
+- [ ] SSE/WebSocket se necessário;
+- [ ] ETA/mapa;
+- [ ] mensagens automáticas por etapa.
 
 ### Fase 11D — logística
-- [ ] papel courier;
-- [ ] fila de entregas;
-- [ ] aceite atômico;
-- [ ] código de coleta;
-- [ ] código de entrega;
-- [ ] painel mobile entregador;
-- [ ] auditoria.
+- [x] papel courier;
+- [x] senha reforçada + MFA;
+- [x] fila de entregas;
+- [x] endereço minimizado antes do aceite;
+- [x] aceite atômico;
+- [x] código de coleta;
+- [x] código de entrega;
+- [x] painel mobile entregador;
+- [x] eventos e auditoria;
+- [x] tentativas inválidas auditadas/rate-limited;
+- [x] Nginx/helper/deployer preparados;
+- [ ] gate CI/CodeQL do candidato final;
+- [ ] QA real multiusuário;
+- [ ] reatribuição/cancelamento operacional.
 
 ### Fase 11E — automações
 - [ ] webhook/integração bancária para conciliar CookLily Pix;
@@ -314,7 +328,7 @@ Nenhuma API externa poderá ser tratada como fonte de verdade financeira sem val
 
 - sem PAN/CVV;
 - sem segredo no frontend;
-- códigos armazenados como hash;
+- códigos logísticos não persistidos: derivados via HMAC com segredo exclusivo da VPS;
 - RBAC;
 - CSRF;
 - MFA para funções privilegiadas;
