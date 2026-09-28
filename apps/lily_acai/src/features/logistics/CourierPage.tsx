@@ -2,10 +2,14 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import {
+  abandonCourierDelivery,
   acceptCourierDelivery,
   getCourierDeliveries,
+  getCourierDeliveryHistory,
+  rejectCourierDelivery,
   transitionCourierDelivery,
   type CourierDeliveriesPayload,
+  type CourierDeliveryHistoryPayload,
   type CourierDelivery,
   type CourierDeliveryAction
 } from "./api";
@@ -69,6 +73,7 @@ function DeliveryCard(props: {
   const { delivery } = props;
   const [busy, setBusy] = useState(false);
   const action = nextAction(delivery.deliveryStatus);
+  const canAbandon = ["courier_accepted", "courier_arrived_pickup"].includes(delivery.deliveryStatus);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -87,6 +92,24 @@ function DeliveryCard(props: {
       await props.onChanged();
     } catch (cause) {
       props.onError(cause instanceof Error ? cause.message : "Não foi possível atualizar a entrega.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function abandon(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(true);
+    props.onError("");
+    try {
+      await abandonCourierDelivery(delivery.id, {
+        reason: String(form.get("reason") || "other") as "vehicle" | "incident" | "personal" | "other",
+        note: String(form.get("note") || "").trim() || null
+      }, props.csrfToken);
+      await props.onChanged();
+    } catch (cause) {
+      props.onError(cause instanceof Error ? cause.message : "Não foi possível devolver a entrega à fila.");
     } finally {
       setBusy(false);
     }
@@ -141,6 +164,27 @@ function DeliveryCard(props: {
       </button>
     </form>}
 
+    {canAbandon && <details className="courier-secondary-action">
+      <summary>Não consigo continuar esta entrega</summary>
+      <form onSubmit={abandon}>
+        <p>Disponível somente antes de confirmar a coleta. O pedido volta à fila e a ocorrência fica auditada.</p>
+        <label>Motivo
+          <select name="reason" defaultValue="vehicle" disabled={busy}>
+            <option value="vehicle">Problema com veículo</option>
+            <option value="incident">Imprevisto/incidente</option>
+            <option value="personal">Motivo pessoal</option>
+            <option value="other">Outro</option>
+          </select>
+        </label>
+        <label>Observação opcional
+          <textarea name="note" maxLength={300} rows={2} disabled={busy} />
+        </label>
+        <button className="button ghost" type="submit" disabled={busy}>
+          {busy ? "Devolvendo..." : "Desistir e devolver à fila"}
+        </button>
+      </form>
+    </details>}
+
     {!action && delivery.deliveryStatus === "left_delivery" && <div className="success">
       Entrega concluída e rota finalizada.
     </div>}
@@ -150,11 +194,12 @@ function DeliveryCard(props: {
 export function CourierPage() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [payload, setPayload] = useState<CourierDeliveriesPayload | null>(null);
+  const [history, setHistory] = useState<CourierDeliveryHistoryPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
 
-  async function refresh() {
+  async function refresh(includeHistory = false) {
     const current = await getLilySession();
     if (!["courier", "admin"].includes(current.user.role)) {
       throw new Error("Esta área é exclusiva para entregadores CookLily.");
@@ -165,6 +210,9 @@ export function CourierPage() {
     const deliveries = await getCourierDeliveries();
     setSession(current);
     setPayload(deliveries);
+    if (includeHistory) {
+      setHistory(await getCourierDeliveryHistory({ page: 1, limit: 20 }));
+    }
   }
 
   useEffect(() => {
@@ -172,7 +220,7 @@ export function CourierPage() {
 
     const load = async () => {
       try {
-        await refresh();
+        await refresh(true);
         if (!cancelled) setError("");
       } catch (cause) {
         if (!cancelled) {
@@ -184,7 +232,11 @@ export function CourierPage() {
     };
 
     void load();
-    const timer = window.setInterval(() => { void load(); }, 5000);
+    const timer = window.setInterval(() => {
+      refresh(false).catch((cause) => {
+        if (!cancelled) setError(cause instanceof Error ? cause.message : "Não foi possível atualizar as entregas.");
+      });
+    }, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
@@ -201,9 +253,28 @@ export function CourierPage() {
     setError("");
     try {
       await acceptCourierDelivery(delivery.id, session.csrfToken);
-      await refresh();
+      await refresh(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível aceitar a entrega.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function reject(delivery: CourierDelivery, event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || busyId) return;
+    const form = new FormData(event.currentTarget);
+    setBusyId(delivery.id);
+    setError("");
+    try {
+      await rejectCourierDelivery(delivery.id, {
+        reason: String(form.get("reason") || "other") as "route_not_viable" | "capacity" | "vehicle" | "personal" | "other",
+        note: String(form.get("note") || "").trim() || null
+      }, session.csrfToken);
+      await refresh(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível recusar esta oferta.");
     } finally {
       setBusyId("");
     }
@@ -244,7 +315,7 @@ export function CourierPage() {
               csrfToken={session.csrfToken}
               codesReady={payload.logisticsCodesReady}
               pickupAddressText={payload.pickupAddressText}
-              onChanged={refresh}
+              onChanged={() => refresh(true)}
               onError={setError}
             />)}
           </div>}
@@ -266,8 +337,55 @@ export function CourierPage() {
               </div>
               <button className="button primary" type="button" disabled={busyId === delivery.id}
                 onClick={() => void accept(delivery)}>
-                {busyId === delivery.id ? "Aceitando..." : "Aceitar entrega"}
+                {busyId === delivery.id ? "Atualizando..." : "Aceitar entrega"}
               </button>
+              <details className="courier-secondary-action">
+                <summary>Recusar esta oferta</summary>
+                <form onSubmit={(event) => void reject(delivery, event)}>
+                  <label>Motivo
+                    <select name="reason" defaultValue="route_not_viable" disabled={busyId === delivery.id}>
+                      <option value="route_not_viable">Fora da minha rota</option>
+                      <option value="capacity">Sem capacidade agora</option>
+                      <option value="vehicle">Problema com veículo</option>
+                      <option value="personal">Motivo pessoal</option>
+                      <option value="other">Outro</option>
+                    </select>
+                  </label>
+                  <label>Observação opcional
+                    <textarea name="note" rows={2} maxLength={300} disabled={busyId === delivery.id} />
+                  </label>
+                  <button className="button ghost" type="submit" disabled={busyId === delivery.id}>
+                    Não mostrar esta entrega novamente
+                  </button>
+                </form>
+              </details>
+            </article>)}
+          </div>}
+    </section>
+
+    <section className="courier-section">
+      <div className="courier-section-heading">
+        <div><span className="eyebrow">Histórico</span><h2>Minhas atribuições recentes</h2></div>
+        <span>{history?.total ?? 0}</span>
+      </div>
+      {!history || history.items.length === 0
+        ? <div className="empty-state"><p>Nenhuma atribuição registrada ainda.</p></div>
+        : <div className="courier-history-list">
+            {history.items.map(({ assignment, delivery }) => <article key={assignment.id}>
+              <div>
+                <strong>{delivery.orderNumber}</strong>
+                <small>{new Date(assignment.assignedAt).toLocaleString("pt-BR")}</small>
+              </div>
+              <div>
+                <span className={`assignment-status assignment-${assignment.status}`}>
+                  {assignment.status === "active" ? "Em andamento"
+                    : assignment.status === "completed" ? "Concluída"
+                    : assignment.status === "abandoned" ? "Desistência"
+                    : assignment.status === "reassigned" ? "Reatribuída"
+                    : "Cancelada"}
+                </span>
+                <small>{destinationText(delivery)}</small>
+              </div>
             </article>)}
           </div>}
     </section>
