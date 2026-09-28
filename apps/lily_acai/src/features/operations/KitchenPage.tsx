@@ -64,23 +64,26 @@ function actionLabel(order: KitchenOrder) {
 function KitchenCard(props: {
   order: KitchenOrder;
   csrfToken: string;
-  busy: boolean;
   onUpdated: (order: KitchenOrder) => void;
   onError: (message: string) => void;
 }) {
   const { order } = props;
+  const [busy, setBusy] = useState(false);
   const blockedByPayment =
     order.operationStatus === "waiting_payment"
     && order.financialStatus !== "paid";
   const finalKitchenStage = order.operationStatus === "ready_for_dispatch";
 
   async function advance() {
+    setBusy(true);
     props.onError("");
     try {
       const updated = await advanceKitchenOrder(order.id, props.csrfToken);
       props.onUpdated(updated);
     } catch (cause) {
       props.onError(cause instanceof Error ? cause.message : "Não foi possível avançar o pedido.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -125,10 +128,10 @@ function KitchenCard(props: {
     <button
       className={finalKitchenStage ? "button ghost" : "button primary"}
       type="button"
-      disabled={props.busy || blockedByPayment || finalKitchenStage}
+      disabled={busy || blockedByPayment || finalKitchenStage}
       onClick={() => void advance()}
     >
-      {props.busy ? "Atualizando..." : actionLabel(order)}
+      {busy ? "Atualizando..." : actionLabel(order)}
     </button>
   </article>;
 }
@@ -137,7 +140,6 @@ export function KitchenPage() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
 
   async function load() {
@@ -184,7 +186,6 @@ export function KitchenPage() {
   ) as Record<KitchenOperationStatus, KitchenOrder[]>, [orders]);
 
   function updateOrder(next: KitchenOrder) {
-    setBusyId("");
     setOrders((current) => current.map((order) => order.id === next.id ? next : order));
   }
 
@@ -227,7 +228,6 @@ export function KitchenPage() {
             key={order.id}
             order={order}
             csrfToken={session.csrfToken}
-            busy={busyId === order.id}
             onError={setError}
             onUpdated={updateOrder}
           />)}
