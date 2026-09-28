@@ -178,6 +178,87 @@ Já existe atribuição `la_*`/legado `cc_*` e persistência canônica sem PII e
 - deep-link de produto por slug: **implementado tecnicamente; QA real pendente**;
 - revalidação dos 40 achados de UX/segurança/admin em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
+## Entrega 11 — Pix próprio e operação ponta a ponta
+
+**Status:** em desenvolvimento incremental.
+
+Objetivos:
+
+- Pix próprio CookLily sem taxa de gateway;
+- acompanhamento do pedido pelo cliente;
+- fila da cozinha;
+- estados operacionais separados do estado financeiro;
+- painel mobile do entregador;
+- códigos de coleta e entrega;
+- eventos auditáveis;
+- automações/integrações bancárias posteriores.
+
+### 11A — Pix próprio CookLily
+
+Implementado no candidato atual:
+
+- gerador interno de BR Code estático;
+- CRC16 conforme BR Code;
+- valor fixado no payload;
+- `txid` único por pagamento;
+- adapter `cooklily_pix` no contrato `PaymentProvider`;
+- provider sem chamada a gateway externo;
+- Pix Copia e Cola devolvido pelo backend;
+- configuração fail-closed por variáveis da VPS;
+- painel financeiro preparado para selecionar Pix CookLily;
+- confirmação manual/reconciliação no primeiro estágio;
+- testes do payload incluindo reprodução do exemplo oficial do Banco Central.
+
+Configuração necessária na VPS, sem versionar valores:
+
+- `COOKLILY_PIX_KEY`;
+- `COOKLILY_PIX_MERCHANT_NAME`;
+- `COOKLILY_PIX_MERCHANT_CITY`.
+
+Limitação consciente da primeira fase:
+
+- geração não tem taxa de gateway;
+- tarifa de recebimento depende do banco/conta;
+- confirmação automática ainda depende de API bancária/PSP recebedor;
+- QR visual será integrado em subfase própria; o Pix Copia e Cola já é suficiente para validar o payload.
+
+### 11B — domínio operacional
+
+Próximo bloco:
+
+- separar financeiro de produção/logística;
+- estágio operacional do pedido;
+- eventos operacionais;
+- regras de transição;
+- fila da cozinha;
+- APIs staff.
+
+### 11C — cliente
+
+Próximo bloco:
+
+- linha do tempo do pedido;
+- pagamento + produção + entrega;
+- código de entrega;
+- atualização periódica/SSE.
+
+### 11D — entregador
+
+Próximo bloco:
+
+- papel `courier`;
+- aceitar entrega de forma atômica;
+- chegou na coleta;
+- código de coleta;
+- saiu da coleta;
+- chegou no destino;
+- código de entrega;
+- finalização/saída.
+
+Documento detalhado:
+
+`docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md`
+
 ## Sincronizações paralelas
 
 Antes do lançamento comercial completo:
