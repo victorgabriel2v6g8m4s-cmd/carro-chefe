@@ -14,6 +14,7 @@ import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
+import { CourierPage } from "./features/logistics/CourierPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import "./styles.css";
@@ -105,6 +106,7 @@ function Shell({ children }: { children: ReactNode }) {
   const instagramUrl = config?.social.instagramUrl ?? null;
   const whatsappUrl = config?.social.whatsappUrl ?? null;
   const isStaff = user ? ["staff", "admin"].includes(user.role) : false;
+  const isCourier = user ? ["courier", "admin"].includes(user.role) : false;
   const closeMenu = () => setMenuOpen(false);
 
   return <div className="lily-shell">
@@ -120,6 +122,7 @@ function Shell({ children }: { children: ReactNode }) {
           <NavLink to="/ranking">Ranking</NavLink>
           {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
           {isStaff && <NavLink to="/painel">Painel</NavLink>}
+          {isCourier && <NavLink to="/entregas">Entregas</NavLink>}
         </nav>
 
         <div className="header-actions">
@@ -157,6 +160,7 @@ function Shell({ children }: { children: ReactNode }) {
           <NavLink to="/cardapio" onClick={closeMenu}>Cardápio</NavLink>
           <NavLink to="/ranking" onClick={closeMenu}>Ranking</NavLink>
           {isStaff && <NavLink className="staff-menu-link" to="/painel" onClick={closeMenu}>Painel administrativo</NavLink>}
+          {isCourier && <NavLink className="staff-menu-link" to="/entregas" onClick={closeMenu}>Painel de entregas</NavLink>}
           {user ? <>
             <Link to="/perfil" onClick={closeMenu}>Meu perfil</Link>
             <Link to="/pedidos" onClick={closeMenu}>Meus pedidos</Link>
@@ -366,7 +370,8 @@ function Cadastro() {
 
 function Entrar() {
   const navigate = useNavigate();
-  const nextPath = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+  const rawNextPath = new URLSearchParams(window.location.search).get("next");
+  const nextPath = safeNextPath(rawNextPath);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -376,10 +381,16 @@ function Entrar() {
     const form = new FormData(event.currentTarget);
     try {
       const authenticated = await loginLily({ phone: String(form.get("phone") ?? ""), password: String(form.get("password") ?? "") });
+      const defaultPath = authenticated.user.role === "courier"
+        ? "/entregas"
+        : ["staff", "admin"].includes(authenticated.user.role)
+          ? "/painel"
+          : "/cardapio";
+      const destination = rawNextPath ? nextPath : defaultPath;
       if (authenticated.mfa?.required && !authenticated.mfa.verified) {
-        navigate(`/perfil?next=${encodeURIComponent(nextPath)}`, { replace: true });
+        navigate(`/perfil?next=${encodeURIComponent(destination)}`, { replace: true });
       } else {
-        navigate(nextPath, { replace: true });
+        navigate(destination, { replace: true });
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao entrar.");
@@ -434,6 +445,7 @@ function App() {
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
+    <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></>;
