@@ -2,7 +2,8 @@
 
 **Data:** 27/09/2026  
 **Branch canônica:** `cooklily/canonical`  
-**Último runtime tecnicamente validado antes desta nova fase:** `7bb6a5e14763875fca7628e0cc0f3c820d689567`
+**Último runtime tecnicamente validado:** `8a9dbb2147f5bdee70e1a981cf2c03e0b183f9b9` — cozinha/estado operacional, CI `36371053349`, CodeQL `36371053318`, 164 testes Node 20/24.  
+**Entrega 11D:** implementação de logística/entregador em candidato posterior, ainda aguardando novo gate completo.
 
 Este documento consolida o que já foi feito, o que já foi configurado pelo operador e o que continua pendente. Não contém segredos, tokens, chaves privadas ou credenciais.
 
@@ -82,7 +83,10 @@ Já implementado:
 - bloqueio de aprovação manual para provider automático;
 - cancelamento;
 - estorno parcial/integral;
-- pedido só muda para `paid` se o valor confirmado for exatamente o esperado.
+- pedido só muda para `paid` se o valor confirmado for exatamente o esperado;
+- provider próprio `cooklily_pix` para BR Code estático/Pix Copia e Cola sem gateway;
+- `txid`, valor e CRC16 gerados internamente;
+- confirmação do Pix próprio continua operacional até existir uma integração bancária autoritativa.
 
 ## 5. Mercado Pago — estado operacional atual
 
@@ -120,7 +124,8 @@ Validação:
 Implementado:
 
 - staff/admin separados de customer;
-- MFA TOTP obrigatório;
+- papel `courier` implementado no candidato da Entrega 11D com acesso mínimo à logística;
+- MFA TOTP obrigatório para staff/admin e também para courier no candidato 11D;
 - segredo TOTP cifrado com AES-256-GCM;
 - recovery codes de uso único;
 - segundo fator por nova sessão privilegiada;
@@ -199,6 +204,36 @@ Já implementado tecnicamente:
 
 Ainda depende de QA real em aparelhos/navegadores.
 
+## 9.1. Operação de pedidos — atualização 28/09/2026
+
+Validado no runtime `8a9dbb2147f5bdee70e1a981cf2c03e0b183f9b9`:
+
+- estado de produção separado do estado financeiro;
+- eventos imutáveis da cozinha;
+- fila em recebido / aguardando pagamento / montar / despachar;
+- montagem bloqueada sem pagamento;
+- painel da cozinha com polling e conflito otimista;
+- API da cozinha sem telefone/endereço do cliente.
+
+Candidato da Entrega 11D, ainda sem SHA final validado:
+
+- estado logístico separado;
+- fila de entregas somente depois de pagamento + liberação da cozinha;
+- papel `courier`;
+- aceite atômico;
+- endereço reduzido antes do aceite e completo somente ao responsável;
+- cheguei na coleta → código de coleta → saí da coleta;
+- cheguei no destino → código de entrega → saí do destino;
+- códigos de 6 dígitos derivados por HMAC e não persistidos;
+- tentativas inválidas auditadas e limitadas;
+- cliente recebe eventos logísticos na timeline;
+- cozinha recebe o código de coleta;
+- cliente recebe o código de entrega;
+- painel mobile `/lilyacai/entregas`;
+- novo namespace Nginx `/api/v1/lily/courier/*`;
+- helper `enable-lily-entrega11-nginx`;
+- deploy fail-closed sem `COOKLILY_LOGISTICS_CODE_KEY`.
+
 ## 10. Pendências relevantes
 
 - recuperação segura de senha;
@@ -206,13 +241,13 @@ Ainda depende de QA real em aparelhos/navegadores.
 - alergênicos;
 - homologação Mercado Pago após deploy do CSRF corrigido;
 - configuração real de operação;
-- painel operacional completo de pedidos;
-- tracking completo;
-- observabilidade/hardening;
-- nova fase: Pix próprio CookLily;
-- nova fase: painel do cliente;
-- nova fase: painel da cozinha;
-- nova fase: fluxo do entregador.
+- recuperação segura de pedido guest no tracking;
+- conciliação automática do Pix próprio via banco/PSP;
+- homologação real da chave Pix;
+- QA real do painel cliente/cozinha/entregador;
+- reatribuição/cancelamento seguro de entregas;
+- ETA/mapa/notificações;
+- observabilidade/hardening.
 
 ## 11. Regra daqui em diante
 
