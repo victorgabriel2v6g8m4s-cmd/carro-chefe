@@ -6,8 +6,8 @@ import { auditLilyAdmin, requireLilyAdmin } from "./admin-security";
 import { normalizeLilyPhone } from "./auth";
 
 const idSchema = z.string().trim().min(1).max(120);
-const roleSchema = z.enum(["customer", "staff", "admin"]);
-const staffRoleSchema = z.enum(["staff", "admin"]);
+const roleSchema = z.enum(["customer", "staff", "courier", "admin"]);
+const staffRoleSchema = z.enum(["staff", "courier", "admin"]);
 
 const promoteSchema = z.object({
   phone: z.string().trim().min(8).max(40),
@@ -59,7 +59,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
       includeCustomers: z.enum(["true", "false"]).optional().transform((value) => value === "true")
     }).parse(request.query);
 
-    const where: any = query.includeCustomers ? {} : { role: { in: ["staff", "admin"] } };
+    const where: any = query.includeCustomers ? {} : { role: { in: ["staff", "courier", "admin"] } };
     if (query.q) {
       const phone = normalizeLilyPhone(query.q);
       where.OR = [
@@ -149,7 +149,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
       await ensureAnotherActiveAdmin(target.id);
     }
 
-    const roleChangedToPrivileged = target.role !== nextRole && ["staff", "admin"].includes(nextRole);
+    const roleChangedToPrivileged = target.role !== nextRole && ["staff", "courier", "admin"].includes(nextRole);
     const updated = await lilyPrisma.$transaction(async (tx) => {
       const user = await tx.lilyUser.update({
         where: { id },
