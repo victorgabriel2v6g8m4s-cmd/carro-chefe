@@ -153,6 +153,12 @@ async function findOrderById(id: string) {
   return lilyPrisma.lilyOrder.findUnique({ where: { id }, include: orderInclude });
 }
 
+function shouldExposeDeliveryCode(order: NonNullable<Awaited<ReturnType<typeof findOrderById>>>) {
+  return order.fulfillmentType === "delivery"
+    && ["picked_up", "left_pickup", "courier_arrived_delivery"].includes(order.deliveryStatus)
+    && lilyLogisticsCodeConfiguration().ready;
+}
+
 function serializeOrder(
   order: Awaited<ReturnType<typeof findOrderById>>,
   guestAccessToken?: string | null,
@@ -177,7 +183,7 @@ function serializeOrder(
     customerNote: order.customerNote,
     createdAt: order.createdAt,
     ...(guestAccessToken ? { guestAccessToken } : {}),
-    ...(includeDeliveryCode && order.fulfillmentType === "delivery" && lilyLogisticsCodeConfiguration().ready
+    ...(includeDeliveryCode && shouldExposeDeliveryCode(order)
       ? { deliveryCode: lilyOrderSecurityCode(order.id, "delivery") }
       : {}),
     items: order.items.map((item) => ({
@@ -225,10 +231,66 @@ function serializeOrder(
   };
 }
 
+function hashGuestAccessToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function timingSafeStringEqual(actual: string, expected: string) {
+  const left = Buffer.from(actual);
+  const right = Buffer.from(expected);
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
 function createGuestAccessToken() {
   const token = crypto.randomBytes(32).toString("base64url");
-  const hash = crypto.createHash("sha256").update(token).digest("hex");
-  return { token, hash };
+  return { token, hash: hashGuestAccessToken(token) };
+}
+
+function serializeGuestTrackingOrder(order: NonNullable<Awaited<ReturnType<typeof findOrderById>>>) {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    fulfillmentType: order.fulfillmentType,
+    status: order.status,
+    operationStatus: order.operationStatus,
+    operationUpdatedAt: order.operationUpdatedAt,
+    deliveryStatus: order.deliveryStatus,
+    deliveryUpdatedAt: order.deliveryUpdatedAt,
+    isHomologation: order.isHomologation,
+    grandTotalCents: order.grandTotalCents,
+    createdAt: order.createdAt,
+    ...(shouldExposeDeliveryCode(order)
+      ? { deliveryCode: lilyOrderSecurityCode(order.id, "delivery") }
+      : {}),
+    items: order.items.map((item) => ({
+      id: item.id,
+      kind: item.variantId === "combo" ? "combo" : "product",
+      productName: item.productNameSnapshot,
+      variantName: item.variantNameSnapshot,
+      sizeMl: item.sizeMl,
+      quantity: item.quantity,
+      lineTotalCents: item.lineTotalCents,
+      flavors: (JSON.parse(item.flavorsSnapshotJson) as Array<{ name?: string }>).map((flavor) => ({
+        name: typeof flavor.name === "string" ? flavor.name : ""
+      })).filter((flavor) => flavor.name),
+      addons: item.addons.map((addon) => ({
+        name: addon.addonNameSnapshot,
+        quantity: addon.quantity
+      }))
+    })),
+    statusEvents: order.statusEvents.map((event) => ({
+      toStatus: event.toStatus,
+      createdAt: event.createdAt
+    })),
+    operationEvents: order.operationEvents.map((event) => ({
+      toStatus: event.toStatus,
+      createdAt: event.createdAt
+    })),
+    deliveryEvents: order.deliveryEvents.map((event) => ({
+      toStatus: event.toStatus,
+      createdAt: event.createdAt
+    }))
+  };
 }
 
 function homologationRequested(request: FastifyRequest) {
@@ -479,6 +541,38 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       throw error;
     }
     return reply.code(201).send(serializeOrder(created, guestAccess?.token ?? null));
+  });
+
+  app.get("/api/v1/lily/public/orders/:id/tracking", {
+    config: { rateLimit: { max: 30, timeWindow: "1 minute" } }
+  }, async (request, reply) => {
+    const { id } = z.object({ id: z.string().trim().min(1).max(120) }).parse(request.params);
+    const supplied = request.headers["x-lily-order-token"];
+
+    // Resposta uniforme: não revelar se o ID existe, se pertence a conta ou se o token está ausente/incorreto.
+    const notFound = () => {
+      throw new ApiError(404, "Pedido não encontrado.", { code: "LILY_GUEST_ORDER_NOT_FOUND" });
+    };
+
+    if (typeof supplied !== "string" || supplied.length < 32 || supplied.length > 160) {
+      return notFound();
+    }
+
+    const order = await findOrderById(id);
+    if (!order || order.userId || !order.guestAccessTokenHash) {
+      return notFound();
+    }
+
+    const actualHash = hashGuestAccessToken(supplied);
+    if (!timingSafeStringEqual(actualHash, order.guestAccessTokenHash)) {
+      return notFound();
+    }
+
+    reply.header("Cache-Control", "private, no-store, max-age=0");
+    reply.header("Pragma", "no-cache");
+    reply.header("Referrer-Policy", "no-referrer");
+    reply.header("X-Robots-Tag", "noindex, nofollow");
+    return serializeGuestTrackingOrder(order);
   });
 
   app.get("/api/v1/lily/customer/orders", async (request) => {
