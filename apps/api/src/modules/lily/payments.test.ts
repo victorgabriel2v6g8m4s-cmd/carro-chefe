@@ -13,9 +13,14 @@ function cookieFrom(response: { headers: Record<string, unknown> }) {
   return raw.split(";")[0];
 }
 
-async function register(phone: string, role: "customer" | "staff" | "admin" = "customer") {
+async function register(
+  phone: string,
+  role: "customer" | "staff" | "admin" = "customer",
+  remoteAddress?: string
+) {
   const response = await app.inject({
     method: "POST",
+    ...(remoteAddress ? { remoteAddress } : {}),
     url: "/api/v1/lily/auth/register",
     headers: { origin },
     payload: {
@@ -177,7 +182,7 @@ describe("CookLily Entrega 07 — pagamentos", () => {
   });
 
   it("permite pagamento de homologação sem abrir pagamentos ao público", async () => {
-    const admin = await register("67999907009", "admin");
+    const admin = await register("67999907009", "admin", "127.0.0.209");
     await lilyPrisma.lilyOperationalSettings.update({
       where: { id: "default" },
       data: {
