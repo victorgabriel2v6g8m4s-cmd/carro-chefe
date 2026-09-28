@@ -258,6 +258,7 @@ describe("CookLily Entrega 06", () => {
     const created = await app.inject({
       method: "POST",
       url: "/api/v1/lily/orders",
+      remoteAddress: "127.0.0.201",
       headers: {
         origin,
         cookie: staff.cookie,
