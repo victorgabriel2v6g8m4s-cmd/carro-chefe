@@ -675,8 +675,10 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
     }
     ensureReassignable(current.deliveryStatus);
 
-    if (targetCourierUserId && targetCourierUserId === current.courierUserId) {
-      throw new ApiError(409, "A entrega já está atribuída a este entregador.", {
+    if ((targetCourierUserId ?? null) === (current.courierUserId ?? null)) {
+      throw new ApiError(409, targetCourierUserId
+        ? "A entrega já está atribuída a este entregador."
+        : "A entrega já está disponível na fila.", {
         code: "LILY_DELIVERY_REASSIGNMENT_NOOP"
       });
     }
