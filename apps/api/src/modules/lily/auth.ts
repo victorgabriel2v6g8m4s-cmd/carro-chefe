@@ -132,7 +132,7 @@ export async function createLilySession(userId: string, request: FastifyRequest,
     select: { role: true }
   });
   if (!user) throw new ApiError(401, "Usuário Lily não encontrado.", { code: "LILY_USER_NOT_FOUND" });
-  const ttlMs = user.role === "staff" || user.role === "admin"
+  const ttlMs = ["staff", "courier", "admin"].includes(user.role)
     ? STAFF_SESSION_TTL_MS
     : CUSTOMER_SESSION_TTL_MS;
   const token = crypto.randomBytes(32).toString("base64url");
