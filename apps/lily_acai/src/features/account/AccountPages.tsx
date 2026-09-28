@@ -40,11 +40,16 @@ function OrderTimeline({ order }: { order: LilyOrder }) {
   const events = [
     { key: "created", label: "Pedido recebido", at: order.createdAt },
     ...order.statusEvents.map((event, index) => ({
-      key: `${event.toStatus}-${event.createdAt}-${index}`,
+      key: `financial-${event.toStatus}-${event.createdAt}-${index}`,
+      label: orderStatusLabel(event.toStatus),
+      at: event.createdAt
+    })),
+    ...order.operationEvents.map((event, index) => ({
+      key: `operation-${event.toStatus}-${event.createdAt}-${index}`,
       label: orderStatusLabel(event.toStatus),
       at: event.createdAt
     }))
-  ];
+  ].sort((left, right) => new Date(left.at).getTime() - new Date(right.at).getTime());
 
   const unique = events.filter((event, index) =>
     index === 0 || event.label !== events[index - 1]?.label
