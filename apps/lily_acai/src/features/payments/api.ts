@@ -32,7 +32,6 @@ export type LilyPayment = {
   provider: string;
   method: string;
   status: string;
-  isHomologation: boolean;
   amountCents: number;
   currency: string;
   instructions: string | null;
@@ -61,6 +60,7 @@ export type LilyPaymentOrderContext = {
   id: string;
   orderNumber: string;
   status: string;
+  isHomologation: boolean;
   amountCents: number;
   currency: "BRL";
 };
