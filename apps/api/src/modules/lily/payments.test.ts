@@ -305,8 +305,8 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     process.env.COOKLILY_PIX_MERCHANT_NAME = "CookLily";
     process.env.COOKLILY_PIX_MERCHANT_CITY = "CAMPO GRANDE";
 
-    const customer = await register("67999907110");
-    const admin = await register("67999907111", "admin");
+    const customer = await register("67999907110", "customer", "127.0.0.210");
+    const admin = await register("67999907111", "admin", "127.0.0.211");
 
     const settings = await app.inject({
       method: "PATCH",
