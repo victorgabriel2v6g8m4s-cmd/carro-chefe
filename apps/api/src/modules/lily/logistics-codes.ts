@@ -29,7 +29,15 @@ function logisticsKey() {
 }
 
 export function lilyLogisticsCodeConfiguration() {
-  const configured = Boolean(process.env.COOKLILY_LOGISTICS_CODE_KEY?.trim());
+  const encoded = process.env.COOKLILY_LOGISTICS_CODE_KEY?.trim();
+  let configured = false;
+  if (encoded) {
+    try {
+      configured = Buffer.from(encoded, "base64url").length === 32;
+    } catch {
+      configured = false;
+    }
+  }
   return {
     configured,
     ready: configured || process.env.NODE_ENV !== "production"
