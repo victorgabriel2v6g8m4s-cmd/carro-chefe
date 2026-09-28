@@ -138,6 +138,7 @@ async function cleanup() {
   await lilyPrisma.lilyPayment.deleteMany();
   await lilyPrisma.lilyOrderItemAddon.deleteMany();
   await lilyPrisma.lilyOrderItem.deleteMany();
+  await lilyPrisma.lilyDeliveryAssignment.deleteMany();
   await lilyPrisma.lilyOrderDeliveryEvent.deleteMany();
   await lilyPrisma.lilyOrderOperationEvent.deleteMany();
   await lilyPrisma.lilyOrderStatusEvent.deleteMany();
@@ -257,6 +258,216 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(stored?.courierUserId).toBe(first.user.id);
   });
 
+  it("permite recusar a oferta sem retirar a entrega da fila dos demais couriers", async () => {
+    const first = await register("67999908206", "courier", "127.0.0.236");
+    const second = await register("67999908207", "courier", "127.0.0.237");
+    const order = await createDelivery();
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/reject`,
+      headers: { origin, cookie: first.cookie, "x-lily-csrf": first.csrf },
+      payload: { reason: "route_not_viable", note: "fora da rota atual" }
+    });
+    expect(rejected.statusCode).toBe(200);
+
+    const firstQueue = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: first.cookie }
+    });
+    expect(firstQueue.json().available.some((row: any) => row.id === order.id)).toBe(false);
+
+    const secondQueue = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: second.cookie }
+    });
+    expect(secondQueue.json().available.some((row: any) => row.id === order.id)).toBe(true);
+
+    const audit = await lilyPrisma.lilyAdminAudit.findFirst({
+      where: { actorUserId: first.user.id, action: "delivery.reject", entityId: order.id }
+    });
+    expect(audit?.payloadJson).toContain("route_not_viable");
+  });
+
+  it("desistência antes da coleta devolve o pedido à fila e preserva histórico sem expor endereço antigo", async () => {
+    const first = await register("67999908208", "courier", "127.0.0.238");
+    const second = await register("67999908209", "courier", "127.0.0.239");
+    const order = await createDelivery();
+
+    const accepted = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/accept`,
+      headers: { origin, cookie: first.cookie, "x-lily-csrf": first.csrf }
+    });
+    expect(accepted.statusCode).toBe(200);
+
+    const abandoned = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/abandon`,
+      headers: { origin, cookie: first.cookie, "x-lily-csrf": first.csrf },
+      payload: { reason: "vehicle", note: "pneu furado" }
+    });
+    expect(abandoned.statusCode).toBe(200);
+    expect(abandoned.json()).toMatchObject({
+      assignedToMe: false,
+      deliveryStatus: "waiting_courier"
+    });
+    expect(JSON.stringify(abandoned.json())).not.toContain("Rua Secreta");
+
+    const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(stored?.courierUserId).toBeNull();
+
+    const assignments = await lilyPrisma.lilyDeliveryAssignment.findMany({
+      where: { orderId: order.id },
+      orderBy: { assignedAt: "asc" }
+    });
+    expect(assignments).toHaveLength(1);
+    expect(assignments[0]).toMatchObject({
+      courierUserId: first.user.id,
+      status: "abandoned",
+      endReason: "vehicle"
+    });
+    expect(assignments[0]?.endedAt).not.toBeNull();
+
+    const firstQueue = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: first.cookie }
+    });
+    expect(firstQueue.json().available.some((row: any) => row.id === order.id)).toBe(false);
+
+    const secondQueue = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: second.cookie }
+    });
+    expect(secondQueue.json().available.some((row: any) => row.id === order.id)).toBe(true);
+
+    const history = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries/history?status=abandoned",
+      headers: { cookie: first.cookie }
+    });
+    expect(history.statusCode).toBe(200);
+    expect(history.json().total).toBe(1);
+    expect(history.json().items[0].assignment.status).toBe("abandoned");
+    expect(JSON.stringify(history.json())).not.toContain("Rua Secreta");
+    expect(JSON.stringify(history.json())).not.toContain("Portão preto");
+  });
+
+  it("bloqueia desistência e reatribuição depois que a coleta foi confirmada", async () => {
+    const courier = await register("67999908210", "courier", "127.0.0.240");
+    const admin = await register("67999908211", "admin", "127.0.0.241");
+    const order = await createDelivery();
+
+    const accept = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/accept`,
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf }
+    });
+    expect(accept.statusCode).toBe(200);
+
+    const arrived = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/transition`,
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { action: "arrived_pickup" }
+    });
+    expect(arrived.statusCode).toBe(200);
+
+    const pickup = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/transition`,
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { action: "confirm_pickup", code: lilyOrderSecurityCode(order.id, "pickup") }
+    });
+    expect(pickup.statusCode).toBe(200);
+    expect(pickup.json().deliveryStatus).toBe("picked_up");
+
+    const abandon = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/abandon`,
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { reason: "personal" }
+    });
+    expect(abandon.statusCode).toBe(409);
+    expect(abandon.json().details.code).toBe("LILY_DELIVERY_REASSIGNMENT_LOCKED");
+
+    const reassign = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/deliveries/${order.id}/reassign`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { courierUserId: null, reason: "support" }
+    });
+    expect(reassign.statusCode).toBe(409);
+    expect(reassign.json().details.code).toBe("LILY_DELIVERY_REASSIGNMENT_LOCKED");
+  });
+
+  it("admin reatribui atomicamente e histórico mantém os dois vínculos", async () => {
+    const first = await register("67999908212", "courier", "127.0.0.242");
+    const second = await register("67999908213", "courier", "127.0.0.243");
+    const admin = await register("67999908214", "admin", "127.0.0.244");
+    const order = await createDelivery();
+
+    const accepted = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/accept`,
+      headers: { origin, cookie: first.cookie, "x-lily-csrf": first.csrf }
+    });
+    expect(accepted.statusCode).toBe(200);
+
+    const reassigned = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/deliveries/${order.id}/reassign`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: {
+        courierUserId: second.user.id,
+        reason: "operational",
+        note: "redistribuição de rota"
+      }
+    });
+    expect(reassigned.statusCode).toBe(200);
+    expect(reassigned.json().deliveryStatus).toBe("courier_accepted");
+
+    const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(stored?.courierUserId).toBe(second.user.id);
+
+    const assignments = await lilyPrisma.lilyDeliveryAssignment.findMany({
+      where: { orderId: order.id },
+      orderBy: { assignedAt: "asc" }
+    });
+    expect(assignments).toHaveLength(2);
+    expect(assignments.map((row) => row.status)).toEqual(["reassigned", "active"]);
+    expect(assignments[0]?.courierUserId).toBe(first.user.id);
+    expect(assignments[1]?.courierUserId).toBe(second.user.id);
+
+    const firstMine = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: first.cookie }
+    });
+    expect(firstMine.json().mine.some((row: any) => row.id === order.id)).toBe(false);
+
+    const secondMine = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: second.cookie }
+    });
+    expect(secondMine.json().mine.some((row: any) => row.id === order.id)).toBe(true);
+
+    const adminHistory = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/admin/deliveries/history?courierUserId=${encodeURIComponent(first.user.id)}`,
+      headers: { cookie: admin.cookie }
+    });
+    expect(adminHistory.statusCode).toBe(200);
+    expect(adminHistory.json().total).toBe(1);
+    expect(adminHistory.json().items[0].assignment.status).toBe("reassigned");
+    expect(JSON.stringify(adminHistory.json())).not.toContain("Rua Secreta");
+  });
+
   it("executa coleta e entrega com códigos de 6 dígitos e registra todas as etapas", async () => {
     const courier = await register("67999908205", "courier", "127.0.0.235");
     const order = await createDelivery();
@@ -343,5 +554,24 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
       "delivered",
       "left_delivery"
     ]);
+
+    const completedAssignment = await lilyPrisma.lilyDeliveryAssignment.findFirst({
+      where: { orderId: order.id, courierUserId: courier.user.id }
+    });
+    expect(completedAssignment).toMatchObject({
+      status: "completed",
+      endReason: "completed"
+    });
+    expect(completedAssignment?.endedAt).not.toBeNull();
+
+    const history = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries/history?status=completed&page=1&limit=10",
+      headers: { cookie: courier.cookie }
+    });
+    expect(history.statusCode).toBe(200);
+    expect(history.json().total).toBe(1);
+    expect(history.json().items[0].delivery.id).toBe(order.id);
+    expect(JSON.stringify(history.json())).not.toContain("Rua Secreta");
   });
 });
