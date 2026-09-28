@@ -133,6 +133,82 @@ describe("CookLily gestão de equipe e RBAC", () => {
     expect(response.json().members[0].role).toBe("admin");
   });
 
+  it("promove entregador com senha reforçada, MFA e acesso mínimo ao painel de entregas", async () => {
+    const admin = await register("67999907121", "admin");
+    const customer = await register("67999907122");
+
+    const promoted = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/team/promote",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { phone: customer.user.phone, role: "courier" }
+    });
+    expect(promoted.statusCode).toBe(200);
+    expect(promoted.json().role).toBe("courier");
+    expect(promoted.json().staffPasswordUpgradeRequired).toBe(true);
+
+    const oldSession = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/auth/me",
+      headers: { cookie: customer.cookie }
+    });
+    expect(oldSession.statusCode).toBe(401);
+
+    const courier = await login(customer.user.phone, customer.secret);
+    expect(courier.user.role).toBe("courier");
+
+    const passwordBlocked = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: courier.cookie }
+    });
+    expect(passwordBlocked.statusCode).toBe(403);
+    expect(passwordBlocked.json().details.code).toBe("LILY_STAFF_PASSWORD_UPGRADE_REQUIRED");
+
+    const changed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/profile/password",
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: {
+        currentPassword: customer.secret,
+        newPassword: "nova-senha-courier-2026"
+      }
+    });
+    expect(changed.statusCode).toBe(200);
+
+    const mfaBlocked = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: courier.cookie }
+    });
+    expect(mfaBlocked.statusCode).toBe(403);
+    expect(mfaBlocked.json().details.code).toBe("LILY_STAFF_MFA_SETUP_REQUIRED");
+
+    await lilyPrisma.lilyUser.update({
+      where: { id: customer.user.id },
+      data: { mfaEnabled: true }
+    });
+    await lilyPrisma.lilySession.updateMany({
+      where: { userId: customer.user.id, revokedAt: null },
+      data: { mfaVerifiedAt: new Date() }
+    });
+
+    const allowed = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: courier.cookie }
+    });
+    expect(allowed.statusCode).toBe(200);
+
+    const adminDenied = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/team",
+      headers: { cookie: courier.cookie }
+    });
+    expect(adminDenied.statusCode).toBe(403);
+    expect(adminDenied.json().details.code).toBe("LILY_STAFF_REQUIRED");
+  });
+
   it("promove conta existente e exige troca de senha antes do acesso staff", async () => {
     const admin = await register("67999907101", "admin");
     const customer = await register("67999907102");
