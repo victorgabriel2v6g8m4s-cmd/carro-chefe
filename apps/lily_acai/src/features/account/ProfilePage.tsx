@@ -60,7 +60,7 @@ export function ProfilePage() {
     const [nextProfile, sessionPayload] = await Promise.all([getLilyProfile(), getLilySessions()]);
     setProfile(nextProfile);
     setSessions(sessionPayload.sessions);
-    if (["staff", "admin"].includes(current.user.role)) {
+    if (["staff", "courier", "admin"].includes(current.user.role)) {
       setMfaStatus(await getLilyMfaStatus());
     } else {
       setMfaStatus(null);
@@ -256,10 +256,14 @@ export function ProfilePage() {
   if (!loaded) return <section className="checkout-page"><h1>Carregando perfil...</h1></section>;
   if (!session || !profile) return <AccountRequired />;
 
-  const passwordMinimum = ["staff", "admin"].includes(session.user.role) ? 12 : 8;
-  const privileged = ["staff", "admin"].includes(session.user.role);
+  const passwordMinimum = ["staff", "courier", "admin"].includes(session.user.role) ? 12 : 8;
+  const privileged = ["staff", "courier", "admin"].includes(session.user.role);
   const nextPathRaw = new URLSearchParams(window.location.search).get("next");
-  const nextPath = nextPathRaw && nextPathRaw.startsWith("/painel") && !nextPathRaw.startsWith("//") ? nextPathRaw : null;
+  const nextPath = nextPathRaw
+    && (nextPathRaw.startsWith("/painel") || nextPathRaw.startsWith("/entregas"))
+    && !nextPathRaw.startsWith("//")
+      ? nextPathRaw
+      : null;
 
   return <section className="profile-page">
     {session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
@@ -268,7 +272,7 @@ export function ProfilePage() {
     </div>}
     {privileged && mfaStatus?.setupRequired && !session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
       <strong>MFA obrigatória para a equipe.</strong>
-      <p>Configure um autenticador TOTP antes de acessar o painel administrativo.</p>
+      <p>Configure um autenticador TOTP antes de acessar o área operacional.</p>
     </div>}
     {privileged && mfaStatus?.enabled && !mfaStatus.verified && <div className="operation-warning security-upgrade-warning">
       <strong>Confirme o segundo fator.</strong>
