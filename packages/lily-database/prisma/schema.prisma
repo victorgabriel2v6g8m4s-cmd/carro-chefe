@@ -61,6 +61,23 @@ model LilyOrderDeliveryEvent {
   @@index([toStatus, createdAt])
 }
 
+model LilyDeliveryAssignment {
+  id            String    @id @default(cuid())
+  orderId       String
+  courierUserId String
+  status        String    @default("active")
+  assignedBy    String
+  assignedAt    DateTime  @default(now())
+  endedAt       DateTime?
+  endReason     String?
+  endNote       String?
+  order         LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, assignedAt])
+  @@index([courierUserId, assignedAt])
+  @@index([status, assignedAt])
+}
+
 model LilySession {
   id            String    @id @default(cuid())
   userId        String
@@ -469,6 +486,7 @@ model LilyOrder {
   statusEvents        LilyOrderStatusEvent[]
   operationEvents     LilyOrderOperationEvent[]
   deliveryEvents      LilyOrderDeliveryEvent[]
+  deliveryAssignments LilyDeliveryAssignment[]
   payments            LilyPayment[]
 
   @@index([userId, createdAt])
