@@ -238,7 +238,7 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
   });
 
   app.post("/api/v1/lily/courier/deliveries/:id/transition", {
-    config: { rateLimit: { max: 36, timeWindow: "10 minutes" } }
+    config: { rateLimit: { max: 12, timeWindow: "10 minutes" } }
   }, async (request) => {
     const context = await requireLilyCourier(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
@@ -254,6 +254,9 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
         });
       }
       if (!input.code || !verifyLilyOrderSecurityCode(id, "pickup", input.code)) {
+        await auditLilyAdmin(context.user.id, "delivery.pickup_code_failed", "order", id, {
+          deliveryStatus: current.deliveryStatus
+        });
         throw new ApiError(401, "Código de coleta inválido.", {
           code: "LILY_PICKUP_CODE_INVALID"
         });
@@ -267,6 +270,9 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
         });
       }
       if (!input.code || !verifyLilyOrderSecurityCode(id, "delivery", input.code)) {
+        await auditLilyAdmin(context.user.id, "delivery.delivery_code_failed", "order", id, {
+          deliveryStatus: current.deliveryStatus
+        });
         throw new ApiError(401, "Código de entrega inválido.", {
           code: "LILY_DELIVERY_CODE_INVALID"
         });
