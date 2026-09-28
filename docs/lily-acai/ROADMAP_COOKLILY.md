@@ -259,7 +259,7 @@ Limitação consciente da primeira fase:
 
 ### 11D — entregador
 
-**Status:** implementação funcional candidata a gate técnico; não publicar antes de CI + CodeQL do SHA final.
+**Status:** primeira versão tecnicamente validada no runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322` — CI `36409871119`, CodeQL `36409871166`, 172 testes Node 20/24.
 
 - [x] papel mínimo `courier`, separado de staff/admin;
 - [x] senha privilegiada + MFA obrigatório + sessão privilegiada;
@@ -281,7 +281,7 @@ Limitação consciente da primeira fase:
 - [x] eventos logísticos separados do financeiro e da cozinha;
 - [x] helper Nginx da Entrega 11D;
 - [x] deploy fail-closed sem `COOKLILY_LOGISTICS_CODE_KEY`;
-- [ ] gate CI/CodeQL do candidato final;
+- [x] gate CI/CodeQL do runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`;
 - [ ] QA real em dois celulares/contas simultâneas;
 - [ ] cancelamento/reatribuição operacional controlada;
 - [ ] histórico completo de entregas para courier/admin.
