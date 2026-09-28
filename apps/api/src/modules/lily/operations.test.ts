@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
