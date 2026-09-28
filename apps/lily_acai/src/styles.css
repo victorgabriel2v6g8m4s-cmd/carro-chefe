@@ -2251,3 +2251,75 @@ img, svg { max-width: 100%; }
     flex-direction: column;
   }
 }
+
+
+.order-timeline-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 22px;
+  background: var(--cl-color-surface);
+}
+.order-timeline-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.order-timeline-heading h2 {
+  margin: 4px 0 0;
+}
+.order-timeline-heading small {
+  color: var(--cl-color-text-muted);
+}
+.order-timeline {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.order-timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 58px;
+}
+.order-timeline li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 18px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--cl-color-border);
+}
+.order-timeline-dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border-radius: 999px;
+  border: 3px solid var(--cl-color-surface);
+  background: var(--cl-color-text-muted);
+  box-shadow: 0 0 0 1px var(--cl-color-border);
+}
+.order-timeline li.current .order-timeline-dot {
+  background: currentColor;
+}
+.order-timeline li > div {
+  display: grid;
+  gap: 3px;
+}
+.order-timeline time {
+  color: var(--cl-color-text-muted);
+  font-size: 0.84rem;
+}
+@media (max-width: 640px) {
+  .order-timeline-heading {
+    display: grid;
+  }
+}
