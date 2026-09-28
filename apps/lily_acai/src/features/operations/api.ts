@@ -13,10 +13,13 @@ export type KitchenOrder = {
   financialStatus: string;
   operationStatus: KitchenOperationStatus;
   operationUpdatedAt: string;
+  deliveryStatus: string;
+  deliveryUpdatedAt: string | null;
   fulfillmentType: "pickup" | "delivery";
   isHomologation: boolean;
   grandTotalCents: number;
   customerNote: string | null;
+  pickupCode: string | null;
   createdAt: string;
   items: Array<{
     id: string;
