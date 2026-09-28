@@ -223,6 +223,15 @@ export function OrderDetailPage() {
     <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(customerOrderStatus(order))}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
     <OrderTimeline order={order} />
 
+    {order.fulfillmentType === "delivery" && order.routeEstimate && <section className="route-estimate-card">
+      <span className="eyebrow">Previsão de rota</span>
+      <strong>{(order.routeEstimate.distanceMeters / 1000).toFixed(1)} km · {Math.max(1, Math.round(order.routeEstimate.durationSeconds / 60))} min</strong>
+      {order.routeEstimate.estimatedArrivalAt
+        ? <p>Chegada estimada por volta de <b>{new Date(order.routeEstimate.estimatedArrivalAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</b>.</p>
+        : <p>A previsão de chegada começa quando o entregador confirma a saída da coleta.</p>}
+      <small>Estimativa de rota, não rastreamento GPS ao vivo.</small>
+    </section>}
+
     {order.fulfillmentType === "delivery"
       && order.deliveryCode
       && ["picked_up", "left_pickup", "courier_arrived_delivery"].includes(order.deliveryStatus)
