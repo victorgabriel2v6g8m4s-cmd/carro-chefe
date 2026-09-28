@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { useCart } from "../cart/CartContext";
-import { storeGuestOrderToken } from "../payments/PaymentPage";
+import { storeGuestOrderToken } from "../orders/guest-token";
 import {
   createOrder,
   createSavedAddress,
