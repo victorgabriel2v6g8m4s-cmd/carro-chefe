@@ -294,7 +294,7 @@ O papel `courier` deve ter acesso mínimo:
 - [x] eventos e auditoria;
 - [x] tentativas inválidas auditadas/rate-limited;
 - [x] Nginx/helper/deployer preparados;
-- [ ] gate CI/CodeQL do candidato final;
+- [x] gate CI/CodeQL: runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`, CI `36409871119`, CodeQL `36409871166`, 172 testes Node 20/24;
 - [ ] QA real multiusuário;
 - [ ] reatribuição/cancelamento operacional.
 
