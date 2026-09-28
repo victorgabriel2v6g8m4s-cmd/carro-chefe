@@ -8,6 +8,11 @@ import {
   lilyLogisticsCodeConfiguration,
   verifyLilyOrderSecurityCode
 } from "./logistics-codes";
+import {
+  getOrCreateLilyRouteEstimate,
+  lilyRoutingConfiguration,
+  serializeLilyRouteEstimate
+} from "./routing";
 
 const idSchema = z.string().trim().min(1).max(120);
 
@@ -79,7 +84,8 @@ const transitionSchema = z.object({
 
 const deliveryInclude = {
   items: { select: { id: true, quantity: true } },
-  deliveryEvents: { orderBy: { createdAt: "asc" as const } }
+  deliveryEvents: { orderBy: { createdAt: "asc" as const } },
+  routeEstimate: true
 };
 
 function parseAddress(raw: string | null) {
@@ -137,6 +143,13 @@ function serializeDelivery(
     itemCount: order.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0),
     createdAt: order.createdAt,
     destination: revealFullAddress ? fullAddress(address) : publicAddress(address),
+    routeEstimate: assignedToActor || options.forceFullAddress
+      ? serializeLilyRouteEstimate(order.routeEstimate, {
+          deliveryStatus: order.deliveryStatus,
+          deliveryEvents: order.deliveryEvents,
+          includeMap: true
+        })
+      : null,
     deliveryEvents: order.deliveryEvents.map((event: any) => ({
       fromStatus: event.fromStatus,
       toStatus: event.toStatus,
@@ -270,6 +283,43 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
       logisticsCodesReady: lilyLogisticsCodeConfiguration().ready,
       available: available.map((order) => serializeDelivery(order, context.user.id)),
       mine: mine.map((order) => serializeDelivery(order, context.user.id))
+    };
+  });
+
+  app.get("/api/v1/lily/courier/deliveries/:id/route", {
+    config: { rateLimit: { max: 12, timeWindow: "10 minutes" } }
+  }, async (request) => {
+    const context = await requireLilyCourier(request);
+    const { id } = z.object({ id: idSchema }).parse(request.params);
+    const current = await assignedOrder(id, context.user.id);
+
+    const result = await getOrCreateLilyRouteEstimate(id);
+    if (!result.available) {
+      return {
+        available: false,
+        reason: result.reason,
+        provider: lilyRoutingConfiguration().provider
+      };
+    }
+
+    const fresh = await lilyPrisma.lilyOrder.findUnique({
+      where: { id },
+      include: deliveryInclude
+    });
+    return {
+      available: true,
+      cached: result.cached,
+      estimate: fresh
+        ? serializeLilyRouteEstimate(fresh.routeEstimate, {
+            deliveryStatus: fresh.deliveryStatus,
+            deliveryEvents: fresh.deliveryEvents,
+            includeMap: true
+          })
+        : serializeLilyRouteEstimate(result.estimate, {
+            deliveryStatus: current.deliveryStatus,
+            deliveryEvents: current.deliveryEvents,
+            includeMap: true
+          })
     };
   });
 
