@@ -85,6 +85,9 @@ export type LilyOrder = {
   status: string;
   operationStatus: string;
   operationUpdatedAt: string;
+  deliveryStatus: string;
+  deliveryUpdatedAt: string | null;
+  deliveryCode?: string;
   isHomologation: boolean;
   subtotalCents: number;
   deliveryFeeCents: number;
@@ -113,6 +116,13 @@ export type LilyOrder = {
   }>;
   statusEvents: Array<{ fromStatus: string | null; toStatus: string; actor: string; createdAt: string }>;
   operationEvents: Array<{
+    fromStatus: string | null;
+    toStatus: string;
+    actor: string;
+    note: string | null;
+    createdAt: string;
+  }>;
+  deliveryEvents: Array<{
     fromStatus: string | null;
     toStatus: string;
     actor: string;
