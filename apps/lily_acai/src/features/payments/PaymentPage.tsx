@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
+import { readGuestOrderToken } from "../orders/guest-token";
 import {
   createLilyPayment,
   getLilyPayment,
@@ -26,10 +27,6 @@ declare global {
 
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-}
-
-function guestTokenKey(orderId: string) {
-  return `cooklily:order-token:${orderId}`;
 }
 
 function paymentKey(orderId: string, method: LilyPaymentMethod) {
@@ -162,10 +159,6 @@ function MercadoPagoCardBrick(props: {
   </div>;
 }
 
-export function storeGuestOrderToken(orderId: string, token: string) {
-  sessionStorage.setItem(guestTokenKey(orderId), token);
-}
-
 export function PaymentPage() {
   const { orderId = "" } = useParams();
   const [searchParams] = useSearchParams();
@@ -182,7 +175,7 @@ export function PaymentPage() {
   const [error, setError] = useState("");
 
   const guestAccessToken = useMemo(
-    () => orderId ? sessionStorage.getItem(guestTokenKey(orderId)) : null,
+    () => orderId ? readGuestOrderToken(orderId) : null,
     [orderId]
   );
 
@@ -468,7 +461,7 @@ export function PaymentPage() {
           <h2>Pagamento confirmado.</h2>
           <p>O pedido já está marcado como pago e pode seguir para a operação.</p>
           {session && <Link className="button primary" to={`/pedidos/${payment.orderId}`}>Ver pedido</Link>}
-          {!session && <Link className="button primary" to="/cardapio">Voltar ao cardápio</Link>}
+          {!session && <Link className="button primary" to={`/acompanhar/${payment.orderId}`}>Acompanhar pedido</Link>}
         </>}
 
         {["failed", "cancelled"].includes(payment.status) && <>
