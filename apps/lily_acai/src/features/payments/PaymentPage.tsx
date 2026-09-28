@@ -276,6 +276,10 @@ export function PaymentPage() {
 
   async function createPixPayment() {
     if (selectedMethod === "pix") {
+      if (config?.provider === "cooklily_pix") {
+        await submitPayment({ method: "pix" });
+        return;
+      }
       const email = payerEmail.trim();
       if (!email || !email.includes("@")) {
         setError("Informe um e-mail válido para gerar o Pix.");
@@ -320,6 +324,7 @@ export function PaymentPage() {
   const automaticPix = methods.some((method) => method.id === "pix");
   const manualPix = methods.some((method) => method.id === "manual_pix");
   const cardEnabled = methods.some((method) => method.id === "credit_card");
+  const ownPix = config?.provider === "cooklily_pix";
 
   return <section className="payment-page">
     <div className="checkout-heading">
@@ -364,7 +369,7 @@ export function PaymentPage() {
       </div>}
 
       {(selectedMethod === "pix" || selectedMethod === "manual_pix") && (automaticPix || manualPix) && <>
-        {selectedMethod === "pix" && <label className="payment-email">
+        {selectedMethod === "pix" && !ownPix && <label className="payment-email">
           E-mail para o pagamento
           <input
             type="email"
@@ -376,7 +381,9 @@ export function PaymentPage() {
           />
         </label>}
         <p>{selectedMethod === "pix"
-          ? "O QR Code e o Pix Copia e Cola serão gerados para este pedido e confirmados automaticamente."
+          ? ownPix
+            ? "A CookLily gera o Pix Copia e Cola diretamente, sem gateway. Nesta primeira fase a entrada ainda é conciliada pela equipe."
+            : "O QR Code e o Pix Copia e Cola serão gerados para este pedido e confirmados automaticamente."
           : "A equipe fará a confirmação operacional do Pix depois da entrada financeira."}</p>
         <button className="button primary" type="button" disabled={busy} onClick={() => void createPixPayment()}>
           {busy ? "Preparando..." : selectedMethod === "pix" ? "Gerar Pix" : "Continuar com Pix"}
@@ -417,7 +424,9 @@ export function PaymentPage() {
         <strong className="payment-amount">{money(payment.amountCents)}</strong>
 
         {payment.status === "pending" && payment.method === "pix" && <>
-          <p>Use o QR Code ou copie o código Pix. A confirmação acontece automaticamente quando o processador registrar o pagamento.</p>
+          <p>{payment.provider === "cooklily_pix"
+            ? "Copie o código Pix gerado pela CookLily. A confirmação aparecerá após a conciliação da entrada."
+            : "Use o QR Code ou copie o código Pix. A confirmação acontece automaticamente quando o processador registrar o pagamento."}</p>
           {payment.providerData?.qrCodeBase64 && <img
             className="pix-qr-code"
             src={`data:image/png;base64,${payment.providerData.qrCodeBase64}`}
