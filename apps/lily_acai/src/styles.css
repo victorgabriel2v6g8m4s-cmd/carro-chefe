@@ -2664,3 +2664,138 @@ img, svg { max-width: 100%; }
     min-height: 48px;
   }
 }
+
+
+/* Entrega 11E — reatribuição e histórico logístico */
+.courier-secondary-action {
+  margin-top: 10px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 12px;
+  background: var(--cl-color-surface);
+}
+.courier-secondary-action > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 800;
+  color: var(--cl-color-text-muted);
+}
+.courier-secondary-action form {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.courier-secondary-action label,
+.admin-reassign-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.courier-secondary-action select,
+.courier-secondary-action textarea,
+.admin-reassign-form select,
+.admin-reassign-form input {
+  width: 100%;
+}
+.courier-history-list,
+.admin-delivery-list,
+.admin-delivery-history {
+  display: grid;
+  gap: 12px;
+}
+.courier-history-list > article,
+.admin-delivery-history > article,
+.admin-delivery-card {
+  border: 1px solid var(--cl-color-border);
+  border-radius: 16px;
+  background: var(--cl-color-surface);
+}
+.courier-history-list > article {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+}
+.courier-history-list > article > div,
+.admin-delivery-history > article > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.courier-history-list > article > div:last-child {
+  justify-items: end;
+  text-align: right;
+}
+.assignment-status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--cl-color-surface-strong);
+  font-size: 11px;
+  font-weight: 900;
+}
+.assignment-completed { background: #effbf4; color: #17633a; }
+.assignment-abandoned,
+.assignment-reassigned,
+.assignment-cancelled { background: #fbf4f7; color: #7b294a; }
+
+.admin-deliveries-page {
+  width: min(1240px, calc(100% - 32px));
+}
+.admin-delivery-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.admin-delivery-card > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.admin-delivery-card > header > div {
+  display: grid;
+  gap: 4px;
+}
+.admin-reassign-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cl-color-border);
+}
+.admin-reassign-form .wide {
+  grid-column: 1 / -2;
+}
+.admin-delivery-history > article {
+  display: grid;
+  grid-template-columns: minmax(150px,.7fr) minmax(180px,.8fr) minmax(220px,1.3fr);
+  gap: 14px;
+  padding: 14px;
+}
+.operation-warning.compact {
+  margin: 0;
+  padding: 12px;
+}
+
+@media (max-width: 760px) {
+  .admin-deliveries-page {
+    width: calc(100% - 20px);
+  }
+  .courier-history-list > article {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .courier-history-list > article > div:last-child {
+    justify-items: start;
+    text-align: left;
+  }
+  .admin-reassign-form,
+  .admin-delivery-history > article {
+    grid-template-columns: 1fr;
+  }
+  .admin-reassign-form .wide {
+    grid-column: auto;
+  }
+}
