@@ -10,6 +10,8 @@ const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
 const paymentSource = readFileSync(resolve(sourceDirectory, "features/payments/PaymentPage.tsx"), "utf8");
 const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPage.tsx"), "utf8");
+const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/CourierPage.tsx"), "utf8");
+const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("não mascara overflow horizontal globalmente", () => {
@@ -88,6 +90,27 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(paymentSource).toContain("providerData?.qrCode");
     expect(paymentSource).not.toContain("MERCADO_PAGO_ACCESS_TOKEN");
     expect(paymentSource).not.toContain("MERCADO_PAGO_WEBHOOK_SECRET");
+  });
+
+
+  it("mantém painel do entregador com coleta e entrega confirmadas por código", () => {
+    expect(mainSource).toContain('path="/entregas"');
+    expect(mainSource).toContain("CourierPage");
+    expect(courierSource).toContain("Aceitar entrega");
+    expect(courierSource).toContain("Cheguei na coleta");
+    expect(courierSource).toContain("Código de coleta");
+    expect(courierSource).toContain("Saí do local de coleta");
+    expect(courierSource).toContain("Cheguei no local de entrega");
+    expect(courierSource).toContain("Código de entrega");
+    expect(courierSource).toContain("Saí do local de entrega");
+  });
+
+  it("mantém códigos logísticos separados entre cozinha, entregador e cliente", () => {
+    expect(kitchenSource).toContain("Código de coleta");
+    expect(kitchenSource).toContain("Informe este código ao entregador somente");
+    expect(accountOrdersSource).toContain("deliveryCode");
+    expect(accountOrdersSource).toContain("Informe este código ao entregador somente quando ele estiver no seu endereço");
+    expect(accountOrdersSource).toContain("deliveryEvents");
   });
 
   it("mantém fila da cozinha no painel e bloqueia montagem sem pagamento", () => {
