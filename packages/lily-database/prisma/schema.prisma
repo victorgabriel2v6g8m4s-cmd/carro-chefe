@@ -47,6 +47,20 @@ model LilyOrderOperationEvent {
   @@index([toStatus, createdAt])
 }
 
+model LilyOrderDeliveryEvent {
+  id         String    @id @default(cuid())
+  orderId    String
+  fromStatus String?
+  toStatus   String
+  actor      String
+  note       String?
+  createdAt  DateTime  @default(now())
+  order      LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@index([toStatus, createdAt])
+}
+
 model LilySession {
   id            String    @id @default(cuid())
   userId        String
@@ -433,6 +447,9 @@ model LilyOrder {
   status              String                 @default("awaiting_payment")
   operationStatus     String                 @default("received")
   operationUpdatedAt  DateTime               @default(now())
+  deliveryStatus      String                 @default("not_applicable")
+  deliveryUpdatedAt   DateTime?
+  courierUserId       String?
   isHomologation      Boolean                @default(false)
   subtotalCents       Int
   deliveryFeeCents    Int
@@ -451,12 +468,15 @@ model LilyOrder {
   items               LilyOrderItem[]
   statusEvents        LilyOrderStatusEvent[]
   operationEvents     LilyOrderOperationEvent[]
+  deliveryEvents      LilyOrderDeliveryEvent[]
   payments            LilyPayment[]
 
   @@index([userId, createdAt])
   @@index([phoneNormalized, createdAt])
   @@index([status, createdAt])
   @@index([operationStatus, operationUpdatedAt])
+  @@index([deliveryStatus, deliveryUpdatedAt])
+  @@index([courierUserId, deliveryUpdatedAt])
 }
 
 model LilyOrderItem {
