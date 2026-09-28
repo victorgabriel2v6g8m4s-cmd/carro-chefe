@@ -81,6 +81,8 @@ async function createOrder(input: {
       fulfillmentType: "delivery",
       status: input.financialStatus ?? "awaiting_payment",
       operationStatus: input.operationStatus ?? "received",
+      deliveryStatus: "not_ready",
+      deliveryUpdatedAt: new Date(),
       subtotalCents: 2500,
       deliveryFeeCents: 500,
       discountTotalCents: 0,
@@ -248,14 +250,21 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const stored = await lilyPrisma.lilyOrder.findUnique({
       where: { id: order.id },
-      include: { operationEvents: { orderBy: { createdAt: "asc" } } }
+      include: {
+        operationEvents: { orderBy: { createdAt: "asc" } },
+        deliveryEvents: { orderBy: { createdAt: "asc" } }
+      }
     });
     expect(stored?.status).toBe("paid");
+    expect(stored?.deliveryStatus).toBe("waiting_courier");
     expect(stored?.operationEvents.map((event) => event.toStatus)).toEqual([
       "received",
       "waiting_payment",
       "preparing",
       "ready_for_dispatch"
+    ]);
+    expect(stored?.deliveryEvents.map((event) => event.toStatus)).toEqual([
+      "waiting_courier"
     ]);
   });
 });
