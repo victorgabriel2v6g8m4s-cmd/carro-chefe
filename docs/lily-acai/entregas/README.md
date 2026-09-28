@@ -130,8 +130,8 @@ Entregue tecnicamente: focus trap, alvos de toque críticos 44 px, Configuraçõ
 ## Entrega 11 — operação ponta a ponta
 
 - 11D: `ENTREGA_11D_LOGISTICA_2026-09-28.md` — fluxo base do courier tecnicamente validado.
-- 11E: `ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-28.md` — recusa, desistência, reatribuição segura e histórico; implementação candidata, gate pendente.
-- 11F: tracking guest seguro — próxima tranche.
+- 11E: `ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-28.md` — recusa, desistência, reatribuição segura e histórico; CI/CodeQL aprovados, QA real pendente.
+- 11F: `ENTREGA_11F_TRACKING_GUEST_2026-09-28.md` — tracking guest por capability token; implementação candidata, gate pendente.
 - 11G: ETA/mapas.
 - 11H: WhatsApp por etapa.
 - 11I: conciliação automática do Pix próprio.
