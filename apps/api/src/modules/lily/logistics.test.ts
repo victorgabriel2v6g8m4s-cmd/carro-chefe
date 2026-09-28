@@ -288,13 +288,13 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(arrivedPickup.statusCode).toBe(200);
     expect(arrivedPickup.json().deliveryStatus).toBe("courier_arrived_pickup");
 
-    const wrongPickup = await transition("confirm_pickup", "000000");
-    if (lilyOrderSecurityCode(order.id, "pickup") !== "000000") {
-      expect(wrongPickup.statusCode).toBe(401);
-      expect(wrongPickup.json().details.code).toBe("LILY_PICKUP_CODE_INVALID");
-    }
+    const pickupCode = lilyOrderSecurityCode(order.id, "pickup");
+    const wrongPickupCode = pickupCode === "000000" ? "000001" : "000000";
+    const wrongPickup = await transition("confirm_pickup", wrongPickupCode);
+    expect(wrongPickup.statusCode).toBe(401);
+    expect(wrongPickup.json().details.code).toBe("LILY_PICKUP_CODE_INVALID");
 
-    const picked = await transition("confirm_pickup", lilyOrderSecurityCode(order.id, "pickup"));
+    const picked = await transition("confirm_pickup", pickupCode);
     expect(picked.statusCode).toBe(200);
     expect(picked.json().deliveryStatus).toBe("picked_up");
 
@@ -306,13 +306,13 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(arrivedDelivery.statusCode).toBe(200);
     expect(arrivedDelivery.json().deliveryStatus).toBe("courier_arrived_delivery");
 
-    const wrongDelivery = await transition("confirm_delivery", "999999");
-    if (lilyOrderSecurityCode(order.id, "delivery") !== "999999") {
-      expect(wrongDelivery.statusCode).toBe(401);
-      expect(wrongDelivery.json().details.code).toBe("LILY_DELIVERY_CODE_INVALID");
-    }
+    const deliveryCode = lilyOrderSecurityCode(order.id, "delivery");
+    const wrongDeliveryCode = deliveryCode === "999999" ? "999998" : "999999";
+    const wrongDelivery = await transition("confirm_delivery", wrongDeliveryCode);
+    expect(wrongDelivery.statusCode).toBe(401);
+    expect(wrongDelivery.json().details.code).toBe("LILY_DELIVERY_CODE_INVALID");
 
-    const delivered = await transition("confirm_delivery", lilyOrderSecurityCode(order.id, "delivery"));
+    const delivered = await transition("confirm_delivery", deliveryCode);
     expect(delivered.statusCode).toBe(200);
     expect(delivered.json().deliveryStatus).toBe("delivered");
 
@@ -325,6 +325,14 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
       include: { deliveryEvents: { orderBy: { createdAt: "asc" } } }
     });
     expect(stored?.completedAt).not.toBeNull();
+    const failedAttempts = await lilyPrisma.lilyAdminAudit.findMany({
+      where: {
+        actorUserId: courier.user.id,
+        action: { in: ["delivery.pickup_code_failed", "delivery.delivery_code_failed"] }
+      }
+    });
+    expect(failedAttempts).toHaveLength(2);
+
     expect(stored?.deliveryEvents.map((event) => event.toStatus)).toEqual([
       "waiting_courier",
       "courier_accepted",
