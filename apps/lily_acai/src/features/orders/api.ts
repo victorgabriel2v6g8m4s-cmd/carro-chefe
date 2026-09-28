@@ -83,6 +83,8 @@ export type LilyOrder = {
   orderNumber: string;
   fulfillmentType: "pickup" | "delivery";
   status: string;
+  operationStatus: string;
+  operationUpdatedAt: string;
   isHomologation: boolean;
   subtotalCents: number;
   deliveryFeeCents: number;
@@ -110,6 +112,13 @@ export type LilyOrder = {
     addons: Array<{ addonId: string; name: string; unitPriceCents: number; quantity: number }>;
   }>;
   statusEvents: Array<{ fromStatus: string | null; toStatus: string; actor: string; createdAt: string }>;
+  operationEvents: Array<{
+    fromStatus: string | null;
+    toStatus: string;
+    actor: string;
+    note: string | null;
+    createdAt: string;
+  }>;
 };
 
 function selectionPayload(selection: NonNullable<CartItem["comboSelections"]>[number]) {
