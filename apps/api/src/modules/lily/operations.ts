@@ -3,6 +3,10 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
+import {
+  lilyLogisticsCodeConfiguration,
+  lilyOrderSecurityCode
+} from "./logistics-codes";
 
 const idSchema = z.string().trim().min(1).max(120);
 const noteSchema = z.object({
@@ -21,7 +25,8 @@ type OperationStatus = typeof LILY_OPERATION_STATUSES[number];
 
 const operationInclude = {
   items: { include: { addons: true } },
-  operationEvents: { orderBy: { createdAt: "asc" as const } }
+  operationEvents: { orderBy: { createdAt: "asc" as const } },
+  deliveryEvents: { orderBy: { createdAt: "asc" as const } }
 };
 
 function nextOperationStatus(order: {
@@ -54,10 +59,17 @@ function serializeKitchenOrder(order: any) {
     financialStatus: order.status,
     operationStatus: order.operationStatus,
     operationUpdatedAt: order.operationUpdatedAt,
+    deliveryStatus: order.deliveryStatus,
+    deliveryUpdatedAt: order.deliveryUpdatedAt,
     fulfillmentType: order.fulfillmentType,
     isHomologation: order.isHomologation,
     grandTotalCents: order.grandTotalCents,
     customerNote: order.customerNote,
+    pickupCode: order.fulfillmentType === "delivery"
+      && order.operationStatus === "ready_for_dispatch"
+      && lilyLogisticsCodeConfiguration().ready
+        ? lilyOrderSecurityCode(order.id, "pickup")
+        : null,
     createdAt: order.createdAt,
     items: order.items.map((item: any) => ({
       id: item.id,
@@ -125,6 +137,7 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
 
     const next = nextOperationStatus(current);
     const now = new Date();
+    const opensDeliveryQueue = next === "ready_for_dispatch" && current.fulfillmentType === "delivery";
 
     const updated = await lilyPrisma.$transaction(async (tx) => {
       const result = await tx.lilyOrder.updateMany({
@@ -135,7 +148,14 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
         },
         data: {
           operationStatus: next,
-          operationUpdatedAt: now
+          operationUpdatedAt: now,
+          ...(opensDeliveryQueue
+            ? {
+                deliveryStatus: "waiting_courier",
+                deliveryUpdatedAt: now,
+                courierUserId: null
+              }
+            : {})
         }
       });
 
@@ -156,6 +176,19 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
         }
       });
 
+      if (opensDeliveryQueue) {
+        await tx.lilyOrderDeliveryEvent.create({
+          data: {
+            orderId: id,
+            fromStatus: current.deliveryStatus,
+            toStatus: "waiting_courier",
+            actor: `staff:${context.user.id}`,
+            note: "Pedido liberado pela cozinha para a fila de entrega.",
+            createdAt: now
+          }
+        });
+      }
+
       return tx.lilyOrder.findUnique({
         where: { id },
         include: operationInclude
@@ -165,7 +198,8 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
     await auditLilyAdmin(context.user.id, "order.operation.advance", "order", id, {
       fromStatus: current.operationStatus,
       toStatus: next,
-      financialStatus: current.status
+      financialStatus: current.status,
+      ...(opensDeliveryQueue ? { deliveryStatus: "waiting_courier" } : {})
     });
 
     return serializeKitchenOrder(updated);
