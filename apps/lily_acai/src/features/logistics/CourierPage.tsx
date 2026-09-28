@@ -118,7 +118,21 @@ function DeliveryCard(props: {
     }
   }
 
-  async function calculateRoute() {
+  useEffect(() => {
+    if (!delivery.assignedToMe
+      || delivery.routeEstimate
+      || ["left_delivery", "cancelled"].includes(delivery.deliveryStatus)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (!cancelled) void calculateRoute(true);
+    }, 150);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [delivery.id, delivery.assignedToMe, delivery.routeEstimate, delivery.deliveryStatus]);
+
+  async function calculateRoute(silent = false) {
     setRouteBusy(true);
     setRouteMessage("");
     props.onError("");
@@ -130,13 +144,13 @@ function DeliveryCard(props: {
           : result.reason === "address_incomplete"
             ? "Endereço insuficiente para calcular a rota."
             : "O provedor de mapas está indisponível. A entrega continua normalmente.";
-        setRouteMessage(message);
+        if (!silent) setRouteMessage(message);
         return;
       }
-      setRouteMessage(result.cached ? "Rota carregada do cache." : "Rota calculada e salva.");
+      if (!silent) setRouteMessage(result.cached ? "Rota carregada do cache." : "Rota calculada e salva.");
       await props.onChanged();
     } catch (cause) {
-      setRouteMessage(cause instanceof Error ? cause.message : "Não foi possível calcular a rota.");
+      if (!silent) setRouteMessage(cause instanceof Error ? cause.message : "Não foi possível calcular a rota.");
     } finally {
       setRouteBusy(false);
     }
@@ -172,7 +186,7 @@ function DeliveryCard(props: {
       {delivery.assignedToMe && !delivery.routeEstimate
         && !["left_delivery", "cancelled"].includes(delivery.deliveryStatus)
         && <button className="button ghost courier-route-button" type="button"
-          onClick={() => void calculateRoute()} disabled={routeBusy}>
+          onClick={() => void calculateRoute(false)} disabled={routeBusy}>
           {routeBusy ? "Calculando rota..." : "Calcular rota e ETA"}
         </button>}
       {routeMessage && <small className="courier-route-message">{routeMessage}</small>}
