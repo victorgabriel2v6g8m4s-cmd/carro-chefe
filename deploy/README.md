@@ -24,6 +24,10 @@ Exemplo mínimo em `/etc/carro-chefe/carro-chefe.env`:
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
 LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
 LILY_MFA_ENCRYPTION_KEY=<32-bytes-aleatorios-em-base64url>
+COOKLILY_LOGISTICS_CODE_KEY=<32-bytes-aleatorios-em-base64url>
+COOKLILY_PIX_KEY=<chave-pix-quando-homologada>
+COOKLILY_PIX_MERCHANT_NAME=<nome-recebedor>
+COOKLILY_PIX_MERCHANT_CITY=CAMPO GRANDE
 TRUST_PROXY=true
 PRODUCTION_AUTH_READY=false
 VITE_GA4_ID=
@@ -155,7 +159,7 @@ Uma VPS que ainda possui um deployer anterior a esse mecanismo precisa de um boo
 Novos namespaces Nginx continuam exigindo revisão explícita; o script valida e falha antes da migration em vez de editar o proxy silenciosamente.
 
 
-## Promoção CookLily para staff/admin
+## Promoção CookLily para staff/courier/admin
 
 O script `deploy/scripts/lily-promote-user` transforma a promoção de uma conta CookLily existente em uma operação única e auditada.
 
@@ -167,6 +171,12 @@ sudo lily-promote-user 67999999999
 
 O papel padrão é `staff`.
 
+Para promover explicitamente um entregador:
+
+```bash
+sudo lily-promote-user 67999999999 courier
+```
+
 Para promover explicitamente para `admin`:
 
 ```bash
@@ -175,6 +185,41 @@ sudo lily-promote-user 67999999999 admin
 
 O telefone é normalizado para `+55...`. O comando falha se a conta não existir, estiver inativa ou a transição de papel não for uma promoção válida. Ele grava uma entrada em `LilyAdminAudit`.
 
-A conta precisa ser criada antes pelo fluxo normal de cadastro. O utilitário não cria usuário e não redefine senha.
+A conta precisa ser criada antes pelo fluxo normal de cadastro. O utilitário não cria usuário e não redefine senha. Staff, courier e admin precisam trocar para a política de senha privilegiada e configurar MFA antes de usar funções operacionais.
 
 O `carro-chefe-deploy` copia o helper para `/usr/local/sbin/lily-promote-user` somente depois que health checks do release passam.
+
+
+## CookLily — Entrega 11D
+
+A logística dos entregadores usa um namespace próprio:
+
+```text
+/api/v1/lily/courier/*
+```
+
+A primeira publicação que contenha a Entrega 11D exige duas preparações antes do `carro-chefe-deploy`:
+
+1. adicionar `COOKLILY_LOGISTICS_CODE_KEY` ao arquivo de ambiente;
+2. executar o helper Nginx `deploy/scripts/enable-lily-entrega11-nginx`.
+
+Gere uma chave independente de 32 bytes:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+```
+
+Grave o valor somente em `/etc/carro-chefe/carro-chefe.env`. Não reutilize a chave MFA e não versione o segredo.
+
+A chave precisa permanecer estável enquanto existirem entregas em andamento, porque os códigos de coleta/entrega são derivados dela e do ID do pedido.
+
+O helper Nginx:
+
+- cria backup;
+- é idempotente;
+- insere somente `/api/v1/lily/courier/*` antes do bloqueio genérico;
+- executa `nginx -t`;
+- restaura o backup se o teste falhar;
+- recarrega o Nginx somente depois da validação.
+
+Depois que o candidato final da Entrega 11D tiver CI + CodeQL verdes, use esse SHA exato para instalar/executar o helper e depois para o deploy. Não use a cabeça móvel da branch.
