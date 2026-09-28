@@ -14,6 +14,7 @@ import {
   quoteLilyConfiguration
 } from "./configuration";
 import { resolveLilyFulfillment } from "./fulfillment";
+import { lilyLogisticsCodeConfiguration, lilyOrderSecurityCode } from "./logistics-codes";
 
 const quantitySchema = z.number().int().min(1).max(20);
 const noteSchema = z.string().trim().max(300).nullable().optional();
@@ -144,14 +145,19 @@ function orderNumber() {
 const orderInclude = {
   items: { include: { addons: true } },
   statusEvents: { orderBy: { createdAt: "asc" as const } },
-  operationEvents: { orderBy: { createdAt: "asc" as const } }
+  operationEvents: { orderBy: { createdAt: "asc" as const } },
+  deliveryEvents: { orderBy: { createdAt: "asc" as const } }
 };
 
 async function findOrderById(id: string) {
   return lilyPrisma.lilyOrder.findUnique({ where: { id }, include: orderInclude });
 }
 
-function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestAccessToken?: string | null) {
+function serializeOrder(
+  order: Awaited<ReturnType<typeof findOrderById>>,
+  guestAccessToken?: string | null,
+  includeDeliveryCode = false
+) {
   if (!order) return null;
   return {
     id: order.id,
@@ -160,6 +166,8 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
     status: order.status,
     operationStatus: order.operationStatus,
     operationUpdatedAt: order.operationUpdatedAt,
+    deliveryStatus: order.deliveryStatus,
+    deliveryUpdatedAt: order.deliveryUpdatedAt,
     isHomologation: order.isHomologation,
     subtotalCents: order.subtotalCents,
     deliveryFeeCents: order.deliveryFeeCents,
@@ -169,6 +177,9 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
     customerNote: order.customerNote,
     createdAt: order.createdAt,
     ...(guestAccessToken ? { guestAccessToken } : {}),
+    ...(includeDeliveryCode && order.fulfillmentType === "delivery" && lilyLogisticsCodeConfiguration().ready
+      ? { deliveryCode: lilyOrderSecurityCode(order.id, "delivery") }
+      : {}),
     items: order.items.map((item) => ({
       id: item.id,
       kind: item.variantId === "combo" ? "combo" : "product",
@@ -198,6 +209,13 @@ function serializeOrder(order: Awaited<ReturnType<typeof findOrderById>>, guestA
       createdAt: event.createdAt
     })),
     operationEvents: order.operationEvents.map((event) => ({
+      fromStatus: event.fromStatus,
+      toStatus: event.toStatus,
+      actor: event.actor,
+      note: event.note,
+      createdAt: event.createdAt
+    })),
+    deliveryEvents: order.deliveryEvents.map((event) => ({
       fromStatus: event.fromStatus,
       toStatus: event.toStatus,
       actor: event.actor,
@@ -337,6 +355,8 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           fulfillmentType: input.fulfillmentType,
           status: "awaiting_payment",
           operationStatus: "received",
+          deliveryStatus: input.fulfillmentType === "delivery" ? "not_ready" : "not_applicable",
+          deliveryUpdatedAt: new Date(),
           isHomologation,
           subtotalCents: quote.subtotalCents,
           deliveryFeeCents: quote.deliveryFeeCents,
@@ -425,7 +445,18 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
               toStatus: "received",
               actor: "system:order_created"
             }
-          }
+          },
+          ...(input.fulfillmentType === "delivery"
+            ? {
+                deliveryEvents: {
+                  create: {
+                    fromStatus: null,
+                    toStatus: "not_ready",
+                    actor: "system:order_created"
+                  }
+                }
+              }
+            : {})
         },
         include: orderInclude
       });
@@ -469,6 +500,6 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       include: orderInclude
     });
     if (!order) throw new ApiError(404, "Pedido não encontrado.");
-    return serializeOrder(order);
+    return serializeOrder(order, null, true);
   });
 }
