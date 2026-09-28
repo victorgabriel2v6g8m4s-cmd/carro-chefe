@@ -7,6 +7,7 @@ import { lilyCatalogRoutes } from "./catalog";
 import { lilyAddressRoutes } from "./addresses";
 import { getLilyOperationalSettings, lilyFulfillmentRoutes } from "./fulfillment";
 import { lilyOrderRoutes } from "./orders";
+import { lilyOperationsRoutes } from "./operations";
 import { lilyProfileRoutes } from "./profile";
 import { lilyPaymentRoutes } from "./payments";
 import { lilyTeamRoutes } from "./team";
@@ -321,6 +322,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyFulfillmentRoutes);
   await app.register(lilyAddressRoutes);
   await app.register(lilyOrderRoutes);
+  await app.register(lilyOperationsRoutes);
   await app.register(lilyPaymentRoutes);
   await app.register(lilyTeamRoutes);
   await app.register(lilyProfileRoutes);
