@@ -14,6 +14,62 @@ function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  received: "Pedido recebido",
+  awaiting_payment: "Aguardando pagamento",
+  paid: "Pagamento confirmado",
+  preparing: "Montando pedido",
+  ready_for_dispatch: "Pronto para despacho",
+  waiting_courier: "Aguardando entregador",
+  courier_accepted: "Entregador aceitou",
+  courier_arrived_pickup: "Entregador chegou para coleta",
+  picked_up: "Pedido coletado",
+  left_pickup: "Saiu para entrega",
+  courier_arrived_delivery: "Entregador chegou ao endereço",
+  delivered: "Pedido entregue",
+  left_delivery: "Entrega finalizada",
+  refunded: "Pagamento estornado",
+  cancelled: "Pedido cancelado"
+};
+
+function orderStatusLabel(status: string) {
+  return ORDER_STATUS_LABELS[status] ?? status.replace(/_/g, " ");
+}
+
+function OrderTimeline({ order }: { order: LilyOrder }) {
+  const events = [
+    { key: "created", label: "Pedido recebido", at: order.createdAt },
+    ...order.statusEvents.map((event, index) => ({
+      key: `${event.toStatus}-${event.createdAt}-${index}`,
+      label: orderStatusLabel(event.toStatus),
+      at: event.createdAt
+    }))
+  ];
+
+  const unique = events.filter((event, index) =>
+    index === 0 || event.label !== events[index - 1]?.label
+  );
+
+  return <section className="order-timeline-card" aria-label="Acompanhamento do pedido">
+    <div className="order-timeline-heading">
+      <div>
+        <span className="eyebrow">Acompanhamento</span>
+        <h2>{orderStatusLabel(order.status)}</h2>
+      </div>
+      <small>Atualização automática</small>
+    </div>
+    <ol className="order-timeline">
+      {unique.map((event, index) => <li key={event.key} className={index === unique.length - 1 ? "current" : "done"}>
+        <span className="order-timeline-dot" aria-hidden="true" />
+        <div>
+          <strong>{event.label}</strong>
+          <time dateTime={event.at}>{new Date(event.at).toLocaleString("pt-BR")}</time>
+        </div>
+      </li>)}
+    </ol>
+  </section>;
+}
+
 function AccountRequired() {
   return <section className="checkout-page empty-state">
     <span className="eyebrow">Conta CookLily</span>
@@ -112,7 +168,7 @@ export function OrdersPage() {
     {orders.length === 0 ? <div className="empty-state"><p>Você ainda não tem pedidos vinculados a esta conta.</p><Link className="button primary" to="/cardapio">Ver cardápio</Link></div>
       : <div className="order-list">{orders.map((order) => <Link key={order.id} to={`/pedidos/${order.id}`}>
         <div><strong>{order.orderNumber}</strong><small>{new Date(order.createdAt).toLocaleString("pt-BR")}</small></div>
-        <div><span>{order.status === "awaiting_payment" ? "Aguardando pagamento" : order.status}</span><strong>{money(order.grandTotalCents)}</strong></div>
+        <div><span>{orderStatusLabel(order.status)}</span><strong>{money(order.grandTotalCents)}</strong></div>
       </Link>)}</div>}
   </section>;
 }
@@ -122,13 +178,25 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<LilyOrder | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    getCustomerOrder(id).then(setOrder).catch((cause) => setError(cause instanceof Error ? cause.message : "Pedido não encontrado."));
+    let cancelled = false;
+    const load = () => getCustomerOrder(id)
+      .then((value) => { if (!cancelled) setOrder(value); })
+      .catch((cause) => { if (!cancelled) setError(cause instanceof Error ? cause.message : "Pedido não encontrado."); });
+
+    void load();
+    const timer = window.setInterval(() => { void load(); }, 10000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [id]);
   if (error) return <section className="checkout-page empty-state"><h1>{error}</h1><Link className="button primary" to="/pedidos">Meus pedidos</Link></section>;
   if (!order) return <section className="checkout-page"><h1>Carregando pedido...</h1></section>;
 
   return <section className="checkout-page">
-    <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {order.status === "awaiting_payment" ? "Aguardando pagamento" : order.status}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
+    <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(order.status)}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
+    <OrderTimeline order={order} />
+
     <div className="order-detail">
       {order.items.map((item) => <article key={item.id}>
         <div><strong>{item.quantity}× {item.productName}</strong><span>{item.kind === "combo" ? "Combo" : `${item.sizeMl} ml · ${item.variantName}`}</span></div>
