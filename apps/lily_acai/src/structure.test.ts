@@ -9,6 +9,7 @@ const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
 const paymentSource = readFileSync(resolve(sourceDirectory, "features/payments/PaymentPage.tsx"), "utf8");
+const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPage.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("não mascara overflow horizontal globalmente", () => {
@@ -87,5 +88,14 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(paymentSource).toContain("providerData?.qrCode");
     expect(paymentSource).not.toContain("MERCADO_PAGO_ACCESS_TOKEN");
     expect(paymentSource).not.toContain("MERCADO_PAGO_WEBHOOK_SECRET");
+  });
+
+  it("mantém fila da cozinha no painel e bloqueia montagem sem pagamento", () => {
+    expect(mainSource).toContain('path="/painel/cozinha"');
+    expect(kitchenSource).toContain("Fila da cozinha");
+    expect(kitchenSource).toContain('order.financialStatus !== "paid"');
+    expect(kitchenSource).toContain("Aguardando pagamento");
+    expect(kitchenSource).toContain("Montar pedido");
+    expect(kitchenSource).toContain("Despachar pedido");
   });
 });
