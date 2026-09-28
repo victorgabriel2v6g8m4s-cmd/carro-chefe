@@ -125,3 +125,13 @@ Runtime validado: `a1176a444d6ab184ab75bdc30b5b0ee8449e05f0`.
 - builds e Tool Health: success.
 
 Entregue tecnicamente: focus trap, alvos de toque críticos 44 px, Configurações da loja separada de fulfillment, controle explícito de sessões e deep-link de produto. Recuperação de senha continua pendente por depender de canal seguro de verificação.
+
+
+## Entrega 11 — operação ponta a ponta
+
+- 11D: `ENTREGA_11D_LOGISTICA_2026-09-28.md` — fluxo base do courier tecnicamente validado.
+- 11E: `ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-28.md` — recusa, desistência, reatribuição segura e histórico; implementação candidata, gate pendente.
+- 11F: tracking guest seguro — próxima tranche.
+- 11G: ETA/mapas.
+- 11H: WhatsApp por etapa.
+- 11I: conciliação automática do Pix próprio.

@@ -10,6 +10,7 @@ import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
 import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
+import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
@@ -445,6 +446,7 @@ function App() {
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
+    <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />

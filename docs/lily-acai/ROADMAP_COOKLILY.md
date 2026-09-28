@@ -283,8 +283,64 @@ Limitação consciente da primeira fase:
 - [x] deploy fail-closed sem `COOKLILY_LOGISTICS_CODE_KEY`;
 - [x] gate CI/CodeQL do runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`;
 - [ ] QA real em dois celulares/contas simultâneas;
-- [ ] cancelamento/reatribuição operacional controlada;
-- [ ] histórico completo de entregas para courier/admin.
+- [x] recusa de oferta sem remover a entrega da fila global — **11E candidata; gate pendente**;
+- [x] desistência antes da coleta e retorno seguro à fila — **11E candidata; gate pendente**;
+- [x] reatribuição admin protegida contra concorrência e bloqueada após coleta — **11E candidata; gate pendente**;
+- [x] histórico persistente de atribuições courier/admin — **11E candidata; gate pendente**.
+
+### 11E — recusa, desistência, reatribuição e histórico
+
+**Status:** implementação candidata em branch de entrega; CI/CodeQL e QA real pendentes.
+
+- [x] novo `LilyDeliveryAssignment` com backfill;
+- [x] índice parcial garantindo no máximo um vínculo ativo por pedido;
+- [x] recusa de oferta por courier;
+- [x] exclusão da mesma oferta para quem recusou/desistiu, sem afetar os demais;
+- [x] desistência permitida somente antes de `picked_up`;
+- [x] retorno transacional para `waiting_courier`;
+- [x] reatribuição/devolução à fila por admin;
+- [x] bloqueio de no-op e de reatribuição após coleta;
+- [x] histórico paginado do courier;
+- [x] histórico paginado/filtrável do admin;
+- [x] minimização de endereço no histórico;
+- [x] painel admin `/painel/entregas`;
+- [x] UX de recusa/desistência no painel `/entregas`;
+- [ ] gate CI/CodeQL;
+- [ ] QA real multiusuário.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-28.md`.
+
+### 11F — tracking seguro de pedidos guest
+
+**Status:** próxima tranche.
+
+- [ ] endpoint de tracking protegido pelo token opaco já emitido no checkout;
+- [ ] resposta minimizada sem telefone/endereço/notas internas;
+- [ ] proteção contra enumeração e cache;
+- [ ] código de entrega somente nas etapas permitidas;
+- [ ] página guest com polling.
+
+### 11G — ETA/mapas
+
+- [ ] definir provedor com prioridade para gratuito/baixo custo;
+- [ ] geocodificação/rota no servidor ou proxy controlado;
+- [ ] ETA sem expor localização além do necessário;
+- [ ] fallback quando provedor estiver indisponível.
+
+### 11H — WhatsApp por etapa
+
+- [ ] templates e consentimento/base legal;
+- [ ] eventos idempotentes por etapa;
+- [ ] fila/retry e auditoria;
+- [ ] evitar PII desnecessária em payloads/logs.
+
+### 11I — conciliação automática do Pix próprio
+
+- [ ] definir banco/PSP recebedor e contrato;
+- [ ] adapter de extrato/API Pix/webhook;
+- [ ] matching autoritativo por txid/valor;
+- [ ] idempotência e tratamento de divergência;
+- [ ] reconciliação automática sem transformar retorno do cliente em confirmação financeira.
 
 Documento detalhado:
 
