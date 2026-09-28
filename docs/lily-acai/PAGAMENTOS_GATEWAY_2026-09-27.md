@@ -183,3 +183,60 @@ A migration mantém fail-closed:
 - `paymentsEnabled` mantém o estado anterior (hoje deve permanecer desligado em produção até homologação).
 
 Nenhuma publicação ativa automaticamente cobrança real.
+
+
+## Pix próprio CookLily
+
+A Entrega 11 adiciona um terceiro adapter:
+
+`cooklily_pix`
+
+Ele não chama Mercado Pago, Asaas, Efí ou outro gateway para gerar a cobrança.
+
+Fluxo inicial:
+
+1. backend recebe o valor do pedido já recalculado;
+2. gera um `txid` alfanumérico único;
+3. monta o BR Code estático conforme o padrão Pix;
+4. calcula CRC16;
+5. devolve o Pix Copia e Cola;
+6. persiste `txid` e snapshot no pagamento;
+7. pagamento fica `pending`;
+8. staff/admin confirma a entrada após conferir o recebimento;
+9. reconciliação registra bruto, taxa bancária real e líquido.
+
+O Banco Central documenta que QR Code Pix estático pode ser criado diretamente pela automação do usuário recebedor e que pagamentos iniciados por QR estático com `txid` podem ser consultados posteriormente via API Pix.
+
+### O que “sem taxa” significa
+
+O adapter CookLily não cobra nem depende de tarifa de gateway.
+
+Isso **não garante que o banco recebedor não cobre tarifa Pix de conta PJ**. A tarifa bancária deve ser verificada na conta escolhida.
+
+### Automação futura
+
+Quando a conta PJ estiver definida, a conciliação poderá usar:
+
+- API Pix do banco;
+- webhook;
+- consulta por `txid`;
+- extrato enriquecido.
+
+Pesquisa inicial:
+
+- Banco Inter publica API Pix gratuita para integração e webhook, mas informa que os recebimentos possuem tarifação de baixo custo;
+- Sicoob possui API Pix/recebimentos, porém tabelas 2026 localizadas exibem tarifa transacional em alguns produtos/cooperativas.
+
+Por isso o gerador próprio é independente do banco, e a automação de conciliação será um adapter posterior.
+
+### Configuração da VPS
+
+Somente valores operacionais, nunca no Git:
+
+```env
+COOKLILY_PIX_KEY=<chave-pix-valida>
+COOKLILY_PIX_MERCHANT_NAME=<nome-curto-do-recebedor>
+COOKLILY_PIX_MERCHANT_CITY=CAMPO GRANDE
+```
+
+O painel mostra somente se esses três valores estão configurados.
