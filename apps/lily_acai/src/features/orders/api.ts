@@ -78,6 +78,15 @@ export type OrderQuote = {
   address: LilyAddressInput | null;
 };
 
+export type LilyRouteEstimate = {
+  provider: string;
+  distanceMeters: number;
+  durationSeconds: number;
+  calculatedAt: string;
+  estimatedArrivalAt: string | null;
+  isLive: false;
+};
+
 export type LilyOrder = {
   id: string;
   orderNumber: string;
@@ -87,6 +96,7 @@ export type LilyOrder = {
   operationUpdatedAt: string;
   deliveryStatus: string;
   deliveryUpdatedAt: string | null;
+  routeEstimate: LilyRouteEstimate | null;
   deliveryCode?: string;
   isHomologation: boolean;
   subtotalCents: number;
@@ -140,6 +150,7 @@ export type LilyGuestTrackingOrder = {
   operationUpdatedAt: string;
   deliveryStatus: string;
   deliveryUpdatedAt: string | null;
+  routeEstimate: LilyRouteEstimate | null;
   deliveryCode?: string;
   isHomologation: boolean;
   grandTotalCents: number;
