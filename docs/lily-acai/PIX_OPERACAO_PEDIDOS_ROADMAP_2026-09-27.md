@@ -296,14 +296,48 @@ O papel `courier` deve ter acesso mínimo:
 - [x] Nginx/helper/deployer preparados;
 - [x] gate CI/CodeQL: runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`, CI `36409871119`, CodeQL `36409871166`, 172 testes Node 20/24;
 - [ ] QA real multiusuário;
-- [ ] reatribuição/cancelamento operacional.
+- [x] recusa/desistência antes da coleta — candidata na 11E;
+- [x] reatribuição administrativa segura — candidata na 11E;
+- [x] histórico de atribuições courier/admin — candidata na 11E.
 
-### Fase 11E — automações
-- [ ] webhook/integração bancária para conciliar CookLily Pix;
-- [ ] WhatsApp;
-- [ ] ETA;
+### Fase 11E — cadeia de custódia e histórico
+- [x] persistir cada atribuição de courier;
+- [x] garantir no máximo um vínculo ativo por pedido;
+- [x] recusa sem remover pedido dos demais couriers;
+- [x] desistência antes da coleta;
+- [x] retorno seguro à fila;
+- [x] reatribuição/devolução por admin;
+- [x] bloquear reatribuição após `picked_up`;
+- [x] histórico courier/admin com endereço minimizado;
+- [ ] gate CI/CodeQL;
+- [ ] QA real multiusuário.
+
+### Fase 11F — tracking guest seguro
+- [ ] token opaco em header;
+- [ ] resposta minimizada;
+- [ ] proteção contra enumeração/cache;
+- [ ] polling da página guest;
+- [ ] código de entrega somente nas etapas permitidas.
+
+### Fase 11G — ETA e mapas
+- [ ] escolher provider gratuito/baixo custo;
+- [ ] rota/ETA;
+- [ ] fallback e limites de privacidade.
+
+### Fase 11H — WhatsApp por etapa
+- [ ] eventos idempotentes;
+- [ ] templates/consentimento;
+- [ ] retry/auditoria.
+
+### Fase 11I — conciliação automática do Pix próprio
+- [ ] definir banco/PSP recebedor;
+- [ ] webhook/API Pix/extrato;
+- [ ] matching txid + valor;
+- [ ] divergências e idempotência.
+
+### Backlog transversal
 - [ ] alertas de atraso;
-- [ ] métricas.
+- [ ] métricas operacionais.
 
 ## APIs externas candidatas
 
