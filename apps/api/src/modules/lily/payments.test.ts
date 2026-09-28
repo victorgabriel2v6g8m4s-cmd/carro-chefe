@@ -131,6 +131,9 @@ afterEach(() => {
   delete process.env.MERCADO_PAGO_PUBLIC_KEY;
   delete process.env.MERCADO_PAGO_WEBHOOK_SECRET;
   delete process.env.MERCADO_PAGO_API_BASE_URL;
+  delete process.env.COOKLILY_PIX_KEY;
+  delete process.env.COOKLILY_PIX_MERCHANT_NAME;
+  delete process.env.COOKLILY_PIX_MERCHANT_CITY;
 });
 
 afterAll(async () => {
@@ -295,6 +298,111 @@ describe("CookLily Entrega 07 — pagamentos", () => {
       headers: { "x-lily-order-token": "token-incorreto" }
     });
     expect(wrongToken.statusCode).toBe(401);
+  });
+
+  it("gera Pix próprio sem gateway e só paga o pedido após conciliação administrativa", async () => {
+    process.env.COOKLILY_PIX_KEY = "pix@example.com";
+    process.env.COOKLILY_PIX_MERCHANT_NAME = "CookLily";
+    process.env.COOKLILY_PIX_MERCHANT_CITY = "CAMPO GRANDE";
+
+    const customer = await register("67999907110");
+    const admin = await register("67999907111", "admin");
+
+    const settings = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/payments/settings",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: {
+        paymentsEnabled: true,
+        paymentProvider: "cooklily_pix",
+        manualPixEnabled: false,
+        manualPixInstructions: null,
+        mercadoPagoPixEnabled: false,
+        mercadoPagoCardEnabled: false
+      }
+    });
+    expect(settings.statusCode).toBe(200);
+    expect(settings.json().paymentProvider).toBe("cooklily_pix");
+    expect(settings.json().cookLilyPix).toEqual({
+      keyConfigured: true,
+      merchantNameConfigured: true,
+      merchantCityConfigured: true,
+      ready: true
+    });
+
+    const order = await createOrder({
+      userId: customer.user.id,
+      phone: customer.user.phone
+    });
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/payments",
+      headers: {
+        origin,
+        cookie: customer.cookie,
+        "x-lily-csrf": customer.csrf,
+        "idempotency-key": "cooklily-own-pix-integration-0001"
+      },
+      payload: {
+        orderId: order.id,
+        method: "pix"
+      }
+    });
+
+    expect(created.statusCode).toBe(201);
+    expect(created.json().provider).toBe("cooklily_pix");
+    expect(created.json().method).toBe("pix");
+    expect(created.json().status).toBe("pending");
+    expect(created.json().amountCents).toBe(2500);
+    expect(created.json().instructions).toMatch(/^000201/);
+    expect(created.json().providerData.qrCode).toBe(created.json().instructions);
+    expect(created.json().providerData.paymentMethodType).toBe("static_br_code");
+    expect(created.json()).not.toHaveProperty("providerReference");
+
+    const before = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(before?.status).toBe("awaiting_payment");
+
+    const adminList = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/payments",
+      headers: { cookie: admin.cookie }
+    });
+    expect(adminList.statusCode).toBe(200);
+    const internalPayment = adminList.json().payments.find((row: any) => row.id === created.json().id);
+    expect(internalPayment?.provider).toBe("cooklily_pix");
+    expect(internalPayment?.providerReference).toMatch(/^CL[a-f0-9]{23}$/);
+
+    const confirmed = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/payments/${encodeURIComponent(created.json().id)}/confirm`,
+      headers: {
+        origin,
+        cookie: admin.cookie,
+        "x-lily-csrf": admin.csrf
+      },
+      payload: {
+        providerReference: "BANK-OWN-PIX-0001",
+        reportedGrossCents: 2500,
+        feeCents: 0,
+        netCents: 2500,
+        note: "Conciliação de teste do Pix próprio"
+      }
+    });
+
+    expect(confirmed.statusCode).toBe(200);
+    expect(confirmed.json().status).toBe("approved");
+    expect(confirmed.json().reconciliations[0]).toMatchObject({
+      status: "matched",
+      expectedGrossCents: 2500,
+      reportedGrossCents: 2500,
+      feeCents: 0,
+      netCents: 2500
+    });
+
+    const paidOrder = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(paidOrder?.status).toBe("paid");
+    expect(paidOrder?.paidAt).not.toBeNull();
   });
 
   it("não permite abrir Mercado Pago sem as credenciais necessárias", async () => {
