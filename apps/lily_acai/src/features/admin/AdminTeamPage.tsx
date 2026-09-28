@@ -37,10 +37,10 @@ export function AdminTeamPage() {
     try {
       const member = await promoteLilyTeamMember({
         phone: String(data.get("phone") || ""),
-        role: String(data.get("role") || "staff") as "staff" | "admin"
+        role: String(data.get("role") || "staff") as "staff" | "courier" | "admin"
       }, session.csrfToken);
       form.reset();
-      setMessage(`${member.phone} promovido para ${member.role}. A conta precisa atualizar a senha e configurar MFA antes de usar funções administrativas.`);
+      setMessage(`${member.phone} promovido para ${member.role}. A conta precisa atualizar a senha e configurar MFA antes de usar funções operacionais privilegiadas.`);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível promover a conta.");
@@ -49,7 +49,7 @@ export function AdminTeamPage() {
     }
   }
 
-  async function update(member: LilyTeamMember, input: { role?: "customer" | "staff" | "admin"; status?: "active" | "suspended" }) {
+  async function update(member: LilyTeamMember, input: { role?: "customer" | "staff" | "courier" | "admin"; status?: "active" | "suspended" }) {
     if (!session) return;
     setBusyId(member.id);
     setError("");
@@ -94,6 +94,7 @@ export function AdminTeamPage() {
       <label>Papel
         <select name="role" defaultValue="staff">
           <option value="staff">Staff</option>
+          <option value="courier">Entregador</option>
           <option value="admin">Admin</option>
         </select>
       </label>
@@ -137,10 +138,11 @@ export function AdminTeamPage() {
             <select
               value={member.role}
               disabled={busyId === member.id}
-              onChange={(event) => void update(member, { role: event.target.value as "customer" | "staff" | "admin" })}
+              onChange={(event) => void update(member, { role: event.target.value as "customer" | "staff" | "courier" | "admin" })}
             >
               <option value="customer">Customer</option>
               <option value="staff">Staff</option>
+              <option value="courier">Entregador</option>
               <option value="admin">Admin</option>
             </select>
           </label>
