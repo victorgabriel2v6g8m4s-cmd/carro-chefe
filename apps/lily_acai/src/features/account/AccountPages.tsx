@@ -15,11 +15,13 @@ function money(cents: number) {
 }
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
+  not_ready: "Preparando para a entrega",
   received: "Pedido recebido",
   awaiting_payment: "Aguardando pagamento",
   paid: "Pagamento confirmado",
   preparing: "Montando pedido",
   ready_for_dispatch: "Pronto para despacho",
+  ready_for_pickup: "Pronto para retirada",
   waiting_courier: "Aguardando entregador",
   courier_accepted: "Entregador aceitou",
   courier_arrived_pickup: "Entregador chegou para coleta",
@@ -36,6 +38,20 @@ function orderStatusLabel(status: string) {
   return ORDER_STATUS_LABELS[status] ?? status.replace(/_/g, " ");
 }
 
+function customerOrderStatus(order: LilyOrder) {
+  if (["refunded", "cancelled"].includes(order.status)) return order.status;
+  if (order.status === "awaiting_payment") return order.status;
+  if (order.fulfillmentType === "delivery"
+    && !["not_ready", "not_applicable"].includes(order.deliveryStatus)) {
+    return order.deliveryStatus;
+  }
+  if (order.fulfillmentType === "pickup" && order.operationStatus === "ready_for_dispatch") {
+    return "ready_for_pickup";
+  }
+  if (order.operationStatus && order.operationStatus !== "received") return order.operationStatus;
+  return order.status === "paid" ? "paid" : order.operationStatus || order.status;
+}
+
 function OrderTimeline({ order }: { order: LilyOrder }) {
   const events = [
     { key: "created", label: "Pedido recebido", at: order.createdAt },
@@ -46,6 +62,11 @@ function OrderTimeline({ order }: { order: LilyOrder }) {
     })),
     ...order.operationEvents.map((event, index) => ({
       key: `operation-${event.toStatus}-${event.createdAt}-${index}`,
+      label: orderStatusLabel(event.toStatus),
+      at: event.createdAt
+    })),
+    ...order.deliveryEvents.map((event, index) => ({
+      key: `delivery-${event.toStatus}-${event.createdAt}-${index}`,
       label: orderStatusLabel(event.toStatus),
       at: event.createdAt
     }))
@@ -59,7 +80,7 @@ function OrderTimeline({ order }: { order: LilyOrder }) {
     <div className="order-timeline-heading">
       <div>
         <span className="eyebrow">Acompanhamento</span>
-        <h2>{orderStatusLabel(order.status)}</h2>
+        <h2>{orderStatusLabel(customerOrderStatus(order))}</h2>
       </div>
       <small>Atualização automática</small>
     </div>
@@ -173,7 +194,7 @@ export function OrdersPage() {
     {orders.length === 0 ? <div className="empty-state"><p>Você ainda não tem pedidos vinculados a esta conta.</p><Link className="button primary" to="/cardapio">Ver cardápio</Link></div>
       : <div className="order-list">{orders.map((order) => <Link key={order.id} to={`/pedidos/${order.id}`}>
         <div><strong>{order.orderNumber}</strong><small>{new Date(order.createdAt).toLocaleString("pt-BR")}</small></div>
-        <div><span>{orderStatusLabel(order.status)}</span><strong>{money(order.grandTotalCents)}</strong></div>
+        <div><span>{orderStatusLabel(customerOrderStatus(order))}</span><strong>{money(order.grandTotalCents)}</strong></div>
       </Link>)}</div>}
   </section>;
 }
@@ -199,8 +220,17 @@ export function OrderDetailPage() {
   if (!order) return <section className="checkout-page"><h1>Carregando pedido...</h1></section>;
 
   return <section className="checkout-page">
-    <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(order.status)}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
+    <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(customerOrderStatus(order))}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
     <OrderTimeline order={order} />
+
+    {order.fulfillmentType === "delivery"
+      && order.deliveryCode
+      && ["picked_up", "left_pickup", "courier_arrived_delivery"].includes(order.deliveryStatus)
+      && <section className="delivery-code-card">
+        <span className="eyebrow">Código de entrega</span>
+        <strong>{order.deliveryCode}</strong>
+        <p>Informe este código ao entregador somente quando ele estiver no seu endereço com o pedido.</p>
+      </section>}
 
     <div className="order-detail">
       {order.items.map((item) => <article key={item.id}>
