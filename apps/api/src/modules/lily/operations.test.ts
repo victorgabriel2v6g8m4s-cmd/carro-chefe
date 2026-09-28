@@ -130,7 +130,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/api/v1/lily/staff/orders/operations",
+      url: "/api/v1/lily/admin/kitchen/orders",
       headers: { cookie: customer.cookie }
     });
 
@@ -144,7 +144,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/api/v1/lily/staff/orders/operations",
+      url: "/api/v1/lily/admin/kitchen/orders",
       headers: { cookie: staff.cookie }
     });
 
@@ -167,7 +167,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const response = await app.inject({
       method: "POST",
-      url: `/api/v1/lily/staff/orders/${order.id}/operation/advance`,
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
       headers: {
         origin,
         cookie: staff.cookie
@@ -185,7 +185,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const receive = await app.inject({
       method: "POST",
-      url: `/api/v1/lily/staff/orders/${order.id}/operation/advance`,
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
       headers: {
         origin,
         cookie: staff.cookie,
@@ -199,7 +199,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const blocked = await app.inject({
       method: "POST",
-      url: `/api/v1/lily/staff/orders/${order.id}/operation/advance`,
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
       headers: {
         origin,
         cookie: staff.cookie,
@@ -220,7 +220,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const prepare = await app.inject({
       method: "POST",
-      url: `/api/v1/lily/staff/orders/${order.id}/operation/advance`,
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
       headers: {
         origin,
         cookie: staff.cookie,
@@ -234,7 +234,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
     const dispatch = await app.inject({
       method: "POST",
-      url: `/api/v1/lily/staff/orders/${order.id}/operation/advance`,
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
       headers: {
         origin,
         cookie: staff.cookie,
