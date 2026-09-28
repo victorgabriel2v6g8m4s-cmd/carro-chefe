@@ -14,6 +14,7 @@ import {
   mercadoPagoConfiguration,
   verifyMercadoPagoWebhookSignature
 } from "./mercado-pago-provider";
+import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
 
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -33,7 +34,7 @@ const createPaymentSchema = z.discriminatedUnion("method", [
   z.object({
     orderId: idSchema,
     method: z.literal("pix"),
-    payer: payerSchema
+    payer: payerSchema.optional()
   }).strict(),
   z.object({
     orderId: idSchema,
@@ -49,7 +50,7 @@ const createPaymentSchema = z.discriminatedUnion("method", [
 
 const paymentSettingsSchema = z.object({
   paymentsEnabled: z.boolean().optional(),
-  paymentProvider: z.enum(["manual", "mercado_pago"]).optional(),
+  paymentProvider: z.enum(["manual", "cooklily_pix", "mercado_pago"]).optional(),
   manualPixEnabled: z.boolean().optional(),
   manualPixInstructions: z.string().trim().max(2000).nullable().optional(),
   mercadoPagoPixEnabled: z.boolean().optional(),
@@ -371,6 +372,13 @@ function paymentMethods(
       : [];
   }
 
+  if (settings.paymentProvider === "cooklily_pix") {
+    const configured = cookLilyPixConfiguration();
+    return configured.ready
+      ? [{ id: "pix" as const, label: "Pix CookLily", confirmation: "manual" as const }]
+      : [];
+  }
+
   if (settings.paymentProvider === "mercado_pago") {
     const configured = mercadoPagoConfiguration();
     return [
@@ -391,6 +399,8 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const isHomologation = await requirePaymentHomologation(request);
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
+    const cookLilyPix = cookLilyPixConfiguration();
+    const cookLilyPix = cookLilyPixConfiguration();
     const methods = paymentMethods(settings, { allowDisabled: isHomologation });
     return {
       enabled: settings.paymentsEnabled || isHomologation,
@@ -398,6 +408,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       provider: settings.paymentProvider,
       providerConfigured: methods.length > 0,
       publicKey: settings.paymentProvider === "mercado_pago" ? mercadoPago.publicKey : null,
+      cookLilyPixConfigured: cookLilyPix.ready,
       methods
     };
   });
@@ -437,6 +448,17 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     if (settings.paymentProvider === "manual") {
       if (input.method !== "manual_pix" || !settings.manualPixEnabled || !settings.manualPixInstructions?.trim()) {
         throw new ApiError(503, "Pix manual ainda não está configurado.", { code: "LILY_PIX_DISABLED" });
+      }
+    } else if (settings.paymentProvider === "cooklily_pix") {
+      if (input.method !== "pix") {
+        throw new ApiError(400, "O Pix próprio CookLily aceita apenas Pix.", {
+          code: "LILY_PAYMENT_METHOD_UNSUPPORTED"
+        });
+      }
+      if (!cookLilyPix.ready) {
+        throw new ApiError(503, "Pix próprio CookLily ainda não está configurado.", {
+          code: "LILY_COOKLILY_PIX_NOT_CONFIGURED"
+        });
       }
     } else if (settings.paymentProvider === "mercado_pago") {
       if (input.method === "manual_pix") {
@@ -690,6 +712,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     await requireLilyStaff(request);
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
+    const cookLilyPix = cookLilyPixConfiguration();
     return {
       paymentsEnabled: settings.paymentsEnabled,
       paymentProvider: settings.paymentProvider,
@@ -697,6 +720,12 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       manualPixInstructions: settings.manualPixInstructions,
       mercadoPagoPixEnabled: settings.mercadoPagoPixEnabled,
       mercadoPagoCardEnabled: settings.mercadoPagoCardEnabled,
+      cookLilyPix: {
+        keyConfigured: cookLilyPix.keyConfigured,
+        merchantNameConfigured: cookLilyPix.merchantNameConfigured,
+        merchantCityConfigured: cookLilyPix.merchantCityConfigured,
+        ready: cookLilyPix.ready
+      },
       mercadoPago: {
         accessTokenConfigured: mercadoPago.accessTokenConfigured,
         publicKeyConfigured: Boolean(mercadoPago.publicKey),
@@ -713,11 +742,17 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const current = await getLilyOperationalSettings();
     const merged = { ...current, ...input };
     const mercadoPago = mercadoPagoConfiguration();
+    const cookLilyPix = cookLilyPixConfiguration();
 
     if (merged.paymentsEnabled && merged.paymentProvider === "manual"
       && (!merged.manualPixEnabled || !merged.manualPixInstructions?.trim())) {
       throw new ApiError(400, "Configure e habilite o Pix manual antes de abrir pagamentos.", {
         code: "LILY_PAYMENT_CONFIGURATION_REQUIRED"
+      });
+    }
+    if (merged.paymentsEnabled && merged.paymentProvider === "cooklily_pix" && !cookLilyPix.ready) {
+      throw new ApiError(400, "Configure chave Pix, nome e cidade da CookLily na VPS antes de abrir pagamentos.", {
+        code: "LILY_COOKLILY_PIX_CONFIGURATION_REQUIRED"
       });
     }
     if (merged.paymentsEnabled && merged.paymentProvider === "mercado_pago") {
@@ -764,6 +799,12 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       manualPixInstructions: updated.manualPixInstructions,
       mercadoPagoPixEnabled: updated.mercadoPagoPixEnabled,
       mercadoPagoCardEnabled: updated.mercadoPagoCardEnabled,
+      cookLilyPix: {
+        keyConfigured: cookLilyPix.keyConfigured,
+        merchantNameConfigured: cookLilyPix.merchantNameConfigured,
+        merchantCityConfigured: cookLilyPix.merchantCityConfigured,
+        ready: cookLilyPix.ready
+      },
       mercadoPago: {
         accessTokenConfigured: mercadoPago.accessTokenConfigured,
         publicKeyConfigured: Boolean(mercadoPago.publicKey),
@@ -807,7 +848,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const input = confirmationSchema.parse(request.body);
     const existing = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
     if (!existing) throw new ApiError(404, "Pagamento não encontrado.");
-    if (existing.provider !== "manual") {
+    if (!["manual", "cooklily_pix"].includes(existing.provider)) {
       throw new ApiError(409, "Pagamentos automáticos só podem ser confirmados pelo processador.", {
         code: "LILY_PAYMENT_PROVIDER_CONFIRMATION_REQUIRED"
       });
