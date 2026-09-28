@@ -616,3 +616,42 @@ Com uma conta/configuração de teste ou cobrança controlada:
 - estorno total muda pagamento/pedido para `refunded`.
 
 Veja também `docs/lily-acai/PAGAMENTOS_GATEWAY_2026-09-27.md`.
+
+
+## Configuração do Pix próprio CookLily
+
+O provider `cooklily_pix` é fail-closed. Ele só aparece como utilizável quando a VPS possui:
+
+```env
+COOKLILY_PIX_KEY=<chave Pix válida>
+COOKLILY_PIX_MERCHANT_NAME=<nome do recebedor, até 25 caracteres após normalização>
+COOKLILY_PIX_MERCHANT_CITY=CAMPO GRANDE
+```
+
+Esses valores não devem ser versionados.
+
+Depois de alterar `/etc/carro-chefe/carro-chefe.env`, reinicie/publice o serviço para carregar as variáveis.
+
+No painel `/lilyacai/painel/pagamentos`, confirme:
+
+- Chave Pix: configurada;
+- Nome do recebedor: configurado;
+- Cidade: configurada;
+- provider: Pix CookLily.
+
+Durante homologação, `paymentsEnabled` pode permanecer desligado e o modo de homologação continua disponível para staff/admin com MFA.
+
+### Smoke do Pix próprio
+
+1. criar pedido de homologação;
+2. selecionar Pix CookLily;
+3. gerar pagamento;
+4. conferir se o payload começa com `000201`;
+5. validar valor;
+6. validar que o `txid` é diferente entre pagamentos;
+7. copiar o payload para um app bancário em ambiente controlado;
+8. confirmar que destinatário/valor são os esperados;
+9. nesta fase, confirmar entrada manualmente no painel;
+10. conferir transição do pedido para pago e reconciliação.
+
+Não ativar em produção antes de validar a chave Pix real e a tabela de tarifas da conta recebedora.
