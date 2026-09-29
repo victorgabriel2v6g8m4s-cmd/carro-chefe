@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
+import { trackLilyAnalytics } from "../../analytics";
 import { readGuestOrderToken } from "../orders/guest-token";
 import {
   createLilyPayment,
@@ -236,6 +237,24 @@ export function PaymentPage() {
     return () => window.clearInterval(timer);
   }, [payment?.id, payment?.status, session?.user.id, guestAccessToken]);
 
+  useEffect(() => {
+    if (!payment || payment.status !== "approved") return;
+    const key = `cooklily.analytics.payment-confirmed:${payment.id}`;
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // Sem storage, o refetch da mesma montagem ainda é estabilizado pelo React state.
+    }
+    const method = payment.method === "credit_card" || payment.method === "manual_pix" || payment.method === "pix"
+      ? payment.method
+      : undefined;
+    trackLilyAnalytics("payment_confirmed", {
+      surface: "payment",
+      ...(method ? { paymentMethod: method } : {})
+    });
+  }, [payment?.id, payment?.status, payment?.method]);
+
   async function submitPayment(input: {
     method: LilyPaymentMethod;
     payer?: CardBrickPayload["payer"];
@@ -258,6 +277,10 @@ export function PaymentPage() {
       if (created.status === "failed") {
         sessionStorage.removeItem(paymentKey(orderId, input.method));
       }
+      trackLilyAnalytics("payment_start", {
+        surface: "payment",
+        paymentMethod: input.method
+      });
       setPayment(created);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível iniciar o pagamento.");
