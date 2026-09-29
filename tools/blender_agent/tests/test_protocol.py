@@ -27,7 +27,16 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(request["params"]["x2"], 3)
 
     def test_viewport_actions_are_allowlisted(self) -> None:
-        for action in ("ui.dismiss_modal", "ui.view3d", "ui.orbit"):
+        for action in (
+            "ui.dismiss_modal",
+            "ui.view3d",
+            "ui.orbit",
+            "viewport.describe",
+            "viewport.set_view",
+            "viewport.frame_all",
+            "viewport.set_shading",
+            "viewport.capture",
+        ):
             request = normalize_request({
                 "version": 1,
                 "id": f"test-{action}",
