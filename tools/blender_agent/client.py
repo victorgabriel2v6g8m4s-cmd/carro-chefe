@@ -64,6 +64,13 @@ def _json_text(value: Any) -> str:
     return json.dumps(value, ensure_ascii=True, indent=2)
 
 
+def _json_list(value: str) -> list[Any]:
+    parsed = json.loads(value)
+    if not isinstance(parsed, list):
+        raise argparse.ArgumentTypeError("valor precisa ser uma lista JSON")
+    return parsed
+
+
 def _json_params(value: str) -> dict[str, Any]:
     parsed = json.loads(value)
     if not isinstance(parsed, dict):
@@ -265,6 +272,60 @@ def build_parser() -> argparse.ArgumentParser:
         "text": a.text,
         "stage_id": a.stage_id,
         "tags": a.tags,
+    }))
+
+    sculpt_status = sub.add_parser("sculpt-status", help="mostra estado atual do Sculpt")
+    sculpt_status.set_defaults(handler=lambda _a: call("sculpt.status"))
+
+    sculpt_prepare = sub.add_parser("sculpt-prepare", help="seleciona mesh, entra em Sculpt e configura brush")
+    sculpt_prepare.add_argument("--name")
+    sculpt_prepare.add_argument(
+        "--brush",
+        choices=["DRAW", "SMOOTH", "GRAB", "INFLATE", "CLAY_STRIPS", "CREASE", "SNAKE_HOOK"],
+        default="DRAW",
+    )
+    sculpt_prepare.add_argument("--radius", type=int, default=60)
+    sculpt_prepare.add_argument("--strength", type=float, default=0.25)
+    sculpt_prepare.set_defaults(handler=lambda a: call("sculpt.prepare", {
+        "name": a.name,
+        "brush": a.brush,
+        "radius": a.radius,
+        "strength": a.strength,
+    }))
+
+    sculpt_stroke = sub.add_parser("sculpt-stroke", help="aplica stroke Sculpt semantico com checkpoint")
+    sculpt_stroke.add_argument(
+        "--points-json",
+        required=True,
+        type=_json_list,
+        dest="points",
+        help='lista JSON, ex.: [[0.45,0.5],[0.55,0.5]]',
+    )
+    sculpt_stroke.add_argument(
+        "--brush",
+        choices=["DRAW", "SMOOTH", "GRAB", "INFLATE", "CLAY_STRIPS", "CREASE", "SNAKE_HOOK"],
+    )
+    sculpt_stroke.add_argument("--radius", type=int, default=60)
+    sculpt_stroke.add_argument("--strength", type=float, default=0.25)
+    sculpt_stroke.add_argument("--pressure", type=float, default=1.0)
+    sculpt_stroke.add_argument("--mode", choices=["NORMAL", "INVERT", "SMOOTH", "ERASE"], default="NORMAL")
+    sculpt_stroke.add_argument("--coordinate-space", choices=["NORMALIZED", "REGION"], default="NORMALIZED")
+    sculpt_stroke.add_argument("--label", default="stroke")
+    sculpt_stroke.add_argument("--no-checkpoint", action="store_true")
+    sculpt_stroke.add_argument("--no-capture-before", action="store_true")
+    sculpt_stroke.add_argument("--before-name")
+    sculpt_stroke.set_defaults(handler=lambda a: call("sculpt.stroke", {
+        "points": a.points,
+        "brush": a.brush,
+        "radius": a.radius,
+        "strength": a.strength,
+        "pressure": a.pressure,
+        "mode": a.mode,
+        "coordinate_space": a.coordinate_space,
+        "label": a.label,
+        "checkpoint": not a.no_checkpoint,
+        "capture_before": not a.no_capture_before,
+        "before_name": a.before_name,
     }))
 
     window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
