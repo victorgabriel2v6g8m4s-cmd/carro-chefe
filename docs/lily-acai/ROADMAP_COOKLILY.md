@@ -368,7 +368,7 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md`.
 
 ### 11I — conciliação automática do Pix próprio
 
-**Status:** implementação candidata em `feat/lily-entrega-11i-pix-auto-reconciliation`; gate CI/CodeQL ainda pendente. A camada de cobrança Pix própria já existia; a entrada bancária automática e o matching autoritativo estão implementados no candidato atual.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #102. Candidate SHA `5758eaf634988bb8cb86b5c37fdf8be6aa3fd402`; CI `36622443247` e CodeQL `36622443193`: success. Merge SHA `41cdb60877ad660fad505a219cc695af7f0b9537`. Homologação bancária real permanece pendente.
 
 - [x] provider `cooklily_pix` gera BR Code estático sem gateway;
 - [x] txid próprio por pagamento;
@@ -385,7 +385,8 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md`.
 - [x] audit trail + integração com WhatsApp operacional;
 - [x] endpoints admin e worker periódico;
 - [x] testes automatizados dos invariantes financeiros críticos;
-- [ ] gate CI/CodeQL do SHA final;
+- [x] gate CI/CodeQL do SHA final;
+- [x] integração em `cooklily/canonical`;
 - [ ] definir/homologar banco/PSP recebedor real e credenciais;
 - [ ] confirmar detalhes específicos de OAuth/mTLS/scopes da instituição;
 - [ ] smoke financeiro real/sandbox e tabela de tarifas da conta.
