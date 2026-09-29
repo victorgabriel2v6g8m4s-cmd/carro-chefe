@@ -1,72 +1,84 @@
 # CookLily — Entrega 11I — Conciliação automática Pix
 
-- status: in_progress
+- status: merged
 - owner: AG-DEV
 - branch: `feat/lily-entrega-11i-pix-auto-reconciliation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
-- head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `b347240ab37ec806ac6f6799378c81f3e5fab0ac`
+- validated_head_sha: `5758eaf634988bb8cb86b5c37fdf8be6aa3fd402`
+- merge_sha: `41cdb60877ad660fad505a219cc695af7f0b9537`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
-- pull_requests: PR #102 -> `cooklily/canonical` (draft); PR #103 -> `main` (gate temporário, não mergear)
+- pull_requests: PR #102 -> `cooklily/canonical` (merged); PR #103 -> `main` (gate temporário fechado sem merge)
 - last_verified_at: 2026-09-29
-- interruption_state: retomada auditada; Git tratado como fonte de verdade
+- interruption_state: concluída tecnicamente; homologação externa pendente
 
 ## Concluído e persistido
 
+- Regra global de checkpoint adicionada ao `AGENTS.md` e protocolo em `docs/execution-checkpoints/README.md`.
 - Schema para `LilyPixSettlement` e `LilyPixReconciliationState`.
 - Migration `20260929173000_lily_pix_auto_reconciliation`.
 - Motor `apps/api/src/modules/lily/pix-reconciliation.ts`.
 - Testes `apps/api/src/modules/lily/pix-reconciliation.test.ts`.
 - Registro de rotas administrativas de reconciliação.
 - Worker de reconciliação iniciado no runtime do servidor.
-- Branch auditada como 7 commits à frente e 0 atrás da canonical antes da criação da regra de checkpoint.
-- Regra global de checkpoint adicionada ao `AGENTS.md`.
-- Polling Pix endurecido em `13c11fb90ebabb5a50c69a0d81a58bff345da3bc`: paginação estrita, rejeição de linhas financeiras inválidas, limite seguro de páginas, OAuth client-credentials configurável e matching por `providerPaymentId` ou `providerReference`.
-- Divergência de valor agora também gera evento auditável `payment.amount_mismatch` sem aprovar pagamento/pedido.
-- Checkout passa a anunciar confirmação `automatic` apenas quando a geração Pix e a reconciliação automática estão ambas prontas (`6a22c62097e654f209bf54d5bc4be3c290193d29`).
-- Testes adicionais de fail-closed, paginação, audit trail e matching por `providerPaymentId` em `b654a73d1b65d928357ed24f02ebd272861e4b58`.
-
-## Em andamento
-
-Auditoria do núcleo concluída e lacunas críticas corrigidas. Em andamento: fechar documentação/roadmap/deploy, revisar compatibilidade PSP-specific e então validar PR/gates.
-
-## Marcos adicionais desta retomada
-
-- Documento técnico `ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md` criado.
-- Roadmap oficial, roadmap Pix, índice de entregas e status de implementação sincronizados.
-- Runbook VPS atualizado com configuração fail-closed e smoke financeiro.
-- OAuth scope deixou de ser presumido; só é enviado se o PSP real exigir/configurar.
-- Pesquisa oficial confirmou que a API Pix padroniza a consulta funcional, enquanto segurança/acesso dependem da instituição recebedora.
+- Polling com janela sobreposta, paginação estrita e fail-closed.
+- Normalização bancária sem persistir nome/documento/`infoPagador`.
+- Deduplicação por `source:endToEndId`.
+- Matching por `txid` contra `providerPaymentId`/referência e valor exato.
+- Divergência de valor mantém pedido/pagamento pendentes e gera `payment.amount_mismatch` + reconciliação discrepante.
+- Pix sem txid, desconhecido, ambíguo, duplicado, tardio ou corrida perdida preservado para revisão.
+- Checkout anuncia confirmação `automatic` somente quando a geração Pix e a reconciliação bancária estão prontas.
+- OAuth client-credentials/mTLS configuráveis; scope não presumido.
+- Endpoints admin de configuração, settlements e execução manual.
+- Runbook VPS e documentação técnica da 11I.
+- Fallback manual preservado.
 
 ## Gates e testes
 
-- PR gate #103 disparou CI `36621455025` e CodeQL `36621455028` para o SHA `21442a24d77136ca7f39add2b06a39190f81b4cc`.
-- Quality Node 20/24 falhou em `policy:check`, antes de testes da feature: a alteração de `AGENTS.md` exigia regenerar o manifesto versionado.
-- A primeira tentativa de regeneração usou helper SHA-256 com estado reutilizado e continuou falhando; a causa foi identificada, não houve bypass.
-- `.agent-policy/manifest.json` foi regenerado corretamente em `79fa794b1570bb1102370b81f659dd9225371a36`, após validar SHA-256 contra vetor conhecido.
-- No CI `36622044845`, `policy:check` e migrations passaram; Quality/Tool Health chegaram ao TypeScript e detectaram `oauthBodyFormatValid` não declarado.
-- Correção em `33151d4e1b756f6dcecffe96e4ef49bd2fc8bf9e`; guarda/teste de configuração em `c05df62bea69287fc5863d15c32003d7df96f054`.
-- No gate `36622255558`, política, migrations e geração Prisma passaram; o TypeScript detectou uma corrupção textual na regex de `receivedPathValid` introduzida durante a correção anterior (`TS1002`).
-- O bloco de validação foi substituído integralmente e restaurado em `b347240ab37ec806ac6f6799378c81f3e5fab0ac`.
-- Novo gate do HEAD resultante deste checkpoint é obrigatório. Não considerar a 11I pronta até CI e CodeQL verdes.
+Validação final do SHA `5758eaf634988bb8cb86b5c37fdf8be6aa3fd402`:
+
+- CI `36622443247`: success.
+- CodeQL `36622443193`: success.
+- Quality / Node 20: success.
+- Quality / Node 24: success.
+- Tool Health / Linux: success.
+- Windows Supervisor: success.
+- Workbook Snapshot: success.
+- Excel Recipe Linux: success.
+- Excel Recipe Windows: success.
+
+Durante o gate foram detectadas e corrigidas sem bypass:
+- manifesto de política desatualizado após alteração em `AGENTS.md`;
+- validação `oauthBodyFormatValid` ausente;
+- corrupção textual acidental da regex de `receivedPathValid`.
+
+## Integração
+
+- PR #102 marcado pronto após gates verdes.
+- Squash merge concluído em `cooklily/canonical`.
+- Merge SHA: `41cdb60877ad660fad505a219cc695af7f0b9537`.
+- PR gate #103 fechado sem merge.
 
 ## Migrations
 
 - `packages/lily-database/prisma/migrations/20260929173000_lily_pix_auto_reconciliation/migration.sql`
 
-## Bloqueios/riscos
+## Bloqueios/riscos remanescentes
 
-- O banco/PSP recebedor real e suas credenciais/API ainda precisam ser confirmados antes da homologação produtiva.
-- Não escolher arbitrariamente um PSP apenas para completar a integração.
-- A conciliação deve permanecer fail-closed: Pix sem correspondência exata de txid + valor não pode aprovar pedido automaticamente.
+- A instituição/banco/PSP que efetivamente receberá o Pix da CookLily ainda precisa ser definida.
+- Não escolher arbitrariamente um PSP apenas para concluir a homologação.
+- Autenticação, scopes, URLs, certificados e eventual tarifa dependem da conta real.
+- O provider de reconciliação deve permanecer `disabled` até a homologação da instituição recebedora.
+- “Pix próprio sem gateway” não implica tarifa bancária zero.
 
 ## Homologação/dependências externas
 
-- Confirmar instituição recebedora e API Pix disponível.
-- Configurar credenciais somente por ambiente/secret manager.
-- Executar homologação com eventos Pix reais/sandbox quando a instituição estiver definida.
+- Confirmar a instituição recebedora real.
+- Confirmar acesso à API Pix de recebidos e requisitos de mTLS/OAuth.
+- Configurar credenciais somente na VPS/secret manager.
+- Executar smoke controlado: pagamento exato, replay, valor divergente, paginação e timeout.
+- Conferir tabela contratual de tarifas da conta.
 
 ## Próxima ação exata
 
-Atualizar documentação operacional/roadmaps da Entrega 11I (incluindo variáveis de ambiente e dependência do PSP real), revisar o diff final e abrir PR canônico + gate de CI/CodeQL.
+Definir qual conta/instituição receberá o Pix CookLily e, com a documentação/credenciais reais dessa conta, homologar o adapter 11I sem alterar os invariantes fail-closed.
