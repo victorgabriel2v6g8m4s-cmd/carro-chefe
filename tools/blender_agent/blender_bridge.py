@@ -684,6 +684,7 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "event_simulation": hasattr(bpy.context.window, "event_simulate") if bpy.context.window else False,
             "modal_operators": _modal_operator_names(bpy.context.window) if bpy.context.window else [],
             "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
+            "active_stage_id": get_active_stage_id(),
         }
 
     if action == "workspace.list":
@@ -1017,6 +1018,23 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
     raise ValueError(f"action sem dispatcher: {action}")
 
 
+def _record_task_history(task: Task, *, ok: bool, result: Any = None, error: str | None = None) -> None:
+    action = str(task.request.get("action", ""))
+    if action.startswith("history."):
+        return
+    try:
+        record_event(
+            action=action,
+            params=task.request.get("params") or {},
+            result=result,
+            ok=ok,
+            error=error,
+            request_id=str(task.request.get("id") or ""),
+        )
+    except Exception as exc:
+        print(f"[Carro Chefe Blender Agent] history warning: {type(exc).__name__}: {exc}")
+
+
 def _drain_queue() -> float:
     for _ in range(10):
         try:
@@ -1026,8 +1044,11 @@ def _drain_queue() -> float:
         try:
             result = _dispatch(task.request["action"], task.request["params"])
             task.response = {"id": task.request["id"], "ok": True, "result": result}
+            _record_task_history(task, ok=True, result=result)
         except Exception as exc:
-            task.response = {"id": task.request["id"], "ok": False, "error": f"{type(exc).__name__}: {exc}"}
+            error = f"{type(exc).__name__}: {exc}"
+            task.response = {"id": task.request["id"], "ok": False, "error": error}
+            _record_task_history(task, ok=False, error=error)
         finally:
             task.done.set()
     return 0.05
@@ -1038,6 +1059,7 @@ def start_bridge() -> dict[str, Any]:
     if _SERVER is not None:
         return {"host": _SERVER.server_address[0], "port": _SERVER.server_address[1]}
 
+    stage = ensure_stage()
     port = int(os.environ.get("CC_BLENDER_PORT", "0"))
     _SERVER = ReusableThreadingTCPServer((DEFAULT_HOST, port), Handler)
     thread = threading.Thread(target=_SERVER.serve_forever, name="cc-blender-agent", daemon=True)
@@ -1052,6 +1074,7 @@ def start_bridge() -> dict[str, Any]:
         "token": _TOKEN,
         "pid": os.getpid(),
         "blender": bpy.app.version_string,
+        "active_stage_id": stage["stage_id"],
     }
     target = session_path()
     target.write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
