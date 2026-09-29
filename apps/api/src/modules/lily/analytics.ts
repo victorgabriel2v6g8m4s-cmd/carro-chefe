@@ -67,7 +67,7 @@ const analyticsEventSchema = z.object({
 const summaryQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(90).default(7),
   campaign: z.string().trim().min(1).max(120).optional(),
-  includeHomologation: z.coerce.boolean().optional().default(false)
+  includeHomologation: z.enum(["true", "false"]).optional().transform((value) => value === "true")
 });
 
 const funnelEvents = [
