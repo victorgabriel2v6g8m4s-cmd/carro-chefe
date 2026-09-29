@@ -237,7 +237,7 @@ Limitação consciente da primeira fase:
 - [x] polling operacional a cada 5 segundos;
 - [x] omitir telefone/endereço da API da cozinha;
 - [ ] QA real em tablet/celular;
-- [x] SLA configurável da etapa de montagem + alertas visuais — 11J candidata, gate pendente;
+- [x] SLA configurável da etapa de montagem + alertas visuais — 11J integrada/validada;
 - [ ] impressão;
 - [x] integração inicial com a etapa logística: ao ficar pronto para despacho, pedido de entrega entra em `waiting_courier`;
 - [ ] QA real em operação de cozinha + entregador.
@@ -399,7 +399,7 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-
 
 ### 11J — SLA e alertas operacionais da cozinha
 
-**Status:** implementação candidata em `feat/lily-entrega-11j-sla-alertas-operacionais`; gate CI/CodeQL pendente.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #104. Candidate SHA `b5413d4bc9d0c6cd63f9661f285968f10dc22747`; CI `36626787032` e CodeQL `36626787547`: success. Merge SHA `16097e4ed3dda019d981d8d1da3f1be6dd00794c`. Definição do SLA real e QA em tablet/celular permanecem pendentes.
 
 - [x] threshold `kitchenPreparationSlaMinutes` nullable e sem valor padrão;
 - [x] migration aditiva;
@@ -412,7 +412,8 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-
 - [x] alerta visual no card da cozinha;
 - [x] atraso não muda status nem executa automação;
 - [x] testes unitários e de integração;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL;
+- [x] integração em `cooklily/canonical`;
 - [ ] definir SLA real com a operação;
 - [ ] QA real em tablet/celular.
 
