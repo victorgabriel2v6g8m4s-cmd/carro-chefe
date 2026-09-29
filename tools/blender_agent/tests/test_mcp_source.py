@@ -39,6 +39,11 @@ class McpAdapterSourceTests(unittest.TestCase):
         self.assertIn('Image(path=result["path"])', source)
         self.assertIn('mcp.run(transport="stdio")', source)
 
+    def test_workspace_capture_rejects_partial_or_unrestored_results(self) -> None:
+        source = SERVER.read_text(encoding="utf-8")
+        self.assertIn('result.get("failure_count", 0)', source)
+        self.assertIn('result.get("restored_original_workspace", False)', source)
+
     def test_mcp_server_has_no_shell_or_dynamic_execution(self) -> None:
         tree = ast.parse(SERVER.read_text(encoding="utf-8"))
         forbidden = []
