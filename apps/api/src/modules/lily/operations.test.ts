@@ -70,6 +70,7 @@ async function createOrder(input: {
   userId?: string | null;
   financialStatus?: string;
   operationStatus?: string;
+  whatsappUpdatesOptIn?: boolean;
 } = {}) {
   const created = await lilyPrisma.lilyOrder.create({
     data: {
@@ -87,6 +88,9 @@ async function createOrder(input: {
       deliveryFeeCents: 500,
       discountTotalCents: 0,
       grandTotalCents: 3000,
+      whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
+      whatsappConsentAt: input.whatsappUpdatesOptIn ? new Date() : null,
+      whatsappConsentVersion: input.whatsappUpdatesOptIn ? "2026-09-29" : null,
       addressSnapshotJson: JSON.stringify({
         postalCode: "79000000",
         neighborhood: "Centro",
@@ -184,7 +188,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
 
   it("mantém pagamento e cozinha separados e só libera montagem após pagamento", async () => {
     const staff = await register("67999908104", "staff", "127.0.0.224");
-    const order = await createOrder();
+    const order = await createOrder({ whatsappUpdatesOptIn: true });
 
     const receive = await app.inject({
       method: "POST",
@@ -266,5 +270,14 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(stored?.deliveryEvents.map((event) => event.toStatus)).toEqual([
       "waiting_courier"
     ]);
+    const notifications = await lilyPrisma.lilyWhatsAppNotification.findMany({
+      where: { orderId: order.id },
+      orderBy: { createdAt: "asc" }
+    });
+    expect(notifications.map((row) => row.stage).sort()).toEqual([
+      "preparing",
+      "waiting_courier"
+    ]);
+    expect(notifications.every((row) => row.status === "pending")).toBe(true);
   });
 });

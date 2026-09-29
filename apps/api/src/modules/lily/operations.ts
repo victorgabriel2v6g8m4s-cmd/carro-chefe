@@ -7,6 +7,7 @@ import {
   lilyLogisticsCodeConfiguration,
   lilyOrderSecurityCode
 } from "./logistics-codes";
+import { enqueueLilyWhatsAppStage, type LilyWhatsAppStage } from "./whatsapp";
 
 const idSchema = z.string().trim().min(1).max(120);
 const noteSchema = z.object({
@@ -138,6 +139,11 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
     const next = nextOperationStatus(current);
     const now = new Date();
     const opensDeliveryQueue = next === "ready_for_dispatch" && current.fulfillmentType === "delivery";
+    const whatsappStage: LilyWhatsAppStage | null = next === "preparing"
+      ? "preparing"
+      : next === "ready_for_dispatch"
+        ? (current.fulfillmentType === "delivery" ? "waiting_courier" : "ready_for_pickup")
+        : null;
 
     const updated = await lilyPrisma.$transaction(async (tx) => {
       const result = await tx.lilyOrder.updateMany({
@@ -175,6 +181,15 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
           createdAt: now
         }
       });
+
+      if (whatsappStage) {
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: id,
+          optedIn: current.whatsappUpdatesOptIn,
+          stage: whatsappStage,
+          at: now
+        });
+      }
 
       if (opensDeliveryQueue) {
         await tx.lilyOrderDeliveryEvent.create({

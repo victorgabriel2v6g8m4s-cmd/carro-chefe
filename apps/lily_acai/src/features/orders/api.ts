@@ -105,6 +105,7 @@ export type LilyOrder = {
   grandTotalCents: number;
   address: LilyAddressInput | null;
   customerNote: string | null;
+  whatsappUpdatesOptIn: boolean;
   createdAt: string;
   guestAccessToken?: string;
   items: Array<{
@@ -154,6 +155,7 @@ export type LilyGuestTrackingOrder = {
   deliveryCode?: string;
   isHomologation: boolean;
   grandTotalCents: number;
+  whatsappUpdatesOptIn: boolean;
   createdAt: string;
   items: Array<{
     id: string;
@@ -234,6 +236,7 @@ export async function createOrder(input: {
   fulfillmentType: "pickup" | "delivery";
   address?: LilyAddressInput;
   customerNote?: string;
+  whatsappUpdatesOptIn?: boolean;
   items: CartItem[];
   quote: OrderQuote;
   attribution?: Record<string, string>;
@@ -257,6 +260,7 @@ export async function createOrder(input: {
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
       customerNote: input.customerNote || null,
+      whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
       items: input.items.map((item, index) => ({
         ...cartItemPayload(item),
         configurationHash: input.quote.items[index]!.configurationHash,
@@ -304,4 +308,24 @@ export async function getGuestOrderTracking(orderId: string, guestAccessToken: s
     }
   );
   return parseResponse<LilyGuestTrackingOrder>(response);
+}
+
+
+export async function optOutOrderWhatsApp(
+  orderId: string,
+  options: { csrfToken?: string; guestAccessToken?: string } = {}
+) {
+  const headers: Record<string, string> = {};
+  if (options.csrfToken) headers["X-Lily-CSRF"] = options.csrfToken;
+  if (options.guestAccessToken) headers["X-Lily-Order-Token"] = options.guestAccessToken;
+
+  const response = await fetch(
+    `/api/v1/lily/orders/${encodeURIComponent(orderId)}/whatsapp/opt-out`,
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers
+    }
+  );
+  return parseResponse<{ enabled: false }>(response);
 }

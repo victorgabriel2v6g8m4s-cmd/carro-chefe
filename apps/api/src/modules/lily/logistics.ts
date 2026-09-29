@@ -13,6 +13,7 @@ import {
   lilyRoutingConfiguration,
   serializeLilyRouteEstimate
 } from "./routing";
+import { enqueueLilyWhatsAppStage, type LilyWhatsAppStage } from "./whatsapp";
 
 const idSchema = z.string().trim().min(1).max(120);
 
@@ -373,6 +374,17 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
         }
       });
 
+      const notificationOrder = await tx.lilyOrder.findUnique({
+        where: { id },
+        select: { whatsappUpdatesOptIn: true }
+      });
+      await enqueueLilyWhatsAppStage(tx, {
+        orderId: id,
+        optedIn: Boolean(notificationOrder?.whatsappUpdatesOptIn),
+        stage: "courier_accepted",
+        at: now
+      });
+
       return tx.lilyOrder.findUnique({
         where: { id },
         include: deliveryInclude
@@ -392,6 +404,15 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
     const current = await assignedOrder(id, context.user.id);
 
     const next = nextStatusForAction(current.deliveryStatus as DeliveryStatus, input.action);
+    const whatsappStage: LilyWhatsAppStage | null = input.action === "confirm_pickup"
+      ? "picked_up"
+      : input.action === "left_pickup"
+        ? "out_for_delivery"
+        : input.action === "arrived_delivery"
+          ? "arrived_delivery"
+          : input.action === "confirm_delivery"
+            ? "delivered"
+            : null;
 
     if (input.action === "confirm_pickup") {
       if (!lilyLogisticsCodeConfiguration().ready) {
@@ -477,6 +498,15 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           createdAt: now
         }
       });
+
+      if (whatsappStage) {
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: id,
+          optedIn: current.whatsappUpdatesOptIn,
+          stage: whatsappStage,
+          at: now
+        });
+      }
 
       return tx.lilyOrder.findUnique({
         where: { id },
@@ -809,6 +839,15 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           createdAt: now
         }
       });
+
+      if (targetCourierUserId) {
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: id,
+          optedIn: current.whatsappUpdatesOptIn,
+          stage: "courier_accepted",
+          at: now
+        });
+      }
 
       return tx.lilyOrder.findUnique({ where: { id }, include: deliveryInclude });
     });

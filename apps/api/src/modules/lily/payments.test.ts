@@ -56,6 +56,7 @@ async function createOrder(input: {
   phone?: string;
   guestToken?: string;
   isHomologation?: boolean;
+  whatsappUpdatesOptIn?: boolean;
 } = {}) {
   const suffix = crypto.randomBytes(5).toString("hex");
   return lilyPrisma.lilyOrder.create({
@@ -74,7 +75,10 @@ async function createOrder(input: {
       subtotalCents: 2500,
       deliveryFeeCents: 0,
       discountTotalCents: 0,
-      grandTotalCents: 2500
+      grandTotalCents: 2500,
+      whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
+      whatsappConsentAt: input.whatsappUpdatesOptIn ? new Date() : null,
+      whatsappConsentVersion: input.whatsappUpdatesOptIn ? "2026-09-29" : null
     }
   });
 }
@@ -569,7 +573,7 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     const staff = await register("67999907006", "staff");
     const admin = await register("67999907007", "admin");
     await enableManualPix(admin);
-    const order = await createOrder({ userId: customer.user.id, phone: customer.user.phone });
+    const order = await createOrder({ userId: customer.user.id, phone: customer.user.phone, whatsappUpdatesOptIn: true });
 
     const created = await app.inject({
       method: "POST",
@@ -613,6 +617,9 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     const paidOrder = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
     expect(paidOrder?.status).toBe("paid");
     expect(paidOrder?.paidAt).not.toBeNull();
+    expect(await lilyPrisma.lilyWhatsAppNotification.count({
+      where: { orderId: order.id, stage: "payment_confirmed", status: "pending" }
+    })).toBe(1);
 
     const customerView = await app.inject({
       method: "GET",
@@ -662,5 +669,14 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     expect(full.json().status).toBe("refunded");
     expect(full.json().refundedCents).toBe(2500);
     expect((await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } }))?.status).toBe("refunded");
+    const whatsappStages = await lilyPrisma.lilyWhatsAppNotification.findMany({
+      where: { orderId: order.id },
+      select: { stage: true, status: true }
+    });
+    expect(whatsappStages.map((row) => row.stage).sort()).toEqual([
+      "payment_confirmed",
+      "refunded"
+    ]);
+    expect(whatsappStages.every((row) => row.status === "pending")).toBe(true);
   });
 });

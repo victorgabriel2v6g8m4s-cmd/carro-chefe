@@ -83,6 +83,31 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'
 
 Grave o valor somente em `/etc/carro-chefe/carro-chefe.env`, com permissões restritas. Não versione, não troque a chave sem plano de rotação e backup: ela cifra os segredos TOTP persistidos no banco Lily.
 
+## WhatsApp operacional da Entrega 11H — opcional e fail-open
+
+O worker permanece desligado até a configuração explícita do provider:
+
+```env
+COOKLILY_WHATSAPP_PROVIDER=meta_cloud
+COOKLILY_WHATSAPP_ACCESS_TOKEN=<token-backend>
+COOKLILY_WHATSAPP_PHONE_NUMBER_ID=<phone-number-id>
+COOKLILY_WHATSAPP_GRAPH_VERSION=<versao-graph-suportada>
+COOKLILY_WHATSAPP_TEMPLATE_NAME=cooklily_order_update
+COOKLILY_WHATSAPP_TEMPLATE_LANGUAGE=pt_BR
+COOKLILY_WHATSAPP_TIMEOUT_MS=8000
+COOKLILY_WHATSAPP_WORKER_INTERVAL_MS=15000
+```
+
+Antes disso, manter `COOKLILY_WHATSAPP_PROVIDER=disabled` ou ausente.
+
+O template deve existir e estar aprovado para o número/WABA real antes de habilitar o worker. A implementação espera dois parâmetros no corpo: número do pedido e descrição da etapa.
+
+O Access Token é segredo de backend: não usar `VITE_*`, não versionar e manter somente no arquivo protegido da VPS.
+
+Configuração ausente, expirada, quota/429 ou indisponibilidade da Meta **não bloqueia** criação de pedido, pagamento, cozinha ou logística. A outbox faz retry e mantém o estado operacional independente.
+
+As rotas administrativas usam o namespace `/api/v1/lily/admin/*` já autorizado no Nginx; esta entrega não abre webhook público novo.
+
 ## Backup antes de migration
 
 ```bash

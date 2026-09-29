@@ -61,6 +61,27 @@ model LilyOrderDeliveryEvent {
   @@index([toStatus, createdAt])
 }
 
+model LilyWhatsAppNotification {
+  id                String    @id @default(cuid())
+  orderId           String
+  stage             String
+  status            String    @default("pending")
+  attempts          Int       @default(0)
+  nextAttemptAt     DateTime  @default(now())
+  provider          String?
+  providerMessageId String?
+  lastErrorCode     String?
+  lastErrorMessage  String?
+  sentAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  order             LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, stage])
+  @@index([status, nextAttemptAt])
+  @@index([orderId, createdAt])
+}
+
 model LilyDeliveryRouteEstimate {
   orderId             String    @id
   provider            String
@@ -490,6 +511,9 @@ model LilyOrder {
   grandTotalCents     Int
   addressSnapshotJson String?
   customerNote        String?
+  whatsappUpdatesOptIn Boolean               @default(false)
+  whatsappConsentAt    DateTime?
+  whatsappConsentVersion String?
   laQr                String?
   laCampaign          String?
   laVariant           String?
@@ -504,6 +528,7 @@ model LilyOrder {
   deliveryEvents      LilyOrderDeliveryEvent[]
   deliveryAssignments LilyDeliveryAssignment[]
   routeEstimate       LilyDeliveryRouteEstimate?
+  whatsappNotifications LilyWhatsAppNotification[]
   payments            LilyPayment[]
 
   @@index([userId, createdAt])

@@ -92,11 +92,15 @@ Evidência técnica:
 
 Pendente QA real em navegador/mobile.
 
-### 4. ETA/mapas — IMPLEMENTAÇÃO CANDIDATA EM ANDAMENTO
+### 4. ETA/mapas — IMPLEMENTADO, VALIDADO E INTEGRADO
 
-Branch limpa:
+Entrega 11G integrada pelo PR #97.
 
-`feat/lily-entrega-11g-eta-mapas-v2`
+Evidência técnica:
+
+- candidate SHA: `58759148c410fe08584f9ff9895fd64cbeb02ca3`;
+- CI: `36602067779` — success;
+- CodeQL: `36602067812` — success.
 
 A branch anterior estava baseada no SHA pré-squash da 11F e foi descartada como base de integração. A v2 foi recriada diretamente sobre a `cooklily/canonical` atual.
 
@@ -117,29 +121,30 @@ Implementado:
 - provider indisponível não muda status nem bloqueia entrega;
 - testes de adapter/privacidade/fallback.
 
-Ainda falta nesta revisão:
+Ainda falta homologação com chave real e conferência de geocodificação/rota em endereços reais.
 
-- CI/CodeQL da branch limpa;
-- homologação com chave real;
-- conferência de geocodificação/rota em endereços reais.
+### 5. WhatsApp por etapa — IMPLEMENTAÇÃO CANDIDATA
 
-### 5. WhatsApp por etapa — AINDA NÃO IMPLEMENTADO
+Branch: `feat/lily-entrega-11h-whatsapp-etapas`.
 
-O projeto já possui CTA/integração de WhatsApp na landing, mas não existe fluxo operacional por etapa de pedido.
+Implementado nesta continuação:
 
-Ainda faltam:
+- opt-in operacional por pedido separado de marketing;
+- opt-out conta/guest;
+- outbox persistente e idempotente;
+- Meta Cloud API direta;
+- template parametrizado;
+- retry/backoff e recuperação de claims interrompidos;
+- etapas de pagamento/cozinha/logística;
+- endpoints admin de saúde/fila/retry;
+- falha do provider não bloqueia operação;
+- testes de integração.
 
-- outbox próprio do domínio Lily;
-- templates por estado;
-- chave idempotente por pedido + etapa;
-- adapter de provider;
-- retry/backoff;
-- auditoria;
-- política de consentimento/base legal;
-- regras para não reenviar etapas antigas;
-- configuração fail-closed.
+Ainda falta:
 
-Esta é a próxima tranche depois da 11G.
+- gate CI/CodeQL;
+- WABA/número/template/token reais;
+- homologação operacional.
 
 ### 6. Conciliação automática do Pix próprio — PARCIALMENTE IMPLEMENTADA
 
@@ -174,11 +179,10 @@ O que ainda falta para ser **conciliação automática do Pix próprio**:
 
 ## Ordem de execução atualizada
 
-1. fechar gate técnico da 11G;
-2. homologar 11G em ambiente real quando chave/endereço estiverem disponíveis;
-3. implementar 11H — WhatsApp por etapa;
-4. implementar 11I — ingestão e conciliação bancária automática do Pix próprio;
-5. QA operacional ponta a ponta e deploy apenas por SHA validado.
+1. fechar gate técnico da 11H;
+2. homologar 11G/11H em ambiente real quando credenciais estiverem disponíveis;
+3. implementar 11I — ingestão e conciliação bancária automática do Pix próprio;
+4. QA operacional ponta a ponta e deploy apenas por SHA validado.
 
 ## Regra de status
 

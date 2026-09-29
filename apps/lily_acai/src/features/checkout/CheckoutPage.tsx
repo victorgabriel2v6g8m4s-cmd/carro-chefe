@@ -41,6 +41,7 @@ export function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [phone, setPhone] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
   const [saveAddress, setSaveAddress] = useState(false);
   const [homologation, setHomologation] = useState(false);
   const [quote, setQuote] = useState<OrderQuote | null>(null);
@@ -137,6 +138,7 @@ export function CheckoutPage() {
         fulfillmentType,
         address: deliveryAddress(),
         customerNote,
+        whatsappUpdatesOptIn,
         items: cart.items,
         quote: freshQuote,
         attribution: attributionForApi(readStoredCookLilyAttribution()),
@@ -230,6 +232,20 @@ export function CheckoutPage() {
               onChange={(event) => { setPhone(event.target.value); setIdempotencyKey(null); }} />
           </label>
           {!session && <small>Você pode comprar sem criar conta. O telefone é necessário para identificar e acompanhar o pedido.</small>}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={whatsappUpdatesOptIn}
+              onChange={(event) => {
+                setWhatsappUpdatesOptIn(event.target.checked);
+                setIdempotencyKey(null);
+              }}
+            />
+            <span>
+              <strong>Receber atualizações deste pedido pelo WhatsApp.</strong>
+              {" "}Somente mensagens operacionais de status; este aceite não habilita promoções.
+            </span>
+          </label>
         </fieldset>
 
         {fulfillmentType === "delivery" && <fieldset className="checkout-section">

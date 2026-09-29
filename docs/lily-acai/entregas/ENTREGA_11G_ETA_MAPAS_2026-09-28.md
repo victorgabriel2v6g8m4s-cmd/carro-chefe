@@ -2,7 +2,7 @@
 
 **Data:** 28/09/2026  
 **Base funcional:** Entrega 11F integrada em `cooklily/canonical` pelo PR #94.  
-**Status:** implementação candidata; CI/CodeQL e homologação com chave real ainda pendentes.
+**Status:** tecnicamente validada e integrada pelo PR #97. Candidate SHA `58759148c410fe08584f9ff9895fd64cbeb02ca3`; CI `36602067779` e CodeQL `36602067812`: success. Homologação com chave/endereço reais permanece pendente.
 
 ## Objetivo
 

@@ -331,13 +331,20 @@ O papel `courier` deve ter acesso mínimo:
 - [x] cliente sem coordenadas/GPS;
 - [x] navegação OpenStreetMap somente para courier responsável;
 - [x] provider indisponível não bloqueia operação;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36602067779`, CodeQL `36602067812`;
 - [ ] homologação com chave/endereço reais.
 
 ### Fase 11H — WhatsApp por etapa
-- [ ] eventos idempotentes;
-- [ ] templates/consentimento;
-- [ ] retry/auditoria.
+- [x] consentimento operacional por pedido separado de marketing;
+- [x] opt-out conta/guest;
+- [x] eventos idempotentes por pedido+etapa;
+- [x] outbox persistente;
+- [x] adapter Meta Cloud API;
+- [x] template parametrizado;
+- [x] retry/backoff/auditoria operacional;
+- [x] falha de mensageria não bloqueia pedido;
+- [ ] gate CI/CodeQL;
+- [ ] homologação Meta real.
 
 ### Fase 11I — conciliação automática do Pix próprio
 - [x] BR Code/txid próprio (`cooklily_pix`);

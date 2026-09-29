@@ -15,6 +15,7 @@ import {
   verifyMercadoPagoWebhookSignature
 } from "./mercado-pago-provider";
 import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
+import { enqueueLilyWhatsAppStage } from "./whatsapp";
 
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -341,6 +342,12 @@ async function applyRemotePaymentState(
           actor: source
         }
       });
+      await enqueueLilyWhatsAppStage(tx, {
+        orderId: current.orderId,
+        optedIn: current.order.whatsappUpdatesOptIn,
+        stage: "payment_confirmed",
+        at: now
+      });
     } else if (nextStatus === "refunded" && ["awaiting_payment", "paid"].includes(current.order.status)) {
       await tx.lilyOrder.update({
         where: { id: current.orderId },
@@ -353,6 +360,12 @@ async function applyRemotePaymentState(
           toStatus: "refunded",
           actor: source
         }
+      });
+      await enqueueLilyWhatsAppStage(tx, {
+        orderId: current.orderId,
+        optedIn: current.order.whatsappUpdatesOptIn,
+        stage: "refunded",
+        at: now
       });
     }
 
@@ -619,6 +632,12 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
             toStatus: "paid",
             actor: `provider:${provider.id}`
           }
+        });
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: access.order.id,
+          optedIn: access.order.whatsappUpdatesOptIn,
+          stage: "payment_confirmed",
+          at: now
         });
       }
 
@@ -917,7 +936,19 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
           toStatus: "paid",
           actor: `admin:${context.user.id}`
         }
-      })
+      }),
+      ...(existing.order.whatsappUpdatesOptIn ? [
+        lilyPrisma.lilyWhatsAppNotification.upsert({
+          where: { orderId_stage: { orderId: existing.orderId, stage: "payment_confirmed" } },
+          update: {},
+          create: {
+            orderId: existing.orderId,
+            stage: "payment_confirmed",
+            status: "pending",
+            nextAttemptAt: now
+          }
+        })
+      ] : [])
     ]);
 
     await auditLilyAdmin(context.user.id, "payment.approve", "payment", id, {
@@ -1068,7 +1099,19 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
               toStatus: "refunded",
               actor: `admin:${context.user.id}`
             }
-          })
+          }),
+          ...(payment.order.whatsappUpdatesOptIn ? [
+            lilyPrisma.lilyWhatsAppNotification.upsert({
+              where: { orderId_stage: { orderId: payment.orderId, stage: "refunded" } },
+              update: {},
+              create: {
+                orderId: payment.orderId,
+                stage: "refunded",
+                status: "pending",
+                nextAttemptAt: now
+              }
+            })
+          ] : [])
         );
       }
       await lilyPrisma.$transaction(operations);

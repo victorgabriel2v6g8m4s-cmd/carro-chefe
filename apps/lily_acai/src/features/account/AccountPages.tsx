@@ -6,6 +6,7 @@ import {
   getCustomerOrder,
   getCustomerOrders,
   getSavedAddresses,
+  optOutOrderWhatsApp,
   type LilyAddressInput,
   type LilyOrder
 } from "../orders/api";
@@ -203,6 +204,7 @@ export function OrderDetailPage() {
   const { id = "" } = useParams();
   const [order, setOrder] = useState<LilyOrder | null>(null);
   const [error, setError] = useState("");
+  const [whatsappBusy, setWhatsappBusy] = useState(false);
   useEffect(() => {
     let cancelled = false;
     const load = () => getCustomerOrder(id)
@@ -216,7 +218,21 @@ export function OrderDetailPage() {
       window.clearInterval(timer);
     };
   }, [id]);
-  if (error) return <section className="checkout-page empty-state"><h1>{error}</h1><Link className="button primary" to="/pedidos">Meus pedidos</Link></section>;
+  async function stopWhatsAppUpdates() {
+    if (!order || whatsappBusy) return;
+    setWhatsappBusy(true);
+    try {
+      const current = await getLilySession();
+      await optOutOrderWhatsApp(order.id, { csrfToken: current.csrfToken });
+      setOrder((value) => value ? { ...value, whatsappUpdatesOptIn: false } : value);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível desativar as mensagens.");
+    } finally {
+      setWhatsappBusy(false);
+    }
+  }
+
+    if (error) return <section className="checkout-page empty-state"><h1>{error}</h1><Link className="button primary" to="/pedidos">Meus pedidos</Link></section>;
   if (!order) return <section className="checkout-page"><h1>Carregando pedido...</h1></section>;
 
   return <section className="checkout-page">
@@ -256,7 +272,15 @@ export function OrderDetailPage() {
       <p>Finalize ou acompanhe o pagamento deste pedido.</p>
       <Link className="button primary" to={`/pagamento/${order.id}`}>Ir para pagamento</Link>
     </div>}
-    {order.status === "paid" && <div className="payment-approved-card"><strong>Pagamento confirmado</strong><p>O pedido já pode seguir para produção.</p></div>}
+    {order.whatsappUpdatesOptIn && <div className="guest-tracking-security-note">
+      <strong>Atualizações no WhatsApp</strong>
+      <p>Mensagens operacionais deste pedido estão ativas e são separadas de promoções.</p>
+      <button className="button ghost" type="button" disabled={whatsappBusy}
+        onClick={() => void stopWhatsAppUpdates()}>
+        {whatsappBusy ? "Desativando..." : "Parar atualizações no WhatsApp"}
+      </button>
+    </div>}
+        {order.status === "paid" && <div className="payment-approved-card"><strong>Pagamento confirmado</strong><p>O pedido já pode seguir para produção.</p></div>}
     {order.status === "refunded" && <div className="payment-refunded-card"><strong>Pagamento estornado</strong><p>O pagamento deste pedido foi estornado.</p></div>}
   </section>;
 }

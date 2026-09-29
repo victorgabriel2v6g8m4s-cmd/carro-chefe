@@ -77,6 +77,7 @@ async function createDelivery(input: {
   operationStatus?: string;
   deliveryStatus?: string;
   courierUserId?: string | null;
+  whatsappUpdatesOptIn?: boolean;
 } = {}) {
   const suffix = crypto.randomBytes(5).toString("hex");
   return lilyPrisma.lilyOrder.create({
@@ -96,6 +97,9 @@ async function createDelivery(input: {
       deliveryFeeCents: 500,
       discountTotalCents: 0,
       grandTotalCents: 3300,
+      whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
+      whatsappConsentAt: input.whatsappUpdatesOptIn ? new Date() : null,
+      whatsappConsentVersion: input.whatsappUpdatesOptIn ? "2026-09-29" : null,
       addressSnapshotJson: JSON.stringify({
         postalCode: "79000000",
         street: "Rua Secreta",
@@ -505,7 +509,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
 
   it("executa coleta e entrega com códigos de 6 dígitos e registra todas as etapas", async () => {
     const courier = await register("67999908205", "courier", "127.0.0.235");
-    const order = await createDelivery();
+    const order = await createDelivery({ whatsappUpdatesOptIn: true });
 
     const accept = await app.inject({
       method: "POST",
@@ -608,5 +612,17 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(history.json().total).toBe(1);
     expect(history.json().items[0].delivery.id).toBe(order.id);
     expect(JSON.stringify(history.json())).not.toContain("Rua Secreta");
+
+    const notifications = await lilyPrisma.lilyWhatsAppNotification.findMany({
+      where: { orderId: order.id }
+    });
+    expect(notifications.map((row) => row.stage).sort()).toEqual([
+      "arrived_delivery",
+      "courier_accepted",
+      "delivered",
+      "out_for_delivery",
+      "picked_up"
+    ]);
+    expect(notifications.every((row) => row.status === "pending")).toBe(true);
   });
 });
