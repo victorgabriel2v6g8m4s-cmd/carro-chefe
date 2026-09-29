@@ -29,20 +29,22 @@ declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
 }
 
+export const SENSITIVE_LOG_REDACT_PATHS = [
+  "req.headers.authorization",
+  "req.headers.cookie",
+  "req.headers.x-lily-csrf",
+  "req.headers.x-lily-order-token",
+  "req.headers.x-api-key",
+  "res.headers.set-cookie"
+] as const;
+
 export async function buildApp() {
   const app = Fastify({
     logger: process.env.NODE_ENV === "test"
       ? false
       : {
           redact: {
-            paths: [
-              "req.headers.authorization",
-              "req.headers.cookie",
-              "req.headers.x-lily-csrf",
-              "req.headers.x-lily-order-token",
-              "req.headers.x-api-key",
-              "res.headers.set-cookie"
-            ],
+            paths: [...SENSITIVE_LOG_REDACT_PATHS],
             censor: "[REDACTED]"
           }
         },
