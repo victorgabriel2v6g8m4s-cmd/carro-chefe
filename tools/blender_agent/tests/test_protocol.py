@@ -36,6 +36,15 @@ class ProtocolTests(unittest.TestCase):
             "viewport.frame_all",
             "viewport.set_shading",
             "viewport.capture",
+            "workspace.list",
+            "workspace.describe",
+            "workspace.capture_set",
+            "history.stage.create",
+            "history.stage.list",
+            "history.stage.activate",
+            "history.stage.describe",
+            "history.search",
+            "history.note",
         ):
             request = normalize_request({
                 "version": 1,
