@@ -134,4 +134,4 @@ Entregue tecnicamente: focus trap, alvos de toque críticos 44 px, Configuraçõ
 - 11F: `ENTREGA_11F_TRACKING_GUEST_2026-09-28.md` — tracking guest por capability token; CI/CodeQL aprovados, QA real pendente.
 - 11G: `ENTREGA_11G_ETA_MAPAS_2026-09-28.md` — ETA de rota/mapas sem GPS contínuo; CI/CodeQL aprovados, homologação real pendente.
 - 11H: `ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md` — outbox WhatsApp operacional por etapa; CI/CodeQL aprovados e integrada pelo PR #99, homologação Meta real pendente.
-- 11I: `ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md` — ingestão autoritativa, settlement ledger, matching txid+valor e worker de conciliação; candidato em gate técnico, homologação bancária real pendente.
+- 11I: `ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md` — ingestão autoritativa, settlement ledger, matching txid+valor e worker de conciliação; CI/CodeQL aprovados e integrada pelo PR #102, homologação bancária real pendente.
