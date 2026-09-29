@@ -434,6 +434,28 @@ describe("CookLily Entrega 06", () => {
       status: "pending",
       attempts: 0
     });
+
+    const stopped = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/orders/${created.json().id}/whatsapp/opt-out`,
+      headers: {
+        origin,
+        "x-lily-order-token": created.json().guestAccessToken
+      }
+    });
+    expect(stopped.statusCode).toBe(200);
+    expect(stopped.json()).toEqual({ enabled: false });
+
+    const afterOptOut = await lilyPrisma.lilyOrder.findUnique({
+      where: { id: created.json().id },
+      include: { whatsappNotifications: true }
+    });
+    expect(afterOptOut?.whatsappUpdatesOptIn).toBe(false);
+    expect(afterOptOut?.whatsappNotifications[0]).toMatchObject({
+      stage: "awaiting_payment",
+      status: "skipped",
+      lastErrorCode: "OPT_OUT"
+    });
   });
 
   it("expõe tracking guest somente com capability token válido e minimiza PII", async () => {
