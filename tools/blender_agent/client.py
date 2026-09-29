@@ -57,6 +57,13 @@ def call(action: str, params: dict[str, Any] | None = None, timeout: float = DEF
     return response
 
 
+def _json_text(value: Any) -> str:
+    # ASCII-safe JSON survives Windows PowerShell 5.1 native-process decoding.
+    # Non-ASCII filesystem paths are represented as JSON \\uXXXX escapes and
+    # ConvertFrom-Json reconstructs the original Unicode string correctly.
+    return json.dumps(value, ensure_ascii=True, indent=2)
+
+
 def _json_params(value: str) -> dict[str, Any]:
     parsed = json.loads(value)
     if not isinstance(parsed, dict):
@@ -220,10 +227,10 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         result = args.handler(args)
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(_json_text(result))
         return 0
     except Exception as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False), file=sys.stderr)
+        print(_json_text({"ok": False, "error": str(exc)}), file=sys.stderr)
         return 1
 
 
