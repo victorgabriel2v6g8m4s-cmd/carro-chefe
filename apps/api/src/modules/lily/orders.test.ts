@@ -401,6 +401,41 @@ describe("CookLily Entrega 06", () => {
     expect(persisted?.laCampaign).toBe("entrega-06-test");
   });
 
+  it("registra opt-in WhatsApp por pedido e cria a primeira notificação de forma atômica", async () => {
+    await enableFlatOperation();
+    const quoteResponse = await quoteSol();
+    expect(quoteResponse.statusCode).toBe(200);
+    const base = await createPayloadFromQuote(quoteResponse.json());
+    const payload = { ...base, whatsappUpdatesOptIn: true };
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/orders",
+      remoteAddress: ["127", "0", "0", "247"].join("."),
+      headers: {
+        origin,
+        "idempotency-key": "cooklily:test:whatsapp:optin:01"
+      },
+      payload
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json().whatsappUpdatesOptIn).toBe(true);
+
+    const stored = await lilyPrisma.lilyOrder.findUnique({
+      where: { id: created.json().id },
+      include: { whatsappNotifications: true }
+    });
+    expect(stored?.whatsappUpdatesOptIn).toBe(true);
+    expect(stored?.whatsappConsentAt).not.toBeNull();
+    expect(stored?.whatsappConsentVersion).toBe("2026-09-29");
+    expect(stored?.whatsappNotifications).toHaveLength(1);
+    expect(stored?.whatsappNotifications[0]).toMatchObject({
+      stage: "awaiting_payment",
+      status: "pending",
+      attempts: 0
+    });
+  });
+
   it("expõe tracking guest somente com capability token válido e minimiza PII", async () => {
     await enableFlatOperation();
     const quoteResponse = await quoteSol("delivery", deliveryAddress());
