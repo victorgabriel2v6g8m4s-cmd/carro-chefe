@@ -15,13 +15,14 @@ import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
+import { AdminAnalyticsPage } from "./features/analytics/AdminAnalyticsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
 import { KitchenPrintPage } from "./features/operations/KitchenPrintPage";
 import { OrderControlPage } from "./features/operations/OrderControlPage";
 import { CourierPage } from "./features/logistics/CourierPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
-import { trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
+import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import "./styles.css";
 
@@ -155,7 +156,7 @@ function Shell({ children }: { children: ReactNode }) {
         <nav className="desktop-nav" aria-label="Navegação principal">
           <NavLink to="/cardapio">Cardápio</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
-          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
+          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>Instagram</a>}
           {isStaff && <NavLink to="/painel">Painel</NavLink>}
           {isCourier && <NavLink to="/entregas">Entregas</NavLink>}
         </nav>
@@ -205,8 +206,8 @@ function Shell({ children }: { children: ReactNode }) {
             <Link className="mobile-menu-primary" to="/cadastro" onClick={closeMenu}>Criar conta</Link>
           </>}
           <div className="mobile-menu-secondary">
-            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>Instagram @{config?.social.instagramHandle}</a>}
-            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp</a>}
+            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("instagram_click"); closeMenu(); }}>Instagram @{config?.social.instagramHandle}</a>}
+            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("whatsapp_click"); closeMenu(); }}>WhatsApp</a>}
           </div>
         </nav>
       </>}
@@ -363,6 +364,7 @@ function Cadastro() {
       return;
     }
     try {
+      const analyticsOptional = form.get("analyticsOptional") === "on";
       await registerLily({
         phone: String(form.get("phone") ?? ""),
         password,
@@ -373,9 +375,11 @@ function Cadastro() {
         consents: {
           lilyMarketing: form.get("lilyMarketing") === "on",
           shareWithCarroChefe: form.get("shareWithCarroChefe") === "on",
-          analyticsOptional: form.get("analyticsOptional") === "on"
+          analyticsOptional
         }
       });
+      if (analyticsOptional) grantLilyAnalytics();
+      else denyLilyAnalytics();
       navigate("/cardapio");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar conta.");
@@ -482,6 +486,7 @@ function App() {
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
+    <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
     <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
     <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
