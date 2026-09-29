@@ -331,7 +331,7 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11F_TRACKING_GUEST_2026-09-28.md`.
 
 ### 11G — ETA/mapas
 
-**Status:** implementação candidata em `feat/lily-entrega-11g-eta-mapas-v2`; gate pendente.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #97. Candidate SHA `58759148c410fe08584f9ff9895fd64cbeb02ca3`; CI `36602067779` e CodeQL `36602067812`: success. Homologação com chave/endereço reais permanece pendente.
 
 - [x] provider OpenRouteService/HeiGIT com chave somente no backend;
 - [x] geocodificação e directions server-side;
@@ -342,17 +342,29 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11F_TRACKING_GUEST_2026-09-28.md`.
 - [x] sem GPS contínuo nem rastreamento de localização do aparelho;
 - [x] falha do provider não bloqueia aceite/coleta/entrega;
 - [x] testes unitários de adapter, privacidade e fail-open;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36602067779`, CodeQL `36602067812`;
 - [ ] homologação com chave real e endereços reais.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11G_ETA_MAPAS_2026-09-28.md`.
 
 ### 11H — WhatsApp por etapa
 
-- [ ] templates e consentimento/base legal;
-- [ ] eventos idempotentes por etapa;
-- [ ] fila/retry e auditoria;
-- [ ] evitar PII desnecessária em payloads/logs.
+**Status:** implementação candidata em `feat/lily-entrega-11h-whatsapp-etapas`; gate pendente.
+
+- [x] opt-in operacional por pedido, desmarcado por padrão e separado de marketing;
+- [x] opt-out seguro para conta e guest;
+- [x] outbox persistente com unique pedido+etapa;
+- [x] Meta Cloud API direta via backend;
+- [x] template parametrizado por número do pedido + etapa;
+- [x] retry exponencial, recuperação de claim stale e dead-letter lógico;
+- [x] falha do provider nunca bloqueia fluxo operacional;
+- [x] etapas financeiras/cozinha/logística conectadas;
+- [x] endpoints admin de saúde/fila/retry;
+- [x] testes de idempotência, segredo, retry e integrações;
+- [ ] gate CI/CodeQL;
+- [ ] homologação com WABA, número, template e token reais.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md`.
 
 ### 11I — conciliação automática do Pix próprio
 
