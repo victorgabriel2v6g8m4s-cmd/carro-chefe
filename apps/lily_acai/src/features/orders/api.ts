@@ -155,6 +155,7 @@ export type LilyGuestTrackingOrder = {
   deliveryCode?: string;
   isHomologation: boolean;
   grandTotalCents: number;
+  whatsappUpdatesOptIn: boolean;
   createdAt: string;
   items: Array<{
     id: string;
@@ -307,4 +308,24 @@ export async function getGuestOrderTracking(orderId: string, guestAccessToken: s
     }
   );
   return parseResponse<LilyGuestTrackingOrder>(response);
+}
+
+
+export async function optOutOrderWhatsApp(
+  orderId: string,
+  options: { csrfToken?: string; guestAccessToken?: string } = {}
+) {
+  const headers: Record<string, string> = {};
+  if (options.csrfToken) headers["X-Lily-CSRF"] = options.csrfToken;
+  if (options.guestAccessToken) headers["X-Lily-Order-Token"] = options.guestAccessToken;
+
+  const response = await fetch(
+    `/api/v1/lily/orders/${encodeURIComponent(orderId)}/whatsapp/opt-out`,
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers
+    }
+  );
+  return parseResponse<{ enabled: false }>(response);
 }
