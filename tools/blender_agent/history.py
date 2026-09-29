@@ -449,7 +449,19 @@ def describe_stage(stage_id: str | None = None, *, recent: int = 20) -> dict[str
         if len(recent_events) >= max(0, min(200, int(recent))):
             break
     attachments_dir = _stage_dir(resolved) / "attachments"
-    attachments = [path for path in attachments_dir.iterdir() if path.is_file()]
+    attachments = sorted(
+        [path for path in attachments_dir.iterdir() if path.is_file()],
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    attachment_files = [
+        {
+            "name": path.name,
+            "path": str(path),
+            "size": path.stat().st_size,
+        }
+        for path in attachments[:100]
+    ]
     previous_id = metadata.get("previous_stage_id")
     previous = None
     if previous_id:
@@ -471,6 +483,8 @@ def describe_stage(stage_id: str | None = None, *, recent: int = 20) -> dict[str
         "attachments": {
             "count": len(attachments),
             "bytes": sum(path.stat().st_size for path in attachments),
+            "files": attachment_files,
+            "truncated": len(attachments) > len(attachment_files),
         },
         "retention": {
             "segment_max_bytes": SEGMENT_MAX_BYTES,
