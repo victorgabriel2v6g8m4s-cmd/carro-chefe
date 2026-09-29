@@ -64,8 +64,8 @@ Estados: `aberto`, `mitigado`, `resolvido`, `aceito`.
 - **Status:** aberto
 - **Contexto:** primeira implementação de `tools/blender_agent`.
 - **Impacto:** CI e testes sem Blender validam protocolo, sandbox e superfície do cliente, mas não provam `Window.event_simulate`, Sculpt ou contexto de viewport na instalação real do proprietário.
-- **Evidência segura:** o primeiro teste real abriu Blender 5.2.0 LTS, mas o bridge não criou `bridge.json`; a janela exibiu `Unable to Load File`. A análise identificou perda de aspas no `Start-Process -ArgumentList` quando o caminho do repositório contém espaços (`Área de Trabalho`). O launcher foi corrigido para montar uma linha de argumentos explicitamente quotada e aguardar a sessão real do bridge.
-- **Tratamento:** manter maturidade `em desenvolvimento`; atualizar a branch, repetir o launcher corrigido e só considerar V0.1 validada quando `status`, `ui-window` e um gesto `ui-drag` passarem no Windows 10/Blender 5.2.0 LTS do proprietário.
+- **Evidência segura:** o primeiro teste real identificou perda de aspas no launcher e isso foi corrigido. No segundo teste, `status` e demais comandos responderam, mas o splash inicial permaneceu sobre a viewport e a interface pareceu bloqueada; o splash do Blender é modal e impede interação com a viewport atrás dele. Foi adicionada rotina automática de `Esc`, ação `ui.dismiss_modal`, detecção da maior VIEW_3D e `ui.orbit` direcionado à viewport.
+- **Tratamento:** manter maturidade `em desenvolvimento`; repetir o smoke test com V0.1.1 e considerar a ponte visual validada quando o splash fechar, `ui-view3d` retornar bounds coerentes e `ui-orbit` alterar visualmente a viewport no Windows 10/Blender 5.2.0 LTS do proprietário.
 - **Owner:** `AG-DEV` + proprietário.
 
 ## Regra obrigatória
