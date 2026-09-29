@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
@@ -15,12 +15,15 @@ import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
+import { AdminAnalyticsPage } from "./features/analytics/AdminAnalyticsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
 import { KitchenPrintPage } from "./features/operations/KitchenPrintPage";
 import { OrderControlPage } from "./features/operations/OrderControlPage";
 import { CourierPage } from "./features/logistics/CourierPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
+import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
+import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -52,6 +55,35 @@ function safeNextPath(raw: string | null) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/cardapio";
   const withoutBase = raw.replace(/^\/lilyacai(?=\/|$)/, "") || "/cardapio";
   return withoutBase.startsWith("/") && !withoutBase.startsWith("//") ? withoutBase : "/cardapio";
+}
+
+
+function analyticsSurface(pathname: string): LilyAnalyticsSurface | null {
+  if (pathname === "/") return "landing";
+  if (pathname.startsWith("/cardapio")) return "catalog";
+  if (pathname.startsWith("/carrinho")) return "cart";
+  if (pathname.startsWith("/checkout")) return "checkout";
+  if (pathname.startsWith("/pagamento/")) return "payment";
+  if (pathname.startsWith("/ranking")) return "ranking";
+  if (pathname.startsWith("/privacidade")) return "privacy";
+  if (pathname.startsWith("/perfil") || pathname.startsWith("/pedidos") || pathname.startsWith("/enderecos") || pathname.startsWith("/acompanhar/")) return "account";
+  return null;
+}
+
+function AnalyticsRouteTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const surface = analyticsSurface(location.pathname);
+    if (!surface) return;
+    trackLilyAnalytics("page_view", { surface });
+    if (surface === "catalog") trackLilyAnalytics("catalog_view", { surface });
+    if (surface === "cart") trackLilyAnalytics("cart_view", { surface });
+    if (surface === "checkout") trackLilyAnalytics("checkout_start", { surface });
+    if (surface === "privacy") trackLilyAnalytics("privacy_open", { surface });
+  }, [location.pathname]);
+
+  return null;
 }
 
 function AttributionCapture() {
@@ -124,7 +156,7 @@ function Shell({ children }: { children: ReactNode }) {
         <nav className="desktop-nav" aria-label="Navegação principal">
           <NavLink to="/cardapio">Cardápio</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
-          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">Instagram</a>}
+          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>Instagram</a>}
           {isStaff && <NavLink to="/painel">Painel</NavLink>}
           {isCourier && <NavLink to="/entregas">Entregas</NavLink>}
         </nav>
@@ -174,8 +206,8 @@ function Shell({ children }: { children: ReactNode }) {
             <Link className="mobile-menu-primary" to="/cadastro" onClick={closeMenu}>Criar conta</Link>
           </>}
           <div className="mobile-menu-secondary">
-            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>Instagram @{config?.social.instagramHandle}</a>}
-            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={closeMenu}>WhatsApp</a>}
+            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("instagram_click"); closeMenu(); }}>Instagram @{config?.social.instagramHandle}</a>}
+            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("whatsapp_click"); closeMenu(); }}>WhatsApp</a>}
           </div>
         </nav>
       </>}
@@ -190,10 +222,11 @@ function Shell({ children }: { children: ReactNode }) {
         {config?.store.address && <small>{config.store.address}</small>}
       </div>
       <div className="footer-links">
-        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">@{config?.social.instagramHandle}</a>}
-        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}
+        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>@{config?.social.instagramHandle}</a>}
+        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click")}>WhatsApp</a>}
         <Link to="/ranking">Ranking</Link>
-        <Link to="/privacidade">Privacidade</Link>
+        <Link to="/privacidade" onClick={() => trackLilyAnalytics("privacy_open", { surface: "privacy" })}>Privacidade</Link>
+        <LilyAnalyticsPreferencesButton />
       </div>
       <small>CookLily × Carro Chefe — parceria temporária.</small>
     </footer>
@@ -237,6 +270,7 @@ function Landing() {
 
     setState("submitting");
     setMessage("");
+    trackLilyAnalytics("lead_submit", { surface: "landing" });
     try {
       const current = readCookLilyAttribution(window.location.search);
       const stored = readStoredCookLilyAttribution();
@@ -251,9 +285,11 @@ function Landing() {
       });
       form.reset();
       setState("success");
+      trackLilyAnalytics("lead_success", { surface: "landing" });
       setMessage("Cadastro recebido. Quando houver cupons e promoções CookLily, este WhatsApp poderá receber as novidades.");
     } catch (cause) {
       setState("error");
+      trackLilyAnalytics("lead_error", { surface: "landing" });
       setMessage(cause instanceof Error ? cause.message : "Não foi possível cadastrar agora.");
     }
   }
@@ -300,7 +336,7 @@ function Landing() {
     <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       {trackingWhatsapp
-        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
+        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click", { surface: "landing" })}>Acompanhar pelo WhatsApp</a>
         : <Link className="button primary" to="/cardapio">Ver cardápio</Link>}
     </section>
   </Shell>;
@@ -331,6 +367,7 @@ function Cadastro() {
       return;
     }
     try {
+      const analyticsOptional = form.get("analyticsOptional") === "on";
       await registerLily({
         phone: String(form.get("phone") ?? ""),
         password,
@@ -341,9 +378,11 @@ function Cadastro() {
         consents: {
           lilyMarketing: form.get("lilyMarketing") === "on",
           shareWithCarroChefe: form.get("shareWithCarroChefe") === "on",
-          analyticsOptional: form.get("analyticsOptional") === "on"
+          analyticsOptional
         }
       });
+      if (analyticsOptional) grantLilyAnalytics();
+      else denyLilyAnalytics();
       navigate("/cardapio");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar conta.");
@@ -422,13 +461,14 @@ function Privacidade() {
     <h2>Conta separada</h2><p>Quando uma conta CookLily for utilizada, sessão, endereço, pedido e pagamento permanecem em domínio de dados próprio e não autenticam o usuário no Carro Chefe.</p>
     <h2>O que é necessário</h2><p>Para manter uma conta, usamos o telefone informado, hash da senha, registros técnicos de sessão e o aceite dos termos aplicáveis. Senhas e tokens de sessão não são armazenados em texto puro.</p>
     <h2>Escolhas opcionais</h2><p>Marketing CookLily, analytics não essencial e compartilhamento com o Carro Chefe são escolhas independentes. Recusar qualquer uma delas não impede cadastro nem compra.</p>
+    <h2>Analytics first-party</h2><p>Analytics não essencial só é enviado depois que você escolhe permitir. Usamos um identificador aleatório de sessão, o caminho da tela sem query string, atribuição de campanha/QR e campos técnicos limitados de produto, carrinho, checkout e pagamento. Não enviamos telefone, nome, endereço, observações, tokens ou dados do cartão nesses eventos. Você pode mudar essa preferência pelo rodapé.</p>
     <h2>Compartilhamento</h2><p>Consentir com compartilhamento não mistura automaticamente as bases. Qualquer transferência futura deverá selecionar somente dados permitidos por finalidade e consentimento vigente.</p>
     <h2>Pagamentos</h2><p>A CookLily mantém pedido, status, auditoria e reconciliação, mas utiliza processadores externos para movimentar pagamentos. Número do cartão e CVV são capturados e tokenizados pelo processador e não passam pela API CookLily. O sistema mantém apenas identificadores, status e dados operacionais necessários para vincular o pagamento ao pedido, cancelar, reconciliar e estornar.</p>
   </article></Shell>;
 }
 
 function App() {
-  return <><AttributionCapture /><Routes>
+  return <><AttributionCapture /><AnalyticsRouteTracker /><Routes>
     <Route path="/" element={<Landing />} />
     <Route path="/cardapio" element={<Cardapio />} />
     <Route path="/cadastro" element={<Cadastro />} />
@@ -450,13 +490,14 @@ function App() {
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
+    <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
     <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
     <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
-  </Routes></>;
+  </Routes><LilyAnalyticsConsentBanner /></>;
 }
 
 createRoot(document.getElementById("root")!).render(

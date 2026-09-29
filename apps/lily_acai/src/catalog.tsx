@@ -11,6 +11,7 @@ import {
   type ComboBuilderPayload
 } from "./api";
 import { useCart } from "./features/cart/CartContext";
+import { trackLilyAnalytics } from "./analytics";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -49,6 +50,14 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
   const [busy, setBusy] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const quoteRequest = useRef(0);
+
+  useEffect(() => {
+    trackLilyAnalytics("product_view", {
+      surface: "product",
+      productSlug: product.slug,
+      variantSizeMl: sizeMl
+    });
+  }, [product.slug]);
 
   function toggleFlavor(id: string) {
     if (product.configurationType !== "lilymix") return;
@@ -126,6 +135,20 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
       addons: quote.addons,
       configurationHash: quote.configurationHash,
       unitPriceCents: quote.totalPriceCents
+    });
+    trackLilyAnalytics("product_configured", {
+      surface: "product",
+      productSlug: product.slug,
+      variantSizeMl: quote.sizeMl,
+      addonCount: selectedAddonUnits,
+      itemCount: 1
+    });
+    trackLilyAnalytics("add_to_cart", {
+      surface: "product",
+      productSlug: product.slug,
+      variantSizeMl: quote.sizeMl,
+      addonCount: selectedAddonUnits,
+      itemCount: 1
     });
     setAdded(true);
   }
@@ -236,6 +259,13 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
   const quoteRequest = useRef(0);
+
+  useEffect(() => {
+    trackLilyAnalytics("combo_view", {
+      surface: "combo",
+      comboSlug: combo.slug
+    });
+  }, [combo.slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -362,6 +392,22 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
       })),
       configurationHash: quote.configurationHash,
       unitPriceCents: quote.totalPriceCents
+    });
+    const comboAddonCount = quote.selections.reduce(
+      (total, selection) => total + selection.addons.reduce((sum, addon) => sum + addon.quantity, 0),
+      0
+    );
+    trackLilyAnalytics("combo_configured", {
+      surface: "combo",
+      comboSlug: combo.slug,
+      addonCount: comboAddonCount,
+      itemCount: quote.selections.length
+    });
+    trackLilyAnalytics("add_to_cart", {
+      surface: "combo",
+      comboSlug: combo.slug,
+      addonCount: comboAddonCount,
+      itemCount: quote.selections.length
     });
     setAdded(true);
   }

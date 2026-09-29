@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
+import { trackLilyAnalytics } from "../../analytics";
 import { useCart } from "../cart/CartContext";
 import { storeGuestOrderToken } from "../orders/guest-token";
 import {
@@ -147,6 +148,11 @@ export function CheckoutPage() {
         homologation
       });
       if (order.guestAccessToken) storeGuestOrderToken(order.id, order.guestAccessToken);
+      trackLilyAnalytics("order_created", {
+        surface: "checkout",
+        itemCount: cart.itemCount,
+        fulfillmentType
+      });
 
       if (saveAddress && session && fulfillmentType === "delivery" && !selectedAddressId) {
         try {
