@@ -107,6 +107,17 @@ def capture_set(
     }
 
 
+def _parse_bool_choice(value: str) -> bool | None:
+    normalized = value.strip().lower()
+    if normalized in {"any", "all", "*"}:
+        return None
+    if normalized in {"true", "success", "ok", "1", "yes"}:
+        return True
+    if normalized in {"false", "failure", "fail", "0", "no"}:
+        return False
+    raise argparse.ArgumentTypeError("use any, success ou failure")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Cliente local do Blender Agent do Carro Chefe")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -160,6 +171,101 @@ def build_parser() -> argparse.ArgumentParser:
         wait_seconds=a.wait,
         shading=a.shading,
     ))
+
+    workspaces = sub.add_parser("workspace-list", help="lista abas/workspaces do Blender")
+    workspaces.set_defaults(handler=lambda _a: call("workspace.list"))
+
+    workspace_describe = sub.add_parser("workspace-describe", help="consulta conteudo de uma ou varias abas/workspaces")
+    workspace_describe.add_argument("--name", action="append", dest="names")
+    workspace_describe.add_argument("--all", action="store_true")
+    workspace_describe.set_defaults(handler=lambda a: call("workspace.describe", {
+        "names": a.names,
+        "all": a.all,
+    }))
+
+    workspace_capture = sub.add_parser("workspace-capture-set", help="captura varias abas/workspaces em uma operacao")
+    workspace_capture.add_argument("--label", default="workspace-capture-set")
+    workspace_capture.add_argument("--workspace", action="append", dest="workspaces")
+    workspace_capture.add_argument("--target", choices=["VIEW_3D", "WINDOW", "AREA"], default="VIEW_3D")
+    workspace_capture.add_argument("--area-type")
+    workspace_capture.add_argument("--shading", choices=["WIREFRAME", "SOLID", "MATERIAL", "RENDERED"])
+    workspace_capture.add_argument("--plan-json", help="plano JSON customizado com lista 'captures'")
+    workspace_capture.set_defaults(handler=lambda a: call("workspace.capture_set", (
+        {
+            **json.loads(a.plan_json),
+            "label": a.label,
+        }
+        if a.plan_json
+        else {
+            "label": a.label,
+            "workspaces": a.workspaces,
+            "target": a.target,
+            "area_type": a.area_type,
+            "shading": a.shading,
+        }
+    )))
+
+    history_start = sub.add_parser("history-start", help="inicia nova etapa de producao com referencia a anterior")
+    history_start.add_argument("label")
+    history_start.add_argument("--id", dest="stage_id")
+    history_start.add_argument("--previous", dest="previous_stage_id")
+    history_start.add_argument("--tag", action="append", dest="tags", default=[])
+    history_start.add_argument("--no-activate", action="store_true")
+    history_start.set_defaults(handler=lambda a: call("history.stage.create", {
+        "label": a.label,
+        "stage_id": a.stage_id,
+        "previous_stage_id": a.previous_stage_id,
+        "activate": not a.no_activate,
+        "tags": a.tags,
+    }))
+
+    history_list = sub.add_parser("history-list", help="lista etapas de producao registradas")
+    history_list.add_argument("--limit", type=int, default=100)
+    history_list.set_defaults(handler=lambda a: call("history.stage.list", {"limit": a.limit}))
+
+    history_use = sub.add_parser("history-use", help="ativa uma etapa existente")
+    history_use.add_argument("stage_id")
+    history_use.set_defaults(handler=lambda a: call("history.stage.activate", {"stage_id": a.stage_id}))
+
+    history_show = sub.add_parser("history-show", help="mostra contexto resumido de uma etapa")
+    history_show.add_argument("stage_id", nargs="?")
+    history_show.add_argument("--recent", type=int, default=20)
+    history_show.set_defaults(handler=lambda a: call("history.stage.describe", {
+        "stage_id": a.stage_id,
+        "recent": a.recent,
+    }))
+
+    history_search = sub.add_parser("history-search", help="pesquisa comandos e anexos por palavras-chave/filtros")
+    history_search.add_argument("query", nargs="?")
+    history_search.add_argument("--stage", dest="stage_id")
+    history_search.add_argument("--action")
+    history_search.add_argument("--since")
+    history_search.add_argument("--until")
+    history_search.add_argument("--success", type=_parse_bool_choice, default=None)
+    history_search.add_argument("--attachment", type=_parse_bool_choice, default=None, dest="has_attachment")
+    history_search.add_argument("--tag", action="append", dest="tags", default=[])
+    history_search.add_argument("--limit", type=int, default=50)
+    history_search.set_defaults(handler=lambda a: call("history.search", {
+        "query": a.query,
+        "stage_id": a.stage_id,
+        "action": a.action,
+        "since": a.since,
+        "until": a.until,
+        "success": a.success,
+        "has_attachment": a.has_attachment,
+        "tags": a.tags,
+        "limit": a.limit,
+    }))
+
+    history_note = sub.add_parser("history-note", help="adiciona nota textual a etapa ativa")
+    history_note.add_argument("text")
+    history_note.add_argument("--stage", dest="stage_id")
+    history_note.add_argument("--tag", action="append", dest="tags", default=[])
+    history_note.set_defaults(handler=lambda a: call("history.note", {
+        "text": a.text,
+        "stage_id": a.stage_id,
+        "tags": a.tags,
+    }))
 
     window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
     window.set_defaults(handler=lambda _a: call("ui.window"))
