@@ -312,7 +312,7 @@ def build_parser() -> argparse.ArgumentParser:
     sculpt_stroke.add_argument("--radius", type=int, default=60)
     sculpt_stroke.add_argument("--strength", type=float, default=0.25)
     sculpt_stroke.add_argument("--pressure", type=float, default=1.0)
-    sculpt_stroke.add_argument("--mode", choices=["NORMAL", "INVERT", "SMOOTH", "ERASE"], default="NORMAL")
+    sculpt_stroke.add_argument("--mode", choices=["NORMAL", "INVERT", "SMOOTH", "ERASE", "MASK"], default="NORMAL")
     sculpt_stroke.add_argument("--coordinate-space", choices=["NORMALIZED", "REGION"], default="NORMALIZED")
     sculpt_stroke.add_argument("--label", default="stroke")
     sculpt_stroke.add_argument("--no-checkpoint", action="store_true")
