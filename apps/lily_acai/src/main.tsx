@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
@@ -21,6 +21,8 @@ import { OrderControlPage } from "./features/operations/OrderControlPage";
 import { CourierPage } from "./features/logistics/CourierPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
+import { trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
+import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -52,6 +54,35 @@ function safeNextPath(raw: string | null) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/cardapio";
   const withoutBase = raw.replace(/^\/lilyacai(?=\/|$)/, "") || "/cardapio";
   return withoutBase.startsWith("/") && !withoutBase.startsWith("//") ? withoutBase : "/cardapio";
+}
+
+
+function analyticsSurface(pathname: string): LilyAnalyticsSurface | null {
+  if (pathname === "/") return "landing";
+  if (pathname.startsWith("/cardapio")) return "catalog";
+  if (pathname.startsWith("/carrinho")) return "cart";
+  if (pathname.startsWith("/checkout")) return "checkout";
+  if (pathname.startsWith("/pagamento/")) return "payment";
+  if (pathname.startsWith("/ranking")) return "ranking";
+  if (pathname.startsWith("/privacidade")) return "privacy";
+  if (pathname.startsWith("/perfil") || pathname.startsWith("/pedidos") || pathname.startsWith("/enderecos") || pathname.startsWith("/acompanhar/")) return "account";
+  return null;
+}
+
+function AnalyticsRouteTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const surface = analyticsSurface(location.pathname);
+    if (!surface) return;
+    trackLilyAnalytics("page_view", { surface });
+    if (surface === "catalog") trackLilyAnalytics("catalog_view", { surface });
+    if (surface === "cart") trackLilyAnalytics("cart_view", { surface });
+    if (surface === "checkout") trackLilyAnalytics("checkout_start", { surface });
+    if (surface === "privacy") trackLilyAnalytics("privacy_open", { surface });
+  }, [location.pathname]);
+
+  return null;
 }
 
 function AttributionCapture() {
@@ -190,10 +221,11 @@ function Shell({ children }: { children: ReactNode }) {
         {config?.store.address && <small>{config.store.address}</small>}
       </div>
       <div className="footer-links">
-        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer">@{config?.social.instagramHandle}</a>}
-        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}
+        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>@{config?.social.instagramHandle}</a>}
+        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click")}>WhatsApp</a>}
         <Link to="/ranking">Ranking</Link>
-        <Link to="/privacidade">Privacidade</Link>
+        <Link to="/privacidade" onClick={() => trackLilyAnalytics("privacy_open", { surface: "privacy" })}>Privacidade</Link>
+        <LilyAnalyticsPreferencesButton />
       </div>
       <small>CookLily × Carro Chefe — parceria temporária.</small>
     </footer>
@@ -428,7 +460,7 @@ function Privacidade() {
 }
 
 function App() {
-  return <><AttributionCapture /><Routes>
+  return <><AttributionCapture /><AnalyticsRouteTracker /><Routes>
     <Route path="/" element={<Landing />} />
     <Route path="/cardapio" element={<Cardapio />} />
     <Route path="/cadastro" element={<Cadastro />} />
@@ -456,7 +488,7 @@ function App() {
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
-  </Routes></>;
+  </Routes><LilyAnalyticsConsentBanner /></>;
 }
 
 createRoot(document.getElementById("root")!).render(
