@@ -55,6 +55,33 @@ function nextOperationStatus(order: {
   });
 }
 
+function serializeKitchenPrintTicket(order: any) {
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt,
+    financialStatus: order.status,
+    operationStatus: order.operationStatus,
+    fulfillmentType: order.fulfillmentType,
+    isHomologation: order.isHomologation,
+    customerNote: order.customerNote,
+    items: order.items.map((item: any) => ({
+      id: item.id,
+      productName: item.productNameSnapshot,
+      variantName: item.variantNameSnapshot,
+      sizeMl: item.sizeMl,
+      quantity: item.quantity,
+      note: item.customerNote,
+      flavors: JSON.parse(item.flavorsSnapshotJson),
+      configuration: JSON.parse(item.configurationSnapshotJson),
+      addons: item.addons.map((addon: any) => ({
+        name: addon.addonNameSnapshot,
+        quantity: addon.quantity
+      }))
+    }))
+  };
+}
+
 function serializeKitchenOrder(order: any, kitchenPreparationSlaMinutes: number | null | undefined, now = new Date()) {
   return {
     id: order.id,
@@ -134,6 +161,20 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
         kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes,
         overdue: serializedOrders.filter((order) => order.sla?.status === "overdue").length
       }
+    };
+  });
+
+  app.get("/api/v1/lily/admin/kitchen/orders/:id/print", async (request) => {
+    await requireLilyStaff(request);
+    const { id } = z.object({ id: idSchema }).parse(request.params);
+    const order = await lilyPrisma.lilyOrder.findUnique({
+      where: { id },
+      include: operationInclude
+    });
+    if (!order) throw new ApiError(404, "Pedido não encontrado.");
+
+    return {
+      ticket: serializeKitchenPrintTicket(order)
     };
   });
 
