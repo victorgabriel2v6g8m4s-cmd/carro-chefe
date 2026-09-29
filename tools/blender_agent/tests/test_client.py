@@ -100,6 +100,35 @@ class ClientParserTests(unittest.TestCase):
         self.assertEqual(args.stage_id, "bread-shape")
         self.assertEqual(args.tags, ["bread"])
 
+    def test_sculpt_prepare_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "sculpt-prepare",
+            "--name", "Bread",
+            "--brush", "GRAB",
+            "--radius", "72",
+            "--strength", "0.3",
+        ])
+        self.assertEqual(args.command, "sculpt-prepare")
+        self.assertEqual(args.name, "Bread")
+        self.assertEqual(args.brush, "GRAB")
+        self.assertEqual(args.radius, 72)
+
+    def test_sculpt_stroke_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "sculpt-stroke",
+            "--points-json", "[[0.4,0.5],[0.6,0.5]]",
+            "--brush", "DRAW",
+            "--radius", "50",
+            "--strength", "0.2",
+            "--mode", "NORMAL",
+        ])
+        self.assertEqual(args.command, "sculpt-stroke")
+        self.assertEqual(args.points, [[0.4, 0.5], [0.6, 0.5]])
+        self.assertEqual(args.coordinate_space, "NORMALIZED")
+        self.assertFalse(args.no_checkpoint)
+
     def test_generic_call_accepts_json(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
