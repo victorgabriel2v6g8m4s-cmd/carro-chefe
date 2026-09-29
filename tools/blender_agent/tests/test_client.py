@@ -129,6 +129,12 @@ class ClientParserTests(unittest.TestCase):
         self.assertEqual(args.coordinate_space, "NORMALIZED")
         self.assertFalse(args.no_checkpoint)
 
+    def test_sculpt_finish_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["sculpt-finish"])
+        self.assertEqual(args.command, "sculpt-finish")
+        self.assertFalse(args.keep_workspace)
+
     def test_generic_call_accepts_json(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
