@@ -24,6 +24,9 @@ export type LilyAnalyticsEvent =
   | "instagram_click"
   | "whatsapp_click"
   | "privacy_open"
+  | "lead_submit"
+  | "lead_success"
+  | "lead_error"
   | "analytics_consent_granted";
 
 export type LilyAnalyticsSurface =
