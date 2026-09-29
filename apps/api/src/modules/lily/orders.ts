@@ -16,6 +16,7 @@ import {
 import { resolveLilyFulfillment } from "./fulfillment";
 import { lilyLogisticsCodeConfiguration, lilyOrderSecurityCode } from "./logistics-codes";
 import { serializeLilyRouteEstimate } from "./routing";
+import { LILY_WHATSAPP_CONSENT_VERSION } from "./whatsapp";
 
 const quantitySchema = z.number().int().min(1).max(20);
 const noteSchema = z.string().trim().max(300).nullable().optional();
@@ -58,6 +59,7 @@ const orderSchema = z.object({
   fulfillmentType: z.enum(["pickup", "delivery"]),
   address: lilyAddressInputSchema.optional(),
   customerNote: z.string().trim().max(500).nullable().optional(),
+  whatsappUpdatesOptIn: z.boolean().default(false),
   items: z.array(orderItemSchema).min(1).max(30),
   attribution: lilyAttributionInputSchema.optional()
 }).strict();
@@ -132,6 +134,7 @@ function fingerprint(input: {
     fulfillmentType: input.order.fulfillmentType,
     address: input.address,
     customerNote: input.order.customerNote?.trim() || null,
+    whatsappUpdatesOptIn: input.order.whatsappUpdatesOptIn,
     items: input.order.items,
     attribution: normalizeLilyAttribution(input.order.attribution ?? {}),
     isHomologation: input.isHomologation
@@ -183,6 +186,7 @@ function serializeOrder(
     grandTotalCents: order.grandTotalCents,
     address: order.addressSnapshotJson ? JSON.parse(order.addressSnapshotJson) : null,
     customerNote: order.customerNote,
+    whatsappUpdatesOptIn: order.whatsappUpdatesOptIn,
     createdAt: order.createdAt,
     routeEstimate: serializeLilyRouteEstimate(order.routeEstimate, {
       deliveryStatus: order.deliveryStatus,
@@ -436,6 +440,9 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           grandTotalCents: quote.grandTotalCents,
           addressSnapshotJson: quote.address ? JSON.stringify(quote.address) : null,
           customerNote: input.customerNote?.trim() || null,
+          whatsappUpdatesOptIn: input.whatsappUpdatesOptIn,
+          whatsappConsentAt: input.whatsappUpdatesOptIn ? new Date() : null,
+          whatsappConsentVersion: input.whatsappUpdatesOptIn ? LILY_WHATSAPP_CONSENT_VERSION : null,
           laQr: attribution.laQr,
           laCampaign: attribution.laCampaign,
           laVariant: attribution.laVariant,
@@ -518,6 +525,17 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
               actor: "system:order_created"
             }
           },
+          ...(input.whatsappUpdatesOptIn
+            ? {
+                whatsappNotifications: {
+                  create: {
+                    stage: "awaiting_payment",
+                    status: "pending",
+                    nextAttemptAt: new Date()
+                  }
+                }
+              }
+            : {}),
           ...(input.fulfillmentType === "delivery"
             ? {
                 deliveryEvents: {
