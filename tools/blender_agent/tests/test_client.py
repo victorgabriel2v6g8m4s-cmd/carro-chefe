@@ -63,6 +63,43 @@ class ClientParserTests(unittest.TestCase):
         self.assertEqual(args.preset, "THREE_QUARTER")
         self.assertTrue(args.no_frame_all)
 
+    def test_workspace_capture_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "workspace-capture-set",
+            "--label", "tabs",
+            "--workspace", "Layout",
+            "--workspace", "Sculpting",
+            "--target", "VIEW_3D",
+            "--shading", "MATERIAL",
+        ])
+        self.assertEqual(args.command, "workspace-capture-set")
+        self.assertEqual(args.workspaces, ["Layout", "Sculpting"])
+        self.assertEqual(args.shading, "MATERIAL")
+
+    def test_history_search_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "history-search", "baguete",
+            "--stage", "shape",
+            "--action", "object.",
+            "--success", "failure",
+            "--attachment", "success",
+            "--tag", "bread",
+        ])
+        self.assertEqual(args.command, "history-search")
+        self.assertEqual(args.stage_id, "shape")
+        self.assertFalse(args.success)
+        self.assertTrue(args.has_attachment)
+        self.assertEqual(args.tags, ["bread"])
+
+    def test_history_start_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["history-start", "Bread shape", "--id", "bread-shape", "--tag", "bread"])
+        self.assertEqual(args.command, "history-start")
+        self.assertEqual(args.stage_id, "bread-shape")
+        self.assertEqual(args.tags, ["bread"])
+
     def test_generic_call_accepts_json(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
