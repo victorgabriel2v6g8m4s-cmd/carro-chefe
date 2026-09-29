@@ -43,6 +43,7 @@ from tools.blender_agent.protocol import (
     decode_message,
     encode_message,
     safe_runtime_path,
+    sanitize_label,
     session_path,
 )
 
@@ -684,6 +685,80 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "modal_operators": _modal_operator_names(bpy.context.window) if bpy.context.window else [],
             "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
         }
+
+    if action == "workspace.list":
+        return _workspace_list()
+
+    if action == "workspace.describe":
+        return _workspace_describe(params)
+
+    if action == "workspace.capture_set":
+        return _workspace_capture_set(params)
+
+    if action == "history.stage.create":
+        metadata = create_stage(
+            str(params.get("label", "stage")),
+            stage_id=str(params["stage_id"]) if params.get("stage_id") else None,
+            previous_stage_id=str(params["previous_stage_id"]) if params.get("previous_stage_id") else None,
+            activate=bool(params.get("activate", True)),
+            tags=params.get("tags") or [],
+        )
+        record_event(
+            action="history.stage.create",
+            params={
+                "label": metadata["label"],
+                "previous_stage_id": metadata.get("previous_stage_id"),
+            },
+            result={"stage_id": metadata["stage_id"]},
+            ok=True,
+            stage_id=str(metadata["stage_id"]),
+            tags=["history", "stage"],
+        )
+        return metadata
+
+    if action == "history.stage.list":
+        return {
+            "active_stage_id": get_active_stage_id(),
+            "stages": list_stages(limit=int(params.get("limit", 100))),
+        }
+
+    if action == "history.stage.activate":
+        metadata = set_active_stage(str(params["stage_id"]))
+        record_event(
+            action="history.stage.activate",
+            params={"stage_id": metadata["stage_id"]},
+            result={"active": True},
+            ok=True,
+            stage_id=str(metadata["stage_id"]),
+            tags=["history", "stage"],
+        )
+        return metadata
+
+    if action == "history.stage.describe":
+        return describe_stage(
+            str(params["stage_id"]) if params.get("stage_id") else None,
+            recent=int(params.get("recent", 20)),
+        )
+
+    if action == "history.search":
+        return search_events(
+            query=str(params["query"]) if params.get("query") is not None else None,
+            stage_id=str(params["stage_id"]) if params.get("stage_id") else None,
+            action=str(params["action"]) if params.get("action") else None,
+            since=str(params["since"]) if params.get("since") else None,
+            until=str(params["until"]) if params.get("until") else None,
+            success=bool(params["success"]) if params.get("success") is not None else None,
+            has_attachment=bool(params["has_attachment"]) if params.get("has_attachment") is not None else None,
+            tags=params.get("tags") or [],
+            limit=int(params.get("limit", 50)),
+        )
+
+    if action == "history.note":
+        return record_note(
+            str(params.get("text", "")),
+            tags=params.get("tags") or [],
+            stage_id=str(params["stage_id"]) if params.get("stage_id") else None,
+        )
 
     if action == "viewport.describe":
         return _viewport_description()
