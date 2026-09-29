@@ -25,6 +25,10 @@ class McpAdapterSourceTests(unittest.TestCase):
             "blender_ui_orbit",
             "blender_checkpoint",
             "blender_action",
+            "blender_sculpt_iteration",
+            "blender_sculpt_stroke",
+            "blender_sculpt_prepare",
+            "blender_sculpt_status",
             "blender_history_note",
             "blender_history_search",
             "blender_history_context",
@@ -43,6 +47,14 @@ class McpAdapterSourceTests(unittest.TestCase):
         source = SERVER.read_text(encoding="utf-8")
         self.assertIn('result.get("failure_count", 0)', source)
         self.assertIn('result.get("restored_original_workspace", False)', source)
+
+    def test_sculpt_iteration_returns_before_and_after_images(self) -> None:
+        source = SERVER.read_text(encoding="utf-8")
+        self.assertIn("def blender_sculpt_iteration(", source)
+        self.assertIn('checkpoint": True', source)
+        self.assertIn('capture_before": True', source)
+        self.assertIn('Image(path=before["path"])', source)
+        self.assertIn('Image(path=after["path"])', source)
 
     def test_mcp_server_has_no_shell_or_dynamic_execution(self) -> None:
         tree = ast.parse(SERVER.read_text(encoding="utf-8"))
