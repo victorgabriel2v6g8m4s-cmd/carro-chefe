@@ -59,6 +59,22 @@ NODE_ENV=production
 
 Segredos nunca usam `VITE_*`.
 
+### ETA/mapas da Entrega 11G — opcional e fail-open
+
+Para ativar ETA de rota e navegação:
+
+```env
+COOKLILY_ORS_API_KEY=<chave-heigit-openrouteservice>
+COOKLILY_ORS_BASE_URL=https://api.heigit.org/openrouteservice
+COOKLILY_ROUTING_TIMEOUT_MS=6000
+```
+
+Somente `COOKLILY_ORS_API_KEY` é necessária. Base URL e timeout possuem defaults seguros.
+
+A chave é segredo de backend e nunca pode usar `VITE_*`. Em 28/09/2026 o host legado `api.openrouteservice.org` encerrou a migração; não configurá-lo em releases novos.
+
+Se a chave estiver ausente, inválida, sem quota ou o provider estiver fora, pedidos e entregas continuam operando normalmente e o ETA fica indisponível.
+
 A partir do MFA de staff/admin, `LILY_MFA_ENCRYPTION_KEY` é obrigatória em produção e o deployer falha antes de migrations se ela estiver ausente ou inválida. Gere uma vez na VPS e preserve a mesma chave enquanto existirem contas com MFA configurada:
 
 ```bash

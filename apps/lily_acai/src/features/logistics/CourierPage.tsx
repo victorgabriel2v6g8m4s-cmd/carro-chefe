@@ -6,6 +6,7 @@ import {
   acceptCourierDelivery,
   getCourierDeliveries,
   getCourierDeliveryHistory,
+  getCourierDeliveryRoute,
   rejectCourierDelivery,
   transitionCourierDelivery,
   type CourierDeliveriesPayload,
@@ -72,6 +73,8 @@ function DeliveryCard(props: {
 }) {
   const { delivery } = props;
   const [busy, setBusy] = useState(false);
+  const [routeBusy, setRouteBusy] = useState(false);
+  const [routeMessage, setRouteMessage] = useState("");
   const action = nextAction(delivery.deliveryStatus);
   const canAbandon = ["courier_accepted", "courier_arrived_pickup"].includes(delivery.deliveryStatus);
 
@@ -115,6 +118,44 @@ function DeliveryCard(props: {
     }
   }
 
+  useEffect(() => {
+    if (!delivery.assignedToMe
+      || delivery.routeEstimate
+      || ["left_delivery", "cancelled"].includes(delivery.deliveryStatus)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (!cancelled) void calculateRoute(true);
+    }, 150);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [delivery.id, delivery.assignedToMe, delivery.routeEstimate, delivery.deliveryStatus]);
+
+  async function calculateRoute(silent = false) {
+    setRouteBusy(true);
+    setRouteMessage("");
+    props.onError("");
+    try {
+      const result = await getCourierDeliveryRoute(delivery.id);
+      if (!result.available) {
+        const message = result.reason === "not_configured"
+          ? "ETA/mapa ainda não foi configurado na VPS."
+          : result.reason === "address_incomplete"
+            ? "Endereço insuficiente para calcular a rota."
+            : "O provedor de mapas está indisponível. A entrega continua normalmente.";
+        if (!silent) setRouteMessage(message);
+        return;
+      }
+      if (!silent) setRouteMessage(result.cached ? "Rota carregada do cache." : "Rota calculada e salva.");
+      await props.onChanged();
+    } catch (cause) {
+      if (!silent) setRouteMessage(cause instanceof Error ? cause.message : "Não foi possível calcular a rota.");
+    } finally {
+      setRouteBusy(false);
+    }
+  }
+
   return <article className="courier-delivery-card">
     <header>
       <div>
@@ -133,6 +174,22 @@ function DeliveryCard(props: {
       {delivery.assignedToMe && delivery.destination?.reference && <em>
         Referência: {delivery.destination.reference}
       </em>}
+      {delivery.assignedToMe && delivery.routeEstimate && <div className="courier-eta">
+        <strong>{(delivery.routeEstimate.distanceMeters / 1000).toFixed(1)} km · {Math.max(1, Math.round(delivery.routeEstimate.durationSeconds / 60))} min de rota</strong>
+        {delivery.routeEstimate.estimatedArrivalAt && <span>
+          Chegada estimada: {new Date(delivery.routeEstimate.estimatedArrivalAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+        </span>}
+        <small>Estimativa de rota; não é GPS ao vivo.</small>
+        {delivery.routeEstimate.mapUrl && <a className="button ghost" href={delivery.routeEstimate.mapUrl}
+          target="_blank" rel="noreferrer">Abrir rota no mapa</a>}
+      </div>}
+      {delivery.assignedToMe && !delivery.routeEstimate
+        && !["left_delivery", "cancelled"].includes(delivery.deliveryStatus)
+        && <button className="button ghost courier-route-button" type="button"
+          onClick={() => void calculateRoute(false)} disabled={routeBusy}>
+          {routeBusy ? "Calculando rota..." : "Calcular rota e ETA"}
+        </button>}
+      {routeMessage && <small className="courier-route-message">{routeMessage}</small>}
     </div>
 
     <ol className="courier-mini-timeline">

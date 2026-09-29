@@ -2,7 +2,7 @@
 
 **Data:** 28/09/2026  
 **Base funcional:** Entrega 11E validada e integrada em `cooklily/canonical` pelo PR #92.  
-**Status:** implementação candidata; gate CI/CodeQL e QA de navegador ainda pendentes.
+**Status:** tecnicamente validada e integrada pelo PR #94. Candidate SHA `0d4f8a6f60821dfa09d9a94a2470e5f2ffb22af1`; CI `36414636227` e CodeQL `36414636183`: success. QA real de navegador/mobile permanece pendente.
 
 ## Objetivo
 

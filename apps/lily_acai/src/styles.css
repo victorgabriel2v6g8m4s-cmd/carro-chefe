@@ -2846,3 +2846,37 @@ img, svg { max-width: 100%; }
     flex-direction: column;
   }
 }
+
+
+/* Entrega 11G — ETA de rota e mapas */
+.courier-eta,
+.route-estimate-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 14px;
+  background: var(--cl-color-surface-strong);
+}
+.courier-eta strong,
+.route-estimate-card > strong {
+  font-size: 18px;
+}
+.courier-eta .button {
+  width: fit-content;
+  margin-top: 4px;
+}
+.courier-route-button {
+  width: fit-content;
+  margin-top: 8px;
+}
+.courier-route-message {
+  color: var(--cl-color-text-muted);
+}
+.route-estimate-card p {
+  margin: 0;
+}
+.route-estimate-card small,
+.courier-eta small {
+  color: var(--cl-color-text-muted);
+}

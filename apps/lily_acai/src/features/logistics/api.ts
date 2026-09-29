@@ -23,6 +23,18 @@ export type CourierDestination = {
   reference?: string | null;
 };
 
+export type CourierRouteEstimate = {
+  provider: string;
+  distanceMeters: number;
+  durationSeconds: number;
+  calculatedAt: string;
+  estimatedArrivalAt: string | null;
+  isLive: false;
+  origin?: { lat: number; lng: number };
+  destination?: { lat: number; lng: number };
+  mapUrl?: string;
+};
+
 export type CourierDelivery = {
   id: string;
   orderNumber: string;
@@ -36,6 +48,7 @@ export type CourierDelivery = {
   itemCount: number;
   createdAt: string;
   destination: CourierDestination | null;
+  routeEstimate: CourierRouteEstimate | null;
   deliveryEvents: Array<{
     fromStatus: string | null;
     toStatus: string;
@@ -78,6 +91,17 @@ export async function acceptCourierDelivery(orderId: string, csrfToken: string) 
     }
   );
   return parseResponse<CourierDelivery>(response);
+}
+
+export async function getCourierDeliveryRoute(orderId: string) {
+  const response = await fetch(
+    `/api/v1/lily/courier/deliveries/${encodeURIComponent(orderId)}/route`,
+    { credentials: "same-origin", cache: "no-store" }
+  );
+  return parseResponse<
+    | { available: true; cached: boolean; estimate: CourierRouteEstimate }
+    | { available: false; reason: "not_configured" | "address_incomplete" | "provider_unavailable"; provider: string }
+  >(response);
 }
 
 export async function transitionCourierDelivery(

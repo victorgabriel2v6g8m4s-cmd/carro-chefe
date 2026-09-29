@@ -3,7 +3,7 @@
 **Data:** 28/09/2026  
 **Branch de entrega:** `feat/lily-entrega-11e-reatribuicao-historico-guest`  
 **Base:** `cooklily/canonical` em `280c637495fcb1e4fda9150bf5a1b9d5e1bd7044`  
-**Status:** implementação candidata; gate CI/CodeQL e QA real ainda pendentes.
+**Status:** tecnicamente validada e integrada pelo PR #92. Candidate SHA `ddda7af8648bf9bf69ab80f3ee2224e5a7d6dd77`; CI `36413414854` e CodeQL `36413414990`: success. QA real multiusuário permanece pendente.
 
 ## Objetivo
 

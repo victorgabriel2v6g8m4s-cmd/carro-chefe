@@ -15,6 +15,7 @@ import {
 } from "./configuration";
 import { resolveLilyFulfillment } from "./fulfillment";
 import { lilyLogisticsCodeConfiguration, lilyOrderSecurityCode } from "./logistics-codes";
+import { serializeLilyRouteEstimate } from "./routing";
 
 const quantitySchema = z.number().int().min(1).max(20);
 const noteSchema = z.string().trim().max(300).nullable().optional();
@@ -146,7 +147,8 @@ const orderInclude = {
   items: { include: { addons: true } },
   statusEvents: { orderBy: { createdAt: "asc" as const } },
   operationEvents: { orderBy: { createdAt: "asc" as const } },
-  deliveryEvents: { orderBy: { createdAt: "asc" as const } }
+  deliveryEvents: { orderBy: { createdAt: "asc" as const } },
+  routeEstimate: true
 };
 
 async function findOrderById(id: string) {
@@ -182,6 +184,10 @@ function serializeOrder(
     address: order.addressSnapshotJson ? JSON.parse(order.addressSnapshotJson) : null,
     customerNote: order.customerNote,
     createdAt: order.createdAt,
+    routeEstimate: serializeLilyRouteEstimate(order.routeEstimate, {
+      deliveryStatus: order.deliveryStatus,
+      deliveryEvents: order.deliveryEvents
+    }),
     ...(guestAccessToken ? { guestAccessToken } : {}),
     ...(includeDeliveryCode && shouldExposeDeliveryCode(order)
       ? { deliveryCode: lilyOrderSecurityCode(order.id, "delivery") }
@@ -259,6 +265,10 @@ function serializeGuestTrackingOrder(order: NonNullable<Awaited<ReturnType<typeo
     isHomologation: order.isHomologation,
     grandTotalCents: order.grandTotalCents,
     createdAt: order.createdAt,
+    routeEstimate: serializeLilyRouteEstimate(order.routeEstimate, {
+      deliveryStatus: order.deliveryStatus,
+      deliveryEvents: order.deliveryEvents
+    }),
     ...(shouldExposeDeliveryCode(order)
       ? { deliveryCode: lilyOrderSecurityCode(order.id, "delivery") }
       : {}),

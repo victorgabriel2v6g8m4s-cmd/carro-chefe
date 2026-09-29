@@ -143,6 +143,15 @@ export function GuestOrderTrackingPage() {
 
     <GuestTimeline order={order} />
 
+    {order.fulfillmentType === "delivery" && order.routeEstimate && <section className="route-estimate-card">
+      <span className="eyebrow">Previsão de rota</span>
+      <strong>{(order.routeEstimate.distanceMeters / 1000).toFixed(1)} km · {Math.max(1, Math.round(order.routeEstimate.durationSeconds / 60))} min</strong>
+      {order.routeEstimate.estimatedArrivalAt
+        ? <p>Chegada estimada por volta de <b>{new Date(order.routeEstimate.estimatedArrivalAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</b>.</p>
+        : <p>A previsão de chegada começa quando o entregador confirma a saída da coleta.</p>}
+      <small>Estimativa calculada pela rota; não representa GPS ao vivo do entregador.</small>
+    </section>}
+
     {order.fulfillmentType === "delivery" && order.deliveryCode && <section className="delivery-code-card">
       <span className="eyebrow">Código de entrega</span>
       <strong>{order.deliveryCode}</strong>
