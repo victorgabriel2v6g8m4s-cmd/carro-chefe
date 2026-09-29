@@ -50,6 +50,8 @@ from tools.blender_agent.protocol import (
 _TASKS: "queue.Queue[Task]" = queue.Queue()
 _TOKEN = secrets.token_urlsafe(32)
 _SERVER = None
+_CAPTURE_JOB = None
+_WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "2"))))
 
 _MOUSE_BUTTONS = {"left": "LEFTMOUSE", "middle": "MIDDLEMOUSE", "right": "RIGHTMOUSE"}
 _UI_EVENT_TYPES = {
@@ -87,6 +89,22 @@ class Task:
     request: dict[str, Any]
     done: threading.Event = field(default_factory=threading.Event)
     response: dict[str, Any] | None = None
+
+
+@dataclass
+class WorkspaceCaptureJob:
+    task: Task
+    params: dict[str, Any]
+    captures: list[dict[str, Any]]
+    label: str
+    original_workspace_name: str
+    results: list[dict[str, Any]] = field(default_factory=list)
+    index: int = 0
+    phase: str = "switch"
+    settle_remaining: int = 0
+    requested_workspace_name: str | None = None
+    last_screen_name: str | None = None
+    started_ns: int = field(default_factory=time.time_ns)
 
 
 class ReusableThreadingTCPServer(socketserver.ThreadingTCPServer):
@@ -507,72 +525,7 @@ def _save_window_pixels(pixels, output: Path) -> dict[str, Any]:
     }
 
 
-def _capture_workspace_item(spec: dict[str, Any], index: int) -> dict[str, Any]:
-    window = bpy.context.window
-    if window is None:
-        raise RuntimeError("nenhuma janela Blender ativa")
-    workspace_name = spec.get("workspace")
-    workspace = _workspace_by_name(str(workspace_name) if workspace_name else None)
-    original = window.workspace
-
-    target = str(spec.get("target", "VIEW_3D")).upper()
-    if target not in {"VIEW_3D", "WINDOW", "AREA"}:
-        raise ValueError(f"target de captura invalido: {target}")
-
-    try:
-        if workspace != original:
-            window.workspace = workspace
-            _redraw_window()
-
-        if spec.get("shading"):
-            shading = str(spec["shading"]).upper()
-            if shading not in _VIEW_SHADING_TYPES:
-                raise ValueError(f"shading nao permitido: {shading}")
-            if any(area.type == "VIEW_3D" for area in window.screen.areas):
-                _viewport_set_shading({"type": shading})
-
-        _redraw_window()
-        region_rect = None
-        area_type = None
-
-        if target == "VIEW_3D":
-            _area, region, _space, _region_3d = _view3d_context()
-            region_rect = (
-                (int(region.x), int(region.y)),
-                (int(region.x + region.width), int(region.y + region.height)),
-            )
-            area_type = "VIEW_3D"
-        elif target == "AREA":
-            requested = str(spec.get("area_type") or "VIEW_3D").upper()
-            areas = [area for area in window.screen.areas if area.type == requested]
-            if not areas:
-                raise ValueError(f"area nao encontrada no workspace {workspace.name}: {requested}")
-            area = max(areas, key=lambda item: item.width * item.height)
-            region_rect = (
-                (int(area.x), int(area.y)),
-                (int(area.x + area.width), int(area.y + area.height)),
-            )
-            area_type = requested
-
-        filename = str(spec.get("filename") or f"{index:02d}-{workspace.name}-{target.lower()}.png")
-        if not filename.lower().endswith(".png"):
-            filename += ".png"
-        output = attachment_output_path(filename)
-        pixels = window.screenshot(region=region_rect) if region_rect else window.screenshot()
-        capture = _save_window_pixels(pixels, output)
-        capture.update({
-            "workspace": workspace.name,
-            "target": target,
-            "area_type": area_type,
-        })
-        return capture
-    finally:
-        if window.workspace != original:
-            window.workspace = original
-            _redraw_window()
-
-
-def _workspace_capture_set(params: dict[str, Any]) -> dict[str, Any]:
+def _normalize_workspace_capture_specs(params: dict[str, Any]) -> list[dict[str, Any]]:
     captures = params.get("captures")
     if captures is None:
         workspaces = params.get("workspaces")
@@ -594,36 +547,361 @@ def _workspace_capture_set(params: dict[str, Any]) -> dict[str, Any]:
     if len(captures) == 0 or len(captures) > 20:
         raise ValueError("capture_set exige entre 1 e 20 capturas")
 
-    results: list[dict[str, Any]] = []
-    for index, spec in enumerate(captures, start=1):
+    normalized: list[dict[str, Any]] = []
+    for spec in captures:
         if not isinstance(spec, dict):
             raise ValueError("cada captura deve ser objeto")
-        try:
-            results.append({"ok": True, **_capture_workspace_item(spec, index)})
-        except Exception as exc:
-            results.append({
-                "ok": False,
-                "workspace": spec.get("workspace"),
-                "target": spec.get("target", "VIEW_3D"),
-                "error": f"{type(exc).__name__}: {exc}",
-            })
+        target = str(spec.get("target", "VIEW_3D")).upper()
+        if target not in {"VIEW_3D", "WINDOW", "AREA"}:
+            raise ValueError(f"target de captura invalido: {target}")
+        normalized.append({
+            **spec,
+            "target": target,
+        })
+    return normalized
 
-    label = sanitize_label(str(params.get("label", "workspace-capture-set")), "workspace-capture-set")
-    manifest_path = attachment_output_path(f"{label}.json")
+
+def _capture_active_workspace_item(
+    spec: dict[str, Any],
+    index: int,
+    requested_workspace_name: str,
+) -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    if not hasattr(window, "screenshot"):
+        raise RuntimeError("workspace.capture_set requer Blender 5.2+ com Window.screenshot")
+
+    captured_workspace_name = window.workspace.name
+    captured_screen_name = window.screen.name
+    if captured_workspace_name != requested_workspace_name:
+        raise RuntimeError(
+            "workspace mismatch antes da captura: "
+            f"solicitado={requested_workspace_name!r}, ativo={captured_workspace_name!r}, "
+            f"screen={captured_screen_name!r}"
+        )
+
+    target = str(spec.get("target", "VIEW_3D")).upper()
+    region_rect = None
+    area_type = None
+
+    if target == "VIEW_3D":
+        _area, region, _space, _region_3d = _view3d_context()
+        region_rect = (
+            (int(region.x), int(region.y)),
+            (int(region.x + region.width), int(region.y + region.height)),
+        )
+        area_type = "VIEW_3D"
+    elif target == "AREA":
+        requested_area = str(spec.get("area_type") or "VIEW_3D").upper()
+        areas = [area for area in window.screen.areas if area.type == requested_area]
+        if not areas:
+            raise ValueError(
+                f"area nao encontrada no workspace {requested_workspace_name}: {requested_area}"
+            )
+        area = max(areas, key=lambda item: item.width * item.height)
+        region_rect = (
+            (int(area.x), int(area.y)),
+            (int(area.x + area.width), int(area.y + area.height)),
+        )
+        area_type = requested_area
+
+    filename = str(
+        spec.get("filename")
+        or f"{index:02d}-{requested_workspace_name}-{target.lower()}.png"
+    )
+    if not filename.lower().endswith(".png"):
+        filename += ".png"
+    output = attachment_output_path(filename)
+
+    pixels = window.screenshot(region=region_rect) if region_rect else window.screenshot()
+
+    workspace_after = window.workspace.name
+    screen_after = window.screen.name
+    if workspace_after != requested_workspace_name:
+        raise RuntimeError(
+            "workspace mudou durante a captura: "
+            f"solicitado={requested_workspace_name!r}, depois={workspace_after!r}, "
+            f"screen={screen_after!r}"
+        )
+
+    capture = _save_window_pixels(pixels, output)
+    capture.update({
+        "workspace_requested": requested_workspace_name,
+        "workspace_captured": workspace_after,
+        "workspace_match": workspace_after == requested_workspace_name,
+        "screen_captured": screen_after,
+        "target": target,
+        "area_type": area_type,
+    })
+    return capture
+
+
+def _write_workspace_capture_manifest(job: WorkspaceCaptureJob) -> dict[str, Any]:
+    manifest_path = attachment_output_path(f"{job.label}.json")
+    window = bpy.context.window
+    final_workspace = window.workspace.name if window else None
+    final_screen = window.screen.name if window else None
+    restored = final_workspace == job.original_workspace_name
     manifest = {
-        "version": 1,
+        "version": 2,
         "action": "workspace.capture_set",
         "created_ns": time.time_ns(),
+        "started_ns": job.started_ns,
         "active_stage": get_active_stage_id(),
-        "captures": results,
+        "synchronization": {
+            "strategy": "timer-yield",
+            "settle_ticks": _WORKSPACE_CAPTURE_SETTLE_TICKS,
+        },
+        "original_workspace": job.original_workspace_name,
+        "final_workspace": final_workspace,
+        "final_screen": final_screen,
+        "restored_original_workspace": restored,
+        "captures": job.results,
     }
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return {
         "manifest": str(manifest_path),
-        "captures": results,
-        "success_count": sum(1 for item in results if item.get("ok")),
-        "failure_count": sum(1 for item in results if not item.get("ok")),
+        "captures": job.results,
+        "success_count": sum(1 for item in job.results if item.get("ok")),
+        "failure_count": sum(1 for item in job.results if not item.get("ok")),
+        "requested_count": len(job.captures),
+        "original_workspace": job.original_workspace_name,
+        "final_workspace": final_workspace,
+        "restored_original_workspace": restored,
+        "synchronization": manifest["synchronization"],
     }
+
+
+def _start_workspace_capture_job(task: Task) -> None:
+    global _CAPTURE_JOB
+    if _CAPTURE_JOB is not None:
+        raise RuntimeError("ja existe workspace.capture_set em andamento")
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    captures = _normalize_workspace_capture_specs(task.request.get("params") or {})
+    label = sanitize_label(
+        str(task.request.get("params", {}).get("label", "workspace-capture-set")),
+        "workspace-capture-set",
+    )
+    _CAPTURE_JOB = WorkspaceCaptureJob(
+        task=task,
+        params=task.request.get("params") or {},
+        captures=captures,
+        label=label,
+        original_workspace_name=window.workspace.name,
+    )
+
+
+def _capture_job_fail_current(job: WorkspaceCaptureJob, exc: Exception) -> None:
+    window = bpy.context.window
+    spec = job.captures[job.index] if job.index < len(job.captures) else {}
+    job.results.append({
+        "ok": False,
+        "workspace_requested": job.requested_workspace_name or spec.get("workspace"),
+        "workspace_captured": window.workspace.name if window else None,
+        "screen_captured": window.screen.name if window else None,
+        "workspace_match": bool(
+            window
+            and job.requested_workspace_name
+            and window.workspace.name == job.requested_workspace_name
+        ),
+        "target": spec.get("target", "VIEW_3D"),
+        "area_type": spec.get("area_type"),
+        "error": f"{type(exc).__name__}: {exc}",
+    })
+    job.index += 1
+    job.phase = "switch"
+    job.settle_remaining = 0
+    job.requested_workspace_name = None
+    job.last_screen_name = None
+
+
+def _advance_workspace_capture_job() -> float:
+    global _CAPTURE_JOB
+    job = _CAPTURE_JOB
+    if job is None:
+        return 0.05
+
+    window = bpy.context.window
+    if window is None:
+        error = RuntimeError("janela Blender desapareceu durante workspace.capture_set")
+        job.task.response = {
+            "id": job.task.request["id"],
+            "ok": False,
+            "error": f"{type(error).__name__}: {error}",
+        }
+        _record_task_history(job.task, ok=False, error=str(error))
+        job.task.done.set()
+        _CAPTURE_JOB = None
+        return 0.05
+
+    try:
+        if job.index >= len(job.captures):
+            if job.phase not in {"restore", "restore_settle", "finalize"}:
+                job.phase = "restore"
+
+            if job.phase == "restore":
+                original = bpy.data.workspaces.get(job.original_workspace_name)
+                if original is None:
+                    raise RuntimeError(
+                        f"workspace original nao existe mais: {job.original_workspace_name}"
+                    )
+                window.workspace = original
+                _redraw_window()
+                job.phase = "restore_settle"
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+
+            if job.phase == "restore_settle":
+                if window.workspace.name != job.original_workspace_name:
+                    original = bpy.data.workspaces.get(job.original_workspace_name)
+                    if original is None:
+                        raise RuntimeError(
+                            f"workspace original nao existe mais: {job.original_workspace_name}"
+                        )
+                    window.workspace = original
+                    job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                    job.last_screen_name = window.screen.name
+                    _redraw_window()
+                    return 0.05
+
+                current_screen = window.screen.name
+                if current_screen != job.last_screen_name:
+                    job.last_screen_name = current_screen
+                    job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                    _redraw_window()
+                    return 0.05
+
+                if job.settle_remaining > 0:
+                    job.settle_remaining -= 1
+                    _redraw_window()
+                    return 0.05
+
+                job.phase = "finalize"
+
+            if job.phase == "finalize":
+                result = _write_workspace_capture_manifest(job)
+                if not result["restored_original_workspace"]:
+                    raise RuntimeError(
+                        "workspace original nao foi restaurado ao final do capture_set"
+                    )
+                job.task.response = {
+                    "id": job.task.request["id"],
+                    "ok": True,
+                    "result": result,
+                }
+                _record_task_history(job.task, ok=True, result=result)
+                job.task.done.set()
+                _CAPTURE_JOB = None
+                return 0.05
+
+        spec = job.captures[job.index]
+
+        if job.phase == "switch":
+            requested = _workspace_by_name(
+                str(spec.get("workspace")) if spec.get("workspace") else None
+            )
+            job.requested_workspace_name = requested.name
+            window.workspace = requested
+            _redraw_window()
+            job.phase = "settle_workspace"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            job.last_screen_name = window.screen.name
+            return 0.05
+
+        if job.phase == "settle_workspace":
+            if window.workspace.name != job.requested_workspace_name:
+                requested = _workspace_by_name(job.requested_workspace_name)
+                window.workspace = requested
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                _redraw_window()
+                return 0.05
+
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+
+            job.phase = "configure"
+            return 0.05
+
+        if job.phase == "configure":
+            shading_value = spec.get("shading")
+            if shading_value:
+                shading = str(shading_value).upper()
+                if shading not in _VIEW_SHADING_TYPES:
+                    raise ValueError(f"shading nao permitido: {shading}")
+                if any(area.type == "VIEW_3D" for area in window.screen.areas):
+                    _viewport_set_shading({"type": shading})
+            _redraw_window()
+            job.phase = "settle_config"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            job.last_screen_name = window.screen.name
+            return 0.05
+
+        if job.phase == "settle_config":
+            if window.workspace.name != job.requested_workspace_name:
+                raise RuntimeError(
+                    "workspace mudou durante a configuracao: "
+                    f"esperado={job.requested_workspace_name!r}, "
+                    f"ativo={window.workspace.name!r}"
+                )
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "capture"
+            return 0.05
+
+        if job.phase == "capture":
+            requested_name = str(job.requested_workspace_name)
+            capture = _capture_active_workspace_item(
+                spec,
+                job.index + 1,
+                requested_name,
+            )
+            job.results.append({"ok": True, **capture})
+            job.index += 1
+            job.phase = "switch"
+            job.settle_remaining = 0
+            job.requested_workspace_name = None
+            job.last_screen_name = None
+            return 0.05
+
+        raise RuntimeError(f"fase de workspace.capture_set invalida: {job.phase}")
+
+    except Exception as exc:
+        if job.index < len(job.captures):
+            _capture_job_fail_current(job, exc)
+            return 0.05
+
+        error = f"{type(exc).__name__}: {exc}"
+        job.task.response = {
+            "id": job.task.request["id"],
+            "ok": False,
+            "error": error,
+        }
+        _record_task_history(job.task, ok=False, error=error)
+        job.task.done.set()
+        _CAPTURE_JOB = None
+        return 0.05
 
 
 def _dismiss_modal_event() -> dict[str, Any]:
@@ -694,7 +972,7 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
         return _workspace_describe(params)
 
     if action == "workspace.capture_set":
-        return _workspace_capture_set(params)
+        raise RuntimeError("workspace.capture_set deve ser executado pelo scheduler assíncrono")
 
     if action == "history.stage.create":
         metadata = create_stage(
@@ -1036,11 +1314,25 @@ def _record_task_history(task: Task, *, ok: bool, result: Any = None, error: str
 
 
 def _drain_queue() -> float:
+    if _CAPTURE_JOB is not None:
+        return _advance_workspace_capture_job()
+
     for _ in range(10):
         try:
             task = _TASKS.get_nowait()
         except queue.Empty:
             break
+
+        if task.request.get("action") == "workspace.capture_set":
+            try:
+                _start_workspace_capture_job(task)
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                task.response = {"id": task.request["id"], "ok": False, "error": error}
+                _record_task_history(task, ok=False, error=error)
+                task.done.set()
+            break
+
         try:
             result = _dispatch(task.request["action"], task.request["params"])
             task.response = {"id": task.request["id"], "ok": True, "result": result}
