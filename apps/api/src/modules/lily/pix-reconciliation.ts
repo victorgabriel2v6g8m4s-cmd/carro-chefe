@@ -205,7 +205,7 @@ async function accessToken() {
     `${env("COOKLILY_PIX_API_CLIENT_ID")}:${env("COOKLILY_PIX_API_CLIENT_SECRET")}`
   ).toString("base64");
   const tokenInput = new URLSearchParams({ grant_type: "client_credentials" });
-  const scope = env("COOKLILY_PIX_API_OAUTH_SCOPE") || "pix.read";
+  const scope = env("COOKLILY_PIX_API_OAUTH_SCOPE");
   if (scope) tokenInput.set("scope", scope);
   const body = config.oauthBodyFormat === "json"
     ? JSON.stringify(Object.fromEntries(tokenInput))
