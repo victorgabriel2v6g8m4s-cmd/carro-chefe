@@ -6,7 +6,7 @@
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
 - head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `b654a73d1b65d928357ed24f02ebd272861e4b58`
+- head_sha_verified: `4926165a243a0600a93a3b3ae5562c8b01224c9b`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
 - pull_requests: ainda não verificado/criado para 11I
 - last_verified_at: 2026-09-29
@@ -30,6 +30,14 @@
 ## Em andamento
 
 Auditoria do núcleo concluída e lacunas críticas corrigidas. Em andamento: fechar documentação/roadmap/deploy, revisar compatibilidade PSP-specific e então validar PR/gates.
+
+## Marcos adicionais desta retomada
+
+- Documento técnico `ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md` criado.
+- Roadmap oficial, roadmap Pix, índice de entregas e status de implementação sincronizados.
+- Runbook VPS atualizado com configuração fail-closed e smoke financeiro.
+- OAuth scope deixou de ser presumido; só é enviado se o PSP real exigir/configurar.
+- Pesquisa oficial confirmou que a API Pix padroniza a consulta funcional, enquanto segurança/acesso dependem da instituição recebedora.
 
 ## Gates e testes
 
