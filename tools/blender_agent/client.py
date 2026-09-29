@@ -78,6 +78,18 @@ def build_parser() -> argparse.ArgumentParser:
     window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
     window.set_defaults(handler=lambda _a: call("ui.window"))
 
+    dismiss = sub.add_parser("ui-dismiss", help="fecha splash/modal inicial com ESC")
+    dismiss.set_defaults(handler=lambda _a: call("ui.dismiss_modal"))
+
+    view3d = sub.add_parser("ui-view3d", help="retorna bounds da maior VIEW_3D")
+    view3d.set_defaults(handler=lambda _a: call("ui.view3d"))
+
+    orbit = sub.add_parser("ui-orbit", help="orbita a maior VIEW_3D com middle mouse")
+    orbit.add_argument("--dx", type=int, default=120)
+    orbit.add_argument("--dy", type=int, default=60)
+    orbit.add_argument("--steps", type=int, default=18)
+    orbit.set_defaults(handler=lambda a: call("ui.orbit", {"dx": a.dx, "dy": a.dy, "steps": a.steps}))
+
     click = sub.add_parser("ui-click", help="simula clique dentro da janela Blender")
     click.add_argument("x", type=int)
     click.add_argument("y", type=int)
