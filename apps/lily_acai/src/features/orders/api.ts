@@ -105,6 +105,7 @@ export type LilyOrder = {
   grandTotalCents: number;
   address: LilyAddressInput | null;
   customerNote: string | null;
+  whatsappUpdatesOptIn: boolean;
   createdAt: string;
   guestAccessToken?: string;
   items: Array<{
@@ -234,6 +235,7 @@ export async function createOrder(input: {
   fulfillmentType: "pickup" | "delivery";
   address?: LilyAddressInput;
   customerNote?: string;
+  whatsappUpdatesOptIn?: boolean;
   items: CartItem[];
   quote: OrderQuote;
   attribution?: Record<string, string>;
@@ -257,6 +259,7 @@ export async function createOrder(input: {
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
       customerNote: input.customerNote || null,
+      whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
       items: input.items.map((item, index) => ({
         ...cartItemPayload(item),
         configurationHash: input.quote.items[index]!.configurationHash,
