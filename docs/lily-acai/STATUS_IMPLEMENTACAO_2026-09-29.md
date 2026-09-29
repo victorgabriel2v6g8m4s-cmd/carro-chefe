@@ -248,14 +248,38 @@ Pendente apenas de homologação operacional:
 - QA em impressora real quando disponível;
 - integração de hardware específica somente se o equipamento futuro exigir.
 
+
+### 9. Entrega 08 — TORRE DE CONTROLE DE PEDIDOS VALIDADA E INTEGRADA
+
+PR #108 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `62b0c6eca315c718c512b35a6274ba01f701c270`;
+- CI `36635632700`: success;
+- CodeQL `36635632701`: success;
+- merge SHA `64f4af027fcdd3cf13ee57457c193a8c622cc5f9`.
+
+Implementado:
+
+- visão staff unificada do estado financeiro, operacional e logístico;
+- fila/filtros de ativos, atenção, concluídos, cancelados e modalidade;
+- alertas de pagamento parado, SLA vencido e inconsistências de fluxo;
+- navegação para o domínio responsável, sem permitir forçar status arbitrariamente;
+- conclusão segura e auditável de retirada presencial;
+- minimização de PII na API do painel;
+- testes de RBAC, CSRF, privacidade, SLA e conclusão.
+
+Pendente apenas de deploy/QA real no ciclo de homologação.
+
 ## Ordem de execução atualizada
 
-1. fazer deploy da canonical validada até a 11K;
-2. aplicar migrations pendentes da CookLily e validar saúde dos serviços;
-3. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
-4. definir com Operações o SLA real da cozinha e executar QA em tablet/celular;
-5. testar a comanda 11K em PDF e impressora real;
-6. executar QA operacional ponta a ponta em cozinha, cliente e courier antes de iniciar nova entrega.
+1. continuar as Entregas 09–10 em branches isoladas, sem depender do deploy adiado;
+2. amanhã, fazer deploy/homologação da linha selecionada na VPS;
+3. aplicar migrations pelo deployer e validar saúde dos serviços;
+4. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
+5. definir com Operações o SLA real e testar 11K em PDF/impressora real;
+6. executar QA operacional ponta a ponta em pedidos, cozinha, cliente e courier.
 
 ## Regra de status
 
