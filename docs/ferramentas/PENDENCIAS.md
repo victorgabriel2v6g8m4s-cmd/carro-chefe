@@ -65,12 +65,12 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 ### TOOL-PEND-006 — Blender Agent até V1.0
 
 - **Data:** 29/09/2026
-- **Status:** em desenvolvimento
+- **Status:** validando
 - **Owner:** `AG-DEV`, com validação visual do proprietário
 - **Origem:** necessidade de modelagem 3D iterativa sem Computer Use capaz de controlar o Blender no Windows 10.
 - **Problema:** scripts únicos não fecham o ciclo observar/editar/corrigir e a conta atual não expõe controle de mouse do aplicativo.
 - **Capacidade necessária:** evoluir `tools/blender_agent` de bridge V0.1 para feedback visual automático, Sculpt assistido, recipes 3D e agente iterativo com rollback.
-- **Alternativa temporária:** V0.1 já oferece ações `bpy` e eventos de clique/arrasto/wheel confinados ao Blender por `Window.event_simulate`; inspeção visual ainda exige render/observação assistida.
+- **Alternativa temporária:** V0.1 foi validada no Windows 10/Blender 5.2 LTS. A V0.2 já gera capturas PNG da VIEW_3D, presets multiângulo e receipts; ainda falta confirmar as imagens no smoke test real e automatizar sua ingestão pelo agente.
 - **Prioridade:** média/alta para produção dos ativos 3D de produto.
 - **Critérios de aceite:** seguir [BLENDER_AGENT.md](../tecnologia/BLENDER_AGENT.md); smoke test em Blender real no Windows 10; captura de viewport; Sculpt com contexto controlado; checkpoints/rollback; recipes versionadas; testes e documentação; promoção explícita de ativos.
 - **Dependências/bloqueios:** Blender instalado na máquina real, sessão gráfica, validação de `--enable-event-simulate` e referências físicas aprovadas do produto.
