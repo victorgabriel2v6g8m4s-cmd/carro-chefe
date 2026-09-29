@@ -543,7 +543,7 @@ def _capture_workspace_item(spec: dict[str, Any], index: int) -> dict[str, Any]:
             )
             area_type = "VIEW_3D"
         elif target == "AREA":
-            requested = str(spec.get("area_type", "VIEW_3D")).upper()
+            requested = str(spec.get("area_type") or "VIEW_3D").upper()
             areas = [area for area in window.screen.areas if area.type == requested]
             if not areas:
                 raise ValueError(f"area nao encontrada no workspace {workspace.name}: {requested}")
