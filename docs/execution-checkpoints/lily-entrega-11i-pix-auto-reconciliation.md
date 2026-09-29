@@ -6,7 +6,7 @@
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
 - head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `fc19612decb77ab6030db11c250edd967cd37480`
+- head_sha_verified: `5bbdc76af93fb6ad83ffa0348533c08d4953ebfe`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
 - pull_requests: PR #102 -> `cooklily/canonical` (draft); PR #103 -> `main` (gate temporário, não mergear)
 - last_verified_at: 2026-09-29
@@ -41,7 +41,10 @@ Auditoria do núcleo concluída e lacunas críticas corrigidas. Em andamento: fe
 
 ## Gates e testes
 
-Ainda não revalidados nesta retomada. Não considerar a 11I pronta até CI e CodeQL verdes no SHA final candidato.
+- PR gate #103 disparou CI `36621455025` e CodeQL `36621455028` para o SHA `21442a24d77136ca7f39add2b06a39190f81b4cc`.
+- Quality Node 20/24 falhou em `policy:check`, antes de testes da feature: a alteração de `AGENTS.md` exigia regenerar o manifesto versionado.
+- Correção persistida em `5bbdc76af93fb6ad83ffa0348533c08d4953ebfe`: `.agent-policy/manifest.json` regenerado, sem bypass da política.
+- Novo gate do HEAD resultante deste checkpoint é obrigatório. Não considerar a 11I pronta até CI e CodeQL verdes.
 
 ## Migrations
 
