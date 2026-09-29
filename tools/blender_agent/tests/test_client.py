@@ -33,6 +33,31 @@ class ClientParserTests(unittest.TestCase):
         self.assertEqual(args.dy, -40)
         self.assertEqual(args.steps, 10)
 
+    def test_viewport_capture_set_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "viewport-capture-set",
+            "--label",
+            "baguete-v1",
+            "--views",
+            "FRONT",
+            "TOP",
+            "THREE_QUARTER",
+            "--shading",
+            "MATERIAL",
+        ])
+        self.assertEqual(args.command, "viewport-capture-set")
+        self.assertEqual(args.label, "baguete-v1")
+        self.assertEqual(args.views, ["FRONT", "TOP", "THREE_QUARTER"])
+        self.assertEqual(args.shading, "MATERIAL")
+
+    def test_viewport_view_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["viewport-view", "THREE_QUARTER", "--no-frame-all"])
+        self.assertEqual(args.command, "viewport-view")
+        self.assertEqual(args.preset, "THREE_QUARTER")
+        self.assertTrue(args.no_frame_all)
+
     def test_generic_call_accepts_json(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
