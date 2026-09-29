@@ -82,6 +82,25 @@ _MODIFIER_PROPERTIES = {
 }
 _VIEW_AXIS_TYPES = {"LEFT", "RIGHT", "BOTTOM", "TOP", "FRONT", "BACK", "CAMERA", "THREE_QUARTER"}
 _VIEW_SHADING_TYPES = {"WIREFRAME", "SOLID", "MATERIAL", "RENDERED"}
+_SCULPT_BRUSH_TYPES = {
+    "DRAW",
+    "SMOOTH",
+    "GRAB",
+    "INFLATE",
+    "CLAY_STRIPS",
+    "CREASE",
+    "SNAKE_HOOK",
+}
+_SCULPT_TOOL_IDS = {
+    "DRAW": "builtin_brush.Draw",
+    "SMOOTH": "builtin_brush.Smooth",
+    "GRAB": "builtin_brush.Grab",
+    "INFLATE": "builtin_brush.Inflate",
+    "CLAY_STRIPS": "builtin_brush.Clay Strips",
+    "CREASE": "builtin_brush.Crease",
+    "SNAKE_HOOK": "builtin_brush.Snake Hook",
+}
+_SCULPT_STROKE_MODES = {"NORMAL", "INVERT", "SMOOTH", "ERASE"}
 
 
 @dataclass
@@ -904,6 +923,286 @@ def _advance_workspace_capture_job() -> float:
         return 0.05
 
 
+def _sculpt_context():
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    area, region, space, region_3d = _view3d_context()
+    return window, area, region, space, region_3d
+
+
+def _sculpt_active_tool_id() -> str | None:
+    window = bpy.context.window
+    if window is None:
+        return None
+    try:
+        tool = window.workspace.tools.from_space_view3d_mode("SCULPT", create=False)
+        return getattr(tool, "idname", None) if tool else None
+    except Exception:
+        return None
+
+
+def _sculpt_status() -> dict[str, Any]:
+    active = bpy.context.view_layer.objects.active
+    unified = bpy.context.scene.tool_settings.unified_paint_settings
+    return {
+        "mode": bpy.context.mode,
+        "active_object": active.name if active else None,
+        "active_object_type": active.type if active else None,
+        "brush_tool": _sculpt_active_tool_id(),
+        "radius": int(getattr(unified, "size", 0)),
+        "strength": float(getattr(unified, "strength", 0.0)),
+        "view": _viewport_description(),
+        "allowed_brushes": sorted(_SCULPT_BRUSH_TYPES),
+    }
+
+
+def _sculpt_select_mesh(name: str | None):
+    obj = _selected_object(name) if name else bpy.context.view_layer.objects.active
+    if obj is None:
+        raise ValueError("nenhum objeto ativo para Sculpt")
+    if obj.type != "MESH":
+        raise ValueError(f"Sculpt exige objeto MESH; recebido {obj.type}")
+
+    if bpy.context.mode != "OBJECT":
+        try:
+            bpy.ops.object.mode_set(mode="OBJECT")
+        except Exception as exc:
+            raise RuntimeError(f"nao foi possivel sair do modo atual: {bpy.context.mode}") from exc
+
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    return obj
+
+
+def _sculpt_set_brush(brush: str) -> dict[str, Any]:
+    normalized = str(brush or "DRAW").upper()
+    if normalized not in _SCULPT_BRUSH_TYPES:
+        raise ValueError(f"brush Sculpt nao permitido: {normalized}")
+
+    window, area, region, _space, _region_3d = _sculpt_context()
+    result = None
+    first_error = None
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        if hasattr(bpy.ops.wm, "tool_set_by_brush_type"):
+            try:
+                result = bpy.ops.wm.tool_set_by_brush_type(
+                    brush_type=normalized,
+                    space_type="VIEW_3D",
+                )
+            except Exception as exc:
+                first_error = exc
+        if not result or "FINISHED" not in result:
+            try:
+                result = bpy.ops.wm.tool_set_by_id(
+                    name=_SCULPT_TOOL_IDS[normalized],
+                    space_type="VIEW_3D",
+                )
+            except Exception as exc:
+                if first_error:
+                    raise RuntimeError(
+                        f"falha ao ativar brush {normalized}: {first_error}; fallback: {exc}"
+                    ) from exc
+                raise RuntimeError(f"falha ao ativar brush {normalized}: {exc}") from exc
+
+    if not result or "FINISHED" not in result:
+        raise RuntimeError(f"Blender recusou brush Sculpt {normalized}: {sorted(result or [])}")
+
+    return {
+        "brush": normalized,
+        "tool_id": _sculpt_active_tool_id(),
+        "operator": sorted(result),
+    }
+
+
+def _sculpt_set_radius_strength(radius: int, strength: float) -> dict[str, Any]:
+    radius = max(5, min(500, int(radius)))
+    strength = max(0.001, min(1.0, float(strength)))
+    unified = bpy.context.scene.tool_settings.unified_paint_settings
+    unified.use_unified_size = True
+    unified.use_unified_strength = True
+    unified.size = radius
+    unified.strength = strength
+    return {"radius": radius, "strength": strength}
+
+
+def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
+    obj = _sculpt_select_mesh(str(params["name"]) if params.get("name") else None)
+    window, area, region, _space, _region_3d = _sculpt_context()
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        result = bpy.ops.object.mode_set(mode="SCULPT")
+    if not result or "FINISHED" not in result:
+        raise RuntimeError(f"nao foi possivel entrar em Sculpt Mode: {sorted(result or [])}")
+
+    brush_info = _sculpt_set_brush(str(params.get("brush", "DRAW")))
+    settings = _sculpt_set_radius_strength(
+        int(params.get("radius", 60)),
+        float(params.get("strength", 0.25)),
+    )
+    _redraw_window()
+    return {
+        "object": obj.name,
+        "mode": bpy.context.mode,
+        **brush_info,
+        **settings,
+        "view": _viewport_description(),
+    }
+
+
+def _normalize_sculpt_points(
+    points: Any,
+    *,
+    coordinate_space: str,
+    region,
+    default_pressure: float,
+    radius: int,
+) -> list[dict[str, Any]]:
+    if not isinstance(points, list) or len(points) < 1:
+        raise ValueError("sculpt.stroke exige lista points com pelo menos 1 ponto")
+    if len(points) > 128:
+        raise ValueError("sculpt.stroke limita cada stroke a 128 pontos")
+
+    space = str(coordinate_space or "NORMALIZED").upper()
+    if space not in {"NORMALIZED", "REGION"}:
+        raise ValueError("coordinate_space deve ser NORMALIZED ou REGION")
+
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(points):
+        if isinstance(item, dict):
+            x = float(item["x"])
+            y = float(item["y"])
+            pressure = float(item.get("pressure", default_pressure))
+        elif isinstance(item, (list, tuple)) and len(item) >= 2:
+            x = float(item[0])
+            y = float(item[1])
+            pressure = float(item[2]) if len(item) >= 3 else default_pressure
+        else:
+            raise ValueError(f"ponto Sculpt invalido no indice {index}")
+
+        if space == "NORMALIZED":
+            if not (0.0 <= x <= 1.0 and 0.0 <= y <= 1.0):
+                raise ValueError(f"ponto normalizado fora de 0..1 no indice {index}")
+            px = x * max(1, region.width - 1)
+            py = y * max(1, region.height - 1)
+        else:
+            px, py = x, y
+
+        if not (0 <= px < region.width and 0 <= py < region.height):
+            raise ValueError(
+                f"ponto Sculpt fora da VIEW_3D no indice {index}: {(px, py)} "
+                f"para {region.width}x{region.height}"
+            )
+
+        normalized.append({
+            "name": "CCSculptStroke",
+            "location": (0.0, 0.0, 0.0),
+            "mouse": (float(px), float(py)),
+            "mouse_event": (float(px), float(py)),
+            "pressure": max(0.0, min(1.0, pressure)),
+            "size": float(radius),
+            "time": float(index) * 0.02,
+            "is_start": index == 0,
+            "x_tilt": 0.0,
+            "y_tilt": 0.0,
+            "pen_flip": False,
+        })
+    return normalized
+
+
+def _sculpt_checkpoint(label: str) -> Path:
+    stage = get_active_stage_id() or "stage"
+    filename = sanitize_label(
+        f"{stage}-{label}-{time.time_ns()}.blend",
+        "sculpt-checkpoint.blend",
+    )
+    output = safe_runtime_path("checkpoints", filename)
+    bpy.ops.wm.save_as_mainfile(filepath=str(output), copy=True)
+    return output
+
+
+def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
+    if bpy.context.mode != "SCULPT":
+        raise RuntimeError("sculpt.stroke exige Sculpt Mode; execute sculpt.prepare primeiro")
+
+    active = bpy.context.view_layer.objects.active
+    if active is None or active.type != "MESH":
+        raise RuntimeError("sculpt.stroke exige MESH ativo")
+
+    brush = str(params.get("brush", "")).upper()
+    brush_info = _sculpt_set_brush(brush) if brush else {
+        "brush": None,
+        "tool_id": _sculpt_active_tool_id(),
+        "operator": [],
+    }
+
+    radius = max(5, min(500, int(params.get("radius", 60))))
+    strength = max(0.001, min(1.0, float(params.get("strength", 0.25))))
+    settings = _sculpt_set_radius_strength(radius, strength)
+
+    window, area, region, _space, _region_3d = _sculpt_context()
+    points = _normalize_sculpt_points(
+        params.get("points"),
+        coordinate_space=str(params.get("coordinate_space", "NORMALIZED")),
+        region=region,
+        default_pressure=float(params.get("pressure", 1.0)),
+        radius=radius,
+    )
+
+    mode = str(params.get("mode", "NORMAL")).upper()
+    if mode not in _SCULPT_STROKE_MODES:
+        raise ValueError(f"modo de stroke Sculpt nao permitido: {mode}")
+
+    checkpoint_path = None
+    if bool(params.get("checkpoint", True)):
+        checkpoint_path = _sculpt_checkpoint(str(params.get("label", "stroke")))
+
+    before = None
+    if bool(params.get("capture_before", True)):
+        before = _viewport_capture({
+            "filename": str(params.get("before_name", f"sculpt-before-{time.time_ns()}.png"))
+        })
+
+    operator = bpy.ops.sculpt.brush_stroke
+    rna = operator.get_rna_type()
+    available = set(rna.properties.keys())
+    kwargs: dict[str, Any] = {
+        "stroke": points,
+        "mode": mode if mode in {"NORMAL", "INVERT"} or "brush_toggle" not in available else "NORMAL",
+    }
+    if "override_location" in available:
+        kwargs["override_location"] = True
+    if "ignore_background_click" in available:
+        kwargs["ignore_background_click"] = True
+    if "brush_toggle" in available and mode in {"SMOOTH", "ERASE"}:
+        kwargs["brush_toggle"] = mode
+    elif "brush_toggle" not in available and mode in {"SMOOTH", "ERASE"}:
+        kwargs["mode"] = mode
+
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        result = operator(**kwargs)
+
+    if not result or "FINISHED" not in result:
+        raise RuntimeError(f"Blender recusou sculpt stroke: {sorted(result or [])}")
+
+    bpy.context.view_layer.update()
+    area.tag_redraw()
+    return {
+        "object": active.name,
+        "brush": brush_info.get("brush"),
+        "tool_id": brush_info.get("tool_id"),
+        **settings,
+        "mode": mode,
+        "coordinate_space": str(params.get("coordinate_space", "NORMALIZED")).upper(),
+        "point_count": len(points),
+        "operator": sorted(result),
+        "checkpoint": str(checkpoint_path) if checkpoint_path else None,
+        "before_capture": before,
+        "post_capture_recommended": True,
+        "post_capture_reason": "o framebuffer precisa de um ciclo do event loop apos o stroke",
+    }
+
+
 def _dismiss_modal_event() -> dict[str, Any]:
     window = bpy.context.window
     if window is None:
@@ -964,6 +1263,15 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
             "active_stage_id": get_active_stage_id(),
         }
+
+    if action == "sculpt.status":
+        return _sculpt_status()
+
+    if action == "sculpt.prepare":
+        return _sculpt_prepare(params)
+
+    if action == "sculpt.stroke":
+        return _sculpt_stroke(params)
 
     if action == "workspace.list":
         return _workspace_list()
