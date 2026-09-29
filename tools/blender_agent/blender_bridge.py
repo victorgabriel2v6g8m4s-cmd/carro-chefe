@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import hmac
 import json
 import math
@@ -19,6 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import bpy
+import imbuf
 from mathutils import Vector
 
 from tools.blender_agent.protocol import (
@@ -62,6 +64,8 @@ _MODIFIER_PROPERTIES = {
     "SMOOTH": {"factor", "iterations", "use_x", "use_y", "use_z"},
     "SIMPLE_DEFORM": {"deform_method", "deform_axis", "angle", "factor", "limits"},
 }
+_VIEW_AXIS_TYPES = {"LEFT", "RIGHT", "BOTTOM", "TOP", "FRONT", "BACK", "CAMERA", "THREE_QUARTER"}
+_VIEW_SHADING_TYPES = {"WIREFRAME", "SOLID", "MATERIAL", "RENDERED"}
 
 
 @dataclass
@@ -165,15 +169,164 @@ def _largest_view3d_area():
     return max(areas, key=lambda area: area.width * area.height)
 
 
-def _view3d_snapshot() -> dict[str, int]:
+def _view3d_context():
     area = _largest_view3d_area()
+    regions = [region for region in area.regions if region.type == "WINDOW"]
+    if not regions:
+        raise RuntimeError("VIEW_3D sem região WINDOW")
+    region = max(regions, key=lambda item: item.width * item.height)
+    space = area.spaces.active
+    region_3d = getattr(space, "region_3d", None)
+    if region_3d is None:
+        raise RuntimeError("VIEW_3D sem RegionView3D")
+    return area, region, space, region_3d
+
+
+def _view3d_snapshot() -> dict[str, Any]:
+    area, region, _space, _region_3d = _view3d_context()
     return {
-        "x": int(area.x),
-        "y": int(area.y),
-        "width": int(area.width),
-        "height": int(area.height),
-        "center_x": int(area.x + area.width // 2),
-        "center_y": int(area.y + area.height // 2),
+        "x": int(region.x),
+        "y": int(region.y),
+        "width": int(region.width),
+        "height": int(region.height),
+        "center_x": int(region.x + region.width // 2),
+        "center_y": int(region.y + region.height // 2),
+        "area": {
+            "x": int(area.x),
+            "y": int(area.y),
+            "width": int(area.width),
+            "height": int(area.height),
+        },
+    }
+
+
+def _viewport_description() -> dict[str, Any]:
+    area, region, space, region_3d = _view3d_context()
+    active = bpy.context.view_layer.objects.active
+    view_location = getattr(region_3d, "view_location", None)
+    view_rotation = getattr(region_3d, "view_rotation", None)
+    return {
+        "bounds": _view3d_snapshot(),
+        "area_type": area.type,
+        "region_type": region.type,
+        "shading": getattr(space.shading, "type", None),
+        "view_perspective": getattr(region_3d, "view_perspective", None),
+        "is_perspective": bool(getattr(region_3d, "is_perspective", False)),
+        "view_distance": float(getattr(region_3d, "view_distance", 0.0)),
+        "view_location": [round(float(v), 6) for v in view_location] if view_location is not None else None,
+        "view_rotation": [round(float(v), 6) for v in view_rotation] if view_rotation is not None else None,
+        "mode": bpy.context.mode,
+        "active_object": active.name if active else None,
+        "selected_objects": [obj.name for obj in bpy.context.selected_objects],
+    }
+
+
+def _viewport_frame_all() -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    area, region, _space, _region_3d = _view3d_context()
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        result = bpy.ops.view3d.view_all(use_all_regions=False, center=False)
+    area.tag_redraw()
+    return {"operator": sorted(result), "view": _viewport_description()}
+
+
+def _viewport_set_view(params: dict[str, Any]) -> dict[str, Any]:
+    preset = str(params.get("preset", "FRONT")).upper()
+    if preset not in _VIEW_AXIS_TYPES:
+        raise ValueError(f"preset de viewport não permitido: {preset}")
+
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    area, region, _space, _region_3d = _view3d_context()
+
+    results: list[str] = []
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        if preset == "CAMERA":
+            results.extend(sorted(bpy.ops.view3d.view_camera()))
+        elif preset == "THREE_QUARTER":
+            results.extend(sorted(bpy.ops.view3d.view_axis(type="FRONT", align_active=False, relative=False)))
+            results.extend(sorted(bpy.ops.view3d.view_orbit(angle=math.radians(35.0), type="ORBITRIGHT")))
+            results.extend(sorted(bpy.ops.view3d.view_orbit(angle=math.radians(20.0), type="ORBITUP")))
+        else:
+            results.extend(sorted(bpy.ops.view3d.view_axis(type=preset, align_active=False, relative=False)))
+
+        if bool(params.get("frame_all", True)):
+            results.extend(sorted(bpy.ops.view3d.view_all(use_all_regions=False, center=False)))
+
+    area.tag_redraw()
+    return {"preset": preset, "operator": results, "view": _viewport_description()}
+
+
+def _viewport_set_shading(params: dict[str, Any]) -> dict[str, Any]:
+    shading = str(params.get("type", "SOLID")).upper()
+    if shading not in _VIEW_SHADING_TYPES:
+        raise ValueError(f"shading não permitido: {shading}")
+    area, _region, space, _region_3d = _view3d_context()
+    space.shading.type = shading
+    area.tag_redraw()
+    return {"shading": shading, "view": _viewport_description()}
+
+
+def _viewport_capture(params: dict[str, Any]) -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    if not hasattr(window, "screenshot"):
+        raise RuntimeError("viewport.capture requer Blender 5.2+ com Window.screenshot")
+
+    _area, region, _space, _region_3d = _view3d_context()
+    filename = str(params.get("filename", f"viewport-{time.time_ns()}.png"))
+    if not filename.lower().endswith(".png"):
+        filename += ".png"
+    output = safe_runtime_path("viewports", filename)
+
+    region_rect = (
+        (int(region.x), int(region.y)),
+        (int(region.x + region.width), int(region.y + region.height)),
+    )
+    pixels = window.screenshot(region=region_rect)
+    height, width = int(pixels.shape[0]), int(pixels.shape[1])
+    if width <= 0 or height <= 0:
+        raise RuntimeError("captura retornou dimensões inválidas")
+
+    image = imbuf.new((width, height))
+    try:
+        image.file_type = "PNG"
+        with image.with_buffer(write=True) as buffer:
+            buffer.cast("B")[:] = pixels.cast("B")
+        imbuf.write(image, filepath=str(output))
+    finally:
+        image.free()
+
+    if not output.exists() or output.stat().st_size <= 0:
+        raise RuntimeError("arquivo de viewport não foi gravado")
+
+    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    view = _viewport_description()
+    receipt = {
+        "protocol": PROTOCOL_VERSION,
+        "action": "viewport.capture",
+        "created_ns": time.time_ns(),
+        "image": str(output),
+        "sha256": digest,
+        "width": width,
+        "height": height,
+        "scene": bpy.context.scene.name,
+        "view": view,
+    }
+    receipt_path = safe_runtime_path("receipts", f"{output.stem}.json")
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return {
+        "path": str(output),
+        "receipt": str(receipt_path),
+        "sha256": digest,
+        "width": width,
+        "height": height,
+        "view": view,
     }
 
 
@@ -236,6 +389,21 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "modal_operators": _modal_operator_names(bpy.context.window) if bpy.context.window else [],
             "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
         }
+
+    if action == "viewport.describe":
+        return _viewport_description()
+
+    if action == "viewport.set_view":
+        return _viewport_set_view(params)
+
+    if action == "viewport.frame_all":
+        return _viewport_frame_all()
+
+    if action == "viewport.set_shading":
+        return _viewport_set_shading(params)
+
+    if action == "viewport.capture":
+        return _viewport_capture(params)
 
     if action == "ui.window":
         window = bpy.context.window
