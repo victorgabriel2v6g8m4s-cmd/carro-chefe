@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import {
   lilyPixAutoReconciliationConfiguration,
+  parsePixApiV2Page,
   parsePixApiV2Received,
   reconcileReceivedPix
 } from "./pix-reconciliation";
@@ -140,6 +141,25 @@ describe("CookLily Entrega 11I — conciliação automática Pix", () => {
     expect(parsed[0]?.payloadHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it("falha fechado quando uma página autoritativa contém Pix inválido", () => {
+    expect(() => parsePixApiV2Page({
+      parametros: { paginacao: { paginaAtual: 0, quantidadeDePaginas: 1 } },
+      pix: [{
+        endToEndId: "invalido",
+        txid: "CL12345678901234567890123",
+        valor: "25.00",
+        horario: "2026-09-29T17:30:00.000Z"
+      }]
+    })).toThrow("campos financeiros inválidos");
+  });
+
+  it("falha fechado quando a paginação excede o limite seguro", () => {
+    expect(() => parsePixApiV2Page({
+      parametros: { paginacao: { paginaAtual: 0, quantidadeDePaginas: 101 } },
+      pix: []
+    })).toThrow("mais páginas do que o limite seguro");
+  });
+
   it("aprova exatamente uma vez quando txid e valor correspondem", async () => {
     const { order, payment, txid } = await createPendingCookLilyPix({
       whatsappUpdatesOptIn: true
@@ -199,6 +219,14 @@ describe("CookLily Entrega 11I — conciliação automática Pix", () => {
       reportedGrossCents: 2400,
       discrepancyCents: -100
     });
+    const mismatchEvent = await lilyPrisma.lilyPaymentEvent.findFirst({
+      where: { paymentId: payment.id }
+    });
+    expect(mismatchEvent).toMatchObject({
+      eventType: "payment.amount_mismatch",
+      fromStatus: "pending",
+      toStatus: "pending"
+    });
   });
 
   it("registra txid desconhecido e Pix sem txid sem tocar em pedidos", async () => {
@@ -214,6 +242,19 @@ describe("CookLily Entrega 11I — conciliação automática Pix", () => {
     }));
     expect(noTxid.matchStatus).toBe("no_txid");
     expect(noTxid.paymentId).toBeNull();
+  });
+
+  it("também reconcilia pelo providerPaymentId quando providerReference está ausente", async () => {
+    const { order, payment, txid } = await createPendingCookLilyPix();
+    await lilyPrisma.lilyPayment.update({
+      where: { id: payment.id },
+      data: { providerReference: null }
+    });
+
+    const settlement = await reconcileReceivedPix(received({ txid }));
+    expect(settlement.matchStatus).toBe("matched");
+    expect(settlement.paymentId).toBe(payment.id);
+    expect((await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } }))?.status).toBe("paid");
   });
 
   it("um segundo Pix no mesmo txid após aprovação é alerta de duplicidade e não nova aprovação", async () => {
