@@ -75,6 +75,23 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("attachment_output_path", source)
         self.assertIn("workspace.capture_set", source)
 
+    def test_sculpt_strokes_are_checkpointed_and_bounded(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _sculpt_prepare", source)
+        self.assertIn("def _sculpt_stroke", source)
+        self.assertIn("def _normalize_sculpt_points", source)
+        self.assertIn("sculpt.stroke limita cada stroke a 128 pontos", source)
+        self.assertIn("_sculpt_checkpoint", source)
+        self.assertIn("checkpoint", source)
+        self.assertIn('"NORMALIZED", "REGION"', source)
+
+    def test_sculpt_uses_operator_stroke_and_context_override(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("bpy.ops.sculpt.brush_stroke", source)
+        self.assertIn('"override_location" in available', source)
+        self.assertIn("bpy.context.temp_override", source)
+        self.assertIn("_SCULPT_BRUSH_TYPES", source)
+
     def test_bridge_binds_through_loopback_constant(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("(DEFAULT_HOST, port)", source)
