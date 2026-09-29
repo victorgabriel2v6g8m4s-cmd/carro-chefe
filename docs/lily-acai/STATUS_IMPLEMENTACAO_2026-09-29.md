@@ -152,59 +152,54 @@ Ainda falta apenas a dependência operacional externa:
 - WABA/número/template/token reais;
 - homologação Meta em produção/controlada.
 
-### 6. Conciliação automática do Pix próprio — CANDIDATO EM VALIDAÇÃO
+### 6. Conciliação automática do Pix próprio — VALIDADA E INTEGRADA
 
-O estado real avançou além do roadmap anterior.
+PR #102 integrado em `cooklily/canonical`.
 
-Já existe e permanece preservado:
+Evidências técnicas:
 
-- provider `cooklily_pix`;
-- BR Code Pix estático;
-- valor fechado;
-- txid próprio por pagamento;
-- CRC16;
-- integração ao domínio `LilyPaymentProvider`;
-- ledger de pagamento/eventos;
-- reconciliação manual administrativa como fallback.
+- candidate SHA `5758eaf634988bb8cb86b5c37fdf8be6aa3fd402`;
+- CI `36622443247`: success;
+- CodeQL `36622443193`: success;
+- merge SHA `41cdb60877ad660fad505a219cc695af7f0b9537`.
 
-Implementado na 11I:
+Implementado:
 
+- provider `cooklily_pix` com BR Code/valor/txid próprios;
+- fallback manual administrativo;
 - `LilyPixSettlement` para ledger autoritativo de Pix recebidos;
 - `LilyPixReconciliationState` para cursor/saúde do poller;
 - migration `20260929173000_lily_pix_auto_reconciliation`;
 - adapter compatível com consulta de Pix recebidos da API Pix v2;
 - mTLS + OAuth client-credentials configuráveis;
 - janela com overlap + deduplicação por `source:endToEndId`;
-- paginação estrita, com falha fechada antes de avançar cursor se a janela estiver incompleta ou malformada;
-- minimização de dados bancários: sem nome/documento/`infoPagador`;
-- matching por txid contra `providerPaymentId`/referência;
-- aprovação somente com txid único, valor exato e estados pendentes;
-- discrepância de valor mantém pagamento/pedido pendentes e gera reconciliação + evento auditável;
-- Pix sem txid, desconhecido, ambíguo, duplicado, tardio ou corrida perdida entra em revisão;
-- worker periódico + execução manual administrativa;
-- contadores de revisão e último erro persistente;
+- paginação estrita/fail-closed;
+- minimização dos dados bancários persistidos;
+- matching por txid + valor exato;
+- aprovação automática apenas com correspondência única e estados pendentes;
+- discrepância, unmatched, ambiguidade, duplicidade, late payment e corrida perdida preservados para revisão;
+- worker periódico e execução manual auditada;
+- indicadores de saúde/reviewRequired;
 - WhatsApp `payment_confirmed` quando houver opt-in;
-- checkout anuncia confirmação automática somente quando o adapter bancário está realmente pronto;
+- confirmação `automatic` exposta ao checkout somente quando o adapter bancário estiver realmente pronto;
 - testes automatizados dos invariantes financeiros.
 
-Ainda falta para sair de candidato:
+Pendente apenas de homologação externa:
 
-- CI/CodeQL do SHA final;
-- definir qual instituição realmente recebe o Pix CookLily;
-- confirmar compatibilidade de OAuth/mTLS/scopes/URLs/certificado;
-- credenciais reais;
-- smoke financeiro real/sandbox;
-- conferência das tarifas da conta recebedora.
+- definir a instituição/conta que efetivamente receberá o Pix CookLily;
+- confirmar OAuth/mTLS/scopes/URLs/certificado da instituição;
+- configurar credenciais reais;
+- executar smoke financeiro real/sandbox;
+- conferir tarifas contratuais da conta recebedora.
 
-A escolha da instituição não é uma pendência de arquitetura que justifique selecionar arbitrariamente um PSP. O código permanece `disabled` por padrão e só deve ser ligado à API da conta efetivamente usada.
+O provider de reconciliação permanece `disabled` por padrão até essa homologação.
 
 ## Ordem de execução atualizada
 
-1. concluir gate técnico da 11I;
-2. homologar 11G/11H quando chaves/contas externas estiverem disponíveis;
-3. definir a instituição recebedora do Pix e homologar a 11I com a API real;
-4. QA operacional ponta a ponta;
-5. deploy somente por SHA validado.
+1. definir/homologar a instituição recebedora da 11I;
+2. homologar 11G/11H com chaves/contas externas reais;
+3. executar QA operacional ponta a ponta em cozinha, cliente e courier;
+4. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
 
 ## Regra de status
 
