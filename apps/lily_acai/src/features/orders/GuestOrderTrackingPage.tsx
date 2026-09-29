@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getGuestOrderTracking, type LilyGuestTrackingOrder } from "./api";
+import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
 import { readGuestOrderToken } from "./guest-token";
 
 const LABELS: Record<string, string> = {
@@ -86,6 +86,7 @@ export function GuestOrderTrackingPage() {
   const [order, setOrder] = useState<LilyGuestTrackingOrder | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
+  const [whatsappBusy, setWhatsappBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +117,25 @@ export function GuestOrderTrackingPage() {
     };
   }, [id]);
 
-  if (!loaded) return <section className="checkout-page"><h1>Carregando acompanhamento...</h1></section>;
+  async function stopWhatsAppUpdates() {
+    if (!id || whatsappBusy) return;
+    const token = readGuestOrderToken(id);
+    if (!token) {
+      setError("A chave de acompanhamento deste pedido não está disponível.");
+      return;
+    }
+    setWhatsappBusy(true);
+    try {
+      await optOutOrderWhatsApp(id, { guestAccessToken: token });
+      setOrder((current) => current ? { ...current, whatsappUpdatesOptIn: false } : current);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível desativar as mensagens.");
+    } finally {
+      setWhatsappBusy(false);
+    }
+  }
+
+    if (!loaded) return <section className="checkout-page"><h1>Carregando acompanhamento...</h1></section>;
 
   if (!order) return <section className="checkout-page empty-state">
     <span className="eyebrow">Acompanhamento seguro</span>
@@ -177,6 +196,15 @@ export function GuestOrderTrackingPage() {
       <strong>Aguardando pagamento</strong>
       <p>Você pode voltar à cobrança sem colocar a chave do pedido na URL.</p>
       <Link className="button primary" to={`/pagamento/${order.id}`}>Ir para pagamento</Link>
+    </div>}
+
+    {order.whatsappUpdatesOptIn && <div className="guest-tracking-security-note">
+      <strong>Atualizações no WhatsApp</strong>
+      <p>Você autorizou mensagens operacionais deste pedido. Isso não habilita promoções.</p>
+      <button className="button ghost" type="button" disabled={whatsappBusy}
+        onClick={() => void stopWhatsAppUpdates()}>
+        {whatsappBusy ? "Desativando..." : "Parar atualizações no WhatsApp"}
+      </button>
     </div>}
 
     <div className="guest-tracking-security-note">
