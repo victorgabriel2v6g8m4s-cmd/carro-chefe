@@ -349,7 +349,7 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11G_ETA_MAPAS_2026-09-28.md`.
 
 ### 11H — WhatsApp por etapa
 
-**Status:** implementação candidata em `feat/lily-entrega-11h-whatsapp-etapas`; gate pendente.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #99. Candidate SHA `24913c695acabed46125166683f7ddb2c2fe89a9`; CI `36604181215` e CodeQL `36604181245`: success. Merge SHA `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`. Homologação Meta real permanece pendente.
 
 - [x] opt-in operacional por pedido, desmarcado por padrão e separado de marketing;
 - [x] opt-out seguro para conta e guest;
@@ -361,28 +361,38 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11G_ETA_MAPAS_2026-09-28.md`.
 - [x] etapas financeiras/cozinha/logística conectadas;
 - [x] endpoints admin de saúde/fila/retry;
 - [x] testes de idempotência, segredo, retry e integrações;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL;
 - [ ] homologação com WABA, número, template e token reais.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md`.
 
 ### 11I — conciliação automática do Pix próprio
 
-**Estado real:** a camada de cobrança Pix própria já existe; falta a entrada bancária automática.
+**Status:** implementação candidata em `feat/lily-entrega-11i-pix-auto-reconciliation`; gate CI/CodeQL ainda pendente. A camada de cobrança Pix própria já existia; a entrada bancária automática e o matching autoritativo estão implementados no candidato atual.
 
 - [x] provider `cooklily_pix` gera BR Code estático sem gateway;
 - [x] txid próprio por pagamento;
-- [x] ledger de pagamentos/eventos/reconciliação já existente;
+- [x] ledger de pagamentos/eventos/reconciliação;
 - [x] confirmação/reconciliação manual auditada como fallback;
-- [ ] escolher/integrar banco/PSP recebedor com API/webhook/extrato confiável;
-- [ ] adapter de ingestão bancária;
-- [ ] matching autoritativo por txid + valor;
-- [ ] idempotência de eventos bancários e tratamento de divergência;
-- [ ] aprovação automática somente após confirmação financeira autoritativa.
+- [x] ledger de Pix recebidos por `endToEndId`;
+- [x] cursor persistente do poller com janela sobreposta;
+- [x] adapter de ingestão compatível com API Pix v2 `GET /pix`;
+- [x] paginação e parsing fail-closed para não avançar cursor com janela incompleta;
+- [x] matching autoritativo por txid + valor;
+- [x] idempotência de eventos bancários;
+- [x] divergências/duplicidades/atrasos preservados para revisão;
+- [x] aprovação automática somente após confirmação financeira exata;
+- [x] audit trail + integração com WhatsApp operacional;
+- [x] endpoints admin e worker periódico;
+- [x] testes automatizados dos invariantes financeiros críticos;
+- [ ] gate CI/CodeQL do SHA final;
+- [ ] definir/homologar banco/PSP recebedor real e credenciais;
+- [ ] confirmar detalhes específicos de OAuth/mTLS/scopes da instituição;
+- [ ] smoke financeiro real/sandbox e tabela de tarifas da conta.
 
-Documento detalhado:
+A especificação do Banco Central padroniza a API funcional de Pix recebidos, mas o acesso/autenticação é fornecido pela instituição onde a CookLily mantém a conta. Por isso, o provider permanece `disabled` até a instituição real ser definida; não será escolhido um PSP apenas para “fechar” a implementação.
 
-`docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md`
+Documento: `docs/lily-acai/entregas/ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md`.
 
 ## Sincronizações paralelas
 
