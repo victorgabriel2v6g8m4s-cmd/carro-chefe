@@ -37,6 +37,11 @@ ALLOWED_ACTIONS = {
     "ui.drag",
     "ui.orbit",
     "ui.wheel",
+    "viewport.describe",
+    "viewport.set_view",
+    "viewport.frame_all",
+    "viewport.set_shading",
+    "viewport.capture",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
