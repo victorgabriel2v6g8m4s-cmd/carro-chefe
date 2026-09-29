@@ -142,6 +142,27 @@ jobs:
         shell: pwsh
         run: python -m tools.excel_recipe.probe_v3b_real
 
+  blender-agent-core:
+    name: Blender Agent Core / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify Python runtime
+        shell: pwsh
+        run: python --version
+
+      - name: Test Blender Agent protocol and client
+        shell: pwsh
+        run: python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest
