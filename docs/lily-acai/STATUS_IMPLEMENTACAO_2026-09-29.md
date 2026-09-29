@@ -194,9 +194,16 @@ Pendente apenas de homologação externa:
 
 O provider de reconciliação permanece `disabled` por padrão até essa homologação.
 
-### 7. SLA/alertas da cozinha — CANDIDATO EM VALIDAÇÃO
+### 7. SLA/alertas da cozinha — VALIDADA E INTEGRADA
 
-Branch: `feat/lily-entrega-11j-sla-alertas-operacionais`.
+PR #104 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `b5413d4bc9d0c6cd63f9661f285968f10dc22747`;
+- CI `36626787032`: success;
+- CodeQL `36626787547`: success;
+- merge SHA `16097e4ed3dda019d981d8d1da3f1be6dd00794c`.
 
 Implementado:
 
@@ -208,18 +215,17 @@ Implementado:
 - nenhuma mudança automática de status;
 - testes unitários e de integração.
 
-Ainda falta:
+Pendente apenas de parametrização/homologação operacional:
 
-- CI/CodeQL do SHA final;
-- definir o número real de minutos com a operação;
+- definir o número real de minutos com Operações;
 - QA real em tablet/celular.
 
 ## Ordem de execução atualizada
 
-1. concluir gate técnico da 11J;
-2. definir/homologar a instituição recebedora da 11I;
-3. homologar 11G/11H com chaves/contas externas reais;
-4. definir com a operação o SLA real da cozinha e executar QA em tablet/celular;
+1. definir/homologar a instituição recebedora da 11I;
+2. homologar 11G/11H com chaves/contas externas reais;
+3. definir com Operações o SLA real da cozinha e executar QA em tablet/celular;
+4. avançar a próxima pendência técnica desbloqueada: impressão da cozinha;
 5. executar QA operacional ponta a ponta em cozinha, cliente e courier;
 6. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
 
