@@ -50,7 +50,7 @@ const analyticsMetadataSchema = z.object({
   addonCount: z.number().int().min(0).max(100).optional(),
   itemCount: z.number().int().min(0).max(200).optional(),
   fulfillmentType: z.enum(["pickup", "delivery"]).optional(),
-  paymentMethod: z.enum(["pix", "manual_pix", "card"]).optional()
+  paymentMethod: z.enum(["pix", "manual_pix", "credit_card"]).optional()
 }).strict().default({});
 
 const analyticsEventSchema = z.object({
