@@ -28,11 +28,14 @@ $afterPath = $null
 $checkpointPath = $null
 $beforeHash = $null
 $afterHash = $null
+$previousStageId = $null
+$smokeStageId = $null
 
 try {
     Write-Host "1/7 bridge status"
     $status = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "status")
     if (-not $status.ok) { throw "Bridge unavailable." }
+    $previousStageId = $status.result.active_stage_id
 
     Write-Host "2/7 create history stage"
     $stage = Invoke-JsonCommand @(
@@ -40,6 +43,7 @@ try {
         "Sculpt smoke test", "--tag", "smoke", "--tag", "sculpt"
     )
     if (-not $stage.ok) { throw "Could not create sculpt smoke stage." }
+    $smokeStageId = $stage.result.stage_id
 
     Write-Host "3/7 create temporary UV sphere"
     $primitiveParams = @{
@@ -131,6 +135,17 @@ finally {
         }
         catch {
             Write-Warning "Could not remove temporary sphere during cleanup: $($_.Exception.Message)"
+        }
+    }
+
+    if ($previousStageId -and $smokeStageId -and $previousStageId -ne $smokeStageId) {
+        try {
+            $restoredStage = Invoke-JsonCommand @(
+                "-m", "tools.blender_agent.client", "history-use", $previousStageId
+            )
+        }
+        catch {
+            Write-Warning "Could not restore previous history stage: $($_.Exception.Message)"
         }
     }
 }
