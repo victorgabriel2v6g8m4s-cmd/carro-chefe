@@ -266,20 +266,16 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(ticket).toMatchObject({
       id: order.id,
       orderNumber: order.orderNumber,
-      financialStatus: "paid",
-      operationStatus: "preparing",
       fulfillmentType: "delivery",
       customerNote: "Sem canudo"
     });
     expect(Object.keys(ticket).sort()).toEqual([
       "createdAt",
       "customerNote",
-      "financialStatus",
       "fulfillmentType",
       "id",
       "isHomologation",
       "items",
-      "operationStatus",
       "orderNumber"
     ]);
     expect(JSON.stringify(ticket)).not.toContain("+5567999912345");
@@ -287,6 +283,8 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(ticket).not.toHaveProperty("pickupCode");
     expect(ticket).not.toHaveProperty("deliveryCode");
     expect(ticket).not.toHaveProperty("addressSnapshotJson");
+    expect(ticket).not.toHaveProperty("financialStatus");
+    expect(ticket).not.toHaveProperty("operationStatus");
   });
 
   it("não emite comanda antes de pagamento e liberação para produção", async () => {
