@@ -64,8 +64,8 @@ Estados: `aberto`, `mitigado`, `resolvido`, `aceito`.
 - **Status:** aberto
 - **Contexto:** primeira implementação de `tools/blender_agent`.
 - **Impacto:** CI e testes sem Blender validam protocolo, sandbox e superfície do cliente, mas não provam `Window.event_simulate`, Sculpt ou contexto de viewport na instalação real do proprietário.
-- **Evidência segura:** o ambiente atual não possui acesso à sessão gráfica/Blender do Windows 10 do proprietário.
-- **Tratamento:** manter maturidade `em desenvolvimento`; executar o smoke test documentado em `tools/blender_agent/README.md` na máquina real antes de considerar V0.1 validada.
+- **Evidência segura:** o primeiro teste real abriu Blender 5.2.0 LTS, mas o bridge não criou `bridge.json`; a janela exibiu `Unable to Load File`. A análise identificou perda de aspas no `Start-Process -ArgumentList` quando o caminho do repositório contém espaços (`Área de Trabalho`). O launcher foi corrigido para montar uma linha de argumentos explicitamente quotada e aguardar a sessão real do bridge.
+- **Tratamento:** manter maturidade `em desenvolvimento`; atualizar a branch, repetir o launcher corrigido e só considerar V0.1 validada quando `status`, `ui-window` e um gesto `ui-drag` passarem no Windows 10/Blender 5.2.0 LTS do proprietário.
 - **Owner:** `AG-DEV` + proprietário.
 
 ## Regra obrigatória
