@@ -18,23 +18,24 @@ CREATE TABLE "LilyAnalyticsEvent" (
   "fulfillmentType" TEXT,
   "paymentMethod" TEXT,
   "metadataJson" TEXT NOT NULL DEFAULT '{}',
+  "occurredAt" DATETIME NOT NULL,
   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE UNIQUE INDEX "LilyAnalyticsEvent_eventId_key"
   ON "LilyAnalyticsEvent"("eventId");
 
-CREATE INDEX "LilyAnalyticsEvent_event_createdAt_idx"
-  ON "LilyAnalyticsEvent"("event", "createdAt");
+CREATE INDEX "LilyAnalyticsEvent_event_occurredAt_idx"
+  ON "LilyAnalyticsEvent"("event", "occurredAt");
 
-CREATE INDEX "LilyAnalyticsEvent_sessionId_createdAt_idx"
-  ON "LilyAnalyticsEvent"("sessionId", "createdAt");
+CREATE INDEX "LilyAnalyticsEvent_sessionId_occurredAt_idx"
+  ON "LilyAnalyticsEvent"("sessionId", "occurredAt");
 
-CREATE INDEX "LilyAnalyticsEvent_laCampaign_laVariant_createdAt_idx"
-  ON "LilyAnalyticsEvent"("laCampaign", "laVariant", "createdAt");
+CREATE INDEX "LilyAnalyticsEvent_laCampaign_laVariant_occurredAt_idx"
+  ON "LilyAnalyticsEvent"("laCampaign", "laVariant", "occurredAt");
 
-CREATE INDEX "LilyAnalyticsEvent_laQr_createdAt_idx"
-  ON "LilyAnalyticsEvent"("laQr", "createdAt");
+CREATE INDEX "LilyAnalyticsEvent_laQr_occurredAt_idx"
+  ON "LilyAnalyticsEvent"("laQr", "occurredAt");
 
-CREATE INDEX "LilyAnalyticsEvent_productSlug_event_createdAt_idx"
-  ON "LilyAnalyticsEvent"("productSlug", "event", "createdAt");
+CREATE INDEX "LilyAnalyticsEvent_productSlug_event_occurredAt_idx"
+  ON "LilyAnalyticsEvent"("productSlug", "event", "occurredAt");
