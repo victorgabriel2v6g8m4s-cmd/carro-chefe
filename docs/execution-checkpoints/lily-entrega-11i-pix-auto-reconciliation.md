@@ -6,9 +6,9 @@
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
 - head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `4926165a243a0600a93a3b3ae5562c8b01224c9b`
+- head_sha_verified: `fc19612decb77ab6030db11c250edd967cd37480`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
-- pull_requests: ainda não verificado/criado para 11I
+- pull_requests: PR #102 -> `cooklily/canonical` (draft); PR #103 -> `main` (gate temporário, não mergear)
 - last_verified_at: 2026-09-29
 - interruption_state: retomada auditada; Git tratado como fonte de verdade
 
