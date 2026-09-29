@@ -474,41 +474,6 @@ export async function reconcileReceivedPix(
   }
 }
 
-export async function retryUnmatchedPixSettlements(limit = 100) {
-  const rows = await lilyPrisma.lilyPixSettlement.findMany({
-    where: { matchStatus: "unmatched", txid: { not: null } },
-    orderBy: { occurredAt: "asc" },
-    take: Math.min(500, Math.max(1, limit))
-  });
-  let matched = 0;
-
-  for (const row of rows) {
-    const candidates = await lilyPrisma.lilyPayment.findMany({
-      where: {
-        provider: "cooklily_pix",
-        method: "pix",
-        providerReference: row.txid
-      },
-      take: 2
-    });
-    if (candidates.length !== 1) continue;
-
-    // Remove somente o registro ainda sem match para reaplicar o mesmo evento pelo motor autoritativo.
-    await lilyPrisma.lilyPixSettlement.delete({
-      where: { id: row.id }
-    });
-    const result = await reconcileReceivedPix({
-      endToEndId: row.endToEndId,
-      txid: row.txid,
-      amountCents: row.amountCents,
-      occurredAt: row.occurredAt,
-      payloadHash: row.payloadHash
-    }, row.source);
-    if (result.matchStatus === "matched") matched += 1;
-  }
-  return { scanned: rows.length, matched };
-}
-
 export async function runPixAutoReconciliation() {
   const config = lilyPixAutoReconciliationConfiguration();
   const attemptAt = new Date();
@@ -538,8 +503,6 @@ export async function runPixAutoReconciliation() {
       else if (row.matchStatus === "discrepant") discrepant += 1;
       else if (["unmatched", "no_txid", "ambiguous"].includes(row.matchStatus)) unmatched += 1;
     }
-
-    await retryUnmatchedPixSettlements(100);
 
     await lilyPrisma.lilyPixReconciliationState.update({
       where: { source: SOURCE },
