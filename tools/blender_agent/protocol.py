@@ -30,9 +30,12 @@ ALLOWED_ACTIONS = {
     "export.glb",
     "export.obj",
     "ui.window",
+    "ui.view3d",
+    "ui.dismiss_modal",
     "ui.event",
     "ui.click",
     "ui.drag",
+    "ui.orbit",
     "ui.wheel",
 }
 
