@@ -23,6 +23,12 @@ class BridgeSourceTests(unittest.TestCase):
                     forbidden_calls.append(name)
         self.assertEqual(forbidden_calls, [])
 
+    def test_startup_splash_is_dismissed_once(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("_dismiss_startup_modal", source)
+        self.assertIn('event_simulate("ESC"', source)
+        self.assertIn("first_interval=0.75", source)
+
     def test_bridge_binds_through_loopback_constant(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("(DEFAULT_HOST, port)", source)
