@@ -163,6 +163,22 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
 
+      - name: Parse Blender Agent PowerShell launcher
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "tools/blender_agent/start.ps1"),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest
