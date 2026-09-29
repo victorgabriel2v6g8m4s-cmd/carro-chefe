@@ -289,6 +289,23 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(ticket).not.toHaveProperty("addressSnapshotJson");
   });
 
+  it("não emite comanda antes de pagamento e liberação para produção", async () => {
+    const staff = await register("67999908109", "staff", "127.0.0.229");
+    const order = await createOrder({
+      financialStatus: "awaiting_payment",
+      operationStatus: "waiting_payment"
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/print`,
+      headers: { cookie: staff.cookie }
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().details.code).toBe("LILY_KITCHEN_PRINT_NOT_READY");
+  });
+
   it("nega comanda de impressão para customer", async () => {
     const customer = await register("67999908108", "customer", "127.0.0.228");
     const order = await createOrder();
