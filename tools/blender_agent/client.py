@@ -63,11 +63,6 @@ def _json_params(value: str) -> dict[str, Any]:
     return parsed
 
 
-def _gui_module():
-    from . import windows_gui
-    return windows_gui
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Cliente local do Blender Agent do Carro Chefe")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -75,36 +70,57 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("status", help="testa conexão com o bridge")
     status.set_defaults(handler=lambda _a: call("health"))
 
-    invoke = sub.add_parser("call", help="executa uma action semântica no Blender")
+    invoke = sub.add_parser("call", help="executa qualquer action allowlisted")
     invoke.add_argument("action")
     invoke.add_argument("--json", default="{}", type=_json_params, dest="params")
     invoke.set_defaults(handler=lambda a: call(a.action, a.params))
 
-    click = sub.add_parser("gui-click", help="clica apenas quando blender.exe estiver em foreground")
+    window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
+    window.set_defaults(handler=lambda _a: call("ui.window"))
+
+    click = sub.add_parser("ui-click", help="simula clique dentro da janela Blender")
     click.add_argument("x", type=int)
     click.add_argument("y", type=int)
     click.add_argument("--button", choices=["left", "middle", "right"], default="left")
-    click.set_defaults(handler=lambda a: _gui_module().click(a.x, a.y, a.button))
+    click.add_argument("--shift", action="store_true")
+    click.add_argument("--ctrl", action="store_true")
+    click.add_argument("--alt", action="store_true")
+    click.set_defaults(handler=lambda a: call("ui.click", {
+        "x": a.x,
+        "y": a.y,
+        "button": a.button,
+        "shift": a.shift,
+        "ctrl": a.ctrl,
+        "alt": a.alt,
+    }))
 
-    drag = sub.add_parser("gui-drag", help="arrasta dentro do Blender em foreground")
+    drag = sub.add_parser("ui-drag", help="simula arrasto dentro da janela Blender")
     drag.add_argument("x1", type=int)
     drag.add_argument("y1", type=int)
     drag.add_argument("x2", type=int)
     drag.add_argument("y2", type=int)
     drag.add_argument("--button", choices=["left", "middle", "right"], default="left")
-    drag.add_argument("--duration", type=float, default=0.35)
-    drag.add_argument("--modifier", action="append", choices=["shift", "ctrl", "alt"], default=[])
-    drag.set_defaults(handler=lambda a: _gui_module().drag(
-        a.x1, a.y1, a.x2, a.y2, button=a.button, duration=a.duration, modifiers=a.modifier
-    ))
+    drag.add_argument("--steps", type=int, default=18)
+    drag.add_argument("--shift", action="store_true")
+    drag.add_argument("--ctrl", action="store_true")
+    drag.add_argument("--alt", action="store_true")
+    drag.set_defaults(handler=lambda a: call("ui.drag", {
+        "x1": a.x1,
+        "y1": a.y1,
+        "x2": a.x2,
+        "y2": a.y2,
+        "button": a.button,
+        "steps": a.steps,
+        "shift": a.shift,
+        "ctrl": a.ctrl,
+        "alt": a.alt,
+    }))
 
-    wheel = sub.add_parser("gui-wheel", help="rola wheel apenas no Blender em foreground")
-    wheel.add_argument("delta", type=int)
-    wheel.set_defaults(handler=lambda a: _gui_module().wheel(a.delta))
-
-    shot = sub.add_parser("gui-screenshot", help="captura somente a janela do Blender")
-    shot.add_argument("--name", default="blender-window.png")
-    shot.set_defaults(handler=lambda a: {"path": str(_gui_module().screenshot_blender_window(a.name))})
+    wheel = sub.add_parser("ui-wheel", help="simula scroll dentro do Blender")
+    wheel.add_argument("steps", type=int, help="positivo sobe/aproxima; negativo desce/afasta")
+    wheel.add_argument("--x", type=int)
+    wheel.add_argument("--y", type=int)
+    wheel.set_defaults(handler=lambda a: call("ui.wheel", {"steps": a.steps, "x": a.x, "y": a.y}))
 
     return parser
 
