@@ -50,7 +50,7 @@ class McpAdapterSourceTests(unittest.TestCase):
 
     def test_mcp_dependency_uses_stable_major_line(self) -> None:
         requirement = REQUIREMENTS.read_text(encoding="utf-8").strip()
-        self.assertEqual(requirement, "mcp>=2,<3")
+        self.assertEqual(requirement, "mcp==2.2.0")
 
 
 if __name__ == "__main__":
