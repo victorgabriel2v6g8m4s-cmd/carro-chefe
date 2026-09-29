@@ -100,17 +100,13 @@ python -m tools.blender_agent.client viewport-capture-set --label baguete-test
 
 O conjunto padrão gera `FRONT`, `RIGHT`, `TOP` e `THREE_QUARTER`. Também podem ser escolhidas vistas específicas com `--views`.
 
-As imagens ficam em:
+As capturas e receipts passam a ficar dentro da etapa ativa:
 
 ```text
-.runtime/blender-agent/viewports/
+.runtime/blender-agent/history/<stage-id>/attachments/
 ```
 
-Cada imagem recebe um receipt auditável em:
-
-```text
-.runtime/blender-agent/receipts/
-```
+Isso mantém cada etapa de produção autocontida e permite que o auto-history associe as imagens aos comandos que as geraram.
 
 O receipt registra SHA-256, dimensões, cena e estado da viewport no momento da captura.
 
