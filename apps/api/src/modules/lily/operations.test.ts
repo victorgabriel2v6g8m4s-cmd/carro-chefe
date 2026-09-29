@@ -122,6 +122,9 @@ async function cleanup() {
   await lilyPrisma.lilyConsentRecord.deleteMany();
   await lilyPrisma.lilySession.deleteMany();
   await lilyPrisma.lilyUser.deleteMany();
+  await lilyPrisma.lilyOperationalSettings.updateMany({
+    data: { kitchenPreparationSlaMinutes: null }
+  });
 }
 
 beforeEach(cleanup);
@@ -166,6 +169,79 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(row).not.toHaveProperty("phoneNormalized");
     expect(row).not.toHaveProperty("address");
     expect(JSON.stringify(row)).not.toContain("Rua privada");
+    expect(row.sla).toBeNull();
+    expect(response.json().sla).toEqual({
+      kitchenPreparationSlaMinutes: null,
+      overdue: 0
+    });
+  });
+
+  it("permite configurar ou desativar o SLA da montagem sem inventar valor padrão", async () => {
+    const staff = await register("67999908105", "staff", "127.0.0.225");
+
+    const configured = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/fulfillment",
+      headers: {
+        origin,
+        cookie: staff.cookie,
+        "x-lily-csrf": staff.csrf
+      },
+      payload: { kitchenPreparationSlaMinutes: 18 }
+    });
+    expect(configured.statusCode).toBe(200);
+    expect(configured.json().kitchenPreparationSlaMinutes).toBe(18);
+
+    const disabled = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/admin/fulfillment",
+      headers: {
+        origin,
+        cookie: staff.cookie,
+        "x-lily-csrf": staff.csrf
+      },
+      payload: { kitchenPreparationSlaMinutes: null }
+    });
+    expect(disabled.statusCode).toBe(200);
+    expect(disabled.json().kitchenPreparationSlaMinutes).toBeNull();
+  });
+
+  it("expõe atraso de montagem sem alterar o estado operacional", async () => {
+    const staff = await register("67999908106", "staff", "127.0.0.226");
+    await lilyPrisma.lilyOperationalSettings.upsert({
+      where: { id: "default" },
+      update: { kitchenPreparationSlaMinutes: 10 },
+      create: { id: "default", kitchenPreparationSlaMinutes: 10 }
+    });
+    const order = await createOrder({
+      financialStatus: "paid",
+      operationStatus: "preparing"
+    });
+    await lilyPrisma.lilyOrder.update({
+      where: { id: order.id },
+      data: { operationUpdatedAt: new Date(Date.now() - 12 * 60_000) }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/kitchen/orders",
+      headers: { cookie: staff.cookie }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().sla).toMatchObject({
+      kitchenPreparationSlaMinutes: 10,
+      overdue: 1
+    });
+    const row = response.json().orders.find((item: any) => item.id === order.id);
+    expect(row.sla).toMatchObject({
+      thresholdMinutes: 10,
+      status: "overdue"
+    });
+    expect(row.sla.overdueMinutes).toBeGreaterThanOrEqual(2);
+
+    const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+    expect(stored?.operationStatus).toBe("preparing");
   });
 
   it("exige CSRF para avançar etapa operacional", async () => {
