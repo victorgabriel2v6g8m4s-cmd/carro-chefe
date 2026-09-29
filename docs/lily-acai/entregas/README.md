@@ -11,7 +11,7 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 | 05 | Catálogo, mídia, admin, cardápio dinâmico e publicação | publicada na VPS; homologação conjunta com 06 pendente |
 | 06 | Carrinho, endereço e criação de pedido | **implementação técnica concluída e validada; deploy/homologação pendentes** |
 | 07 | Pagamento e reconciliação | **implementação técnica aprovada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy/homologação pendentes** |
-| 08 | Painel de pedidos | parcial: fulfillment/configuração existem; fila/operação completa pendente |
+| 08 | Painel de pedidos | **validada e integrada pelo PR #108; CI `36635632700`, CodeQL `36635632701`; QA real pendente** |
 | 09 | Tracking QR e analytics first-party | parcial: attribution `la_*` existe; analytics completo pendente |
 | 10 | QA operacional, acessibilidade, observabilidade e hardening | P0/P1 técnicos avançados; QA real, recuperação de senha, observabilidade e demais hardening continuam abertos |
 
@@ -23,6 +23,7 @@ Planos e relatórios:
 - `ENTREGA_06_CARRINHO_PEDIDOS.md`;
 - `HOMOLOGACAO_05_06_AJUSTES.md`;
 - `ENTREGA_07_PAGAMENTOS_RECONCILIACAO.md`;
+- `ENTREGA_08_TORRE_CONTROLE_PEDIDOS_2026-09-29.md`;
 - `P0_UX_SEGURANCA_2026-09-27.md`;
 - `P1_UX_CONTA_ADMIN_2026-09-27.md`.
 
