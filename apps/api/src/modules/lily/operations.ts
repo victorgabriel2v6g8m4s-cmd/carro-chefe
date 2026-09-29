@@ -172,6 +172,11 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
       include: operationInclude
     });
     if (!order) throw new ApiError(404, "Pedido não encontrado.");
+    if (order.status !== "paid" || !["preparing", "ready_for_dispatch"].includes(order.operationStatus)) {
+      throw new ApiError(409, "A comanda só fica disponível após o pagamento e a liberação para produção.", {
+        code: "LILY_KITCHEN_PRINT_NOT_READY"
+      });
+    }
 
     return {
       ticket: serializeKitchenPrintTicket(order)
