@@ -84,6 +84,14 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".header-icon { width: 44px; height: 44px; min-width: 44px; }");
   });
 
+  it("mantém estado ativo visível na navegação principal", () => {
+    expect(mainSource).toContain("<NavLink to=\"/cardapio\">Cardápio</NavLink>");
+    expect(mainSource).toContain("<NavLink to=\"/ranking\">Ranking</NavLink>");
+    expect(css).toContain(".topbar .desktop-nav a.active");
+    expect(css).toContain(".topbar .desktop-nav a.active::after");
+    expect(css).toContain(".topbar .mobile-menu a.active:not(.mobile-menu-primary):not(.staff-menu-link)");
+  });
+
   it("mantém configurações da loja separadas de entrega", () => {
     expect(mainSource).toContain('path="/painel/configuracoes"');
     expect(mainSource).toContain("AdminStoreSettingsPage");
