@@ -9,6 +9,7 @@ SCRIPTS = (
     ROOT / "start.ps1",
     ROOT / "smoke-test.ps1",
     ROOT / "context-smoke-test.ps1",
+    ROOT / "sculpt-smoke-test.ps1",
     ROOT / "install-mcp.ps1",
 )
 
