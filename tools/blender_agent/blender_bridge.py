@@ -51,7 +51,7 @@ _TASKS: "queue.Queue[Task]" = queue.Queue()
 _TOKEN = secrets.token_urlsafe(32)
 _SERVER = None
 _CAPTURE_JOB = None
-_WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "2"))))
+_WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "3"))))
 
 _MOUSE_BUTTONS = {"left": "LEFTMOUSE", "middle": "MIDDLEMOUSE", "right": "RIGHTMOUSE"}
 _UI_EVENT_TYPES = {
