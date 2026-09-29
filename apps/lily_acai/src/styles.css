@@ -4,8 +4,26 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: radial-gradient(circle at 88% 8%, rgb(249 192 207 / 70%) 0, transparent 28%), var(--cl-color-surface); }
 a { color: inherit; }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 .lily-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+.skip-link {
+  position: fixed;
+  z-index: 200;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-160%);
+  padding: 10px 14px;
+  border-radius: var(--cl-radius-sm);
+  background: var(--cl-color-secondary);
+  color: var(--cl-color-white);
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: var(--cl-shadow-card);
+}
+.skip-link:focus-visible { transform: translateY(0); }
+#lily-main-content:focus { outline: none; }
+
 .topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(18px,5vw,72px); border-bottom: 1px solid rgb(130 0 35 / 14%); background: rgb(255 247 250 / 92%); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 10; }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
 .brand-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 50%; box-shadow: 0 8px 24px rgb(68 4 45 / 12%); }
@@ -26,7 +44,7 @@ p { line-height: 1.65; color: var(--cl-color-text-muted); }
 .hero p { max-width: 660px; font-size: clamp(17px,2vw,20px); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .button { border: 0; border-radius: var(--cl-radius-pill); padding: 14px 21px; text-decoration: none; font-weight: 800; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; }
-.button:focus-visible,a:focus-visible,input:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 3px; }
+.button:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 3px; }
 .button.primary { background: var(--cl-color-primary); color: white; box-shadow: 0 12px 28px rgb(130 0 35 / 24%); }
 .button.primary:hover { background: var(--cl-color-secondary); }
 .button.ghost { background: white; border: 1px solid rgb(130 0 35 / 22%); color: var(--cl-color-secondary); }
