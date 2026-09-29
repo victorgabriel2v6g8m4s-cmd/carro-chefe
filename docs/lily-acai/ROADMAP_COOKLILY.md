@@ -244,7 +244,7 @@ Limitação consciente da primeira fase:
 
 ### 11C — cliente
 
-**Status:** primeira versão implementada; nova integração logística em gate.
+**Status:** fluxo base implementado e expandido pelas Entregas 11F, 11G e 11H; QA real de navegador/mobile permanece pendente.
 
 - [x] página de pedidos e detalhe autenticado;
 - [x] polling do detalhe a cada 10 segundos;
@@ -252,10 +252,12 @@ Limitação consciente da primeira fase:
 - [x] timeline preparada para eventos de entrega;
 - [x] status legível por etapa;
 - [x] código de entrega derivado e exibido somente quando a entrega já está em rota/chegada;
-- [ ] guest tracking por token fora da sessão;
-- [ ] SSE/WebSocket se polling deixar de ser suficiente;
-- [ ] ETA/mapa;
-- [ ] notificações WhatsApp/push.
+- [x] guest tracking por capability token seguro fora da sessão — 11F;
+- [x] ETA/mapa de rota sem expor coordenadas ao cliente — 11G;
+- [x] notificações operacionais por WhatsApp com opt-in/opt-out — 11H;
+- [ ] SSE/WebSocket somente se polling de 10 s deixar de ser suficiente;
+- [ ] push notification, sem prioridade enquanto tracking + WhatsApp cobrirem a operação;
+- [ ] QA real de navegador/mobile.
 
 ### 11D — entregador
 
