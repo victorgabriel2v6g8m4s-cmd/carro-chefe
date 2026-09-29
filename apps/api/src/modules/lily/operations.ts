@@ -21,6 +21,7 @@ export const LILY_OPERATION_STATUSES = [
   "waiting_payment",
   "preparing",
   "ready_for_dispatch",
+  "completed",
   "cancelled"
 ] as const;
 
