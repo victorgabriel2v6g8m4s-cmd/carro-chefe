@@ -5,6 +5,7 @@ export type KitchenOperationStatus =
   | "waiting_payment"
   | "preparing"
   | "ready_for_dispatch"
+  | "completed"
   | "cancelled";
 
 export type KitchenOrder = {
