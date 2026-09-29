@@ -363,7 +363,8 @@ O papel `courier` deve ter acesso mínimo:
 - [x] fallback manual preservado;
 - [x] worker periódico e execução admin auditada;
 - [x] testes de invariantes financeiros críticos;
-- [ ] gate CI/CodeQL do candidato 11I;
+- [x] gate CI `36622443247` + CodeQL `36622443193`;
+- [x] integrada em `cooklily/canonical` pelo PR #102;
 - [ ] definir/homologar banco/PSP recebedor real;
 - [ ] confirmar OAuth/mTLS/scopes/URLs/certificado da instituição;
 - [ ] smoke financeiro real/sandbox e tarifas da conta.
