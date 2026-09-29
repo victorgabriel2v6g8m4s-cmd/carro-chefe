@@ -51,6 +51,9 @@ ALLOWED_ACTIONS = {
     "history.stage.describe",
     "history.search",
     "history.note",
+    "sculpt.status",
+    "sculpt.prepare",
+    "sculpt.stroke",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
