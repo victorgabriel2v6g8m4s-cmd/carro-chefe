@@ -5,15 +5,21 @@ import { buildApp } from "./app";
 import { assertLoopbackBinding, config } from "./config";
 import { readStaticFile } from "./static-files";
 import { startLilyWhatsAppWorker } from "./modules/lily/whatsapp";
+import { startLilyPixReconciliationWorker } from "./modules/lily/pix-reconciliation";
 
 assertLoopbackBinding(config.host);
 
 const app = await buildApp();
-const stopLilyWhatsAppWorker = startLilyWhatsAppWorker({
-  info: (value) => app.log.info(value),
-  error: (value) => app.log.error(value)
+const workerLog = {
+  info: (value: unknown) => app.log.info(value),
+  error: (value: unknown) => app.log.error(value)
+};
+const stopLilyWhatsAppWorker = startLilyWhatsAppWorker(workerLog);
+const stopLilyPixReconciliationWorker = startLilyPixReconciliationWorker(workerLog);
+app.addHook("onClose", async () => {
+  stopLilyWhatsAppWorker();
+  stopLilyPixReconciliationWorker();
 });
-app.addHook("onClose", async () => { stopLilyWhatsAppWorker(); });
 const siteDist = path.join(config.projectRoot, "apps", "site", "dist");
 const managementDist = path.join(config.projectRoot, "apps", "gestao", "dist");
 const lilyDist = path.join(config.projectRoot, "apps", "lily_acai", "dist");
