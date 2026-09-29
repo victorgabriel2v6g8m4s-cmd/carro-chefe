@@ -13,6 +13,7 @@ import { lilyProfileRoutes } from "./profile";
 import { lilyPaymentRoutes } from "./payments";
 import { lilyTeamRoutes } from "./team";
 import { lilyMfaRoutes } from "./mfa";
+import { lilyWhatsAppRoutes } from "./whatsapp";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -329,4 +330,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyTeamRoutes);
   await app.register(lilyProfileRoutes);
   await app.register(lilyMfaRoutes);
+  await app.register(lilyWhatsAppRoutes);
 }
