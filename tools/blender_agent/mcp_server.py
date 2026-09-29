@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 try:
@@ -21,7 +22,9 @@ mcp = MCPServer(
         "antes de operações destrutivas. Ao iniciar uma nova etapa material da produção, "
         "crie um stage com blender_history_start. Use as ferramentas de workspace para consultar "
         "abas antigas e as ferramentas de history para recuperar contexto por etapa, sem "
-        "depender da memória da conversa."
+        "depender da memória da conversa. Em Sculpt, prefira strokes pequenos em coordenadas "
+        "NORMALIZED, mantenha checkpoint habilitado e capture o viewport após cada stroke antes "
+        "de decidir o próximo ajuste."
     ),
 )
 
@@ -210,6 +213,91 @@ def blender_history_note(
         "tags": tags or [],
         "stage_id": stage_id,
     }))
+
+
+@mcp.tool()
+def blender_sculpt_status() -> dict[str, Any]:
+    """Mostra objeto, modo, brush, raio, força e viewport do Sculpt atual."""
+    return _result(call("sculpt.status"))
+
+
+@mcp.tool()
+def blender_sculpt_prepare(
+    name: str | None = None,
+    brush: str = "DRAW",
+    radius: int = 60,
+    strength: float = 0.25,
+) -> dict[str, Any]:
+    """Seleciona um mesh, entra em Sculpt Mode e configura um brush allowlisted."""
+    return _result(call("sculpt.prepare", {
+        "name": name,
+        "brush": brush,
+        "radius": radius,
+        "strength": strength,
+    }))
+
+
+@mcp.tool()
+def blender_sculpt_stroke(
+    points: list[list[float] | dict[str, float]],
+    brush: str | None = None,
+    radius: int = 60,
+    strength: float = 0.25,
+    pressure: float = 1.0,
+    mode: str = "NORMAL",
+    label: str = "stroke",
+) -> dict[str, Any]:
+    """Aplica um stroke Sculpt pequeno em coordenadas normalizadas e cria checkpoint antes."""
+    return _result(call("sculpt.stroke", {
+        "points": points,
+        "brush": brush,
+        "radius": radius,
+        "strength": strength,
+        "pressure": pressure,
+        "mode": mode,
+        "coordinate_space": "NORMALIZED",
+        "label": sanitize_label(label, "stroke"),
+        "checkpoint": True,
+        "capture_before": True,
+    }))
+
+
+@mcp.tool()
+def blender_sculpt_iteration(
+    points: list[list[float] | dict[str, float]],
+    brush: str | None = None,
+    radius: int = 60,
+    strength: float = 0.25,
+    pressure: float = 1.0,
+    mode: str = "NORMAL",
+    label: str = "stroke",
+    settle_seconds: float = 0.2,
+) -> list[Image]:
+    """Executa checkpoint + stroke e devolve imagens antes/depois para comparação visual."""
+    clean = sanitize_label(label, "stroke")
+    before_name = f"{clean}-before.png"
+    stroke = _result(call("sculpt.stroke", {
+        "points": points,
+        "brush": brush,
+        "radius": radius,
+        "strength": strength,
+        "pressure": pressure,
+        "mode": mode,
+        "coordinate_space": "NORMALIZED",
+        "label": clean,
+        "checkpoint": True,
+        "capture_before": True,
+        "before_name": before_name,
+    }))
+    before = stroke.get("before_capture")
+    if not isinstance(before, dict) or not before.get("path"):
+        raise RuntimeError("sculpt iteration nao recebeu captura anterior")
+
+    time.sleep(max(0.05, min(2.0, float(settle_seconds))))
+    after = _result(call("viewport.capture", {
+        "filename": f"{clean}-after.png",
+    }))
+    return [Image(path=before["path"]), Image(path=after["path"])]
 
 
 @mcp.tool()
