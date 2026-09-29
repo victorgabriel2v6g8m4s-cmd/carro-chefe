@@ -182,6 +182,26 @@ export function AdminAnalyticsPage() {
 
     <section className="analytics-panel">
       <div className="analytics-panel-heading">
+        <div><span className="eyebrow">Pedidos autoritativos</span><h2>Pedidos e valor por origem</h2></div>
+        <small>Esta tabela vem de LilyOrder e inclui somente pedidos não homologação, salvo quando o filtro permitir.</small>
+      </div>
+      {data.orderAttribution.length === 0
+        ? <p>Nenhum pedido atribuído nesta janela.</p>
+        : <div className="analytics-table-wrap"><table>
+            <thead><tr><th>Campanha</th><th>QR</th><th>Variante</th><th>Pedidos</th><th>Pagos</th><th>Bruto pago</th></tr></thead>
+            <tbody>{data.orderAttribution.map((row, index) => <tr key={["orders", row.campaign, row.qr, row.variant, index].join("|")}>
+              <td>{row.campaign ?? "Direto/sem campanha"}</td>
+              <td>{row.qr ?? "—"}</td>
+              <td>{row.variant ?? "—"}</td>
+              <td>{row.created}</td>
+              <td>{row.paid}</td>
+              <td>{money(row.paidGrossCents)}</td>
+            </tr>)}</tbody>
+          </table></div>}
+    </section>
+
+    <section className="analytics-panel">
+      <div className="analytics-panel-heading">
         <div><span className="eyebrow">Atribuição</span><h2>Campanha, QR e variante</h2></div>
         <small>Somente eventos que o visitante consentiu entram nesta tabela.</small>
       </div>
