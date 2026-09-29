@@ -123,11 +123,18 @@ Implementado:
 
 Ainda falta homologação com chave real e conferência de geocodificação/rota em endereços reais.
 
-### 5. WhatsApp por etapa — IMPLEMENTAÇÃO CANDIDATA
+### 5. WhatsApp por etapa — VALIDADA E INTEGRADA
 
-Branch: `feat/lily-entrega-11h-whatsapp-etapas`.
+PR #99 integrado em `cooklily/canonical`.
 
-Implementado nesta continuação:
+Evidências técnicas:
+
+- candidate SHA `24913c695acabed46125166683f7ddb2c2fe89a9`;
+- CI `36604181215`: success;
+- CodeQL `36604181245`: success;
+- merge SHA `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`.
+
+Implementado:
 
 - opt-in operacional por pedido separado de marketing;
 - opt-out conta/guest;
@@ -140,49 +147,64 @@ Implementado nesta continuação:
 - falha do provider não bloqueia operação;
 - testes de integração.
 
-Ainda falta:
+Ainda falta apenas a dependência operacional externa:
 
-- gate CI/CodeQL;
 - WABA/número/template/token reais;
-- homologação operacional.
+- homologação Meta em produção/controlada.
 
-### 6. Conciliação automática do Pix próprio — PARCIALMENTE IMPLEMENTADA
+### 6. Conciliação automática do Pix próprio — CANDIDATO EM VALIDAÇÃO
 
-O estado real é mais avançado que o roadmap antigo.
+O estado real avançou além do roadmap anterior.
 
-Já existe:
+Já existe e permanece preservado:
 
 - provider `cooklily_pix`;
 - BR Code Pix estático;
 - valor fechado;
 - txid próprio por pagamento;
 - CRC16;
-- configuração por variáveis da VPS;
 - integração ao domínio `LilyPaymentProvider`;
 - ledger de pagamento/eventos;
-- tabela de reconciliação;
-- confirmação/reconciliação manual pelo admin;
-- testes do payload oficial do Banco Central;
-- fallback manual;
-- pagamento só muda o pedido quando há confirmação autorizada.
+- reconciliação manual administrativa como fallback.
 
-O que ainda falta para ser **conciliação automática do Pix próprio**:
+Implementado na 11I:
 
-- escolher/ligar uma fonte bancária autoritativa;
-- webhook/API/extrato do banco/PSP recebedor;
-- deduplicação do evento bancário;
-- matching por txid + valor;
-- registro de divergências;
-- aprovação automática somente após confirmação bancária válida;
-- job/retry de reconciliação;
-- homologação financeira real.
+- `LilyPixSettlement` para ledger autoritativo de Pix recebidos;
+- `LilyPixReconciliationState` para cursor/saúde do poller;
+- migration `20260929173000_lily_pix_auto_reconciliation`;
+- adapter compatível com consulta de Pix recebidos da API Pix v2;
+- mTLS + OAuth client-credentials configuráveis;
+- janela com overlap + deduplicação por `source:endToEndId`;
+- paginação estrita, com falha fechada antes de avançar cursor se a janela estiver incompleta ou malformada;
+- minimização de dados bancários: sem nome/documento/`infoPagador`;
+- matching por txid contra `providerPaymentId`/referência;
+- aprovação somente com txid único, valor exato e estados pendentes;
+- discrepância de valor mantém pagamento/pedido pendentes e gera reconciliação + evento auditável;
+- Pix sem txid, desconhecido, ambíguo, duplicado, tardio ou corrida perdida entra em revisão;
+- worker periódico + execução manual administrativa;
+- contadores de revisão e último erro persistente;
+- WhatsApp `payment_confirmed` quando houver opt-in;
+- checkout anuncia confirmação automática somente quando o adapter bancário está realmente pronto;
+- testes automatizados dos invariantes financeiros.
+
+Ainda falta para sair de candidato:
+
+- CI/CodeQL do SHA final;
+- definir qual instituição realmente recebe o Pix CookLily;
+- confirmar compatibilidade de OAuth/mTLS/scopes/URLs/certificado;
+- credenciais reais;
+- smoke financeiro real/sandbox;
+- conferência das tarifas da conta recebedora.
+
+A escolha da instituição não é uma pendência de arquitetura que justifique selecionar arbitrariamente um PSP. O código permanece `disabled` por padrão e só deve ser ligado à API da conta efetivamente usada.
 
 ## Ordem de execução atualizada
 
-1. fechar gate técnico da 11H;
-2. homologar 11G/11H em ambiente real quando credenciais estiverem disponíveis;
-3. implementar 11I — ingestão e conciliação bancária automática do Pix próprio;
-4. QA operacional ponta a ponta e deploy apenas por SHA validado.
+1. concluir gate técnico da 11I;
+2. homologar 11G/11H quando chaves/contas externas estiverem disponíveis;
+3. definir a instituição recebedora do Pix e homologar a 11I com a API real;
+4. QA operacional ponta a ponta;
+5. deploy somente por SHA validado.
 
 ## Regra de status
 
