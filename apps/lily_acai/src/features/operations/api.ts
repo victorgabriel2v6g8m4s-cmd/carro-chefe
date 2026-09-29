@@ -37,8 +37,7 @@ export type KitchenOrder = {
     sizeMl: number;
     quantity: number;
     note: string | null;
-    flavors: Array<{ id?: string; name?: string }>;
-    configuration: Record<string, unknown>;
+    flavors: Array<{ name: string }>;
     addons: Array<{ name: string; quantity: number }>;
   }>;
   operationEvents: Array<{
@@ -89,8 +88,6 @@ export type KitchenPrintTicket = {
   id: string;
   orderNumber: string;
   createdAt: string;
-  financialStatus: string;
-  operationStatus: KitchenOperationStatus;
   fulfillmentType: "pickup" | "delivery";
   isHomologation: boolean;
   customerNote: string | null;
