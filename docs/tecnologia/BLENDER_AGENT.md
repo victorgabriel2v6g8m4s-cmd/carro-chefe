@@ -103,13 +103,30 @@ Objetivo: impedir perda de contexto operacional em chats e produções longas.
 - [x] busca por texto, stage, action, tempo, sucesso/falha, tags e anexos;
 - [x] contexto com etapa anterior/próximas e eventos recentes;
 - [x] ferramentas MCP para workspaces e auto-history;
-- [ ] smoke test real de múltiplos workspaces e recuperação histórica no Windows 10/Blender 5.2 LTS.
+- [x] smoke test real de múltiplos workspaces e recuperação histórica no Windows 10/Blender 5.2 LTS, confirmado após a correção assíncrona de redraw.
 
 Documento dedicado: [BLENDER_AGENT_CONTEXT.md](./BLENDER_AGENT_CONTEXT.md).
 
 ### V0.3 — Sculpt assistido
 
-Planejado: ativação explícita de Sculpt, brush allowlisted, stroke multiponto, radius/strength, máscara/smooth, checkpoint antes de strokes destrutivos e validação de contexto. Critério: corrigir a forma do pão por strokes pequenos e retornar imagem pós-stroke.
+Implementado e aguardando smoke test real:
+
+- [x] ativação explícita de Sculpt Mode;
+- [x] workspace Sculpting/Layout com restauração posterior;
+- [x] brushes allowlisted;
+- [x] stroke multiponto;
+- [x] coordenadas normalizadas independentes da resolução;
+- [x] radius/strength/pressure limitados;
+- [x] modos NORMAL/INVERT/SMOOTH/ERASE com detecção da API disponível;
+- [x] checkpoint automático antes do stroke;
+- [x] captura "antes";
+- [x] captura "depois" via iteração MCP após redraw;
+- [x] auto-history de strokes e anexos;
+- [x] MCP `blender_sculpt_iteration` devolvendo before/after;
+- [x] smoke test destrutivo isolado em UV sphere temporária;
+- [ ] smoke test real no Windows 10 + Blender 5.2 LTS.
+
+Critério: corrigir a forma por strokes pequenos, produzir before/after diferentes, registrar checkpoint/history e restaurar o workspace. Documento: [BLENDER_AGENT_SCULPT.md](./BLENDER_AGENT_SCULPT.md).
 
 ### V0.4 — Receitas 3D de produto
 
