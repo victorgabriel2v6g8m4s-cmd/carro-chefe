@@ -173,6 +173,44 @@ Referências de integração:
 - https://developers.openai.com/api/docs/guides/agents-api/tools/mcp
 - https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
 
+## Contexto persistente: abas + auto-history
+
+A ferramenta não depende mais apenas da memória da conversa para produções longas.
+
+### Consultar abas/workspaces
+
+```powershell
+python -m tools.blender_agent.client workspace-list
+python -m tools.blender_agent.client workspace-describe --name Layout --name Sculpting
+python -m tools.blender_agent.client workspace-describe --all
+```
+
+A consulta retorna editores/áreas, seleção, objeto ativo, modo, objetos da cena e contexto específico de VIEW_3D, Outliner, Properties, Text/Image/Node Editor quando disponível.
+
+### Capturar várias abas em uma operação
+
+```powershell
+python -m tools.blender_agent.client workspace-capture-set --workspace Layout --workspace Sculpting --target WINDOW --label baguete-context
+```
+
+Também existe `--plan-json` para capturas diferentes por workspace. Targets suportados: `VIEW_3D`, `WINDOW` e `AREA`.
+
+### Auto-history por etapa
+
+```powershell
+python -m tools.blender_agent.client history-start "Base do pão" --tag baguete
+python -m tools.blender_agent.client history-list
+python -m tools.blender_agent.client history-show
+python -m tools.blender_agent.client history-search bevel --action object.
+python -m tools.blender_agent.client history-note "Formato lateral aprovado" --tag decisao
+```
+
+Cada etapa possui pasta própria com `metadata.json`, segmentos `events-XXXX.jsonl` e `attachments/`. A nova etapa referencia `previous_stage_id`; o contexto também mostra próximas etapas derivadas.
+
+Todas as actions normais do bridge são registradas automaticamente, com redaction de campos sensíveis, resultados/erros e anexos de runtime com SHA-256. O histórico é rotacionado por segmento e possui limites configuráveis de retenção para evitar um arquivo monolítico.
+
+Arquitetura e política completa: [BLENDER_AGENT_CONTEXT.md](../../docs/tecnologia/BLENDER_AGENT_CONTEXT.md).
+
 ## Segurança
 
 - bind somente em `127.0.0.1` e porta efêmera por padrão;
@@ -199,6 +237,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/smoke-te
 ```
 
 Ele valida bridge, descrição do viewport, preset 3/4, geração do PNG, receipt e, se o venv MCP já existir, import do adaptador MCP. O `-OpenImage` é opcional.
+
+Smoke test de contexto/workspaces/auto-history:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/context-smoke-test.ps1 -OpenImages
+```
 
 Smoke test manual detalhado:
 
