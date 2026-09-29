@@ -343,17 +343,30 @@ O papel `courier` deve ter acesso mínimo:
 - [x] template parametrizado;
 - [x] retry/backoff/auditoria operacional;
 - [x] falha de mensageria não bloqueia pedido;
-- [ ] gate CI/CodeQL;
+- [x] gate CI `36604181215` + CodeQL `36604181245`;
+- [x] integrada em `cooklily/canonical` pelo PR #99;
 - [ ] homologação Meta real.
 
 ### Fase 11I — conciliação automática do Pix próprio
 - [x] BR Code/txid próprio (`cooklily_pix`);
 - [x] ledger e reconciliação manual auditável;
-- [ ] definir/integrar banco/PSP recebedor;
-- [ ] webhook/API Pix/extrato autoritativo;
-- [ ] matching txid + valor;
-- [ ] divergências e idempotência;
-- [ ] confirmação automática do pedido somente após evento bancário validado.
+- [x] ledger de settlements Pix recebidos;
+- [x] estado/cursor persistente do poller;
+- [x] adapter funcional para API Pix v2 `GET /pix`;
+- [x] ingestão com mTLS + OAuth client-credentials parametrizável;
+- [x] paginação estrita/fail-closed;
+- [x] deduplicação por source + endToEndId;
+- [x] matching txid + valor;
+- [x] divergências e idempotência;
+- [x] confirmação automática do pedido somente após evento bancário exato;
+- [x] revisão administrativa de unmatched/discrepant/duplicate/late;
+- [x] fallback manual preservado;
+- [x] worker periódico e execução admin auditada;
+- [x] testes de invariantes financeiros críticos;
+- [ ] gate CI/CodeQL do candidato 11I;
+- [ ] definir/homologar banco/PSP recebedor real;
+- [ ] confirmar OAuth/mTLS/scopes/URLs/certificado da instituição;
+- [ ] smoke financeiro real/sandbox e tarifas da conta.
 
 ### Backlog transversal
 - [ ] alertas de atraso;
