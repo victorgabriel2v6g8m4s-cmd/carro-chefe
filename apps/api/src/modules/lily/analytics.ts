@@ -43,6 +43,7 @@ const surfaceSchema = z.enum([
 
 const slugSchema = z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/);
 const pathSchema = z.string().trim().startsWith("/").max(240)
+  .refine((value) => /^\/lilyacai(?:\/|$)/.test(value), "O path analítico deve pertencer à CookLily.")
   .refine((value) => !value.includes("?") && !value.includes("#"), "O path analítico não pode conter query ou fragment.");
 
 const analyticsMetadataSchema = z.object({
@@ -69,7 +70,7 @@ const analyticsEventSchema = z.object({
 
 const summaryQuerySchema = z.object({
   days: z.coerce.number().int().min(1).max(90).default(7),
-  campaign: z.string().trim().min(1).max(120).optional(),
+  campaign: z.string().trim().regex(/^[A-Za-z0-9._:-]{1,120}$/).optional(),
   includeHomologation: z.enum(["true", "false"]).optional().transform((value) => value === "true")
 });
 
@@ -103,7 +104,7 @@ function aggregateProductEvents(rows: Array<{ productSlug: string | null; event:
 
 export async function lilyAnalyticsRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/public/analytics/events", {
-    config: { rateLimit: { max: 180, timeWindow: "1 minute" } }
+    config: { rateLimit: { max: 90, timeWindow: "1 minute" } }
   }, async (request, reply) => {
     const input = analyticsEventSchema.parse(request.body);
     const normalizedAttribution = normalizeLilyAttribution(input.attribution);
