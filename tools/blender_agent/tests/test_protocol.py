@@ -26,6 +26,16 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(request["action"], "ui.drag")
         self.assertEqual(request["params"]["x2"], 3)
 
+    def test_viewport_actions_are_allowlisted(self) -> None:
+        for action in ("ui.dismiss_modal", "ui.view3d", "ui.orbit"):
+            request = normalize_request({
+                "version": 1,
+                "id": f"test-{action}",
+                "action": action,
+                "params": {},
+            })
+            self.assertEqual(request["action"], action)
+
     def test_rejects_arbitrary_action(self) -> None:
         with self.assertRaises(ProtocolError):
             normalize_request({
