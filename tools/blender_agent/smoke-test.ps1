@@ -20,7 +20,7 @@ function Invoke-JsonCommand {
         return $text | ConvertFrom-Json
     }
     catch {
-        throw "Saida nao é JSON valido: $text"
+        throw "Saida nao e JSON valido: $text"
     }
 }
 
