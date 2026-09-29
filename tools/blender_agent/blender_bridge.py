@@ -51,6 +51,7 @@ _TASKS: "queue.Queue[Task]" = queue.Queue()
 _TOKEN = secrets.token_urlsafe(32)
 _SERVER = None
 _CAPTURE_JOB = None
+_SCULPT_SESSION = None
 _WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "3"))))
 
 _MOUSE_BUTTONS = {"left": "LEFTMOUSE", "middle": "MIDDLEMOUSE", "right": "RIGHTMOUSE"}
@@ -1031,10 +1032,12 @@ def _sculpt_set_radius_strength(radius: int, strength: float) -> dict[str, Any]:
 
 
 def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
+    global _SCULPT_SESSION
     window = bpy.context.window
     if window is None:
         raise RuntimeError("nenhuma janela Blender ativa")
 
+    original_workspace_name = window.workspace.name
     requested_workspace = str(params.get("workspace", "")).strip()
     if requested_workspace:
         target_workspace = bpy.data.workspaces.get(requested_workspace)
@@ -1066,10 +1069,17 @@ def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
         int(params.get("radius", 60)),
         float(params.get("strength", 0.25)),
     )
+    _SCULPT_SESSION = {
+        "object": obj.name,
+        "original_workspace": original_workspace_name,
+        "sculpt_workspace": window.workspace.name,
+        "started_ns": time.time_ns(),
+    }
     _redraw_window()
     return {
         "object": obj.name,
         "workspace": window.workspace.name,
+        "original_workspace": original_workspace_name,
         "mode": bpy.context.mode,
         **brush_info,
         **settings,
@@ -1146,6 +1156,50 @@ def _sculpt_checkpoint(label: str) -> Path:
     output = safe_runtime_path("checkpoints", filename)
     bpy.ops.wm.save_as_mainfile(filepath=str(output), copy=True)
     return output
+
+
+def _sculpt_finish(params: dict[str, Any]) -> dict[str, Any]:
+    global _SCULPT_SESSION
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+
+    object_name = None
+    if bpy.context.mode == "SCULPT":
+        active = bpy.context.view_layer.objects.active
+        object_name = active.name if active else None
+        area, region = None, None
+        try:
+            area, region, _space, _region_3d = _view3d_context()
+        except Exception:
+            pass
+        if area is not None and region is not None:
+            with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+                result = bpy.ops.object.mode_set(mode="OBJECT")
+        else:
+            result = bpy.ops.object.mode_set(mode="OBJECT")
+        if not result or "FINISHED" not in result:
+            raise RuntimeError(f"nao foi possivel sair de Sculpt Mode: {sorted(result or [])}")
+
+    restore = bool(params.get("restore_workspace", True))
+    restored_workspace = window.workspace.name
+    original_workspace = (_SCULPT_SESSION or {}).get("original_workspace")
+    if restore and original_workspace and original_workspace in bpy.data.workspaces:
+        window.workspace = bpy.data.workspaces[original_workspace]
+        _redraw_window()
+        restored_workspace = window.workspace.name
+
+    session = _SCULPT_SESSION
+    _SCULPT_SESSION = None
+    return {
+        "object": object_name or (session or {}).get("object"),
+        "mode": bpy.context.mode,
+        "restored_workspace": restored_workspace,
+        "original_workspace": original_workspace,
+        "restored_original_workspace": bool(
+            not restore or not original_workspace or restored_workspace == original_workspace
+        ),
+    }
 
 
 def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
@@ -1299,6 +1353,9 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
 
     if action == "sculpt.stroke":
         return _sculpt_stroke(params)
+
+    if action == "sculpt.finish":
+        return _sculpt_finish(params)
 
     if action == "workspace.list":
         return _workspace_list()
