@@ -5,8 +5,8 @@
 - branch: `feat/lily-entrega-11j-sla-alertas-operacionais`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `19381bda06010f971f41a024a27d928c2e96c3f6`
-- head_sha_verified: `d31ca24a2a1c42d81e78a63fd2e4270b029dc0f3`
-- pull_requests: ainda não criados
+- head_sha_verified: `c3519c042af3d0a64de7c0bdb7ffa3336d74fc8e`
+- pull_requests: PR #104 -> `cooklily/canonical` (draft); PR #105 -> `main` (gate temporário, não mergear)
 - last_verified_at: 2026-09-29
 - interruption_state: execução iniciada após conclusão da 11I
 
@@ -39,7 +39,7 @@ Primeiro escopo:
 
 ## Em andamento
 
-Implementação funcional concluída no branch. Em andamento: revisão do diff, documentação/roadmap e gate CI/CodeQL.
+Implementação funcional, revisão de diff e documentação concluídas. Em andamento: gate CI/CodeQL.
 
 ## Gates e testes
 
@@ -57,4 +57,4 @@ Ainda não iniciados. A entrega só poderá integrar após CI e CodeQL verdes no
 
 ## Próxima ação exata
 
-Revisar o diff completo, criar documento da Entrega 11J, atualizar o roadmap e abrir PR canônico + gate CI/CodeQL.
+Acompanhar CI/CodeQL do HEAD resultante deste checkpoint; corrigir qualquer falha antes de marcar o PR #104 pronto.
