@@ -30,7 +30,7 @@ apps/gestao/          Central Operacional React/Vite (`/gestao`)
 apps/api/             API TypeScript, SSE, webhooks e bridge do Codex
 apps/qr_manipulator/  QR Lab e tracking de derivados QR
 packages/             Banco Prisma, contratos e componentes compartilhados
-tools/                Runtime, policy, supervisor, snapshots e health check
+tools/                Runtime, policy, Blender Agent, supervisor, snapshots e health check
 cardápio/             Materiais atuais do cardápio
 elementos gráficos/  Elementos visuais originais
 logos/                Variações oficiais da marca
@@ -50,7 +50,8 @@ planejamento/         Dados iniciais e implementação legada preservada
 - API transacional com histórico justificado, trilha de auditoria, SSE e webhooks assinados;
 - canal de execução, perguntas e respostas entre a Central e agentes Codex;
 - site público e painel responsivo baseados na identidade visual existente;
-- catálogo de ferramentas e verificação automática da saúde das ferramentas próprias.
+- catálogo de ferramentas e verificação automática da saúde das ferramentas próprias;
+- integração local com Blender para modelagem 3D iterativa, documentada em `docs/tecnologia/BLENDER_AGENT.md`.
 
 ## Princípio de operação
 
