@@ -102,9 +102,21 @@ def get_active_stage_id() -> str | None:
 
 
 def set_active_stage(stage_id: str) -> dict[str, Any]:
-    metadata = get_stage_metadata(stage_id)
-    _atomic_json_write(_active_path(), {"stage_id": metadata["stage_id"], "updated_at": _now_iso()})
-    return metadata
+    with _HISTORY_LOCK:
+        previous_id = get_active_stage_id()
+        metadata = get_stage_metadata(stage_id)
+        now = _now_iso()
+        if previous_id and previous_id != metadata["stage_id"]:
+            previous = get_stage_metadata(previous_id)
+            if previous.get("status") == "active":
+                previous["status"] = "completed"
+                previous["updated_at"] = now
+                _atomic_json_write(_metadata_path(previous_id), previous)
+        metadata["status"] = "active"
+        metadata["updated_at"] = now
+        _atomic_json_write(_metadata_path(str(metadata["stage_id"])), metadata)
+        _atomic_json_write(_active_path(), {"stage_id": metadata["stage_id"], "updated_at": now})
+        return metadata
 
 
 def _unique_stage_id(label: str) -> str:
