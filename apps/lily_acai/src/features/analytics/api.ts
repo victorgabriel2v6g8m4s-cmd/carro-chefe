@@ -5,6 +5,7 @@ export type LilyAnalyticsSummary = {
   window: { from: string; to: string; days: number };
   filters: { campaign: string | null; includeHomologation: boolean };
   events: Record<string, number>;
+  surfaces: Record<string, number>;
   funnel: Array<{ event: string; sessions: number }>;
   attribution: Array<{
     campaign: string | null;
