@@ -33,8 +33,8 @@ class BridgeSourceTests(unittest.TestCase):
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("window.screenshot(region=region_rect)", source)
         self.assertIn("imbuf.write(image", source)
-        self.assertIn('safe_runtime_path("viewports"', source)
-        self.assertIn('safe_runtime_path("receipts"', source)
+        self.assertIn("attachment_output_path(filename)", source)
+        self.assertIn('attachment_output_path(f"{output.stem}.json")', source)
 
     def test_viewport_presets_use_context_override(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
