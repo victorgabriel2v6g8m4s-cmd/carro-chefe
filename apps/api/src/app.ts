@@ -32,10 +32,13 @@ declare module "fastify" {
 export const SENSITIVE_LOG_REDACT_PATHS = [
   "req.headers.authorization",
   "req.headers.cookie",
-  "req.headers.x-lily-csrf",
-  "req.headers.x-lily-order-token",
-  "req.headers.x-api-key",
-  "res.headers.set-cookie"
+  'req.headers["x-lily-csrf"]',
+  'req.headers["x-lily-order-token"]',
+  'req.headers["x-agent-key"]',
+  'req.headers["x-carrochefe-signature"]',
+  'req.headers["x-signature"]',
+  'req.headers["x-api-key"]',
+  'res.headers["set-cookie"]'
 ] as const;
 
 export async function buildApp() {
