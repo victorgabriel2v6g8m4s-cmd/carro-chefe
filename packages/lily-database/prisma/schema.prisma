@@ -698,3 +698,31 @@ model LilyLoyaltyEvent {
   @@index([userId, createdAt])
   @@index([type, createdAt])
 }
+
+
+model LilyAnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique
+  sessionId     String
+  event         String
+  path          String
+  laQr          String?
+  laCampaign    String?
+  laVariant     String?
+  surface       String?
+  productSlug   String?
+  comboSlug     String?
+  variantSizeMl Int?
+  addonCount    Int?
+  itemCount     Int?
+  fulfillmentType String?
+  paymentMethod String?
+  metadataJson  String   @default("{}")
+  createdAt     DateTime @default(now())
+
+  @@index([event, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([laCampaign, laVariant, createdAt])
+  @@index([laQr, createdAt])
+  @@index([productSlug, event, createdAt])
+}
