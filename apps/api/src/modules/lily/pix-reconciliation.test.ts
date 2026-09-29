@@ -98,6 +98,10 @@ beforeEach(async () => {
   delete process.env.COOKLILY_PIX_API_CLIENT_ID;
   delete process.env.COOKLILY_PIX_API_CLIENT_SECRET;
   delete process.env.COOKLILY_PIX_API_PFX_PATH;
+  delete process.env.COOKLILY_PIX_API_PFX_PASSPHRASE;
+  delete process.env.COOKLILY_PIX_API_OAUTH_BODY_FORMAT;
+  delete process.env.COOKLILY_PIX_API_OAUTH_SCOPE;
+  delete process.env.COOKLILY_PIX_API_RECEIVED_PATH;
   await cleanup();
 });
 
@@ -111,6 +115,15 @@ describe("CookLily Entrega 11I — conciliação automática Pix", () => {
       clientIdConfigured: false,
       clientSecretConfigured: false,
       pfxConfigured: false
+    });
+  });
+
+  it("rejeita formato OAuth desconhecido em vez de tentar autenticar", () => {
+    process.env.COOKLILY_PIX_API_OAUTH_BODY_FORMAT = "xml";
+    expect(lilyPixAutoReconciliationConfiguration()).toMatchObject({
+      oauthBodyFormat: "xml",
+      oauthBodyFormatValid: false,
+      ready: false
     });
   });
 
