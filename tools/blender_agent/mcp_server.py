@@ -18,7 +18,9 @@ mcp = MCPServer(
         "Controle somente a sessão local do Blender Agent do Carro Chefe. "
         "Prefira ações semânticas; use eventos ui.* apenas quando necessário. "
         "Capture a viewport após mudanças visuais relevantes e crie checkpoints "
-        "antes de operações destrutivas."
+        "antes de operações destrutivas. Use as ferramentas de workspace para consultar "
+        "abas antigas e as ferramentas de history para recuperar contexto por etapa, sem "
+        "depender da memória da conversa."
     ),
 )
 
@@ -71,6 +73,125 @@ def blender_viewport_capture(name: str = "agent-latest.png") -> Image:
         clean += ".png"
     result = _result(call("viewport.capture", {"filename": clean}))
     return Image(path=result["path"])
+
+
+@mcp.tool()
+def blender_workspaces() -> dict[str, Any]:
+    """Lista as abas/workspaces disponíveis no Blender e indica a aba atual."""
+    return _result(call("workspace.list"))
+
+
+@mcp.tool()
+def blender_workspace_describe(
+    names: list[str] | None = None,
+    all_workspaces: bool = False,
+) -> dict[str, Any]:
+    """Consulta conteúdo estruturado de uma ou várias abas/workspaces sem depender da memória do chat."""
+    return _result(call("workspace.describe", {
+        "names": names,
+        "all": all_workspaces,
+    }))
+
+
+@mcp.tool()
+def blender_workspace_capture(
+    workspaces: list[str] | None = None,
+    target: str = "VIEW_3D",
+    shading: str | None = None,
+    label: str = "workspace-capture-set",
+) -> list[Image]:
+    """Captura várias abas/workspaces em uma operação e devolve todas as imagens ao modelo."""
+    result = _result(call("workspace.capture_set", {
+        "workspaces": workspaces,
+        "target": target,
+        "shading": shading,
+        "label": sanitize_label(label, "workspace-capture-set"),
+    }))
+    images: list[Image] = []
+    for capture in result.get("captures", []):
+        if capture.get("ok") and capture.get("path"):
+            images.append(Image(path=capture["path"]))
+    if not images:
+        raise RuntimeError(f"nenhuma captura de workspace foi gerada: {result}")
+    return images
+
+
+@mcp.tool()
+def blender_history_start(
+    label: str,
+    stage_id: str | None = None,
+    previous_stage_id: str | None = None,
+    tags: list[str] | None = None,
+) -> dict[str, Any]:
+    """Inicia uma nova etapa de produção e referencia automaticamente a etapa anterior."""
+    return _result(call("history.stage.create", {
+        "label": label,
+        "stage_id": stage_id,
+        "previous_stage_id": previous_stage_id,
+        "activate": True,
+        "tags": tags or [],
+    }))
+
+
+@mcp.tool()
+def blender_history_list(limit: int = 100) -> dict[str, Any]:
+    """Lista etapas de produção registradas, incluindo a etapa ativa e suas relações."""
+    return _result(call("history.stage.list", {"limit": limit}))
+
+
+@mcp.tool()
+def blender_history_use(stage_id: str) -> dict[str, Any]:
+    """Ativa uma etapa histórica existente para continuar o trabalho nela."""
+    return _result(call("history.stage.activate", {"stage_id": stage_id}))
+
+
+@mcp.tool()
+def blender_history_context(stage_id: str | None = None, recent: int = 20) -> dict[str, Any]:
+    """Recupera contexto resumido da etapa, eventos recentes, anexos e referência anterior/próxima."""
+    return _result(call("history.stage.describe", {
+        "stage_id": stage_id,
+        "recent": recent,
+    }))
+
+
+@mcp.tool()
+def blender_history_search(
+    query: str | None = None,
+    stage_id: str | None = None,
+    action: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    success: bool | None = None,
+    has_attachment: bool | None = None,
+    tags: list[str] | None = None,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Pesquisa o auto-history por palavras-chave e filtros de etapa, ação, tempo, resultado, tags e anexos."""
+    return _result(call("history.search", {
+        "query": query,
+        "stage_id": stage_id,
+        "action": action,
+        "since": since,
+        "until": until,
+        "success": success,
+        "has_attachment": has_attachment,
+        "tags": tags or [],
+        "limit": limit,
+    }))
+
+
+@mcp.tool()
+def blender_history_note(
+    text: str,
+    tags: list[str] | None = None,
+    stage_id: str | None = None,
+) -> dict[str, Any]:
+    """Anexa uma nota curta ao histórico segmentado da etapa."""
+    return _result(call("history.note", {
+        "text": text,
+        "tags": tags or [],
+        "stage_id": stage_id,
+    }))
 
 
 @mcp.tool()
