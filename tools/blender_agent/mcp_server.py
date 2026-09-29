@@ -224,6 +224,7 @@ def blender_sculpt_status() -> dict[str, Any]:
 @mcp.tool()
 def blender_sculpt_prepare(
     name: str | None = None,
+    workspace: str = "Sculpting",
     brush: str = "DRAW",
     radius: int = 60,
     strength: float = 0.25,
@@ -231,6 +232,8 @@ def blender_sculpt_prepare(
     """Seleciona um mesh, entra em Sculpt Mode e configura um brush allowlisted."""
     return _result(call("sculpt.prepare", {
         "name": name,
+        "workspace": workspace,
+        "frame_selected": True,
         "brush": brush,
         "radius": radius,
         "strength": strength,
