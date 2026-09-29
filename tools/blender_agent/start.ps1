@@ -36,7 +36,7 @@ if (-not $BlenderExe) {
 }
 
 if (-not $BlenderExe -or -not (Test-Path -LiteralPath $BlenderExe)) {
-    throw "Blender não encontrado. Passe -BlenderExe 'C:\...\blender.exe'."
+    throw "Blender nao encontrado. Passe -BlenderExe 'C:\...\blender.exe'."
 }
 
 $BlenderExe = (Resolve-Path -LiteralPath $BlenderExe).Path
@@ -60,7 +60,7 @@ Write-Host "Bridge:  $Bridge"
 Write-Host "Args:    $argumentString"
 
 if ($DryRun) {
-    Write-Host "DryRun: Blender não foi iniciado."
+    Write-Host "DryRun: Blender nao foi iniciado."
     exit 0
 }
 
@@ -81,9 +81,9 @@ while ((Get-Date) -lt $deadline) {
                 Write-Host "Blender Agent pronto."
                 Write-Host "PID:     $($session.pid)"
                 Write-Host "Bridge:  $($session.host):$($session.port)"
-                Write-Host "Sessão:  $SessionFile"
+                Write-Host "Sessao:  $SessionFile"
                 Write-Host ""
-                Write-Host "Próximo teste:"
+                Write-Host "Proximo teste:"
                 Write-Host "python -m tools.blender_agent.client status"
                 exit 0
             }
@@ -94,14 +94,14 @@ while ((Get-Date) -lt $deadline) {
     }
 
     if ($process.HasExited) {
-        throw "O Blender encerrou antes de criar a sessão do bridge (exit $($process.ExitCode)). Rode novamente com -DryRun para conferir os argumentos."
+        throw "O Blender encerrou antes de criar a sessao do bridge (exit $($process.ExitCode)). Rode novamente com -DryRun para conferir os argumentos."
     }
 
     Start-Sleep -Milliseconds 250
 }
 
 throw @"
-O Blender abriu, mas o bridge não criou a sessão em $WaitForBridgeSeconds segundos.
+O Blender abriu, mas o bridge nao criou a sessao em $WaitForBridgeSeconds segundos.
 
 Arquivo esperado:
 $SessionFile
