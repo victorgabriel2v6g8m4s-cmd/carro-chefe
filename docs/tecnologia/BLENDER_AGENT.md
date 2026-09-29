@@ -42,9 +42,9 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 - interação visual usa `bpy.types.Window.event_simulate`, confinada à janela Blender;
 - promoção de ativos para `mídias/`, `cardápio/` ou diretórios oficiais continua explícita.
 
-## Estado atual — V0.1
+## Estado atual — V0.2 em validação
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, `ui.window`, detecção da maior VIEW_3D, fechamento automático/manual do splash, clique, drag, orbit e wheel, evento UI allowlisted, launcher PowerShell para Windows 10, testes unitários sem Blender e integração no Tool Health.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, receipts JSON com SHA-256, testes unitários e integração no Tool Health.
 
 Maturidade: **em desenvolvimento**.
 
@@ -57,12 +57,26 @@ Maturidade: **em desenvolvimento**.
 - [x] eventos estilo mouse confinados ao Blender;
 - [x] checkpoint, render e export;
 - [x] testes sem Blender;
-- [ ] smoke test completo no Blender real do Windows 10 do proprietário; bridge e comandos responderam, mas a etapa visual ainda precisa confirmar splash fechado e orbit da VIEW_3D;
-- [ ] confirmar versão mínima suportada na máquina real.
+- [x] smoke test completo no Windows 10 do proprietário: splash, `status`, bounds e `ui-orbit` funcionaram;
+- [x] baseline operacional definida e validada em Blender 5.2.0 LTS.
 
 ### V0.2 — Feedback visual automático
 
-Objetivo: tornar o loop observação -> ação -> observação automático. Planejado: captura da área 3D, `viewport.capture`, bounds da viewport, presets frente/topo/lateral/3-4, grade referência vs render e receipts JSON de iteração. Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção humana.
+Objetivo: tornar o loop observação -> ação -> observação automático.
+
+- [x] bounds da maior VIEW_3D;
+- [x] `viewport.describe`;
+- [x] `viewport.capture` restrito à região 3D;
+- [x] gravação PNG usando API nativa do Blender 5.2;
+- [x] receipts JSON e SHA-256;
+- [x] presets `FRONT`, `RIGHT`, `LEFT`, `TOP`, `BOTTOM`, `BACK`, `CAMERA` e `THREE_QUARTER`;
+- [x] shading previsível;
+- [x] CLI `viewport-capture-set` para frente/lateral/topo/3-4;
+- [ ] smoke test real das imagens geradas no Windows 10/Blender 5.2 LTS;
+- [ ] integração de ingestão automática dessas imagens pelo agente;
+- [ ] grade comparativa referência vs captura/render.
+
+Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção humana.
 
 ### V0.3 — Sculpt assistido
 
