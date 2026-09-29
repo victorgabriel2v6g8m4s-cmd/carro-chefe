@@ -61,11 +61,11 @@ Estados: `aberto`, `mitigado`, `resolvido`, `aceito`.
 
 - **Data:** 2026-09-29
 - **Tipo:** plataforma/recurso
-- **Status:** aberto
+- **Status:** resolvido
 - **Contexto:** primeira implementação de `tools/blender_agent`.
-- **Impacto:** CI e testes sem Blender validam protocolo, sandbox e superfície do cliente, mas não provam `Window.event_simulate`, Sculpt ou contexto de viewport na instalação real do proprietário.
-- **Evidência segura:** o primeiro teste real identificou perda de aspas no launcher e isso foi corrigido. No segundo teste, `status` e demais comandos responderam, mas o splash inicial permaneceu sobre a viewport e a interface pareceu bloqueada; o splash do Blender é modal e impede interação com a viewport atrás dele. Foi adicionada rotina automática de `Esc`, ação `ui.dismiss_modal`, detecção da maior VIEW_3D e `ui.orbit` direcionado à viewport.
-- **Tratamento:** manter maturidade `em desenvolvimento`; repetir o smoke test com V0.1.1 e considerar a ponte visual validada quando o splash fechar, `ui-view3d` retornar bounds coerentes e `ui-orbit` alterar visualmente a viewport no Windows 10/Blender 5.2.0 LTS do proprietário.
+- **Impacto:** a validação real era necessária para provar `Window.event_simulate` e o contexto de VIEW_3D na máquina-alvo.
+- **Evidência segura:** após corrigir quoting do launcher e o splash modal, o proprietário confirmou em 29/09/2026 que `status`, `ui-view3d`, fechamento do splash e `ui-orbit` funcionaram perfeitamente no Windows 10 com Blender 5.2.0 LTS.
+- **Tratamento:** bloqueio encerrado para a baseline Blender 5.2.0 LTS. Novas capacidades de captura/Sculpt mantêm validação própria no roadmap e não reabrem este bloqueio automaticamente.
 - **Owner:** `AG-DEV` + proprietário.
 
 ## Regra obrigatória
