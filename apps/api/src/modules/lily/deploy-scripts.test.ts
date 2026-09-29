@@ -84,7 +84,8 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain("lily_backup_sha256=");
     expect(deployer).toContain("backup_verification=ok");
     expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf('PHASE="stop-service"'));
-    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf('PHASE="migrate-core"'));
+    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf('PHASE="production-migrations"'));
+    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf("npm run db:deploy:core"));
   });
 
   it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {
