@@ -157,14 +157,29 @@ Documento: `docs/lily-acai/entregas/ENTREGA_08_TORRE_CONTROLE_PEDIDOS_2026-09-29
 
 ## Entrega 09 — tracking e analytics first-party
 
-**Status:** parcial.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #110. Candidate SHA `c52a0fcda0d016f282ad513b4b91b0098fc0a75c`; CI `36637864661` e CodeQL `36637864655`: success. QA real permanece pendente.
 
-Já existe atribuição `la_*`/legado `cc_*` e persistência canônica sem PII em URL. Falta consolidar analytics first-party completo:
+Implementado:
 
-- manter QR físico atual;
-- produto, variante, combinação, adicionais, campanha, origem, superfície e pedido;
-- funis e eventos de navegação/compra;
-- relatórios operacionais e de marketing.
+- analytics first-party próprio, sem dependência de GA4/Clarity;
+- consentimento explícito, recusa sem perda de funcionalidade e fila pré-consentimento apenas em memória;
+- sessão/evento pseudônimos por UUID;
+- ingestão strict sem telefone, nome, endereço, notas, tokens ou query string;
+- atribuição canônica `la_*` com entrada legada `cc_*`;
+- eventos de landing, catálogo, produto, combo, carrinho, checkout, pagamento e canais;
+- funil por sessão;
+- métricas de produto;
+- painel staff `/painel/analytics`;
+- pedidos e receita calculados de `LilyOrder` como fonte autoritativa;
+- pedidos de homologação excluídos das métricas comerciais por padrão;
+- testes backend/frontend de privacidade, consentimento, idempotência e agregação.
+
+Pendente:
+
+- QA real do aviso/preferências e dashboard;
+- definir retenção jurídica definitiva antes da operação comercial plena.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_09_ANALYTICS_FIRST_PARTY_2026-09-29.md`.
 
 ## Entrega 10 — QA, observabilidade e hardening
 
