@@ -29,7 +29,8 @@ const settingsPatchSchema = z.object({
   pickupAddressText: z.string().trim().max(500).nullable().optional(),
   pickupInstructions: z.string().trim().max(1000).nullable().optional(),
   businessHours: businessHoursSchema.optional(),
-  timezone: z.literal("America/Campo_Grande").optional()
+  timezone: z.literal("America/Campo_Grande").optional(),
+  kitchenPreparationSlaMinutes: z.number().int().min(1).max(720).nullable().optional()
 }).strict();
 
 const storeSettingsPatchSchema = z.object({
@@ -144,7 +145,8 @@ function serializeFulfillmentSettings(settings: Awaited<ReturnType<typeof getLil
     pickupAddressText: settings.pickupAddressText,
     pickupInstructions: settings.pickupInstructions,
     businessHours: parseBusinessHours(settings.businessHoursJson),
-    timezone: settings.timezone
+    timezone: settings.timezone,
+    kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes
   };
 }
 
@@ -328,7 +330,10 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
         ...(input.pickupAddressText === undefined ? {} : { pickupAddressText: input.pickupAddressText || null }),
         ...(input.pickupInstructions === undefined ? {} : { pickupInstructions: input.pickupInstructions || null }),
         ...(input.businessHours === undefined ? {} : { businessHoursJson: JSON.stringify(input.businessHours) }),
-        ...(input.timezone === undefined ? {} : { timezone: input.timezone })
+        ...(input.timezone === undefined ? {} : { timezone: input.timezone }),
+        ...(input.kitchenPreparationSlaMinutes === undefined
+          ? {}
+          : { kitchenPreparationSlaMinutes: input.kitchenPreparationSlaMinutes })
       }
     });
     await auditLilyAdmin(context.user.id, "update", "fulfillment-settings", SETTINGS_ID, input);

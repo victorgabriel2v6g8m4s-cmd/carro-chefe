@@ -21,6 +21,15 @@ export type KitchenOrder = {
   customerNote: string | null;
   pickupCode: string | null;
   createdAt: string;
+  sla: {
+    thresholdMinutes: number;
+    startedAt: string;
+    dueAt: string;
+    elapsedMinutes: number;
+    remainingMinutes: number;
+    overdueMinutes: number;
+    status: "on_track" | "overdue";
+  } | null;
   items: Array<{
     id: string;
     productName: string;
@@ -48,6 +57,10 @@ export async function getKitchenOrders() {
   return parseResponse<{
     orders: KitchenOrder[];
     statuses: KitchenOperationStatus[];
+    sla: {
+      kitchenPreparationSlaMinutes: number | null;
+      overdue: number;
+    };
   }>(response);
 }
 

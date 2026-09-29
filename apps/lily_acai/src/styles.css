@@ -2422,6 +2422,54 @@ img, svg { max-width: 100%; }
   border: 1px dashed currentColor;
   font-weight: 800;
 }
+
+.kitchen-sla {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 12px;
+  background: var(--cl-color-surface-soft);
+}
+.kitchen-sla > span {
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.kitchen-sla > strong {
+  font-size: .95rem;
+}
+.kitchen-sla small {
+  color: inherit;
+  opacity: .78;
+}
+.kitchen-sla.is-on-track {
+  border-color: #b9e6ca;
+  background: #effbf4;
+  color: #125934;
+}
+.kitchen-sla.is-overdue {
+  border-color: #e7bdcc;
+  background: #fff1f5;
+  color: #7b2346;
+}
+.kitchen-sla-summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid #b9e6ca;
+  border-radius: 999px;
+  background: #effbf4;
+  color: #125934 !important;
+  font-weight: 900;
+}
+.kitchen-sla-summary.is-overdue {
+  border-color: #e7bdcc;
+  background: #fff1f5;
+  color: #7b2346 !important;
+}
 .kitchen-items {
   display: grid;
   gap: 10px;

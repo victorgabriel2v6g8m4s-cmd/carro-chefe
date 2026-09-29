@@ -194,12 +194,34 @@ Pendente apenas de homologação externa:
 
 O provider de reconciliação permanece `disabled` por padrão até essa homologação.
 
+### 7. SLA/alertas da cozinha — CANDIDATO EM VALIDAÇÃO
+
+Branch: `feat/lily-entrega-11j-sla-alertas-operacionais`.
+
+Implementado:
+
+- SLA de montagem configurável e desligado por padrão;
+- persistência em `LilyOperationalSettings`;
+- configuração no painel staff;
+- cálculo pelo backend com relógio do servidor;
+- alerta por pedido + contador de atrasados;
+- nenhuma mudança automática de status;
+- testes unitários e de integração.
+
+Ainda falta:
+
+- CI/CodeQL do SHA final;
+- definir o número real de minutos com a operação;
+- QA real em tablet/celular.
+
 ## Ordem de execução atualizada
 
-1. definir/homologar a instituição recebedora da 11I;
-2. homologar 11G/11H com chaves/contas externas reais;
-3. executar QA operacional ponta a ponta em cozinha, cliente e courier;
-4. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
+1. concluir gate técnico da 11J;
+2. definir/homologar a instituição recebedora da 11I;
+3. homologar 11G/11H com chaves/contas externas reais;
+4. definir com a operação o SLA real da cozinha e executar QA em tablet/celular;
+5. executar QA operacional ponta a ponta em cozinha, cliente e courier;
+6. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
 
 ## Regra de status
 

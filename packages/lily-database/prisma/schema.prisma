@@ -470,6 +470,7 @@ model LilyOperationalSettings {
   manualPixInstructions     String?
   mercadoPagoPixEnabled     Boolean  @default(false)
   mercadoPagoCardEnabled    Boolean  @default(false)
+  kitchenPreparationSlaMinutes Int?
   createdAt                 DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
