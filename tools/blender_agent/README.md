@@ -68,6 +68,11 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `viewport.set_view` / `viewport.frame_all` | presets de vista e enquadramento |
 | `viewport.set_shading` | wireframe/solid/material/rendered |
 | `viewport.capture` | captura PNG somente da região 3D + receipt JSON/SHA-256 |
+| `workspace.list` / `workspace.describe` | lista e consulta conteúdo de abas/workspaces |
+| `workspace.capture_set` | captura múltiplos workspaces/áreas e gera manifesto |
+| `history.stage.create/list/activate/describe` | ciclo de vida e contexto das etapas de produção |
+| `history.search` | pesquisa por texto, etapa, action, tempo, status, tags e anexos |
+| `history.note` | nota explícita na etapa ativa |
 
 ## Feedback visual automático — V0.2
 
