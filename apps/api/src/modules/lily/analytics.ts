@@ -167,6 +167,7 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
 
     const [
       eventCounts,
+      surfaceGroups,
       attributionGroups,
       productGroups,
       orderAggregate,
@@ -178,6 +179,11 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
       lilyPrisma.lilyAnalyticsEvent.groupBy({
         by: ["event"],
         where: eventWhere,
+        _count: { _all: true }
+      }),
+      lilyPrisma.lilyAnalyticsEvent.groupBy({
+        by: ["surface"],
+        where: { ...eventWhere, surface: { not: null } },
         _count: { _all: true }
       }),
       lilyPrisma.lilyAnalyticsEvent.groupBy({
@@ -263,6 +269,7 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
         includeHomologation: query.includeHomologation
       },
       events: Object.fromEntries(eventCounts.map((row) => [row.event, row._count._all])),
+      surfaces: Object.fromEntries(surfaceGroups.filter((row) => row.surface).map((row) => [row.surface!, row._count._all])),
       funnel: funnelSessionRows,
       attribution,
       orderAttribution,
