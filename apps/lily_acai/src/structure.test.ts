@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8");
+const html = readFileSync(resolve(sourceDirectory, "../index.html"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
@@ -14,6 +15,11 @@ const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
+  it("mantém idioma e viewport declarados no documento", () => {
+    expect(html).toContain('<html lang="pt-BR">');
+    expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');
+  });
+
   it("mantém skip link e destino de foco para teclado", () => {
     expect(mainSource).toContain('className="skip-link"');
     expect(mainSource).toContain('href="#lily-main-content"');
