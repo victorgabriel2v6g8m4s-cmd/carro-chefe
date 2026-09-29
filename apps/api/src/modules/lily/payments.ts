@@ -15,6 +15,7 @@ import {
   verifyMercadoPagoWebhookSignature
 } from "./mercado-pago-provider";
 import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
+import { lilyPixAutoReconciliationConfiguration } from "./pix-reconciliation";
 import { enqueueLilyWhatsAppStage } from "./whatsapp";
 
 const idSchema = z.string().trim().min(1).max(120);
@@ -387,8 +388,13 @@ function paymentMethods(
 
   if (settings.paymentProvider === "cooklily_pix") {
     const configured = cookLilyPixConfiguration();
+    const reconciliation = lilyPixAutoReconciliationConfiguration();
     return configured.ready
-      ? [{ id: "pix" as const, label: "Pix CookLily", confirmation: "manual" as const }]
+      ? [{
+        id: "pix" as const,
+        label: "Pix CookLily",
+        confirmation: reconciliation.ready ? "automatic" as const : "manual" as const
+      }]
       : [];
   }
 

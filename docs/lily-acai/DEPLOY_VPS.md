@@ -792,3 +792,70 @@ Com contas de teste/controladas:
 18. sair do local de entrega;
 19. conferir `LilyOrderDeliveryEvent`, `completedAt` e auditorias;
 20. confirmar que nenhum código/segredo aparece em logs, Git ou bundle frontend.
+
+
+## Conciliação automática do Pix próprio — Entrega 11I
+
+A geração do Pix CookLily e a confirmação automática são capacidades separadas. O BR Code continua disponível com `cooklily_pix`; o worker bancário permanece desligado por padrão até a instituição recebedora real ser homologada.
+
+### Configuração fail-closed
+
+Não habilite `pix_api_v2` somente porque o código está publicado. Primeiro obtenha a documentação e as credenciais da **instituição onde a CookLily realmente recebe o Pix**.
+
+Variáveis obrigatórias para o adapter atual:
+
+```env
+COOKLILY_PIX_RECONCILIATION_PROVIDER=pix_api_v2
+COOKLILY_PIX_API_BASE_URL=https://<api-do-psp>
+COOKLILY_PIX_API_OAUTH_URL=https://<oauth-do-psp>
+COOKLILY_PIX_API_CLIENT_ID=<secret>
+COOKLILY_PIX_API_CLIENT_SECRET=<secret>
+COOKLILY_PIX_API_PFX_PATH=/etc/carro-chefe/secrets/<certificado>.pfx
+```
+
+Opcionais:
+
+```env
+COOKLILY_PIX_API_PFX_PASSPHRASE=<secret>
+COOKLILY_PIX_API_RECEIVED_PATH=/v2/pix
+COOKLILY_PIX_API_OAUTH_BODY_FORMAT=form
+COOKLILY_PIX_API_OAUTH_SCOPE=<scope-exigido-pelo-psp>
+COOKLILY_PIX_RECONCILIATION_POLL_INTERVAL_MS=60000
+COOKLILY_PIX_API_TIMEOUT_MS=10000
+COOKLILY_PIX_RECONCILIATION_LOOKBACK_MINUTES=60
+```
+
+Enquanto a instituição ainda não estiver definida:
+
+```env
+COOKLILY_PIX_RECONCILIATION_PROVIDER=disabled
+```
+
+A especificação do Banco Central padroniza funcionalmente a API Pix, porém a autenticação e o acesso à conta são fornecidos pelo PSP. Se a instituição exigir `private_key_jwt`, headers adicionais, outro token endpoint ou outro formato de certificado, implemente/adapte isso explicitamente antes de ativar; não afrouxe matching, TLS ou validação para “fazer funcionar”.
+
+### Certificado e segredos
+
+- nunca grave PFX, senha do certificado, client secret ou tokens no Git;
+- mantenha o PFX fora do checkout, com acesso apenas ao usuário do serviço;
+- mantenha `/etc/carro-chefe/carro-chefe.env` com permissão restrita;
+- não imprima as variáveis de segredo durante deploy/smoke;
+- não reutilize certificados/chaves de outro ambiente sem aprovação do PSP.
+
+### Smoke antes de produção
+
+1. confirmar `GET /api/v1/lily/admin/pix-reconciliation/settings` com `ready=true` usando conta staff/admin autorizada;
+2. criar pedido controlado com Pix CookLily;
+3. confirmar no BR Code o valor e o txid;
+4. pagar em ambiente controlado/sandbox;
+5. executar ou aguardar o poller;
+6. confirmar um único `LilyPixSettlement=matched`;
+7. confirmar `LilyPayment=approved` e `LilyOrder=paid`;
+8. repetir a consulta e confirmar idempotência;
+9. testar um valor divergente e confirmar que o pedido continua pendente;
+10. testar indisponibilidade/timeout e confirmar que `lastSuccessfulAt` não avança falsamente;
+11. testar mais de uma página;
+12. conferir que dados pessoais do pagador não foram persistidos pelo adapter;
+13. conferir `reviewRequired` e settlements não matched;
+14. validar a tabela real de tarifas da conta.
+
+Não confundir “sem taxa de gateway para gerar o BR Code” com “recebimento bancário necessariamente gratuito”. A tarifa é determinada pela conta/instituição contratada.

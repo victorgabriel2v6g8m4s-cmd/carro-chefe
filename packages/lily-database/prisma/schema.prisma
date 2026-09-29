@@ -611,6 +611,7 @@ model LilyPayment {
   order                LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   events               LilyPaymentEvent[]
   reconciliations      LilyPaymentReconciliation[]
+  pixSettlements       LilyPixSettlement[]
 
   @@index([orderId, status, createdAt])
   @@index([status, createdAt])
@@ -632,6 +633,36 @@ model LilyPaymentEvent {
 
   @@index([paymentId, createdAt])
   @@index([source, eventType, createdAt])
+}
+
+model LilyPixSettlement {
+  id              String       @id @default(cuid())
+  source          String
+  providerEventId String       @unique
+  endToEndId      String
+  txid            String?
+  amountCents     Int
+  occurredAt      DateTime
+  payloadHash     String
+  matchStatus     String
+  paymentId       String?
+  matchedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  payment         LilyPayment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([source, occurredAt])
+  @@index([txid, matchStatus])
+  @@index([paymentId, createdAt])
+}
+
+model LilyPixReconciliationState {
+  source           String   @id
+  lastSuccessfulAt DateTime?
+  lastAttemptAt    DateTime?
+  lastErrorCode    String?
+  lastErrorMessage String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model LilyPaymentReconciliation {
