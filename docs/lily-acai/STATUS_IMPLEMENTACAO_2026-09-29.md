@@ -220,12 +220,33 @@ Pendente apenas de parametrização/homologação operacional:
 - definir o número real de minutos com Operações;
 - QA real em tablet/celular.
 
+### 8. Impressão da cozinha — CANDIDATO EM VALIDAÇÃO
+
+Branch: `feat/lily-entrega-11k-impressao-cozinha`.
+
+Implementado:
+
+- comanda staff própria e minimizada;
+- emissão somente após pagamento/liberação para produção;
+- sem telefone/endereço/códigos logísticos;
+- página dedicada de prévia;
+- impressão nativa do navegador;
+- CSS de impressão sem assumir hardware/papel;
+- impressão sem efeitos colaterais de status;
+- testes de autorização/privacidade/readiness.
+
+Ainda falta:
+
+- CI/CodeQL do SHA final;
+- QA de impressão em PDF;
+- QA em equipamento real quando disponível.
+
 ## Ordem de execução atualizada
 
 1. definir/homologar a instituição recebedora da 11I;
 2. homologar 11G/11H com chaves/contas externas reais;
 3. definir com Operações o SLA real da cozinha e executar QA em tablet/celular;
-4. avançar a próxima pendência técnica desbloqueada: impressão da cozinha;
+4. concluir gate técnico da 11K;
 5. executar QA operacional ponta a ponta em cozinha, cliente e courier;
 6. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
 
