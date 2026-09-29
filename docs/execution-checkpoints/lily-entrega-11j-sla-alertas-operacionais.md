@@ -5,7 +5,7 @@
 - branch: `feat/lily-entrega-11j-sla-alertas-operacionais`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `19381bda06010f971f41a024a27d928c2e96c3f6`
-- head_sha_verified: `19381bda06010f971f41a024a27d928c2e96c3f6`
+- head_sha_verified: `d31ca24a2a1c42d81e78a63fd2e4270b029dc0f3`
 - pull_requests: ainda não criados
 - last_verified_at: 2026-09-29
 - interruption_state: execução iniciada após conclusão da 11I
@@ -27,10 +27,19 @@ Primeiro escopo:
 - Branch criada a partir da canonical após fechamento da 11I.
 - Regras locais de API Lily, frontend Lily, banco Lily e docs revisadas.
 - Decisão: nenhum threshold default será inventado; `null` significa SLA desligado.
+- Campo nullable `LilyOperationalSettings.kitchenPreparationSlaMinutes`.
+- Migration `20260929203000_lily_kitchen_sla`.
+- PATCH/GET administrativo de fulfillment expõe o SLA da montagem.
+- Função pura `lilyKitchenPreparationSla` calcula prazo pelo relógio do servidor a partir de `operationUpdatedAt`.
+- Fila da cozinha expõe `sla` por pedido e resumo `overdue`.
+- Atraso não altera status nem avança pedido automaticamente.
+- Painel staff permite configurar/desativar SLA sem valor default.
+- UI da cozinha mostra tempo restante ou atraso.
+- Testes unitários e de integração adicionados.
 
 ## Em andamento
 
-Adicionar configuração persistente, migration, cálculo de SLA, API/DTO, UI da cozinha, testes e documentação.
+Implementação funcional concluída no branch. Em andamento: revisão do diff, documentação/roadmap e gate CI/CodeQL.
 
 ## Gates e testes
 
@@ -38,7 +47,7 @@ Ainda não iniciados. A entrega só poderá integrar após CI e CodeQL verdes no
 
 ## Migrations
 
-Planejada uma migration aditiva para `LilyOperationalSettings.kitchenPreparationSlaMinutes`.
+`packages/lily-database/prisma/migrations/20260929203000_lily_kitchen_sla/migration.sql` — migration aditiva, nullable e sem valor presumido.
 
 ## Bloqueios/riscos
 
@@ -48,4 +57,4 @@ Planejada uma migration aditiva para `LilyOperationalSettings.kitchenPreparation
 
 ## Próxima ação exata
 
-Adicionar o campo nullable ao schema/migration e expor a configuração no endpoint administrativo de fulfillment.
+Revisar o diff completo, criar documento da Entrega 11J, atualizar o roadmap e abrir PR canônico + gate CI/CodeQL.
