@@ -121,6 +121,10 @@ def blender_workspace_capture(
             "shading": shading,
         })
     result = _result(call("workspace.capture_set", params))
+    if int(result.get("failure_count", 0)) > 0:
+        raise RuntimeError(f"workspace capture teve falhas: {result.get('captures')}")
+    if not bool(result.get("restored_original_workspace", False)):
+        raise RuntimeError("workspace original nao foi restaurado apos capture_set")
     images: list[Image] = []
     for capture in result.get("captures", []):
         if capture.get("ok") and capture.get("path"):
