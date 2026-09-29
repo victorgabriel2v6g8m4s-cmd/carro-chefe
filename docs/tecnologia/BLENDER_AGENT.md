@@ -79,6 +79,12 @@ Objetivo: tornar o loop observação -> ação -> observação automático.
 
 Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção humana.
 
+### Log de validação V0.2
+
+- **29/09/2026 — primeiro smoke real:** bridge, descrição da viewport e preset 3/4 funcionaram; a captura foi solicitada, mas o PowerShell 5.1 corrompeu o caminho Unicode retornado pela CLI (`Área de Trabalho` -> representação inválida) e o teste reportou falsamente que o PNG não existia.
+- **Correção:** JSON da CLI passou a ser ASCII-safe com escapes Unicode; scripts PowerShell foram restringidos a ASCII e receberam teste de regressão.
+- **Próxima validação:** repetir apenas o `smoke-test.ps1 -OpenImage`; não é necessário mudar o diretório do repositório.
+
 ### V0.3 — Sculpt assistido
 
 Planejado: ativação explícita de Sculpt, brush allowlisted, stroke multiponto, radius/strength, máscara/smooth, checkpoint antes de strokes destrutivos e validação de contexto. Critério: corrigir a forma do pão por strokes pequenos e retornar imagem pós-stroke.
