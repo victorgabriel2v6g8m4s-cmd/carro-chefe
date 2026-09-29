@@ -158,13 +158,13 @@ Opcionais:
 COOKLILY_PIX_API_PFX_PASSPHRASE=<secret>
 COOKLILY_PIX_API_RECEIVED_PATH=/v2/pix
 COOKLILY_PIX_API_OAUTH_BODY_FORMAT=form
-COOKLILY_PIX_API_OAUTH_SCOPE=pix.read
+COOKLILY_PIX_API_OAUTH_SCOPE=<scope-exigido-pelo-psp>
 COOKLILY_PIX_RECONCILIATION_POLL_INTERVAL_MS=60000
 COOKLILY_PIX_API_TIMEOUT_MS=10000
 COOKLILY_PIX_RECONCILIATION_LOOKBACK_MINUTES=60
 ```
 
-`COOKLILY_PIX_API_OAUTH_BODY_FORMAT` aceita `form` ou `json`. O valor padrão é `form`, alinhado ao fluxo client-credentials convencional, mas a configuração real deve seguir a documentação da instituição recebedora.
+`COOKLILY_PIX_API_OAUTH_BODY_FORMAT` aceita `form` ou `json`. O valor padrão do formato é `form`; `scope` não possui valor presumido e só é enviado quando configurado. A configuração real deve seguir a documentação da instituição recebedora.
 
 Nenhum segredo/certificado deve ser versionado.
 
