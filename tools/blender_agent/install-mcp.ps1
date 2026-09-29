@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 
 $VenvPython = Join-Path $Venv "Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $VenvPython)) {
-    throw "Python do venv não encontrado: $VenvPython"
+    throw "Python do venv nao encontrado: $VenvPython"
 }
 
 & $VenvPython -m pip install --disable-pip-version-check --upgrade pip
@@ -30,14 +30,14 @@ if ($LASTEXITCODE -ne 0) {
 
 & $VenvPython -m pip install --disable-pip-version-check -r $Requirements
 if ($LASTEXITCODE -ne 0) {
-    throw "Falha ao instalar dependências MCP."
+    throw "Falha ao instalar dependencias MCP."
 }
 
 Write-Host ""
 Write-Host "MCP do Blender Agent instalado."
 Write-Host "Python: $VenvPython"
 Write-Host ""
-Write-Host "Configuração Codex sugerida para %USERPROFILE%\.codex\config.toml:"
+Write-Host "Configuracao Codex sugerida para %USERPROFILE%\.codex\config.toml:"
 Write-Host ""
 Write-Host "[mcp_servers.carro_chefe_blender]"
 Write-Host ('command = "' + $VenvPython.Replace("\", "\\") + '"')
