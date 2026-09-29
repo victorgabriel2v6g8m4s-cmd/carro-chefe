@@ -244,6 +244,80 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(stored?.operationStatus).toBe("preparing");
   });
 
+  it("gera comanda staff minimizada sem telefone, endereço ou códigos logísticos", async () => {
+    const staff = await register("67999908107", "staff", "127.0.0.227");
+    const order = await createOrder({
+      financialStatus: "paid",
+      operationStatus: "preparing"
+    });
+    await lilyPrisma.lilyOrder.update({
+      where: { id: order.id },
+      data: { customerNote: "Sem canudo" }
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/print`,
+      headers: { cookie: staff.cookie }
+    });
+
+    expect(response.statusCode).toBe(200);
+    const ticket = response.json().ticket;
+    expect(ticket).toMatchObject({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      fulfillmentType: "delivery",
+      customerNote: "Sem canudo"
+    });
+    expect(Object.keys(ticket).sort()).toEqual([
+      "createdAt",
+      "customerNote",
+      "fulfillmentType",
+      "id",
+      "isHomologation",
+      "items",
+      "orderNumber"
+    ]);
+    expect(JSON.stringify(ticket)).not.toContain("+5567999912345");
+    expect(JSON.stringify(ticket)).not.toContain("Rua privada");
+    expect(ticket).not.toHaveProperty("pickupCode");
+    expect(ticket).not.toHaveProperty("deliveryCode");
+    expect(ticket).not.toHaveProperty("addressSnapshotJson");
+    expect(ticket).not.toHaveProperty("financialStatus");
+    expect(ticket).not.toHaveProperty("operationStatus");
+  });
+
+  it("não emite comanda antes de pagamento e liberação para produção", async () => {
+    const staff = await register("67999908109", "staff", "127.0.0.229");
+    const order = await createOrder({
+      financialStatus: "awaiting_payment",
+      operationStatus: "waiting_payment"
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/print`,
+      headers: { cookie: staff.cookie }
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().details.code).toBe("LILY_KITCHEN_PRINT_NOT_READY");
+  });
+
+  it("nega comanda de impressão para customer", async () => {
+    const customer = await register("67999908108", "customer", "127.0.0.228");
+    const order = await createOrder();
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/print`,
+      headers: { cookie: customer.cookie }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().details.code).toBe("LILY_STAFF_REQUIRED");
+  });
+
   it("exige CSRF para avançar etapa operacional", async () => {
     const staff = await register("67999908103", "staff", "127.0.0.223");
     const order = await createOrder();

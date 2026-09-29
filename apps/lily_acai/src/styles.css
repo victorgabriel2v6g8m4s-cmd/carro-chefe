@@ -2513,6 +2513,160 @@ img, svg { max-width: 100%; }
   text-align: center;
   font-size: 0.85rem;
 }
+
+.kitchen-card-actions {
+  display: grid;
+  gap: 8px;
+}
+.kitchen-card-actions .button {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.kitchen-print-page {
+  width: min(760px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 60px;
+}
+.kitchen-print-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.kitchen-print-ticket {
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 18px;
+  background: white;
+  color: #161116;
+  box-shadow: var(--cl-shadow-sm);
+}
+.kitchen-print-ticket > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid currentColor;
+}
+.kitchen-print-ticket h1,
+.kitchen-print-ticket h2,
+.kitchen-print-ticket h3,
+.kitchen-print-ticket p {
+  margin: 0;
+}
+.kitchen-print-ticket h1 {
+  margin-top: 4px;
+  font-size: 1.8rem;
+}
+.kitchen-print-brand {
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.kitchen-print-test {
+  padding: 5px 8px;
+  border: 2px solid currentColor;
+  font-size: .72rem;
+  letter-spacing: .08em;
+}
+.kitchen-print-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+}
+.kitchen-print-meta div {
+  display: grid;
+  gap: 2px;
+}
+.kitchen-print-meta dt {
+  font-size: .72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.kitchen-print-meta dd {
+  margin: 0;
+  font-weight: 800;
+}
+.kitchen-print-items {
+  display: grid;
+  gap: 12px;
+}
+.kitchen-print-items > h2,
+.kitchen-print-order-note > h2 {
+  font-size: .9rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.kitchen-print-items > article {
+  display: grid;
+  gap: 5px;
+  padding: 12px 0;
+  border-top: 1px dashed #555;
+}
+.kitchen-print-items > article h3 {
+  font-size: 1.05rem;
+}
+.kitchen-print-items > article p {
+  line-height: 1.35;
+}
+.kitchen-print-note,
+.kitchen-print-order-note {
+  padding: 10px;
+  border: 2px solid currentColor;
+  font-weight: 700;
+}
+.kitchen-print-order-note {
+  display: grid;
+  gap: 6px;
+}
+.kitchen-print-ticket > footer {
+  display: grid;
+  gap: 3px;
+  padding-top: 14px;
+  border-top: 2px solid currentColor;
+}
+.kitchen-print-ticket > footer small {
+  font-size: .72rem;
+}
+
+@media print {
+  @page {
+    margin: 8mm;
+  }
+  html,
+  body,
+  #root {
+    background: white !important;
+  }
+  .kitchen-print-page {
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+  .kitchen-print-actions {
+    display: none !important;
+  }
+  .kitchen-print-ticket {
+    gap: 14px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .kitchen-print-ticket > header,
+  .kitchen-print-ticket > footer,
+  .kitchen-print-items > article,
+  .kitchen-print-order-note {
+    break-inside: avoid;
+  }
+}
 @media (max-width: 900px) {
   .kitchen-board {
     grid-template-columns: repeat(4, minmax(270px, 82vw));

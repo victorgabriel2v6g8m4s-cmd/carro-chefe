@@ -16,6 +16,7 @@ import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
+import { KitchenPrintPage } from "./features/operations/KitchenPrintPage";
 import { CourierPage } from "./features/logistics/CourierPage";
 import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
@@ -448,6 +449,7 @@ function App() {
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
+    <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
     <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
