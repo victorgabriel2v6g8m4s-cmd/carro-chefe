@@ -71,6 +71,7 @@ export function AdminHome() {
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pagamentos`}>Pagamentos</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pedidos`}>Pedidos</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/analytics`}>Analytics</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/saude`}>Saúde</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cozinha`}>Cozinha</a>
       {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entregas`}>Gestão de entregas</a>}
       {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}entregas`}>Visão do entregador</a>}

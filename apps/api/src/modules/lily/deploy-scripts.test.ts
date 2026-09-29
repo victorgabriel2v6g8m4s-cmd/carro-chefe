@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,7 +13,8 @@ describe("scripts operacionais CookLily", () => {
       "deploy/scripts/lily-promote-user",
       "deploy/scripts/enable-lily-entrega06-nginx",
       "deploy/scripts/enable-lily-entrega07-nginx",
-      "deploy/scripts/enable-lily-entrega11-nginx"
+      "deploy/scripts/enable-lily-entrega11-nginx",
+      "deploy/scripts/verify-sqlite-backup"
     ]) {
       const result = spawnSync("bash", ["-n", path.join(root, relative)], {
         encoding: "utf8"
@@ -40,6 +42,50 @@ describe("scripts operacionais CookLily", () => {
     expect(helper.indexOf("location ^~ /api/v1/lily/courier/")).toBeLessThan(
       helper.indexOf('marker = "    location ^~ /api/ { return 404; }"')
     );
+  });
+
+
+  it.skipIf(process.platform === "win32")("valida backup SQLite por cópia isolada e rejeita arquivo inválido", () => {
+    const sqliteAvailable = spawnSync("sqlite3", ["--version"], { encoding: "utf8" });
+    if (sqliteAvailable.status !== 0) return;
+
+    const temp = mkdtempSync(path.join(os.tmpdir(), "cooklily-backup-test-"));
+    try {
+      const db = path.join(temp, "backup.db");
+      const created = spawnSync("sqlite3", [
+        db,
+        'CREATE TABLE "_prisma_migrations" ("id" TEXT PRIMARY KEY); INSERT INTO "_prisma_migrations" ("id") VALUES ("m1");'
+      ], { encoding: "utf8" });
+      expect(created.status, created.stderr || created.stdout).toBe(0);
+
+      const verifier = path.join(root, "deploy/scripts/verify-sqlite-backup");
+      const valid = spawnSync("bash", [verifier, db, "test"], { encoding: "utf8" });
+      expect(valid.status, valid.stderr || valid.stdout).toBe(0);
+      expect(valid.stdout).toContain("backup_verification=ok");
+      expect(valid.stdout).toContain("migrations=1");
+      expect(valid.stdout).toMatch(/sha256=[0-9a-f]{64}/);
+
+      const invalid = path.join(temp, "invalid.db");
+      const broken = spawnSync("bash", ["-c", 'printf "not sqlite" > "$1"', "_", invalid], { encoding: "utf8" });
+      expect(broken.status).toBe(0);
+      const rejected = spawnSync("bash", [verifier, invalid, "broken"], { encoding: "utf8" });
+      expect(rejected.status).not.toBe(0);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
+  });
+
+  it("verifica os backups antes de parar o serviço ou aplicar migrations", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    expect(deployer).toContain('PHASE="backup-verify"');
+    expect(deployer).toContain('bash deploy/scripts/verify-sqlite-backup "${CORE_BACKUP}" core');
+    expect(deployer).toContain('bash deploy/scripts/verify-sqlite-backup "${LILY_BACKUP}" lily');
+    expect(deployer).toContain("core_backup_sha256=");
+    expect(deployer).toContain("lily_backup_sha256=");
+    expect(deployer).toContain("backup_verification=ok");
+    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf('PHASE="stop-service"'));
+    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf('PHASE="production-migrations"'));
+    expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf("npm run db:deploy:core"));
   });
 
   it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {

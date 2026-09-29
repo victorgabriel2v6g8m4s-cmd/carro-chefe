@@ -29,9 +29,28 @@ declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
 }
 
+export const SENSITIVE_LOG_REDACT_PATHS = [
+  "req.headers.authorization",
+  "req.headers.cookie",
+  'req.headers["x-lily-csrf"]',
+  'req.headers["x-lily-order-token"]',
+  'req.headers["x-agent-key"]',
+  'req.headers["x-carrochefe-signature"]',
+  'req.headers["x-signature"]',
+  'req.headers["x-api-key"]',
+  'res.headers["set-cookie"]'
+] as const;
+
 export async function buildApp() {
   const app = Fastify({
-    logger: process.env.NODE_ENV !== "test",
+    logger: process.env.NODE_ENV === "test"
+      ? false
+      : {
+          redact: {
+            paths: [...SENSITIVE_LOG_REDACT_PATHS],
+            censor: "[REDACTED]"
+          }
+        },
     bodyLimit: 16 * 1024 * 1024,
     trustProxy: config.trustProxy
   });
@@ -53,7 +72,8 @@ export async function buildApp() {
     catch { done(new ApiError(400, "JSON inválido."), undefined); }
   });
 
-  app.addHook("onSend", async (_request, reply) => {
+  app.addHook("onSend", async (request, reply) => {
+    reply.header("X-Request-Id", request.id);
     reply.header("X-Content-Type-Options", "nosniff");
     reply.header("Referrer-Policy", "no-referrer");
     reply.header("X-Frame-Options", "SAMEORIGIN");

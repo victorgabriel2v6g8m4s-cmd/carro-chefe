@@ -150,7 +150,9 @@ Exemplo:
 sudo carro-chefe-deploy da166683ab2d0e27acae23d9714ec8e824a02ac4
 ```
 
-O script usa bancos temporários para gates, gera backups antes de migration, para o serviço antes de gravar SQLite, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
+O script usa bancos temporários para gates, gera backups antes de migration, **valida cada backup em cópia isolada com `integrity_check` + `foreign_key_check` antes de parar o serviço**, executa as migrations e faz health checks. Logs/evidências ficam fora do Git em `/srv/carro-chefe/data/deploy-logs/`.
+
+A evidência de deploy registra SHA-256 dos backups. Depois de um deploy válido, o helper `/usr/local/sbin/carro-chefe-verify-backup` fica disponível para drills e conferência manual. O runbook detalhado está em `docs/lily-acai/OPERACAO_BACKUP_RESTORE.md`.
 
 Depois do `git fetch`, o deployer compara sua própria versão com `deploy/scripts/carro-chefe-deploy` do SHA solicitado. Se divergirem, ele reexecuta automaticamente a versão contida no release antes de checkout, gates, backup ou migrations. Isso evita que um binário antigo em `/usr/local/sbin` valide um release novo com lógica de deploy obsoleta.
 
