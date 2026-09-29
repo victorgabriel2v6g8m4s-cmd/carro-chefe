@@ -279,6 +279,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sculpt_prepare = sub.add_parser("sculpt-prepare", help="seleciona mesh, entra em Sculpt e configura brush")
     sculpt_prepare.add_argument("--name")
+    sculpt_prepare.add_argument("--workspace", default="Sculpting")
+    sculpt_prepare.add_argument("--no-frame-selected", action="store_true")
     sculpt_prepare.add_argument(
         "--brush",
         choices=["DRAW", "SMOOTH", "GRAB", "INFLATE", "CLAY_STRIPS", "CREASE", "SNAKE_HOOK"],
@@ -288,6 +290,8 @@ def build_parser() -> argparse.ArgumentParser:
     sculpt_prepare.add_argument("--strength", type=float, default=0.25)
     sculpt_prepare.set_defaults(handler=lambda a: call("sculpt.prepare", {
         "name": a.name,
+        "workspace": a.workspace,
+        "frame_selected": not a.no_frame_selected,
         "brush": a.brush,
         "radius": a.radius,
         "strength": a.strength,
