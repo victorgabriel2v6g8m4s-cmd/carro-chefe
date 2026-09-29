@@ -44,7 +44,7 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 
 ## Estado atual — V0.2 em validação
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, receipts JSON com SHA-256, adaptador MCP stdio que devolve a viewport como imagem diretamente ao modelo, testes unitários e integração no Tool Health.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, consulta/captura de múltiplos workspaces, auto-history segmentado por etapa, busca histórica por filtros, receipts/anexos com SHA-256, adaptador MCP stdio com imagens e contexto persistente, testes unitários e integração no Tool Health.
 
 Maturidade: **em desenvolvimento**.
 
@@ -84,6 +84,28 @@ Critério de pronto: o agente recebe imagem atualizada após cada lote sem inter
 - **29/09/2026 — primeiro smoke real:** bridge, descrição da viewport e preset 3/4 funcionaram; a captura foi solicitada, mas o PowerShell 5.1 corrompeu o caminho Unicode retornado pela CLI (`Área de Trabalho` -> representação inválida) e o teste reportou falsamente que o PNG não existia.
 - **Correção:** JSON da CLI passou a ser ASCII-safe com escapes Unicode; scripts PowerShell foram restringidos a ASCII e receberam teste de regressão.
 - **Próxima validação:** repetir apenas o `smoke-test.ps1 -OpenImage`; não é necessário mudar o diretório do repositório.
+
+### V0.2.1 — Contexto persistente e auto-history
+
+Objetivo: impedir perda de contexto operacional em chats e produções longas.
+
+- [x] listar workspaces/abas;
+- [x] consultar conteúdo estruturado de uma ou várias abas;
+- [x] restaurar workspace original depois da inspeção;
+- [x] capturar vários workspaces em uma única action;
+- [x] targets `VIEW_3D`, `WINDOW` e `AREA`;
+- [x] manifesto agregado e SHA-256;
+- [x] stage de produção com `previous_stage_id`;
+- [x] eventos JSONL segmentados e rotacionados;
+- [x] anexos por stage;
+- [x] registro automático de actions e falhas;
+- [x] redaction de segredos comuns;
+- [x] busca por texto, stage, action, tempo, sucesso/falha, tags e anexos;
+- [x] contexto com etapa anterior/próximas e eventos recentes;
+- [x] ferramentas MCP para workspaces e auto-history;
+- [ ] smoke test real de múltiplos workspaces e recuperação histórica no Windows 10/Blender 5.2 LTS.
+
+Documento dedicado: [BLENDER_AGENT_CONTEXT.md](./BLENDER_AGENT_CONTEXT.md).
 
 ### V0.3 — Sculpt assistido
 
