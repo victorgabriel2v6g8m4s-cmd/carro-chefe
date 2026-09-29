@@ -1,35 +1,36 @@
 # CookLily — Entrega 08 — Torre de controle de pedidos
 
-- status: in_progress
+- status: merged_validated
 - owner: AG-DEV
 - branch: `feat/lily-entrega-08-torre-controle-pedidos`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `e05582931bf28f69292ce353ae6996414f8b259d`
+- validated_head_sha: `62b0c6eca315c718c512b35a6274ba01f701c270`
+- canonical_merge_sha: `64f4af027fcdd3cf13ee57457c193a8c622cc5f9`
+- ci_run: `36635632700` — success
+- codeql_run: `36635632701` — success
+- canonical_pr: #108 — squash merged
+- gate_pr: #109 — closed without merge
 - last_verified_at: 2026-09-29
-- interruption_state: implementação iniciada após autorização explícita do proprietário para prosseguir antes da homologação da 11K
+- interruption_state: entrega integrada; homologação real ficou para o ciclo de testes na VPS
 
-## Objetivo
+## Entregue
 
-Fechar a Entrega 08 sem criar um segundo motor de estados: consolidar financeiro, cozinha e logística numa fila operacional única, destacar pedidos que exigem atenção e encaminhar as ações ao domínio responsável.
+- overview staff unificado de financeiro, cozinha e logística;
+- filtros por estado, modalidade e número do pedido;
+- alertas objetivos para pagamento/cozinha/SLA/logística;
+- nenhuma API genérica para forçar estados;
+- conclusão auditável de retirada presencial;
+- CSRF + MFA + controle otimista na conclusão;
+- resposta operacional sem telefone, endereço ou códigos logísticos;
+- painel responsivo `/lilyacai/painel/pedidos`;
+- testes de RBAC, privacidade, filtros, SLA e conclusão de retirada.
 
-Também fechar a lacuna de retirada presencial: pedido pago e pronto para retirada precisa poder ser marcado como entregue ao cliente de forma auditável.
+## Pendências externas
 
-## Invariantes
+- deploy da linha que inclua esta entrega;
+- QA real em desktop/tablet/mobile durante o ciclo de homologação.
 
-- nenhuma API de “forçar status” arbitrário;
-- financeiro continua no domínio de pagamentos;
-- montagem continua no domínio da cozinha;
-- entrega continua no domínio logístico;
-- torre de controle é leitura operacional e roteamento de ação;
-- conclusão de retirada exige staff + MFA + CSRF, pedido pago, fulfillment pickup e estado ready_for_dispatch;
-- overview não expõe telefone, endereço ou códigos logísticos;
-- deploy/homologação real continuam separados e serão executados depois.
+## Continuidade
 
-## Próximas ações
-
-1. API de overview/triagem de pedidos;
-2. conclusão auditável de retirada;
-3. painel frontend de pedidos;
-4. testes de RBAC, privacidade, filtros e transição;
-5. gates CI/CodeQL;
-6. documentação e integração em `cooklily/canonical`.
+A próxima entrega técnica é a Entrega 09 — analytics first-party. Ela deve partir da `cooklily/canonical` já contendo este merge.
