@@ -158,6 +158,8 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
       productGroups,
       orderAggregate,
       paidAggregate,
+      orderAttributionCreated,
+      orderAttributionPaid,
       funnelSessionRows
     ] = await Promise.all([
       lilyPrisma.lilyAnalyticsEvent.groupBy({
@@ -189,6 +191,18 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
         _count: { _all: true },
         _sum: { grandTotalCents: true }
       }),
+      lilyPrisma.lilyOrder.groupBy({
+        by: ["laCampaign", "laQr", "laVariant"],
+        where: orderWhere,
+        _count: { _all: true },
+        _sum: { grandTotalCents: true }
+      }),
+      lilyPrisma.lilyOrder.groupBy({
+        by: ["laCampaign", "laQr", "laVariant"],
+        where: { ...orderWhere, paidAt: { not: null } },
+        _count: { _all: true },
+        _sum: { grandTotalCents: true }
+      }),
       Promise.all(funnelEvents.map(async (event) => ({
         event,
         sessions: (await lilyPrisma.lilyAnalyticsEvent.findMany({
@@ -209,6 +223,25 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
       .sort((a, b) => b.events - a.events)
       .slice(0, 50);
 
+    const paidByAttribution = new Map(
+      orderAttributionPaid.map((row) => [
+        JSON.stringify([row.laCampaign, row.laQr, row.laVariant]),
+        row
+      ])
+    );
+    const orderAttribution = orderAttributionCreated.map((row) => {
+      const paid = paidByAttribution.get(JSON.stringify([row.laCampaign, row.laQr, row.laVariant]));
+      return {
+        campaign: row.laCampaign,
+        qr: row.laQr,
+        variant: row.laVariant,
+        created: row._count._all,
+        paid: paid?._count._all ?? 0,
+        grossOrderValueCents: row._sum.grandTotalCents ?? 0,
+        paidGrossCents: paid?._sum.grandTotalCents ?? 0
+      };
+    }).sort((a, b) => b.paidGrossCents - a.paidGrossCents || b.created - a.created).slice(0, 50);
+
     return {
       generatedAt: now,
       window: { from, to: now, days: query.days },
@@ -219,6 +252,7 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
       events: Object.fromEntries(eventCounts.map((row) => [row.event, row._count._all])),
       funnel: funnelSessionRows,
       attribution,
+      orderAttribution,
       products: aggregateProductEvents(productGroups),
       orders: {
         created: orderAggregate._count._all,
