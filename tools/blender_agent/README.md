@@ -7,7 +7,7 @@ A ferramenta combina duas camadas: ações semânticas via Blender Python API e 
 ## Requisitos
 
 - Windows 10 ou superior para o fluxo principal do projeto;
-- Blender 4.3+ recomendado; Blender 5.x é o alvo de validação;
+- Blender 5.2 LTS é a baseline validada para o fluxo completo; versões anteriores podem não possuir `Window.screenshot` usado na captura automática do viewport;
 - Python do sistema para o cliente CLI;
 - Blender iniciado com `--enable-event-simulate` para ações `ui.*`.
 - O core de protocolo/CLI é testável sem Blender em Linux, macOS e Windows.
@@ -64,6 +64,55 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `ui.dismiss_modal` | envia `Esc` para fechar splash/modal atual |
 | `ui.orbit` | orbita automaticamente a maior VIEW_3D |
 | `ui.click` / `ui.drag` / `ui.wheel` | interação estilo mouse confinada ao Blender |
+| `viewport.describe` | estado da VIEW_3D, shading, perspectiva e seleção |
+| `viewport.set_view` / `viewport.frame_all` | presets de vista e enquadramento |
+| `viewport.set_shading` | wireframe/solid/material/rendered |
+| `viewport.capture` | captura PNG somente da região 3D + receipt JSON/SHA-256 |
+
+## Feedback visual automático — V0.2
+
+A V0.2 permite que o agente capture exatamente a região 3D exibida no Blender 5.2 LTS. A implementação usa `Window.screenshot(region=...)` e grava o PNG via `imbuf`, sem capturar outros aplicativos ou o desktop inteiro.
+
+Diagnóstico da viewport:
+
+```powershell
+python -m tools.blender_agent.client viewport-describe
+```
+
+Definir vista e shading:
+
+```powershell
+python -m tools.blender_agent.client viewport-shading MATERIAL
+python -m tools.blender_agent.client viewport-view FRONT
+```
+
+Capturar a vista atual:
+
+```powershell
+python -m tools.blender_agent.client viewport-capture --name baguete-front.png
+```
+
+Gerar um conjunto previsível de vistas:
+
+```powershell
+python -m tools.blender_agent.client viewport-capture-set --label baguete-test
+```
+
+O conjunto padrão gera `FRONT`, `RIGHT`, `TOP` e `THREE_QUARTER`. Também podem ser escolhidas vistas específicas com `--views`.
+
+As imagens ficam em:
+
+```text
+.runtime/blender-agent/viewports/
+```
+
+Cada imagem recebe um receipt auditável em:
+
+```text
+.runtime/blender-agent/receipts/
+```
+
+O receipt registra SHA-256, dimensões, cena e estado da viewport no momento da captura.
 
 ## Segurança
 
@@ -97,7 +146,7 @@ python -m tools.blender_agent.client call scene.summary
 
 ## Limitações atuais
 
-- ainda não há captura automática do viewport acoplada ao loop do agente;
+- a captura do viewport e o conjunto multiângulo foram implementados, mas ainda precisam do smoke test visual no Blender 5.2 LTS real antes de considerar a V0.2 validada;
 - `event_simulate` exige `--enable-event-simulate`;
 - Sculpt depende do contexto/tool ativo;
 - checkpoint é criado, mas rollback automático ficará para a próxima fase;
