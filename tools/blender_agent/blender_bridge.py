@@ -41,6 +41,7 @@ _UI_EVENT_TYPES = {
     "MIDDLEMOUSE",
     "RIGHTMOUSE",
     "MOUSEMOVE",
+    "ESC",
     "WHEELUPMOUSE",
     "WHEELDOWNMOUSE",
     "PEN",
@@ -146,6 +147,58 @@ def _event_simulate(event_type: str, value: str, params: dict[str, Any]):
         ) from exc
 
 
+def _modal_operator_names(window) -> list[str]:
+    names: list[str] = []
+    for operator in window.modal_operators:
+        identifier = getattr(operator, "bl_idname", None) or getattr(operator, "name", None)
+        names.append(str(identifier or type(operator).__name__))
+    return names
+
+
+def _largest_view3d_area():
+    window = bpy.context.window
+    if window is None or window.screen is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    areas = [area for area in window.screen.areas if area.type == "VIEW_3D"]
+    if not areas:
+        raise RuntimeError("nenhuma VIEW_3D encontrada")
+    return max(areas, key=lambda area: area.width * area.height)
+
+
+def _view3d_snapshot() -> dict[str, int]:
+    area = _largest_view3d_area()
+    return {
+        "x": int(area.x),
+        "y": int(area.y),
+        "width": int(area.width),
+        "height": int(area.height),
+        "center_x": int(area.x + area.width // 2),
+        "center_y": int(area.y + area.height // 2),
+    }
+
+
+def _dismiss_modal_event() -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    before = _modal_operator_names(window)
+    x = int(window.width // 2)
+    y = int(window.height // 2)
+    _event_simulate("ESC", "PRESS", {"x": x, "y": y})
+    _event_simulate("ESC", "RELEASE", {"x": x, "y": y})
+    return {"queued": True, "modal_before": before}
+
+
+def _dismiss_startup_modal() -> None:
+    if os.environ.get("CC_BLENDER_KEEP_SPLASH") == "1":
+        return None
+    try:
+        _dismiss_modal_event()
+    except Exception as exc:
+        print(f"[Carro Chefe Blender Agent] não foi possível fechar splash automaticamente: {exc}")
+    return None
+
+
 def _ui_click(params: dict[str, Any]) -> dict[str, Any]:
     event_type = _MOUSE_BUTTONS[str(params.get("button", "left"))]
     _event_simulate("MOUSEMOVE", "NOTHING", params)
@@ -180,6 +233,8 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "pid": os.getpid(),
             "file": bpy.data.filepath or None,
             "event_simulation": hasattr(bpy.context.window, "event_simulate") if bpy.context.window else False,
+            "modal_operators": _modal_operator_names(bpy.context.window) if bpy.context.window else [],
+            "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
         }
 
     if action == "ui.window":
@@ -187,6 +242,12 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
         if window is None:
             raise RuntimeError("nenhuma janela Blender ativa")
         return {"width": int(window.width), "height": int(window.height)}
+
+    if action == "ui.view3d":
+        return _view3d_snapshot()
+
+    if action == "ui.dismiss_modal":
+        return _dismiss_modal_event()
 
     if action == "ui.event":
         event_type = str(params["type"]).upper()
@@ -199,6 +260,24 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
 
     if action == "ui.drag":
         return _ui_drag(params)
+
+    if action == "ui.orbit":
+        view = _view3d_snapshot()
+        dx = max(-500, min(500, int(params.get("dx", 120))))
+        dy = max(-500, min(500, int(params.get("dy", 60))))
+        x1, y1 = view["center_x"], view["center_y"]
+        x2 = max(view["x"] + 4, min(view["x"] + view["width"] - 4, x1 + dx))
+        y2 = max(view["y"] + 4, min(view["y"] + view["height"] - 4, y1 + dy))
+        result = _ui_drag({
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2,
+            "button": "middle",
+            "steps": max(4, min(60, int(params.get("steps", 18)))),
+        })
+        result["view3d"] = view
+        return result
 
     if action == "ui.wheel":
         steps = int(params.get("steps", 0))
@@ -426,6 +505,7 @@ def start_bridge() -> dict[str, Any]:
     thread = threading.Thread(target=_SERVER.serve_forever, name="cc-blender-agent", daemon=True)
     thread.start()
     bpy.app.timers.register(_drain_queue, persistent=True)
+    bpy.app.timers.register(_dismiss_startup_modal, first_interval=0.75)
 
     info = {
         "version": PROTOCOL_VERSION,
