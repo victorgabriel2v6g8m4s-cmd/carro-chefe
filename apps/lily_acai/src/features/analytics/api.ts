@@ -12,6 +12,15 @@ export type LilyAnalyticsSummary = {
     variant: string | null;
     events: number;
   }>;
+  orderAttribution: Array<{
+    campaign: string | null;
+    qr: string | null;
+    variant: string | null;
+    created: number;
+    paid: number;
+    grossOrderValueCents: number;
+    paidGrossCents: number;
+  }>;
   products: Array<{
     productSlug: string;
     views: number;
