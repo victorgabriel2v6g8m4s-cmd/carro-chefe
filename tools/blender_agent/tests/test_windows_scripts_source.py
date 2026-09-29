@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = (
     ROOT / "start.ps1",
     ROOT / "smoke-test.ps1",
+    ROOT / "context-smoke-test.ps1",
     ROOT / "install-mcp.ps1",
 )
 
