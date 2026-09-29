@@ -100,3 +100,17 @@ python -m tools.blender_agent.client call scene.summary
 - ainda não há addon/painel instalável nem reconhecimento visual automático da UI.
 
 Roadmap completo em `docs/tecnologia/BLENDER_AGENT.md`.
+
+## Troubleshooting do launcher
+
+Se o Blender abrir e mostrar `Unable to Load File`, ou se `python -m tools.blender_agent.client status` disser que `bridge.json` não existe, o bridge não iniciou.
+
+A partir da correção de 29/09/2026 o launcher preserva aspas em caminhos Windows com espaços, inclusive pastas como `Área de Trabalho`, e espera a criação real da sessão antes de retornar sucesso.
+
+Diagnóstico sem abrir o Blender:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -DryRun
+```
+
+Na linha `Args:`, o caminho completo de `blender_bridge.py` deve aparecer entre aspas. No fluxo normal, só prossiga para `client status` depois de o launcher imprimir `Blender Agent pronto.`.
