@@ -239,3 +239,16 @@ Na linha `Args:`, o caminho completo de `blender_bridge.py` deve aparecer entre 
 ### Splash inicial / interface aparentemente travada
 
 O splash do Blender é modal: enquanto está aberto, a viewport atrás dele não recebe cliques. O Blender 5.2 fecha esse splash com `Esc`. A V0.1.1 envia esse `Esc` automaticamente 0,75 s após a inicialização. Se ainda aparecer, rode `python -m tools.blender_agent.client ui-dismiss`. Depois confirme a viewport com `ui-view3d` e use `ui-orbit`, que calcula automaticamente o centro da maior VIEW_3D em vez de depender de coordenadas fixas.
+
+### Windows PowerShell 5.1 e caminhos com acentos
+
+O smoke test V0.2 revelou uma incompatibilidade de code page quando a CLI Python devolvia JSON contendo caminhos Unicode, por exemplo `Área de Trabalho`. O Python retornava o caminho correto, mas o Windows PowerShell 5.1 podia reinterpretar os bytes e transformar `Área` em texto corrompido, fazendo `Test-Path` procurar um caminho inexistente.
+
+Correção adotada:
+
+- a CLI imprime JSON ASCII-safe, com Unicode representado por escapes `\uXXXX`;
+- `ConvertFrom-Json` reconstrói o caminho Unicode correto antes de `Test-Path`;
+- os scripts `.ps1` do Blender Agent usam somente bytes ASCII para evitar mojibake de literais no Windows PowerShell 5.1;
+- há teste automatizado impedindo a reintrodução de caracteres não ASCII nesses scripts.
+
+Essa correção não altera o nome real das pastas nem exige mover o repositório para um caminho sem acentos.
