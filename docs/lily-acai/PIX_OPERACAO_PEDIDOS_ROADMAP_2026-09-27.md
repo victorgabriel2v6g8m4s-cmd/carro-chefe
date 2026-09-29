@@ -277,9 +277,9 @@ O papel `courier` deve ter acesso mínimo:
 - [x] polling;
 - [x] código de entrega;
 - [x] status legíveis;
-- [ ] guest tracking por token;
+- [x] guest tracking por capability token;
 - [ ] SSE/WebSocket se necessário;
-- [ ] ETA/mapa;
+- [x] ETA/mapa — implementação 11G candidata, gate pendente;
 - [ ] mensagens automáticas por etapa.
 
 ### Fase 11D — logística
@@ -320,13 +320,19 @@ O papel `courier` deve ter acesso mínimo:
 - [x] polling da página guest;
 - [x] código de entrega somente nas etapas permitidas;
 - [x] CTA do pagamento guest para acompanhamento;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36414636227`, CodeQL `36414636183`;
 - [ ] QA real de navegador/mobile.
 
 ### Fase 11G — ETA e mapas
-- [ ] escolher provider gratuito/baixo custo;
-- [ ] rota/ETA;
-- [ ] fallback e limites de privacidade.
+- [x] provider OpenRouteService/HeiGIT;
+- [x] geocode/directions somente no backend;
+- [x] cache persistente;
+- [x] ETA por rota após saída da coleta;
+- [x] cliente sem coordenadas/GPS;
+- [x] navegação OpenStreetMap somente para courier responsável;
+- [x] provider indisponível não bloqueia operação;
+- [ ] gate CI/CodeQL;
+- [ ] homologação com chave/endereço reais.
 
 ### Fase 11H — WhatsApp por etapa
 - [ ] eventos idempotentes;
@@ -334,10 +340,13 @@ O papel `courier` deve ter acesso mínimo:
 - [ ] retry/auditoria.
 
 ### Fase 11I — conciliação automática do Pix próprio
-- [ ] definir banco/PSP recebedor;
-- [ ] webhook/API Pix/extrato;
+- [x] BR Code/txid próprio (`cooklily_pix`);
+- [x] ledger e reconciliação manual auditável;
+- [ ] definir/integrar banco/PSP recebedor;
+- [ ] webhook/API Pix/extrato autoritativo;
 - [ ] matching txid + valor;
-- [ ] divergências e idempotência.
+- [ ] divergências e idempotência;
+- [ ] confirmação automática do pedido somente após evento bancário validado.
 
 ### Backlog transversal
 - [ ] alertas de atraso;

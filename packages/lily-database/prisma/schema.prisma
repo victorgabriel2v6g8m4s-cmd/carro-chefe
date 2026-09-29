@@ -61,6 +61,22 @@ model LilyOrderDeliveryEvent {
   @@index([toStatus, createdAt])
 }
 
+model LilyDeliveryRouteEstimate {
+  orderId             String    @id
+  provider            String
+  sourceHash          String
+  originLat           Float
+  originLng           Float
+  destinationLat      Float
+  destinationLng      Float
+  distanceMeters      Int
+  durationSeconds     Int
+  calculatedAt        DateTime  @default(now())
+  order               LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([provider, calculatedAt])
+}
+
 model LilyDeliveryAssignment {
   id            String    @id @default(cuid())
   orderId       String
@@ -487,6 +503,7 @@ model LilyOrder {
   operationEvents     LilyOrderOperationEvent[]
   deliveryEvents      LilyOrderDeliveryEvent[]
   deliveryAssignments LilyDeliveryAssignment[]
+  routeEstimate       LilyDeliveryRouteEstimate?
   payments            LilyPayment[]
 
   @@index([userId, createdAt])

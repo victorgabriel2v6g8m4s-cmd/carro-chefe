@@ -283,10 +283,10 @@ Limitação consciente da primeira fase:
 - [x] deploy fail-closed sem `COOKLILY_LOGISTICS_CODE_KEY`;
 - [x] gate CI/CodeQL do runtime `0941ede6142c3e63fe90ff1d0b1dcbb7b5651322`;
 - [ ] QA real em dois celulares/contas simultâneas;
-- [x] recusa de oferta sem remover a entrega da fila global — **11E candidata; gate pendente**;
-- [x] desistência antes da coleta e retorno seguro à fila — **11E candidata; gate pendente**;
-- [x] reatribuição admin protegida contra concorrência e bloqueada após coleta — **11E candidata; gate pendente**;
-- [x] histórico persistente de atribuições courier/admin — **11E candidata; gate pendente**.
+- [x] recusa de oferta sem remover a entrega da fila global — 11E integrada/validada;
+- [x] desistência antes da coleta e retorno seguro à fila — 11E integrada/validada;
+- [x] reatribuição admin protegida contra concorrência e bloqueada após coleta — 11E integrada/validada;
+- [x] histórico persistente de atribuições courier/admin — 11E integrada/validada.
 
 ### 11E — recusa, desistência, reatribuição e histórico
 
@@ -312,7 +312,7 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-2
 
 ### 11F — tracking seguro de pedidos guest
 
-**Status:** implementação candidata; gate pendente.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #94. Runtime validado `0d4f8a6f60821dfa09d9a94a2470e5f2ffb22af1`; CI `36414636227` e CodeQL `36414636183`: success. QA real de navegador/mobile permanece pendente.
 
 - [x] endpoint de tracking protegido pelo token opaco já emitido no checkout;
 - [x] token somente em header, nunca em query;
@@ -324,17 +324,28 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11E_REATRIBUICAO_HISTORICO_2026-09-2
 - [x] página guest com polling de 10 s;
 - [x] CTA pagamento -> acompanhamento;
 - [x] teste automatizado de capability e minimização;
-- [ ] gate CI/CodeQL;
+- [x] gate CI/CodeQL: CI `36414636227`, CodeQL `36414636183`;
 - [ ] QA real de navegador/mobile.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11F_TRACKING_GUEST_2026-09-28.md`.
 
 ### 11G — ETA/mapas
 
-- [ ] definir provedor com prioridade para gratuito/baixo custo;
-- [ ] geocodificação/rota no servidor ou proxy controlado;
-- [ ] ETA sem expor localização além do necessário;
-- [ ] fallback quando provedor estiver indisponível.
+**Status:** implementação candidata em `feat/lily-entrega-11g-eta-mapas-v2`; gate pendente.
+
+- [x] provider OpenRouteService/HeiGIT com chave somente no backend;
+- [x] geocodificação e directions server-side;
+- [x] cache persistente 1:1 por pedido/endereço;
+- [x] ETA iniciado somente após `left_pickup`;
+- [x] cliente/guest recebe distância/duração/ETA sem coordenadas;
+- [x] courier responsável recebe link de navegação OpenStreetMap;
+- [x] sem GPS contínuo nem rastreamento de localização do aparelho;
+- [x] falha do provider não bloqueia aceite/coleta/entrega;
+- [x] testes unitários de adapter, privacidade e fail-open;
+- [ ] gate CI/CodeQL;
+- [ ] homologação com chave real e endereços reais.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11G_ETA_MAPAS_2026-09-28.md`.
 
 ### 11H — WhatsApp por etapa
 
@@ -345,11 +356,17 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11F_TRACKING_GUEST_2026-09-28.md`.
 
 ### 11I — conciliação automática do Pix próprio
 
-- [ ] definir banco/PSP recebedor e contrato;
-- [ ] adapter de extrato/API Pix/webhook;
-- [ ] matching autoritativo por txid/valor;
-- [ ] idempotência e tratamento de divergência;
-- [ ] reconciliação automática sem transformar retorno do cliente em confirmação financeira.
+**Estado real:** a camada de cobrança Pix própria já existe; falta a entrada bancária automática.
+
+- [x] provider `cooklily_pix` gera BR Code estático sem gateway;
+- [x] txid próprio por pagamento;
+- [x] ledger de pagamentos/eventos/reconciliação já existente;
+- [x] confirmação/reconciliação manual auditada como fallback;
+- [ ] escolher/integrar banco/PSP recebedor com API/webhook/extrato confiável;
+- [ ] adapter de ingestão bancária;
+- [ ] matching autoritativo por txid + valor;
+- [ ] idempotência de eventos bancários e tratamento de divergência;
+- [ ] aprovação automática somente após confirmação financeira autoritativa.
 
 Documento detalhado:
 

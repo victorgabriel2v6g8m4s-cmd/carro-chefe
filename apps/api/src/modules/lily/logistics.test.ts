@@ -258,6 +258,41 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(stored?.courierUserId).toBe(first.user.id);
   });
 
+  it("ETA/mapa falha aberto quando o provider não está configurado", async () => {
+    const originalKey = process.env.COOKLILY_ORS_API_KEY;
+    delete process.env.COOKLILY_ORS_API_KEY;
+    try {
+      const courier = await register("67999908215", "courier", ["127", "0", "0", "246"].join("."));
+      const order = await createDelivery();
+
+      const accepted = await app.inject({
+        method: "POST",
+        url: `/api/v1/lily/courier/deliveries/${order.id}/accept`,
+        headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf }
+      });
+      expect(accepted.statusCode).toBe(200);
+
+      const route = await app.inject({
+        method: "GET",
+        url: `/api/v1/lily/courier/deliveries/${order.id}/route`,
+        headers: { cookie: courier.cookie }
+      });
+      expect(route.statusCode).toBe(200);
+      expect(route.json()).toMatchObject({
+        available: false,
+        reason: "not_configured",
+        provider: "openrouteservice"
+      });
+
+      const stillAssigned = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
+      expect(stillAssigned?.courierUserId).toBe(courier.user.id);
+      expect(stillAssigned?.deliveryStatus).toBe("courier_accepted");
+    } finally {
+      if (originalKey === undefined) delete process.env.COOKLILY_ORS_API_KEY;
+      else process.env.COOKLILY_ORS_API_KEY = originalKey;
+    }
+  });
+
   it("permite recusar a oferta sem retirar a entrega da fila dos demais couriers", async () => {
     const first = await register("67999908206", "courier", "127.0.0.236");
     const second = await register("67999908207", "courier", "127.0.0.237");
