@@ -297,3 +297,14 @@ Correção adotada:
 - há teste automatizado impedindo a reintrodução de caracteres não ASCII nesses scripts.
 
 Essa correção não altera o nome real das pastas nem exige mover o repositório para um caminho sem acentos.
+
+
+### Capturas multi-workspace e redraw assíncrono
+
+A captura de abas diferentes não é feita imediatamente após `window.workspace = ...`. O Blender pode manter o frame anterior visível por um curto período, mesmo com o workspace lógico já alterado.
+
+O `workspace.capture_set` usa uma máquina de estados no timer do Blender, cedendo ciclos ao event loop antes de cada screenshot. Cada captura registra `workspace_requested`, `workspace_captured`, `screen_captured` e `workspace_match`. Mismatch é falha explícita.
+
+O número padrão de ticks de estabilização é 3 e pode ser sobrescrito por `CC_BLENDER_WORKSPACE_SETTLE_TICKS`.
+
+O `context-smoke-test.ps1` prioriza as abas `Animation` e `Compositing` quando elas existem e valida que cada imagem veio realmente do workspace solicitado.
