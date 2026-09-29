@@ -37,7 +37,8 @@ export type KitchenOrder = {
     sizeMl: number;
     quantity: number;
     note: string | null;
-    flavors: Array<{ name: string }>;
+    flavors: Array<{ id?: string; name?: string }>;
+    configuration: Record<string, unknown>;
     addons: Array<{ name: string; quantity: number }>;
   }>;
   operationEvents: Array<{
@@ -98,8 +99,7 @@ export type KitchenPrintTicket = {
     sizeMl: number;
     quantity: number;
     note: string | null;
-    flavors: Array<{ id?: string; name?: string }>;
-    configuration: Record<string, unknown>;
+    flavors: Array<{ name: string }>;
     addons: Array<{ name: string; quantity: number }>;
   }>;
 };
