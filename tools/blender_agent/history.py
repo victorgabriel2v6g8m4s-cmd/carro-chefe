@@ -496,7 +496,7 @@ def search_events(
 ) -> dict[str, Any]:
     wanted_tags = {sanitize_label(tag, "tag") for tag in (tags or []) if str(tag).strip()}
     stage_ids = [stage_id] if stage_id else [str(row["stage_id"]) for row in list_stages(limit=1_000)]
-    needle = query.casefold().strip() if query else None
+    needles = [part for part in query.casefold().split() if part] if query else []
     matches: list[dict[str, Any]] = []
     scanned = 0
 
@@ -531,9 +531,9 @@ def search_events(
             event_tags = set(event.get("tags") or [])
             if wanted_tags and not wanted_tags.issubset(event_tags):
                 continue
-            if needle:
+            if needles:
                 haystack = json.dumps(event, ensure_ascii=False, sort_keys=True).casefold()
-                if needle not in haystack:
+                if not all(needle in haystack for needle in needles):
                     continue
             matches.append(event)
             if len(matches) >= max(1, min(500, int(limit))):
