@@ -45,7 +45,7 @@ function parseOptionalMinutes(value: unknown) {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
   const parsed = Number(raw);
-  return Number.isInteger(parsed) ? parsed : null;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 async function getAdminFulfillment() {
