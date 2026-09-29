@@ -27,9 +27,13 @@ ALLOWED_ACTIONS = {
     "camera.orbit",
     "render.still",
     "checkpoint.create",
-    "checkpoint.restore",
     "export.glb",
     "export.obj",
+    "ui.window",
+    "ui.event",
+    "ui.click",
+    "ui.drag",
+    "ui.wheel",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
