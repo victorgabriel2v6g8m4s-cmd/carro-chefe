@@ -42,6 +42,20 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("bpy.ops.view3d.view_axis", source)
         self.assertIn("THREE_QUARTER", source)
 
+    def test_bridge_records_non_history_actions(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _record_task_history", source)
+        self.assertIn('if action.startswith("history.")', source)
+        self.assertIn("record_event(", source)
+        self.assertIn("ensure_stage()", source)
+
+    def test_workspace_capture_restores_original_workspace(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _workspace_capture_set", source)
+        self.assertIn("window.workspace = original", source)
+        self.assertIn("attachment_output_path", source)
+        self.assertIn("workspace.capture_set", source)
+
     def test_bridge_binds_through_loopback_constant(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("(DEFAULT_HOST, port)", source)
