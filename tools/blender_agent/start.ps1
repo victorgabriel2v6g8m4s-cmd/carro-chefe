@@ -89,7 +89,7 @@ while ((Get-Date) -lt $deadline) {
             }
         }
         catch {
-            # O Blender pode estar no meio da gravação do JSON. Tenta de novo.
+            # O Blender pode estar no meio da gravacao do JSON. Tenta de novo.
         }
     }
 
