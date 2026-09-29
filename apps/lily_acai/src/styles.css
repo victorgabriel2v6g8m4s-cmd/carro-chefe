@@ -22,7 +22,7 @@ button, input, select, textarea { font: inherit; }
   box-shadow: var(--cl-shadow-card);
 }
 .skip-link:focus-visible { transform: translateY(0); }
-#lily-main-content:focus { outline: none; }
+#lily-main-content:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }
 
 .topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(18px,5vw,72px); border-bottom: 1px solid rgb(130 0 35 / 14%); background: rgb(255 247 250 / 92%); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 10; }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
