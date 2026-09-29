@@ -62,6 +62,49 @@ O resultado inclui:
 - sucesso/falha individual por workspace;
 - referência automática no histórico da etapa ativa.
 
+## 2.1 Sincronização real entre workspaces
+
+O primeiro smoke test multi-workspace revelou que simplesmente atribuir `window.workspace` e chamar redraw dentro da mesma execução não garante que o framebuffer já represente a nova aba. O Blender pode ter atualizado o estado lógico do workspace enquanto a imagem visível ainda corresponde ao frame anterior.
+
+A captura múltipla agora usa uma máquina de estados assíncrona no próprio `bpy.app.timers`:
+
+```text
+switch workspace
+  ↓
+yield para o event loop
+  ↓
+aguarda screen ficar estável por alguns ticks
+  ↓
+aplica shading/configuração
+  ↓
+yield novamente
+  ↓
+captura
+  ↓
+valida workspace_requested == workspace_captured
+  ↓
+próxima aba
+```
+
+A quantidade padrão de ciclos de estabilização é 3 e pode ser ajustada por:
+
+```text
+CC_BLENDER_WORKSPACE_SETTLE_TICKS
+```
+
+O manifesto da captura passou para versão 2 e inclui, por item:
+
+- `workspace_requested`;
+- `workspace_captured`;
+- `workspace_match`;
+- `screen_captured`;
+- target/area;
+- SHA-256.
+
+Se o workspace ativo não corresponder ao solicitado no instante da captura, o item é marcado como falha em vez de gerar silenciosamente uma imagem com nome incorreto.
+
+Ao final, o capture-set também confirma `restored_original_workspace=true`.
+
 ## 3. Auto-history segmentado por etapa
 
 O histórico não usa um arquivo global gigantesco.
@@ -259,3 +302,10 @@ O script valida:
 5. captura de múltiplos workspaces;
 6. busca no auto-history por action + anexo;
 7. recuperação do contexto da etapa.
+
+
+## Log de validação multi-workspace
+
+Em 29/09/2026, o smoke test abriu duas imagens nomeadas para `Animation` e `Compositing`, porém ambas mostravam visualmente `Compositing`. A causa foi atribuída ao capture-set síncrono, que trocava o workspace e fotografava antes de o event loop concluir o redraw.
+
+Correção: capture-set passou a ser processado como job assíncrono por ticks, com validação de workspace/screen no momento exato da screenshot e manifesto v2. O smoke test agora prioriza `Animation` + `Compositing` quando disponíveis para reproduzir diretamente esse cenário.
