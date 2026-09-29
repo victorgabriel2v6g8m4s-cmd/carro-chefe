@@ -1,0 +1,8 @@
+{"action":"object.add_primitive","params":{"kind":"cube","name":"Baguete_Base","location":[0,0,0],"scale":[3.8,1.05,0.65]}}
+{"action":"modifier.add","params":{"name":"Baguete_Base","type":"BEVEL","properties":{"width":0.55,"segments":6}}}
+{"action":"modifier.add","params":{"name":"Baguete_Base","type":"SUBSURF","properties":{"levels":2,"render_levels":2}}}
+{"action":"object.shade_smooth","params":{"name":"Baguete_Base"}}
+{"action":"material.simple","params":{"name":"Baguete_Base","material_name":"Crosta","base_color":[0.46,0.20,0.07,1.0],"roughness":0.58}}
+{"action":"camera.orbit","params":{"target":[0,0,0],"distance":8.5,"azimuth_deg":38,"elevation_deg":24}}
+{"action":"checkpoint.create","params":{"label":"baguete-bootstrap"}}
+{"action":"render.still","params":{"filename":"baguete-bootstrap.png","resolution_x":1280,"resolution_y":720}}
