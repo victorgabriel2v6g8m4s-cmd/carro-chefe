@@ -25,6 +25,7 @@ type AdminFulfillmentPayload = {
     pickupInstructions: string | null;
     timezone: string;
     businessHours: BusinessHour[];
+    kitchenPreparationSlaMinutes: number | null;
   };
   zones: Zone[];
 };
@@ -38,6 +39,13 @@ function moneyInput(cents: number) {
 function parseMoney(value: string) {
   const parsed = Number(value.trim().replace(/\./g, "").replace(",", "."));
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed * 100)) : 0;
+}
+
+function parseOptionalMinutes(value: unknown) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) ? parsed : null;
 }
 
 async function getAdminFulfillment() {
@@ -96,7 +104,8 @@ export function AdminFulfillmentPage() {
         pickupAddressText: String(form.get("pickupAddress") || "") || null,
         pickupInstructions: String(form.get("pickupInstructions") || "") || null,
         businessHours,
-        timezone: "America/Campo_Grande"
+        timezone: "America/Campo_Grande",
+        kitchenPreparationSlaMinutes: parseOptionalMinutes(form.get("kitchenPreparationSlaMinutes"))
       });
       setSaved("Configurações salvas.");
       await refresh();
@@ -148,6 +157,18 @@ export function AdminFulfillmentPage() {
           <label>Taxa fixa<input name="flatFee" defaultValue={moneyInput(settings.flatDeliveryFeeCents)} /></label>
           <label className="admin-span">Endereço de retirada<input name="pickupAddress" defaultValue={settings.pickupAddressText ?? ""} /></label>
           <label className="admin-span">Instruções de retirada<textarea name="pickupInstructions" rows={2} defaultValue={settings.pickupInstructions ?? ""} /></label>
+          <label>SLA de montagem (minutos)
+            <input
+              name="kitchenPreparationSlaMinutes"
+              type="number"
+              min="1"
+              max="720"
+              step="1"
+              defaultValue={settings.kitchenPreparationSlaMinutes ?? ""}
+              placeholder="Desativado"
+            />
+            <small>Campo vazio desativa alertas. Defina o tempo somente após aprovação operacional.</small>
+          </label>
         </div>
       </section>
 
