@@ -299,9 +299,37 @@ Implementado:
 
 Pendente apenas de deploy/QA real e decisão jurídica de retenção.
 
+
+### 11. Entrega 10A — OBSERVABILIDADE E BACKUP VALIDADA E INTEGRADA
+
+PR #112 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `3ba8c615c64b736692d7e925d51d9659225f876d`;
+- CI `36639472270`: success;
+- CodeQL `36639472287`: success;
+- merge SHA `632ad25a2e72954e301093259c28535993ef7d05`.
+
+Implementado:
+
+- request ID para correlação;
+- redaction explícita de headers sensíveis;
+- resumo/painel staff de saúde sem PII;
+- backup SQLite validado por cópia isolada;
+- integrity/foreign-key check antes de stop/migrations;
+- hashes de backup na evidência do deploy;
+- helper de verificação de backup;
+- runbook de restauração manual;
+- testes automatizados do hardening.
+
+O primeiro gate revelou apenas uma asserção de teste referenciando nome antigo de fase do deployer; o comportamento de produção estava correto. O teste foi corrigido e o head final passou toda a matriz.
+
+Pendente: deploy, drill real, cópia externa, retention policy e QA físico/mobile.
+
 ## Ordem de execução atualizada
 
-1. continuar a Entrega 10 em branch isolada, sem depender do deploy adiado;
+1. continuar a Entrega 10B em branch isolada, sem depender do deploy adiado;
 2. amanhã, fazer deploy/homologação da linha selecionada na VPS;
 3. aplicar migrations pelo deployer e validar saúde dos serviços;
 4. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
