@@ -106,6 +106,15 @@ function KitchenCard(props: {
       <strong>{money(order.grandTotalCents)}</strong>
       {order.isHomologation && <span className="kitchen-test-badge">Teste</span>}
     </div>
+    {order.sla && <div className={"kitchen-sla " + (order.sla.status === "overdue" ? "is-overdue" : "is-on-track")}>
+      <span>{order.sla.status === "overdue" ? "Atraso na montagem" : "SLA da montagem"}</span>
+      <strong>{order.sla.status === "overdue"
+        ? order.sla.overdueMinutes + " min acima do SLA"
+        : order.sla.remainingMinutes + " min restantes"}</strong>
+      <small>SLA configurado: {order.sla.thresholdMinutes} min · início {
+        new Date(order.sla.startedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+      }</small>
+    </div>}
 
     <ul className="kitchen-items">
       {order.items.map((item) => <li key={item.id}>
@@ -147,6 +156,10 @@ function KitchenCard(props: {
 export function KitchenPage() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
+  const [slaSummary, setSlaSummary] = useState<{
+    kitchenPreparationSlaMinutes: number | null;
+    overdue: number;
+  }>({ kitchenPreparationSlaMinutes: null, overdue: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -161,6 +174,7 @@ export function KitchenPage() {
     setSession(current);
     const result = await getKitchenOrders();
     setOrders(result.orders);
+    setSlaSummary(result.sla);
   }
 
   useEffect(() => {
@@ -214,6 +228,13 @@ export function KitchenPage() {
         <p>Pagamento e produção são controlados separadamente. Pedidos não pagos não podem entrar em montagem.</p>
       </div>
       <div className="kitchen-heading-actions">
+        {slaSummary.kitchenPreparationSlaMinutes
+          ? <span className={"kitchen-sla-summary " + (slaSummary.overdue > 0 ? "is-overdue" : "")}>
+              {slaSummary.overdue > 0
+                ? slaSummary.overdue + " pedido" + (slaSummary.overdue === 1 ? "" : "s") + " atrasado" + (slaSummary.overdue === 1 ? "" : "s")
+                : "SLA montagem: " + slaSummary.kitchenPreparationSlaMinutes + " min"}
+            </span>
+          : <span>SLA de montagem desativado</span>}
         <span>Atualiza a cada 5 s</span>
         <Link className="button ghost" to="/painel">Painel</Link>
       </div>
