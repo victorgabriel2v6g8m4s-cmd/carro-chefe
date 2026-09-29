@@ -85,6 +85,13 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("checkpoint", source)
         self.assertIn('"NORMALIZED", "REGION"', source)
 
+    def test_sculpt_prepare_restores_workspace_on_failure(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("original_workspace_name = window.workspace.name", source)
+        self.assertIn("except Exception:", source)
+        self.assertIn("window.workspace = original", source)
+        self.assertIn("_SCULPT_SESSION = None", source)
+
     def test_sculpt_uses_operator_stroke_and_context_override(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("bpy.ops.sculpt.brush_stroke", source)
