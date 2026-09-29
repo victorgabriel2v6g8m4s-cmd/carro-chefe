@@ -20,6 +20,7 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(mainSource).toContain('id="lily-main-content"');
     expect(mainSource).toContain('tabIndex={-1}');
     expect(css).toContain(".skip-link:focus-visible { transform: translateY(0); }");
+    expect(css).toContain("#lily-main-content:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }");
   });
 
   it("mantém foco visível abrangente em controles interativos", () => {
