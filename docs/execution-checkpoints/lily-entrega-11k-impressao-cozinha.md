@@ -5,7 +5,7 @@
 - branch: `feat/lily-entrega-11k-impressao-cozinha`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `808434275bd434a0e9665138e181180f72b08267`
-- head_sha_verified: `a569b6c348fef64cc96840a92da3e5547e6e3259`
+- head_sha_verified: `68d29d33858e75c30a55704eeccf91a1a8eab14e`
 - pull_requests: ainda não criados
 - last_verified_at: 2026-09-29
 - interruption_state: execução iniciada após integração da 11J
@@ -43,6 +43,12 @@ Primeira fase: comanda de impressão via navegador/sistema operacional.
 
 Revisão final do diff e gate CI/CodeQL.
 
+## Revisão pré-gate
+
+- Diff revisado contra `cooklily/canonical`: 0 commits atrás.
+- Foi detectado antes do gate que a primeira redução de tipos frontend havia atingido `KitchenOrder` em vez de somente `KitchenPrintTicket`.
+- Correção persistida em `68d29d33858e75c30a55704eeccf91a1a8eab14e`: contrato normal restaurado e minimização restrita ao DTO de impressão.
+
 ## Gates e testes
 
 Ainda não iniciados. Integração depende de CI + CodeQL verdes no SHA final.
@@ -55,4 +61,4 @@ Ainda não iniciados. Integração depende de CI + CodeQL verdes no SHA final.
 
 ## Próxima ação exata
 
-Revisar o diff completo, abrir PR draft contra `cooklily/canonical` e PR gate contra `main`, então validar CI/CodeQL do SHA final.
+Abrir PR draft contra `cooklily/canonical` e PR gate contra `main`, atualizar este checkpoint com os PRs e validar CI/CodeQL do SHA final.
