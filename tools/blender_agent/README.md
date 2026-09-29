@@ -192,7 +192,15 @@ Preferir ações semânticas. `ui.*` é fallback para Sculpt, seleção visual, 
 python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
 ```
 
-Smoke test real, após abrir o Blender pelo launcher:
+Smoke test automatizado da V0.2, após abrir o Blender pelo launcher:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/smoke-test.ps1 -OpenImage
+```
+
+Ele valida bridge, descrição do viewport, preset 3/4, geração do PNG, receipt e, se o venv MCP já existir, import do adaptador MCP. O `-OpenImage` é opcional.
+
+Smoke test manual detalhado:
 
 ```powershell
 python -m tools.blender_agent.client status
