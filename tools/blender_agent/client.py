@@ -12,6 +12,7 @@ from .protocol import (
     DEFAULT_TIMEOUT_SECONDS,
     PROTOCOL_VERSION,
     encode_message,
+    sanitize_label,
     session_path,
 )
 
@@ -63,6 +64,42 @@ def _json_params(value: str) -> dict[str, Any]:
     return parsed
 
 
+def capture_set(
+    label: str,
+    views: list[str],
+    *,
+    wait_seconds: float = 0.25,
+    shading: str | None = None,
+) -> dict[str, Any]:
+    clean_label = sanitize_label(label, "capture-set")
+    if not views:
+        raise ValueError("capture-set exige pelo menos uma vista")
+    wait_seconds = max(0.05, min(2.0, float(wait_seconds)))
+
+    if shading:
+        call("viewport.set_shading", {"type": shading})
+
+    captures: list[dict[str, Any]] = []
+    for preset in views:
+        normalized = preset.upper()
+        call("viewport.set_view", {"preset": normalized, "frame_all": True})
+        time.sleep(wait_seconds)
+        capture = call("viewport.capture", {
+            "filename": f"{clean_label}-{normalized.lower().replace('_', '-')}.png"
+        })
+        captures.append({
+            "preset": normalized,
+            "capture": capture["result"],
+        })
+
+    return {
+        "ok": True,
+        "label": clean_label,
+        "views": [item["preset"] for item in captures],
+        "captures": captures,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Cliente local do Blender Agent do Carro Chefe")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -74,6 +111,48 @@ def build_parser() -> argparse.ArgumentParser:
     invoke.add_argument("action")
     invoke.add_argument("--json", default="{}", type=_json_params, dest="params")
     invoke.set_defaults(handler=lambda a: call(a.action, a.params))
+
+    viewport = sub.add_parser("viewport-describe", help="descreve estado e bounds da VIEW_3D")
+    viewport.set_defaults(handler=lambda _a: call("viewport.describe"))
+
+    set_view = sub.add_parser("viewport-view", help="define uma vista previsível da VIEW_3D")
+    set_view.add_argument(
+        "preset",
+        choices=["LEFT", "RIGHT", "BOTTOM", "TOP", "FRONT", "BACK", "CAMERA", "THREE_QUARTER"],
+    )
+    set_view.add_argument("--no-frame-all", action="store_true")
+    set_view.set_defaults(handler=lambda a: call("viewport.set_view", {
+        "preset": a.preset,
+        "frame_all": not a.no_frame_all,
+    }))
+
+    frame = sub.add_parser("viewport-frame", help="enquadra todos os objetos na VIEW_3D")
+    frame.set_defaults(handler=lambda _a: call("viewport.frame_all"))
+
+    shading = sub.add_parser("viewport-shading", help="define shading da VIEW_3D")
+    shading.add_argument("type", choices=["WIREFRAME", "SOLID", "MATERIAL", "RENDERED"])
+    shading.set_defaults(handler=lambda a: call("viewport.set_shading", {"type": a.type}))
+
+    capture = sub.add_parser("viewport-capture", help="salva PNG somente da região 3D")
+    capture.add_argument("--name", default="viewport.png")
+    capture.set_defaults(handler=lambda a: call("viewport.capture", {"filename": a.name}))
+
+    capture_many = sub.add_parser("viewport-capture-set", help="captura conjunto de vistas previsíveis")
+    capture_many.add_argument("--label", default="viewport-set")
+    capture_many.add_argument(
+        "--views",
+        nargs="+",
+        choices=["LEFT", "RIGHT", "BOTTOM", "TOP", "FRONT", "BACK", "CAMERA", "THREE_QUARTER"],
+        default=["FRONT", "RIGHT", "TOP", "THREE_QUARTER"],
+    )
+    capture_many.add_argument("--shading", choices=["WIREFRAME", "SOLID", "MATERIAL", "RENDERED"], default="SOLID")
+    capture_many.add_argument("--wait", type=float, default=0.25)
+    capture_many.set_defaults(handler=lambda a: capture_set(
+        a.label,
+        a.views,
+        wait_seconds=a.wait,
+        shading=a.shading,
+    ))
 
     window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
     window.set_defaults(handler=lambda _a: call("ui.window"))
