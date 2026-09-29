@@ -179,7 +179,8 @@ jobs:
             "tools/blender_agent/start.ps1",
             "tools/blender_agent/install-mcp.ps1",
             "tools/blender_agent/smoke-test.ps1",
-            "tools/blender_agent/context-smoke-test.ps1"
+            "tools/blender_agent/context-smoke-test.ps1",
+            "tools/blender_agent/sculpt-smoke-test.ps1"
           )) {
             $tokens = $null
             $errors = $null
