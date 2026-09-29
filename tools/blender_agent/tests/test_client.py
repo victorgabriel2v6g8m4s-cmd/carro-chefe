@@ -25,6 +25,14 @@ class ClientParserTests(unittest.TestCase):
         self.assertTrue(args.shift)
         self.assertEqual(args.steps, 12)
 
+    def test_ui_orbit_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["ui-orbit", "--dx", "90", "--dy", "-40", "--steps", "10"])
+        self.assertEqual(args.command, "ui-orbit")
+        self.assertEqual(args.dx, 90)
+        self.assertEqual(args.dy, -40)
+        self.assertEqual(args.steps, 10)
+
     def test_generic_call_accepts_json(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
