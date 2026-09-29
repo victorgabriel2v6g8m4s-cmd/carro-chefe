@@ -7,7 +7,7 @@ Para atualizar: `npm run tools:status`. Para executar sem escrever: `npm run too
 <!-- TOOL_HEALTH:START -->
 **Plataforma da última execução gravada:** `linux`  
 **Todas as ferramentas próprias estão completas e sem falha aplicável?** **NÃO**  
-**Checks:** 10 passaram; 0 falharam; 0 bloqueados; 1 não aplicáveis à plataforma; 0 planejados.
+**Checks:** 11 passaram; 0 falharam; 0 bloqueados; 1 não aplicáveis à plataforma; 0 planejados.
 
 | Ferramenta | Caminho | Maturidade | Verificação | Detalhe |
 |---|---|---|---|---|
@@ -17,6 +17,7 @@ Para atualizar: `npm run tools:status`. Para executar sem escrever: `npm run too
 | `app-qr` | `apps/qr_manipulator` | em desenvolvimento | verificada | teste aplicável passou |
 | `agent-policy` | `tools/agent-policy` | completa | verificada | teste aplicável passou |
 | `agent-runtime` | `tools/agent-runtime.mjs` | em desenvolvimento | verificada | teste aplicável passou |
+| `blender-agent` | `tools/blender_agent` | em desenvolvimento | verificada | teste aplicável passou |
 | `excel-snapshot` | `tools/excel_snapshot` | completa | verificada | teste aplicável passou |
 | `excel-recipe` | `tools/excel_recipe` | completa | verificada | teste aplicável passou |
 | `windows-supervisor` | `tools/windows-supervisor` | completa | não testada nesta plataforma | não testada nesta plataforma |
