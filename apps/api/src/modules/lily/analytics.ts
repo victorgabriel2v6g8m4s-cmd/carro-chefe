@@ -160,7 +160,7 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
     };
 
     const orderWhere = {
-      occurredAt: { gte: from, lte: now },
+      createdAt: { gte: from, lte: now },
       ...(query.campaign ? { laCampaign: query.campaign } : {}),
       ...(query.includeHomologation ? {} : { isHomologation: false })
     };
