@@ -237,7 +237,7 @@ Limitação consciente da primeira fase:
 - [x] polling operacional a cada 5 segundos;
 - [x] omitir telefone/endereço da API da cozinha;
 - [ ] QA real em tablet/celular;
-- [ ] SLA/alertas de atraso;
+- [x] SLA configurável da etapa de montagem + alertas visuais — 11J candidata, gate pendente;
 - [ ] impressão;
 - [x] integração inicial com a etapa logística: ao ficar pronto para despacho, pedido de entrega entra em `waiting_courier`;
 - [ ] QA real em operação de cozinha + entregador.
@@ -396,6 +396,27 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md`.
 A especificação do Banco Central padroniza a API funcional de Pix recebidos, mas o acesso/autenticação é fornecido pela instituição onde a CookLily mantém a conta. Por isso, o provider permanece `disabled` até a instituição real ser definida; não será escolhido um PSP apenas para “fechar” a implementação.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md`.
+
+### 11J — SLA e alertas operacionais da cozinha
+
+**Status:** implementação candidata em `feat/lily-entrega-11j-sla-alertas-operacionais`; gate CI/CodeQL pendente.
+
+- [x] threshold `kitchenPreparationSlaMinutes` nullable e sem valor padrão;
+- [x] migration aditiva;
+- [x] configuração staff no painel de fulfillment;
+- [x] validação server-side de 1–720 minutos ou `null`;
+- [x] cálculo server-side a partir de `operationUpdatedAt`;
+- [x] SLA somente em `preparing`;
+- [x] DTO por pedido com prazo/restante/atraso;
+- [x] resumo de pedidos atrasados na fila atual;
+- [x] alerta visual no card da cozinha;
+- [x] atraso não muda status nem executa automação;
+- [x] testes unitários e de integração;
+- [ ] gate CI/CodeQL;
+- [ ] definir SLA real com a operação;
+- [ ] QA real em tablet/celular.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11J_SLA_ALERTAS_COZINHA_2026-09-29.md`.
 
 ## Sincronizações paralelas
 
