@@ -63,6 +63,17 @@ class HistoryTests(unittest.TestCase):
         tagged = history.search_events(stage_id="model", tags=["bread"])
         self.assertEqual(len(tagged["matches"]), 1)
 
+    def test_multi_keyword_search(self) -> None:
+        history.create_stage("Search", stage_id="search")
+        history.record_event(
+            action="modifier.add",
+            params={"name": "Baguete", "type": "BEVEL"},
+            result={"segments": 6},
+            ok=True,
+        )
+        result = history.search_events(query="baguete bevel", stage_id="search")
+        self.assertEqual(len(result["matches"]), 1)
+
     def test_attachment_is_hashed_and_referenced(self) -> None:
         history.create_stage("Capture", stage_id="capture")
         attachment = history.attachment_output_path("front.png")
