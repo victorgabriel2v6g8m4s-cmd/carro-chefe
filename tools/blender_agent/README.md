@@ -41,7 +41,7 @@ python -m tools.blender_agent.client ui-drag 620 430 700 430 --button middle --s
 python -m tools.blender_agent.client ui-wheel 3
 ```
 
-As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fora dos limites reportados por `ui.window`.
+As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fora dos limites reportados por `ui.window`. O launcher/bridge também tenta fechar automaticamente o splash inicial com `Esc` após a inicialização.
 
 ## Actions disponíveis
 
@@ -60,7 +60,9 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `render.still` | PNG em runtime |
 | `checkpoint.create` | cópia `.blend` em runtime |
 | `export.glb` / `export.obj` | export controlado |
-| `ui.window` / `ui.event` | estado/evento de UI allowlisted |
+| `ui.window` / `ui.view3d` / `ui.event` | janela, bounds da viewport e evento allowlisted |
+| `ui.dismiss_modal` | envia `Esc` para fechar splash/modal atual |
+| `ui.orbit` | orbita automaticamente a maior VIEW_3D |
 | `ui.click` / `ui.drag` / `ui.wheel` | interação estilo mouse confinada ao Blender |
 
 ## Segurança
@@ -87,6 +89,9 @@ Smoke test real, após abrir o Blender pelo launcher:
 ```powershell
 python -m tools.blender_agent.client status
 python -m tools.blender_agent.client ui-window
+python -m tools.blender_agent.client ui-dismiss
+python -m tools.blender_agent.client ui-view3d
+python -m tools.blender_agent.client ui-orbit --dx 120 --dy 60
 python -m tools.blender_agent.client call scene.summary
 ```
 
@@ -114,3 +119,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps
 ```
 
 Na linha `Args:`, o caminho completo de `blender_bridge.py` deve aparecer entre aspas. No fluxo normal, só prossiga para `client status` depois de o launcher imprimir `Blender Agent pronto.`.
+
+### Splash inicial / interface aparentemente travada
+
+O splash do Blender é modal: enquanto está aberto, a viewport atrás dele não recebe cliques. O Blender 5.2 fecha esse splash com `Esc`. A V0.1.1 envia esse `Esc` automaticamente 0,75 s após a inicialização. Se ainda aparecer, rode `python -m tools.blender_agent.client ui-dismiss`. Depois confirme a viewport com `ui-view3d` e use `ui-orbit`, que calcula automaticamente o centro da maior VIEW_3D em vez de depender de coordenadas fixas.
