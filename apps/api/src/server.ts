@@ -9,7 +9,10 @@ import { startLilyWhatsAppWorker } from "./modules/lily/whatsapp";
 assertLoopbackBinding(config.host);
 
 const app = await buildApp();
-const stopLilyWhatsAppWorker = startLilyWhatsAppWorker(app.log);
+const stopLilyWhatsAppWorker = startLilyWhatsAppWorker({
+  info: (value) => app.log.info(value),
+  error: (value) => app.log.error(value)
+});
 app.addHook("onClose", async () => { stopLilyWhatsAppWorker(); });
 const siteDist = path.join(config.projectRoot, "apps", "site", "dist");
 const managementDist = path.join(config.projectRoot, "apps", "gestao", "dist");
