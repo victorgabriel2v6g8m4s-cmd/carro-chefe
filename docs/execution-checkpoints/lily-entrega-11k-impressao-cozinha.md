@@ -5,7 +5,7 @@
 - branch: `feat/lily-entrega-11k-impressao-cozinha`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `808434275bd434a0e9665138e181180f72b08267`
-- head_sha_verified: `0881a210a066a4d940061f216cf338e30f254a52`
+- head_sha_verified: `93a39a43157a3a8f76cc5cde257a1dd83a4ff462`
 - pull_requests: PR #106 -> `cooklily/canonical` (draft); PR #107 -> `main` (gate temporário)
 - last_verified_at: 2026-09-29
 - interruption_state: execução iniciada após integração da 11J
