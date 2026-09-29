@@ -79,6 +79,11 @@ const funnelEvents = [
   "payment_confirmed"
 ] as const;
 
+function analyticsAttribution(value: string | null) {
+  if (!value) return null;
+  return /^[A-Za-z0-9._:-]{1,120}$/.test(value) ? value : null;
+}
+
 function aggregateProductEvents(rows: Array<{ productSlug: string | null; event: string; _count: { _all: number } }>) {
   const products = new Map<string, { productSlug: string; views: number; addToCart: number }>();
   for (const row of rows) {
@@ -98,7 +103,12 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 180, timeWindow: "1 minute" } }
   }, async (request, reply) => {
     const input = analyticsEventSchema.parse(request.body);
-    const attribution = normalizeLilyAttribution(input.attribution);
+    const normalizedAttribution = normalizeLilyAttribution(input.attribution);
+    const attribution = {
+      laQr: analyticsAttribution(normalizedAttribution.laQr),
+      laCampaign: analyticsAttribution(normalizedAttribution.laCampaign),
+      laVariant: analyticsAttribution(normalizedAttribution.laVariant)
+    };
     const now = new Date();
     const occurredAtCandidate = new Date(input.occurredAt);
     const maxFutureSkewMs = 5 * 60_000;
