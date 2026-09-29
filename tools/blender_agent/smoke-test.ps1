@@ -20,17 +20,17 @@ function Invoke-JsonCommand {
         return $text | ConvertFrom-Json
     }
     catch {
-        throw "Saída não é JSON válido: $text"
+        throw "Saida nao é JSON valido: $text"
     }
 }
 
 Write-Host "1/5 status"
 $status = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "status")
-if (-not $status.ok) { throw "Bridge não respondeu." }
+if (-not $status.ok) { throw "Bridge nao respondeu." }
 
 Write-Host "2/5 viewport describe"
 $view = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "viewport-describe")
-if (-not $view.ok) { throw "Viewport não respondeu." }
+if (-not $view.ok) { throw "Viewport nao respondeu." }
 
 Write-Host "3/5 preset THREE_QUARTER"
 $preset = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "viewport-view", "THREE_QUARTER")
@@ -46,13 +46,13 @@ $imagePath = $capture.result.path
 $receiptPath = $capture.result.receipt
 
 if (-not (Test-Path -LiteralPath $imagePath)) {
-    throw "PNG não encontrado: $imagePath"
+    throw "PNG nao encontrado: $imagePath"
 }
 if ((Get-Item -LiteralPath $imagePath).Length -le 0) {
     throw "PNG vazio: $imagePath"
 }
 if (-not (Test-Path -LiteralPath $receiptPath)) {
-    throw "Receipt não encontrado: $receiptPath"
+    throw "Receipt nao encontrado: $receiptPath"
 }
 
 Write-Host "5/5 optional MCP adapter"
@@ -60,11 +60,11 @@ $mcpPython = Join-Path $RepoRoot ".runtime\blender-agent\mcp-venv\Scripts\python
 if (Test-Path -LiteralPath $mcpPython) {
     & $mcpPython -c "import tools.blender_agent.mcp_server; print('MCP adapter OK')"
     if ($LASTEXITCODE -ne 0) {
-        throw "MCP adapter não importou."
+        throw "MCP adapter nao importou."
     }
 }
 else {
-    Write-Host "MCP venv ainda não instalado; etapa ignorada."
+    Write-Host "MCP venv ainda nao instalado; etapa ignorada."
 }
 
 Write-Host ""
