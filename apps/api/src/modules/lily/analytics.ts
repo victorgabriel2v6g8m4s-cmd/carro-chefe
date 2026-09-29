@@ -58,6 +58,7 @@ const analyticsEventSchema = z.object({
   sessionId: z.string().uuid(),
   event: z.enum(LILY_ANALYTICS_EVENTS),
   consentVersion: z.literal(LILY_ANALYTICS_CONSENT_VERSION),
+  occurredAt: z.string().datetime({ offset: true }),
   path: pathSchema,
   attribution: lilyAttributionInputSchema.default({}),
   metadata: analyticsMetadataSchema
@@ -98,6 +99,14 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     const input = analyticsEventSchema.parse(request.body);
     const attribution = normalizeLilyAttribution(input.attribution);
+    const now = new Date();
+    const occurredAtCandidate = new Date(input.occurredAt);
+    const maxFutureSkewMs = 5 * 60_000;
+    const maxQueueAgeMs = 24 * 60 * 60_000;
+    const occurredAt = occurredAtCandidate.getTime() > now.getTime() + maxFutureSkewMs
+      || occurredAtCandidate.getTime() < now.getTime() - maxQueueAgeMs
+      ? now
+      : occurredAtCandidate;
 
     await lilyPrisma.lilyAnalyticsEvent.upsert({
       where: { eventId: input.eventId },
@@ -118,7 +127,8 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
         itemCount: input.metadata.itemCount ?? null,
         fulfillmentType: input.metadata.fulfillmentType ?? null,
         paymentMethod: input.metadata.paymentMethod ?? null,
-        metadataJson: JSON.stringify(input.metadata)
+        metadataJson: JSON.stringify(input.metadata),
+        occurredAt
       }
     });
 
@@ -132,12 +142,12 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
     const from = new Date(now.getTime() - query.days * 24 * 60 * 60 * 1000);
 
     const eventWhere = {
-      createdAt: { gte: from, lte: now },
+      occurredAt: { gte: from, lte: now },
       ...(query.campaign ? { laCampaign: query.campaign } : {})
     };
 
     const orderWhere = {
-      createdAt: { gte: from, lte: now },
+      occurredAt: { gte: from, lte: now },
       ...(query.campaign ? { laCampaign: query.campaign } : {}),
       ...(query.includeHomologation ? {} : { isHomologation: false })
     };
