@@ -268,6 +268,7 @@ function serializeGuestTrackingOrder(order: NonNullable<Awaited<ReturnType<typeo
     deliveryUpdatedAt: order.deliveryUpdatedAt,
     isHomologation: order.isHomologation,
     grandTotalCents: order.grandTotalCents,
+    whatsappUpdatesOptIn: order.whatsappUpdatesOptIn,
     createdAt: order.createdAt,
     routeEstimate: serializeLilyRouteEstimate(order.routeEstimate, {
       deliveryStatus: order.deliveryStatus,
@@ -569,6 +570,57 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       throw error;
     }
     return reply.code(201).send(serializeOrder(created, guestAccess?.token ?? null));
+  });
+
+  app.post("/api/v1/lily/orders/:id/whatsapp/opt-out", {
+    config: { rateLimit: { max: 12, timeWindow: "10 minutes" } }
+  }, async (request) => {
+    const { id } = z.object({ id: z.string().trim().min(1).max(120) }).parse(request.params);
+    const order = await lilyPrisma.lilyOrder.findUnique({ where: { id } });
+    if (!order) {
+      throw new ApiError(404, "Pedido não encontrado.", { code: "LILY_ORDER_NOT_FOUND" });
+    }
+
+    if (order.userId) {
+      const context = await requireLilySession(request);
+      if (context.user.id !== order.userId) {
+        throw new ApiError(404, "Pedido não encontrado.", { code: "LILY_ORDER_NOT_FOUND" });
+      }
+      requireLilyCsrf(request, context);
+    } else {
+      const supplied = request.headers["x-lily-order-token"];
+      if (typeof supplied !== "string" || !order.guestAccessTokenHash) {
+        throw new ApiError(404, "Pedido não encontrado.", { code: "LILY_ORDER_NOT_FOUND" });
+      }
+      const actualHash = hashGuestAccessToken(supplied);
+      if (!timingSafeStringEqual(actualHash, order.guestAccessTokenHash)) {
+        throw new ApiError(404, "Pedido não encontrado.", { code: "LILY_ORDER_NOT_FOUND" });
+      }
+    }
+
+    if (!order.whatsappUpdatesOptIn) {
+      return { enabled: false };
+    }
+
+    await lilyPrisma.$transaction([
+      lilyPrisma.lilyOrder.update({
+        where: { id },
+        data: { whatsappUpdatesOptIn: false }
+      }),
+      lilyPrisma.lilyWhatsAppNotification.updateMany({
+        where: {
+          orderId: id,
+          status: { in: ["pending", "failed"] }
+        },
+        data: {
+          status: "skipped",
+          lastErrorCode: "OPT_OUT",
+          lastErrorMessage: "Cliente desativou atualizações operacionais deste pedido."
+        }
+      })
+    ]);
+
+    return { enabled: false };
   });
 
   app.get("/api/v1/lily/public/orders/:id/tracking", {
