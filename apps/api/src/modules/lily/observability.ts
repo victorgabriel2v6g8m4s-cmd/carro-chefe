@@ -22,8 +22,9 @@ const DELIVERY_IN_PROGRESS = [
 ];
 
 export async function lilyObservabilityRoutes(app: FastifyInstance) {
-  app.get("/api/v1/lily/admin/observability/summary", async (request) => {
+  app.get("/api/v1/lily/admin/observability/summary", async (request, reply) => {
     await requireLilyStaff(request);
+    reply.header("Cache-Control", "no-store");
     const generatedAt = new Date();
 
     await lilyPrisma.$queryRawUnsafe("SELECT 1");
