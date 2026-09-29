@@ -73,6 +73,7 @@ function KitchenCard(props: {
     order.operationStatus === "waiting_payment"
     && order.financialStatus !== "paid";
   const finalKitchenStage = order.operationStatus === "ready_for_dispatch";
+  const printable = order.financialStatus === "paid" && ["preparing", "ready_for_dispatch"].includes(order.operationStatus);
 
   async function advance() {
     setBusy(true);
@@ -142,14 +143,24 @@ function KitchenCard(props: {
       <p>Informe este código ao entregador somente quando ele estiver no local de coleta.</p>
     </div>}
 
-    <button
-      className={finalKitchenStage ? "button ghost" : "button primary"}
-      type="button"
-      disabled={busy || blockedByPayment || finalKitchenStage}
-      onClick={() => void advance()}
-    >
-      {busy ? "Atualizando..." : actionLabel(order)}
-    </button>
+    <div className="kitchen-card-actions">
+      {printable && <Link
+        className="button ghost"
+        to={"/painel/cozinha/imprimir/" + order.id}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Imprimir comanda
+      </Link>}
+      <button
+        className={finalKitchenStage ? "button ghost" : "button primary"}
+        type="button"
+        disabled={busy || blockedByPayment || finalKitchenStage}
+        onClick={() => void advance()}
+      >
+        {busy ? "Atualizando..." : actionLabel(order)}
+      </button>
+    </div>
   </article>;
 }
 
