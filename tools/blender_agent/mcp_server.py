@@ -18,7 +18,8 @@ mcp = MCPServer(
         "Controle somente a sessão local do Blender Agent do Carro Chefe. "
         "Prefira ações semânticas; use eventos ui.* apenas quando necessário. "
         "Capture a viewport após mudanças visuais relevantes e crie checkpoints "
-        "antes de operações destrutivas. Use as ferramentas de workspace para consultar "
+        "antes de operações destrutivas. Ao iniciar uma nova etapa material da produção, "
+        "crie um stage com blender_history_start. Use as ferramentas de workspace para consultar "
         "abas antigas e as ferramentas de history para recuperar contexto por etapa, sem "
         "depender da memória da conversa."
     ),
@@ -97,16 +98,29 @@ def blender_workspace_describe(
 def blender_workspace_capture(
     workspaces: list[str] | None = None,
     target: str = "VIEW_3D",
+    area_type: str | None = None,
     shading: str | None = None,
     label: str = "workspace-capture-set",
+    captures: list[dict[str, Any]] | None = None,
 ) -> list[Image]:
-    """Captura várias abas/workspaces em uma operação e devolve todas as imagens ao modelo."""
-    result = _result(call("workspace.capture_set", {
-        "workspaces": workspaces,
-        "target": target,
-        "shading": shading,
+    """Captura várias abas/workspaces em uma operação e devolve todas as imagens ao modelo.
+
+    Use captures para um plano customizado por aba; caso contrário, workspaces/target/area_type/shading
+    definem um plano comum.
+    """
+    params: dict[str, Any] = {
         "label": sanitize_label(label, "workspace-capture-set"),
-    }))
+    }
+    if captures:
+        params["captures"] = captures
+    else:
+        params.update({
+            "workspaces": workspaces,
+            "target": target,
+            "area_type": area_type,
+            "shading": shading,
+        })
+    result = _result(call("workspace.capture_set", params))
     images: list[Image] = []
     for capture in result.get("captures", []):
         if capture.get("ok") and capture.get("path"):
