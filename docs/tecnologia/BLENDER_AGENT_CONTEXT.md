@@ -309,3 +309,8 @@ O script valida:
 Em 29/09/2026, o smoke test abriu duas imagens nomeadas para `Animation` e `Compositing`, porém ambas mostravam visualmente `Compositing`. A causa foi atribuída ao capture-set síncrono, que trocava o workspace e fotografava antes de o event loop concluir o redraw.
 
 Correção: capture-set passou a ser processado como job assíncrono por ticks, com validação de workspace/screen no momento exato da screenshot e manifesto v2. O smoke test agora prioriza `Animation` + `Compositing` quando disponíveis para reproduzir diretamente esse cenário.
+
+
+## Validação
+
+Em 29/09/2026, após a correção por timer-yield, o smoke multi-workspace foi validado pelo proprietário no Windows 10 + Blender 5.2 LTS: as capturas de Animation e Compositing passaram a representar workspaces diferentes corretamente e o auto-history/contexto concluiu sem erro.
