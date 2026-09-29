@@ -136,3 +136,4 @@ Entregue tecnicamente: focus trap, alvos de toque críticos 44 px, Configuraçõ
 - 11H: `ENTREGA_11H_WHATSAPP_ETAPAS_2026-09-29.md` — outbox WhatsApp operacional por etapa; CI/CodeQL aprovados e integrada pelo PR #99, homologação Meta real pendente.
 - 11I: `ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-09-29.md` — ingestão autoritativa, settlement ledger, matching txid+valor e worker de conciliação; CI/CodeQL aprovados e integrada pelo PR #102, homologação bancária real pendente.
 - 11J: `ENTREGA_11J_SLA_ALERTAS_COZINHA_2026-09-29.md` — SLA configurável da montagem e alertas visuais na fila da cozinha; CI/CodeQL aprovados e integrada pelo PR #104, parametrização/QA real pendentes.
+- 11K: `ENTREGA_11K_IMPRESSAO_COZINHA_2026-09-29.md` — comanda staff minimizada e impressão nativa do navegador; implementação candidata, gate pendente.
