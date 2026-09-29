@@ -16,6 +16,7 @@ const DEFAULT_POLL_INTERVAL_MS = 60_000;
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_LOOKBACK_MINUTES = 60;
 const OVERLAP_MS = 2 * 60_000;
+const MAX_PAGES_PER_WINDOW = 100;
 
 type PixReceived = {
   endToEndId: string;
@@ -35,6 +36,12 @@ let tokenCache: { accessToken: string; expiresAt: number } | null = null;
 
 function env(name: string) {
   return process.env[name]?.trim() || "";
+}
+
+function reconciliationError(code: string, message: string) {
+  const error = new Error(message) as Error & { code?: string };
+  error.code = code;
+  return error;
 }
 
 function safeErrorMessage(error: unknown) {
@@ -74,6 +81,7 @@ export function lilyPixAutoReconciliationConfiguration() {
     || (apiBaseUrl ? `${apiBaseUrl.replace(/\/+$/, "")}/oauth/token` : "");
   const receivedPath = env("COOKLILY_PIX_API_RECEIVED_PATH") || "/v2/pix";
   const pfxPath = env("COOKLILY_PIX_API_PFX_PATH");
+  const oauthBodyFormat = env("COOKLILY_PIX_API_OAUTH_BODY_FORMAT") || "form";
 
   const supported = provider === "disabled" || provider === SOURCE;
   const apiBaseUrlValid = Boolean(validHttpsUrl(apiBaseUrl));
@@ -92,6 +100,8 @@ export function lilyPixAutoReconciliationConfiguration() {
     clientSecretConfigured,
     pfxConfigured,
     receivedPathValid,
+    oauthBodyFormat,
+    oauthBodyFormatValid,
     ready: provider === SOURCE
       && supported
       && apiBaseUrlValid
@@ -99,7 +109,8 @@ export function lilyPixAutoReconciliationConfiguration() {
       && clientIdConfigured
       && clientSecretConfigured
       && pfxConfigured
-      && receivedPathValid,
+      && receivedPathValid
+      && oauthBodyFormatValid,
     pollIntervalMs: configuredNumber(
       "COOKLILY_PIX_RECONCILIATION_POLL_INTERVAL_MS",
       DEFAULT_POLL_INTERVAL_MS,
@@ -193,13 +204,20 @@ async function accessToken() {
   const basic = Buffer.from(
     `${env("COOKLILY_PIX_API_CLIENT_ID")}:${env("COOKLILY_PIX_API_CLIENT_SECRET")}`
   ).toString("base64");
-  const body = JSON.stringify({ grant_type: "client_credentials" });
+  const tokenInput = new URLSearchParams({ grant_type: "client_credentials" });
+  const scope = env("COOKLILY_PIX_API_OAUTH_SCOPE") || "pix.read";
+  if (scope) tokenInput.set("scope", scope);
+  const body = config.oauthBodyFormat === "json"
+    ? JSON.stringify(Object.fromEntries(tokenInput))
+    : tokenInput.toString();
 
   const response = await mtlsJsonRequest(oauthUrl, {
     method: "POST",
     headers: {
       Authorization: `Basic ${basic}`,
-      "Content-Type": "application/json"
+      "Content-Type": config.oauthBodyFormat === "json"
+        ? "application/json"
+        : "application/x-www-form-urlencoded"
     },
     body
   });
@@ -249,6 +267,42 @@ export function parsePixApiV2Received(input: unknown): PixReceived[] {
   });
 }
 
+export function parsePixApiV2Page(input: unknown) {
+  const root = input && typeof input === "object" ? input as Record<string, any> : null;
+  if (!root || !Array.isArray(root.pix)) {
+    throw reconciliationError("PIX_API_INVALID_PAYLOAD", "Pix API retornou página sem lista pix válida.");
+  }
+
+  const pagination = root.parametros?.paginacao;
+  const page = Number(pagination?.paginaAtual);
+  const pages = Number(pagination?.quantidadeDePaginas);
+  if (!Number.isInteger(page) || page < 0 || !Number.isInteger(pages) || pages < 0) {
+    throw reconciliationError("PIX_API_INVALID_PAGINATION", "Pix API retornou paginação inválida.");
+  }
+  if (pages > MAX_PAGES_PER_WINDOW) {
+    throw reconciliationError(
+      "PIX_API_PAGE_LIMIT_EXCEEDED",
+      "Pix API retornou mais páginas do que o limite seguro por janela."
+    );
+  }
+
+  const pix = parsePixApiV2Received(input);
+  if (pix.length !== root.pix.length) {
+    throw reconciliationError(
+      "PIX_API_INVALID_PIX_ROW",
+      "Pix API retornou ao menos um Pix recebido com campos financeiros inválidos."
+    );
+  }
+  if (pages === 0 && pix.length > 0) {
+    throw reconciliationError("PIX_API_INVALID_PAGINATION", "Pix API retornou Pix em paginação vazia.");
+  }
+  if (pages > 0 && page >= pages) {
+    throw reconciliationError("PIX_API_INVALID_PAGINATION", "Pix API retornou índice de página fora do intervalo.");
+  }
+
+  return { pix, page, pages };
+}
+
 async function fetchReceivedPixWindow(start: Date, end: Date) {
   const config = lilyPixAutoReconciliationConfiguration();
   if (!config.ready) return [] as PixReceived[];
@@ -257,7 +311,7 @@ async function fetchReceivedPixWindow(start: Date, end: Date) {
   const path = env("COOKLILY_PIX_API_RECEIVED_PATH") || "/v2/pix";
   const all: PixReceived[] = [];
 
-  for (let page = 0; page < 20; page += 1) {
+  for (let page = 0; page < MAX_PAGES_PER_WINDOW; page += 1) {
     const url = new URL(`${base}${path}`);
     url.searchParams.set("inicio", start.toISOString());
     url.searchParams.set("fim", end.toISOString());
@@ -268,13 +322,19 @@ async function fetchReceivedPixWindow(start: Date, end: Date) {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` }
     });
-    all.push(...parsePixApiV2Received(body));
+    const parsedPage = parsePixApiV2Page(body);
+    if (parsedPage.page !== page) {
+      throw reconciliationError("PIX_API_PAGE_MISMATCH", "Pix API retornou página diferente da solicitada.");
+    }
+    all.push(...parsedPage.pix);
 
-    const pages = Number(body?.parametros?.paginacao?.quantidadeDePaginas);
-    if (!Number.isFinite(pages) || page + 1 >= pages) break;
+    if (parsedPage.pages === 0 || page + 1 >= parsedPage.pages) return all;
   }
 
-  return all;
+  throw reconciliationError(
+    "PIX_API_PAGE_LIMIT_EXCEEDED",
+    "A janela de consulta atingiu o limite seguro de páginas sem conclusão."
+  );
 }
 
 async function insertSettlement(
@@ -318,7 +378,10 @@ export async function reconcileReceivedPix(
     where: {
       provider: "cooklily_pix",
       method: "pix",
-      providerReference: input.txid
+      OR: [
+        { providerPaymentId: input.txid },
+        { providerReference: input.txid }
+      ]
     },
     include: { order: true },
     take: 2
@@ -352,6 +415,24 @@ export async function reconcileReceivedPix(
           providerReference: input.endToEndId,
           note: "Pix recebido com txid correspondente, mas valor divergente.",
           reconciledBy: `provider:${source}`
+        }
+      });
+      await tx.lilyPaymentEvent.create({
+        data: {
+          paymentId: payment.id,
+          source: `provider:${source}`,
+          eventType: "payment.amount_mismatch",
+          providerEventId,
+          fromStatus: payment.status,
+          toStatus: payment.status,
+          payloadHash: input.payloadHash,
+          payloadJson: JSON.stringify({
+            txid: input.txid,
+            endToEndId: input.endToEndId,
+            expectedCents: payment.amountCents,
+            receivedCents: input.amountCents,
+            occurredAt: input.occurredAt.toISOString()
+          })
         }
       });
       return settlement;
@@ -478,7 +559,7 @@ export async function runPixAutoReconciliation() {
   const config = lilyPixAutoReconciliationConfiguration();
   const attemptAt = new Date();
   if (!config.ready) {
-    return { ready: false, received: 0, matched: 0, discrepant: 0, unmatched: 0 };
+    return { ready: false, received: 0, matched: 0, discrepant: 0, unmatched: 0, reviewRequired: 0 };
   }
 
   const state = await lilyPrisma.lilyPixReconciliationState.upsert({
@@ -496,12 +577,16 @@ export async function runPixAutoReconciliation() {
     let matched = 0;
     let discrepant = 0;
     let unmatched = 0;
+    let reviewRequired = 0;
 
     for (const pix of received) {
       const row = await reconcileReceivedPix(pix);
       if (row.matchStatus === "matched") matched += 1;
-      else if (row.matchStatus === "discrepant") discrepant += 1;
-      else if (["unmatched", "no_txid", "ambiguous"].includes(row.matchStatus)) unmatched += 1;
+      else {
+        reviewRequired += 1;
+        if (row.matchStatus === "discrepant") discrepant += 1;
+        else if (["unmatched", "no_txid", "ambiguous"].includes(row.matchStatus)) unmatched += 1;
+      }
     }
 
     await lilyPrisma.lilyPixReconciliationState.update({
@@ -513,7 +598,7 @@ export async function runPixAutoReconciliation() {
       }
     });
 
-    return { ready: true, received: received.length, matched, discrepant, unmatched };
+    return { ready: true, received: received.length, matched, discrepant, unmatched, reviewRequired };
   } catch (error) {
     await lilyPrisma.lilyPixReconciliationState.update({
       where: { source: SOURCE },
@@ -546,7 +631,8 @@ export function startLilyPixReconciliationWorker(log?: {
           received: result.received,
           matched: result.matched,
           discrepant: result.discrepant,
-          unmatched: result.unmatched
+          unmatched: result.unmatched,
+          reviewRequired: result.reviewRequired
         });
       }
     } catch (error) {
@@ -577,10 +663,20 @@ export async function lilyPixReconciliationRoutes(app: FastifyInstance) {
     await requireLilyStaff(request);
     const config = lilyPixAutoReconciliationConfiguration();
     const state = await lilyPrisma.lilyPixReconciliationState.findUnique({ where: { source: SOURCE } });
-    const [unmatched, discrepant, matched] = await Promise.all([
+    const reviewStatuses = [
+      "unmatched",
+      "no_txid",
+      "ambiguous",
+      "discrepant",
+      "duplicate_payment",
+      "late_payment",
+      "race_lost"
+    ];
+    const [unmatched, discrepant, matched, reviewRequired] = await Promise.all([
       lilyPrisma.lilyPixSettlement.count({ where: { matchStatus: { in: ["unmatched", "no_txid", "ambiguous"] } } }),
       lilyPrisma.lilyPixSettlement.count({ where: { matchStatus: "discrepant" } }),
-      lilyPrisma.lilyPixSettlement.count({ where: { matchStatus: "matched" } })
+      lilyPrisma.lilyPixSettlement.count({ where: { matchStatus: "matched" } }),
+      lilyPrisma.lilyPixSettlement.count({ where: { matchStatus: { in: reviewStatuses } } })
     ]);
 
     return {
@@ -601,7 +697,7 @@ export async function lilyPixReconciliationRoutes(app: FastifyInstance) {
         lastErrorCode: state.lastErrorCode,
         lastErrorMessage: state.lastErrorMessage
       } : null,
-      settlements: { unmatched, discrepant, matched }
+      settlements: { unmatched, discrepant, matched, reviewRequired }
     };
   });
 
