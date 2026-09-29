@@ -29,6 +29,19 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn('event_simulate("ESC"', source)
         self.assertIn("first_interval=0.75", source)
 
+    def test_viewport_capture_uses_blender_window_screenshot(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("window.screenshot(region=region_rect)", source)
+        self.assertIn("imbuf.write(image", source)
+        self.assertIn('safe_runtime_path("viewports"', source)
+        self.assertIn('safe_runtime_path("receipts"', source)
+
+    def test_viewport_presets_use_context_override(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("bpy.context.temp_override", source)
+        self.assertIn("bpy.ops.view3d.view_axis", source)
+        self.assertIn("THREE_QUARTER", source)
+
     def test_bridge_binds_through_loopback_constant(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("(DEFAULT_HOST, port)", source)
