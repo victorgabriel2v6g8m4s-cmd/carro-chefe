@@ -179,6 +179,20 @@ jobs:
             exit 1
           }
 
+      - name: Regress Windows path quoting with spaces
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $fakeDir = Join-Path $PWD ".runtime\Fake Blender Path"
+          New-Item -ItemType Directory -Force -Path $fakeDir | Out-Null
+          $fakeExe = Join-Path $fakeDir "blender.exe"
+          New-Item -ItemType File -Force -Path $fakeExe | Out-Null
+          $output = & powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -BlenderExe $fakeExe -DryRun | Out-String
+          Write-Host $output
+          if ($output -notmatch 'Args:\s+--enable-event-simulate --python ".+blender_bridge\.py"') {
+            throw "Launcher não preservou aspas no caminho do bridge."
+          }
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest
