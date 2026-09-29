@@ -238,7 +238,7 @@ Limitação consciente da primeira fase:
 - [x] omitir telefone/endereço da API da cozinha;
 - [ ] QA real em tablet/celular;
 - [x] SLA configurável da etapa de montagem + alertas visuais — 11J integrada/validada;
-- [ ] impressão;
+- [x] impressão via comanda dedicada do navegador — 11K candidata, gate pendente;
 - [x] integração inicial com a etapa logística: ao ficar pronto para despacho, pedido de entrega entra em `waiting_courier`;
 - [ ] QA real em operação de cozinha + entregador.
 
@@ -418,6 +418,27 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11I_CONCILIACAO_PIX_AUTOMATICA_2026-
 - [ ] QA real em tablet/celular.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11J_SLA_ALERTAS_COZINHA_2026-09-29.md`.
+
+### 11K — impressão da cozinha
+
+**Status:** implementação candidata em `feat/lily-entrega-11k-impressao-cozinha`; gate CI/CodeQL pendente.
+
+- [x] contrato de comanda separado/minimizado;
+- [x] endpoint staff `/api/v1/lily/admin/kitchen/orders/:id/print`;
+- [x] bloqueio antes de pagamento + liberação para produção;
+- [x] ausência de telefone/endereço/códigos logísticos;
+- [x] sabores reduzidos somente a nomes;
+- [x] página dedicada `/painel/cozinha/imprimir/:id`;
+- [x] botão de impressão somente nos estados aptos;
+- [x] impressão nativa do navegador/sistema operacional;
+- [x] CSS `@media print` sem impor largura/modelo de papel;
+- [x] impressão não altera status nem gera evento operacional;
+- [x] testes de autorização, privacidade e readiness;
+- [ ] gate CI/CodeQL;
+- [ ] QA em PDF e impressora real;
+- [ ] integração de hardware específica somente se o equipamento futuro exigir.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_11K_IMPRESSAO_COZINHA_2026-09-29.md`.
 
 ## Sincronizações paralelas
 
