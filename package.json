@@ -20,7 +20,7 @@
     "build:site": "vite build --config apps/site/vite.config.ts",
     "build:qr": "vite build --config apps/qr_manipulator/vite.config.ts",
     "check": "npm run db:generate && npm run db:validate && tsc --noEmit -p tsconfig.json",
-    "test": "npm run db:generate && npm run test:legacy && npm run test:tool-health && vitest run --config vitest.config.ts",
+    "test": "npm run db:generate && npm run test:legacy && npm run test:tool-health && npm run test:lily-budget && vitest run --config vitest.config.ts",
     "test:legacy": "npm --prefix planejamento test",
     "test:tool-health": "node --test tools/tool-health/*.test.mjs",
     "test:watch": "vitest",
@@ -43,7 +43,7 @@
     "supervisor:install": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/install-startup.ps1 -StartNow",
     "supervisor:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/uninstall-startup.ps1",
     "dev:lily": "vite --config apps/lily_acai/vite.config.ts",
-    "build:lily": "vite build --config apps/lily_acai/vite.config.ts",
+    "build:lily": "vite build --config apps/lily_acai/vite.config.ts && node tools/lily-build-budget.mjs",
     "db:generate:core": "prisma generate",
     "db:generate:lily": "prisma generate --config packages/lily-database/prisma.config.ts",
     "db:validate:core": "prisma validate",
@@ -52,7 +52,8 @@
     "db:migrate:lily": "prisma migrate dev --config packages/lily-database/prisma.config.ts",
     "db:deploy:core": "prisma migrate deploy",
     "db:deploy:lily": "prisma migrate deploy --config packages/lily-database/prisma.config.ts",
-    "db:studio:lily": "prisma studio --config packages/lily-database/prisma.config.ts"
+    "db:studio:lily": "prisma studio --config packages/lily-database/prisma.config.ts",
+    "test:lily-budget": "node --test tools/lily-build-budget.test.mjs"
   },
   "engines": {
     "node": ">=20"
