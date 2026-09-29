@@ -101,7 +101,7 @@ _SCULPT_TOOL_IDS = {
     "CREASE": "builtin_brush.Crease",
     "SNAKE_HOOK": "builtin_brush.Snake Hook",
 }
-_SCULPT_STROKE_MODES = {"NORMAL", "INVERT", "SMOOTH", "ERASE"}
+_SCULPT_STROKE_MODES = {"NORMAL", "INVERT", "SMOOTH", "ERASE", "MASK"}
 
 
 @dataclass
@@ -1255,10 +1255,12 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
         kwargs["override_location"] = True
     if "ignore_background_click" in available:
         kwargs["ignore_background_click"] = True
-    if "brush_toggle" in available and mode in {"SMOOTH", "ERASE"}:
+    if "brush_toggle" in available and mode in {"SMOOTH", "ERASE", "MASK"}:
         kwargs["brush_toggle"] = mode
     elif "brush_toggle" not in available and mode in {"SMOOTH", "ERASE"}:
         kwargs["mode"] = mode
+    elif mode == "MASK":
+        raise RuntimeError("esta versao do Blender nao expoe brush_toggle=MASK para sculpt.stroke")
 
     with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
         result = operator(**kwargs)
