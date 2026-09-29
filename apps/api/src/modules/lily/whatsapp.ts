@@ -202,6 +202,21 @@ export async function processLilyWhatsAppQueue(limit = 20) {
   }
 
   const now = new Date();
+  const staleProcessingBefore = new Date(now.getTime() - 5 * 60_000);
+  await lilyPrisma.lilyWhatsAppNotification.updateMany({
+    where: {
+      status: "processing",
+      updatedAt: { lte: staleProcessingBefore },
+      attempts: { lt: MAX_ATTEMPTS }
+    },
+    data: {
+      status: "failed",
+      nextAttemptAt: now,
+      lastErrorCode: "STALE_PROCESSING",
+      lastErrorMessage: "Processamento anterior interrompido; reprogramado automaticamente."
+    }
+  });
+
   const candidates = await lilyPrisma.lilyWhatsAppNotification.findMany({
     where: {
       status: { in: ["pending", "failed"] },
