@@ -42,6 +42,15 @@ ALLOWED_ACTIONS = {
     "viewport.frame_all",
     "viewport.set_shading",
     "viewport.capture",
+    "workspace.list",
+    "workspace.describe",
+    "workspace.capture_set",
+    "history.stage.create",
+    "history.stage.list",
+    "history.stage.activate",
+    "history.stage.describe",
+    "history.search",
+    "history.note",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
