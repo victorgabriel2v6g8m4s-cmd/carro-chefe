@@ -146,6 +146,23 @@ O runtime seleciona o perfil por complexidade antes da execução: tarefas rotin
 8. A Central mantém auditoria append-only e publica atualizações por `GET /api/v1/events` (SSE).
 9. Orientações do proprietário chegam por `POST /api/v1/intents`; cada agente deve trabalhar somente na execução criada para si e não reclassificar silenciosamente o comando.
 
+
+### 7.1 Checkpoint de execução obrigatório
+
+Toda tarefa longa, multi-etapa, sujeita a timeout/polling, ou que altere repositório/infraestrutura deve manter um **checkpoint persistente no Git** em `docs/execution-checkpoints/<task-slug>.md`.
+
+Regras:
+
+1. **O chat não é fonte de verdade de execução.** Após interrupção, timeout, `stream recovery polling timed out`, troca de agente ou retomada em outro chat, nunca inferir conclusão apenas pela última mensagem exibida.
+2. **Antes de retomar**, ler o checkpoint aplicável e confrontá-lo com o estado real do repositório: branch/base, HEAD, commits, diff, PRs, migrations, arquivos, CI/CodeQL e demais gates. Se houver divergência, o Git e os serviços autoritativos vencem e o checkpoint deve ser corrigido antes de continuar.
+3. **Atualizar o checkpoint após cada marco durável**, incluindo pelo menos: commit relevante, migration/schema, abertura/alteração de PR, resultado de testes/CI/CodeQL, merge, deploy/homologação ou descoberta de bloqueio. Também atualizar antes de uma operação longa que possa ser interrompida.
+4. Registrar somente fatos persistidos/verificados. Trabalho apenas planejado deve ficar em `pending`/pendências; trabalho em memória ou ainda não commitado nunca pode aparecer como concluído.
+5. O checkpoint deve conter, no mínimo: tarefa/entrega, responsável, estado, branch, base branch, base SHA verificado, HEAD verificado, PRs, entregas concluídas, trabalho em andamento, testes/gates e respectivos IDs/status, migrations, bloqueios/riscos, dependências de homologação, última verificação e **próxima ação exata**.
+6. Em caso de execução interrompida sem confirmação do último passo, marcar o estado como `interrupted/unknown` e revalidar efeitos colaterais antes de repetir qualquer escrita.
+7. Tarefas paralelas usam arquivos de checkpoint separados para evitar sobrescrita. Ao concluir, o checkpoint permanece como registro histórico com estado `completed` ou `merged`.
+8. O formato e o procedimento canônicos estão em `docs/execution-checkpoints/README.md`.
+
+
 Mudanças permitidas pela fila: criar/editar tarefa, marco, decisão, risco, item de compra e nota. Exclusões permanentes não são suportadas; use status `cancelled` com justificativa para preservar auditoria.
 
 ## 8. Priorização
