@@ -1045,16 +1045,7 @@ def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
     elif not any(area.type == "VIEW_3D" for area in window.screen.areas):
         target_workspace = bpy.data.workspaces.get("Sculpting") or bpy.data.workspaces.get("Layout")
         if target_workspace is None:
-            target_workspace = next(
-                (
-                    workspace
-                    for workspace in bpy.data.workspaces
-                    if any(area.type == "VIEW_3D" for area in workspace.screens[0].areas)
-                ),
-                None,
-            )
-        if target_workspace is None:
-            raise RuntimeError("nenhum workspace com VIEW_3D disponivel para Sculpt")
+            raise RuntimeError("workspaces Sculpting/Layout nao existem e o workspace atual nao possui VIEW_3D")
         window.workspace = target_workspace
         _redraw_window()
 
