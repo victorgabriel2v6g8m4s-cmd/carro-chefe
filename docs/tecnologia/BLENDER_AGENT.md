@@ -72,7 +72,7 @@ Objetivo: tornar o loop observação -> ação -> observação automático.
 - [x] presets `FRONT`, `RIGHT`, `LEFT`, `TOP`, `BOTTOM`, `BACK`, `CAMERA` e `THREE_QUARTER`;
 - [x] shading previsível;
 - [x] CLI `viewport-capture-set` para frente/lateral/topo/3-4;
-- [ ] smoke test real das imagens geradas no Windows 10/Blender 5.2 LTS;
+- [x] smoke test real das imagens geradas no Windows 10/Blender 5.2 LTS, confirmado pelo proprietário em 29/09/2026;
 - [x] adaptador MCP stdio para entregar a captura como conteúdo de imagem ao modelo;
 - [ ] smoke test da conexão MCP no ambiente local do proprietário;
 - [ ] grade comparativa referência vs captura/render.
@@ -83,7 +83,7 @@ Critério de pronto: o agente recebe imagem atualizada após cada lote sem inter
 
 - **29/09/2026 — primeiro smoke real:** bridge, descrição da viewport e preset 3/4 funcionaram; a captura foi solicitada, mas o PowerShell 5.1 corrompeu o caminho Unicode retornado pela CLI (`Área de Trabalho` -> representação inválida) e o teste reportou falsamente que o PNG não existia.
 - **Correção:** JSON da CLI passou a ser ASCII-safe com escapes Unicode; scripts PowerShell foram restringidos a ASCII e receberam teste de regressão.
-- **Próxima validação:** repetir apenas o `smoke-test.ps1 -OpenImage`; não é necessário mudar o diretório do repositório.
+- **Segundo smoke real:** após a correção Unicode, `smoke-test.ps1 -OpenImage` foi confirmado como funcionando perfeitamente pelo proprietário; captura e receipt V0.2 estão validados na baseline Windows 10 + Blender 5.2 LTS.
 
 ### V0.2.1 — Contexto persistente e auto-history
 
