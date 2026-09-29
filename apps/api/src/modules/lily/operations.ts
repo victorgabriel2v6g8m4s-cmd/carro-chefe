@@ -8,6 +8,8 @@ import {
   lilyOrderSecurityCode
 } from "./logistics-codes";
 import { enqueueLilyWhatsAppStage, type LilyWhatsAppStage } from "./whatsapp";
+import { getLilyOperationalSettings } from "./fulfillment";
+import { lilyKitchenPreparationSla } from "./operational-sla";
 
 const idSchema = z.string().trim().min(1).max(120);
 const noteSchema = z.object({
@@ -53,7 +55,7 @@ function nextOperationStatus(order: {
   });
 }
 
-function serializeKitchenOrder(order: any) {
+function serializeKitchenOrder(order: any, kitchenPreparationSlaMinutes: number | null | undefined, now = new Date()) {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -72,6 +74,7 @@ function serializeKitchenOrder(order: any) {
         ? lilyOrderSecurityCode(order.id, "pickup")
         : null,
     createdAt: order.createdAt,
+    sla: lilyKitchenPreparationSla(order, kitchenPreparationSlaMinutes, now),
     items: order.items.map((item: any) => ({
       id: item.id,
       productName: item.productNameSnapshot,
@@ -105,21 +108,32 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
       limit: z.coerce.number().int().min(1).max(200).default(100)
     }).parse(request.query);
 
-    const orders = await lilyPrisma.lilyOrder.findMany({
-      where: query.includeFinished
-        ? {}
-        : { operationStatus: { in: ["received", "waiting_payment", "preparing", "ready_for_dispatch"] } },
-      include: operationInclude,
-      orderBy: [
-        { operationUpdatedAt: "asc" },
-        { createdAt: "asc" }
-      ],
-      take: query.limit
-    });
+    const [orders, settings] = await Promise.all([
+      lilyPrisma.lilyOrder.findMany({
+        where: query.includeFinished
+          ? {}
+          : { operationStatus: { in: ["received", "waiting_payment", "preparing", "ready_for_dispatch"] } },
+        include: operationInclude,
+        orderBy: [
+          { operationUpdatedAt: "asc" },
+          { createdAt: "asc" }
+        ],
+        take: query.limit
+      }),
+      getLilyOperationalSettings()
+    ]);
+    const now = new Date();
+    const serializedOrders = orders.map((order) =>
+      serializeKitchenOrder(order, settings.kitchenPreparationSlaMinutes, now)
+    );
 
     return {
-      orders: orders.map(serializeKitchenOrder),
-      statuses: LILY_OPERATION_STATUSES
+      orders: serializedOrders,
+      statuses: LILY_OPERATION_STATUSES,
+      sla: {
+        kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes,
+        overdue: serializedOrders.filter((order) => order.sla?.status === "overdue").length
+      }
     };
   });
 
@@ -130,10 +144,13 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const input = noteSchema.parse(request.body ?? {});
 
-    const current = await lilyPrisma.lilyOrder.findUnique({
-      where: { id },
-      include: operationInclude
-    });
+    const [current, settings] = await Promise.all([
+      lilyPrisma.lilyOrder.findUnique({
+        where: { id },
+        include: operationInclude
+      }),
+      getLilyOperationalSettings()
+    ]);
     if (!current) throw new ApiError(404, "Pedido não encontrado.");
 
     const next = nextOperationStatus(current);
@@ -217,6 +234,6 @@ export async function lilyOperationsRoutes(app: FastifyInstance) {
       ...(opensDeliveryQueue ? { deliveryStatus: "waiting_courier" } : {})
     });
 
-    return serializeKitchenOrder(updated);
+    return serializeKitchenOrder(updated, settings.kitchenPreparationSlaMinutes);
   });
 }
