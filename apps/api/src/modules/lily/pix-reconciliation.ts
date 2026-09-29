@@ -89,7 +89,9 @@ export function lilyPixAutoReconciliationConfiguration() {
   const clientIdConfigured = Boolean(env("COOKLILY_PIX_API_CLIENT_ID"));
   const clientSecretConfigured = Boolean(env("COOKLILY_PIX_API_CLIENT_SECRET"));
   const pfxConfigured = Boolean(pfxPath && existsSync(pfxPath));
-  const receivedPathValid = /^\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/.test(receivedPath);
+  const receivedPathValid = /^\/[A-Za-z0-9._~!  const receivedPathValid = /^\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/.test(receivedPath);
+'()*+,;=:@%/-]+$/.test(receivedPath);
+  const oauthBodyFormatValid = oauthBodyFormat === "form" || oauthBodyFormat === "json";
 
   return {
     provider,
