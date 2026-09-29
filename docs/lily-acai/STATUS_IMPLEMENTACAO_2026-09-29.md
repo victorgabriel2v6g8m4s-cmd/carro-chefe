@@ -220,35 +220,42 @@ Pendente apenas de parametrização/homologação operacional:
 - definir o número real de minutos com Operações;
 - QA real em tablet/celular.
 
-### 8. Impressão da cozinha — CANDIDATO EM VALIDAÇÃO
+### 8. Impressão da cozinha — VALIDADA E INTEGRADA
 
-Branch: `feat/lily-entrega-11k-impressao-cozinha`.
+PR #106 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `80da3aa2e9321b106f44a99bfed3236344a7dd77`;
+- CI `36628488151`: success;
+- CodeQL `36628488179`: success;
+- merge SHA `56a4884abd491df66a14e9db96772b9dd0da7a03`.
 
 Implementado:
 
 - comanda staff própria e minimizada;
 - emissão somente após pagamento/liberação para produção;
-- sem telefone/endereço/códigos logísticos;
+- sem telefone/endereço/códigos logísticos/status internos;
 - página dedicada de prévia;
 - impressão nativa do navegador;
 - CSS de impressão sem assumir hardware/papel;
 - impressão sem efeitos colaterais de status;
 - testes de autorização/privacidade/readiness.
 
-Ainda falta:
+Pendente apenas de homologação operacional:
 
-- CI/CodeQL do SHA final;
 - QA de impressão em PDF;
-- QA em equipamento real quando disponível.
+- QA em impressora real quando disponível;
+- integração de hardware específica somente se o equipamento futuro exigir.
 
 ## Ordem de execução atualizada
 
-1. definir/homologar a instituição recebedora da 11I;
-2. homologar 11G/11H com chaves/contas externas reais;
-3. definir com Operações o SLA real da cozinha e executar QA em tablet/celular;
-4. concluir gate técnico da 11K;
-5. executar QA operacional ponta a ponta em cozinha, cliente e courier;
-6. publicar somente SHA tecnicamente validado e registrar evidências de deploy.
+1. fazer deploy da canonical validada até a 11K;
+2. aplicar migrations pendentes da CookLily e validar saúde dos serviços;
+3. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
+4. definir com Operações o SLA real da cozinha e executar QA em tablet/celular;
+5. testar a comanda 11K em PDF e impressora real;
+6. executar QA operacional ponta a ponta em cozinha, cliente e courier antes de iniciar nova entrega.
 
 ## Regra de status
 
