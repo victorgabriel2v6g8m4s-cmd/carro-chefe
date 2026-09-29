@@ -23,6 +23,19 @@ import bpy
 import imbuf
 from mathutils import Vector
 
+from tools.blender_agent.history import (
+    attachment_output_path,
+    create_stage,
+    describe_stage,
+    ensure_stage,
+    get_active_stage_id,
+    list_stages,
+    record_event,
+    record_note,
+    search_events,
+    set_active_stage,
+)
+
 from tools.blender_agent.protocol import (
     DEFAULT_HOST,
     MAX_JSON_BYTES,
@@ -281,7 +294,7 @@ def _viewport_capture(params: dict[str, Any]) -> dict[str, Any]:
     filename = str(params.get("filename", f"viewport-{time.time_ns()}.png"))
     if not filename.lower().endswith(".png"):
         filename += ".png"
-    output = safe_runtime_path("viewports", filename)
+    output = attachment_output_path(filename)
 
     region_rect = (
         (int(region.x), int(region.y)),
@@ -317,7 +330,7 @@ def _viewport_capture(params: dict[str, Any]) -> dict[str, Any]:
         "scene": bpy.context.scene.name,
         "view": view,
     }
-    receipt_path = safe_runtime_path("receipts", f"{output.stem}.json")
+    receipt_path = attachment_output_path(f"{output.stem}.json")
     receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return {
