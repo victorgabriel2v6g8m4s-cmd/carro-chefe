@@ -177,23 +177,13 @@ Cada stroke aparece automaticamente na etapa ativa. A captura posterior feita pe
 Preparar:
 
 ```powershell
-python -m tools.blender_agent.client sculpt-prepare ^
-  --name Baguete_Base ^
-  --workspace Sculpting ^
-  --brush GRAB ^
-  --radius 70 ^
-  --strength 0.3
+python -m tools.blender_agent.client sculpt-prepare --name Baguete_Base --workspace Sculpting --brush GRAB --radius 70 --strength 0.3
 ```
 
 Stroke:
 
 ```powershell
-python -m tools.blender_agent.client sculpt-stroke ^
-  --points-json '[[0.44,0.50],[0.50,0.50],[0.56,0.48]]' ^
-  --brush GRAB ^
-  --radius 70 ^
-  --strength 0.3 ^
-  --label ajustar-silhueta
+python -m tools.blender_agent.client sculpt-stroke --points-json '[[0.44,0.50],[0.50,0.50],[0.56,0.48]]' --brush GRAB --radius 70 --strength 0.3 --label ajustar-silhueta
 ```
 
 Captura posterior:
