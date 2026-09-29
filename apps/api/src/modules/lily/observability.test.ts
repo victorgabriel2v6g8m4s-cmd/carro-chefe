@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import Fastify from "fastify";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp, SENSITIVE_LOG_REDACT_PATHS } from "../../app";
@@ -89,6 +90,18 @@ afterAll(async () => {
 });
 
 describe("CookLily Entrega 10A — observabilidade", () => {
+  it("aceita a configuração de redaction do logger em runtime", async () => {
+    const loggerApp = Fastify({
+      logger: {
+        redact: {
+          paths: [...SENSITIVE_LOG_REDACT_PATHS],
+          censor: "[REDACTED]"
+        }
+      }
+    });
+    await loggerApp.close();
+  });
+
   it("expõe request id e mantém lista explícita de headers sensíveis redatados", async () => {
     const response = await app.inject({
       method: "GET",
@@ -188,6 +201,7 @@ describe("CookLily Entrega 10A — observabilidade", () => {
     });
 
     expect(response.statusCode).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.json()).toMatchObject({
       database: { status: "ok" },
       orders: {
