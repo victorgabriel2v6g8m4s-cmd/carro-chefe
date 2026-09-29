@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Uso:
+  verify-sqlite-backup <arquivo.db> [label]
+
+Valida uma cópia isolada do backup SQLite:
+- arquivo regular e não vazio;
+- PRAGMA integrity_check = ok;
+- PRAGMA foreign_key_check sem violações;
+- tabela _prisma_migrations presente e legível.
+
+O arquivo original nunca é aberto para escrita.
+EOF
+}
+
+DB_PATH="${1:-}"
+LABEL="${2:-sqlite}"
+
+if [[ -z "${DB_PATH}" || "${DB_PATH}" == "-h" || "${DB_PATH}" == "--help" ]]; then
+  usage
+  [[ -n "${DB_PATH}" ]] && exit 0
+  exit 2
+fi
+
+command -v sqlite3 >/dev/null 2>&1 || {
+  echo "ERRO: sqlite3 não encontrado" >&2
+  exit 3
+}
+
+command -v sha256sum >/dev/null 2>&1 || {
+  echo "ERRO: sha256sum não encontrado" >&2
+  exit 3
+}
+
+[[ -f "${DB_PATH}" ]] || {
+  echo "ERRO: backup não existe: ${DB_PATH}" >&2
+  exit 4
+}
+
+[[ -s "${DB_PATH}" ]] || {
+  echo "ERRO: backup vazio: ${DB_PATH}" >&2
+  exit 4
+}
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TMP_DIR}"' EXIT
+VERIFY_DB="${TMP_DIR}/verify.db"
+
+cp -- "${DB_PATH}" "${VERIFY_DB}"
+
+INTEGRITY="$(sqlite3 -batch -noheader "${VERIFY_DB}" "PRAGMA query_only=ON; PRAGMA integrity_check;")"
+if [[ "${INTEGRITY}" != "ok" ]]; then
+  echo "ERRO: integrity_check falhou para ${LABEL}" >&2
+  printf '%s\n' "${INTEGRITY}" >&2
+  exit 5
+fi
+
+FK_OUTPUT="$(sqlite3 -batch -noheader "${VERIFY_DB}" "PRAGMA query_only=ON; PRAGMA foreign_key_check;")"
+if [[ -n "${FK_OUTPUT}" ]]; then
+  echo "ERRO: foreign_key_check encontrou violações em ${LABEL}" >&2
+  printf '%s\n' "${FK_OUTPUT}" >&2
+  exit 6
+fi
+
+HAS_MIGRATIONS="$(sqlite3 -batch -noheader "${VERIFY_DB}"   "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='_prisma_migrations';")"
+if [[ "${HAS_MIGRATIONS}" != "1" ]]; then
+  echo "ERRO: tabela _prisma_migrations ausente em ${LABEL}" >&2
+  exit 7
+fi
+
+MIGRATION_COUNT="$(sqlite3 -batch -noheader "${VERIFY_DB}"   "PRAGMA query_only=ON; SELECT COUNT(*) FROM \"_prisma_migrations\";")"
+
+BYTES="$(wc -c < "${DB_PATH}" | tr -d '[:space:]')"
+SHA256="$(sha256sum "${DB_PATH}" | awk '{print $1}')"
+
+echo "backup_verification=ok"
+echo "label=${LABEL}"
+echo "path=${DB_PATH}"
+echo "bytes=${BYTES}"
+echo "sha256=${SHA256}"
+echo "migrations=${MIGRATION_COUNT}"
