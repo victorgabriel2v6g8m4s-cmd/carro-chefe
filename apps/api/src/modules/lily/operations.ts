@@ -60,8 +60,6 @@ function serializeKitchenPrintTicket(order: any) {
     id: order.id,
     orderNumber: order.orderNumber,
     createdAt: order.createdAt,
-    financialStatus: order.status,
-    operationStatus: order.operationStatus,
     fulfillmentType: order.fulfillmentType,
     isHomologation: order.isHomologation,
     customerNote: order.customerNote,
@@ -72,8 +70,9 @@ function serializeKitchenPrintTicket(order: any) {
       sizeMl: item.sizeMl,
       quantity: item.quantity,
       note: item.customerNote,
-      flavors: JSON.parse(item.flavorsSnapshotJson),
-      configuration: JSON.parse(item.configurationSnapshotJson),
+      flavors: (JSON.parse(item.flavorsSnapshotJson) as Array<{ name?: unknown }>)
+        .map((flavor) => ({ name: typeof flavor.name === "string" ? flavor.name : "" }))
+        .filter((flavor) => flavor.name.length > 0),
       addons: item.addons.map((addon: any) => ({
         name: addon.addonNameSnapshot,
         quantity: addon.quantity
