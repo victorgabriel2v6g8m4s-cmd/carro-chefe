@@ -83,3 +83,34 @@ export async function advanceKitchenOrder(
   );
   return parseResponse<KitchenOrder>(response);
 }
+
+
+export type KitchenPrintTicket = {
+  id: string;
+  orderNumber: string;
+  createdAt: string;
+  financialStatus: string;
+  operationStatus: KitchenOperationStatus;
+  fulfillmentType: "pickup" | "delivery";
+  isHomologation: boolean;
+  customerNote: string | null;
+  items: Array<{
+    id: string;
+    productName: string;
+    variantName: string;
+    sizeMl: number;
+    quantity: number;
+    note: string | null;
+    flavors: Array<{ id?: string; name?: string }>;
+    configuration: Record<string, unknown>;
+    addons: Array<{ name: string; quantity: number }>;
+  }>;
+};
+
+export async function getKitchenPrintTicket(id: string) {
+  const response = await fetch(
+    `/api/v1/lily/admin/kitchen/orders/${encodeURIComponent(id)}/print`,
+    { credentials: "same-origin" }
+  );
+  return parseResponse<{ ticket: KitchenPrintTicket }>(response);
+}
