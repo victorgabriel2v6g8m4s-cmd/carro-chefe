@@ -6,7 +6,7 @@
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
 - head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `c05df62bea69287fc5863d15c32003d7df96f054`
+- head_sha_verified: `b347240ab37ec806ac6f6799378c81f3e5fab0ac`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
 - pull_requests: PR #102 -> `cooklily/canonical` (draft); PR #103 -> `main` (gate temporário, não mergear)
 - last_verified_at: 2026-09-29
@@ -47,6 +47,8 @@ Auditoria do núcleo concluída e lacunas críticas corrigidas. Em andamento: fe
 - `.agent-policy/manifest.json` foi regenerado corretamente em `79fa794b1570bb1102370b81f659dd9225371a36`, após validar SHA-256 contra vetor conhecido.
 - No CI `36622044845`, `policy:check` e migrations passaram; Quality/Tool Health chegaram ao TypeScript e detectaram `oauthBodyFormatValid` não declarado.
 - Correção em `33151d4e1b756f6dcecffe96e4ef49bd2fc8bf9e`; guarda/teste de configuração em `c05df62bea69287fc5863d15c32003d7df96f054`.
+- No gate `36622255558`, política, migrations e geração Prisma passaram; o TypeScript detectou uma corrupção textual na regex de `receivedPathValid` introduzida durante a correção anterior (`TS1002`).
+- O bloco de validação foi substituído integralmente e restaurado em `b347240ab37ec806ac6f6799378c81f3e5fab0ac`.
 - Novo gate do HEAD resultante deste checkpoint é obrigatório. Não considerar a 11I pronta até CI e CodeQL verdes.
 
 ## Migrations
