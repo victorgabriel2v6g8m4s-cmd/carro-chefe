@@ -332,6 +332,12 @@ def build_parser() -> argparse.ArgumentParser:
         "before_name": a.before_name,
     }))
 
+    sculpt_finish = sub.add_parser("sculpt-finish", help="sai de Sculpt e restaura workspace anterior")
+    sculpt_finish.add_argument("--keep-workspace", action="store_true")
+    sculpt_finish.set_defaults(handler=lambda a: call("sculpt.finish", {
+        "restore_workspace": not a.keep_workspace,
+    }))
+
     window = sub.add_parser("ui-window", help="retorna tamanho da janela Blender")
     window.set_defaults(handler=lambda _a: call("ui.window"))
 
