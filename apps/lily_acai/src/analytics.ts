@@ -46,7 +46,7 @@ export type LilyAnalyticsMetadata = {
   addonCount?: number;
   itemCount?: number;
   fulfillmentType?: "pickup" | "delivery";
-  paymentMethod?: "pix" | "manual_pix" | "card";
+  paymentMethod?: "pix" | "manual_pix" | "credit_card";
 };
 
 type QueuedEvent = {
