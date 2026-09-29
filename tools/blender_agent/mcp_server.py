@@ -304,6 +304,14 @@ def blender_sculpt_iteration(
 
 
 @mcp.tool()
+def blender_sculpt_finish(restore_workspace: bool = True) -> dict[str, Any]:
+    """Sai de Sculpt Mode e restaura o workspace anterior quando possível."""
+    return _result(call("sculpt.finish", {
+        "restore_workspace": restore_workspace,
+    }))
+
+
+@mcp.tool()
 def blender_ui_orbit(dx: int = 120, dy: int = 60, steps: int = 18) -> dict[str, Any]:
     """Orbita a maior VIEW_3D usando o simulador de eventos interno do Blender."""
     return _result(call("ui.orbit", {"dx": dx, "dy": dy, "steps": steps}))
