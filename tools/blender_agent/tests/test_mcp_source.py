@@ -25,6 +25,15 @@ class McpAdapterSourceTests(unittest.TestCase):
             "blender_ui_orbit",
             "blender_checkpoint",
             "blender_action",
+            "blender_history_note",
+            "blender_history_search",
+            "blender_history_context",
+            "blender_history_use",
+            "blender_history_list",
+            "blender_history_start",
+            "blender_workspace_capture",
+            "blender_workspace_describe",
+            "blender_workspaces",
         ):
             self.assertIn(f"def {name}(", source)
         self.assertIn('Image(path=result["path"])', source)
