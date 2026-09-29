@@ -272,9 +272,36 @@ Implementado:
 
 Pendente apenas de deploy/QA real no ciclo de homologação.
 
+
+### 10. Entrega 09 — ANALYTICS FIRST-PARTY VALIDADA E INTEGRADA
+
+PR #110 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `c52a0fcda0d016f282ad513b4b91b0098fc0a75c`;
+- CI `36637864661`: success;
+- CodeQL `36637864655`: success;
+- merge SHA `3ca8b5aa66ad9c1831c65284cf781c5fc7d8eedd`.
+
+Implementado:
+
+- analytics first-party opcional;
+- zero transmissão após recusa;
+- fila pré-consentimento somente em memória;
+- allowlist estrita e minimização de dados;
+- atribuição campanha/QR/variante;
+- funil consentido de navegação/compra;
+- dashboard staff;
+- pedidos/receita usando `LilyOrder` como fonte autoritativa;
+- homologação excluída por padrão das métricas comerciais;
+- testes de privacidade, consentimento, idempotência e agregação.
+
+Pendente apenas de deploy/QA real e decisão jurídica de retenção.
+
 ## Ordem de execução atualizada
 
-1. continuar as Entregas 09–10 em branches isoladas, sem depender do deploy adiado;
+1. continuar a Entrega 10 em branch isolada, sem depender do deploy adiado;
 2. amanhã, fazer deploy/homologação da linha selecionada na VPS;
 3. aplicar migrations pelo deployer e validar saúde dos serviços;
 4. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
