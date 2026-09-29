@@ -270,6 +270,7 @@ function Landing() {
 
     setState("submitting");
     setMessage("");
+    trackLilyAnalytics("lead_submit", { surface: "landing" });
     try {
       const current = readCookLilyAttribution(window.location.search);
       const stored = readStoredCookLilyAttribution();
@@ -284,9 +285,11 @@ function Landing() {
       });
       form.reset();
       setState("success");
+      trackLilyAnalytics("lead_success", { surface: "landing" });
       setMessage("Cadastro recebido. Quando houver cupons e promoções CookLily, este WhatsApp poderá receber as novidades.");
     } catch (cause) {
       setState("error");
+      trackLilyAnalytics("lead_error", { surface: "landing" });
       setMessage(cause instanceof Error ? cause.message : "Não foi possível cadastrar agora.");
     }
   }
@@ -333,7 +336,7 @@ function Landing() {
     <section className="whatsapp-card">
       <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
       {trackingWhatsapp
-        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer">Acompanhar pelo WhatsApp</a>
+        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click", { surface: "landing" })}>Acompanhar pelo WhatsApp</a>
         : <Link className="button primary" to="/cardapio">Ver cardápio</Link>}
     </section>
   </Shell>;
