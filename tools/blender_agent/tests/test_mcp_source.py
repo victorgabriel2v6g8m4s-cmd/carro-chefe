@@ -25,6 +25,7 @@ class McpAdapterSourceTests(unittest.TestCase):
             "blender_ui_orbit",
             "blender_checkpoint",
             "blender_action",
+            "blender_sculpt_finish",
             "blender_sculpt_iteration",
             "blender_sculpt_stroke",
             "blender_sculpt_prepare",
