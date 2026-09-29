@@ -718,11 +718,12 @@ model LilyAnalyticsEvent {
   fulfillmentType String?
   paymentMethod String?
   metadataJson  String   @default("{}")
+  occurredAt    DateTime
   createdAt     DateTime @default(now())
 
-  @@index([event, createdAt])
-  @@index([sessionId, createdAt])
-  @@index([laCampaign, laVariant, createdAt])
-  @@index([laQr, createdAt])
-  @@index([productSlug, event, createdAt])
+  @@index([event, occurredAt])
+  @@index([sessionId, occurredAt])
+  @@index([laCampaign, laVariant, occurredAt])
+  @@index([laQr, occurredAt])
+  @@index([productSlug, event, occurredAt])
 }
