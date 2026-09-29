@@ -44,7 +44,7 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 
 ## Estado atual — V0.2 em validação
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, receipts JSON com SHA-256, testes unitários e integração no Tool Health.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, receipts JSON com SHA-256, adaptador MCP stdio que devolve a viewport como imagem diretamente ao modelo, testes unitários e integração no Tool Health.
 
 Maturidade: **em desenvolvimento**.
 
@@ -73,7 +73,8 @@ Objetivo: tornar o loop observação -> ação -> observação automático.
 - [x] shading previsível;
 - [x] CLI `viewport-capture-set` para frente/lateral/topo/3-4;
 - [ ] smoke test real das imagens geradas no Windows 10/Blender 5.2 LTS;
-- [ ] integração de ingestão automática dessas imagens pelo agente;
+- [x] adaptador MCP stdio para entregar a captura como conteúdo de imagem ao modelo;
+- [ ] smoke test da conexão MCP no ambiente local do proprietário;
 - [ ] grade comparativa referência vs captura/render.
 
 Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção humana.
@@ -138,6 +139,10 @@ Protocolo allowlisted para manter auditabilidade, testes e menor risco.
 ### ADR-BLENDER-003 — runtime antes de ativos oficiais
 
 Outputs automáticos ficam em `.runtime/blender-agent` para separar experimento de artefato aprovado.
+
+### ADR-BLENDER-004 — MCP stdio como fronteira do agente
+
+O bridge TCP continua privado em loopback e com protocolo estreito. Agentes se conectam por um servidor MCP stdio separado, que reaproveita a allowlist do bridge e pode devolver `Image` ao modelo. Isso evita abrir uma API HTTP pública do Blender e separa claramente controle local, transporte do agente e futura conexão por túnel privado.
 
 ## Pendências conhecidas
 
