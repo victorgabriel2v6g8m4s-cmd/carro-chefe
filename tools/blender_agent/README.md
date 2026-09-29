@@ -114,6 +114,65 @@ Cada imagem recebe um receipt auditável em:
 
 O receipt registra SHA-256, dimensões, cena e estado da viewport no momento da captura.
 
+## Integração direta com agentes via MCP
+
+Além do CLI, a ferramenta agora possui um servidor MCP stdio em `mcp_server.py`. Ele transforma o Blender Agent em ferramentas que um cliente MCP local pode chamar diretamente.
+
+Instalação isolada no Windows:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/install-mcp.ps1
+```
+
+O instalador cria:
+
+```text
+.runtime/blender-agent/mcp-venv/
+```
+
+e instala a versão pinada do MCP Python SDK. Ele **não altera automaticamente** o arquivo de configuração do Codex; ao final imprime o bloco sugerido para `%USERPROFILE%\.codex\config.toml`.
+
+Ferramentas MCP principais:
+
+| Tool MCP | Função |
+|---|---|
+| `blender_status` | verifica Blender/bridge |
+| `blender_scene_summary` | lê a cena atual |
+| `blender_viewport_describe` | lê estado da VIEW_3D |
+| `blender_viewport_set_view` | ajusta preset/shading |
+| `blender_viewport_capture` | captura a VIEW_3D e devolve a imagem diretamente ao modelo |
+| `blender_ui_orbit` | orbita a viewport |
+| `blender_checkpoint` | cria checkpoint |
+| `blender_action` | chama qualquer action segura/allowlisted do protocolo |
+
+O ponto importante da V0.2 é `blender_viewport_capture`: o MCP devolve a captura como conteúdo de imagem, portanto um modelo multimodal compatível consegue **ver a própria viewport** sem depender de captura manual do usuário.
+
+### Codex local
+
+A configuração stdio usa o Python do venv criado pelo instalador, módulo `tools.blender_agent.mcp_server` e `cwd` apontando para a raiz do repositório. O servidor depende do Blender Agent já aberto, porque ele se conecta ao arquivo de sessão local do bridge.
+
+Depois de configurar/reiniciar o cliente, o ciclo esperado é:
+
+```text
+agente
+  -> blender_status
+  -> blender_checkpoint
+  -> blender_action / blender_ui_orbit
+  -> blender_viewport_capture
+  -> modelo enxerga a imagem
+  -> decide o próximo ajuste
+  -> repete
+```
+
+### ChatGPT/Work
+
+Não exponha o bridge local do Blender diretamente na internet. Quando o ambiente ChatGPT/Work não puder iniciar um MCP stdio local, a integração remota deve usar um mecanismo privado suportado (por exemplo, Secure MCP Tunnel quando disponível para a conta/ambiente). O bridge Blender continua somente em `127.0.0.1`; quem faz a ponte é a camada MCP/túnel aprovada.
+
+Referências de integração:
+- https://developers.openai.com/docs/config-file/config-reference
+- https://developers.openai.com/api/docs/guides/agents-api/tools/mcp
+- https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
+
 ## Segurança
 
 - bind somente em `127.0.0.1` e porta efêmera por padrão;
@@ -146,7 +205,7 @@ python -m tools.blender_agent.client call scene.summary
 
 ## Limitações atuais
 
-- a captura do viewport e o conjunto multiângulo foram implementados, mas ainda precisam do smoke test visual no Blender 5.2 LTS real antes de considerar a V0.2 validada;
+- captura do viewport, capture-set e adaptador MCP com retorno de imagem foram implementados; ainda faltam smoke tests reais da imagem e da conexão MCP no ambiente do proprietário antes de considerar a V0.2 validada;
 - `event_simulate` exige `--enable-event-simulate`;
 - Sculpt depende do contexto/tool ativo;
 - checkpoint é criado, mas rollback automático ficará para a próxima fase;
