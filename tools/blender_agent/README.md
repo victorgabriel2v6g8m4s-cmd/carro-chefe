@@ -1,0 +1,102 @@
+# Blender Agent Bridge
+
+Integração local do Carro Chefe com Blender para permitir que agentes controlem modelagem 3D sem depender de Computer Use do sistema operacional.
+
+A ferramenta combina duas camadas: ações semânticas via Blender Python API e eventos de interface simulados pelo próprio Blender para clique, arrasto, middle-mouse e wheel quando a modelagem exigir interação parecida com mouse. A camada de UI usa `bpy.types.Window.event_simulate`; não existe automação genérica do mouse do Windows nesta versão.
+
+## Requisitos
+
+- Windows 10 ou superior para o fluxo principal do projeto;
+- Blender 4.3+ recomendado; Blender 5.x é o alvo de validação;
+- Python do sistema para o cliente CLI;
+- Blender iniciado com `--enable-event-simulate` para ações `ui.*`.
+- O core de protocolo/CLI é testável sem Blender em Linux, macOS e Windows.
+
+## Início rápido no Windows
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1
+```
+
+Se o Blender não estiver no PATH, passe `-BlenderExe`. Para abrir arquivo existente, passe `-BlendFile`. O bridge grava a sessão efêmera em `.runtime/blender-agent/session/bridge.json`; esse arquivo contém token local e nunca deve ser versionado.
+
+## Cliente
+
+```powershell
+python -m tools.blender_agent.client status
+python -m tools.blender_agent.client call scene.summary
+python -m tools.blender_agent.client call object.add_primitive --json '{"kind":"cube","name":"Baguete_Base","scale":[3.8,1.05,0.65]}'
+```
+
+Há um bootstrap de baguete em `examples/baguette_bootstrap.jsonl`.
+
+## Mouse/gestos dentro do Blender
+
+Primeiro consulte `python -m tools.blender_agent.client ui-window`. Depois use:
+
+```powershell
+python -m tools.blender_agent.client ui-click 640 420 --button left
+python -m tools.blender_agent.client ui-drag 620 430 760 360 --button middle
+python -m tools.blender_agent.client ui-drag 620 430 700 430 --button middle --shift
+python -m tools.blender_agent.client ui-wheel 3
+```
+
+As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fora dos limites reportados por `ui.window`.
+
+## Actions disponíveis
+
+| Action | Finalidade |
+|---|---|
+| `health` | status do bridge/Blender |
+| `scene.summary` / `object.list` | inventário da cena |
+| `object.select` | seleção por nome |
+| `object.add_primitive` / `object.add_mesh` | criação de geometria |
+| `object.transform` | localização, escala e rotação |
+| `object.duplicate` / `object.delete` | duplicação e remoção |
+| `object.shade_smooth` | smooth shading |
+| `modifier.add` | modifiers allowlisted |
+| `material.simple` | Principled BSDF básico |
+| `camera.orbit` | câmera determinística |
+| `render.still` | PNG em runtime |
+| `checkpoint.create` | cópia `.blend` em runtime |
+| `export.glb` / `export.obj` | export controlado |
+| `ui.window` / `ui.event` | estado/evento de UI allowlisted |
+| `ui.click` / `ui.drag` / `ui.wheel` | interação estilo mouse confinada ao Blender |
+
+## Segurança
+
+- bind somente em `127.0.0.1` e porta efêmera por padrão;
+- token aleatório por sessão;
+- sem action para `eval`, `exec`, shell ou Python arbitrário;
+- actions e eventos são allowlisted;
+- UI é simulada pelo próprio Blender, sem mouse global do Windows;
+- renders, exports e checkpoints ficam em `.runtime/blender-agent/`;
+- mesh customizado possui limites de tamanho;
+- a ferramenta não publica ativos nem sobrescreve automaticamente mídia oficial.
+
+Preferir ações semânticas. `ui.*` é fallback para Sculpt, seleção visual, viewport e outras operações contextuais.
+
+## Testes
+
+```bash
+python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
+```
+
+Smoke test real, após abrir o Blender pelo launcher:
+
+```powershell
+python -m tools.blender_agent.client status
+python -m tools.blender_agent.client ui-window
+python -m tools.blender_agent.client call scene.summary
+```
+
+## Limitações atuais
+
+- ainda não há captura automática do viewport acoplada ao loop do agente;
+- `event_simulate` exige `--enable-event-simulate`;
+- Sculpt depende do contexto/tool ativo;
+- checkpoint é criado, mas rollback automático ficará para a próxima fase;
+- OBJ varia por versão e usa fallback;
+- ainda não há addon/painel instalável nem reconhecimento visual automático da UI.
+
+Roadmap completo em `docs/tecnologia/BLENDER_AGENT.md`.
