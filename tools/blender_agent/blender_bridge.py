@@ -945,14 +945,17 @@ def _sculpt_active_tool_id() -> str | None:
 def _sculpt_status() -> dict[str, Any]:
     active = bpy.context.view_layer.objects.active
     unified = bpy.context.scene.tool_settings.unified_paint_settings
+    window = bpy.context.window
+    has_view3d = bool(window and any(area.type == "VIEW_3D" for area in window.screen.areas))
     return {
         "mode": bpy.context.mode,
+        "workspace": window.workspace.name if window else None,
         "active_object": active.name if active else None,
         "active_object_type": active.type if active else None,
         "brush_tool": _sculpt_active_tool_id(),
         "radius": int(getattr(unified, "size", 0)),
         "strength": float(getattr(unified, "strength", 0.0)),
-        "view": _viewport_description(),
+        "view": _viewport_description() if has_view3d else None,
         "allowed_brushes": sorted(_SCULPT_BRUSH_TYPES),
     }
 
@@ -1028,10 +1031,42 @@ def _sculpt_set_radius_strength(radius: int, strength: float) -> dict[str, Any]:
 
 
 def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+
+    requested_workspace = str(params.get("workspace", "")).strip()
+    if requested_workspace:
+        target_workspace = bpy.data.workspaces.get(requested_workspace)
+        if target_workspace is None:
+            raise ValueError(f"workspace Sculpt nao encontrado: {requested_workspace}")
+        window.workspace = target_workspace
+        _redraw_window()
+    elif not any(area.type == "VIEW_3D" for area in window.screen.areas):
+        target_workspace = bpy.data.workspaces.get("Sculpting") or bpy.data.workspaces.get("Layout")
+        if target_workspace is None:
+            target_workspace = next(
+                (
+                    workspace
+                    for workspace in bpy.data.workspaces
+                    if any(area.type == "VIEW_3D" for area in workspace.screens[0].areas)
+                ),
+                None,
+            )
+        if target_workspace is None:
+            raise RuntimeError("nenhum workspace com VIEW_3D disponivel para Sculpt")
+        window.workspace = target_workspace
+        _redraw_window()
+
     obj = _sculpt_select_mesh(str(params["name"]) if params.get("name") else None)
     window, area, region, _space, _region_3d = _sculpt_context()
     with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
         result = bpy.ops.object.mode_set(mode="SCULPT")
+        if result and "FINISHED" in result and bool(params.get("frame_selected", True)):
+            try:
+                bpy.ops.view3d.view_selected(use_all_regions=False)
+            except Exception:
+                pass
     if not result or "FINISHED" not in result:
         raise RuntimeError(f"nao foi possivel entrar em Sculpt Mode: {sorted(result or [])}")
 
@@ -1043,6 +1078,7 @@ def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
     _redraw_window()
     return {
         "object": obj.name,
+        "workspace": window.workspace.name,
         "mode": bpy.context.mode,
         **brush_info,
         **settings,
