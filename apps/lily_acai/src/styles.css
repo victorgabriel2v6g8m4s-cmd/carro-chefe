@@ -3082,3 +3082,241 @@ img, svg { max-width: 100%; }
 .courier-eta small {
   color: var(--cl-color-text-muted);
 }
+
+
+/* Entrega 08 — torre de controle de pedidos */
+.order-control-page {
+  width: min(1240px, calc(100% - 32px));
+}
+
+.order-control-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.order-control-kpis article {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 16px;
+  background: var(--cl-color-surface);
+}
+
+.order-control-kpis strong {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+}
+
+.order-control-kpis span {
+  color: var(--cl-color-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.order-control-kpis .warn {
+  border-color: var(--cl-color-accent);
+}
+
+.order-control-toolbar,
+.order-control-meta,
+.order-control-card > header,
+.order-control-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-control-toolbar {
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.order-control-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order-control-tabs button,
+.order-control-meta button {
+  min-height: 42px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 999px;
+  background: var(--cl-color-surface);
+  color: var(--cl-color-text);
+  font: inherit;
+  font-weight: 800;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.order-control-tabs button.active {
+  background: var(--cl-color-text);
+  color: var(--cl-color-surface);
+  border-color: var(--cl-color-text);
+}
+
+.order-control-filters {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.order-control-filters label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.order-control-filters select,
+.order-control-filters input {
+  min-height: 44px;
+}
+
+.order-control-meta {
+  margin: 12px 0;
+  color: var(--cl-color-text-muted);
+}
+
+.order-control-meta button {
+  min-height: 36px;
+  padding-inline: 12px;
+}
+
+.order-control-list {
+  display: grid;
+  gap: 12px;
+}
+
+.order-control-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 18px;
+  background: var(--cl-color-surface);
+}
+
+.order-control-card.needs-attention {
+  border-width: 2px;
+  border-color: var(--cl-color-accent);
+}
+
+.order-control-card > header > div:first-child,
+.order-control-total {
+  display: grid;
+  gap: 4px;
+}
+
+.order-control-total {
+  justify-items: end;
+  text-align: right;
+}
+
+.order-control-total small,
+.order-control-card > footer > small {
+  color: var(--cl-color-text-muted);
+}
+
+.order-control-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.order-control-status-grid > div,
+.order-control-sla {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--cl-color-surface-strong);
+}
+
+.order-control-status-grid small,
+.order-control-sla small {
+  color: var(--cl-color-text-muted);
+}
+
+.order-control-sla.overdue {
+  border: 1px solid var(--cl-color-accent);
+}
+
+.order-control-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.order-control-alerts span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--cl-color-surface-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.order-control-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .order-control-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .order-control-page {
+    width: calc(100% - 20px);
+  }
+
+  .order-control-kpis,
+  .order-control-status-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .order-control-toolbar,
+  .order-control-card > header,
+  .order-control-card > footer,
+  .order-control-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .order-control-filters,
+  .order-control-filters label,
+  .order-control-filters .button,
+  .order-control-actions,
+  .order-control-actions .button {
+    width: 100%;
+  }
+
+  .order-control-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .order-control-total {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .order-control-actions {
+    display: grid;
+  }
+}
+
+@media (max-width: 420px) {
+  .order-control-kpis,
+  .order-control-status-grid {
+    grid-template-columns: 1fr;
+  }
+}
