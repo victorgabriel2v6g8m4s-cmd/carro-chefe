@@ -257,6 +257,16 @@ else
   echo "lily_backup=not_applicable_database_missing"
 fi
 
+PHASE="backup-verify"
+bash deploy/scripts/verify-sqlite-backup "${CORE_BACKUP}" core
+CORE_BACKUP_SHA256="$(sha256sum "${CORE_BACKUP}" | awk '{print $1}')"
+if [[ -n "${LILY_BACKUP}" ]]; then
+  bash deploy/scripts/verify-sqlite-backup "${LILY_BACKUP}" lily
+  LILY_BACKUP_SHA256="$(sha256sum "${LILY_BACKUP}" | awk '{print $1}')"
+else
+  LILY_BACKUP_SHA256="not_applicable"
+fi
+
 PHASE="stop-service"
 systemctl stop "${SERVICE}"
 SERVICE_STOPPED=1
@@ -357,6 +367,10 @@ if [[ -f "${APP_DIR}/deploy/scripts/lily-promote-user" ]]; then
   install -m 0755 "${APP_DIR}/deploy/scripts/lily-promote-user" /usr/local/sbin/lily-promote-user
   echo "operator_tool=/usr/local/sbin/lily-promote-user"
 fi
+if [[ -f "${APP_DIR}/deploy/scripts/verify-sqlite-backup" ]]; then
+  install -m 0755 "${APP_DIR}/deploy/scripts/verify-sqlite-backup" /usr/local/sbin/carro-chefe-verify-backup
+  echo "operator_tool=/usr/local/sbin/carro-chefe-verify-backup"
+fi
 
 PHASE="evidence"
 EVIDENCE_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.evidence"
@@ -365,7 +379,10 @@ timestamp=${STAMP}
 previous_sha=${PREVIOUS_SHA}
 release_sha=${RELEASE_SHA}
 core_backup=${CORE_BACKUP}
+core_backup_sha256=${CORE_BACKUP_SHA256}
 lily_backup=${LILY_BACKUP:-not_applicable}
+lily_backup_sha256=${LILY_BACKUP_SHA256}
+backup_verification=ok
 nginx_config=${NGINX_CONF}
 service=${SERVICE}
 service_status=$(systemctl is-active "${SERVICE}")
