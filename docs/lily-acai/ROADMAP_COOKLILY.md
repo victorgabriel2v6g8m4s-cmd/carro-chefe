@@ -138,15 +138,22 @@ Ainda pendente:
 
 ## Entrega 08 — painel de pedidos
 
-**Status:** parcial.
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #108. Candidate SHA `62b0c6eca315c718c512b35a6274ba01f701c270`; CI `36635632700` e CodeQL `36635632701`: success. QA real permanece pendente.
 
-Já existe configuração de fulfillment e base operacional de pedidos. Ainda falta fechar a entrega como domínio operacional completo:
+Implementado:
 
-- fila operacional;
-- gestão explícita de status;
-- acompanhamento site/WhatsApp;
-- rotinas de operação;
-- integração posterior com ERP.
+- torre de controle unificada para financeiro, cozinha e logística;
+- filtros por estado, modalidade e número do pedido;
+- alertas objetivos de pagamento/cozinha/SLA/logística;
+- próxima ação roteada ao domínio responsável;
+- sem endpoint genérico de edição/forçamento de status;
+- conclusão auditável de retirada presencial paga e pronta;
+- MFA + CSRF + concorrência otimista na retirada;
+- minimização de PII no overview;
+- painel responsivo `/painel/pedidos`;
+- testes de RBAC, privacidade, SLA, filtros e transição de retirada.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_08_TORRE_CONTROLE_PEDIDOS_2026-09-29.md`.
 
 ## Entrega 09 — tracking e analytics first-party
 
