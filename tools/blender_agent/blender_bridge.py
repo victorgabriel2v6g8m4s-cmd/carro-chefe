@@ -343,6 +343,288 @@ def _viewport_capture(params: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _redraw_window() -> None:
+    window = bpy.context.window
+    if window is None or window.screen is None:
+        return
+    for area in window.screen.areas:
+        try:
+            area.tag_redraw()
+        except Exception:
+            pass
+    try:
+        bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+    except Exception:
+        pass
+
+
+def _workspace_by_name(name: str | None):
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    if not name:
+        return window.workspace
+    workspace = bpy.data.workspaces.get(str(name))
+    if workspace is None:
+        raise ValueError(f"workspace nao encontrado: {name}")
+    return workspace
+
+
+def _area_summary(area) -> dict[str, Any]:
+    space = area.spaces.active
+    summary: dict[str, Any] = {
+        "type": area.type,
+        "ui_type": getattr(area, "ui_type", None),
+        "x": int(area.x),
+        "y": int(area.y),
+        "width": int(area.width),
+        "height": int(area.height),
+    }
+    if area.type == "VIEW_3D":
+        region_3d = getattr(space, "region_3d", None)
+        summary["shading"] = getattr(getattr(space, "shading", None), "type", None)
+        summary["view_perspective"] = getattr(region_3d, "view_perspective", None) if region_3d else None
+        summary["view_distance"] = float(getattr(region_3d, "view_distance", 0.0)) if region_3d else None
+    elif area.type == "OUTLINER":
+        summary["display_mode"] = getattr(space, "display_mode", None)
+    elif area.type == "PROPERTIES":
+        summary["context"] = getattr(space, "context", None)
+    elif area.type == "TEXT_EDITOR":
+        text = getattr(space, "text", None)
+        summary["text"] = getattr(text, "name", None)
+    elif area.type == "IMAGE_EDITOR":
+        image = getattr(space, "image", None)
+        summary["image"] = getattr(image, "name", None)
+    elif area.type == "NODE_EDITOR":
+        summary["tree_type"] = getattr(space, "tree_type", None)
+        summary["shader_type"] = getattr(space, "shader_type", None)
+        summary["geometry_nodes_type"] = getattr(space, "geometry_nodes_type", None)
+    elif area.type == "DOPESHEET_EDITOR":
+        summary["mode"] = getattr(space, "mode", None)
+    return summary
+
+
+def _workspace_description_one(name: str | None = None) -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+
+    original = window.workspace
+    target = _workspace_by_name(name)
+    try:
+        if target != original:
+            window.workspace = target
+            _redraw_window()
+
+        scene = bpy.context.scene
+        active = bpy.context.view_layer.objects.active
+        selected = [obj.name for obj in bpy.context.selected_objects]
+        counts: dict[str, int] = {}
+        objects = []
+        for obj in scene.objects:
+            counts[obj.type] = counts.get(obj.type, 0) + 1
+            if len(objects) < 100:
+                objects.append({
+                    "name": obj.name,
+                    "type": obj.type,
+                    "visible": bool(obj.visible_get()),
+                    "hide_viewport": bool(obj.hide_viewport),
+                    "hide_render": bool(obj.hide_render),
+                })
+
+        areas = [_area_summary(area) for area in window.screen.areas]
+        return {
+            "workspace": target.name,
+            "current": target == original,
+            "screen": window.screen.name,
+            "scene": scene.name,
+            "mode": bpy.context.mode,
+            "active_object": active.name if active else None,
+            "selected_objects": selected,
+            "object_counts": counts,
+            "objects": objects,
+            "objects_truncated": max(0, len(scene.objects) - len(objects)),
+            "areas": areas,
+        }
+    finally:
+        if window.workspace != original:
+            window.workspace = original
+            _redraw_window()
+
+
+def _workspace_list() -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    current = window.workspace.name
+    return {
+        "current": current,
+        "workspaces": [
+            {
+                "name": workspace.name,
+                "current": workspace.name == current,
+            }
+            for workspace in bpy.data.workspaces
+        ],
+    }
+
+
+def _workspace_describe(params: dict[str, Any]) -> dict[str, Any]:
+    names = params.get("names")
+    if names is None and params.get("all"):
+        names = [workspace.name for workspace in bpy.data.workspaces]
+    if names is None:
+        name = params.get("name")
+        return {"workspaces": [_workspace_description_one(str(name) if name else None)]}
+    if not isinstance(names, list):
+        raise ValueError("names deve ser lista")
+    if len(names) > 20:
+        raise ValueError("limite de 20 workspaces por consulta")
+    return {"workspaces": [_workspace_description_one(str(name)) for name in names]}
+
+
+def _save_window_pixels(pixels, output: Path) -> dict[str, Any]:
+    height, width = int(pixels.shape[0]), int(pixels.shape[1])
+    if width <= 0 or height <= 0:
+        raise RuntimeError("captura retornou dimensoes invalidas")
+    image = imbuf.new((width, height))
+    try:
+        image.file_type = "PNG"
+        with image.with_buffer(write=True) as buffer:
+            buffer.cast("B")[:] = pixels.cast("B")
+        imbuf.write(image, filepath=str(output))
+    finally:
+        image.free()
+    if not output.exists() or output.stat().st_size <= 0:
+        raise RuntimeError("arquivo de captura nao foi gravado")
+    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    return {
+        "path": str(output),
+        "sha256": digest,
+        "width": width,
+        "height": height,
+    }
+
+
+def _capture_workspace_item(spec: dict[str, Any], index: int) -> dict[str, Any]:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+    workspace_name = spec.get("workspace")
+    workspace = _workspace_by_name(str(workspace_name) if workspace_name else None)
+    original = window.workspace
+
+    target = str(spec.get("target", "VIEW_3D")).upper()
+    if target not in {"VIEW_3D", "WINDOW", "AREA"}:
+        raise ValueError(f"target de captura invalido: {target}")
+
+    try:
+        if workspace != original:
+            window.workspace = workspace
+            _redraw_window()
+
+        if spec.get("shading"):
+            shading = str(spec["shading"]).upper()
+            if shading not in _VIEW_SHADING_TYPES:
+                raise ValueError(f"shading nao permitido: {shading}")
+            if any(area.type == "VIEW_3D" for area in window.screen.areas):
+                _viewport_set_shading({"type": shading})
+
+        _redraw_window()
+        region_rect = None
+        area_type = None
+
+        if target == "VIEW_3D":
+            _area, region, _space, _region_3d = _view3d_context()
+            region_rect = (
+                (int(region.x), int(region.y)),
+                (int(region.x + region.width), int(region.y + region.height)),
+            )
+            area_type = "VIEW_3D"
+        elif target == "AREA":
+            requested = str(spec.get("area_type", "VIEW_3D")).upper()
+            areas = [area for area in window.screen.areas if area.type == requested]
+            if not areas:
+                raise ValueError(f"area nao encontrada no workspace {workspace.name}: {requested}")
+            area = max(areas, key=lambda item: item.width * item.height)
+            region_rect = (
+                (int(area.x), int(area.y)),
+                (int(area.x + area.width), int(area.y + area.height)),
+            )
+            area_type = requested
+
+        filename = str(spec.get("filename") or f"{index:02d}-{workspace.name}-{target.lower()}.png")
+        if not filename.lower().endswith(".png"):
+            filename += ".png"
+        output = attachment_output_path(filename)
+        pixels = window.screenshot(region=region_rect) if region_rect else window.screenshot()
+        capture = _save_window_pixels(pixels, output)
+        capture.update({
+            "workspace": workspace.name,
+            "target": target,
+            "area_type": area_type,
+        })
+        return capture
+    finally:
+        if window.workspace != original:
+            window.workspace = original
+            _redraw_window()
+
+
+def _workspace_capture_set(params: dict[str, Any]) -> dict[str, Any]:
+    captures = params.get("captures")
+    if captures is None:
+        workspaces = params.get("workspaces")
+        if workspaces is None:
+            workspaces = [workspace.name for workspace in bpy.data.workspaces]
+        if not isinstance(workspaces, list):
+            raise ValueError("workspaces deve ser lista")
+        captures = [
+            {
+                "workspace": name,
+                "target": params.get("target", "VIEW_3D"),
+                "area_type": params.get("area_type"),
+                "shading": params.get("shading"),
+            }
+            for name in workspaces
+        ]
+    if not isinstance(captures, list):
+        raise ValueError("captures deve ser lista")
+    if len(captures) == 0 or len(captures) > 20:
+        raise ValueError("capture_set exige entre 1 e 20 capturas")
+
+    results: list[dict[str, Any]] = []
+    for index, spec in enumerate(captures, start=1):
+        if not isinstance(spec, dict):
+            raise ValueError("cada captura deve ser objeto")
+        try:
+            results.append({"ok": True, **_capture_workspace_item(spec, index)})
+        except Exception as exc:
+            results.append({
+                "ok": False,
+                "workspace": spec.get("workspace"),
+                "target": spec.get("target", "VIEW_3D"),
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+
+    label = sanitize_label(str(params.get("label", "workspace-capture-set")), "workspace-capture-set")
+    manifest_path = attachment_output_path(f"{label}.json")
+    manifest = {
+        "version": 1,
+        "action": "workspace.capture_set",
+        "created_ns": time.time_ns(),
+        "active_stage": get_active_stage_id(),
+        "captures": results,
+    }
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {
+        "manifest": str(manifest_path),
+        "captures": results,
+        "success_count": sum(1 for item in results if item.get("ok")),
+        "failure_count": sum(1 for item in results if not item.get("ok")),
+    }
+
+
 def _dismiss_modal_event() -> dict[str, Any]:
     window = bpy.context.window
     if window is None:
