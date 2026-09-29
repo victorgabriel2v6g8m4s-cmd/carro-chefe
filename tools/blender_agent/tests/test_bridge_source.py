@@ -49,10 +49,29 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("record_event(", source)
         self.assertIn("ensure_stage()", source)
 
+    def test_workspace_capture_yields_between_workspace_switch_and_screenshot(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("class WorkspaceCaptureJob", source)
+        self.assertIn("def _start_workspace_capture_job", source)
+        self.assertIn("def _advance_workspace_capture_job", source)
+        self.assertIn('job.phase = "settle_workspace"', source)
+        self.assertIn('job.phase = "settle_config"', source)
+        self.assertIn("_WORKSPACE_CAPTURE_SETTLE_TICKS", source)
+        self.assertIn('if _CAPTURE_JOB is not None:', source)
+
+    def test_workspace_capture_validates_requested_and_captured_workspace(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn('"workspace_requested": requested_workspace_name', source)
+        self.assertIn('"workspace_captured": workspace_after', source)
+        self.assertIn('"workspace_match": workspace_after == requested_workspace_name', source)
+        self.assertIn('"screen_captured": screen_after', source)
+        self.assertIn("workspace mismatch antes da captura", source)
+
     def test_workspace_capture_restores_original_workspace(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
-        self.assertIn("def _workspace_capture_set", source)
-        self.assertIn("window.workspace = original", source)
+        self.assertIn("original_workspace_name", source)
+        self.assertIn("restored_original_workspace", source)
+        self.assertIn('job.phase = "restore_settle"', source)
         self.assertIn("attachment_output_path", source)
         self.assertIn("workspace.capture_set", source)
 
