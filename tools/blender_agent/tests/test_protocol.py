@@ -45,6 +45,9 @@ class ProtocolTests(unittest.TestCase):
             "history.stage.describe",
             "history.search",
             "history.note",
+            "sculpt.status",
+            "sculpt.prepare",
+            "sculpt.stroke",
         ):
             request = normalize_request({
                 "version": 1,
