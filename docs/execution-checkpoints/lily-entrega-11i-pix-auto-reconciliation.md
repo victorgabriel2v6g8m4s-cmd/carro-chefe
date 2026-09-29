@@ -6,7 +6,7 @@
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1dcb08036c4e25b3bf29c5a45c8130f65fb1a761`
 - head_sha_verified_before_checkpoint_rule: `e85a29ed17d6147022a7e9d670da02140a8d36bc`
-- head_sha_verified: `5bbdc76af93fb6ad83ffa0348533c08d4953ebfe`
+- head_sha_verified: `c05df62bea69287fc5863d15c32003d7df96f054`
 - checkpoint_rule_commit: `9cec66fdd5fc1e3c07654638fe8c20c824077e4c`
 - pull_requests: PR #102 -> `cooklily/canonical` (draft); PR #103 -> `main` (gate temporário, não mergear)
 - last_verified_at: 2026-09-29
@@ -43,7 +43,10 @@ Auditoria do núcleo concluída e lacunas críticas corrigidas. Em andamento: fe
 
 - PR gate #103 disparou CI `36621455025` e CodeQL `36621455028` para o SHA `21442a24d77136ca7f39add2b06a39190f81b4cc`.
 - Quality Node 20/24 falhou em `policy:check`, antes de testes da feature: a alteração de `AGENTS.md` exigia regenerar o manifesto versionado.
-- Correção persistida em `5bbdc76af93fb6ad83ffa0348533c08d4953ebfe`: `.agent-policy/manifest.json` regenerado, sem bypass da política.
+- A primeira tentativa de regeneração usou helper SHA-256 com estado reutilizado e continuou falhando; a causa foi identificada, não houve bypass.
+- `.agent-policy/manifest.json` foi regenerado corretamente em `79fa794b1570bb1102370b81f659dd9225371a36`, após validar SHA-256 contra vetor conhecido.
+- No CI `36622044845`, `policy:check` e migrations passaram; Quality/Tool Health chegaram ao TypeScript e detectaram `oauthBodyFormatValid` não declarado.
+- Correção em `33151d4e1b756f6dcecffe96e4ef49bd2fc8bf9e`; guarda/teste de configuração em `c05df62bea69287fc5863d15c32003d7df96f054`.
 - Novo gate do HEAD resultante deste checkpoint é obrigatório. Não considerar a 11I pronta até CI e CodeQL verdes.
 
 ## Migrations
