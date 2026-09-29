@@ -44,7 +44,7 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 
 ## Estado atual — V0.1
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, `ui.window`, clique, drag, wheel, evento UI allowlisted, launcher PowerShell para Windows 10, testes unitários sem Blender e integração prevista no Tool Health.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, `ui.window`, detecção da maior VIEW_3D, fechamento automático/manual do splash, clique, drag, orbit e wheel, evento UI allowlisted, launcher PowerShell para Windows 10, testes unitários sem Blender e integração no Tool Health.
 
 Maturidade: **em desenvolvimento**.
 
@@ -57,7 +57,7 @@ Maturidade: **em desenvolvimento**.
 - [x] eventos estilo mouse confinados ao Blender;
 - [x] checkpoint, render e export;
 - [x] testes sem Blender;
-- [ ] smoke test no Blender real do Windows 10 do proprietário;
+- [ ] smoke test completo no Blender real do Windows 10 do proprietário; bridge e comandos responderam, mas a etapa visual ainda precisa confirmar splash fechado e orbit da VIEW_3D;
 - [ ] confirmar versão mínima suportada na máquina real.
 
 ### V0.2 — Feedback visual automático
