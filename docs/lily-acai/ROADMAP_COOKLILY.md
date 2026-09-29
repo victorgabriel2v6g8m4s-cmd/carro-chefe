@@ -183,16 +183,33 @@ Documento: `docs/lily-acai/entregas/ENTREGA_09_ANALYTICS_FIRST_PARTY_2026-09-29.
 
 ## Entrega 10 — QA, observabilidade e hardening
 
-**Status:** em aberto, com backlog formalizado.
+**Status:** em desenvolvimento incremental. A 10A foi tecnicamente validada e integrada pelo PR #112. Candidate SHA `3ba8c615c64b736692d7e925d51d9659225f876d`; CI `36639472270` e CodeQL `36639472287`: success. QA real permanece pendente.
 
-- acessibilidade;
-- observabilidade;
-- segurança;
-- backup/restore;
-- performance;
-- QA operacional e mobile;
-- MFA de staff/admin: **implementada tecnicamente; enrollment/deploy pendentes**;
+### 10A — observabilidade e backup/restore
+
+Implementado:
+
+- `X-Request-Id` para correlação de incidentes;
+- redaction de Authorization, cookies, CSRF, guest token, agent key e assinaturas;
+- painel staff `/painel/saude` com agregados sem PII;
+- `Cache-Control: no-store` no resumo operacional;
+- verificador isolado de backup SQLite;
+- `integrity_check` + `foreign_key_check` + leitura de migrations;
+- SHA-256 dos backups nas evidências;
+- deploy fail-closed antes de stop/migrations se backup recém-criado não validar;
+- helper de verificação instalado somente após deploy saudável;
+- runbook de restauração manual e drill isolado;
+- testes de privacidade, logger e deploy.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_10A_OBSERVABILIDADE_BACKUP_2026-09-29.md`.
+
+Ainda aberto na Entrega 10:
+
+- 10B: regressões automatizadas de acessibilidade/overflow/performance;
+- QA operacional e mobile real;
+- MFA staff/admin: **implementada tecnicamente; enrollment/deploy pendentes**;
 - recuperação segura de senha: pendente por falta de canal de verificação aprovado;
+- retenção de PII/logs/analytics/backups: depende de política final;
 - overflows mascarados: **correção estrutural implementada; QA visual pendente**;
 - focus trap e alvos de toque críticos: **implementados tecnicamente; QA real pendente**;
 - controle explícito de outras sessões: **implementado tecnicamente**;
