@@ -14,6 +14,28 @@ const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
+  it("mantém skip link e destino de foco para teclado", () => {
+    expect(mainSource).toContain('className="skip-link"');
+    expect(mainSource).toContain('href="#lily-main-content"');
+    expect(mainSource).toContain('id="lily-main-content"');
+    expect(mainSource).toContain('tabIndex={-1}');
+    expect(css).toContain(".skip-link:focus-visible { transform: translateY(0); }");
+  });
+
+  it("mantém foco visível abrangente em controles interativos", () => {
+    expect(css).toContain("button:focus-visible");
+    expect(css).toContain("select:focus-visible");
+    expect(css).toContain("textarea:focus-visible");
+    expect(css).toContain("outline: 3px solid var(--cl-color-primary)");
+    expect(css).toContain("outline-offset: 3px");
+  });
+
+  it("respeita preferência de movimento reduzido", () => {
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(css).toContain("transition: none !important");
+    expect(css).toContain("animation: none !important");
+  });
+
   it("não mascara overflow horizontal globalmente", () => {
     expect(css).not.toMatch(/html,\s*body,\s*#root\s*\{[^}]*overflow-x:\s*hidden/i);
     expect(css).not.toMatch(/main\s*\{[^}]*overflow:\s*clip/i);
