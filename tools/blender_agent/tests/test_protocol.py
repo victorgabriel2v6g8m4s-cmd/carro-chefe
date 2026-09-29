@@ -48,6 +48,7 @@ class ProtocolTests(unittest.TestCase):
             "sculpt.status",
             "sculpt.prepare",
             "sculpt.stroke",
+            "sculpt.finish",
         ):
             request = normalize_request({
                 "version": 1,
