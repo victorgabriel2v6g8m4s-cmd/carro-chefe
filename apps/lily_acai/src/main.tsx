@@ -15,6 +15,7 @@ import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
+import { AdminObservabilityPage } from "./features/admin/AdminObservabilityPage";
 import { AdminAnalyticsPage } from "./features/analytics/AdminAnalyticsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
 import { KitchenPrintPage } from "./features/operations/KitchenPrintPage";
@@ -491,6 +492,7 @@ function App() {
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
     <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
     <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
+    <Route path="/painel/saude" element={<Shell><AdminObservabilityPage /></Shell>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
     <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
     <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
