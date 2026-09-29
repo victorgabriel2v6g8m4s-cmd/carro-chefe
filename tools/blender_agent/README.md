@@ -73,6 +73,10 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `history.stage.create/list/activate/describe` | ciclo de vida e contexto das etapas de produção |
 | `history.search` | pesquisa por texto, etapa, action, tempo, status, tags e anexos |
 | `history.note` | nota explícita na etapa ativa |
+| `sculpt.status` | estado do Sculpt/brush/objeto/viewport |
+| `sculpt.prepare` | entra em Sculpt Mode com brush/radius/strength allowlisted |
+| `sculpt.stroke` | stroke multiponto com checkpoint e captura anterior |
+| `sculpt.finish` | sai de Sculpt e restaura workspace anterior |
 
 ## Feedback visual automático — V0.2
 
@@ -212,6 +216,44 @@ Todas as actions normais do bridge são registradas automaticamente, com redacti
 
 Arquitetura e política completa: [BLENDER_AGENT_CONTEXT.md](../../docs/tecnologia/BLENDER_AGENT_CONTEXT.md).
 
+## Sculpt assistido — V0.3
+
+O Sculpt assistido fecha o ciclo de deformação orgânica sem depender de mouse global. A interface para agentes usa coordenadas normalizadas de 0 a 1 sobre a VIEW_3D e limita cada stroke a 128 pontos.
+
+Fluxo recomendado:
+
+```text
+sculpt.prepare
+  -> checkpoint automático
+  -> captura antes
+  -> sculpt.stroke
+  -> aguarda redraw
+  -> captura depois
+  -> modelo compara
+  -> próximo stroke
+```
+
+Brushes allowlisted: `DRAW`, `SMOOTH`, `GRAB`, `INFLATE`, `CLAY_STRIPS`, `CREASE` e `SNAKE_HOOK`.
+
+CLI:
+
+```powershell
+python -m tools.blender_agent.client sculpt-prepare --name Baguete_Base --workspace Sculpting --brush GRAB --radius 70 --strength 0.3
+python -m tools.blender_agent.client sculpt-stroke --points-json '[[0.44,0.50],[0.50,0.50],[0.56,0.48]]' --brush GRAB --radius 70 --strength 0.3 --label ajustar-silhueta
+python -m tools.blender_agent.client viewport-capture --name ajustar-silhueta-after.png
+python -m tools.blender_agent.client sculpt-finish
+```
+
+No MCP, `blender_sculpt_iteration` executa o stroke com checkpoint e devolve duas imagens, antes/depois, para comparação multimodal.
+
+Documento completo: [BLENDER_AGENT_SCULPT.md](../../docs/tecnologia/BLENDER_AGENT_SCULPT.md).
+
+Smoke test:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/sculpt-smoke-test.ps1 -OpenImages
+```
+
 ## Segurança
 
 - bind somente em `127.0.0.1` e porta efêmera por padrão;
@@ -258,10 +300,10 @@ python -m tools.blender_agent.client call scene.summary
 
 ## Limitações atuais
 
-- captura do viewport, capture-set e adaptador MCP com retorno de imagem foram implementados; ainda faltam smoke tests reais da imagem e da conexão MCP no ambiente do proprietário antes de considerar a V0.2 validada;
+- controle, captura VIEW_3D e captura multi-workspace já foram validados no Windows 10 + Blender 5.2 LTS; a conexão MCP local e o Sculpt V0.3 ainda aguardam smoke test final;
 - `event_simulate` exige `--enable-event-simulate`;
-- Sculpt depende do contexto/tool ativo;
-- checkpoint é criado, mas rollback automático ficará para a próxima fase;
+- Sculpt V0.3 depende de mesh visível na VIEW_3D e brush compatível; strokes são intencionalmente limitados;
+- checkpoint automático existe para Sculpt, mas rollback automático de decisão continua no roadmap V0.5;
 - OBJ varia por versão e usa fallback;
 - ainda não há addon/painel instalável nem reconhecimento visual automático da UI.
 
