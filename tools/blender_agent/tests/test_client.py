@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import unittest
 
-from tools.blender_agent.client import build_parser
+from tools.blender_agent.client import _json_text, build_parser
 
 
 class ClientParserTests(unittest.TestCase):
+    def test_json_output_is_ascii_safe_for_windows_powershell(self) -> None:
+        text = _json_text({"path": r"C:\\Users\\valdi\\Área de Trabalho\\cezar"})
+        self.assertTrue(text.isascii())
+        self.assertIn(r"\\u00c1rea de Trabalho", text)
+
     def test_ui_drag_parses_modifiers(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
