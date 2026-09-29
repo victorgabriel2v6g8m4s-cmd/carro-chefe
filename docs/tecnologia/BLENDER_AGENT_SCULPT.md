@@ -122,7 +122,8 @@ Allowlist:
 - `NORMAL`;
 - `INVERT`;
 - `SMOOTH`;
-- `ERASE`.
+- `ERASE`;
+- `MASK` quando a versão do Blender expõe `brush_toggle=MASK`.
 
 A implementação detecta em runtime as propriedades realmente disponíveis em `bpy.ops.sculpt.brush_stroke`, permitindo compatibilidade entre variações recentes da API do Blender.
 
