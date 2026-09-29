@@ -102,9 +102,12 @@ describe("CookLily Entrega 10A — observabilidade", () => {
     expect(SENSITIVE_LOG_REDACT_PATHS).toEqual(expect.arrayContaining([
       "req.headers.authorization",
       "req.headers.cookie",
-      "req.headers.x-lily-csrf",
-      "req.headers.x-lily-order-token",
-      "res.headers.set-cookie"
+      'req.headers["x-lily-csrf"]',
+      'req.headers["x-lily-order-token"]',
+      'req.headers["x-agent-key"]',
+      'req.headers["x-carrochefe-signature"]',
+      'req.headers["x-signature"]',
+      'res.headers["set-cookie"]'
     ]));
   });
 
