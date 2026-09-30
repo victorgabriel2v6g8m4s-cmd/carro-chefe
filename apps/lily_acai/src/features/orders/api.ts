@@ -1,4 +1,4 @@
-import { parseResponse, type AuthPayload } from "../../api";
+import { parseResponse, type AuthPayload, type LilyAllergenSummary } from "../../api";
 import type { CartItem } from "../cart/types";
 
 export type LilyAddressInput = {
@@ -36,6 +36,7 @@ type ProductQuoteItem = {
   sizeMl: number;
   flavors: Array<{ id: string; name: string }>;
   addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+  allergens: LilyAllergenSummary;
   totalPriceCents: number;
   quantity: number;
   note: string | null;
@@ -46,6 +47,7 @@ type ComboQuoteItem = {
   kind: "combo";
   configurationHash: string;
   combo: { id: string; slug: string; name: string; description: string | null };
+  allergens: LilyAllergenSummary;
   selections: Array<{
     configurationHash: string;
     product: { id: string; slug: string; name: string };
@@ -53,6 +55,7 @@ type ComboQuoteItem = {
     sizeMl: number;
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+    allergens: LilyAllergenSummary;
     totalPriceCents: number;
   }>;
   totalPriceCents: number;
@@ -119,6 +122,7 @@ export type LilyOrder = {
     configurationHash: string;
     configuration: Record<string, unknown>;
     flavors: Array<{ id: string; name: string }>;
+    allergens: LilyAllergenSummary;
     unitPriceCents: number;
     quantity: number;
     lineTotalCents: number;
@@ -166,6 +170,7 @@ export type LilyGuestTrackingOrder = {
     quantity: number;
     lineTotalCents: number;
     flavors: Array<{ name: string }>;
+    allergens: LilyAllergenSummary;
     addons: Array<{ name: string; quantity: number }>;
   }>;
   statusEvents: Array<{ toStatus: string; createdAt: string }>;
