@@ -1,16 +1,41 @@
 # ADR-001 — Decisões aprovadas do cardápio inicial CookLily
 
 **Data de fechamento:** 24/09/2026  
+**Horário de fechamento:** não registrado no documento-fonte; não inferir  
 **Status geral:** FECHADO  
 **Escopo:** cardápio inicial, produtos, naming, preços, adicionais, apresentação, catálogo, checkout e regras comerciais associadas.
+
+## Registro da fonte e auditoria
+
+- **Documento-fonte:** `Decisoes_Cardapio_Inicial_CookLily.pdf`, 15 páginas, fornecido pelo proprietário ao projeto em 30/09/2026.
+- **SHA-256 do PDF recebido:** `db4bd2fd0e7c91f7b28e19c629286d7e84a337c249db8a88baf86314ec904f52`.
+- **Data declarada de fechamento no PDF:** 24/09/2026.
+- **Hora declarada no PDF:** não existe; qualquer horário acrescentado às decisões 1–100 seria inventado.
+- **Revalidação documental:** 30/09/2026 16:50 UTC-03:00, sem alterar a autoria histórica das decisões.
+
+### Contagem de autoria registrada no PDF
+
+- Humano: **78** decisões;
+- IA por delegação humana: **15** decisões;
+- IA por aplicação técnica: **2** decisões;
+- Mista — Humano + IA por delegação: **1** decisão;
+- Mista — Humano definiu sabores; IA definiu naming e preços por delegação: **1** decisão;
+- Mista — objetivo humano, estrutura comercial consolidada pela IA: **1** decisão;
+- Mista — oferta definida pelo humano; regra de integridade definida pela IA: **1** decisão;
+- Mista — requisito humano; critérios técnicos detalhados pela IA: **1** decisão.
 
 ## Legenda de autoria
 
 - **Humano:** decisão definida diretamente pelo proprietário.
 - **IA por delegação humana:** o proprietário autorizou explicitamente a IA a escolher a alternativa mais coerente e considerar a escolha definitiva.
-- **Mista — Humano + IA por delegação:** o proprietário definiu o escopo/objetivo e a IA fechou nome, valor, regra ou implementação específica.
+- **IA por aplicação técnica:** decisão técnica aplicada pela IA dentro dos limites definidos pelo projeto.
+- **Mista — Humano + IA por delegação:** o proprietário definiu o escopo/objetivo e a IA fechou a alternativa específica.
+- **Mista — Humano definiu sabores; IA definiu naming e preços por delegação:** autoria composta preservada literalmente.
+- **Mista — objetivo humano, estrutura comercial consolidada pela IA:** autoria composta preservada literalmente.
+- **Mista — oferta definida pelo humano; regra de integridade definida pela IA:** autoria composta preservada literalmente.
+- **Mista — requisito humano; critérios técnicos detalhados pela IA:** autoria composta preservada literalmente.
 
-Este ADR preserva a origem de cada decisão para auditoria. A aprovação humana geral do fechamento do cardápio não altera a autoria original de uma decisão delegada à IA.
+Este ADR preserva a origem de cada decisão para auditoria. A aprovação humana geral do fechamento do cardápio não altera a autoria original de uma decisão delegada à IA. O estado de implementação é acompanhado em documento separado e não reescreve o status/autoria históricos do ADR.
 
 ---
 

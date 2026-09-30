@@ -126,12 +126,15 @@ Implementado:
 
 O primeiro gate `gate/lily-entrega-07-v1` falhou em TypeScript porque `serializeOrder` foi passado diretamente a `Array.map`, fazendo o índice do map conflitar com o segundo parâmetro opcional do serializer. O mesmo erro fez o Tool Health reportar falha no `app-api`. A correção foi aplicada em `cooklily/canonical` e revalidada com sucesso: CI `36330633129`, CodeQL `36330633098`, 25 arquivos de teste / 122 testes em Node 20 e Node 24, builds e Tool Health aprovados.
 
-Ainda pendente:
+Ainda pendente / atualizado pelo ADR-002 de 30/09/2026:
 
 - criar/aprovar conta e aplicação Mercado Pago;
-- configurar Public Key, Access Token, chave Pix e Webhook Secret;
+- configurar Public Key, Access Token e Webhook Secret;
+- implementar **cartão de débito** via Mercado Pago;
+- refatorar o roteamento para permitir **Pix próprio CookLily + crédito/débito Mercado Pago simultaneamente**;
+- retirar Mercado Pago Pix da matriz pública necessária, preservando-o apenas se houver motivo de compatibilidade/homologação;
 - conferir taxas contratuais;
-- smoke real de Pix/cartão;
+- smoke real de Pix próprio + crédito + débito;
 - deploy/homologação da linha canônica.
 
 **Gate de lançamento comercial digital:** Entregas 05–07 prontas, publicadas e homologadas.
@@ -234,7 +237,7 @@ Ainda pendente na Entrega 10:
 
 ## Entrega 11 — Pix próprio e operação ponta a ponta
 
-**Status:** em desenvolvimento incremental.
+**Status:** subfases 11A–11K tecnicamente implementadas/integradas; permanecem homologações reais, credenciais externas e QA operacional.
 
 Objetivos:
 
@@ -269,12 +272,12 @@ Configuração necessária na VPS, sem versionar valores:
 - `COOKLILY_PIX_MERCHANT_NAME`;
 - `COOKLILY_PIX_MERCHANT_CITY`.
 
-Limitação consciente da primeira fase:
+Estado após a Entrega 11I:
 
-- geração não tem taxa de gateway;
+- geração continua sem taxa de gateway;
 - tarifa de recebimento depende do banco/conta;
-- confirmação automática ainda depende de API bancária/PSP recebedor;
-- QR visual será integrado em subfase própria; o Pix Copia e Cola já é suficiente para validar o payload.
+- conciliação automática já existe tecnicamente via adapter API Pix v2, mas permanece desabilitada até banco/conta/credenciais reais serem homologados;
+- BR Code/Pix Copia e Cola já fazem parte do fluxo técnico.
 
 ### 11B — domínio operacional
 
@@ -519,6 +522,7 @@ Pendente:
 
 - preenchimento/revisão operacional do catálogo real;
 - política de contato cruzado;
+- implementar a apresentação em **sanfona fechada por padrão**, com aviso exibido somente ao abrir, conforme ADR-002;
 - QA real em mobile/desktop e impressão.
 
 Documento: `docs/lily-acai/entregas/ENTREGA_12_ALERGENICOS_2026-09-30.md`.

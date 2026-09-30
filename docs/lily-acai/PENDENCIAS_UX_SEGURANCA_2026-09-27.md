@@ -2,7 +2,8 @@
 
 **Data da consolidação:** 27/09/2026  
 **Branch canônica de integração:** `cooklily/canonical`  
-**Origem:** QA/homologação manual + revisão do código candidato das Entregas 05–07.
+**Origem:** QA/homologação manual + revisão do código candidato das Entregas 05–07.  
+**Auditoria posterior:** 30/09/2026 — Entregas 08–12 e 11A–11K já avançaram tecnicamente; este arquivo preserva os achados de UX e só fecha itens visuais após QA real, conforme sua própria regra de fechamento.
 
 ## Regra de fechamento
 
@@ -70,25 +71,29 @@ Status usados:
 | CAT-008 | Grid em duas colunas fica enterrado atrás dos combos. | **CANDIDATO / REVALIDAR.** Ordem atual coloca grid antes do carrossel. | Em mobile, produtos aparecem antes da seção de combos e duas colunas permanecem utilizáveis. |
 | CAT-009 | Link de destaque não abre diretamente o produto/modal. | **RESOLVIDA TECNICAMENTE / QA REAL PENDENTE.** O contrato usa `?produto=<slug>`; abre por slug mesmo fora da primeira página e fechar o modal preserva filtros. | Definir deep-link estável de produto (slug/query/rota) e abrir/rolar para o produto correto sem depender de hash ignorado. |
 
-## Pendências técnicas paralelas
+## Pendências técnicas paralelas — estado auditado em 30/09/2026
 
-Além dos 40 achados acima:
+Além dos achados de UX acima:
 
-1. Entrega 07 está tecnicamente aprovada; ainda falta deploy/homologação operacional;
-2. selecionar/integrar provedor automático de pagamento ou formalizar Pix manual como fase inicial;
-3. publicar e homologar a linha canônica na VPS por SHA imutável;
-4. definir canal seguro de verificação para recuperação de senha;
-5. sincronizar workbook financeiro, alergênicos e fotografias restantes;
-6. completar Entregas 08–10: operação de pedidos, analytics first-party e hardening.
+1. **Entregas 08, 09, 10A, 10B e 12 estão tecnicamente integradas**; não permanecem como pendência de desenvolvimento, apenas homologações reais específicas;
+2. Pix próprio, tracking guest, ETA, WhatsApp, reatribuição, SLA e impressão também estão tecnicamente integrados nas subfases 11;
+3. a nova decisão ADR-002 exige sanfona fechada de alergênicos — ainda não implementada;
+4. a nova decisão ADR-002 exige Pix próprio + crédito/débito Mercado Pago simultâneos — débito e roteamento multi-provider ainda não implementados;
+5. publicar/homologar a linha canônica na VPS após o hotfix do deployer continua pendente;
+6. recuperação de senha continua bloqueada até definir canal seguro de verificação;
+7. workbook financeiro, dados reais de alergênicos/contato cruzado e fotografias restantes continuam pendentes de operação/conteúdo;
+8. credenciais/contas reais de Mercado Pago, banco Pix, ORS e Meta ainda precisam de homologação externa.
 
-## Ordem recomendada de execução
+## Ordem recomendada de execução — 30/09/2026
 
-1. preparar deploy controlado da linha canônica com chave MFA e backups;
-2. homologar P0/P1 em 320/360/390/430/768 px e teclado;
-3. revalidar itens ainda marcados **CANDIDATO / REVALIDAR**;
-4. decidir canal seguro para recuperação de senha;
-5. concluir mídia/fotografia e sincronizações financeiras/alergênicos;
-6. avançar Entregas 08–10: operação de pedidos, analytics e hardening.
+1. implementar ADR-002 (sanfona de alergênicos + matriz de pagamento multi-provider com débito);
+2. rodar CI/CodeQL;
+3. executar deploy controlado da canonical com o hotfix do deployer, chave MFA e backups;
+4. homologar P0/P1/P2 em 320/360/390/430/768 px, teclado e leitor de tela;
+5. revalidar itens ainda marcados **CANDIDATO / REVALIDAR**;
+6. homologar credenciais/serviços externos e transações financeiras reais;
+7. revisar dados reais de alergênicos/contato cruzado e impressão;
+8. decidir canal seguro para recuperação de senha e concluir mídia/workbook.
 
 
 ## Evidência do patch P0

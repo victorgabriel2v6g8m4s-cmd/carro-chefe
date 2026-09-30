@@ -6,6 +6,30 @@ Este documento registra a comparação dos processadores estudados e a arquitetu
 
 > As taxas abaixo são uma fotografia das ofertas públicas consultadas nesta data. Condições comerciais, antecipação, análise cadastral, prazo de recebimento, promoções e negociação podem alterar os valores. A condição contratual válida é sempre a exibida na conta aprovada do estabelecimento.
 
+## Decisão posterior aprovada — 30/09/2026 16:50 UTC-03:00
+
+O proprietário definiu a matriz pública de pagamento que prevalece para o checkout CookLily:
+
+- **Pix:** provider próprio `cooklily_pix`, com BR Code/txid gerados automaticamente;
+- **cartão de crédito:** Mercado Pago;
+- **cartão de débito:** Mercado Pago;
+- o **cliente escolhe** qual dos três métodos deseja usar.
+
+Arquitetura alvo:
+
+```text
+Checkout
+├── pix          -> cooklily_pix
+├── credit_card  -> mercado_pago
+└── debit_card   -> mercado_pago
+```
+
+Esta decisão exige evoluir o modelo atual, porque hoje `paymentProvider` é global/mutuamente exclusivo, `debit_card` não faz parte do contrato e o Card Payment Brick atual exclui débito. Mercado Pago Pix deixa de ser requisito do fluxo público; Pix manual pode continuar apenas como contingência administrativa.
+
+A implementação existente de crédito Mercado Pago e do Pix próprio continua aproveitável. A lacuna é o roteamento multi-provider por método + débito + homologação.
+
+Fonte de decisão: [ADR-002](./decisoes/ADR_002_UX_ALERGENICOS_PAGAMENTOS_2026-09-30.md).
+
 ## Decisão arquitetural
 
 A CookLily possui uma camada própria de pagamentos:
