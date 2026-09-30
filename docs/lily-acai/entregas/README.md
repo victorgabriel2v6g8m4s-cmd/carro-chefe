@@ -13,7 +13,7 @@ A ordem abaixo substitui a sequência anterior a partir da Entrega 03, conforme 
 | 07 | Pagamento e reconciliação | **implementação técnica aprovada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; deploy/homologação pendentes** |
 | 08 | Painel de pedidos | **validada e integrada pelo PR #108; CI `36635632700`, CodeQL `36635632701`; QA real pendente** |
 | 09 | Tracking QR e analytics first-party | **validada e integrada pelo PR #110; CI `36637864661`, CodeQL `36637864655`; QA real/retention policy pendentes** |
-| 10 | QA operacional, acessibilidade, observabilidade e hardening | **10A validada/integrada pelo PR #112; 10B e QA real ainda abertos; recuperação de senha/retention dependem de decisão externa** |
+| 10 | QA operacional, acessibilidade, observabilidade e hardening | **10A (#112) e 10B (#116) validadas/integradas; parte automatizável fechada; QA real, recuperação de senha e retention continuam pendentes** |
 
 Planos e relatórios:
 
@@ -26,6 +26,7 @@ Planos e relatórios:
 - `ENTREGA_08_TORRE_CONTROLE_PEDIDOS_2026-09-29.md`;
 - `ENTREGA_09_ANALYTICS_FIRST_PARTY_2026-09-29.md`;
 - `ENTREGA_10A_OBSERVABILIDADE_BACKUP_2026-09-29.md`;
+- `ENTREGA_10B_A11Y_PERFORMANCE_2026-09-29.md`;
 - `P0_UX_SEGURANCA_2026-09-27.md`;
 - `P1_UX_CONTA_ADMIN_2026-09-27.md`.
 
