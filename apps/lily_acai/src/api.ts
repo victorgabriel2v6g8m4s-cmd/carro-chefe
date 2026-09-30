@@ -25,6 +25,24 @@ export type AuthPayload = {
   };
 };
 
+export type LilyAllergenDescriptor = {
+  code: string;
+  label: string;
+};
+
+export type LilyAllergenComponentInfo = {
+  reviewStatus: string;
+  contains: LilyAllergenDescriptor[];
+  mayContain: LilyAllergenDescriptor[];
+};
+
+export type LilyAllergenSummary = {
+  complete: boolean;
+  contains: LilyAllergenDescriptor[];
+  mayContain: LilyAllergenDescriptor[];
+  unreviewed: string[];
+};
+
 export type CatalogVariant = {
   id: string;
   sizeMl: number;
@@ -39,6 +57,7 @@ export type CatalogFlavor = {
   slug: string;
   name: string;
   premium: boolean;
+  allergens: LilyAllergenComponentInfo;
 };
 
 export type CatalogAddon = {
@@ -47,6 +66,7 @@ export type CatalogAddon = {
   name: string;
   priceCents: number;
   individualLimit: number;
+  allergens: LilyAllergenComponentInfo;
 };
 
 export type CatalogProduct = {
@@ -56,6 +76,7 @@ export type CatalogProduct = {
   descriptiveName: string | null;
   description: string | null;
   tags: string[];
+  allergens: LilyAllergenComponentInfo;
   configurationType: "fixed" | "lilymix";
   status: string;
   isAvailable: boolean;
@@ -276,6 +297,7 @@ export async function configureLilyItem(input: {
     sizeMl: number;
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+    allergens: LilyAllergenSummary;
     basePriceCents: number;
     addonPriceCents: number;
     totalPriceCents: number;
@@ -323,6 +345,7 @@ export type ComboConfigurationQuote = {
   mode: "preset" | "builder";
   configurationHash: string;
   combo: { id: string; slug: string; name: string; description: string | null };
+  allergens: LilyAllergenSummary;
   selections: Array<{
     configurationHash: string;
     product: { id: string; slug: string; name: string };
@@ -330,6 +353,7 @@ export type ComboConfigurationQuote = {
     sizeMl: number;
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
+    allergens: LilyAllergenSummary;
     basePriceCents: number;
     addonPriceCents: number;
     totalPriceCents: number;
