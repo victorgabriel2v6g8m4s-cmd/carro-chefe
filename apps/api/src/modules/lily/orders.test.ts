@@ -401,6 +401,68 @@ describe("CookLily Entrega 06", () => {
     expect(persisted?.laCampaign).toBe("entrega-06-test");
   });
 
+  it("congela o snapshot de alergênicos mesmo se o catálogo mudar depois da compra", async () => {
+    await enableFlatOperation();
+    const product = await lilyPrisma.lilyProduct.findUnique({ where: { id: "prod-acai-sol-lily" } });
+    expect(product).toBeTruthy();
+
+    try {
+      await lilyPrisma.lilyProduct.update({
+        where: { id: product!.id },
+        data: {
+          allergenReviewStatus: "reviewed",
+          allergenContainsJson: JSON.stringify(["milk"]),
+          allergenMayContainJson: JSON.stringify(["peanuts"])
+        }
+      });
+
+      const quoteResponse = await quoteSol();
+      expect(quoteResponse.statusCode).toBe(200);
+      expect(quoteResponse.json().items[0].allergens.contains.map((item: any) => item.code)).toContain("milk");
+
+      const payload = await createPayloadFromQuote(quoteResponse.json(), "67999991122");
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/v1/lily/orders",
+        headers: { origin, "idempotency-key": "cooklily:test:allergen-snapshot:01" },
+        payload
+      });
+      expect(created.statusCode).toBe(201);
+      expect(created.json().items[0].allergens.contains.map((item: any) => item.code)).toContain("milk");
+      const guestToken = created.json().guestAccessToken;
+      expect(typeof guestToken).toBe("string");
+
+      await lilyPrisma.lilyProduct.update({
+        where: { id: product!.id },
+        data: {
+          allergenContainsJson: JSON.stringify(["soy"]),
+          allergenMayContainJson: "[]"
+        }
+      });
+
+      const tracking = await app.inject({
+        method: "GET",
+        url: `/api/v1/lily/public/orders/${created.json().id}/tracking`,
+        headers: { "x-lily-order-token": guestToken }
+      });
+      expect(tracking.statusCode).toBe(200);
+      expect(tracking.json().items[0].allergens.contains.map((item: any) => item.code)).toContain("milk");
+      expect(tracking.json().items[0].allergens.contains.map((item: any) => item.code)).not.toContain("soy");
+
+      const stored = await lilyPrisma.lilyOrderItem.findFirst({ where: { orderId: created.json().id } });
+      expect(JSON.parse(stored!.allergenSnapshotJson).contains.map((item: any) => item.code)).toContain("milk");
+    } finally {
+      await lilyPrisma.lilyProduct.update({
+        where: { id: product!.id },
+        data: {
+          allergenReviewStatus: product!.allergenReviewStatus,
+          allergenContainsJson: product!.allergenContainsJson,
+          allergenMayContainJson: product!.allergenMayContainJson
+        }
+      });
+    }
+  });
+
   it("registra opt-in WhatsApp por pedido e cria a primeira notificação de forma atômica", async () => {
     await enableFlatOperation();
     const quoteResponse = await quoteSol();
