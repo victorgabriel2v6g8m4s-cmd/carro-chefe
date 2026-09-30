@@ -254,6 +254,29 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
       where: { id: order.id },
       data: { customerNote: "Sem canudo" }
     });
+    await lilyPrisma.lilyOrderItem.create({
+      data: {
+        orderId: order.id,
+        productId: "prod-test-allergen",
+        variantId: "var-test-allergen",
+        productNameSnapshot: "Produto teste",
+        variantNameSnapshot: "300 ml",
+        sizeMl: 300,
+        configurationHash: "allergen-print-test",
+        configurationSnapshotJson: "{}",
+        flavorsSnapshotJson: "[]",
+        allergenSnapshotJson: JSON.stringify({
+          complete: true,
+          contains: [{ code: "milk", label: "leite de todos os mamíferos" }],
+          mayContain: [{ code: "peanuts", label: "amendoim" }],
+          unreviewed: []
+        }),
+        unitPriceSnapshotCents: 2500,
+        quantity: 1,
+        lineTotalCents: 2500,
+        customerNote: null
+      }
+    });
 
     const response = await app.inject({
       method: "GET",
@@ -285,6 +308,11 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(ticket).not.toHaveProperty("addressSnapshotJson");
     expect(ticket).not.toHaveProperty("financialStatus");
     expect(ticket).not.toHaveProperty("operationStatus");
+    expect(ticket.items[0].allergens).toMatchObject({
+      complete: true,
+      contains: [{ code: "milk", label: "leite de todos os mamíferos" }],
+      mayContain: [{ code: "peanuts", label: "amendoim" }]
+    });
   });
 
   it("não emite comanda antes de pagamento e liberação para produção", async () => {
