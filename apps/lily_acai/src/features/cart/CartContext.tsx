@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AddCartItemInput, CartItem } from "./types";
+import { incompleteAllergenSummary } from "../allergens/AllergenNotice";
 
 const STORAGE_KEY = "cooklily_cart_v1";
 
