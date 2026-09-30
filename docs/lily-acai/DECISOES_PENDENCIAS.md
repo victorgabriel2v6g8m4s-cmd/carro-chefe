@@ -1,5 +1,8 @@
 # Decisões e pendências — CookLily
 
+**Última auditoria:** 30/09/2026 16:50 UTC-03:00  
+**Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
+
 ## Confirmado
 
 - nome público definitivo: **CookLily**;
@@ -40,7 +43,7 @@
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | **provedor automático decidido tecnicamente:** camada própria + adapter Mercado Pago; Pix/cartão/webhook/refund implementados; criar conta, informar credenciais, homologar taxas e fazer deploy continuam pendentes | Entrega 07 |
+| LILY-PEND-013 | Pagamento | **parcial:** crédito Mercado Pago e infraestrutura financeira estão implementados; ADR-002 agora exige débito Mercado Pago e coexistência simultânea com Pix próprio; credenciais/deploy/homologação continuam pendentes | Entrega 07 / ADR-002 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
@@ -55,9 +58,9 @@
 | LILY-PEND-025 | Densidade Nutella | medição futura melhora precisão; não bloqueia cardápio | financeiro |
 | LILY-PEND-026 | Operação LilyShake | **resolvida** | — |
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
-| LILY-PEND-028 | Alergênicos | criar configuração específica antes da venda comercial completa | compliance |
+| LILY-PEND-028 | Alergênicos | **domínio técnico resolvido pela Entrega 12:** taxonomia, admin, agregação e snapshot integrados; faltam dados reais/contato cruzado e a sanfona fechada por padrão definida no ADR-002 | compliance / ADR-002 |
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
-| LILY-PEND-030 | Checkout | carrinho, entrega/retirada, pedido e domínio financeiro concluídos; gateway automático Mercado Pago integrado sem ativação por default; resta deploy/homologação comercial | Entregas 06–07 |
+| LILY-PEND-030 | Checkout | carrinho/pedido concluídos; pagamento continua fail-closed; **fluxo público ainda precisa refletir ADR-002 (Pix próprio + crédito/débito Mercado Pago escolhidos pelo cliente)** e depois ser homologado | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
@@ -65,17 +68,20 @@
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
 | LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
-| LILY-PEND-038 | Pix próprio | **implementado tecnicamente:** adapter `cooklily_pix`, BR Code estático, valor e txid gerados internamente; falta configurar chave/nome/cidade reais na VPS e homologar com banco recebedor | Entrega 11A |
-| LILY-PEND-039 | Conciliação Pix próprio | escolher/integrar API bancária ou extrato com webhook depois de definir a conta PJ; até lá confirmação é operacional | Entrega 11A/11E |
-| LILY-PEND-040 | Painel do cliente | **primeira versão implementada:** timeline combina pagamento, produção e entrega; polling e código de entrega; faltam guest tracking, ETA/mapa e notificações | Entrega 11C |
-| LILY-PEND-041 | Painel cozinha | primeira fila operacional validada tecnicamente em `8a9dbb...`; já libera automaticamente pedidos de entrega para a fila de courier; QA real, SLA, alertas e impressão ainda pendentes | Entrega 11B |
+| LILY-PEND-038 | Pix próprio | **resolvido tecnicamente:** adapter `cooklily_pix`, BR Code, valor e txid próprios integrados; falta configuração real na VPS e homologação da conta recebedora | Entrega 11A/ADR-002 |
+| LILY-PEND-039 | Conciliação Pix próprio | **resolvida tecnicamente pela 11I:** ledger, poller e adapter API Pix v2 integrados; falta banco/conta real, OAuth/mTLS/certificado, smoke e tarifas | Entrega 11I |
+| LILY-PEND-040 | Painel do cliente | **resolvido tecnicamente:** timeline, guest tracking, ETA/mapa sem coordenadas e WhatsApp operacional integrados; falta QA real/credenciais externas aplicáveis | Entregas 11C/11F/11G/11H |
+| LILY-PEND-041 | Painel cozinha | **resolvido tecnicamente:** fila, handoff, SLA/alertas e impressão integrados; faltam SLA operacional real, QA em tablet e impressora | Entregas 11B/11J/11K |
 | LILY-PEND-042 | Entregador | **implementado e validado tecnicamente em `0941ede...`:** papel `courier`, MFA, fila, aceite atômico e todas as etapas coleta→entrega; falta QA real | Entrega 11D |
 | LILY-PEND-043 | Códigos logísticos | **implementado e coberto por testes:** derivação HMAC sem persistir código por pedido; segredo de 32 bytes na VPS, rate limit e auditoria de tentativas inválidas; falta homologação real | Entrega 11D |
-| LILY-PEND-044 | Rotas/ETA | selecionar serviço barato/gratuito de mapas/rotas somente depois do fluxo operacional básico | Entrega 11E |
-| LILY-PEND-045 | WhatsApp operacional | automatizar mensagens por etapa sem expor PII e respeitando consentimentos/regras do provedor | Entrega 11E |
-| LILY-PEND-046 | Reatribuição/cancelamento de entrega | definir fluxo seguro para courier desistir, admin reatribuir e pedido retornar à fila sem apagar histórico | Entrega 11D |
-| LILY-PEND-047 | Guest tracking | permitir acompanhamento seguro de pedido guest com token opaco sem exigir criação posterior de conta | Entrega 11C |
+| LILY-PEND-044 | Rotas/ETA | **resolvida tecnicamente:** OpenRouteService/HeiGIT server-side integrado; falta chave/endereço reais e homologação de geocodificação/rota | Entrega 11G |
+| LILY-PEND-045 | WhatsApp operacional | **resolvido tecnicamente:** outbox, opt-in/out, Meta Cloud API e etapas integrados; falta WABA/número/template/token reais e homologação Meta | Entrega 11H |
+| LILY-PEND-046 | Reatribuição/cancelamento de entrega | **resolvida tecnicamente:** recusa, desistência pré-coleta, retorno à fila, reatribuição e histórico integrados; falta QA multiusuário real | Entrega 11E |
+| LILY-PEND-047 | Guest tracking | **resolvido tecnicamente:** capability token opaco/hash, página guest e polling integrados; falta QA navegador/mobile real | Entrega 11F |
 | LILY-PEND-048 | QA logística real | testar duas contas courier concorrentes, cozinha e cliente em celulares reais antes de abrir a operação | Entrega 11D |
+| LILY-PEND-049 | Matriz pública de pagamento | implementar decisão ADR-002: Pix próprio + cartão crédito/débito Mercado Pago simultaneamente selecionáveis; hoje débito não existe e o provider é global/exclusivo | ADR-002 / pagamentos |
+| LILY-PEND-050 | UX de alergênicos | implementar sanfona fechada por padrão e revelar aviso/conteúdo somente após ação do usuário, preservando acessibilidade e snapshots | ADR-002 / Entrega 12 |
+| LILY-PEND-051 | Deploy da canonical | hotfix do deployer integrado no head `24bef161...`; executar novo deploy e comprovar health, backup, migrations e rollback antes de chamar a versão atual de homologada | deploy/homologação |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
