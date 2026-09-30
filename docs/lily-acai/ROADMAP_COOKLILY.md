@@ -495,12 +495,40 @@ Documento: `docs/lily-acai/entregas/ENTREGA_11J_SLA_ALERTAS_COZINHA_2026-09-29.m
 
 Documento: `docs/lily-acai/entregas/ENTREGA_11K_IMPRESSAO_COZINHA_2026-09-29.md`.
 
+## Entrega 12 — alergênicos do catálogo e do pedido
+
+**Status:** tecnicamente validada e integrada em `cooklily/canonical` pelo PR #117. Candidate SHA `da643f2d5e3fc07a3764ebfb8eb2d08f3e7a1e0a`; CI `36745374077` e CodeQL `36745374191`: success. Revisão dos dados reais e QA permanecem pendentes.
+
+Implementado:
+
+- vocabulário controlado de alergênicos;
+- produto, sabor e adicional começam como `unreviewed`;
+- editor administrativo de revisão, CONTÉM e PODE CONTER;
+- API pública normalizada;
+- agregação autoritativa no backend;
+- `CONTÉM` prevalece sobre `PODE CONTER`;
+- produto fixo não permite retirar sabores da composição para alterar a informação;
+- combos unem os resumos dos componentes;
+- carrinhos antigos ficam explicitamente incompletos;
+- checkout recota antes de criar o pedido;
+- snapshot imutável por item em `LilyOrderItem.allergenSnapshotJson`;
+- cliente autenticado, guest tracking, cozinha e comanda usam o snapshot histórico;
+- testes de domínio, catálogo, pedidos, cozinha e interface.
+
+Pendente:
+
+- preenchimento/revisão operacional do catálogo real;
+- política de contato cruzado;
+- QA real em mobile/desktop e impressão.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_12_ALERGENICOS_2026-09-30.md`.
+
 ## Sincronizações paralelas
 
 Antes do lançamento comercial completo:
 
 - sincronizar workbook financeiro com cardápio definitivo;
-- criar configuração de alergênicos;
+- revisar e homologar os dados reais de alergênicos e contato cruzado;
 - produzir fotos progressivamente;
 - manter placeholder para o que ainda não tiver foto;
 - configurar dados operacionais no sistema, não na documentação.
