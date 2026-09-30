@@ -360,14 +360,42 @@ Medição validada:
 
 A parte técnica automatizável da Entrega 10 está encerrada em 10A + 10B. Continuam pendentes somente homologação real e decisões externas documentadas.
 
+
+### 13. Entrega 12 — ALERGÊNICOS VALIDADA E INTEGRADA
+
+PR #117 integrado em `cooklily/canonical`.
+
+Evidências técnicas:
+
+- candidate SHA `da643f2d5e3fc07a3764ebfb8eb2d08f3e7a1e0a`;
+- CI `36745374077`: success;
+- CodeQL `36745374191`: success;
+- merge SHA `6074c7b287cc20b03f4d11a1ea3ab3fd7f64a6f0`.
+
+Implementado:
+
+- taxonomia controlada de alergênicos;
+- revisão independente em produto/sabor/adicional;
+- legado tratado como `unreviewed`;
+- agregação autoritativa server-side;
+- prioridade `CONTÉM > PODE CONTER`;
+- informação incompleta explícita;
+- editor administrativo;
+- exposição no configurador, carrinho e checkout;
+- snapshot imutável por item do pedido;
+- exposição no detalhe cliente, guest tracking, cozinha e comanda;
+- testes de persistência e imutabilidade histórica.
+
+Pendente somente de homologação operacional dos dados reais, contato cruzado, mobile/desktop e impressão.
+
 ## Ordem de execução atualizada
 
-1. fazer deploy/homologação da linha selecionada na VPS;
-2. validar health, backups, dashboards e fluxos reais após o deploy;
-3. aplicar migrations pelo deployer e validar saúde dos serviços;
-4. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
-5. definir com Operações o SLA real e testar 11K em PDF/impressora real;
-6. executar QA operacional ponta a ponta em pedidos, cozinha, cliente e courier.
+1. fazer deploy/homologação da canonical contendo a Entrega 12;
+2. validar health, backups e migrations pelo deployer;
+3. revisar e cadastrar alergênicos reais no painel;
+4. executar um pedido de homologação e validar snapshot cliente/guest/cozinha/impressão;
+5. revalidar 11G/11H/11I conforme credenciais externas disponíveis;
+6. executar QA operacional/mobile ponta a ponta.
 
 ## Regra de status
 
