@@ -1,3 +1,5 @@
+import type { LilyAllergenSummary } from "../../api";
+
 export type CartAddon = {
   addonId: string;
   name: string;
@@ -18,6 +20,7 @@ export type CartComboSelection = {
   flavors: CartFlavor[];
   addons: CartAddon[];
   configurationHash: string;
+  allergens: LilyAllergenSummary;
 };
 
 export type CartItem = {
@@ -34,6 +37,7 @@ export type CartItem = {
   comboId?: string;
   comboSelections?: CartComboSelection[];
   configurationHash: string;
+  allergens: LilyAllergenSummary;
   unitPriceCents: number;
   quantity: number;
   note: string;

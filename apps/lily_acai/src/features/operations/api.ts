@@ -1,4 +1,4 @@
-import { parseResponse } from "../../api";
+import { parseResponse, type LilyAllergenSummary } from "../../api";
 
 export type KitchenOperationStatus =
   | "received"
@@ -39,6 +39,7 @@ export type KitchenOrder = {
     quantity: number;
     note: string | null;
     flavors: Array<{ id?: string; name?: string }>;
+    allergens: LilyAllergenSummary;
     configuration: Record<string, unknown>;
     addons: Array<{ name: string; quantity: number }>;
   }>;
@@ -101,6 +102,7 @@ export type KitchenPrintTicket = {
     quantity: number;
     note: string | null;
     flavors: Array<{ name: string }>;
+    allergens: LilyAllergenSummary;
     addons: Array<{ name: string; quantity: number }>;
   }>;
 };

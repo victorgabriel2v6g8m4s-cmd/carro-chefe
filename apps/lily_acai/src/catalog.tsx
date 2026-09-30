@@ -12,6 +12,7 @@ import {
 } from "./api";
 import { useCart } from "./features/cart/CartContext";
 import { trackLilyAnalytics } from "./analytics";
+import { AllergenNotice } from "./features/allergens/AllergenNotice";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -133,6 +134,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
       flavorIds: quote.flavors.map((flavor) => flavor.id),
       flavors: quote.flavors,
       addons: quote.addons,
+      allergens: quote.allergens,
       configurationHash: quote.configurationHash,
       unitPriceCents: quote.totalPriceCents
     });
@@ -217,6 +219,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
             </div>
           </fieldset>}
 
+          {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
           {busy && <p className="config-status" role="status">Atualizando preço e validação...</p>}
           {!busy && !quote && product.configurationType === "lilymix" && flavorIds.length === 0
@@ -388,8 +391,10 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
         flavorIds: selection.flavors.map((flavor) => flavor.id),
         flavors: selection.flavors,
         addons: selection.addons,
+        allergens: selection.allergens,
         configurationHash: selection.configurationHash
       })),
+      allergens: quote.allergens,
       configurationHash: quote.configurationHash,
       unitPriceCents: quote.totalPriceCents
     });
@@ -487,6 +492,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
             <small>Categoria, tamanho, disponibilidade, adicionais e preço são validados automaticamente no servidor.</small>
           </>}
 
+          {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
           {quoting && <p className="config-status" role="status">Validando combo e recalculando...</p>}
         </div>

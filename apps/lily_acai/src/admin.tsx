@@ -11,6 +11,115 @@ function parseMoney(input: string) {
   return Number.isFinite(value) ? Math.round(value * 100) : 0;
 }
 
+
+type AdminAllergenValue = {
+  reviewStatus: "unreviewed" | "reviewed";
+  contains: string[];
+  mayContain: string[];
+};
+
+function normalizeAdminAllergens(input: any): AdminAllergenValue {
+  return {
+    reviewStatus: input?.reviewStatus === "reviewed" ? "reviewed" : "unreviewed",
+    contains: Array.isArray(input?.contains) ? input.contains.map(String) : [],
+    mayContain: Array.isArray(input?.mayContain) ? input.mayContain.map(String) : []
+  };
+}
+
+function selectedValues(target: HTMLSelectElement) {
+  return Array.from(target.selectedOptions).map((option) => option.value);
+}
+
+function allergenPayload(value: AdminAllergenValue) {
+  return {
+    allergenReviewStatus: value.reviewStatus,
+    allergenContains: value.contains,
+    allergenMayContain: value.mayContain
+  };
+}
+
+function AllergenAdminFields(props: {
+  catalog: Array<{ code: string; label: string }>;
+  value: AdminAllergenValue;
+  onChange: (value: AdminAllergenValue) => void;
+}) {
+  return <fieldset className="admin-allergen-fields">
+    <legend>Alergênicos</legend>
+    <label>Revisão
+      <select
+        value={props.value.reviewStatus}
+        onChange={(event) => props.onChange({ ...props.value, reviewStatus: event.target.value === "reviewed" ? "reviewed" : "unreviewed" })}
+      >
+        <option value="unreviewed">Pendente de revisão</option>
+        <option value="reviewed">Revisado</option>
+      </select>
+    </label>
+    <label>CONTÉM
+      <select
+        multiple
+        size={5}
+        value={props.value.contains}
+        onChange={(event) => props.onChange({ ...props.value, contains: selectedValues(event.target) })}
+      >
+        {props.catalog.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+      </select>
+    </label>
+    <label>PODE CONTER
+      <select
+        multiple
+        size={5}
+        value={props.value.mayContain}
+        onChange={(event) => props.onChange({ ...props.value, mayContain: selectedValues(event.target) })}
+      >
+        {props.catalog.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+      </select>
+    </label>
+    <small>
+      “Pendente de revisão” nunca é tratado como ausência de alergênicos. Não selecione o mesmo item em CONTÉM e PODE CONTER.
+    </small>
+  </fieldset>;
+}
+
+function ComponentAllergenEditor(props: {
+  endpoint: "flavors" | "addons";
+  item: any;
+  catalog: Array<{ code: string; label: string }>;
+  csrf: string;
+  refresh: () => Promise<void>;
+  setError: (value: string) => void;
+}) {
+  const [value, setValue] = useState<AdminAllergenValue>(() => normalizeAdminAllergens(props.item.allergens));
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    props.setError("");
+    try {
+      await lilyAdminJson(`${props.endpoint}/${props.item.id}`, "PATCH", props.csrf, {
+        allergens: allergenPayload(value)
+      });
+      await props.refresh();
+    } catch (cause) {
+      props.setError(cause instanceof Error ? cause.message : "Falha ao salvar alergênicos.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <details className="admin-allergen-component">
+    <summary>
+      <strong>{props.item.name}</strong>
+      <span className={value.reviewStatus === "reviewed" ? "state-live" : "state-off"}>
+        {value.reviewStatus === "reviewed" ? "Alergênicos revisados" : "Revisão pendente"}
+      </span>
+    </summary>
+    <AllergenAdminFields catalog={props.catalog} value={value} onChange={setValue} />
+    <button className="button ghost" type="button" disabled={busy} onClick={() => void save()}>
+      {busy ? "Salvando..." : "Salvar alergênicos"}
+    </button>
+  </details>;
+}
+
 function useAdminData() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -100,6 +209,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     coverMediaId: product.cover?.id ?? ""
   });
   const [busy, setBusy] = useState(false);
+  const [allergens, setAllergens] = useState<AdminAllergenValue>(() => normalizeAdminAllergens(product.rawAllergens));
 
   useEffect(() => {
     setDraft((current) => ({
@@ -121,6 +231,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     try {
       await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, {
         ...draft,
+        allergens: allergenPayload(allergens),
         coverMediaId: draft.coverMediaId || null
       });
       await refresh();
@@ -198,6 +309,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <label className="toggle"><input type="checkbox" checked={draft.isAvailable} onChange={(e) => setDraft({ ...draft, isAvailable: e.target.checked })} /> Disponível</label>
       <label className="toggle"><input type="checkbox" checked={draft.featured} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} /> Mais pedido · etiqueta na grade</label>
       <label className="toggle"><input type="checkbox" checked={draft.weeklyHighlight} onChange={(e) => setDraft({ ...draft, weeklyHighlight: e.target.checked })} /> Escolha da semana · banner exclusivo</label>
+      <div className="admin-span"><AllergenAdminFields catalog={data.allergenCatalog ?? []} value={allergens} onChange={setAllergens} /></div>
       <button className="button primary" type="button" disabled={busy} onClick={save}>{busy ? "Salvando..." : "Salvar produto"}</button>
     </div>
     <div className="variant-admin">
@@ -426,6 +538,18 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
         <label>Adicional preço 300<input name="modifier300" defaultValue="0" /></label><label>Adicional preço 500<input name="modifier500" defaultValue="0" /></label>
         <button className="button primary" type="submit">Criar sabor</button>
       </form>
+      <div className="admin-allergen-component-list">
+        <h4>Revisão de alergênicos dos sabores</h4>
+        {data.flavors.map((flavor: any) => <ComponentAllergenEditor
+          key={flavor.id}
+          endpoint="flavors"
+          item={flavor}
+          catalog={data.allergenCatalog ?? []}
+          csrf={csrf}
+          refresh={refresh}
+          setError={setError}
+        />)}
+      </div>
       <div className="compatibility-matrix">
         {data.flavors.map((a: any) => <div className="compat-row" key={a.id}>
           <strong>{a.name}</strong>
@@ -461,6 +585,18 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
           <select name="status" defaultValue={addon.status}><option value="published">Publicado</option><option value="paused">Pausado</option><option value="draft">Rascunho</option></select>
           <button className="button ghost" type="submit">Salvar</button>
         </form>)}
+      </div>
+      <div className="admin-allergen-component-list">
+        <h4>Revisão de alergênicos dos adicionais</h4>
+        {data.addons.map((addon: any) => <ComponentAllergenEditor
+          key={addon.id}
+          endpoint="addons"
+          item={addon}
+          catalog={data.allergenCatalog ?? []}
+          csrf={csrf}
+          refresh={refresh}
+          setError={setError}
+        />)}
       </div>
       <form className="admin-form-grid compact" onSubmit={createAddon}>
         <label>Nome<input name="name" required /></label><label>Slug<input name="slug" required /></label>

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
+import { aggregateLilyAllergens, mergeLilyAllergenSummaries, parseLilyAllergenJson } from "./allergens";
 
 const idSchema = z.string().trim().min(1).max(120);
 const sizeSchema = z.number().int().min(100).max(5000);
@@ -70,8 +71,11 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   if (!variant || !variant.isAvailable) throw new ApiError(409, "Tamanho indisponível.", { code: "LILY_VARIANT_UNAVAILABLE" });
 
   let basePriceCents = variant.priceCents;
-  const selectedFlavors = product.flavorLinks.map((link) => link.flavor)
-    .filter((flavor) => input.flavorIds.includes(flavor.id) && flavor.status === "published");
+  const publishedFlavors = product.flavorLinks.map((link) => link.flavor)
+    .filter((flavor) => flavor.status === "published");
+  const selectedFlavors = product.configurationType === "fixed"
+    ? publishedFlavors
+    : publishedFlavors.filter((flavor) => input.flavorIds.includes(flavor.id));
 
   if (product.configurationType === "lilymix") {
     if (input.flavorIds.length < 1 || input.flavorIds.length > 3 || selectedFlavors.length !== input.flavorIds.length) {
@@ -88,8 +92,9 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     if (new Set(input.flavorIds).size !== input.flavorIds.length) {
       throw new ApiError(400, "Não repita o mesmo sabor na combinação.", { code: "LILY_DUPLICATE_FLAVOR" });
     }
-    const fixedIds = new Set(product.flavorLinks.map((link) => link.flavorId));
-    if (input.flavorIds.some((id) => !fixedIds.has(id))) {
+    const fixedIds = publishedFlavors.map((flavor) => flavor.id).sort();
+    const requestedIds = [...input.flavorIds].sort();
+    if (fixedIds.length !== requestedIds.length || fixedIds.some((id, index) => id !== requestedIds[index])) {
       throw new ApiError(400, "Sabores do produto fixo não podem ser trocados.", { code: "LILY_FIXED_FLAVOR" });
     }
   }
@@ -112,6 +117,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
 
   let addonPriceCents = 0;
   const addonDetails: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }> = [];
+  const selectedAddons: Array<(typeof product.addonLinks)[number]["addon"]> = [];
   for (const requested of input.addons) {
     const link = product.addonLinks.find((item) =>
       item.addonId === requested.addonId && item.allowed && item.addon.status === "published"
@@ -129,16 +135,38 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     const unitPriceCents = link.priceOverride ?? link.addon.priceCents;
     addonPriceCents += unitPriceCents * requested.quantity;
     addonDetails.push({ addonId: link.addonId, name: link.addon.name, quantity: requested.quantity, unitPriceCents });
+    selectedAddons.push(link.addon);
   }
 
+  const effectiveFlavorIds = selectedFlavors.map((flavor) => flavor.id).sort();
   const canonical = JSON.stringify({
     productId: product.id,
     sizeMl: input.sizeMl,
-    flavorIds: [...input.flavorIds].sort(),
+    flavorIds: effectiveFlavorIds,
     addons: [...input.addons].sort((a, b) => a.addonId.localeCompare(b.addonId))
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
   const totalPriceCents = basePriceCents + addonPriceCents;
+  const allergens = aggregateLilyAllergens([
+    {
+      label: product.displayName,
+      reviewStatus: product.allergenReviewStatus,
+      contains: parseLilyAllergenJson(product.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(product.allergenMayContainJson)
+    },
+    ...selectedFlavors.map((flavor) => ({
+      label: flavor.name,
+      reviewStatus: flavor.allergenReviewStatus,
+      contains: parseLilyAllergenJson(flavor.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(flavor.allergenMayContainJson)
+    })),
+    ...selectedAddons.map((addon) => ({
+      label: addon.name,
+      reviewStatus: addon.allergenReviewStatus,
+      contains: parseLilyAllergenJson(addon.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(addon.allergenMayContainJson)
+    }))
+  ]);
   return {
     configurationHash,
     product: { id: product.id, slug: product.slug, name: product.displayName },
@@ -146,6 +174,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     sizeMl: input.sizeMl,
     flavors: selectedFlavors.map((flavor) => ({ id: flavor.id, name: flavor.name })),
     addons: addonDetails,
+    allergens,
     basePriceCents,
     addonPriceCents,
     totalPriceCents
@@ -337,6 +366,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
     selections: selections.map((item) => item.configurationHash).sort()
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
+  const allergens = mergeLilyAllergenSummaries(selections.map((selection) => selection.allergens));
 
   return {
     kind: "combo" as const,
@@ -349,6 +379,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
     },
     mode,
     selections,
+    allergens,
     regularPriceCents: Math.min(combo.regularPriceCents, componentBasePriceCents),
     basePriceCents: comboBasePriceCents,
     addonPriceCents,

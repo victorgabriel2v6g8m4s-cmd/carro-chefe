@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { AllergenNotice } from "../allergens/AllergenNotice";
 
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -30,6 +31,7 @@ export function CartPage() {
             {item.kind === "combo" && item.comboSelections?.length ? <small>Inclui: {item.comboSelections.map((selection) => selection.productName).join(" + ")}</small> : null}
             {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
             {item.addons.length > 0 && <small>Adicionais: {item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
+            <AllergenNotice summary={item.allergens} compact />
           </div>
           <div className="cart-item-actions">
             <strong>{money(item.unitPriceCents * item.quantity)}</strong>

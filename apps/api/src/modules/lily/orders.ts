@@ -207,6 +207,7 @@ function serializeOrder(
       configurationHash: item.configurationHash,
       configuration: JSON.parse(item.configurationSnapshotJson),
       flavors: JSON.parse(item.flavorsSnapshotJson),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       unitPriceCents: item.unitPriceSnapshotCents,
       quantity: item.quantity,
       lineTotalCents: item.lineTotalCents,
@@ -288,6 +289,7 @@ function serializeGuestTrackingOrder(order: NonNullable<Awaited<ReturnType<typeo
       flavors: (JSON.parse(item.flavorsSnapshotJson) as Array<{ name?: string }>).map((flavor) => ({
         name: typeof flavor.name === "string" ? flavor.name : ""
       })).filter((flavor) => flavor.name),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       addons: item.addons.map((addon) => ({
         name: addon.addonNameSnapshot,
         quantity: addon.quantity
@@ -465,10 +467,12 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
                   sizeMl: selection.sizeMl,
                   flavors: selection.flavors,
                   addons: selection.addons,
+                  allergens: selection.allergens,
                   totalPriceCents: selection.totalPriceCents
                 }))
               }),
               flavorsSnapshotJson: "[]",
+              allergenSnapshotJson: JSON.stringify(item.allergens),
               unitPriceSnapshotCents: item.totalPriceCents,
               quantity: item.quantity,
               lineTotalCents: item.lineTotalCents,
@@ -496,6 +500,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
                 addons: item.addons.map((addon) => ({ addonId: addon.addonId, quantity: addon.quantity }))
               }),
               flavorsSnapshotJson: JSON.stringify(item.flavors),
+              allergenSnapshotJson: JSON.stringify(item.allergens),
               unitPriceSnapshotCents: item.totalPriceCents,
               quantity: item.quantity,
               lineTotalCents: item.lineTotalCents,

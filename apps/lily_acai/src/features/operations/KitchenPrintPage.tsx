@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getKitchenPrintTicket, type KitchenPrintTicket } from "./api";
+import { AllergenNotice } from "../allergens/AllergenNotice";
 
 function fulfillmentLabel(value: KitchenPrintTicket["fulfillmentType"]) {
   return value === "delivery" ? "Entrega" : "Retirada";
@@ -85,6 +86,7 @@ export function KitchenPrintPage() {
           {item.addons.length > 0 && <p>
             <strong>Adicionais:</strong> {item.addons.map((addon) => addon.quantity + "× " + addon.name).join(" · ")}
           </p>}
+          <AllergenNotice summary={item.allergens} compact heading="ALERGÊNICOS" />
           {item.note && <p className="kitchen-print-note"><strong>Obs. item:</strong> {item.note}</p>}
         </article>)}
       </section>

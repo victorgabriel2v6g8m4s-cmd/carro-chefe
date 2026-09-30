@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AddCartItemInput, CartItem } from "./types";
+import { incompleteAllergenSummary } from "../allergens/AllergenNotice";
 
 const STORAGE_KEY = "cooklily_cart_v1";
 
@@ -32,7 +33,18 @@ function safeLoad(): CartItem[] {
       && item.quantity > 0
     ).map((item) => ({
       ...item,
-      kind: item.kind === "combo" ? "combo" : "product"
+      kind: item.kind === "combo" ? "combo" : "product",
+      allergens: item.allergens && typeof item.allergens === "object"
+        ? item.allergens
+        : incompleteAllergenSummary("item salvo antes da revisão de alergênicos"),
+      comboSelections: Array.isArray(item.comboSelections)
+        ? item.comboSelections.map((selection: any) => ({
+            ...selection,
+            allergens: selection?.allergens && typeof selection.allergens === "object"
+              ? selection.allergens
+              : incompleteAllergenSummary("item do combo salvo antes da revisão de alergênicos")
+          }))
+        : item.comboSelections
     } as CartItem)).slice(0, 30);
   } catch {
     return [];

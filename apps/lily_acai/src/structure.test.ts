@@ -13,6 +13,12 @@ const paymentSource = readFileSync(resolve(sourceDirectory, "features/payments/P
 const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPage.tsx"), "utf8");
 const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/CourierPage.tsx"), "utf8");
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
+const cartSource = readFileSync(resolve(sourceDirectory, "features/cart/CartPage.tsx"), "utf8");
+const cartContextSource = readFileSync(resolve(sourceDirectory, "features/cart/CartContext.tsx"), "utf8");
+const checkoutSource = readFileSync(resolve(sourceDirectory, "features/checkout/CheckoutPage.tsx"), "utf8");
+const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
+const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
+const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("mantém idioma e viewport declarados no documento", () => {
@@ -148,6 +154,22 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(accountOrdersSource).toContain("deliveryCode");
     expect(accountOrdersSource).toContain("Informe este código ao entregador somente quando ele estiver no seu endereço");
     expect(accountOrdersSource).toContain("deliveryEvents");
+  });
+
+  it("mantém alergênicos visíveis no funil do cliente e na produção", () => {
+    expect(catalogSource).toContain("AllergenNotice");
+    expect(cartSource).toContain("AllergenNotice");
+    expect(cartContextSource).toContain("item salvo antes da revisão de alergênicos");
+    expect(checkoutSource).toContain("AllergenNotice");
+    expect(accountOrdersSource).toContain("AllergenNotice");
+    expect(kitchenSource).toContain("AllergenNotice");
+    expect(printSource).toContain("AllergenNotice");
+    expect(allergenSource).toContain("Informação em revisão");
+    expect(allergenSource).toContain("CONTÉM:");
+    expect(allergenSource).toContain("PODE CONTER:");
+    expect(allergenSource).toContain("contato cruzado");
+    expect(adminSource).toContain("AllergenAdminFields");
+    expect(adminSource).toContain("Pendente de revisão");
   });
 
   it("mantém fila da cozinha no painel e bloqueia montagem sem pagamento", () => {
