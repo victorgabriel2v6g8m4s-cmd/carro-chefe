@@ -88,6 +88,22 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf("npm run db:deploy:core"));
   });
 
+  it.skipIf(process.platform === "win32")("preserva o descritor do lock através do reexec", () => {
+    const temp = mkdtempSync(path.join(os.tmpdir(), "carro-chefe-lock-reexec-"));
+    try {
+      const lock = path.join(temp, "deploy.lock");
+      const probe = spawnSync("bash", ["-c", `
+        set -euo pipefail
+        exec 9>"$1"
+        flock -n 9
+        exec env CARRO_CHEFE_DEPLOY_REEXEC=1 bash -c '[[ -e /proc/self/fd/9 ]]'
+      `, "_", lock], { encoding: "utf8" });
+      expect(probe.status, probe.stderr || probe.stdout).toBe(0);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
+  });
+
   it("reexecuta a versão do deployer contida no SHA alvo antes do release", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     expect(deployer).toContain('git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy"');
@@ -95,6 +111,8 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain('DEPLOYER_PATH="$(readlink -f "${BASH_SOURCE[0]}")"');
     expect(deployer).toContain('sha256sum "${DEPLOYER_PATH}"');
     expect(deployer).toContain('reexec do deployer sem lock herdado');
+    expect(deployer).toContain('[[ -e "/proc/self/fd/9" ]]');
+    expect(deployer).not.toContain('"/proc/$/fd/9"');
     expect(deployer).toContain('exec env CARRO_CHEFE_DEPLOY_REEXEC=1');
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="nginx-precheck"'));
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="backup"'));
