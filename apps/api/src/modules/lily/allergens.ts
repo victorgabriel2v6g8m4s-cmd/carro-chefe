@@ -111,6 +111,26 @@ export function aggregateLilyAllergens(sources: LilyAllergenSource[]) {
   };
 }
 
+
+export function mergeLilyAllergenSummaries(summaries: Array<{
+  complete: boolean;
+  contains: Array<{ code: string }>;
+  mayContain: Array<{ code: string }>;
+  unreviewed: string[];
+}>) {
+  const contains = summaries.flatMap((summary) => summary.contains.map((item) => item.code));
+  const mayContain = summaries.flatMap((summary) => summary.mayContain.map((item) => item.code));
+  const containsSet = new Set(normalizeLilyAllergenCodes(contains));
+  const filteredMayContain = normalizeLilyAllergenCodes(mayContain).filter((code) => !containsSet.has(code));
+
+  return {
+    complete: summaries.every((summary) => summary.complete),
+    contains: describeLilyAllergenCodes(containsSet),
+    mayContain: describeLilyAllergenCodes(filteredMayContain),
+    unreviewed: [...new Set(summaries.flatMap((summary) => summary.unreviewed))]
+  };
+}
+
 export function allergenStorageData(input: z.infer<typeof lilyAllergenInputSchema>) {
   return {
     allergenReviewStatus: input.allergenReviewStatus,
