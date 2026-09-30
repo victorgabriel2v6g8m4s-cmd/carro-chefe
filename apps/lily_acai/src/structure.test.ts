@@ -14,6 +14,7 @@ const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations
 const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/CourierPage.tsx"), "utf8");
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
 const cartSource = readFileSync(resolve(sourceDirectory, "features/cart/CartPage.tsx"), "utf8");
+const cartContextSource = readFileSync(resolve(sourceDirectory, "features/cart/CartContext.tsx"), "utf8");
 const checkoutSource = readFileSync(resolve(sourceDirectory, "features/checkout/CheckoutPage.tsx"), "utf8");
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
@@ -158,6 +159,7 @@ describe("estrutura crítica de UX CookLily", () => {
   it("mantém alergênicos visíveis no funil do cliente e na produção", () => {
     expect(catalogSource).toContain("AllergenNotice");
     expect(cartSource).toContain("AllergenNotice");
+    expect(cartContextSource).toContain("item salvo antes da revisão de alergênicos");
     expect(checkoutSource).toContain("AllergenNotice");
     expect(accountOrdersSource).toContain("AllergenNotice");
     expect(kitchenSource).toContain("AllergenNotice");
