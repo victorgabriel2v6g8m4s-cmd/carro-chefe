@@ -39,7 +39,7 @@ const productCreateSchema = z.object({
   descriptiveName: z.string().trim().max(180).nullable().optional(),
   description: z.string().trim().max(1600).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(60)).max(40).default([]),
-  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
+  allergens: lilyAllergenInputSchema.optional(),
   configurationType: z.enum(["fixed", "lilymix"]).default("fixed"),
   status: statusSchema.default("draft"),
   isAvailable: z.boolean().default(false),
@@ -70,7 +70,7 @@ const flavorCreateSchema = z.object({
   status: statusSchema.default("published"),
   premium: z.boolean().default(false),
   tags: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
-  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
+  allergens: lilyAllergenInputSchema.optional(),
   portion300: z.number().int().min(0).max(1000),
   portion500: z.number().int().min(0).max(1500),
   priceModifier300: moneySchema.default(0),
@@ -85,7 +85,7 @@ const addonCreateSchema = z.object({
   portion300: z.number().int().min(0).max(1000),
   portion500: z.number().int().min(0).max(1500),
   individualLimit: z.number().int().min(1).max(10).default(2),
-  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
+  allergens: lilyAllergenInputSchema.optional(),
   status: statusSchema.default("published")
 }).strict();
 
@@ -678,7 +678,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const { tags, allergens, ...rest } = input;
     const created = await lilyPrisma.$transaction(async (tx) => {
       const product = await tx.lilyProduct.create({
-        data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens) }
+        data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens ?? defaultAllergenInput) }
       });
       if (product.weeklyHighlight) {
         await tx.lilyProduct.updateMany({
@@ -811,7 +811,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const input = flavorCreateSchema.parse(request.body);
     const { tags, allergens, ...rest } = input;
     const created = await lilyPrisma.lilyFlavorComponent.create({
-      data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens) }
+      data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens ?? defaultAllergenInput) }
     });
     await auditLilyAdmin(context.user.id, "create", "flavor", created.id, input);
     return reply.code(201).send(created);
@@ -865,7 +865,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const context = await requireLilyStaff(request, true);
     const input = addonCreateSchema.parse(request.body);
     const { allergens, ...rest } = input;
-    const created = await lilyPrisma.lilyAddon.create({ data: { ...rest, ...allergenStorageData(allergens) } });
+    const created = await lilyPrisma.lilyAddon.create({ data: { ...rest, ...allergenStorageData(allergens ?? defaultAllergenInput) } });
     await auditLilyAdmin(context.user.id, "create", "addon", created.id, input);
     return reply.code(201).send(created);
   });
