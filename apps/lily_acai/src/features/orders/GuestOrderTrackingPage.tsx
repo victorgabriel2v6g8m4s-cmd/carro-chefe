@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
 import { readGuestOrderToken } from "./guest-token";
+import { AllergenNotice } from "../allergens/AllergenNotice";
 
 const LABELS: Record<string, string> = {
   received: "Pedido recebido",
@@ -185,6 +186,7 @@ export function GuestOrderTrackingPage() {
             <small>{item.kind === "combo" ? "Combo" : `${item.sizeMl} ml · ${item.variantName}`}</small>
             {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
             {item.addons.length > 0 && <small>{item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
+            <AllergenNotice summary={item.allergens} compact />
           </div>
           <strong>{money(item.lineTotalCents)}</strong>
         </article>)}
