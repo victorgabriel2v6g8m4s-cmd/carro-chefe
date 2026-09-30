@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
+import { aggregateLilyAllergens, parseLilyAllergenJson } from "./allergens";
 
 const idSchema = z.string().trim().min(1).max(120);
 const sizeSchema = z.number().int().min(100).max(5000);
@@ -112,6 +113,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
 
   let addonPriceCents = 0;
   const addonDetails: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }> = [];
+  const selectedAddons: Array<(typeof product.addonLinks)[number]["addon"]> = [];
   for (const requested of input.addons) {
     const link = product.addonLinks.find((item) =>
       item.addonId === requested.addonId && item.allowed && item.addon.status === "published"
@@ -129,6 +131,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     const unitPriceCents = link.priceOverride ?? link.addon.priceCents;
     addonPriceCents += unitPriceCents * requested.quantity;
     addonDetails.push({ addonId: link.addonId, name: link.addon.name, quantity: requested.quantity, unitPriceCents });
+    selectedAddons.push(link.addon);
   }
 
   const canonical = JSON.stringify({
@@ -139,6 +142,26 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
   const totalPriceCents = basePriceCents + addonPriceCents;
+  const allergens = aggregateLilyAllergens([
+    {
+      label: product.displayName,
+      reviewStatus: product.allergenReviewStatus,
+      contains: parseLilyAllergenJson(product.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(product.allergenMayContainJson)
+    },
+    ...selectedFlavors.map((flavor) => ({
+      label: flavor.name,
+      reviewStatus: flavor.allergenReviewStatus,
+      contains: parseLilyAllergenJson(flavor.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(flavor.allergenMayContainJson)
+    })),
+    ...selectedAddons.map((addon) => ({
+      label: addon.name,
+      reviewStatus: addon.allergenReviewStatus,
+      contains: parseLilyAllergenJson(addon.allergenContainsJson),
+      mayContain: parseLilyAllergenJson(addon.allergenMayContainJson)
+    }))
+  ]);
   return {
     configurationHash,
     product: { id: product.id, slug: product.slug, name: product.displayName },
@@ -146,6 +169,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     sizeMl: input.sizeMl,
     flavors: selectedFlavors.map((flavor) => ({ id: flavor.id, name: flavor.name })),
     addons: addonDetails,
+    allergens,
     basePriceCents,
     addonPriceCents,
     totalPriceCents
