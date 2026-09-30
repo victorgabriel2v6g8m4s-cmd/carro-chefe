@@ -114,8 +114,8 @@ export function aggregateLilyAllergens(sources: LilyAllergenSource[]) {
 
 export function mergeLilyAllergenSummaries(summaries: Array<{
   complete: boolean;
-  contains: Array<{ code: string }>;
-  mayContain: Array<{ code: string }>;
+  contains: Array<{ code: string; label?: string }>;
+  mayContain: Array<{ code: string; label?: string }>;
   unreviewed: string[];
 }>) {
   const contains = summaries.flatMap((summary) => summary.contains.map((item) => item.code));
