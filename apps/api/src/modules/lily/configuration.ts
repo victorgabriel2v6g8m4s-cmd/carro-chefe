@@ -138,10 +138,11 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     selectedAddons.push(link.addon);
   }
 
+  const effectiveFlavorIds = selectedFlavors.map((flavor) => flavor.id).sort();
   const canonical = JSON.stringify({
     productId: product.id,
     sizeMl: input.sizeMl,
-    flavorIds: [...input.flavorIds].sort(),
+    flavorIds: effectiveFlavorIds,
     addons: [...input.addons].sort((a, b) => a.addonId.localeCompare(b.addonId))
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
