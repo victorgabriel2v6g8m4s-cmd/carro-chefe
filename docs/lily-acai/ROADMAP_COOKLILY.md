@@ -183,9 +183,11 @@ Documento: `docs/lily-acai/entregas/ENTREGA_09_ANALYTICS_FIRST_PARTY_2026-09-29.
 
 ## Entrega 10 — QA, observabilidade e hardening
 
-**Status:** em desenvolvimento incremental. A 10A foi tecnicamente validada e integrada pelo PR #112. Candidate SHA `3ba8c615c64b736692d7e925d51d9659225f876d`; CI `36639472270` e CodeQL `36639472287`: success. QA real permanece pendente.
+**Status:** parte técnica automatizável validada e integrada. 10A integrada pelo PR #112; 10B integrada pelo PR #116. QA real e decisões externas continuam pendentes.
 
 ### 10A — observabilidade e backup/restore
+
+Candidate SHA `3ba8c615c64b736692d7e925d51d9659225f876d`; CI `36639472270` e CodeQL `36639472287`: success. Merge `632ad25a2e72954e301093259c28535993ef7d05`.
 
 Implementado:
 
@@ -203,19 +205,32 @@ Implementado:
 
 Documento: `docs/lily-acai/entregas/ENTREGA_10A_OBSERVABILIDADE_BACKUP_2026-09-29.md`.
 
-Ainda aberto na Entrega 10:
+### 10B — acessibilidade e performance em CI
 
-- 10B: regressões automatizadas de acessibilidade/overflow/performance;
-- QA operacional e mobile real;
-- MFA staff/admin: **implementada tecnicamente; enrollment/deploy pendentes**;
-- recuperação segura de senha: pendente por falta de canal de verificação aprovado;
+Candidate SHA `d895e51ba764382238b4227e27e2e5c8816be34e`; CI `36640536487` e CodeQL `36640536577`: success. Merge `930f9d3aa635af099e7a1b9b0de928bb54bdd80f`.
+
+Implementado:
+
+- skip link e destino de foco no conteúdo principal;
+- foco visível ampliado para controles interativos;
+- regressões de idioma/viewport/reduced-motion;
+- regressões preservando focus trap, touch targets, navegação ativa e ausência de overflow mascarado;
+- budget de bundle integrado ao `build:lily`;
+- testes do medidor/budget integrados ao `npm test`;
+- build validado em 468,27 KiB JS raw / 121,81 KiB gzip e 89,05 KiB CSS raw / 16,46 KiB gzip.
+
+Documento: `docs/lily-acai/entregas/ENTREGA_10B_A11Y_PERFORMANCE_2026-09-29.md`.
+
+Ainda pendente na Entrega 10:
+
+- QA operacional e mobile real em 320/360/390/430/768 px;
+- teclado completo/leitor de tela/contraste final em navegador real;
+- Lighthouse/Core Web Vitals após publicação;
+- enrollment real de MFA na VPS;
+- recuperação segura de senha: bloqueada até definição de canal confiável de verificação;
 - retenção de PII/logs/analytics/backups: depende de política final;
-- overflows mascarados: **correção estrutural implementada; QA visual pendente**;
-- focus trap e alvos de toque críticos: **implementados tecnicamente; QA real pendente**;
-- controle explícito de outras sessões: **implementado tecnicamente**;
-- Configurações da loja separada de fulfillment: **implementada tecnicamente**;
-- deep-link de produto por slug: **implementado tecnicamente; QA real pendente**;
-- revalidação dos 40 achados de UX/segurança/admin em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
+- drill real de backup/restore e cópia externa criptografada;
+- revalidação dos achados marcados QA REAL PENDENTE em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`.
 
 ## Entrega 11 — Pix próprio e operação ponta a ponta
 
