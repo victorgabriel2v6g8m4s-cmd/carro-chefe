@@ -467,10 +467,12 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
                   sizeMl: selection.sizeMl,
                   flavors: selection.flavors,
                   addons: selection.addons,
+                  allergens: selection.allergens,
                   totalPriceCents: selection.totalPriceCents
                 }))
               }),
               flavorsSnapshotJson: "[]",
+              allergenSnapshotJson: JSON.stringify(item.allergens),
               unitPriceSnapshotCents: item.totalPriceCents,
               quantity: item.quantity,
               lineTotalCents: item.lineTotalCents,
@@ -498,6 +500,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
                 addons: item.addons.map((addon) => ({ addonId: addon.addonId, quantity: addon.quantity }))
               }),
               flavorsSnapshotJson: JSON.stringify(item.flavors),
+              allergenSnapshotJson: JSON.stringify(item.allergens),
               unitPriceSnapshotCents: item.totalPriceCents,
               quantity: item.quantity,
               lineTotalCents: item.lineTotalCents,
