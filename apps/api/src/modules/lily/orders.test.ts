@@ -111,9 +111,14 @@ async function enableFlatOperation() {
   });
 }
 
-async function quoteSol(fulfillmentType: "pickup" | "delivery" = "pickup", address?: Record<string, unknown>) {
+async function quoteSol(
+  fulfillmentType: "pickup" | "delivery" = "pickup",
+  address?: Record<string, unknown>,
+  remoteAddress?: string
+) {
   return app.inject({
     method: "POST",
+    ...(remoteAddress ? { remoteAddress } : {}),
     url: "/api/v1/lily/orders/quote",
     payload: {
       fulfillmentType,
@@ -416,7 +421,8 @@ describe("CookLily Entrega 06", () => {
         }
       });
 
-      const quoteResponse = await quoteSol();
+      const snapshotRemoteAddress = "127.0.0.42";
+      const quoteResponse = await quoteSol("pickup", undefined, snapshotRemoteAddress);
       expect(quoteResponse.statusCode).toBe(200);
       expect(quoteResponse.json().items[0].allergens.contains.map((item: any) => item.code)).toContain("milk");
 
@@ -424,6 +430,7 @@ describe("CookLily Entrega 06", () => {
       const created = await app.inject({
         method: "POST",
         url: "/api/v1/lily/orders",
+        remoteAddress: snapshotRemoteAddress,
         headers: { origin, "idempotency-key": "cooklily:test:allergen-snapshot:01" },
         payload
       });
@@ -443,6 +450,7 @@ describe("CookLily Entrega 06", () => {
       const tracking = await app.inject({
         method: "GET",
         url: `/api/v1/lily/public/orders/${created.json().id}/tracking`,
+        remoteAddress: snapshotRemoteAddress,
         headers: { "x-lily-order-token": guestToken }
       });
       expect(tracking.statusCode).toBe(200);
