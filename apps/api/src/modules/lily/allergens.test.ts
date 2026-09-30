@@ -4,6 +4,7 @@ import {
   allergenStorageData,
   describeLilyAllergenCodes,
   lilyAllergenInputSchema,
+  mergeLilyAllergenSummaries,
   parseLilyAllergenJson
 } from "./allergens";
 
@@ -55,6 +56,28 @@ describe("CookLily allergen domain", () => {
     expect(result.complete).toBe(false);
     expect(result.unreviewed).toEqual(["Sabor Morango"]);
     expect(result.contains.map((item) => item.code)).toEqual(["milk"]);
+  });
+
+  it("preserva fontes não revisadas ao unir itens de combo", () => {
+    const result = mergeLilyAllergenSummaries([
+      {
+        complete: false,
+        contains: [{ code: "milk", label: "leite" }],
+        mayContain: [{ code: "peanuts", label: "amendoim" }],
+        unreviewed: ["Nutella"]
+      },
+      {
+        complete: true,
+        contains: [{ code: "peanuts", label: "amendoim" }],
+        mayContain: [{ code: "milk", label: "leite" }],
+        unreviewed: []
+      }
+    ]);
+
+    expect(result.complete).toBe(false);
+    expect(result.unreviewed).toEqual(["Nutella"]);
+    expect(result.contains.map((item) => item.code)).toEqual(["peanuts", "milk"]);
+    expect(result.mayContain).toEqual([]);
   });
 
   it("rejeita o mesmo código em contém e pode conter", () => {
