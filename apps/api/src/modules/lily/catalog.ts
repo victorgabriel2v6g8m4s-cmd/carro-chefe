@@ -6,6 +6,7 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
+import { LILY_ALLERGEN_CATALOG, allergenApiData, allergenStorageData, lilyAllergenInputSchema, parseLilyAllergenJson } from "./allergens";
 import { isActiveWindow, lilyComboConfigurationSchema, lilyComboModeFromRules, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration, resolveLilyComboPresetSelections } from "./configuration";
 
 const statusSchema = z.enum(["draft", "published", "paused"]);
@@ -15,6 +16,11 @@ const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
 const sizeSchema = z.number().int().min(100).max(5000);
 const marginFloorBps = 1000;
+const defaultAllergenInput = {
+  allergenReviewStatus: "unreviewed" as const,
+  allergenContains: [] as string[],
+  allergenMayContain: [] as string[]
+};
 
 const categoryCreateSchema = z.object({
   parentId: idSchema.nullable().optional(),
@@ -33,6 +39,7 @@ const productCreateSchema = z.object({
   descriptiveName: z.string().trim().max(180).nullable().optional(),
   description: z.string().trim().max(1600).nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(60)).max(40).default([]),
+  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
   configurationType: z.enum(["fixed", "lilymix"]).default("fixed"),
   status: statusSchema.default("draft"),
   isAvailable: z.boolean().default(false),
@@ -63,6 +70,7 @@ const flavorCreateSchema = z.object({
   status: statusSchema.default("published"),
   premium: z.boolean().default(false),
   tags: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
+  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
   portion300: z.number().int().min(0).max(1000),
   portion500: z.number().int().min(0).max(1500),
   priceModifier300: moneySchema.default(0),
@@ -77,6 +85,7 @@ const addonCreateSchema = z.object({
   portion300: z.number().int().min(0).max(1000),
   portion500: z.number().int().min(0).max(1500),
   individualLimit: z.number().int().min(1).max(10).default(2),
+  allergens: lilyAllergenInputSchema.default(defaultAllergenInput),
   status: statusSchema.default("published")
 }).strict();
 
@@ -228,6 +237,7 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
     descriptiveName: product.descriptiveName,
     description: product.description,
     tags: parseStringArray(product.tagsJson),
+    allergens: allergenApiData(product),
     configurationType: product.configurationType,
     status: product.status,
     isAvailable: product.isAvailable,
@@ -256,7 +266,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
         id: link.flavor.id,
         slug: link.flavor.slug,
         name: link.flavor.name,
-        premium: link.flavor.premium
+        premium: link.flavor.premium,
+        allergens: allergenApiData(link.flavor)
       })),
     addons: product.addonLinks
       .filter((link) => link.allowed && link.addon.status === "published")
@@ -265,7 +276,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
         slug: link.addon.slug,
         name: link.addon.name,
         priceCents: link.priceOverride ?? link.addon.priceCents,
-        individualLimit: link.individualLimit ?? link.addon.individualLimit
+        individualLimit: link.individualLimit ?? link.addon.individualLimit,
+        allergens: allergenApiData(link.addon)
       })),
     mixTiers: product.mixTiers
       .filter((tier) => tier.status === "published")
@@ -597,10 +609,16 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     }));
 
     return {
+      allergenCatalog: LILY_ALLERGEN_CATALOG,
       categories,
       products: products.map((product) => ({
         ...serializeProduct(product),
         rawStatus: product.status,
+        rawAllergens: {
+          reviewStatus: product.allergenReviewStatus,
+          contains: parseLilyAllergenJson(product.allergenContainsJson),
+          mayContain: parseLilyAllergenJson(product.allergenMayContainJson)
+        },
         rawVariants: product.variants,
         rawFlavorIds: product.flavorLinks.map((link) => link.flavorId),
         rawAddonLinks: product.addonLinks.map((link) => ({
@@ -612,8 +630,23 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
           portion500: link.portion500
         }))
       })),
-      flavors: flavors.map((flavor) => ({ ...flavor, tags: parseStringArray(flavor.tagsJson) })),
-      addons,
+      flavors: flavors.map((flavor) => ({
+        ...flavor,
+        tags: parseStringArray(flavor.tagsJson),
+        allergens: {
+          reviewStatus: flavor.allergenReviewStatus,
+          contains: parseLilyAllergenJson(flavor.allergenContainsJson),
+          mayContain: parseLilyAllergenJson(flavor.allergenMayContainJson)
+        }
+      })),
+      addons: addons.map((addon) => ({
+        ...addon,
+        allergens: {
+          reviewStatus: addon.allergenReviewStatus,
+          contains: parseLilyAllergenJson(addon.allergenContainsJson),
+          mayContain: parseLilyAllergenJson(addon.allergenMayContainJson)
+        }
+      })),
       compatibilities,
       combos: adminCombos,
       offers,
@@ -642,10 +675,10 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/products", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = productCreateSchema.parse(request.body);
-    const { tags, ...rest } = input;
+    const { tags, allergens, ...rest } = input;
     const created = await lilyPrisma.$transaction(async (tx) => {
       const product = await tx.lilyProduct.create({
-        data: { ...rest, tagsJson: JSON.stringify(tags) }
+        data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens) }
       });
       if (product.weeklyHighlight) {
         await tx.lilyProduct.updateMany({
@@ -670,7 +703,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = productCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
-    const { tags, ...rest } = input;
+    const { tags, allergens, ...rest } = input;
     const updated = await lilyPrisma.$transaction(async (tx) => {
       if (rest.weeklyHighlight === true) {
         await tx.lilyProduct.updateMany({
@@ -686,7 +719,11 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       }
       return tx.lilyProduct.update({
         where: { id },
-        data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
+        data: {
+          ...patchObject(rest),
+          ...(tags ? { tagsJson: JSON.stringify(tags) } : {}),
+          ...(allergens ? allergenStorageData(allergens) : {})
+        }
       });
     });
     await auditLilyAdmin(context.user.id, "update", "product", id, input);
@@ -772,8 +809,10 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/flavors", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = flavorCreateSchema.parse(request.body);
-    const { tags, ...rest } = input;
-    const created = await lilyPrisma.lilyFlavorComponent.create({ data: { ...rest, tagsJson: JSON.stringify(tags) } });
+    const { tags, allergens, ...rest } = input;
+    const created = await lilyPrisma.lilyFlavorComponent.create({
+      data: { ...rest, tagsJson: JSON.stringify(tags), ...allergenStorageData(allergens) }
+    });
     await auditLilyAdmin(context.user.id, "create", "flavor", created.id, input);
     return reply.code(201).send(created);
   });
@@ -783,10 +822,14 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = flavorCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
-    const { tags, ...rest } = input;
+    const { tags, allergens, ...rest } = input;
     const updated = await lilyPrisma.lilyFlavorComponent.update({
       where: { id },
-      data: { ...patchObject(rest), ...(tags ? { tagsJson: JSON.stringify(tags) } : {}) }
+      data: {
+        ...patchObject(rest),
+        ...(tags ? { tagsJson: JSON.stringify(tags) } : {}),
+        ...(allergens ? allergenStorageData(allergens) : {})
+      }
     });
     await auditLilyAdmin(context.user.id, "update", "flavor", id, input);
     return updated;
@@ -821,7 +864,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/addons", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = addonCreateSchema.parse(request.body);
-    const created = await lilyPrisma.lilyAddon.create({ data: input });
+    const { allergens, ...rest } = input;
+    const created = await lilyPrisma.lilyAddon.create({ data: { ...rest, ...allergenStorageData(allergens) } });
     await auditLilyAdmin(context.user.id, "create", "addon", created.id, input);
     return reply.code(201).send(created);
   });
@@ -831,7 +875,11 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = addonCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
-    const updated = await lilyPrisma.lilyAddon.update({ where: { id }, data: patchObject(input) });
+    const { allergens, ...rest } = input;
+    const updated = await lilyPrisma.lilyAddon.update({
+      where: { id },
+      data: { ...patchObject(rest), ...(allergens ? allergenStorageData(allergens) : {}) }
+    });
     await auditLilyAdmin(context.user.id, "update", "addon", id, input);
     return updated;
   });
