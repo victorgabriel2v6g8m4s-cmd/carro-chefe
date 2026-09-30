@@ -208,6 +208,9 @@ model LilyProduct {
   descriptiveName        String?
   description            String?
   tagsJson               String             @default("[]")
+  allergenReviewStatus   String             @default("unreviewed")
+  allergenContainsJson   String             @default("[]")
+  allergenMayContainJson String             @default("[]")
   configurationType      String             @default("fixed")
   status                 String             @default("draft")
   isAvailable            Boolean            @default(false)
@@ -260,6 +263,9 @@ model LilyFlavorComponent {
   status            String                    @default("published")
   premium           Boolean                   @default(false)
   tagsJson          String                    @default("[]")
+  allergenReviewStatus   String                @default("unreviewed")
+  allergenContainsJson   String                @default("[]")
+  allergenMayContainJson String                @default("[]")
   portion300        Int
   portion500        Int
   priceModifier300  Int                       @default(0)
@@ -305,6 +311,9 @@ model LilyAddon {
   portion300      Int
   portion500      Int
   individualLimit Int                  @default(2)
+  allergenReviewStatus   String         @default("unreviewed")
+  allergenContainsJson   String         @default("[]")
+  allergenMayContainJson String         @default("[]")
   status          String               @default("published")
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
@@ -551,6 +560,7 @@ model LilyOrderItem {
   configurationHash         String
   configurationSnapshotJson String
   flavorsSnapshotJson       String               @default("[]")
+  allergenSnapshotJson       String               @default("{\"complete\":false,\"contains\":[],\"mayContain\":[],\"unreviewed\":[]}")
   unitPriceSnapshotCents    Int
   quantity                  Int
   lineTotalCents            Int
