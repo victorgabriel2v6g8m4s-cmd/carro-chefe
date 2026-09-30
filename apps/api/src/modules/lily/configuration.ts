@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { aggregateLilyAllergens, parseLilyAllergenJson } from "./allergens";
+import { aggregateLilyAllergens, mergeLilyAllergenSummaries, parseLilyAllergenJson } from "./allergens";
 
 const idSchema = z.string().trim().min(1).max(120);
 const sizeSchema = z.number().int().min(100).max(5000);
@@ -365,12 +365,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
     selections: selections.map((item) => item.configurationHash).sort()
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
-  const allergens = aggregateLilyAllergens(selections.map((selection) => ({
-    label: selection.product.name,
-    reviewStatus: selection.allergens.complete ? "reviewed" : "unreviewed",
-    contains: selection.allergens.contains.map((item) => item.code),
-    mayContain: selection.allergens.mayContain.map((item) => item.code)
-  })));
+  const allergens = mergeLilyAllergenSummaries(selections.map((selection) => selection.allergens));
 
   return {
     kind: "combo" as const,
