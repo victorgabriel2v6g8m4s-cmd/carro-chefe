@@ -3803,3 +3803,16 @@ img, svg { max-width: 100%; }
     background: transparent;
   }
 }
+
+
+.checkout-line-item {
+  flex-wrap: wrap;
+}
+
+.checkout-line-allergens {
+  flex: 0 0 100%;
+}
+
+.checkout-line-allergens .allergen-notice {
+  width: 100%;
+}
