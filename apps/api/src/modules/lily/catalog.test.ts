@@ -105,6 +105,101 @@ describe("CookLily catálogo", () => {
     expect(invalid.json().details.code).toBe("LILY_INCOMPATIBLE_FLAVORS");
   });
 
+  it("agrega alergênicos da base, sabor e adicional sem tratar não revisado como seguro", async () => {
+    const product = await lilyPrisma.lilyProduct.findUnique({ where: { id: "prod-lilymix" } });
+    const banana = await lilyPrisma.lilyFlavorComponent.findUnique({ where: { slug: "banana" } });
+    const addon = await lilyPrisma.lilyAddon.findUnique({ where: { id: "add-ninho" } });
+    expect(product && banana && addon).toBeTruthy();
+
+    try {
+      await lilyPrisma.lilyProduct.update({
+        where: { id: "prod-lilymix" },
+        data: {
+          allergenReviewStatus: "reviewed",
+          allergenContainsJson: JSON.stringify(["milk"]),
+          allergenMayContainJson: "[]"
+        }
+      });
+      await lilyPrisma.lilyFlavorComponent.update({
+        where: { id: banana!.id },
+        data: {
+          allergenReviewStatus: "reviewed",
+          allergenContainsJson: "[]",
+          allergenMayContainJson: JSON.stringify(["peanuts"])
+        }
+      });
+      await lilyPrisma.lilyAddon.update({
+        where: { id: "add-ninho" },
+        data: {
+          allergenReviewStatus: "reviewed",
+          allergenContainsJson: JSON.stringify(["soy"]),
+          allergenMayContainJson: JSON.stringify(["milk"])
+        }
+      });
+
+      const reviewed = await app.inject({
+        method: "POST",
+        url: "/api/v1/lily/public/configure-item",
+        payload: {
+          productId: "prod-lilymix",
+          sizeMl: 300,
+          flavorIds: [banana!.id],
+          addons: [{ addonId: "add-ninho", quantity: 1 }]
+        }
+      });
+      expect(reviewed.statusCode).toBe(200);
+      expect(reviewed.json().allergens).toMatchObject({
+        complete: true,
+        unreviewed: []
+      });
+      expect(reviewed.json().allergens.contains.map((item: any) => item.code)).toEqual(["soy", "milk"]);
+      expect(reviewed.json().allergens.mayContain.map((item: any) => item.code)).toEqual(["peanuts"]);
+
+      await lilyPrisma.lilyAddon.update({
+        where: { id: "add-ninho" },
+        data: { allergenReviewStatus: "unreviewed" }
+      });
+      const incomplete = await app.inject({
+        method: "POST",
+        url: "/api/v1/lily/public/configure-item",
+        payload: {
+          productId: "prod-lilymix",
+          sizeMl: 300,
+          flavorIds: [banana!.id],
+          addons: [{ addonId: "add-ninho", quantity: 1 }]
+        }
+      });
+      expect(incomplete.statusCode).toBe(200);
+      expect(incomplete.json().allergens.complete).toBe(false);
+      expect(incomplete.json().allergens.unreviewed).toContain(addon!.name);
+    } finally {
+      await lilyPrisma.lilyProduct.update({
+        where: { id: product!.id },
+        data: {
+          allergenReviewStatus: product!.allergenReviewStatus,
+          allergenContainsJson: product!.allergenContainsJson,
+          allergenMayContainJson: product!.allergenMayContainJson
+        }
+      });
+      await lilyPrisma.lilyFlavorComponent.update({
+        where: { id: banana!.id },
+        data: {
+          allergenReviewStatus: banana!.allergenReviewStatus,
+          allergenContainsJson: banana!.allergenContainsJson,
+          allergenMayContainJson: banana!.allergenMayContainJson
+        }
+      });
+      await lilyPrisma.lilyAddon.update({
+        where: { id: addon!.id },
+        data: {
+          allergenReviewStatus: addon!.allergenReviewStatus,
+          allergenContainsJson: addon!.allergenContainsJson,
+          allergenMayContainJson: addon!.allergenMayContainJson
+        }
+      });
+    }
+  });
+
   it("aplica limite de adicionais", async () => {
     const flavors = await lilyPrisma.lilyFlavorComponent.findMany();
     const bySlug = Object.fromEntries(flavors.map((flavor) => [flavor.slug, flavor.id]));
