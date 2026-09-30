@@ -22,7 +22,7 @@ export function AllergenNotice(props: {
     {contains.length > 0 && <p><b>CONTÉM:</b> {contains.join(", ")}.</p>}
     {mayContain.length > 0 && <p><b>PODE CONTER:</b> {mayContain.join(", ")}.</p>}
     {summary.complete && contains.length === 0 && mayContain.length === 0 && <p>
-      Nenhum alergênico foi marcado nesta composição revisada.
+      Cadastro revisado sem marcações de CONTÉM/PODE CONTER. Isso não equivale a alegação de ausência de alergênicos.
     </p>}
     <small>
       Em caso de alergia, confirme ingredientes e possibilidade de contato cruzado com a equipe antes do consumo.
