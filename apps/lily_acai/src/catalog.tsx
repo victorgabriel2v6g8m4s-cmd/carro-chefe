@@ -391,8 +391,10 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
         flavorIds: selection.flavors.map((flavor) => flavor.id),
         flavors: selection.flavors,
         addons: selection.addons,
+        allergens: selection.allergens,
         configurationHash: selection.configurationHash
       })),
+      allergens: quote.allergens,
       configurationHash: quote.configurationHash,
       unitPriceCents: quote.totalPriceCents
     });
