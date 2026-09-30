@@ -2,6 +2,16 @@
 
 Este diretório concentra a documentação humana do projeto. Os documentos são organizados por **assunto**, mantendo poucos níveis para facilitar navegação, busca e referências estáveis.
 
+## Separação de escopos de negócio
+
+A documentação possui duas operações distintas e elas não devem compartilhar decisões comerciais por acidente:
+
+- **Carro Chefe:** navegação canônica em [docs/carro-chefe/README.md](./carro-chefe/README.md).
+- **CookLily:** navegação canônica em [docs/cooklily/README.md](./cooklily/README.md); os documentos físicos permanecem em `docs/lily-acai/` por compatibilidade histórica/técnica.
+- **Compartilhado:** ferramentas, governança de repositório e componentes de infraestrutura só são compartilhados quando o documento declara esse escopo.
+
+Uma decisão de CookLily não altera cardápio, marca ou operação do Carro Chefe automaticamente, e vice-versa.
+
 ## Comece por aqui
 
 1. [Catálogo operacional de ferramentas](./ferramentas/README.md) — seleção tool-first, custos relativos, limitações, saúde, pendências e bloqueios.
@@ -24,6 +34,11 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 ```text
 docs/
 ├── README.md
+├── carro-chefe/
+│   └── README.md
+├── cooklily/
+│   └── README.md
+├── lily-acai/  # namespace técnico legado dos documentos CookLily
 ├── ferramentas/
 │   ├── README.md
 │   ├── GITHUB.md
