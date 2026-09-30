@@ -8,6 +8,14 @@
 
 Transformar a pendência pré-lançamento “criar configuração de alergênicos” em um domínio estruturado e auditável, fazendo a informação acompanhar a configuração escolhida pelo cliente e ser congelada no pedido.
 
+## Decisão de UX posterior — ADR-002
+
+Em 30/09/2026 às 16:50 UTC-03:00, o proprietário aprovou uma mudança de apresentação: no fluxo do cliente, os alergênicos devem ficar em **sanfona fechada por padrão** e o aviso/conteúdo só aparece após o cliente abrir o controle.
+
+Essa decisão não altera taxonomia, agregação, snapshot, admin, cozinha ou regras de segurança desta Entrega 12. Ela altera apenas a apresentação no cliente e está **pendente de implementação** no frontend atual.
+
+Fonte: [ADR-002](../decisoes/ADR_002_UX_ALERGENICOS_PAGAMENTOS_2026-09-30.md).
+
 ## Princípio de segurança
 
 **Ausência de cadastro não significa ausência de alergênicos.**
@@ -150,7 +158,7 @@ Novos componentes continuam começando como não revisados.
 
 ## Funil do cliente
 
-O resumo consolidado aparece em:
+O resumo consolidado está disponível em:
 
 - configurador de produto;
 - configurador de combo;
