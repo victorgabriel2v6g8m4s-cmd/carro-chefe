@@ -207,6 +207,7 @@ function serializeOrder(
       configurationHash: item.configurationHash,
       configuration: JSON.parse(item.configurationSnapshotJson),
       flavors: JSON.parse(item.flavorsSnapshotJson),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       unitPriceCents: item.unitPriceSnapshotCents,
       quantity: item.quantity,
       lineTotalCents: item.lineTotalCents,
@@ -288,6 +289,7 @@ function serializeGuestTrackingOrder(order: NonNullable<Awaited<ReturnType<typeo
       flavors: (JSON.parse(item.flavorsSnapshotJson) as Array<{ name?: string }>).map((flavor) => ({
         name: typeof flavor.name === "string" ? flavor.name : ""
       })).filter((flavor) => flavor.name),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       addons: item.addons.map((addon) => ({
         name: addon.addonNameSnapshot,
         quantity: addon.quantity
