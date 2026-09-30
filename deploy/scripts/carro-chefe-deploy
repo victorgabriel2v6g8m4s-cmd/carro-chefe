@@ -60,7 +60,7 @@ if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
   exec 9>"${LOCK_FILE}"
   flock -n 9 || early_die "outro deploy já está em execução"
 else
-  [[ -e "/proc/$/fd/9" ]] || early_die "reexec do deployer sem lock herdado"
+  [[ -e "/proc/self/fd/9" ]] || early_die "reexec do deployer sem lock herdado"
 fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
