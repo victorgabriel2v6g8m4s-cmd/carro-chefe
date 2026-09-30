@@ -1,5 +1,7 @@
 # CookLily — operação temporária
 
+> **Organização documental:** este caminho é preservado como namespace técnico legado. O índice público/canônico de navegação da marca está em [../cooklily/README.md](../cooklily/README.md). Decisões CookLily não devem ser misturadas aos documentos de produto do Carro Chefe.
+
 ## Nome público e compatibilidade técnica
 
 O nome público definitivo da marca é **CookLily**. No ativo visual oficial, o wordmark aparece como **cookLily**.
@@ -65,7 +67,8 @@ O lançamento comercial digital completo exige a sequência 05–07.
 - Entrega 06: implementação técnica validada no SHA `da166683ab2d0e27acae23d9714ec8e824a02ac4`; deploy/homologação da linha consolidada ainda pendentes;
 - patches de homologação 05/06: incorporados na linha canônica, porém os achados de QA mobile devem ser revalidados em aparelhos reais;
 - Entrega 07: domínio de pagamento/reconciliação preservado e ampliado com adapter automático Mercado Pago (Orders API), Pix automático, cartão tokenizado, webhook assinado, cancelamento/refund e proteção de valor; homologação continua em modo de testes;
-- Entrega 11 iniciada: documentação consolidada e primeira versão do Pix próprio CookLily sem taxa de gateway, baseado em BR Code estático e `txid` próprio;
+- Entregas 11A–11K: principais fluxos de Pix próprio, operação, cliente, courier, ETA, WhatsApp, conciliação, SLA e impressão estão tecnicamente integrados; homologações externas/reais permanecem separadas;
+- Entrega 12: domínio de alergênicos tecnicamente integrado; dados reais, contato cruzado e nova apresentação em sanfona ainda dependem de homologação/implementação;
 - pagamentos continuam fechados por padrão; Mercado Pago é o primeiro provider automático, mas conta, credenciais e homologação comercial permanecem externas ao Git;
 - backlog UX/segurança/admin consolidado em `PENDENCIAS_UX_SEGURANCA_2026-09-27.md`;
 - patch P0 mobile + MFA validado no runtime `0f3e894f4993eea1c07aed881bad4ea4525e1674` (CI `36332050698`, CodeQL `36332050747`, 131 testes Node 20/24); QA visual/deploy/enrollment permanecem separados;
@@ -87,5 +90,7 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`, `entregas/ENTREGA_07_PAG
 - entregas/P0_UX_SEGURANCA_2026-09-27.md;
 - entregas/P1_UX_CONTA_ADMIN_2026-09-27.md;
 - STATUS_IMPLEMENTACAO_2026-09-27.md;
+- STATUS_IMPLEMENTACAO_2026-09-30.md;
+- decisoes/ADR_002_UX_ALERGENICOS_PAGAMENTOS_2026-09-30.md;
 - PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md;
 - entregas/.
