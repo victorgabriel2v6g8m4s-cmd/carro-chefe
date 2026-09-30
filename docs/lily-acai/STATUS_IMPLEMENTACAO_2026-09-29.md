@@ -327,10 +327,43 @@ O primeiro gate revelou apenas uma asserção de teste referenciando nome antigo
 
 Pendente: deploy, drill real, cópia externa, retention policy e QA físico/mobile.
 
+
+### 12. Entrega 10B — ACESSIBILIDADE E PERFORMANCE EM CI VALIDADA E INTEGRADA
+
+O PR draft #114 foi fechado sem merge porque o conector não possuía permissão para convertê-lo em ready. O mesmo head validado foi integrado pelo PR não-draft #116.
+
+Evidências técnicas:
+
+- candidate SHA `d895e51ba764382238b4227e27e2e5c8816be34e`;
+- CI `36640536487`: success;
+- CodeQL `36640536577`: success;
+- merge SHA `930f9d3aa635af099e7a1b9b0de928bb54bdd80f`;
+- Node 24: 39 arquivos / 234 testes;
+- build budget: success.
+
+Implementado:
+
+- skip link e foco no conteúdo principal;
+- foco visível ampliado;
+- regressões estruturais de idioma, viewport, reduced-motion, focus trap, touch targets, overflow e navegação ativa;
+- medidor próprio de JS/CSS raw + gzip;
+- budget de performance dentro de `build:lily`;
+- testes do budget dentro de `npm test`.
+
+Medição validada:
+
+- JS raw 468,27 KiB;
+- JS gzip 121,81 KiB;
+- CSS raw 89,05 KiB;
+- CSS gzip 16,46 KiB;
+- JS + CSS gzip 138,27 KiB.
+
+A parte técnica automatizável da Entrega 10 está encerrada em 10A + 10B. Continuam pendentes somente homologação real e decisões externas documentadas.
+
 ## Ordem de execução atualizada
 
-1. continuar a Entrega 10B em branch isolada, sem depender do deploy adiado;
-2. amanhã, fazer deploy/homologação da linha selecionada na VPS;
+1. fazer deploy/homologação da linha selecionada na VPS;
+2. validar health, backups, dashboards e fluxos reais após o deploy;
 3. aplicar migrations pelo deployer e validar saúde dos serviços;
 4. homologar 11G/11H/11I com as credenciais externas reais disponíveis;
 5. definir com Operações o SLA real e testar 11K em PDF/impressora real;
