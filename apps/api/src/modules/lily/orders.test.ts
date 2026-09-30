@@ -111,14 +111,9 @@ async function enableFlatOperation() {
   });
 }
 
-async function quoteSol(
-  fulfillmentType: "pickup" | "delivery" = "pickup",
-  address?: Record<string, unknown>,
-  remoteAddress?: string
-) {
+async function quoteSol(fulfillmentType: "pickup" | "delivery" = "pickup", address?: Record<string, unknown>) {
   return app.inject({
     method: "POST",
-    ...(remoteAddress ? { remoteAddress } : {}),
     url: "/api/v1/lily/orders/quote",
     payload: {
       fulfillmentType,
@@ -408,6 +403,7 @@ describe("CookLily Entrega 06", () => {
 
   it("congela o snapshot de alergênicos mesmo se o catálogo mudar depois da compra", async () => {
     await enableFlatOperation();
+    const snapshotApp = await buildApp();
     const product = await lilyPrisma.lilyProduct.findUnique({ where: { id: "prod-acai-sol-lily" } });
     expect(product).toBeTruthy();
 
@@ -421,16 +417,27 @@ describe("CookLily Entrega 06", () => {
         }
       });
 
-      const snapshotRemoteAddress = "127.0.0.42";
-      const quoteResponse = await quoteSol("pickup", undefined, snapshotRemoteAddress);
+      const quoteResponse = await snapshotApp.inject({
+        method: "POST",
+        url: "/api/v1/lily/orders/quote",
+        payload: {
+          fulfillmentType: "pickup",
+          items: [{
+            productId: "prod-acai-sol-lily",
+            sizeMl: 300,
+            flavorIds: [],
+            addons: [],
+            quantity: 1
+          }]
+        }
+      });
       expect(quoteResponse.statusCode).toBe(200);
       expect(quoteResponse.json().items[0].allergens.contains.map((item: any) => item.code)).toContain("milk");
 
       const payload = await createPayloadFromQuote(quoteResponse.json(), "67999991122");
-      const created = await app.inject({
+      const created = await snapshotApp.inject({
         method: "POST",
         url: "/api/v1/lily/orders",
-        remoteAddress: snapshotRemoteAddress,
         headers: { origin, "idempotency-key": "cooklily:test:allergen-snapshot:01" },
         payload
       });
@@ -447,10 +454,9 @@ describe("CookLily Entrega 06", () => {
         }
       });
 
-      const tracking = await app.inject({
+      const tracking = await snapshotApp.inject({
         method: "GET",
         url: `/api/v1/lily/public/orders/${created.json().id}/tracking`,
-        remoteAddress: snapshotRemoteAddress,
         headers: { "x-lily-order-token": guestToken }
       });
       expect(tracking.statusCode).toBe(200);
@@ -468,6 +474,7 @@ describe("CookLily Entrega 06", () => {
           allergenMayContainJson: product!.allergenMayContainJson
         }
       });
+      await snapshotApp.close();
     }
   });
 
