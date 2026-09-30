@@ -361,6 +361,12 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
     selections: selections.map((item) => item.configurationHash).sort()
   });
   const configurationHash = crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 24);
+  const allergens = aggregateLilyAllergens(selections.map((selection) => ({
+    label: selection.product.name,
+    reviewStatus: selection.allergens.complete ? "reviewed" : "unreviewed",
+    contains: selection.allergens.contains.map((item) => item.code),
+    mayContain: selection.allergens.mayContain.map((item) => item.code)
+  })));
 
   return {
     kind: "combo" as const,
@@ -373,6 +379,7 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
     },
     mode,
     selections,
+    allergens,
     regularPriceCents: Math.min(combo.regularPriceCents, componentBasePriceCents),
     basePriceCents: comboBasePriceCents,
     addonPriceCents,
