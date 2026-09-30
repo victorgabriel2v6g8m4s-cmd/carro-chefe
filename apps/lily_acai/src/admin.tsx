@@ -80,6 +80,46 @@ function AllergenAdminFields(props: {
   </fieldset>;
 }
 
+function ComponentAllergenEditor(props: {
+  endpoint: "flavors" | "addons";
+  item: any;
+  catalog: Array<{ code: string; label: string }>;
+  csrf: string;
+  refresh: () => Promise<void>;
+  setError: (value: string) => void;
+}) {
+  const [value, setValue] = useState<AdminAllergenValue>(() => normalizeAdminAllergens(props.item.allergens));
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    props.setError("");
+    try {
+      await lilyAdminJson(`${props.endpoint}/${props.item.id}`, "PATCH", props.csrf, {
+        allergens: allergenPayload(value)
+      });
+      await props.refresh();
+    } catch (cause) {
+      props.setError(cause instanceof Error ? cause.message : "Falha ao salvar alergênicos.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <details className="admin-allergen-component">
+    <summary>
+      <strong>{props.item.name}</strong>
+      <span className={value.reviewStatus === "reviewed" ? "state-live" : "state-off"}>
+        {value.reviewStatus === "reviewed" ? "Alergênicos revisados" : "Revisão pendente"}
+      </span>
+    </summary>
+    <AllergenAdminFields catalog={props.catalog} value={value} onChange={setValue} />
+    <button className="button ghost" type="button" disabled={busy} onClick={() => void save()}>
+      {busy ? "Salvando..." : "Salvar alergênicos"}
+    </button>
+  </details>;
+}
+
 function useAdminData() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -498,6 +538,18 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
         <label>Adicional preço 300<input name="modifier300" defaultValue="0" /></label><label>Adicional preço 500<input name="modifier500" defaultValue="0" /></label>
         <button className="button primary" type="submit">Criar sabor</button>
       </form>
+      <div className="admin-allergen-component-list">
+        <h4>Revisão de alergênicos dos sabores</h4>
+        {data.flavors.map((flavor: any) => <ComponentAllergenEditor
+          key={flavor.id}
+          endpoint="flavors"
+          item={flavor}
+          catalog={data.allergenCatalog ?? []}
+          csrf={csrf}
+          refresh={refresh}
+          setError={setError}
+        />)}
+      </div>
       <div className="compatibility-matrix">
         {data.flavors.map((a: any) => <div className="compat-row" key={a.id}>
           <strong>{a.name}</strong>
@@ -533,6 +585,18 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
           <select name="status" defaultValue={addon.status}><option value="published">Publicado</option><option value="paused">Pausado</option><option value="draft">Rascunho</option></select>
           <button className="button ghost" type="submit">Salvar</button>
         </form>)}
+      </div>
+      <div className="admin-allergen-component-list">
+        <h4>Revisão de alergênicos dos adicionais</h4>
+        {data.addons.map((addon: any) => <ComponentAllergenEditor
+          key={addon.id}
+          endpoint="addons"
+          item={addon}
+          catalog={data.allergenCatalog ?? []}
+          csrf={csrf}
+          refresh={refresh}
+          setError={setError}
+        />)}
       </div>
       <form className="admin-form-grid compact" onSubmit={createAddon}>
         <label>Nome<input name="name" required /></label><label>Slug<input name="slug" required /></label>
