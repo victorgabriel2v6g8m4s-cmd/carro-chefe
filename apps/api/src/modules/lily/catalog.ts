@@ -16,10 +16,10 @@ const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
 const sizeSchema = z.number().int().min(100).max(5000);
 const marginFloorBps = 1000;
-const defaultAllergenInput = {
-  allergenReviewStatus: "unreviewed" as const,
-  allergenContains: [] as string[],
-  allergenMayContain: [] as string[]
+const defaultAllergenInput: z.input<typeof lilyAllergenInputSchema> = {
+  allergenReviewStatus: "unreviewed",
+  allergenContains: [],
+  allergenMayContain: []
 };
 
 const categoryCreateSchema = z.object({
