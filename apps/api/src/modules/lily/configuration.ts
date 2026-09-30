@@ -71,8 +71,11 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   if (!variant || !variant.isAvailable) throw new ApiError(409, "Tamanho indisponível.", { code: "LILY_VARIANT_UNAVAILABLE" });
 
   let basePriceCents = variant.priceCents;
-  const selectedFlavors = product.flavorLinks.map((link) => link.flavor)
-    .filter((flavor) => input.flavorIds.includes(flavor.id) && flavor.status === "published");
+  const publishedFlavors = product.flavorLinks.map((link) => link.flavor)
+    .filter((flavor) => flavor.status === "published");
+  const selectedFlavors = product.configurationType === "fixed"
+    ? publishedFlavors
+    : publishedFlavors.filter((flavor) => input.flavorIds.includes(flavor.id));
 
   if (product.configurationType === "lilymix") {
     if (input.flavorIds.length < 1 || input.flavorIds.length > 3 || selectedFlavors.length !== input.flavorIds.length) {
@@ -89,8 +92,9 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     if (new Set(input.flavorIds).size !== input.flavorIds.length) {
       throw new ApiError(400, "Não repita o mesmo sabor na combinação.", { code: "LILY_DUPLICATE_FLAVOR" });
     }
-    const fixedIds = new Set(product.flavorLinks.map((link) => link.flavorId));
-    if (input.flavorIds.some((id) => !fixedIds.has(id))) {
+    const fixedIds = publishedFlavors.map((flavor) => flavor.id).sort();
+    const requestedIds = [...input.flavorIds].sort();
+    if (fixedIds.length !== requestedIds.length || fixedIds.some((id, index) => id !== requestedIds[index])) {
       throw new ApiError(400, "Sabores do produto fixo não podem ser trocados.", { code: "LILY_FIXED_FLAVOR" });
     }
   }
