@@ -147,6 +147,7 @@ function Shell({ children }: { children: ReactNode }) {
   const closeMenu = () => setMenuOpen(false);
 
   return <div className="lily-shell">
+    <a className="skip-link" href="#lily-main-content">Pular para o conteúdo principal</a>
     <header className="topbar">
       <div className="topbar-inner">
         <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
@@ -214,7 +215,7 @@ function Shell({ children }: { children: ReactNode }) {
       </>}
     </header>
 
-    <main>{children}</main>
+    <main id="lily-main-content" tabIndex={-1}>{children}</main>
 
     <footer>
       <div>

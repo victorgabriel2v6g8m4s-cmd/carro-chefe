@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8");
+const html = readFileSync(resolve(sourceDirectory, "../index.html"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
@@ -14,6 +15,34 @@ const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
+  it("mantém idioma e viewport declarados no documento", () => {
+    expect(html).toContain('<html lang="pt-BR">');
+    expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');
+  });
+
+  it("mantém skip link e destino de foco para teclado", () => {
+    expect(mainSource).toContain('className="skip-link"');
+    expect(mainSource).toContain('href="#lily-main-content"');
+    expect(mainSource).toContain('id="lily-main-content"');
+    expect(mainSource).toContain('tabIndex={-1}');
+    expect(css).toContain(".skip-link:focus-visible { transform: translateY(0); }");
+    expect(css).toContain("#lily-main-content:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }");
+  });
+
+  it("mantém foco visível abrangente em controles interativos", () => {
+    expect(css).toContain("button:focus-visible");
+    expect(css).toContain("select:focus-visible");
+    expect(css).toContain("textarea:focus-visible");
+    expect(css).toContain("outline: 3px solid var(--cl-color-primary)");
+    expect(css).toContain("outline-offset: 3px");
+  });
+
+  it("respeita preferência de movimento reduzido", () => {
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(css).toContain("transition: none !important");
+    expect(css).toContain("animation: none !important");
+  });
+
   it("não mascara overflow horizontal globalmente", () => {
     expect(css).not.toMatch(/html,\s*body,\s*#root\s*\{[^}]*overflow-x:\s*hidden/i);
     expect(css).not.toMatch(/main\s*\{[^}]*overflow:\s*clip/i);
@@ -53,6 +82,14 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".combo-carousel-controls button {\n  width: 44px;\n  height: 44px;");
     expect(css).not.toContain(".combo-carousel-controls button { width: 36px; height: 36px; }");
     expect(css).toContain(".header-icon { width: 44px; height: 44px; min-width: 44px; }");
+  });
+
+  it("mantém estado ativo visível na navegação principal", () => {
+    expect(mainSource).toContain("<NavLink to=\"/cardapio\">Cardápio</NavLink>");
+    expect(mainSource).toContain("<NavLink to=\"/ranking\">Ranking</NavLink>");
+    expect(css).toContain(".topbar .desktop-nav a.active");
+    expect(css).toContain(".topbar .desktop-nav a.active::after");
+    expect(css).toContain(".topbar .mobile-menu a.active:not(.mobile-menu-primary):not(.staff-menu-link)");
   });
 
   it("mantém configurações da loja separadas de entrega", () => {
