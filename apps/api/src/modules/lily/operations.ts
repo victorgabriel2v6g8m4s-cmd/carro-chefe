@@ -74,6 +74,7 @@ function serializeKitchenPrintTicket(order: any) {
       flavors: (JSON.parse(item.flavorsSnapshotJson) as Array<{ name?: unknown }>)
         .map((flavor) => ({ name: typeof flavor.name === "string" ? flavor.name : "" }))
         .filter((flavor) => flavor.name.length > 0),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       addons: item.addons.map((addon: any) => ({
         name: addon.addonNameSnapshot,
         quantity: addon.quantity
@@ -110,6 +111,7 @@ function serializeKitchenOrder(order: any, kitchenPreparationSlaMinutes: number 
       quantity: item.quantity,
       note: item.customerNote,
       flavors: JSON.parse(item.flavorsSnapshotJson),
+      allergens: JSON.parse(item.allergenSnapshotJson),
       configuration: JSON.parse(item.configurationSnapshotJson),
       addons: item.addons.map((addon: any) => ({
         name: addon.addonNameSnapshot,
