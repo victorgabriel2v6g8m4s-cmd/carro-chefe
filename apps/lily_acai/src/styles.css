@@ -3694,3 +3694,112 @@ img, svg { max-width: 100%; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Entrega 12 — alergênicos */
+.allergen-notice {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgb(130 0 35 / 24%);
+  border-radius: 14px;
+  background: rgb(255 247 250 / 88%);
+}
+
+.allergen-notice.is-incomplete {
+  border-style: dashed;
+}
+
+.allergen-notice > strong {
+  color: var(--cl-color-secondary);
+}
+
+.allergen-notice p,
+.allergen-notice small {
+  margin: 0;
+}
+
+.allergen-notice p {
+  color: var(--cl-color-text);
+  line-height: 1.45;
+}
+
+.allergen-notice small {
+  color: var(--cl-color-text-muted);
+  line-height: 1.4;
+}
+
+.allergen-notice.is-compact {
+  margin-top: 8px;
+  padding: 9px 10px;
+  font-size: 0.88rem;
+}
+
+.admin-allergen-fields {
+  display: grid;
+  grid-template-columns: minmax(140px, .6fr) repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 14px;
+}
+
+.admin-allergen-fields legend {
+  padding: 0 5px;
+  font-weight: 900;
+}
+
+.admin-allergen-fields label {
+  display: grid;
+  gap: 5px;
+  font-weight: 800;
+}
+
+.admin-allergen-fields select[multiple] {
+  min-height: 130px;
+}
+
+.admin-allergen-fields > small {
+  grid-column: 1 / -1;
+  color: var(--cl-color-text-muted);
+}
+
+.admin-allergen-component-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.admin-allergen-component {
+  padding: 8px 10px;
+  border: 1px solid var(--cl-color-border);
+  border-radius: 12px;
+}
+
+.admin-allergen-component > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .admin-allergen-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-allergen-fields > small {
+    grid-column: auto;
+  }
+}
+
+@media print {
+  .kitchen-print-ticket .allergen-notice {
+    break-inside: avoid;
+    border: 2px solid currentColor;
+    background: transparent;
+  }
+}
