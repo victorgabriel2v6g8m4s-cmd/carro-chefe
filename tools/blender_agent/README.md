@@ -363,3 +363,8 @@ O `sculpt-smoke-test.ps1` tambem coleta stderr nativo com `ErrorActionPreference
 ### Blender 5.2: UnifiedPaintSettings
 
 No Blender 5.x, radius/strength do Sculpt são resolvidos por `tool_settings.sculpt.unified_paint_settings`. O bridge detecta esse caminho e mantém fallback para `tool_settings.unified_paint_settings` em versões antigas. `sculpt.status` informa `settings_source` para auditoria de compatibilidade.
+
+
+### Blender 5.2: OperatorStrokeElement
+
+O payload de cada ponto de `sculpt.stroke` é filtrado dinamicamente pelas propriedades RNA aceitas pelo `OperatorStrokeElement` da instalação atual. Isso evita falhas quando campos antigos, como `pen_flip`, deixam de existir na coleção de stroke. O resultado informa `stroke_element_properties` para diagnóstico.
