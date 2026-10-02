@@ -168,13 +168,17 @@ class RecipeRunJob:
     stage_id: str
     previous_stage_id: str | None
     restore_stage: bool
+    original_workspace_name: str
+    recipe_workspace_name: str
+    restore_workspace: bool
     results: list[dict[str, Any]] = field(default_factory=list)
     captures: list[dict[str, Any]] = field(default_factory=list)
     failed_steps: int = 0
     step_index: int = 0
     view_index: int = 0
-    phase: str = "step"
+    phase: str = "workspace_settle"
     settle_remaining: int = 0
+    last_screen_name: str | None = None
     current_capture: dict[str, Any] | None = None
     fatal_error: str | None = None
     started_ns: int = field(default_factory=time.time_ns)
