@@ -124,7 +124,7 @@ Implementado e aguardando smoke test real:
 - [x] auto-history de strokes e anexos;
 - [x] MCP `blender_sculpt_iteration` devolvendo before/after;
 - [x] smoke test destrutivo isolado em UV sphere temporária;
-- [ ] smoke test real no Windows 10 + Blender 5.2 LTS.
+- [x] smoke test real no Windows 10 + Blender 5.2 LTS, confirmado em 02/10/2026 com stroke, checkpoint, before/after distintos, history e restauração de workspace.
 
 Critério: corrigir a forma por strokes pequenos, produzir before/after diferentes, registrar checkpoint/history e restaurar o workspace. Documento: [BLENDER_AGENT_SCULPT.md](./BLENDER_AGENT_SCULPT.md).
 
