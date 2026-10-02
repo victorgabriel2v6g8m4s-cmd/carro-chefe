@@ -132,6 +132,8 @@ class ClientParserTests(unittest.TestCase):
         self.assertTrue(args.dry_run)
         self.assertTrue(args.restore_stage)
         self.assertFalse(args.no_stage)
+        self.assertIsNone(args.workspace)
+        self.assertFalse(args.keep_workspace)
 
     def test_recipe_status_parser(self) -> None:
         parser = build_parser()
