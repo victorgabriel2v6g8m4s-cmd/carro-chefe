@@ -422,3 +422,10 @@ O payload de cada ponto de `sculpt.stroke` é filtrado dinamicamente pelas propr
 ### Sculpt finish e restauracao do workspace
 
 `sculpt.finish` usa timer-yield para sair de Sculpt Mode, estabilizar o screen, voltar ao workspace original e confirmar a restauracao antes de responder. Isso evita falso negativo/positivo causado por troca de workspace e redraw no mesmo ciclo do Blender.
+
+
+### Nomes longos de captures e extensões
+
+Capturas de recipes combinam recipe id, versão, run id, step e nome da imagem. Isso pode produzir nomes maiores que o limite interno de 100 caracteres.
+
+A sanitização de arquivos agora trunca somente o stem e preserva o sufixo. Portanto uma captura PNG longa continua terminando em `.png`; o mesmo vale para receipts/checkpoints/exports com extensões conhecidas. O `recipe-smoke-test.ps1` falha se qualquer capture não terminar em `.png`.
