@@ -36,6 +36,13 @@ from tools.blender_agent.history import (
     set_active_stage,
 )
 
+from tools.blender_agent.recipes import (
+    RecipeError,
+    plan_recipe,
+    recipe_hash,
+    validate_recipe,
+)
+
 from tools.blender_agent.protocol import (
     DEFAULT_HOST,
     MAX_JSON_BYTES,
@@ -53,6 +60,8 @@ _SERVER = None
 _CAPTURE_JOB = None
 _SCULPT_PREPARE_JOB = None
 _SCULPT_FINISH_JOB = None
+_RECIPE_RUN_JOB = None
+_RECIPE_LAST_STATUS: dict[str, Any] | None = None
 _SCULPT_SESSION = None
 _WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "3"))))
 
@@ -151,6 +160,26 @@ class SculptFinishJob:
     last_screen_name: str | None = None
 
 
+@dataclass
+class RecipeRunJob:
+    task: Task
+    plan: dict[str, Any]
+    run_id: str
+    stage_id: str
+    previous_stage_id: str | None
+    restore_stage: bool
+    results: list[dict[str, Any]] = field(default_factory=list)
+    captures: list[dict[str, Any]] = field(default_factory=list)
+    failed_steps: int = 0
+    step_index: int = 0
+    view_index: int = 0
+    phase: str = "step"
+    settle_remaining: int = 0
+    current_capture: dict[str, Any] | None = None
+    fatal_error: str | None = None
+    started_ns: int = field(default_factory=time.time_ns)
+
+
 class ReusableThreadingTCPServer(socketserver.ThreadingTCPServer):
     allow_reuse_address = True
     daemon_threads = True
@@ -168,7 +197,8 @@ class Handler(socketserver.StreamRequestHandler):
 
             task = Task(request=request)
             _TASKS.put(task)
-            if not task.done.wait(timeout=30):
+            wait_timeout = 120 if request.get("action") == "recipe.run" else 30
+            if not task.done.wait(timeout=wait_timeout):
                 raise TimeoutError("Blender não processou a action no prazo")
             response = task.response or {"ok": False, "error": "resposta vazia"}
         except Exception as exc:
