@@ -62,6 +62,19 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 - **Critérios de aceite:** seguir [SOCIAL_GROWTH_ENGINE.md](../tecnologia/SOCIAL_GROWTH_ENGINE.md); nenhuma ação externa na Fase 1; PII separada de analytics; scores explicáveis; jobs idempotentes; fila de aprovação auditável; health checks por provider; testes de quota/token/retry/duplicidade; publicação automática somente após permissões/auditorias e aprovação da Gestão.
 - **Dependências/bloqueios:** acessos oficiais às contas, contratos de dados, política de retenção, autenticação segura da C.O., OAuth/segredos por provider e futura integração com ERP para pedido/margem.
 
+### TOOL-PEND-006 — Blender Agent até V1.0
+
+- **Data:** 29/09/2026
+- **Status:** validando
+- **Owner:** `AG-DEV`, com validação visual do proprietário
+- **Origem:** necessidade de modelagem 3D iterativa sem Computer Use capaz de controlar o Blender no Windows 10.
+- **Problema:** scripts únicos não fecham o ciclo observar/editar/corrigir e a conta atual não expõe controle de mouse do aplicativo.
+- **Capacidade necessária:** evoluir `tools/blender_agent` de bridge V0.1 para feedback visual automático, contexto persistente de workspaces, auto-history segmentado, Sculpt assistido, recipes 3D e agente iterativo com rollback.
+- **Alternativa temporária:** V0.1–V0.3 foram validadas no Windows 10/Blender 5.2 LTS. A V0.4 de recipes 3D versionadas já está implementada com validate/plan/run/status, variants, history, captures, criteria e receipts; falta smoke real da V0.4 e validar a conexão MCP local antes do loop iterativo autônomo V0.5.
+- **Prioridade:** média/alta para produção dos ativos 3D de produto.
+- **Critérios de aceite:** seguir [BLENDER_AGENT.md](../tecnologia/BLENDER_AGENT.md); smoke test em Blender real no Windows 10; captura de viewport; Sculpt com contexto controlado; checkpoints/rollback; recipes versionadas; testes e documentação; promoção explícita de ativos.
+- **Dependências/bloqueios:** Blender instalado na máquina real, sessão gráfica, validação de `--enable-event-simulate` e referências físicas aprovadas do produto.
+
 ## Regra para agentes
 
 Se uma nova tarefa exigir ferramenta inexistente, registre aqui **antes** de propor uma implementação recorrente. A criação da ferramenta ainda segue especialização: agentes de negócio definem requisito/aceite; `AG-DEV` implementa software.

@@ -57,6 +57,17 @@ Estados: `aberto`, `mitigado`, `resolvido`, `aceito`.
 - **Tratamento:** usar o PR em rascunho e os runners oficiais do GitHub Actions para validar a mesma revisão; não declarar teste local como executado.
 - **Owner:** `AG-DEV` / ambiente de execução.
 
+### BLOCK-TOOL-006 — Smoke test real do Blender Agent depende da máquina Windows com Blender
+
+- **Data:** 2026-09-29
+- **Tipo:** plataforma/recurso
+- **Status:** resolvido
+- **Contexto:** primeira implementação de `tools/blender_agent`.
+- **Impacto:** a validação real era necessária para provar `Window.event_simulate` e o contexto de VIEW_3D na máquina-alvo.
+- **Evidência segura:** após corrigir quoting do launcher e o splash modal, o proprietário confirmou em 29/09/2026 que `status`, `ui-view3d`, fechamento do splash e `ui-orbit` funcionaram perfeitamente no Windows 10 com Blender 5.2.0 LTS.
+- **Tratamento:** bloqueio encerrado para a baseline Blender 5.2.0 LTS. Novas capacidades de captura/Sculpt mantêm validação própria no roadmap e não reabrem este bloqueio automaticamente.
+- **Owner:** `AG-DEV` + proprietário.
+
 ## Regra obrigatória
 
 Quando um agente encontrar qualquer bloqueio de acesso, recurso, permissão, quota, credencial, ambiente, fornecedor ou autoridade que impeça a tarefa, deve atualizar este registro (ou o registro transacional equivalente quando existir) antes de encerrar a entrega. Não ocultar falha com estimativa inventada, credencial ampla, bypass de segurança ou mudança de escopo silenciosa.

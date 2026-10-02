@@ -6,7 +6,11 @@
       "name": "API Carro Chefe",
       "path": "apps/api",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run db:generate && npx tsc -p apps/api/tsconfig.json --noEmit",
       "timeoutMs": 120000
     },
@@ -15,7 +19,11 @@
       "name": "Central Operacional",
       "path": "apps/gestao",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run build:gestao",
       "timeoutMs": 120000
     },
@@ -24,7 +32,11 @@
       "name": "Site público",
       "path": "apps/site",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run build:site",
       "timeoutMs": 120000
     },
@@ -33,7 +45,11 @@
       "name": "QR Lab",
       "path": "apps/qr_manipulator",
       "maturity": "development",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run build:qr",
       "timeoutMs": 120000
     },
@@ -42,7 +58,11 @@
       "name": "Agent Policy",
       "path": "tools/agent-policy",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run policy:check",
       "timeoutMs": 60000
     },
@@ -51,16 +71,41 @@
       "name": "Agent Runtime",
       "path": "tools/agent-runtime.mjs",
       "maturity": "development",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "node --check tools/agent-runtime.mjs",
       "timeoutMs": 30000
+    },
+    {
+      "id": "blender-agent",
+      "name": "Blender Agent Bridge",
+      "path": "tools/blender_agent",
+      "maturity": "development",
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
+      "commands": {
+        "linux": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v && python3 -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python3 -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette",
+        "darwin": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v && python3 -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python3 -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette",
+        "win32": "python -m unittest discover -s tools/blender_agent/tests -p \"test_*.py\" -v && python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette"
+      },
+      "timeoutMs": 60000
     },
     {
       "id": "excel-snapshot",
       "name": "Excel Snapshot",
       "path": "tools/excel_snapshot",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "commands": {
         "linux": "python3 -m unittest discover -s tools/excel_snapshot/tests -p 'test_*.py' -v && python3 tools/excel_snapshot/export.py --check",
         "darwin": "python3 -m unittest discover -s tools/excel_snapshot/tests -p 'test_*.py' -v && python3 tools/excel_snapshot/export.py --check",
@@ -73,7 +118,11 @@
       "name": "Excel Recipe Engine V3B / Generic G1",
       "path": "tools/excel_recipe",
       "maturity": "complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "commands": {
         "linux": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json && python3 -m tools.excel_recipe.probe_v3a_real && python3 -m tools.excel_recipe.probe_v3b_real",
         "darwin": "python3 -m unittest discover -s tools/excel_recipe/tests -p 'test_*.py' -v && python3 -m tools.excel_recipe validate tools/excel_recipe/examples/noop-carro-chefe.json && python3 -m tools.excel_recipe plan tools/excel_recipe/examples/probe-v2-tabela18.json && python3 -m tools.excel_recipe.probe_v3a_real && python3 -m tools.excel_recipe.probe_v3b_real",
@@ -86,7 +135,9 @@
       "name": "Windows Supervisor",
       "path": "tools/windows-supervisor",
       "maturity": "complete",
-      "platforms": ["win32"],
+      "platforms": [
+        "win32"
+      ],
       "commands": {
         "win32": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/windows-supervisor/build.ps1 && powershell -NoProfile -Command \"if (-not (Test-Path tools/windows-supervisor/bin/CarroChefeSupervisor.exe)) { exit 1 }\""
       },
@@ -97,7 +148,11 @@
       "name": "Planejamento legado",
       "path": "planejamento",
       "maturity": "legacy-complete",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run test:legacy",
       "timeoutMs": 120000
     },
@@ -106,7 +161,11 @@
       "name": "Tool Health",
       "path": "tools/tool-health",
       "maturity": "development",
-      "platforms": ["linux", "darwin", "win32"],
+      "platforms": [
+        "linux",
+        "darwin",
+        "win32"
+      ],
       "command": "npm run test:tool-health",
       "timeoutMs": 60000
     }
