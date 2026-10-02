@@ -351,3 +351,10 @@ O `workspace.capture_set` usa uma máquina de estados no timer do Blender, ceden
 O número padrão de ticks de estabilização é 3 e pode ser sobrescrito por `CC_BLENDER_WORKSPACE_SETTLE_TICKS`.
 
 O `context-smoke-test.ps1` prioriza as abas `Animation` e `Compositing` quando elas existem e valida que cada imagem veio realmente do workspace solicitado.
+
+
+### Sculpt prepare e redraw do workspace
+
+Assim como nas capturas multi-workspace, a troca para a aba `Sculpting` precisa ceder ciclos ao event loop antes de consultar a VIEW_3D. `sculpt.prepare` agora usa o scheduler assincrono do bridge e espera o screen estabilizar antes de entrar em Sculpt Mode.
+
+O `sculpt-smoke-test.ps1` tambem coleta stderr nativo com `ErrorActionPreference=Continue` dentro do helper para que uma falha do bridge seja exibida por inteiro em vez de aparecer apenas como `python.exe : {`.
