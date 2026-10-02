@@ -85,6 +85,16 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("checkpoint", source)
         self.assertIn('"NORMALIZED", "REGION"', source)
 
+    def test_sculpt_prepare_yields_after_workspace_switch(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("class SculptPrepareJob", source)
+        self.assertIn("def _start_sculpt_prepare_job", source)
+        self.assertIn("def _advance_sculpt_prepare_job", source)
+        self.assertIn('job.phase = "settle"', source)
+        self.assertIn("_WORKSPACE_CAPTURE_SETTLE_TICKS", source)
+        self.assertIn('if _SCULPT_PREPARE_JOB is not None:', source)
+        self.assertIn("return _advance_sculpt_prepare_job()", source)
+
     def test_sculpt_prepare_restores_workspace_on_failure(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("original_workspace_name = window.workspace.name", source)
