@@ -23,6 +23,8 @@ import bpy
 import imbuf
 from mathutils import Vector
 
+from tools.blender_agent.materials import material_preset
+
 from tools.blender_agent.history import (
     attachment_output_path,
     create_stage,
@@ -216,6 +218,14 @@ class Handler(socketserver.StreamRequestHandler):
             response = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
         self.wfile.write(encode_message(response))
+
+
+def _deterministic_signed(seed: Any, vertex_index: int, axis_index: int) -> float:
+    raw = f"{seed}|{vertex_index}|{axis_index}".encode("utf-8")
+    digest = hashlib.sha256(raw).digest()
+    integer = int.from_bytes(digest[:8], "big", signed=False)
+    unit = integer / float((1 << 64) - 1)
+    return unit * 2.0 - 1.0
 
 
 def _vec3(value: Any, name: str) -> tuple[float, float, float]:
