@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "id": "carro-chefe-food-materials",
+  "version": "1.0.0",
+  "materials": {
+    "bread-crust": {
+      "label": "Crosta de pao",
+      "description": "Base marrom quente e fosca para crosta de baguete.",
+      "base_color": [0.44, 0.20, 0.07, 1.0],
+      "roughness": 0.58,
+      "metallic": 0.0,
+      "tags": ["bread", "crust"]
+    },
+    "bread-crumb": {
+      "label": "Miolo de pao",
+      "description": "Base clara e opaca para miolo.",
+      "base_color": [0.78, 0.62, 0.38, 1.0],
+      "roughness": 0.72,
+      "metallic": 0.0,
+      "tags": ["bread", "crumb"]
+    },
+    "meat-grilled": {
+      "label": "Carne grelhada",
+      "description": "Base escura e pouco brilhante para carne grelhada.",
+      "base_color": [0.20, 0.075, 0.035, 1.0],
+      "roughness": 0.48,
+      "metallic": 0.0,
+      "tags": ["meat", "grilled"]
+    },
+    "cheese-melted": {
+      "label": "Queijo derretido",
+      "description": "Amarelo quente para queijo derretido/massaricado.",
+      "base_color": [0.95, 0.56, 0.08, 1.0],
+      "roughness": 0.34,
+      "metallic": 0.0,
+      "tags": ["cheese", "melted"]
+    },
+    "vinaigrette": {
+      "label": "Vinagrete",
+      "description": "Base vegetal para composicao de vinagrete.",
+      "base_color": [0.42, 0.30, 0.10, 1.0],
+      "roughness": 0.52,
+      "metallic": 0.0,
+      "tags": ["vinaigrette", "vegetable"]
+    },
+    "sauce-creamy": {
+      "label": "Molho cremoso",
+      "description": "Base clara e levemente brilhante para molhos.",
+      "base_color": [0.83, 0.72, 0.54, 1.0],
+      "roughness": 0.30,
+      "metallic": 0.0,
+      "tags": ["sauce", "creamy"]
+    },
+    "skewer-wood": {
+      "label": "Espeto de madeira",
+      "description": "Madeira clara para espetos e palitos.",
+      "base_color": [0.54, 0.31, 0.13, 1.0],
+      "roughness": 0.68,
+      "metallic": 0.0,
+      "tags": ["wood", "skewer"]
+    }
+  }
+}
