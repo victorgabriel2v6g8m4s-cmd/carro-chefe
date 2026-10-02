@@ -213,3 +213,18 @@ O teste cria uma UV sphere temporária, entra em Sculpt, cria checkpoint, captur
 A V0.3 é considerada validada quando o smoke test real entra em Sculpt Mode, ativa o brush, modifica visualmente a esfera, gera checkpoint, produz before/after diferentes, registra o stroke no history, restaura workspace e limpa o objeto temporário.
 
 Depois disso, a próxima evolução é aplicar o mesmo ciclo à baguete real com strokes planejados a partir das referências fotográficas.
+
+
+## Compatibilidade PowerShell 5.1
+
+O primeiro smoke V0.3 parou ao criar a esfera temporária porque o Windows PowerShell 5.1 alterou a passagem de um objeto JSON inline para o subprocesso Python. O problema não era o bridge nem o Sculpt; o parser do CLI recebia argumentos quebrados antes de chegar ao Blender.
+
+Correção:
+
+- o smoke não usa mais `client call ... --json`;
+- foram adicionados `object-add-primitive` e `object-delete` tipados;
+- `sculpt-stroke` aceita `--point X Y` repetível, evitando `--points-json` no smoke;
+- continua existindo `--points-json` para ambientes que preservam argumentos JSON corretamente;
+- há teste de regressão garantindo que `sculpt-smoke-test.ps1` não volte a depender de JSON inline.
+
+Comandos usados pelo smoke agora atravessam PowerShell -> Python apenas como argumentos escalares.
