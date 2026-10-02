@@ -2143,6 +2143,7 @@ def _advance_recipe_run_job() -> float:
                 stage_id=job.stage_id,
             )
             job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
+            _record_task_history(job.task, ok=True, result=result)
             job.task.done.set()
             _RECIPE_RUN_JOB = None
             return 0.05
@@ -2225,6 +2226,22 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             "view3d": _view3d_snapshot() if bpy.context.window and any(a.type == "VIEW_3D" for a in bpy.context.window.screen.areas) else None,
             "active_stage_id": get_active_stage_id(),
         }
+
+    if action == "recipe.validate":
+        return validate_recipe(params.get("recipe"))
+
+    if action == "recipe.plan":
+        return plan_recipe(
+            params.get("recipe"),
+            variant=str(params["variant"]) if params.get("variant") else None,
+            overrides=params.get("overrides") or {},
+        )
+
+    if action == "recipe.status":
+        return _recipe_status_snapshot()
+
+    if action == "recipe.run":
+        raise RuntimeError("recipe.run deve ser executado pelo scheduler assincrono")
 
     if action == "sculpt.status":
         return _sculpt_status()
@@ -2593,6 +2610,8 @@ def _drain_queue() -> float:
         return _advance_sculpt_prepare_job()
     if _SCULPT_FINISH_JOB is not None:
         return _advance_sculpt_finish_job()
+    if _RECIPE_RUN_JOB is not None:
+        return _advance_recipe_run_job()
 
     for _ in range(10):
         try:
@@ -2623,6 +2642,16 @@ def _drain_queue() -> float:
         if task.request.get("action") == "sculpt.finish":
             try:
                 _start_sculpt_finish_job(task)
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                task.response = {"id": task.request["id"], "ok": False, "error": error}
+                _record_task_history(task, ok=False, error=error)
+                task.done.set()
+            break
+
+        if task.request.get("action") == "recipe.run":
+            try:
+                _start_recipe_run_job(task)
             except Exception as exc:
                 error = f"{type(exc).__name__}: {exc}"
                 task.response = {"id": task.request["id"], "ok": False, "error": error}
