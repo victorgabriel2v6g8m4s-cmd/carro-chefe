@@ -294,3 +294,23 @@ Depois da V0.4 validada na máquina real, a V0.5 pode usar recipes como unidade 
 `recipe.status` é respondido diretamente pela thread do socket usando somente o estado em memória do job. Ele não entra na fila da main thread, portanto continua consultável enquanto `recipe.run` ocupa o scheduler do Blender.
 
 O status inclui run id, recipe/version, plan hash, stage, phase, step atual, steps concluídos, falhas e quantidade de capturas.
+
+
+## Workspace da recipe
+
+Antes de executar steps, o runner garante uma VIEW_3D estável:
+
+- se o workspace atual já possui VIEW_3D, ele pode ser usado;
+- se não possui, o runner usa `Layout`;
+- CLI/MCP podem solicitar explicitamente outro workspace;
+- por padrão, o workspace original é restaurado no final com timer-yield e confirmação do screen.
+
+CLI:
+
+```powershell
+python -m tools.blender_agent.client recipe-run <recipe.json> --workspace Layout
+```
+
+`--keep-workspace` desabilita somente a restauração visual; o padrão seguro é restaurar.
+
+O receipt registra `original_workspace`, `recipe_workspace`, `final_workspace` e `workspace_restored`.
