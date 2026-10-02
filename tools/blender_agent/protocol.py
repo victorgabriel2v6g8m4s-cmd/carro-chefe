@@ -89,7 +89,7 @@ def runtime_root() -> Path:
 def safe_runtime_path(category: str, filename: str) -> Path:
     if not category or "/" in category or "\\" in category or category in {".", ".."}:
         raise SecurityError("categoria de runtime inválida")
-    clean = sanitize_label(filename)
+    clean = sanitize_filename(filename)
     base = (runtime_root() / category).resolve()
     base.mkdir(parents=True, exist_ok=True)
     candidate = (base / clean).resolve()
@@ -104,6 +104,28 @@ def sanitize_label(value: str, fallback: str = "item") -> str:
     value = str(value or "").strip()
     value = _LABEL_RE.sub("-", value).strip("._-")
     return (value or fallback)[:100]
+
+
+def sanitize_filename(value: str, fallback: str = "item", max_length: int = 100) -> str:
+    max_length = max(16, min(240, int(max_length)))
+    raw = str(value or "").strip()
+    fallback_raw = str(fallback or "item").strip() or "item"
+    suffix_match = re.search(r"(\.[A-Za-z0-9]{1,16})$", raw)
+    suffix = suffix_match.group(1) if suffix_match else ""
+    clean = _LABEL_RE.sub("-", raw).strip("._-")
+    if not clean:
+        clean = _LABEL_RE.sub("-", fallback_raw).strip("._-") or "item"
+        fallback_suffix = re.search(r"(\.[A-Za-z0-9]{1,16})$", clean)
+        if not suffix and fallback_suffix:
+            suffix = fallback_suffix.group(1)
+
+    if suffix and clean.lower().endswith(suffix.lower()):
+        stem = clean[:-len(suffix)].rstrip("._-")
+        stem_limit = max(1, max_length - len(suffix))
+        stem = stem[:stem_limit].rstrip("._-") or "item"
+        return f"{stem}{suffix}"[:max_length]
+
+    return clean[:max_length]
 
 
 def normalize_request(payload: Any) -> dict[str, Any]:
