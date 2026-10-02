@@ -71,6 +71,14 @@ try {
     if (-not (Test-Path -LiteralPath $runResult.receipt)) { throw "Recipe receipt missing: $($runResult.receipt)" }
     if (-not $runResult.criteria_passed) { throw "Recipe criteria did not pass." }
     if (@($runResult.captures).Count -lt 4) { throw "Recipe generated fewer than four captures." }
+    foreach ($capture in @($runResult.captures)) {
+        if (-not $capture.path -or -not $capture.path.ToLowerInvariant().EndsWith(".png")) {
+            throw "Recipe capture is missing .png suffix: $($capture.path)"
+        }
+        if (-not (Test-Path -LiteralPath $capture.path)) {
+            throw "Recipe capture file is missing: $($capture.path)"
+        }
+    }
     if ($previousStageId -and $runResult.restored_stage_id -ne $previousStageId) {
         throw "Recipe did not restore previous history stage."
     }
