@@ -4,7 +4,11 @@
   "version": "1.0.0",
   "label": "Baguete base Carro Chefe",
   "description": "Recipe inicial e reproduzivel para uma base alongada de baguete, antes de detalhes organicos/Sculpt.",
-  "tags": ["carro-chefe", "baguette", "base"],
+  "tags": [
+    "carro-chefe",
+    "baguette",
+    "base"
+  ],
   "parameters": {
     "object_name": {
       "type": "string",
@@ -13,14 +17,18 @@
     },
     "bread_scale": {
       "type": "vec3",
-      "default": [3.8, 1.05, 0.65],
+      "default": [
+        3.8,
+        1.05,
+        0.65
+      ],
       "description": "Escala inicial X/Y/Z da base."
     },
     "bevel_width": {
       "type": "number",
       "default": 0.55,
       "minimum": 0.05,
-      "maximum": 2.0
+      "maximum": 2
     },
     "bevel_segments": {
       "type": "integer",
@@ -37,8 +45,24 @@
     "roughness": {
       "type": "number",
       "default": 0.58,
-      "minimum": 0.0,
-      "maximum": 1.0
+      "minimum": 0,
+      "maximum": 1
+    },
+    "irregularity_seed": {
+      "type": "integer",
+      "default": 104729,
+      "minimum": 0,
+      "maximum": 2147483647,
+      "description": "Seed deterministico para pequenas irregularidades da base."
+    },
+    "irregularity_amplitude": {
+      "type": "vec3",
+      "default": [
+        0.055,
+        0.035,
+        0.025
+      ],
+      "description": "Amplitude local X/Y/Z da irregularidade deterministica."
     }
   },
   "components": [
@@ -47,7 +71,10 @@
       "label": "Corpo base do pao",
       "object_name": "${object_name}",
       "kind": "mesh",
-      "tags": ["bread", "shell"]
+      "tags": [
+        "bread",
+        "shell"
+      ]
     }
   ],
   "steps": [
@@ -58,10 +85,33 @@
       "params": {
         "kind": "cube",
         "name": "${object_name}",
-        "location": [0.0, 0.0, 0.0],
+        "location": [
+          0,
+          0,
+          0
+        ],
         "scale": "${bread_scale}"
       },
-      "tags": ["geometry"]
+      "tags": [
+        "geometry"
+      ]
+    },
+    {
+      "id": "seeded-irregularity",
+      "label": "Aplicar irregularidade reproduzivel",
+      "action": "object.irregularize",
+      "params": {
+        "name": "${object_name}",
+        "seed": "${irregularity_seed}",
+        "amplitude": "${irregularity_amplitude}"
+      },
+      "checkpoint_before": true,
+      "checkpoint_label": "before-irregularity",
+      "tags": [
+        "geometry",
+        "irregularity",
+        "seeded"
+      ]
     },
     {
       "id": "round-edges",
@@ -79,7 +129,10 @@
       },
       "checkpoint_before": true,
       "checkpoint_label": "before-bevel",
-      "tags": ["geometry", "modifier"]
+      "tags": [
+        "geometry",
+        "modifier"
+      ]
     },
     {
       "id": "subdivide",
@@ -95,7 +148,10 @@
           "subdivision_type": "CATMULL_CLARK"
         }
       },
-      "tags": ["geometry", "modifier"]
+      "tags": [
+        "geometry",
+        "modifier"
+      ]
     },
     {
       "id": "smooth",
@@ -104,18 +160,21 @@
       "params": {
         "name": "${object_name}"
       },
-      "tags": ["shading"]
+      "tags": [
+        "shading"
+      ]
     },
     {
       "id": "crust-material",
       "label": "Aplicar material base de crosta",
-      "action": "material.simple",
+      "action": "material.preset",
       "params": {
         "name": "${object_name}",
+        "preset_id": "bread-crust",
         "material_name": "CC_Bread_Crust_Base",
-        "base_color": [0.44, 0.20, 0.07, 1.0],
-        "roughness": "${roughness}",
-        "metallic": 0.0
+        "overrides": {
+          "roughness": "${roughness}"
+        }
       },
       "capture_after": {
         "name": "material-three-quarter",
@@ -124,7 +183,10 @@
         "filename": "baguette-material-3q.png",
         "frame_all": true
       },
-      "tags": ["material", "validation"]
+      "tags": [
+        "material",
+        "validation"
+      ]
     }
   ],
   "validation_views": [
@@ -158,7 +220,9 @@
     }
   ],
   "criteria": {
-    "required_objects": ["${object_name}"],
+    "required_objects": [
+      "${object_name}"
+    ],
     "min_captures": 4,
     "max_failed_steps": 0
   },
@@ -167,17 +231,33 @@
       "label": "Baguete compacta",
       "description": "Variante curta para testar proporcoes sem alterar a recipe base.",
       "overrides": {
-        "bread_scale": [3.2, 1.05, 0.65]
+        "bread_scale": [
+          3.2,
+          1.05,
+          0.65
+        ],
+        "irregularity_seed": 104729
       },
-      "tags": ["variant", "compact"]
+      "tags": [
+        "variant",
+        "compact"
+      ]
     },
     "long": {
       "label": "Baguete longa",
       "description": "Variante alongada da mesma recipe.",
       "overrides": {
-        "bread_scale": [4.5, 1.05, 0.65]
+        "bread_scale": [
+          4.5,
+          1.05,
+          0.65
+        ],
+        "irregularity_seed": 130363
       },
-      "tags": ["variant", "long"]
+      "tags": [
+        "variant",
+        "long"
+      ]
     }
   }
 }
