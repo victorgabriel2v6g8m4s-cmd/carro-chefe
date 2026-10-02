@@ -125,9 +125,36 @@ class ClientParserTests(unittest.TestCase):
             "--mode", "NORMAL",
         ])
         self.assertEqual(args.command, "sculpt-stroke")
-        self.assertEqual(args.points, [[0.4, 0.5], [0.6, 0.5]])
+        self.assertEqual(args.points_json, [[0.4, 0.5], [0.6, 0.5]])
         self.assertEqual(args.coordinate_space, "NORMALIZED")
         self.assertFalse(args.no_checkpoint)
+
+    def test_sculpt_stroke_repeated_point_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "sculpt-stroke",
+            "--point", "0.4", "0.5",
+            "--point", "0.6", "0.5",
+            "--brush", "DRAW",
+        ])
+        self.assertEqual(args.points, [[0.4, 0.5], [0.6, 0.5]])
+        self.assertIsNone(args.points_json)
+
+    def test_object_add_primitive_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "object-add-primitive", "uv_sphere",
+            "--name", "Smoke Sphere",
+            "--location", "1", "2", "3",
+        ])
+        self.assertEqual(args.kind, "uv_sphere")
+        self.assertEqual(args.name, "Smoke Sphere")
+        self.assertEqual(args.location, [1.0, 2.0, 3.0])
+
+    def test_object_delete_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["object-delete", "Smoke Sphere"])
+        self.assertEqual(args.name, "Smoke Sphere")
 
     def test_sculpt_finish_parser(self) -> None:
         parser = build_parser()
