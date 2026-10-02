@@ -46,14 +46,10 @@ try {
     $smokeStageId = $stage.result.stage_id
 
     Write-Host "3/7 create temporary UV sphere"
-    $primitiveParams = @{
-        kind = "uv_sphere"
-        name = $objectName
-        location = @(0, 0, 0)
-    } | ConvertTo-Json -Compress
     $created = Invoke-JsonCommand @(
-        "-m", "tools.blender_agent.client", "call", "object.add_primitive",
-        "--json", $primitiveParams
+        "-m", "tools.blender_agent.client", "object-add-primitive",
+        "uv_sphere", "--name", $objectName,
+        "--location", "0", "0", "0"
     )
     if (-not $created.ok) { throw "Could not create temporary sphere." }
     $createdObject = $true
@@ -75,10 +71,12 @@ try {
     Start-Sleep -Milliseconds 300
 
     Write-Host "5/7 apply checkpointed stroke"
-    $points = '[[0.48,0.50],[0.50,0.50],[0.52,0.50],[0.54,0.50]]'
     $stroke = Invoke-JsonCommand @(
         "-m", "tools.blender_agent.client", "sculpt-stroke",
-        "--points-json", $points,
+        "--point", "0.48", "0.50",
+        "--point", "0.50", "0.50",
+        "--point", "0.52", "0.50",
+        "--point", "0.54", "0.50",
         "--brush", "DRAW",
         "--radius", "85",
         "--strength", "0.55",
@@ -127,10 +125,8 @@ finally {
 
     if ($createdObject) {
         try {
-            $deleteParams = @{ name = $objectName } | ConvertTo-Json -Compress
             $deleted = Invoke-JsonCommand @(
-                "-m", "tools.blender_agent.client", "call", "object.delete",
-                "--json", $deleteParams
+                "-m", "tools.blender_agent.client", "object-delete", $objectName
             )
         }
         catch {
