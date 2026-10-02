@@ -55,6 +55,10 @@ ALLOWED_ACTIONS = {
     "sculpt.prepare",
     "sculpt.stroke",
     "sculpt.finish",
+    "recipe.validate",
+    "recipe.plan",
+    "recipe.run",
+    "recipe.status",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
