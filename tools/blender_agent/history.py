@@ -332,7 +332,7 @@ def _prune_attachments(stage_id: str, metadata: dict[str, Any]) -> None:
 
 def attachment_output_path(filename: str, *, stage_id: str | None = None) -> Path:
     metadata = get_stage_metadata(stage_id) if stage_id else ensure_stage()
-    clean = sanitize_label(filename, "attachment")
+    clean = sanitize_filename(filename, "attachment")
     folder = _stage_dir(str(metadata["stage_id"])) / "attachments"
     folder.mkdir(parents=True, exist_ok=True)
     candidate = folder / clean
