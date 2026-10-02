@@ -56,6 +56,16 @@ class RecipeEngineTests(unittest.TestCase):
         with self.assertRaisesRegex(RecipeError, "action nao permitida"):
             validate_recipe(recipe)
 
+    def test_destructive_action_requires_checkpoint(self) -> None:
+        recipe = load_recipe(EXAMPLE)
+        recipe["steps"][0] = {
+            "id": "unsafe-delete",
+            "action": "object.delete",
+            "params": {"name": "Something"},
+        }
+        with self.assertRaisesRegex(RecipeError, "checkpoint_before obrigatorio"):
+            validate_recipe(recipe)
+
     def test_unknown_parameter_override_is_rejected(self) -> None:
         with self.assertRaisesRegex(RecipeError, "overrides desconhecidos"):
             plan_recipe(load_recipe(EXAMPLE), overrides={"missing": 1})
