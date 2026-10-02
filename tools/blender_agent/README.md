@@ -368,3 +368,8 @@ No Blender 5.x, radius/strength do Sculpt são resolvidos por `tool_settings.scu
 ### Blender 5.2: OperatorStrokeElement
 
 O payload de cada ponto de `sculpt.stroke` é filtrado dinamicamente pelas propriedades RNA aceitas pelo `OperatorStrokeElement` da instalação atual. Isso evita falhas quando campos antigos, como `pen_flip`, deixam de existir na coleção de stroke. O resultado informa `stroke_element_properties` para diagnóstico.
+
+
+### Sculpt finish e restauracao do workspace
+
+`sculpt.finish` usa timer-yield para sair de Sculpt Mode, estabilizar o screen, voltar ao workspace original e confirmar a restauracao antes de responder. Isso evita falso negativo/positivo causado por troca de workspace e redraw no mesmo ciclo do Blender.
