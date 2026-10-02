@@ -10,6 +10,7 @@ SCRIPTS = (
     ROOT / "smoke-test.ps1",
     ROOT / "context-smoke-test.ps1",
     ROOT / "sculpt-smoke-test.ps1",
+    ROOT / "recipe-smoke-test.ps1",
     ROOT / "install-mcp.ps1",
 )
 
@@ -28,6 +29,15 @@ class WindowsPowerShellSourceTests(unittest.TestCase):
         self.assertIn("object-add-primitive", source)
         self.assertIn("object-delete", source)
         self.assertIn('"--point"', source)
+
+    def test_recipe_smoke_avoids_inline_recipe_json(self) -> None:
+        source = (ROOT / "recipe-smoke-test.ps1").read_text(encoding="ascii")
+        self.assertNotIn("--json", source)
+        self.assertIn("recipe-validate", source)
+        self.assertIn("recipe-plan", source)
+        self.assertIn("recipe-run", source)
+        self.assertIn("recipe-status", source)
+        self.assertIn("object-delete", source)
 
     def test_windows_powershell_scripts_are_ascii_safe(self) -> None:
         for script in SCRIPTS:
