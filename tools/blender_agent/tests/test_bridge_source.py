@@ -115,6 +115,13 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn('job.phase = "restore_error"', source)
         self.assertIn("_SCULPT_SESSION = None", source)
 
+    def test_sculpt_before_capture_uses_fallback_name_when_none(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn(
+            'before_name = params.get("before_name") or f"sculpt-before-{time.time_ns()}.png"',
+            source,
+        )
+
     def test_sculpt_finish_restores_workspace_asynchronously(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("class SculptFinishJob", source)
