@@ -115,6 +115,18 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn('job.phase = "restore_error"', source)
         self.assertIn("_SCULPT_SESSION = None", source)
 
+    def test_sculpt_finish_restores_workspace_asynchronously(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("class SculptFinishJob", source)
+        self.assertIn("def _start_sculpt_finish_job", source)
+        self.assertIn("def _advance_sculpt_finish_job", source)
+        self.assertIn('job.phase = "settle_object"', source)
+        self.assertIn('job.phase = "settle_workspace"', source)
+        self.assertIn('"restored_original_workspace": restored', source)
+        self.assertIn('"strategy": "timer-yield"', source)
+        self.assertIn('if _SCULPT_FINISH_JOB is not None:', source)
+        self.assertIn("return _advance_sculpt_finish_job()", source)
+
     def test_sculpt_stroke_filters_element_fields_from_rna(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("def _sculpt_stroke_element_property_names", source)
