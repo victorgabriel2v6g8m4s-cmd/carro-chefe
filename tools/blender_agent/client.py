@@ -166,6 +166,8 @@ def _recipe_run_file(
     dry_run: bool,
     create_stage: bool,
     restore_stage: bool,
+    workspace: str | None,
+    restore_workspace: bool,
 ) -> dict[str, Any]:
     return call("recipe.run", {
         "recipe": load_recipe(path),
@@ -174,6 +176,8 @@ def _recipe_run_file(
         "dry_run": dry_run,
         "create_stage": create_stage,
         "restore_stage": restore_stage,
+        "workspace": workspace,
+        "restore_workspace": restore_workspace,
     }, timeout=120.0)
 
 
@@ -359,6 +363,8 @@ def build_parser() -> argparse.ArgumentParser:
     recipe_run.add_argument("--dry-run", action="store_true")
     recipe_run.add_argument("--no-stage", action="store_true")
     recipe_run.add_argument("--restore-stage", action="store_true")
+    recipe_run.add_argument("--workspace")
+    recipe_run.add_argument("--keep-workspace", action="store_true")
     recipe_run.set_defaults(handler=lambda a: _recipe_run_file(
         a.path,
         variant=a.variant,
@@ -366,6 +372,8 @@ def build_parser() -> argparse.ArgumentParser:
         dry_run=a.dry_run,
         create_stage=not a.no_stage,
         restore_stage=a.restore_stage,
+        workspace=a.workspace,
+        restore_workspace=not a.keep_workspace,
     ))
 
     recipe_status = sub.add_parser("recipe-status", help="mostra estado da ultima recipe/run atual")
