@@ -15,6 +15,12 @@ SCRIPTS = (
 
 
 class WindowsPowerShellSourceTests(unittest.TestCase):
+    def test_sculpt_smoke_collects_native_stderr_without_terminating(self) -> None:
+        source = (ROOT / "sculpt-smoke-test.ps1").read_text(encoding="ascii")
+        self.assertIn('$ErrorActionPreference = "Continue"', source)
+        self.assertIn("$exitCode = $LASTEXITCODE", source)
+        self.assertIn("Command failed (exit $exitCode)", source)
+
     def test_sculpt_smoke_avoids_inline_json(self) -> None:
         source = (ROOT / "sculpt-smoke-test.ps1").read_text(encoding="ascii")
         self.assertNotIn("--json", source)
