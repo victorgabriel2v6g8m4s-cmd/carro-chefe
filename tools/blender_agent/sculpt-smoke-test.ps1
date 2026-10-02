@@ -9,11 +9,21 @@ Set-Location $RepoRoot
 
 function Invoke-JsonCommand {
     param([string[]]$Arguments)
-    $output = & $PythonExe @Arguments 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "Command failed: $PythonExe $($Arguments -join ' ')`n$output"
+
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $output = & $PythonExe @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
     }
-    $text = ($output | Out-String).Trim()
+    finally {
+        $ErrorActionPreference = $previousPreference
+    }
+
+    $text = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ($exitCode -ne 0) {
+        throw "Command failed (exit $exitCode): $PythonExe $($Arguments -join ' ')`n$text"
+    }
     try { return $text | ConvertFrom-Json }
     catch { throw "Output is not valid JSON: $text" }
 }
