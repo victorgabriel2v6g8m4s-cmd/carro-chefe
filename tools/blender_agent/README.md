@@ -55,8 +55,10 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `object.transform` | localização, escala e rotação |
 | `object.duplicate` / `object.delete` | duplicação e remoção |
 | `object.shade_smooth` | smooth shading |
+| `object.irregularize` | irregularidade geométrica determinística por seed |
 | `modifier.add` | modifiers allowlisted |
 | `material.simple` | Principled BSDF básico |
+| `material.preset` | aplica preset da biblioteca versionada de materiais |
 | `camera.orbit` | câmera determinística |
 | `render.still` | PNG em runtime |
 | `checkpoint.create` | cópia `.blend` em runtime |
@@ -290,7 +292,7 @@ Consultar status:
 python -m tools.blender_agent.client recipe-status
 ```
 
-A recipe suporta parâmetros tipados, components, steps allowlisted, checkpoints, capture-after, validation views, variants, overrides, criteria e hashes SHA-256 de recipe/plano/receipt.
+A recipe suporta parâmetros tipados, components, steps allowlisted, checkpoints, capture-after, validation views, variants, overrides, criteria e hashes SHA-256 de recipe/plano/receipt. A V0.4 também inclui irregularidade determinística por seed e biblioteca de materiais em `tools/blender_agent/materials/carro-chefe-materials-v1.json`.
 
 Cada execução cria um stage próprio por padrão e registra `recipe.start`, `recipe.step`, `recipe.capture`, `recipe.finish` e `recipe.run`.
 
