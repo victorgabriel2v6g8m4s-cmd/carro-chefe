@@ -25,7 +25,8 @@ Se o Blender não estiver no PATH, passe `-BlenderExe`. Para abrir arquivo exist
 ```powershell
 python -m tools.blender_agent.client status
 python -m tools.blender_agent.client call scene.summary
-python -m tools.blender_agent.client call object.add_primitive --json '{"kind":"cube","name":"Baguete_Base","scale":[3.8,1.05,0.65]}'
+python -m tools.blender_agent.client object-add-primitive cube --name Baguete_Base --scale 3.8 1.05 0.65
+python -m tools.blender_agent.client object-delete Baguete_Base
 ```
 
 Há um bootstrap de baguete em `examples/baguette_bootstrap.jsonl`.
@@ -239,7 +240,7 @@ CLI:
 
 ```powershell
 python -m tools.blender_agent.client sculpt-prepare --name Baguete_Base --workspace Sculpting --brush GRAB --radius 70 --strength 0.3
-python -m tools.blender_agent.client sculpt-stroke --points-json '[[0.44,0.50],[0.50,0.50],[0.56,0.48]]' --brush GRAB --radius 70 --strength 0.3 --label ajustar-silhueta
+python -m tools.blender_agent.client sculpt-stroke --point 0.44 0.50 --point 0.50 0.50 --point 0.56 0.48 --brush GRAB --radius 70 --strength 0.3 --label ajustar-silhueta
 python -m tools.blender_agent.client viewport-capture --name ajustar-silhueta-after.png
 python -m tools.blender_agent.client sculpt-finish
 ```
