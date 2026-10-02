@@ -11,6 +11,7 @@ from tools.blender_agent.protocol import (
     encode_message,
     normalize_request,
     safe_runtime_path,
+    sanitize_filename,
     sanitize_label,
 )
 
@@ -101,6 +102,31 @@ class ProtocolTests(unittest.TestCase):
 
     def test_sanitize_label_removes_path_punctuation(self) -> None:
         self.assertEqual(sanitize_label("../../baguete final.png"), "baguete-final.png")
+
+    def test_sanitize_filename_preserves_suffix_when_truncating(self) -> None:
+        original = (
+            "recipe-carro-chefe-baguette-base-1.0.0-1790974720866539200-"
+            "step-05-crust-material-baguette-material-3q.png"
+        )
+        result = sanitize_filename(original)
+        self.assertLessEqual(len(result), 100)
+        self.assertTrue(result.endswith(".png"))
+        self.assertEqual(len(result), 100)
+
+    def test_safe_runtime_path_preserves_long_file_suffix(self) -> None:
+        previous = os.environ.get("CC_BLENDER_RUNTIME")
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["CC_BLENDER_RUNTIME"] = tmp
+            try:
+                original = ("x" * 140) + ".json"
+                result = safe_runtime_path("receipts", original)
+                self.assertTrue(result.name.endswith(".json"))
+                self.assertLessEqual(len(result.name), 100)
+            finally:
+                if previous is None:
+                    os.environ.pop("CC_BLENDER_RUNTIME", None)
+                else:
+                    os.environ["CC_BLENDER_RUNTIME"] = previous
 
 
 if __name__ == "__main__":
