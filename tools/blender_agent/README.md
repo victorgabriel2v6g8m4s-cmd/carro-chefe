@@ -78,6 +78,10 @@ As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fo
 | `sculpt.prepare` | entra em Sculpt Mode com brush/radius/strength allowlisted |
 | `sculpt.stroke` | stroke multiponto com checkpoint e captura anterior |
 | `sculpt.finish` | sai de Sculpt e restaura workspace anterior |
+| `recipe.validate` | valida schema/action allowlist/hash sem editar cena |
+| `recipe.plan` | resolve variant/overrides e gera plano determinístico |
+| `recipe.run` | executa recipe step-by-step com stage/history/capturas/receipt |
+| `recipe.status` | progresso/resultado resumido da recipe |
 
 ## Feedback visual automático — V0.2
 
@@ -150,6 +154,8 @@ Ferramentas MCP principais:
 | `blender_ui_orbit` | orbita a viewport |
 | `blender_checkpoint` | cria checkpoint |
 | `blender_action` | chama qualquer action segura/allowlisted do protocolo |
+| `blender_recipe_validate` / `blender_recipe_plan` | valida e resolve recipes sem execução |
+| `blender_recipe_run` / `blender_recipe_status` | executa/acompanhada recipes versionadas |
 
 O ponto importante da V0.2 é `blender_viewport_capture`: o MCP devolve a captura como conteúdo de imagem, portanto um modelo multimodal compatível consegue **ver a própria viewport** sem depender de captura manual do usuário.
 
@@ -255,6 +261,47 @@ Smoke test:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/sculpt-smoke-test.ps1 -OpenImages
 ```
 
+## Recipes 3D — V0.4
+
+A V0.4 permite reproduzir uma construção 3D a partir de JSON versionado, em vez de depender de uma sequência lembrada pelo chat.
+
+Recipe de exemplo:
+
+```text
+tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
+```
+
+Validar e planejar sem modificar o Blender:
+
+```powershell
+python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
+python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguete
+```
+
+Executar:
+
+```powershell
+python -m tools.blender_agent.client recipe-run tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=Minha_Baguete
+```
+
+Consultar status:
+
+```powershell
+python -m tools.blender_agent.client recipe-status
+```
+
+A recipe suporta parâmetros tipados, components, steps allowlisted, checkpoints, capture-after, validation views, variants, overrides, criteria e hashes SHA-256 de recipe/plano/receipt.
+
+Cada execução cria um stage próprio por padrão e registra `recipe.start`, `recipe.step`, `recipe.capture`, `recipe.finish` e `recipe.run`.
+
+Documento completo: [BLENDER_AGENT_RECIPES.md](../../docs/tecnologia/BLENDER_AGENT_RECIPES.md).
+
+Smoke test:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/recipe-smoke-test.ps1 -OpenImages
+```
+
 ## Segurança
 
 - bind somente em `127.0.0.1` e porta efêmera por padrão;
@@ -301,7 +348,7 @@ python -m tools.blender_agent.client call scene.summary
 
 ## Limitações atuais
 
-- controle, captura VIEW_3D e captura multi-workspace já foram validados no Windows 10 + Blender 5.2 LTS; a conexão MCP local e o Sculpt V0.3 ainda aguardam smoke test final;
+- controle, captura VIEW_3D, captura multi-workspace e Sculpt V0.3 já foram validados no Windows 10 + Blender 5.2 LTS; recipes V0.4 e a conexão MCP local ainda aguardam smoke test real;
 - `event_simulate` exige `--enable-event-simulate`;
 - Sculpt V0.3 depende de mesh visível na VIEW_3D e brush compatível; strokes são intencionalmente limitados;
 - checkpoint automático existe para Sculpt, mas rollback automático de decisão continua no roadmap V0.5;
