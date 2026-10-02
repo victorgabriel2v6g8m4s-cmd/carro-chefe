@@ -53,6 +53,8 @@ class ProtocolTests(unittest.TestCase):
             "recipe.plan",
             "recipe.run",
             "recipe.status",
+            "object.irregularize",
+            "material.preset",
         ):
             request = normalize_request({
                 "version": 1,
