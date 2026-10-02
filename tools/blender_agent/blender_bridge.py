@@ -956,9 +956,31 @@ def _sculpt_active_tool_id() -> str | None:
         return None
 
 
+def _sculpt_unified_paint_settings():
+    tool_settings = bpy.context.scene.tool_settings
+
+    # Blender 5.x moved UnifiedPaintSettings from ToolSettings to Paint/Sculpt.
+    sculpt = getattr(tool_settings, "sculpt", None)
+    if sculpt is not None:
+        unified = getattr(sculpt, "unified_paint_settings", None)
+        if unified is not None:
+            return unified, "tool_settings.sculpt.unified_paint_settings"
+
+    # Compatibility with Blender versions where the property lived directly
+    # on ToolSettings (for example 4.x and older).
+    unified = getattr(tool_settings, "unified_paint_settings", None)
+    if unified is not None:
+        return unified, "tool_settings.unified_paint_settings"
+
+    raise RuntimeError(
+        "UnifiedPaintSettings nao disponivel nesta versao do Blender "
+        f"({bpy.app.version_string})"
+    )
+
+
 def _sculpt_status() -> dict[str, Any]:
     active = bpy.context.view_layer.objects.active
-    unified = bpy.context.scene.tool_settings.unified_paint_settings
+    unified, settings_source = _sculpt_unified_paint_settings()
     window = bpy.context.window
     has_view3d = bool(window and any(area.type == "VIEW_3D" for area in window.screen.areas))
     return {
@@ -969,6 +991,7 @@ def _sculpt_status() -> dict[str, Any]:
         "brush_tool": _sculpt_active_tool_id(),
         "radius": int(getattr(unified, "size", 0)),
         "strength": float(getattr(unified, "strength", 0.0)),
+        "settings_source": settings_source,
         "view": _viewport_description() if has_view3d else None,
         "allowed_brushes": sorted(_SCULPT_BRUSH_TYPES),
     }
@@ -1036,12 +1059,20 @@ def _sculpt_set_brush(brush: str) -> dict[str, Any]:
 def _sculpt_set_radius_strength(radius: int, strength: float) -> dict[str, Any]:
     radius = max(5, min(500, int(radius)))
     strength = max(0.001, min(1.0, float(strength)))
-    unified = bpy.context.scene.tool_settings.unified_paint_settings
-    unified.use_unified_size = True
-    unified.use_unified_strength = True
+    unified, settings_source = _sculpt_unified_paint_settings()
+
+    if hasattr(unified, "use_unified_size"):
+        unified.use_unified_size = True
+    if hasattr(unified, "use_unified_strength"):
+        unified.use_unified_strength = True
+
     unified.size = radius
     unified.strength = strength
-    return {"radius": radius, "strength": strength}
+    return {
+        "radius": radius,
+        "strength": strength,
+        "settings_source": settings_source,
+    }
 
 
 def _sculpt_prepare_active(
