@@ -150,8 +150,8 @@ Implementado e aguardando smoke test real:
 - [x] recipe de exemplo da baguete base;
 - [x] smoke test isolado com cleanup;
 - [ ] smoke test real no Windows 10 + Blender 5.2 LTS;
-- [ ] seeds determinísticos para irregularidade procedural;
-- [ ] biblioteca de materiais reutilizável por ID.
+- [x] seeds determinísticos para irregularidade procedural com hash por vértice/eixo;
+- [x] biblioteca de materiais reutilizável/versionada por ID.
 
 Critério atual: regenerar uma base de produto a partir de recipe + variant/overrides, produzir capturas/receipt e passar critérios declarados. Documento: [BLENDER_AGENT_RECIPES.md](./BLENDER_AGENT_RECIPES.md).
 
