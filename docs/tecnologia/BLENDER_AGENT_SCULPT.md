@@ -294,3 +294,23 @@ Assim como a entrada no workspace Sculpting, a saida tambem nao pode assumir que
 7. so entao responde `restored_original_workspace=true`.
 
 O retorno inclui a estrategia de sincronizacao e o numero de ticks usados. Se a restauracao nao puder ser confirmada, a action falha explicitamente em vez de retornar sucesso parcial.
+
+
+## Validação real concluída
+
+Em 02/10/2026, o smoke V0.3 foi concluído com sucesso no Windows 10 + Blender 5.2 LTS:
+
+- bridge respondeu;
+- stage de history foi criado;
+- mesh temporário foi criado;
+- Sculpt Mode foi preparado;
+- stroke foi aceito pelo operador;
+- checkpoint `.blend` foi salvo;
+- captura antes e captura depois produziram SHA-256 diferentes;
+- `sculpt.stroke` foi localizado no auto-history;
+- workspace original foi restaurado;
+- objeto temporário foi removido.
+
+A V0.3 passa a ser considerada validada na baseline oficial do projeto.
+
+Durante a validação foi observado um detalhe cosmético: quando `before_name` chegava como `None`, a captura era salva como `None.png`. O bridge foi corrigido para gerar automaticamente `sculpt-before-<timestamp>.png`.
