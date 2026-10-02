@@ -51,6 +51,7 @@ _TASKS: "queue.Queue[Task]" = queue.Queue()
 _TOKEN = secrets.token_urlsafe(32)
 _SERVER = None
 _CAPTURE_JOB = None
+_SCULPT_PREPARE_JOB = None
 _SCULPT_SESSION = None
 _WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "3"))))
 
@@ -125,6 +126,18 @@ class WorkspaceCaptureJob:
     requested_workspace_name: str | None = None
     last_screen_name: str | None = None
     started_ns: int = field(default_factory=time.time_ns)
+
+
+@dataclass
+class SculptPrepareJob:
+    task: Task
+    params: dict[str, Any]
+    original_workspace_name: str
+    requested_workspace_name: str
+    phase: str = "switch"
+    settle_remaining: int = 0
+    last_screen_name: str | None = None
+    error: str | None = None
 
 
 class ReusableThreadingTCPServer(socketserver.ThreadingTCPServer):
@@ -1031,78 +1044,228 @@ def _sculpt_set_radius_strength(radius: int, strength: float) -> dict[str, Any]:
     return {"radius": radius, "strength": strength}
 
 
-def _sculpt_prepare(params: dict[str, Any]) -> dict[str, Any]:
+def _sculpt_prepare_active(
+    params: dict[str, Any],
+    *,
+    original_workspace_name: str,
+) -> dict[str, Any]:
     global _SCULPT_SESSION
     window = bpy.context.window
     if window is None:
         raise RuntimeError("nenhuma janela Blender ativa")
-
-    original_workspace_name = window.workspace.name
-    _SCULPT_SESSION = None
-
-    try:
-        requested_workspace = str(params.get("workspace", "")).strip()
-        if requested_workspace:
-            target_workspace = bpy.data.workspaces.get(requested_workspace)
-            if target_workspace is None:
-                raise ValueError(f"workspace Sculpt nao encontrado: {requested_workspace}")
-            window.workspace = target_workspace
-            _redraw_window()
-        elif not any(area.type == "VIEW_3D" for area in window.screen.areas):
-            target_workspace = bpy.data.workspaces.get("Sculpting") or bpy.data.workspaces.get("Layout")
-            if target_workspace is None:
-                raise RuntimeError("workspaces Sculpting/Layout nao existem e o workspace atual nao possui VIEW_3D")
-            window.workspace = target_workspace
-            _redraw_window()
-
-        obj = _sculpt_select_mesh(str(params["name"]) if params.get("name") else None)
-        window, area, region, _space, _region_3d = _sculpt_context()
-        with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
-            result = bpy.ops.object.mode_set(mode="SCULPT")
-            if result and "FINISHED" in result and bool(params.get("frame_selected", True)):
-                try:
-                    bpy.ops.view3d.view_selected(use_all_regions=False)
-                except Exception:
-                    pass
-        if not result or "FINISHED" not in result:
-            raise RuntimeError(f"nao foi possivel entrar em Sculpt Mode: {sorted(result or [])}")
-
-        brush_info = _sculpt_set_brush(str(params.get("brush", "DRAW")))
-        settings = _sculpt_set_radius_strength(
-            int(params.get("radius", 60)),
-            float(params.get("strength", 0.25)),
+    if not any(area.type == "VIEW_3D" for area in window.screen.areas):
+        raise RuntimeError(
+            f"workspace ativo ainda nao possui VIEW_3D: {window.workspace.name} / {window.screen.name}"
         )
-        _SCULPT_SESSION = {
-            "object": obj.name,
-            "original_workspace": original_workspace_name,
-            "sculpt_workspace": window.workspace.name,
-            "started_ns": time.time_ns(),
-        }
-        _redraw_window()
-        return {
-            "object": obj.name,
-            "workspace": window.workspace.name,
-            "original_workspace": original_workspace_name,
-            "mode": bpy.context.mode,
-            **brush_info,
-            **settings,
-            "view": _viewport_description(),
-        }
-    except Exception:
-        try:
-            if bpy.context.mode == "SCULPT":
-                bpy.ops.object.mode_set(mode="OBJECT")
-        except Exception:
-            pass
-        original = bpy.data.workspaces.get(original_workspace_name)
-        if original is not None:
+
+    obj = _sculpt_select_mesh(str(params["name"]) if params.get("name") else None)
+    window, area, region, _space, _region_3d = _sculpt_context()
+    with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+        result = bpy.ops.object.mode_set(mode="SCULPT")
+        if result and "FINISHED" in result and bool(params.get("frame_selected", True)):
             try:
-                window.workspace = original
-                _redraw_window()
+                bpy.ops.view3d.view_selected(use_all_regions=False)
             except Exception:
                 pass
-        _SCULPT_SESSION = None
-        raise
+    if not result or "FINISHED" not in result:
+        raise RuntimeError(f"nao foi possivel entrar em Sculpt Mode: {sorted(result or [])}")
+
+    brush_info = _sculpt_set_brush(str(params.get("brush", "DRAW")))
+    settings = _sculpt_set_radius_strength(
+        int(params.get("radius", 60)),
+        float(params.get("strength", 0.25)),
+    )
+    _SCULPT_SESSION = {
+        "object": obj.name,
+        "original_workspace": original_workspace_name,
+        "sculpt_workspace": window.workspace.name,
+        "started_ns": time.time_ns(),
+    }
+    _redraw_window()
+    return {
+        "object": obj.name,
+        "workspace": window.workspace.name,
+        "screen": window.screen.name,
+        "original_workspace": original_workspace_name,
+        "mode": bpy.context.mode,
+        **brush_info,
+        **settings,
+        "view": _viewport_description(),
+    }
+
+
+def _resolve_sculpt_workspace_name(params: dict[str, Any]) -> str:
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+
+    requested = str(params.get("workspace", "")).strip()
+    if requested:
+        if requested not in bpy.data.workspaces:
+            raise ValueError(f"workspace Sculpt nao encontrado: {requested}")
+        return requested
+
+    if any(area.type == "VIEW_3D" for area in window.screen.areas):
+        return window.workspace.name
+
+    for fallback in ("Sculpting", "Layout"):
+        if fallback in bpy.data.workspaces:
+            return fallback
+    raise RuntimeError("nenhum workspace Sculpting/Layout disponivel")
+
+
+def _start_sculpt_prepare_job(task: Task) -> None:
+    global _SCULPT_PREPARE_JOB
+    if _SCULPT_PREPARE_JOB is not None:
+        raise RuntimeError("ja existe sculpt.prepare em andamento")
+    if _CAPTURE_JOB is not None:
+        raise RuntimeError("workspace.capture_set em andamento; tente sculpt.prepare novamente")
+
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa")
+
+    requested_workspace_name = _resolve_sculpt_workspace_name(task.request.get("params") or {})
+    _SCULPT_PREPARE_JOB = SculptPrepareJob(
+        task=task,
+        params=task.request.get("params") or {},
+        original_workspace_name=window.workspace.name,
+        requested_workspace_name=requested_workspace_name,
+    )
+
+
+def _sculpt_prepare_cleanup(job: SculptPrepareJob) -> None:
+    global _SCULPT_SESSION
+    window = bpy.context.window
+    _SCULPT_SESSION = None
+    if window is None:
+        return
+    try:
+        if bpy.context.mode == "SCULPT":
+            area = next((item for item in window.screen.areas if item.type == "VIEW_3D"), None)
+            region = None
+            if area is not None:
+                region = next((item for item in area.regions if item.type == "WINDOW"), None)
+            if area is not None and region is not None:
+                with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
+                    bpy.ops.object.mode_set(mode="OBJECT")
+            else:
+                bpy.ops.object.mode_set(mode="OBJECT")
+    except Exception:
+        pass
+
+    original = bpy.data.workspaces.get(job.original_workspace_name)
+    if original is not None:
+        try:
+            window.workspace = original
+            _redraw_window()
+        except Exception:
+            pass
+
+
+def _advance_sculpt_prepare_job() -> float:
+    global _SCULPT_PREPARE_JOB
+    job = _SCULPT_PREPARE_JOB
+    if job is None:
+        return 0.05
+
+    window = bpy.context.window
+    if window is None:
+        error = "RuntimeError: janela Blender desapareceu durante sculpt.prepare"
+        job.task.response = {"id": job.task.request["id"], "ok": False, "error": error}
+        _record_task_history(job.task, ok=False, error=error)
+        job.task.done.set()
+        _SCULPT_PREPARE_JOB = None
+        return 0.05
+
+    try:
+        if job.phase == "switch":
+            target = bpy.data.workspaces.get(job.requested_workspace_name)
+            if target is None:
+                raise RuntimeError(f"workspace Sculpt desapareceu: {job.requested_workspace_name}")
+            window.workspace = target
+            _redraw_window()
+            job.phase = "settle"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            job.last_screen_name = window.screen.name
+            return 0.05
+
+        if job.phase == "settle":
+            if window.workspace.name != job.requested_workspace_name:
+                target = bpy.data.workspaces.get(job.requested_workspace_name)
+                if target is None:
+                    raise RuntimeError(f"workspace Sculpt desapareceu: {job.requested_workspace_name}")
+                window.workspace = target
+                _redraw_window()
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+
+            job.phase = "prepare"
+            return 0.05
+
+        if job.phase == "prepare":
+            result = _sculpt_prepare_active(
+                job.params,
+                original_workspace_name=job.original_workspace_name,
+            )
+            job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
+            _record_task_history(job.task, ok=True, result=result)
+            job.task.done.set()
+            _SCULPT_PREPARE_JOB = None
+            return 0.05
+
+        if job.phase == "restore_error":
+            if window.workspace.name != job.original_workspace_name:
+                original = bpy.data.workspaces.get(job.original_workspace_name)
+                if original is not None:
+                    window.workspace = original
+                    _redraw_window()
+                    job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                    job.last_screen_name = window.screen.name
+                    return 0.05
+
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+
+            error = job.error or "RuntimeError: sculpt.prepare falhou"
+            job.task.response = {"id": job.task.request["id"], "ok": False, "error": error}
+            _record_task_history(job.task, ok=False, error=error)
+            job.task.done.set()
+            _SCULPT_PREPARE_JOB = None
+            return 0.05
+
+        raise RuntimeError(f"fase de sculpt.prepare invalida: {job.phase}")
+
+    except Exception as exc:
+        job.error = f"{type(exc).__name__}: {exc}"
+        _sculpt_prepare_cleanup(job)
+        job.phase = "restore_error"
+        job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+        job.last_screen_name = window.screen.name
+        return 0.05
+
 
 
 def _normalize_sculpt_points(
@@ -1369,7 +1532,7 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
         return _sculpt_status()
 
     if action == "sculpt.prepare":
-        return _sculpt_prepare(params)
+        raise RuntimeError("sculpt.prepare deve ser executado pelo scheduler assincrono")
 
     if action == "sculpt.stroke":
         return _sculpt_stroke(params)
@@ -1728,6 +1891,8 @@ def _record_task_history(task: Task, *, ok: bool, result: Any = None, error: str
 def _drain_queue() -> float:
     if _CAPTURE_JOB is not None:
         return _advance_workspace_capture_job()
+    if _SCULPT_PREPARE_JOB is not None:
+        return _advance_sculpt_prepare_job()
 
     for _ in range(10):
         try:
@@ -1738,6 +1903,16 @@ def _drain_queue() -> float:
         if task.request.get("action") == "workspace.capture_set":
             try:
                 _start_workspace_capture_job(task)
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                task.response = {"id": task.request["id"], "ok": False, "error": error}
+                _record_task_history(task, ok=False, error=error)
+                task.done.set()
+            break
+
+        if task.request.get("action") == "sculpt.prepare":
+            try:
+                _start_sculpt_prepare_job(task)
             except Exception as exc:
                 error = f"{type(exc).__name__}: {exc}"
                 task.response = {"id": task.request["id"], "ok": False, "error": error}
