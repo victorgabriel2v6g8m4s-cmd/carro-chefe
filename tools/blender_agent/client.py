@@ -137,6 +137,22 @@ def build_parser() -> argparse.ArgumentParser:
     invoke.add_argument("--json", default="{}", type=_json_params, dest="params")
     invoke.set_defaults(handler=lambda a: call(a.action, a.params))
 
+    add_primitive = sub.add_parser("object-add-primitive", help="cria primitiva sem JSON inline")
+    add_primitive.add_argument("kind", choices=["cube", "cylinder", "uv_sphere", "ico_sphere", "torus"])
+    add_primitive.add_argument("--name")
+    add_primitive.add_argument("--location", nargs=3, type=float, metavar=("X", "Y", "Z"), default=[0.0, 0.0, 0.0])
+    add_primitive.add_argument("--scale", nargs=3, type=float, metavar=("X", "Y", "Z"))
+    add_primitive.set_defaults(handler=lambda a: call("object.add_primitive", {
+        "kind": a.kind,
+        "name": a.name,
+        "location": a.location,
+        "scale": a.scale,
+    }))
+
+    delete_object = sub.add_parser("object-delete", help="remove objeto por nome sem JSON inline")
+    delete_object.add_argument("name")
+    delete_object.set_defaults(handler=lambda a: call("object.delete", {"name": a.name}))
+
     viewport = sub.add_parser("viewport-describe", help="descreve estado e bounds da VIEW_3D")
     viewport.set_defaults(handler=lambda _a: call("viewport.describe"))
 
@@ -298,12 +314,21 @@ def build_parser() -> argparse.ArgumentParser:
     }))
 
     sculpt_stroke = sub.add_parser("sculpt-stroke", help="aplica stroke Sculpt semantico com checkpoint")
-    sculpt_stroke.add_argument(
+    sculpt_points = sculpt_stroke.add_mutually_exclusive_group(required=True)
+    sculpt_points.add_argument(
         "--points-json",
-        required=True,
         type=_json_list,
-        dest="points",
+        dest="points_json",
         help='lista JSON, ex.: [[0.45,0.5],[0.55,0.5]]',
+    )
+    sculpt_points.add_argument(
+        "--point",
+        nargs=2,
+        type=float,
+        action="append",
+        dest="points",
+        metavar=("X", "Y"),
+        help="ponto X Y repetivel; evita JSON inline no Windows PowerShell 5.1",
     )
     sculpt_stroke.add_argument(
         "--brush",
@@ -319,7 +344,7 @@ def build_parser() -> argparse.ArgumentParser:
     sculpt_stroke.add_argument("--no-capture-before", action="store_true")
     sculpt_stroke.add_argument("--before-name")
     sculpt_stroke.set_defaults(handler=lambda a: call("sculpt.stroke", {
-        "points": a.points,
+        "points": a.points_json if a.points_json is not None else a.points,
         "brush": a.brush,
         "radius": a.radius,
         "strength": a.strength,
