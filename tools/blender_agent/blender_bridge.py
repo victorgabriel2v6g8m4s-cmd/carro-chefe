@@ -52,6 +52,7 @@ from tools.blender_agent.protocol import (
     decode_message,
     encode_message,
     safe_runtime_path,
+    sanitize_filename,
     sanitize_label,
     session_path,
 )
@@ -1828,9 +1829,9 @@ def _recipe_configure_capture(capture: dict[str, Any]) -> None:
 
 def _recipe_capture(capture: dict[str, Any], *, prefix: str) -> dict[str, Any]:
     filename = str(capture.get("filename") or f"{capture.get('name', 'capture')}.png")
-    filename = sanitize_label(f"{prefix}-{filename}", "recipe-capture.png")
+    filename = sanitize_filename(f"{prefix}-{filename}", "recipe-capture.png")
     if not filename.lower().endswith(".png"):
-        filename += ".png"
+        filename = sanitize_filename(f"{filename}.png", "recipe-capture.png")
     result = _viewport_capture({"filename": filename})
     return {
         "name": capture.get("name"),
