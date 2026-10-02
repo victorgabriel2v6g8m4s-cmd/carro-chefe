@@ -100,6 +100,44 @@ class ClientParserTests(unittest.TestCase):
         self.assertEqual(args.stage_id, "bread-shape")
         self.assertEqual(args.tags, ["bread"])
 
+    def test_recipe_validate_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["recipe-validate", "recipe.json"])
+        self.assertEqual(args.command, "recipe-validate")
+        self.assertEqual(args.path, "recipe.json")
+
+    def test_recipe_plan_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "recipe-plan", "recipe.json",
+            "--variant", "long",
+            "--set", "roughness=0.4",
+            "--set", 'object_name="Test"',
+        ])
+        self.assertEqual(args.command, "recipe-plan")
+        self.assertEqual(args.variant, "long")
+        self.assertEqual(args.sets, ["roughness=0.4", 'object_name="Test"'])
+
+    def test_recipe_run_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args([
+            "recipe-run", "recipe.json",
+            "--variant", "compact",
+            "--set", 'object_name="Smoke"',
+            "--dry-run",
+            "--restore-stage",
+        ])
+        self.assertEqual(args.command, "recipe-run")
+        self.assertEqual(args.variant, "compact")
+        self.assertTrue(args.dry_run)
+        self.assertTrue(args.restore_stage)
+        self.assertFalse(args.no_stage)
+
+    def test_recipe_status_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["recipe-status"])
+        self.assertEqual(args.command, "recipe-status")
+
     def test_sculpt_prepare_parser(self) -> None:
         parser = build_parser()
         args = parser.parse_args([
