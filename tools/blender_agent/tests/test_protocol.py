@@ -49,6 +49,10 @@ class ProtocolTests(unittest.TestCase):
             "sculpt.prepare",
             "sculpt.stroke",
             "sculpt.finish",
+            "recipe.validate",
+            "recipe.plan",
+            "recipe.run",
+            "recipe.status",
         ):
             request = normalize_request({
                 "version": 1,
