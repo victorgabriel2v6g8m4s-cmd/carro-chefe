@@ -256,6 +256,7 @@ validate
 - até 20 variants;
 - profundidade JSON limitada;
 - actions recipe-safe explícitas;
+- a action `object.delete` exige `checkpoint_before: true`;
 - nenhum código arbitrário;
 - saídas confinadas ao runtime;
 - history segmentado;
@@ -286,3 +287,10 @@ O smoke:
 ## Próximo passo
 
 Depois da V0.4 validada na máquina real, a V0.5 pode usar recipes como unidade de planejamento/rollback em vez de improvisar uma sequência completa de ações a cada sessão.
+
+
+## Status durante execução
+
+`recipe.status` é respondido diretamente pela thread do socket usando somente o estado em memória do job. Ele não entra na fila da main thread, portanto continua consultável enquanto `recipe.run` ocupa o scheduler do Blender.
+
+O status inclui run id, recipe/version, plan hash, stage, phase, step atual, steps concluídos, falhas e quantidade de capturas.
