@@ -2022,6 +2022,22 @@ def _start_recipe_run_job(task: Task) -> None:
         }
         return
 
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa para recipe.run")
+    original_workspace_name = window.workspace.name
+    requested_workspace = str(params.get("workspace") or "").strip()
+    if requested_workspace:
+        target_workspace = bpy.data.workspaces.get(requested_workspace)
+        if target_workspace is None:
+            raise ValueError(f"workspace de recipe nao encontrado: {requested_workspace}")
+    elif any(area.type == "VIEW_3D" for area in window.screen.areas):
+        target_workspace = window.workspace
+    else:
+        target_workspace = bpy.data.workspaces.get("Layout")
+        if target_workspace is None:
+            raise RuntimeError("recipe.run exige workspace atual com VIEW_3D ou workspace Layout")
+
     previous_stage_id = get_active_stage_id()
     if bool(params.get("create_stage", True)):
         stage = create_stage(
@@ -2054,22 +2070,6 @@ def _start_recipe_run_job(task: Task) -> None:
         tags=["recipe", plan["recipe_id"], "start"],
         stage_id=stage_id,
     )
-
-    window = bpy.context.window
-    if window is None:
-        raise RuntimeError("nenhuma janela Blender ativa para recipe.run")
-    original_workspace_name = window.workspace.name
-    requested_workspace = str(params.get("workspace") or "").strip()
-    if requested_workspace:
-        target_workspace = bpy.data.workspaces.get(requested_workspace)
-        if target_workspace is None:
-            raise ValueError(f"workspace de recipe nao encontrado: {requested_workspace}")
-    elif any(area.type == "VIEW_3D" for area in window.screen.areas):
-        target_workspace = window.workspace
-    else:
-        target_workspace = bpy.data.workspaces.get("Layout")
-        if target_workspace is None:
-            raise RuntimeError("recipe.run exige workspace atual com VIEW_3D ou workspace Layout")
 
     window.workspace = target_workspace
     _redraw_window()
