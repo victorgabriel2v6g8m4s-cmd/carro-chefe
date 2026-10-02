@@ -85,6 +85,18 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("checkpoint", source)
         self.assertIn('"NORMALIZED", "REGION"', source)
 
+    def test_sculpt_settings_support_blender_52_location(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _sculpt_unified_paint_settings", source)
+        self.assertIn('getattr(tool_settings, "sculpt", None)', source)
+        self.assertIn('getattr(sculpt, "unified_paint_settings", None)', source)
+        self.assertIn('getattr(tool_settings, "unified_paint_settings", None)', source)
+        self.assertIn('"settings_source": settings_source', source)
+        self.assertNotIn(
+            "bpy.context.scene.tool_settings.unified_paint_settings",
+            source,
+        )
+
     def test_sculpt_prepare_yields_after_workspace_switch(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("class SculptPrepareJob", source)
