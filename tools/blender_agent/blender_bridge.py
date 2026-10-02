@@ -195,12 +195,19 @@ class Handler(socketserver.StreamRequestHandler):
             if not hmac.compare_digest(request.get("token") or "", _TOKEN):
                 raise PermissionError("token de sessão inválido")
 
-            task = Task(request=request)
-            _TASKS.put(task)
-            wait_timeout = 120 if request.get("action") == "recipe.run" else 30
-            if not task.done.wait(timeout=wait_timeout):
-                raise TimeoutError("Blender não processou a action no prazo")
-            response = task.response or {"ok": False, "error": "resposta vazia"}
+            if request.get("action") == "recipe.status":
+                response = {
+                    "id": request["id"],
+                    "ok": True,
+                    "result": _recipe_status_snapshot(),
+                }
+            else:
+                task = Task(request=request)
+                _TASKS.put(task)
+                wait_timeout = 120 if request.get("action") == "recipe.run" else 30
+                if not task.done.wait(timeout=wait_timeout):
+                    raise TimeoutError("Blender não processou a action no prazo")
+                response = task.response or {"ok": False, "error": "resposta vazia"}
         except Exception as exc:
             response = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
