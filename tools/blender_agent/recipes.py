@@ -463,10 +463,10 @@ def plan_recipe(
         "variant": variant,
         "variant_meta": variant_meta,
         "parameters": values,
-        "components": copy.deepcopy(normalized["components"]),
+        "components": _resolve_value(normalized["components"], values, "components"),
         "steps": resolved_steps,
-        "validation_views": copy.deepcopy(normalized["validation_views"]),
-        "criteria": copy.deepcopy(normalized["criteria"]),
+        "validation_views": _resolve_value(normalized["validation_views"], values, "validation_views"),
+        "criteria": _resolve_value(normalized["criteria"], values, "criteria"),
         "tags": sorted(set(normalized["tags"] + (variant_meta or {}).get("tags", []))),
     }
     plan["plan_hash"] = recipe_hash(plan)
