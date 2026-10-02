@@ -90,9 +90,9 @@
         "win32"
       ],
       "commands": {
-        "linux": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v",
-        "darwin": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v",
-        "win32": "python -m unittest discover -s tools/blender_agent/tests -p \"test_*.py\" -v"
+        "linux": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v && python3 -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python3 -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette",
+        "darwin": "python3 -m unittest discover -s tools/blender_agent/tests -p 'test_*.py' -v && python3 -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python3 -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette",
+        "win32": "python -m unittest discover -s tools/blender_agent/tests -p \"test_*.py\" -v && python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json && python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=ToolHealth_Baguette"
       },
       "timeoutMs": 60000
     },
