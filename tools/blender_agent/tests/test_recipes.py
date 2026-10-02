@@ -22,7 +22,7 @@ class RecipeEngineTests(unittest.TestCase):
         self.assertTrue(result["ok"])
         self.assertEqual(result["summary"]["id"], "carro-chefe-baguette-base")
         self.assertEqual(result["summary"]["version"], "1.0.0")
-        self.assertEqual(result["summary"]["steps"], 5)
+        self.assertEqual(result["summary"]["steps"], 6)
         self.assertEqual(result["summary"]["validation_views"], 4)
         self.assertEqual(len(result["recipe_hash"]), 64)
 
@@ -43,6 +43,20 @@ class RecipeEngineTests(unittest.TestCase):
         self.assertEqual(plan["steps"][0]["params"]["scale"], [4.5, 1.05, 0.65])
         self.assertEqual(plan["steps"][0]["params"]["name"], "Recipe_Test")
         self.assertEqual(len(plan["plan_hash"]), 64)
+
+    def test_seeded_irregularity_and_material_preset_are_planned(self) -> None:
+        result = plan_recipe(
+            load_recipe(EXAMPLE),
+            variant="long",
+            overrides={"irregularity_seed": 42},
+        )
+        plan = result["plan"]
+        irregular = next(step for step in plan["steps"] if step["id"] == "seeded-irregularity")
+        material = next(step for step in plan["steps"] if step["id"] == "crust-material")
+        self.assertEqual(irregular["params"]["seed"], 42)
+        self.assertTrue(irregular["checkpoint_before"])
+        self.assertEqual(material["action"], "material.preset")
+        self.assertEqual(material["params"]["preset_id"], "bread-crust")
 
     def test_unknown_top_level_field_is_rejected(self) -> None:
         recipe = load_recipe(EXAMPLE)
