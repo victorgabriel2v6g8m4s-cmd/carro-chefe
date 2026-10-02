@@ -163,6 +163,11 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn('if action == "material.preset":', source)
         self.assertIn('"library_version": preset["library_version"]', source)
 
+    def test_recipe_capture_uses_extension_preserving_sanitizer(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("sanitize_filename(", source)
+        self.assertIn('"recipe-capture.png"', source)
+
     def test_recipe_status_bypasses_main_thread_queue(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn('if request.get("action") == "recipe.status":', source)
