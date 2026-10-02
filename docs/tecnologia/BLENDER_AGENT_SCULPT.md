@@ -261,3 +261,19 @@ Na API 5.2, `Sculpt` é um subtipo de `Paint` e herda `Paint.unified_paint_setti
 A mesma função de resolução é usada tanto para escrita de radius/strength quanto por `sculpt.status`, evitando divergência entre o valor configurado e o valor relatado.
 
 O retorno passa a incluir `settings_source` para deixar explícita a variante de API usada durante o smoke.
+
+
+## Compatibilidade OperatorStrokeElement no Blender 5.2
+
+O smoke real seguinte chegou ao stroke e revelou outra diferença da API: `pen_flip` não era aceito como campo de cada item da coleção `stroke`, embora continue existindo como parâmetro do operador em APIs relacionadas.
+
+Para evitar manter uma lista fixa de campos herdada de versões antigas, o bridge agora introspecta a RNA do próprio `bpy.ops.sculpt.brush_stroke`:
+
+1. lê a propriedade `stroke` do RNA do operador;
+2. obtém o `fixed_type` da coleção;
+3. coleta somente propriedades graváveis realmente aceitas pelo `OperatorStrokeElement` daquela versão;
+4. filtra cada ponto antes de chamar o operador.
+
+Se a introspecção não estiver disponível, usa um conjunto mínimo conservador sem `pen_flip` ou tilt. O retorno de `sculpt.stroke` passa a incluir `stroke_element_properties` para auditoria.
+
+Com isso, diferenças futuras em campos como `pen_flip`, `x_tilt`, `y_tilt` ou `mouse_event` deixam de quebrar todo o stroke.
