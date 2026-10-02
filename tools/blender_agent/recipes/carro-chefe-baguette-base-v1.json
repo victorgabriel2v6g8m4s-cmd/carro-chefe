@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "id": "carro-chefe-baguette-base",
+  "version": "1.0.0",
+  "label": "Baguete base Carro Chefe",
+  "description": "Recipe inicial e reproduzivel para uma base alongada de baguete, antes de detalhes organicos/Sculpt.",
+  "tags": ["carro-chefe", "baguette", "base"],
+  "parameters": {
+    "object_name": {
+      "type": "string",
+      "default": "CC_Baguette_Base",
+      "description": "Nome do objeto base criado pela recipe."
+    },
+    "bread_scale": {
+      "type": "vec3",
+      "default": [3.8, 1.05, 0.65],
+      "description": "Escala inicial X/Y/Z da base."
+    },
+    "bevel_width": {
+      "type": "number",
+      "default": 0.55,
+      "minimum": 0.05,
+      "maximum": 2.0
+    },
+    "bevel_segments": {
+      "type": "integer",
+      "default": 6,
+      "minimum": 1,
+      "maximum": 16
+    },
+    "subsurf_levels": {
+      "type": "integer",
+      "default": 2,
+      "minimum": 0,
+      "maximum": 4
+    },
+    "roughness": {
+      "type": "number",
+      "default": 0.58,
+      "minimum": 0.0,
+      "maximum": 1.0
+    }
+  },
+  "components": [
+    {
+      "id": "bread-shell",
+      "label": "Corpo base do pao",
+      "object_name": "${object_name}",
+      "kind": "mesh",
+      "tags": ["bread", "shell"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "base-mesh",
+      "label": "Criar volume base",
+      "action": "object.add_primitive",
+      "params": {
+        "kind": "cube",
+        "name": "${object_name}",
+        "location": [0.0, 0.0, 0.0],
+        "scale": "${bread_scale}"
+      },
+      "tags": ["geometry"]
+    },
+    {
+      "id": "round-edges",
+      "label": "Arredondar arestas",
+      "action": "modifier.add",
+      "params": {
+        "name": "${object_name}",
+        "type": "BEVEL",
+        "modifier_name": "Recipe_Bevel",
+        "properties": {
+          "width": "${bevel_width}",
+          "segments": "${bevel_segments}",
+          "limit_method": "ANGLE"
+        }
+      },
+      "checkpoint_before": true,
+      "checkpoint_label": "before-bevel",
+      "tags": ["geometry", "modifier"]
+    },
+    {
+      "id": "subdivide",
+      "label": "Adicionar subdivisao",
+      "action": "modifier.add",
+      "params": {
+        "name": "${object_name}",
+        "type": "SUBSURF",
+        "modifier_name": "Recipe_Subsurf",
+        "properties": {
+          "levels": "${subsurf_levels}",
+          "render_levels": "${subsurf_levels}",
+          "subdivision_type": "CATMULL_CLARK"
+        }
+      },
+      "tags": ["geometry", "modifier"]
+    },
+    {
+      "id": "smooth",
+      "label": "Suavizar shading",
+      "action": "object.shade_smooth",
+      "params": {
+        "name": "${object_name}"
+      },
+      "tags": ["shading"]
+    },
+    {
+      "id": "crust-material",
+      "label": "Aplicar material base de crosta",
+      "action": "material.simple",
+      "params": {
+        "name": "${object_name}",
+        "material_name": "CC_Bread_Crust_Base",
+        "base_color": [0.44, 0.20, 0.07, 1.0],
+        "roughness": "${roughness}",
+        "metallic": 0.0
+      },
+      "capture_after": {
+        "name": "material-three-quarter",
+        "preset": "THREE_QUARTER",
+        "shading": "MATERIAL",
+        "filename": "baguette-material-3q.png",
+        "frame_all": true
+      },
+      "tags": ["material", "validation"]
+    }
+  ],
+  "validation_views": [
+    {
+      "name": "front",
+      "preset": "FRONT",
+      "shading": "MATERIAL",
+      "filename": "baguette-front.png",
+      "frame_all": true
+    },
+    {
+      "name": "right",
+      "preset": "RIGHT",
+      "shading": "MATERIAL",
+      "filename": "baguette-right.png",
+      "frame_all": true
+    },
+    {
+      "name": "top",
+      "preset": "TOP",
+      "shading": "MATERIAL",
+      "filename": "baguette-top.png",
+      "frame_all": true
+    },
+    {
+      "name": "three-quarter",
+      "preset": "THREE_QUARTER",
+      "shading": "MATERIAL",
+      "filename": "baguette-three-quarter.png",
+      "frame_all": true
+    }
+  ],
+  "criteria": {
+    "required_objects": ["${object_name}"],
+    "min_captures": 4,
+    "max_failed_steps": 0
+  },
+  "variants": {
+    "compact": {
+      "label": "Baguete compacta",
+      "description": "Variante curta para testar proporcoes sem alterar a recipe base.",
+      "overrides": {
+        "bread_scale": [3.2, 1.05, 0.65]
+      },
+      "tags": ["variant", "compact"]
+    },
+    "long": {
+      "label": "Baguete longa",
+      "description": "Variante alongada da mesma recipe.",
+      "overrides": {
+        "bread_scale": [4.5, 1.05, 0.65]
+      },
+      "tags": ["variant", "long"]
+    }
+  }
+}
