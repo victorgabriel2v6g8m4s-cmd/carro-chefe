@@ -867,7 +867,50 @@ def _advance_workspace_capture_job() -> float:
 
                 job.phase = "finalize"
 
-            if job.phase == "finalize":
+            if job.phase == "restore_workspace":
+            window = bpy.context.window
+            if window is None:
+                raise RuntimeError("janela Blender indisponivel ao restaurar workspace da recipe")
+            if not job.restore_workspace or window.workspace.name == job.original_workspace_name:
+                job.phase = "finalize"
+                return 0.05
+            original = bpy.data.workspaces.get(job.original_workspace_name)
+            if original is None:
+                raise RuntimeError(f"workspace original da recipe nao existe mais: {job.original_workspace_name}")
+            window.workspace = original
+            _redraw_window()
+            job.phase = "restore_workspace_settle"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            job.last_screen_name = window.screen.name
+            return 0.05
+
+        if job.phase == "restore_workspace_settle":
+            window = bpy.context.window
+            if window is None:
+                raise RuntimeError("janela Blender indisponivel ao confirmar workspace da recipe")
+            if window.workspace.name != job.original_workspace_name:
+                original = bpy.data.workspaces.get(job.original_workspace_name)
+                if original is None:
+                    raise RuntimeError(f"workspace original da recipe nao existe mais: {job.original_workspace_name}")
+                window.workspace = original
+                _redraw_window()
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "finalize"
+            return 0.05
+
+        if job.phase == "finalize":
                 result = _write_workspace_capture_manifest(job)
                 if not result["restored_original_workspace"]:
                     raise RuntimeError(
@@ -1841,6 +1884,12 @@ def _recipe_write_initial_files(recipe: dict[str, Any], plan: dict[str, Any], ru
 def _recipe_finalize(job: RecipeRunJob) -> dict[str, Any]:
     global _RECIPE_LAST_STATUS
     criteria = job.plan.get("criteria", {})
+    window = bpy.context.window
+    final_workspace = window.workspace.name if window else None
+    workspace_restored = bool(
+        not job.restore_workspace
+        or final_workspace == job.original_workspace_name
+    )
     required_objects = list(criteria.get("required_objects", []))
     missing_objects = [name for name in required_objects if bpy.data.objects.get(str(name)) is None]
     min_captures = int(criteria.get("min_captures", 0))
@@ -1861,6 +1910,12 @@ def _recipe_finalize(job: RecipeRunJob) -> dict[str, Any]:
             "maximum": max_failed_steps,
             "actual": job.failed_steps,
         },
+        "workspace_restored": {
+            "passed": workspace_restored,
+            "required": bool(job.restore_workspace),
+            "original": job.original_workspace_name,
+            "actual": final_workspace,
+        },
     }
     criteria_passed = all(item["passed"] for item in checks.values())
     status = "passed" if criteria_passed and not job.fatal_error else "failed"
@@ -1878,6 +1933,10 @@ def _recipe_finalize(job: RecipeRunJob) -> dict[str, Any]:
         "parameters": job.plan.get("parameters", {}),
         "stage_id": job.stage_id,
         "previous_stage_id": job.previous_stage_id,
+        "original_workspace": job.original_workspace_name,
+        "recipe_workspace": job.recipe_workspace_name,
+        "final_workspace": final_workspace,
+        "workspace_restored": workspace_restored,
         "started_ns": job.started_ns,
         "finished_ns": time.time_ns(),
         "steps": job.results,
@@ -1905,6 +1964,10 @@ def _recipe_finalize(job: RecipeRunJob) -> dict[str, Any]:
         "plan_hash": job.plan["plan_hash"],
         "stage_id": job.stage_id,
         "restored_stage_id": restored_stage,
+        "original_workspace": job.original_workspace_name,
+        "recipe_workspace": job.recipe_workspace_name,
+        "final_workspace": final_workspace,
+        "workspace_restored": workspace_restored,
         "completed_steps": len(job.results),
         "failed_steps": job.failed_steps,
         "captures": job.captures,
@@ -1992,6 +2055,25 @@ def _start_recipe_run_job(task: Task) -> None:
         stage_id=stage_id,
     )
 
+    window = bpy.context.window
+    if window is None:
+        raise RuntimeError("nenhuma janela Blender ativa para recipe.run")
+    original_workspace_name = window.workspace.name
+    requested_workspace = str(params.get("workspace") or "").strip()
+    if requested_workspace:
+        target_workspace = bpy.data.workspaces.get(requested_workspace)
+        if target_workspace is None:
+            raise ValueError(f"workspace de recipe nao encontrado: {requested_workspace}")
+    elif any(area.type == "VIEW_3D" for area in window.screen.areas):
+        target_workspace = window.workspace
+    else:
+        target_workspace = bpy.data.workspaces.get("Layout")
+        if target_workspace is None:
+            raise RuntimeError("recipe.run exige workspace atual com VIEW_3D ou workspace Layout")
+
+    window.workspace = target_workspace
+    _redraw_window()
+
     _RECIPE_RUN_JOB = RecipeRunJob(
         task=task,
         plan=plan,
@@ -1999,6 +2081,11 @@ def _start_recipe_run_job(task: Task) -> None:
         stage_id=stage_id,
         previous_stage_id=previous_stage_id,
         restore_stage=bool(params.get("restore_stage", False)),
+        original_workspace_name=original_workspace_name,
+        recipe_workspace_name=target_workspace.name,
+        restore_workspace=bool(params.get("restore_workspace", True)),
+        settle_remaining=_WORKSPACE_CAPTURE_SETTLE_TICKS,
+        last_screen_name=window.screen.name,
     )
     _RECIPE_LAST_STATUS = _recipe_status_snapshot()
 
@@ -2013,9 +2100,37 @@ def _advance_recipe_run_job() -> float:
         steps = job.plan["steps"]
         views = job.plan.get("validation_views", [])
 
+        if job.phase == "workspace_settle":
+            window = bpy.context.window
+            if window is None:
+                raise RuntimeError("janela Blender indisponivel durante recipe.run")
+            if window.workspace.name != job.recipe_workspace_name:
+                target = bpy.data.workspaces.get(job.recipe_workspace_name)
+                if target is None:
+                    raise RuntimeError(f"workspace de recipe desapareceu: {job.recipe_workspace_name}")
+                window.workspace = target
+                _redraw_window()
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+            if not any(area.type == "VIEW_3D" for area in window.screen.areas):
+                raise RuntimeError(f"workspace de recipe sem VIEW_3D: {window.workspace.name}")
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "step"
+            return 0.05
+
         if job.phase == "step":
             if job.fatal_error or job.step_index >= len(steps):
-                job.phase = "validation" if not job.fatal_error else "finalize"
+                job.phase = "validation" if not job.fatal_error else "restore_workspace"
                 return 0.05
 
             step = steps[job.step_index]
@@ -2056,7 +2171,7 @@ def _advance_recipe_run_job() -> float:
                 if not bool(step.get("continue_on_error", False)):
                     job.fatal_error = f"step {step['id']} falhou: {error}"
                     job.step_index += 1
-                    job.phase = "finalize"
+                    job.phase = "restore_workspace"
                     return 0.05
 
             capture = step.get("capture_after")
@@ -2102,13 +2217,13 @@ def _advance_recipe_run_job() -> float:
             )
             job.current_capture = None
             job.phase = "step" if job.step_index < len(steps) and not job.fatal_error else (
-                "validation" if not job.fatal_error else "finalize"
+                "validation" if not job.fatal_error else "restore_workspace"
             )
             return 0.05
 
         if job.phase == "validation":
             if job.view_index >= len(views):
-                job.phase = "finalize"
+                job.phase = "restore_workspace"
                 return 0.05
             view = views[job.view_index]
             job.current_capture = {
@@ -2178,7 +2293,10 @@ def _advance_recipe_run_job() -> float:
 
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
-        job.fatal_error = error
+        job.fatal_error = job.fatal_error or error
+        if job.phase not in {"restore_workspace", "restore_workspace_settle", "finalize"}:
+            job.phase = "restore_workspace"
+            return 0.05
         try:
             result = _recipe_finalize(job)
             job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
