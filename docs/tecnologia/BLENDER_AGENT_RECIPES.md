@@ -353,3 +353,18 @@ Presets iniciais:
 A action `material.preset` recebe `name`, `preset_id`, material name opcional e overrides restritos de `base_color`, `roughness` e `metallic`. O resultado registra library id/version/preset id.
 
 A recipe da baguete usa `bread-crust` em vez de repetir os valores completos do material.
+
+
+## Extensões de arquivos de captura
+
+O runtime limita nomes de artefatos para evitar caminhos excessivamente longos. A sanitização de **arquivos** preserva a extensão ao truncar o stem.
+
+Exemplo: um nome longo de capture continua terminando em `.png` mesmo quando precisa ser reduzido para 100 caracteres.
+
+O smoke V0.4 valida explicitamente que todas as capturas:
+
+- possuem caminho existente;
+- terminam em `.png`;
+- permanecem associadas ao receipt/history.
+
+Essa regra também foi aplicada genericamente aos arquivos do runtime e aos attachments do auto-history, preservando extensões como `.png`, `.json`, `.blend`, `.glb` e `.obj`.
