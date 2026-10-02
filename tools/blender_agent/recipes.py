@@ -20,6 +20,8 @@ _ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
 _VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$")
 _PARAM_TOKEN_RE = re.compile(r"^\$\{([A-Za-z][A-Za-z0-9_]*)\}$")
 
+RECIPE_DESTRUCTIVE_ACTIONS = {"object.delete"}
+
 RECIPE_SAFE_ACTIONS = {
     "scene.summary",
     "object.list",
@@ -33,6 +35,7 @@ RECIPE_SAFE_ACTIONS = {
     "modifier.add",
     "material.simple",
     "camera.orbit",
+    "render.still",
     "checkpoint.create",
     "export.glb",
     "export.obj",
@@ -279,6 +282,8 @@ def validate_recipe(recipe: Any) -> dict[str, Any]:
         action = str(step.get("action") or "")
         if action not in RECIPE_SAFE_ACTIONS:
             raise RecipeError(f"{path}.action nao permitida em recipe: {action}")
+        if action in RECIPE_DESTRUCTIVE_ACTIONS and not bool(step.get("checkpoint_before", False)):
+            raise RecipeError(f"{path}.checkpoint_before obrigatorio para action destrutiva {action}")
         params = _expect_dict(step.get("params", {}), f"{path}.params")
         capture_after = step.get("capture_after")
         if capture_after is not None:
