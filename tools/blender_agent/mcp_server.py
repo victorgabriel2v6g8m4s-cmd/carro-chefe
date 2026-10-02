@@ -243,6 +243,8 @@ def blender_recipe_run(
     dry_run: bool = False,
     create_stage: bool = True,
     restore_stage: bool = False,
+    workspace: str | None = None,
+    restore_workspace: bool = True,
 ) -> dict[str, Any]:
     """Executa uma recipe allowlisted step-by-step, com history, captures e receipt."""
     return _result(call("recipe.run", {
@@ -252,6 +254,8 @@ def blender_recipe_run(
         "dry_run": dry_run,
         "create_stage": create_stage,
         "restore_stage": restore_stage,
+        "workspace": workspace,
+        "restore_workspace": restore_workspace,
     }, timeout=120.0))
 
 
