@@ -1293,8 +1293,23 @@ def _advance_sculpt_prepare_job() -> float:
                 job.params,
                 original_workspace_name=job.original_workspace_name,
             )
+            record_event(
+                action="recipe.run",
+                params={
+                    "run_id": job.run_id,
+                    "recipe_id": job.plan["recipe_id"],
+                    "recipe_version": job.plan["recipe_version"],
+                    "recipe_hash": job.plan["recipe_hash"],
+                    "plan_hash": job.plan["plan_hash"],
+                    "variant": job.plan.get("variant"),
+                },
+                result=result,
+                ok=bool(result["passed"]),
+                error=None if result["passed"] else result.get("fatal_error") or "recipe criteria failed",
+                tags=["recipe", job.plan["recipe_id"], "run"],
+                stage_id=job.stage_id,
+            )
             job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
-            _record_task_history(job.task, ok=True, result=result)
             job.task.done.set()
             _SCULPT_PREPARE_JOB = None
             return 0.05
@@ -2588,7 +2603,7 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
 
 def _record_task_history(task: Task, *, ok: bool, result: Any = None, error: str | None = None) -> None:
     action = str(task.request.get("action", ""))
-    if action.startswith("history."):
+    if action.startswith("history.") or action == "recipe.run":
         return
     try:
         record_event(
