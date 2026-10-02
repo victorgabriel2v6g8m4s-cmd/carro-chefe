@@ -247,3 +247,17 @@ Correcao adotada:
 - o smoke test agora captura toda a saida stderr do Python antes de gerar a excecao, preservando diagnostico completo.
 
 Isso evita tanto falso contexto de VIEW_3D quanto erros truncados no Windows PowerShell 5.1.
+
+
+## Compatibilidade UnifiedPaintSettings no Blender 5.2
+
+O smoke real no Blender 5.2 LTS mostrou que `ToolSettings.unified_paint_settings`, usado por versões anteriores da API, não existe mais nesse local.
+
+Na API 5.2, `Sculpt` é um subtipo de `Paint` e herda `Paint.unified_paint_settings`. O bridge agora resolve dinamicamente:
+
+1. `scene.tool_settings.sculpt.unified_paint_settings` — caminho preferido no Blender 5.x;
+2. `scene.tool_settings.unified_paint_settings` — fallback para versões antigas.
+
+A mesma função de resolução é usada tanto para escrita de radius/strength quanto por `sculpt.status`, evitando divergência entre o valor configurado e o valor relatado.
+
+O retorno passa a incluir `settings_source` para deixar explícita a variante de API usada durante o smoke.
