@@ -150,6 +150,11 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("bpy.context.temp_override", source)
         self.assertIn("_SCULPT_BRUSH_TYPES", source)
 
+    def test_recipe_status_bypasses_main_thread_queue(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn('if request.get("action") == "recipe.status":', source)
+        self.assertIn('"result": _recipe_status_snapshot()', source)
+
     def test_recipe_runner_is_scheduler_driven_and_receipted(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("class RecipeRunJob", source)
