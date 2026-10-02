@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from .protocol import runtime_root, sanitize_label
+from .protocol import runtime_root, sanitize_filename, sanitize_label
 
 _HISTORY_LOCK = threading.RLock()
 _REDACT_KEYS = {
