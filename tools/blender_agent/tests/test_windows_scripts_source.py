@@ -15,6 +15,14 @@ SCRIPTS = (
 
 
 class WindowsPowerShellSourceTests(unittest.TestCase):
+    def test_sculpt_smoke_avoids_inline_json(self) -> None:
+        source = (ROOT / "sculpt-smoke-test.ps1").read_text(encoding="ascii")
+        self.assertNotIn("--json", source)
+        self.assertNotIn("--points-json", source)
+        self.assertIn("object-add-primitive", source)
+        self.assertIn("object-delete", source)
+        self.assertIn('"--point"', source)
+
     def test_windows_powershell_scripts_are_ascii_safe(self) -> None:
         for script in SCRIPTS:
             with self.subTest(script=script.name):
