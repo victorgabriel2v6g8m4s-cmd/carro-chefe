@@ -92,6 +92,16 @@ class HistoryTests(unittest.TestCase):
         result = history.search_events(stage_id="capture", has_attachment=True)
         self.assertEqual(len(result["matches"]), 1)
 
+    def test_long_attachment_name_preserves_png_suffix(self) -> None:
+        history.create_stage("Recipe", stage_id="recipe")
+        filename = (
+            "recipe-carro-chefe-baguette-base-1.0.0-1790974720866539200-"
+            "step-05-crust-material-baguette-material-3q.png"
+        )
+        attachment = history.attachment_output_path(filename)
+        self.assertTrue(attachment.name.endswith(".png"))
+        self.assertLessEqual(len(attachment.name), 100)
+
     def test_events_are_segmented_and_old_segments_can_be_pruned(self) -> None:
         old_events = history.SEGMENT_MAX_EVENTS
         old_segments = history.MAX_SEGMENTS_PER_STAGE
