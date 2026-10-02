@@ -97,9 +97,10 @@ class BridgeSourceTests(unittest.TestCase):
 
     def test_sculpt_prepare_restores_workspace_on_failure(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
-        self.assertIn("original_workspace_name = window.workspace.name", source)
-        self.assertIn("except Exception:", source)
+        self.assertIn("original_workspace_name=window.workspace.name", source)
+        self.assertIn("def _sculpt_prepare_cleanup", source)
         self.assertIn("window.workspace = original", source)
+        self.assertIn('job.phase = "restore_error"', source)
         self.assertIn("_SCULPT_SESSION = None", source)
 
     def test_sculpt_uses_operator_stroke_and_context_override(self) -> None:
