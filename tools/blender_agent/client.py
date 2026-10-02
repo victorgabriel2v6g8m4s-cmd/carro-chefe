@@ -8,6 +8,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .recipes import load_recipe, plan_recipe, validate_recipe
+
 from .protocol import (
     DEFAULT_TIMEOUT_SECONDS,
     PROTOCOL_VERSION,
@@ -123,6 +125,56 @@ def _parse_bool_choice(value: str) -> bool | None:
     if normalized in {"false", "failure", "fail", "0", "no"}:
         return False
     raise argparse.ArgumentTypeError("use any, success ou failure")
+
+
+def _parse_recipe_overrides(values: list[str] | None) -> dict[str, Any]:
+    overrides: dict[str, Any] = {}
+    for item in values or []:
+        if "=" not in item:
+            raise argparse.ArgumentTypeError("--set deve usar NOME=VALOR")
+        name, raw = item.split("=", 1)
+        name = name.strip()
+        if not name:
+            raise argparse.ArgumentTypeError("--set exige nome de parametro")
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError:
+            value = raw
+        overrides[name] = value
+    return overrides
+
+
+def _recipe_validate_file(path: str) -> dict[str, Any]:
+    result = validate_recipe(load_recipe(path))
+    return {"ok": True, "result": result}
+
+
+def _recipe_plan_file(path: str, variant: str | None, sets: list[str] | None) -> dict[str, Any]:
+    result = plan_recipe(
+        load_recipe(path),
+        variant=variant,
+        overrides=_parse_recipe_overrides(sets),
+    )
+    return {"ok": True, "result": result}
+
+
+def _recipe_run_file(
+    path: str,
+    *,
+    variant: str | None,
+    sets: list[str] | None,
+    dry_run: bool,
+    create_stage: bool,
+    restore_stage: bool,
+) -> dict[str, Any]:
+    return call("recipe.run", {
+        "recipe": load_recipe(path),
+        "variant": variant,
+        "overrides": _parse_recipe_overrides(sets),
+        "dry_run": dry_run,
+        "create_stage": create_stage,
+        "restore_stage": restore_stage,
+    }, timeout=120.0)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -289,6 +341,35 @@ def build_parser() -> argparse.ArgumentParser:
         "stage_id": a.stage_id,
         "tags": a.tags,
     }))
+
+    recipe_validate = sub.add_parser("recipe-validate", help="valida recipe JSON localmente")
+    recipe_validate.add_argument("path")
+    recipe_validate.set_defaults(handler=lambda a: _recipe_validate_file(a.path))
+
+    recipe_plan_cmd = sub.add_parser("recipe-plan", help="resolve variant/overrides sem alterar Blender")
+    recipe_plan_cmd.add_argument("path")
+    recipe_plan_cmd.add_argument("--variant")
+    recipe_plan_cmd.add_argument("--set", action="append", dest="sets", default=[])
+    recipe_plan_cmd.set_defaults(handler=lambda a: _recipe_plan_file(a.path, a.variant, a.sets))
+
+    recipe_run = sub.add_parser("recipe-run", help="executa recipe versionada no Blender")
+    recipe_run.add_argument("path")
+    recipe_run.add_argument("--variant")
+    recipe_run.add_argument("--set", action="append", dest="sets", default=[])
+    recipe_run.add_argument("--dry-run", action="store_true")
+    recipe_run.add_argument("--no-stage", action="store_true")
+    recipe_run.add_argument("--restore-stage", action="store_true")
+    recipe_run.set_defaults(handler=lambda a: _recipe_run_file(
+        a.path,
+        variant=a.variant,
+        sets=a.sets,
+        dry_run=a.dry_run,
+        create_stage=not a.no_stage,
+        restore_stage=a.restore_stage,
+    ))
+
+    recipe_status = sub.add_parser("recipe-status", help="mostra estado da ultima recipe/run atual")
+    recipe_status.set_defaults(handler=lambda _a: call("recipe.status"))
 
     sculpt_status = sub.add_parser("sculpt-status", help="mostra estado atual do Sculpt")
     sculpt_status.set_defaults(handler=lambda _a: call("sculpt.status"))
