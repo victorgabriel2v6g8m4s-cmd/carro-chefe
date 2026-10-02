@@ -70,7 +70,7 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 - **Origem:** necessidade de modelagem 3D iterativa sem Computer Use capaz de controlar o Blender no Windows 10.
 - **Problema:** scripts únicos não fecham o ciclo observar/editar/corrigir e a conta atual não expõe controle de mouse do aplicativo.
 - **Capacidade necessária:** evoluir `tools/blender_agent` de bridge V0.1 para feedback visual automático, contexto persistente de workspaces, auto-history segmentado, Sculpt assistido, recipes 3D e agente iterativo com rollback.
-- **Alternativa temporária:** controle V0.1, captura VIEW_3D V0.2 e contexto multi-workspace V0.2.1 foram validados no Windows 10/Blender 5.2 LTS. A V0.3 de Sculpt assistido já está implementada com brushes allowlisted, checkpoint automático, before/after, auto-history e MCP; falta o smoke test real dessa etapa e a validação da conexão MCP local antes de avançar para recipes 3D.
+- **Alternativa temporária:** controle V0.1, captura VIEW_3D V0.2, contexto multi-workspace V0.2.1 e Sculpt assistido V0.3 foram validados no Windows 10/Blender 5.2 LTS. A próxima etapa é V0.4 recipes 3D e ainda falta validar a conexão MCP local antes do loop iterativo autônomo.
 - **Prioridade:** média/alta para produção dos ativos 3D de produto.
 - **Critérios de aceite:** seguir [BLENDER_AGENT.md](../tecnologia/BLENDER_AGENT.md); smoke test em Blender real no Windows 10; captura de viewport; Sculpt com contexto controlado; checkpoints/rollback; recipes versionadas; testes e documentação; promoção explícita de ativos.
 - **Dependências/bloqueios:** Blender instalado na máquina real, sessão gráfica, validação de `--enable-event-simulate` e referências físicas aprovadas do produto.
