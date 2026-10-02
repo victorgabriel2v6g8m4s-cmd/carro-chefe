@@ -216,6 +216,52 @@ def blender_history_note(
 
 
 @mcp.tool()
+def blender_recipe_validate(recipe: dict[str, Any]) -> dict[str, Any]:
+    """Valida estritamente uma recipe 3D versionada sem modificar o Blender."""
+    return _result(call("recipe.validate", {"recipe": recipe}))
+
+
+@mcp.tool()
+def blender_recipe_plan(
+    recipe: dict[str, Any],
+    variant: str | None = None,
+    overrides: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve parametros, variant e overrides e devolve o plano deterministico sem executar."""
+    return _result(call("recipe.plan", {
+        "recipe": recipe,
+        "variant": variant,
+        "overrides": overrides or {},
+    }))
+
+
+@mcp.tool()
+def blender_recipe_run(
+    recipe: dict[str, Any],
+    variant: str | None = None,
+    overrides: dict[str, Any] | None = None,
+    dry_run: bool = False,
+    create_stage: bool = True,
+    restore_stage: bool = False,
+) -> dict[str, Any]:
+    """Executa uma recipe allowlisted step-by-step, com history, captures e receipt."""
+    return _result(call("recipe.run", {
+        "recipe": recipe,
+        "variant": variant,
+        "overrides": overrides or {},
+        "dry_run": dry_run,
+        "create_stage": create_stage,
+        "restore_stage": restore_stage,
+    }, timeout=120.0))
+
+
+@mcp.tool()
+def blender_recipe_status() -> dict[str, Any]:
+    """Mostra progresso da recipe atual ou resultado resumido da ultima execucao."""
+    return _result(call("recipe.status"))
+
+
+@mcp.tool()
 def blender_sculpt_status() -> dict[str, Any]:
     """Mostra objeto, modo, brush, raio, força e viewport do Sculpt atual."""
     return _result(call("sculpt.status"))
