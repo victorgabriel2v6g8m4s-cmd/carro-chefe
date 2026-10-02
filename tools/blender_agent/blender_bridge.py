@@ -1646,8 +1646,9 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
 
     before = None
     if bool(params.get("capture_before", True)):
+        before_name = params.get("before_name") or f"sculpt-before-{time.time_ns()}.png"
         before = _viewport_capture({
-            "filename": str(params.get("before_name", f"sculpt-before-{time.time_ns()}.png"))
+            "filename": str(before_name)
         })
 
     rna = operator.get_rna_type()
