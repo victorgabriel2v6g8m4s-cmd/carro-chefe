@@ -42,9 +42,9 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 - interação visual usa `bpy.types.Window.event_simulate`, confinada à janela Blender;
 - promoção de ativos para `mídias/`, `cardápio/` ou diretórios oficiais continua explícita.
 
-## Estado atual — V0.2 em validação
+## Estado atual — V0.4 em validação
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI validado no Windows 10/Blender 5.2 LTS, captura da região VIEW_3D, descrição do viewport, presets ortográficos/câmera/3-4, shading, capture-set multiângulo, consulta/captura de múltiplos workspaces, auto-history segmentado por etapa, busca histórica por filtros, receipts/anexos com SHA-256, adaptador MCP stdio com imagens e contexto persistente, testes unitários e integração no Tool Health.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI, captura VIEW_3D, múltiplos workspaces, auto-history por etapa, Sculpt assistido validado, MCP multimodal e engine V0.4 de recipes 3D JSON versionadas com variants, overrides, plano determinístico, execução step-by-step, validation views, critérios e receipts SHA-256.
 
 Maturidade: **em desenvolvimento**.
 
@@ -128,9 +128,32 @@ Implementado e aguardando smoke test real:
 
 Critério: corrigir a forma por strokes pequenos, produzir before/after diferentes, registrar checkpoint/history e restaurar o workspace. Documento: [BLENDER_AGENT_SCULPT.md](./BLENDER_AGENT_SCULPT.md).
 
-### V0.4 — Receitas 3D de produto
+### V0.4 — Recipes 3D de produto
 
-Planejado: recipe JSON declarativa, componentes de pão/carne/queijo/vinagrete/molhos/espetos, dimensões, seeds determinísticos para irregularidade, biblioteca de materiais e geração de variantes. Critério: regenerar produto a partir de recipe + referências.
+Implementado e aguardando smoke test real:
+
+- [x] schema JSON fechado e versionado;
+- [x] metadata/id/version/tags;
+- [x] parâmetros tipados com bounds/enum;
+- [x] componentes declarativos;
+- [x] steps ordenados com actions recipe-safe;
+- [x] checkpoint antes de step;
+- [x] captura depois de step;
+- [x] validation views;
+- [x] critérios simples de aceite;
+- [x] variants e overrides sem mutar a recipe base;
+- [x] hashes determinísticos de recipe/plano/receipt;
+- [x] execução step-by-step pelo scheduler do Blender;
+- [x] stage próprio e eventos `recipe.start/step/capture/finish/run`;
+- [x] CLI validate/plan/run/status;
+- [x] MCP validate/plan/run/status;
+- [x] recipe de exemplo da baguete base;
+- [x] smoke test isolado com cleanup;
+- [ ] smoke test real no Windows 10 + Blender 5.2 LTS;
+- [ ] seeds determinísticos para irregularidade procedural;
+- [ ] biblioteca de materiais reutilizável por ID.
+
+Critério atual: regenerar uma base de produto a partir de recipe + variant/overrides, produzir capturas/receipt e passar critérios declarados. Documento: [BLENDER_AGENT_RECIPES.md](./BLENDER_AGENT_RECIPES.md).
 
 ### V0.5 — Agente 3D iterativo
 
