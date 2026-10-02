@@ -277,3 +277,20 @@ Para evitar manter uma lista fixa de campos herdada de versões antigas, o bridg
 Se a introspecção não estiver disponível, usa um conjunto mínimo conservador sem `pen_flip` ou tilt. O retorno de `sculpt.stroke` passa a incluir `stroke_element_properties` para auditoria.
 
 Com isso, diferenças futuras em campos como `pen_flip`, `x_tilt`, `y_tilt` ou `mouse_event` deixam de quebrar todo o stroke.
+
+
+## Restauracao assincrona do workspace
+
+O smoke real passou por preparo, stroke, captura posterior e verificacao do history, mas o encerramento reportou `restored_original_workspace=false`.
+
+Assim como a entrada no workspace Sculpting, a saida tambem nao pode assumir que a troca de `window.workspace` terminou visualmente no mesmo ciclo. `sculpt.finish` agora roda como job assincrono:
+
+1. sai de Sculpt Mode;
+2. aguarda o screen estabilizar em Object Mode;
+3. troca para o workspace salvo por `sculpt.prepare`;
+4. cede ciclos ao event loop;
+5. espera o screen estabilizar;
+6. confirma `window.workspace.name == original_workspace`;
+7. so entao responde `restored_original_workspace=true`.
+
+O retorno inclui a estrategia de sincronizacao e o numero de ticks usados. Se a restauracao nao puder ser confirmada, a action falha explicitamente em vez de retornar sucesso parcial.
