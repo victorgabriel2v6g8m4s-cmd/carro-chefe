@@ -115,6 +115,15 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn('job.phase = "restore_error"', source)
         self.assertIn("_SCULPT_SESSION = None", source)
 
+    def test_sculpt_stroke_filters_element_fields_from_rna(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _sculpt_stroke_element_property_names", source)
+        self.assertIn('rna.properties.get("stroke")', source)
+        self.assertIn('getattr(stroke_property, "fixed_type", None)', source)
+        self.assertIn("allowed_properties=stroke_element_properties", source)
+        self.assertIn("if key in allowed_properties", source)
+        self.assertIn('"stroke_element_properties": sorted(stroke_element_properties)', source)
+
     def test_sculpt_uses_operator_stroke_and_context_override(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("bpy.ops.sculpt.brush_stroke", source)
