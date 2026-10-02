@@ -358,3 +358,8 @@ O `context-smoke-test.ps1` prioriza as abas `Animation` e `Compositing` quando e
 Assim como nas capturas multi-workspace, a troca para a aba `Sculpting` precisa ceder ciclos ao event loop antes de consultar a VIEW_3D. `sculpt.prepare` agora usa o scheduler assincrono do bridge e espera o screen estabilizar antes de entrar em Sculpt Mode.
 
 O `sculpt-smoke-test.ps1` tambem coleta stderr nativo com `ErrorActionPreference=Continue` dentro do helper para que uma falha do bridge seja exibida por inteiro em vez de aparecer apenas como `python.exe : {`.
+
+
+### Blender 5.2: UnifiedPaintSettings
+
+No Blender 5.x, radius/strength do Sculpt são resolvidos por `tool_settings.sculpt.unified_paint_settings`. O bridge detecta esse caminho e mantém fallback para `tool_settings.unified_paint_settings` em versões antigas. `sculpt.status` informa `settings_source` para auditoria de compatibilidade.
