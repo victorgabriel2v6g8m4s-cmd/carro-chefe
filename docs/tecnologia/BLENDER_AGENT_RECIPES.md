@@ -314,3 +314,42 @@ python -m tools.blender_agent.client recipe-run <recipe.json> --workspace Layout
 `--keep-workspace` desabilita somente a restauração visual; o padrão seguro é restaurar.
 
 O receipt registra `original_workspace`, `recipe_workspace`, `final_workspace` e `workspace_restored`.
+
+
+## Irregularidade determinística
+
+Recipes podem usar `object.irregularize` para quebrar perfeição geométrica de forma reproduzível.
+
+Parâmetros:
+
+- `name`: mesh alvo;
+- `seed`: inteiro/string obrigatório;
+- `amplitude`: vec3 local, limitada a ±0.5 por eixo.
+
+Cada deslocamento é derivado de SHA-256 sobre `seed + vertex_index + axis`. Isso evita depender do estado global de um PRNG e mantém a mesma perturbação para a mesma topologia/seed.
+
+A action é considerada destrutiva pela recipe e exige `checkpoint_before: true`. O resultado inclui `geometry_hash`.
+
+A baguete de exemplo possui `irregularity_seed` e `irregularity_amplitude`; variants podem trocar o seed sem alterar a recipe base.
+
+## Biblioteca de materiais
+
+Biblioteca versionada:
+
+```text
+tools/blender_agent/materials/carro-chefe-materials-v1.json
+```
+
+Presets iniciais:
+
+- `bread-crust`;
+- `bread-crumb`;
+- `meat-grilled`;
+- `cheese-melted`;
+- `vinaigrette`;
+- `sauce-creamy`;
+- `skewer-wood`.
+
+A action `material.preset` recebe `name`, `preset_id`, material name opcional e overrides restritos de `base_color`, `roughness` e `metallic`. O resultado registra library id/version/preset id.
+
+A recipe da baguete usa `bread-crust` em vez de repetir os valores completos do material.
