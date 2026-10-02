@@ -2633,6 +2633,36 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             polygon.use_smooth = True
         return _object_snapshot(obj)
 
+    if action == "object.irregularize":
+        obj = _selected_object(str(params["name"]))
+        if obj.type != "MESH":
+            raise ValueError("irregularize exige mesh")
+        seed = params.get("seed")
+        if seed is None:
+            raise ValueError("irregularize exige seed")
+        amplitude = _vec3(params.get("amplitude", [0.05, 0.03, 0.02]), "amplitude")
+        if any(abs(value) > 0.5 for value in amplitude):
+            raise ValueError("amplitude de irregularidade excede limite seguro de 0.5")
+        vertices = obj.data.vertices
+        if len(vertices) > 100000:
+            raise ValueError("irregularize excede limite de 100000 vertices")
+        for vertex in vertices:
+            vertex.co.x += amplitude[0] * _deterministic_signed(seed, vertex.index, 0)
+            vertex.co.y += amplitude[1] * _deterministic_signed(seed, vertex.index, 1)
+            vertex.co.z += amplitude[2] * _deterministic_signed(seed, vertex.index, 2)
+        obj.data.update()
+        fingerprint = recipe_hash([
+            [round(float(vertex.co.x), 9), round(float(vertex.co.y), 9), round(float(vertex.co.z), 9)]
+            for vertex in vertices
+        ])
+        return {
+            "name": obj.name,
+            "seed": str(seed),
+            "amplitude": list(amplitude),
+            "vertex_count": len(vertices),
+            "geometry_hash": fingerprint,
+        }
+
     if action == "modifier.add":
         obj = _selected_object(str(params["name"]))
         modifier_type = str(params["type"]).upper()
@@ -2666,6 +2696,30 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
             else:
                 obj.data.materials.append(mat)
         return {"material": mat.name}
+
+    if action == "material.preset":
+        preset = material_preset(
+            str(params["preset_id"]),
+            overrides=params.get("overrides") or {},
+        )
+        material_name = str(
+            params.get("material_name")
+            or f"CC_{preset['preset_id'].replace('-', '_')}_{preset['library_version']}"
+        )[:63]
+        applied = _dispatch("material.simple", {
+            "name": str(params["name"]),
+            "material_name": material_name,
+            "base_color": preset["base_color"],
+            "roughness": preset["roughness"],
+            "metallic": preset["metallic"],
+        })
+        return {
+            **applied,
+            "library_id": preset["library_id"],
+            "library_version": preset["library_version"],
+            "preset_id": preset["preset_id"],
+            "preset_label": preset["label"],
+        }
 
     if action == "camera.orbit":
         target = Vector(_vec3(params.get("target", [0, 0, 0]), "target"))
