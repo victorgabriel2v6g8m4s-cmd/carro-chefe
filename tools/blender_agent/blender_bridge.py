@@ -52,6 +52,7 @@ _TOKEN = secrets.token_urlsafe(32)
 _SERVER = None
 _CAPTURE_JOB = None
 _SCULPT_PREPARE_JOB = None
+_SCULPT_FINISH_JOB = None
 _SCULPT_SESSION = None
 _WORKSPACE_CAPTURE_SETTLE_TICKS = max(1, min(10, int(os.environ.get("CC_BLENDER_WORKSPACE_SETTLE_TICKS", "3"))))
 
@@ -138,6 +139,16 @@ class SculptPrepareJob:
     settle_remaining: int = 0
     last_screen_name: str | None = None
     error: str | None = None
+
+
+@dataclass
+class SculptFinishJob:
+    task: Task
+    params: dict[str, Any]
+    session: dict[str, Any]
+    phase: str = "exit_mode"
+    settle_remaining: int = 0
+    last_screen_name: str | None = None
 
 
 class ReusableThreadingTCPServer(socketserver.ThreadingTCPServer):
@@ -1419,48 +1430,179 @@ def _sculpt_checkpoint(label: str) -> Path:
     return output
 
 
-def _sculpt_finish(params: dict[str, Any]) -> dict[str, Any]:
-    global _SCULPT_SESSION
+def _start_sculpt_finish_job(task: Task) -> None:
+    global _SCULPT_FINISH_JOB
+    if _SCULPT_FINISH_JOB is not None:
+        raise RuntimeError("ja existe sculpt.finish em andamento")
+    if _SCULPT_PREPARE_JOB is not None or _CAPTURE_JOB is not None:
+        raise RuntimeError("outro job de workspace esta em andamento; tente sculpt.finish novamente")
+
     window = bpy.context.window
     if window is None:
         raise RuntimeError("nenhuma janela Blender ativa")
 
-    object_name = None
-    if bpy.context.mode == "SCULPT":
-        active = bpy.context.view_layer.objects.active
-        object_name = active.name if active else None
-        area, region = None, None
-        try:
-            area, region, _space, _region_3d = _view3d_context()
-        except Exception:
-            pass
-        if area is not None and region is not None:
-            with bpy.context.temp_override(window=window, screen=window.screen, area=area, region=region):
-                result = bpy.ops.object.mode_set(mode="OBJECT")
-        else:
-            result = bpy.ops.object.mode_set(mode="OBJECT")
-        if not result or "FINISHED" not in result:
-            raise RuntimeError(f"nao foi possivel sair de Sculpt Mode: {sorted(result or [])}")
+    session = dict(_SCULPT_SESSION or {})
+    _SCULPT_FINISH_JOB = SculptFinishJob(
+        task=task,
+        params=task.request.get("params") or {},
+        session=session,
+        last_screen_name=window.screen.name,
+    )
 
-    restore = bool(params.get("restore_workspace", True))
-    restored_workspace = window.workspace.name
-    original_workspace = (_SCULPT_SESSION or {}).get("original_workspace")
-    if restore and original_workspace and original_workspace in bpy.data.workspaces:
-        window.workspace = bpy.data.workspaces[original_workspace]
-        _redraw_window()
-        restored_workspace = window.workspace.name
 
-    session = _SCULPT_SESSION
-    _SCULPT_SESSION = None
-    return {
-        "object": object_name or (session or {}).get("object"),
-        "mode": bpy.context.mode,
-        "restored_workspace": restored_workspace,
-        "original_workspace": original_workspace,
-        "restored_original_workspace": bool(
-            not restore or not original_workspace or restored_workspace == original_workspace
-        ),
-    }
+def _advance_sculpt_finish_job() -> float:
+    global _SCULPT_FINISH_JOB, _SCULPT_SESSION
+    job = _SCULPT_FINISH_JOB
+    if job is None:
+        return 0.05
+
+    window = bpy.context.window
+    if window is None:
+        error = "RuntimeError: janela Blender desapareceu durante sculpt.finish"
+        job.task.response = {"id": job.task.request["id"], "ok": False, "error": error}
+        _record_task_history(job.task, ok=False, error=error)
+        job.task.done.set()
+        _SCULPT_FINISH_JOB = None
+        return 0.05
+
+    try:
+        if job.phase == "exit_mode":
+            if bpy.context.mode == "SCULPT":
+                active = bpy.context.view_layer.objects.active
+                if active is not None and not job.session.get("object"):
+                    job.session["object"] = active.name
+                area, region = None, None
+                try:
+                    area, region, _space, _region_3d = _view3d_context()
+                except Exception:
+                    pass
+                if area is not None and region is not None:
+                    with bpy.context.temp_override(
+                        window=window,
+                        screen=window.screen,
+                        area=area,
+                        region=region,
+                    ):
+                        result = bpy.ops.object.mode_set(mode="OBJECT")
+                else:
+                    result = bpy.ops.object.mode_set(mode="OBJECT")
+                if not result or "FINISHED" not in result:
+                    raise RuntimeError(
+                        f"nao foi possivel sair de Sculpt Mode: {sorted(result or [])}"
+                    )
+
+            _redraw_window()
+            job.phase = "settle_object"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            job.last_screen_name = window.screen.name
+            return 0.05
+
+        if job.phase == "settle_object":
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "switch_workspace"
+            return 0.05
+
+        if job.phase == "switch_workspace":
+            restore = bool(job.params.get("restore_workspace", True))
+            original_workspace = job.session.get("original_workspace")
+            if restore and original_workspace:
+                target = bpy.data.workspaces.get(str(original_workspace))
+                if target is None:
+                    raise RuntimeError(
+                        f"workspace original nao encontrado: {original_workspace}"
+                    )
+                window.workspace = target
+                _redraw_window()
+                job.phase = "settle_workspace"
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+
+            job.phase = "finalize"
+            return 0.05
+
+        if job.phase == "settle_workspace":
+            original_workspace = str(job.session.get("original_workspace") or "")
+            if window.workspace.name != original_workspace:
+                target = bpy.data.workspaces.get(original_workspace)
+                if target is None:
+                    raise RuntimeError(
+                        f"workspace original nao encontrado: {original_workspace}"
+                    )
+                window.workspace = target
+                _redraw_window()
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                job.last_screen_name = window.screen.name
+                return 0.05
+
+            current_screen = window.screen.name
+            if current_screen != job.last_screen_name:
+                job.last_screen_name = current_screen
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                _redraw_window()
+                return 0.05
+
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+
+            job.phase = "finalize"
+            return 0.05
+
+        if job.phase == "finalize":
+            restore = bool(job.params.get("restore_workspace", True))
+            original_workspace = job.session.get("original_workspace")
+            restored_workspace = window.workspace.name
+            restored = bool(
+                not restore
+                or not original_workspace
+                or restored_workspace == original_workspace
+            )
+            if restore and original_workspace and not restored:
+                raise RuntimeError(
+                    "workspace original nao foi restaurado: "
+                    f"esperado={original_workspace!r}, ativo={restored_workspace!r}"
+                )
+
+            result = {
+                "object": job.session.get("object"),
+                "mode": bpy.context.mode,
+                "restored_workspace": restored_workspace,
+                "screen": window.screen.name,
+                "original_workspace": original_workspace,
+                "restored_original_workspace": restored,
+                "synchronization": {
+                    "strategy": "timer-yield",
+                    "settle_ticks": _WORKSPACE_CAPTURE_SETTLE_TICKS,
+                },
+            }
+            _SCULPT_SESSION = None
+            job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
+            _record_task_history(job.task, ok=True, result=result)
+            job.task.done.set()
+            _SCULPT_FINISH_JOB = None
+            return 0.05
+
+        raise RuntimeError(f"fase de sculpt.finish invalida: {job.phase}")
+
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        job.task.response = {"id": job.task.request["id"], "ok": False, "error": error}
+        _record_task_history(job.task, ok=False, error=error)
+        job.task.done.set()
+        _SCULPT_FINISH_JOB = None
+        return 0.05
+
 
 
 def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
@@ -1621,7 +1763,7 @@ def _dispatch(action: str, params: dict[str, Any]) -> dict[str, Any]:
         return _sculpt_stroke(params)
 
     if action == "sculpt.finish":
-        return _sculpt_finish(params)
+        raise RuntimeError("sculpt.finish deve ser executado pelo scheduler assincrono")
 
     if action == "workspace.list":
         return _workspace_list()
@@ -1976,6 +2118,8 @@ def _drain_queue() -> float:
         return _advance_workspace_capture_job()
     if _SCULPT_PREPARE_JOB is not None:
         return _advance_sculpt_prepare_job()
+    if _SCULPT_FINISH_JOB is not None:
+        return _advance_sculpt_finish_job()
 
     for _ in range(10):
         try:
@@ -1996,6 +2140,16 @@ def _drain_queue() -> float:
         if task.request.get("action") == "sculpt.prepare":
             try:
                 _start_sculpt_prepare_job(task)
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                task.response = {"id": task.request["id"], "ok": False, "error": error}
+                _record_task_history(task, ok=False, error=error)
+                task.done.set()
+            break
+
+        if task.request.get("action") == "sculpt.finish":
+            try:
+                _start_sculpt_finish_job(task)
             except Exception as exc:
                 error = f"{type(exc).__name__}: {exc}"
                 task.response = {"id": task.request["id"], "ok": False, "error": error}
