@@ -1723,6 +1723,448 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _recipe_status_snapshot() -> dict[str, Any]:
+    if _RECIPE_RUN_JOB is not None:
+        job = _RECIPE_RUN_JOB
+        current_step = None
+        if job.step_index < len(job.plan.get("steps", [])):
+            step = job.plan["steps"][job.step_index]
+            current_step = {"index": job.step_index, "id": step.get("id"), "action": step.get("action")}
+        return {
+            "state": "running",
+            "run_id": job.run_id,
+            "recipe_id": job.plan.get("recipe_id"),
+            "recipe_version": job.plan.get("recipe_version"),
+            "plan_hash": job.plan.get("plan_hash"),
+            "stage_id": job.stage_id,
+            "phase": job.phase,
+            "current_step": current_step,
+            "completed_steps": len(job.results),
+            "failed_steps": job.failed_steps,
+            "captures": len(job.captures),
+            "started_ns": job.started_ns,
+        }
+    return dict(_RECIPE_LAST_STATUS or {"state": "idle"})
+
+
+def _recipe_record_step(
+    job: RecipeRunJob,
+    step: dict[str, Any],
+    *,
+    ok: bool,
+    result: Any = None,
+    error: str | None = None,
+    checkpoint: Any = None,
+) -> None:
+    payload = {
+        "recipe_id": job.plan["recipe_id"],
+        "recipe_version": job.plan["recipe_version"],
+        "recipe_hash": job.plan["recipe_hash"],
+        "plan_hash": job.plan["plan_hash"],
+        "variant": job.plan.get("variant"),
+        "run_id": job.run_id,
+        "step_index": int(step["index"]),
+        "step_id": step["id"],
+        "step_action": step["action"],
+        "step_params": step.get("params", {}),
+        "checkpoint": checkpoint,
+    }
+    tags = ["recipe", job.plan["recipe_id"], step["id"], *(step.get("tags") or [])]
+    record_event(
+        action="recipe.step",
+        params=payload,
+        result=result,
+        ok=ok,
+        error=error,
+        tags=tags,
+        stage_id=job.stage_id,
+    )
+
+
+def _recipe_configure_capture(capture: dict[str, Any]) -> None:
+    _viewport_set_shading({"type": capture.get("shading", "SOLID")})
+    _viewport_set_view({
+        "preset": capture.get("preset", "THREE_QUARTER"),
+        "frame_all": bool(capture.get("frame_all", True)),
+    })
+    _redraw_window()
+
+
+def _recipe_capture(capture: dict[str, Any], *, prefix: str) -> dict[str, Any]:
+    filename = str(capture.get("filename") or f"{capture.get('name', 'capture')}.png")
+    filename = sanitize_label(f"{prefix}-{filename}", "recipe-capture.png")
+    if not filename.lower().endswith(".png"):
+        filename += ".png"
+    result = _viewport_capture({"filename": filename})
+    return {
+        "name": capture.get("name"),
+        "preset": capture.get("preset"),
+        "shading": capture.get("shading"),
+        **result,
+    }
+
+
+def _recipe_write_initial_files(recipe: dict[str, Any], plan: dict[str, Any], run_id: str) -> dict[str, str]:
+    recipe_path = attachment_output_path(f"{run_id}-recipe.json")
+    plan_path = attachment_output_path(f"{run_id}-plan.json")
+    recipe_path.write_text(json.dumps(recipe, ensure_ascii=False, indent=2), encoding="utf-8")
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"recipe": str(recipe_path), "plan": str(plan_path)}
+
+
+def _recipe_finalize(job: RecipeRunJob) -> dict[str, Any]:
+    global _RECIPE_LAST_STATUS
+    criteria = job.plan.get("criteria", {})
+    required_objects = list(criteria.get("required_objects", []))
+    missing_objects = [name for name in required_objects if bpy.data.objects.get(str(name)) is None]
+    min_captures = int(criteria.get("min_captures", 0))
+    max_failed_steps = int(criteria.get("max_failed_steps", 0))
+    checks = {
+        "required_objects": {
+            "passed": not missing_objects,
+            "required": required_objects,
+            "missing": missing_objects,
+        },
+        "min_captures": {
+            "passed": len(job.captures) >= min_captures,
+            "required": min_captures,
+            "actual": len(job.captures),
+        },
+        "max_failed_steps": {
+            "passed": job.failed_steps <= max_failed_steps,
+            "maximum": max_failed_steps,
+            "actual": job.failed_steps,
+        },
+    }
+    criteria_passed = all(item["passed"] for item in checks.values())
+    status = "passed" if criteria_passed and not job.fatal_error else "failed"
+
+    receipt = {
+        "version": 1,
+        "action": "recipe.run",
+        "run_id": job.run_id,
+        "status": status,
+        "recipe_id": job.plan["recipe_id"],
+        "recipe_version": job.plan["recipe_version"],
+        "recipe_hash": job.plan["recipe_hash"],
+        "plan_hash": job.plan["plan_hash"],
+        "variant": job.plan.get("variant"),
+        "parameters": job.plan.get("parameters", {}),
+        "stage_id": job.stage_id,
+        "previous_stage_id": job.previous_stage_id,
+        "started_ns": job.started_ns,
+        "finished_ns": time.time_ns(),
+        "steps": job.results,
+        "captures": job.captures,
+        "failed_steps": job.failed_steps,
+        "fatal_error": job.fatal_error,
+        "criteria": checks,
+        "criteria_passed": criteria_passed,
+    }
+    receipt["receipt_hash"] = recipe_hash(receipt)
+    receipt_path = attachment_output_path(f"{job.run_id}-receipt.json")
+    receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    restored_stage = None
+    if job.restore_stage and job.previous_stage_id:
+        restored_stage = set_active_stage(job.previous_stage_id)["stage_id"]
+
+    result = {
+        "run_id": job.run_id,
+        "status": status,
+        "passed": status == "passed",
+        "recipe_id": job.plan["recipe_id"],
+        "recipe_version": job.plan["recipe_version"],
+        "recipe_hash": job.plan["recipe_hash"],
+        "plan_hash": job.plan["plan_hash"],
+        "stage_id": job.stage_id,
+        "restored_stage_id": restored_stage,
+        "completed_steps": len(job.results),
+        "failed_steps": job.failed_steps,
+        "captures": job.captures,
+        "criteria": checks,
+        "criteria_passed": criteria_passed,
+        "receipt": str(receipt_path),
+        "receipt_hash": receipt["receipt_hash"],
+        "fatal_error": job.fatal_error,
+    }
+    _RECIPE_LAST_STATUS = {
+        "state": "finished",
+        **{key: result[key] for key in (
+            "run_id", "status", "passed", "recipe_id", "recipe_version",
+            "plan_hash", "stage_id", "completed_steps", "failed_steps",
+            "criteria_passed", "receipt", "receipt_hash",
+        )},
+    }
+    return result
+
+
+def _start_recipe_run_job(task: Task) -> None:
+    global _RECIPE_RUN_JOB, _RECIPE_LAST_STATUS
+    if _RECIPE_RUN_JOB is not None:
+        raise RuntimeError("ja existe recipe.run em andamento")
+    if _CAPTURE_JOB is not None or _SCULPT_PREPARE_JOB is not None or _SCULPT_FINISH_JOB is not None:
+        raise RuntimeError("outro job visual esta em andamento; tente recipe.run novamente")
+
+    params = task.request.get("params") or {}
+    recipe = params.get("recipe")
+    planned = plan_recipe(
+        recipe,
+        variant=str(params["variant"]) if params.get("variant") else None,
+        overrides=params.get("overrides") or {},
+    )
+    plan = planned["plan"]
+
+    if bool(params.get("dry_run", False)):
+        result = {
+            "status": "dry_run",
+            "passed": True,
+            "plan": plan,
+            "summary": planned["summary"],
+        }
+        task.response = {"id": task.request["id"], "ok": True, "result": result}
+        _record_task_history(task, ok=True, result=result)
+        task.done.set()
+        _RECIPE_LAST_STATUS = {
+            "state": "dry_run",
+            "recipe_id": plan["recipe_id"],
+            "recipe_version": plan["recipe_version"],
+            "plan_hash": plan["plan_hash"],
+        }
+        return
+
+    previous_stage_id = get_active_stage_id()
+    if bool(params.get("create_stage", True)):
+        stage = create_stage(
+            f"Recipe {plan['recipe_id']} {plan['recipe_version']}",
+            tags=["recipe", plan["recipe_id"], *plan.get("tags", [])],
+        )
+    else:
+        stage = ensure_stage()
+    stage_id = str(stage["stage_id"])
+    run_id = sanitize_label(
+        f"recipe-{plan['recipe_id']}-{plan['recipe_version']}-{time.time_ns()}",
+        f"recipe-{time.time_ns()}",
+    )
+
+    validated = validate_recipe(recipe)
+    files = _recipe_write_initial_files(validated["recipe"], plan, run_id)
+    record_event(
+        action="recipe.start",
+        params={
+            "run_id": run_id,
+            "recipe_id": plan["recipe_id"],
+            "recipe_version": plan["recipe_version"],
+            "recipe_hash": plan["recipe_hash"],
+            "plan_hash": plan["plan_hash"],
+            "variant": plan.get("variant"),
+            "parameters": plan.get("parameters", {}),
+        },
+        result={"files": files},
+        ok=True,
+        tags=["recipe", plan["recipe_id"], "start"],
+        stage_id=stage_id,
+    )
+
+    _RECIPE_RUN_JOB = RecipeRunJob(
+        task=task,
+        plan=plan,
+        run_id=run_id,
+        stage_id=stage_id,
+        previous_stage_id=previous_stage_id,
+        restore_stage=bool(params.get("restore_stage", False)),
+    )
+    _RECIPE_LAST_STATUS = _recipe_status_snapshot()
+
+
+def _advance_recipe_run_job() -> float:
+    global _RECIPE_RUN_JOB
+    job = _RECIPE_RUN_JOB
+    if job is None:
+        return 0.05
+
+    try:
+        steps = job.plan["steps"]
+        views = job.plan.get("validation_views", [])
+
+        if job.phase == "step":
+            if job.fatal_error or job.step_index >= len(steps):
+                job.phase = "validation" if not job.fatal_error else "finalize"
+                return 0.05
+
+            step = steps[job.step_index]
+            checkpoint = None
+            if bool(step.get("checkpoint_before", False)):
+                checkpoint = _dispatch("checkpoint.create", {
+                    "label": sanitize_label(
+                        f"{job.run_id}-{step.get('checkpoint_label') or step['id']}",
+                        f"{job.run_id}-checkpoint",
+                    )
+                })
+
+            try:
+                result = _dispatch(step["action"], step.get("params") or {})
+                row = {
+                    "index": step["index"],
+                    "id": step["id"],
+                    "action": step["action"],
+                    "ok": True,
+                    "result": result,
+                    "checkpoint": checkpoint,
+                }
+                job.results.append(row)
+                _recipe_record_step(job, step, ok=True, result=result, checkpoint=checkpoint)
+            except Exception as exc:
+                error = f"{type(exc).__name__}: {exc}"
+                row = {
+                    "index": step["index"],
+                    "id": step["id"],
+                    "action": step["action"],
+                    "ok": False,
+                    "error": error,
+                    "checkpoint": checkpoint,
+                }
+                job.results.append(row)
+                job.failed_steps += 1
+                _recipe_record_step(job, step, ok=False, error=error, checkpoint=checkpoint)
+                if not bool(step.get("continue_on_error", False)):
+                    job.fatal_error = f"step {step['id']} falhou: {error}"
+                    job.step_index += 1
+                    job.phase = "finalize"
+                    return 0.05
+
+            capture = step.get("capture_after")
+            job.step_index += 1
+            if capture:
+                job.current_capture = {
+                    **capture,
+                    "_prefix": f"{job.run_id}-step-{step['index']:02d}-{step['id']}",
+                    "_source": f"step:{step['id']}",
+                }
+                _recipe_configure_capture(capture)
+                job.phase = "capture_settle"
+                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+                return 0.05
+            return 0.05
+
+        if job.phase == "capture_settle":
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "capture"
+            return 0.05
+
+        if job.phase == "capture":
+            capture = job.current_capture or {}
+            result = _recipe_capture(capture, prefix=str(capture.get("_prefix", job.run_id)))
+            result["source"] = capture.get("_source")
+            job.captures.append(result)
+            record_event(
+                action="recipe.capture",
+                params={
+                    "run_id": job.run_id,
+                    "recipe_id": job.plan["recipe_id"],
+                    "recipe_version": job.plan["recipe_version"],
+                    "source": capture.get("_source"),
+                    "capture": {key: value for key, value in capture.items() if not key.startswith("_")},
+                },
+                result=result,
+                ok=True,
+                tags=["recipe", job.plan["recipe_id"], "capture"],
+                stage_id=job.stage_id,
+            )
+            job.current_capture = None
+            job.phase = "step" if job.step_index < len(steps) and not job.fatal_error else (
+                "validation" if not job.fatal_error else "finalize"
+            )
+            return 0.05
+
+        if job.phase == "validation":
+            if job.view_index >= len(views):
+                job.phase = "finalize"
+                return 0.05
+            view = views[job.view_index]
+            job.current_capture = {
+                **view,
+                "_prefix": f"{job.run_id}-validation-{job.view_index:02d}-{view['name']}",
+                "_source": f"validation:{view['name']}",
+            }
+            job.view_index += 1
+            _recipe_configure_capture(view)
+            job.phase = "validation_settle"
+            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
+            return 0.05
+
+        if job.phase == "validation_settle":
+            if job.settle_remaining > 0:
+                job.settle_remaining -= 1
+                _redraw_window()
+                return 0.05
+            job.phase = "validation_capture"
+            return 0.05
+
+        if job.phase == "validation_capture":
+            capture = job.current_capture or {}
+            result = _recipe_capture(capture, prefix=str(capture.get("_prefix", job.run_id)))
+            result["source"] = capture.get("_source")
+            job.captures.append(result)
+            record_event(
+                action="recipe.capture",
+                params={
+                    "run_id": job.run_id,
+                    "recipe_id": job.plan["recipe_id"],
+                    "recipe_version": job.plan["recipe_version"],
+                    "source": capture.get("_source"),
+                },
+                result=result,
+                ok=True,
+                tags=["recipe", job.plan["recipe_id"], "validation", "capture"],
+                stage_id=job.stage_id,
+            )
+            job.current_capture = None
+            job.phase = "validation"
+            return 0.05
+
+        if job.phase == "finalize":
+            result = _recipe_finalize(job)
+            record_event(
+                action="recipe.finish",
+                params={
+                    "run_id": job.run_id,
+                    "recipe_id": job.plan["recipe_id"],
+                    "recipe_version": job.plan["recipe_version"],
+                    "plan_hash": job.plan["plan_hash"],
+                },
+                result=result,
+                ok=bool(result["passed"]),
+                error=None if result["passed"] else result.get("fatal_error") or "recipe criteria failed",
+                tags=["recipe", job.plan["recipe_id"], "finish"],
+                stage_id=job.stage_id,
+            )
+            job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
+            job.task.done.set()
+            _RECIPE_RUN_JOB = None
+            return 0.05
+
+        raise RuntimeError(f"fase de recipe.run invalida: {job.phase}")
+
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        job.fatal_error = error
+        try:
+            result = _recipe_finalize(job)
+            job.task.response = {"id": job.task.request["id"], "ok": True, "result": result}
+            _record_task_history(job.task, ok=True, result=result)
+        except Exception as finalize_exc:
+            final_error = f"{error}; finalize={type(finalize_exc).__name__}: {finalize_exc}"
+            job.task.response = {"id": job.task.request["id"], "ok": False, "error": final_error}
+            _record_task_history(job.task, ok=False, error=final_error)
+        job.task.done.set()
+        _RECIPE_RUN_JOB = None
+        return 0.05
+
+
 def _dismiss_modal_event() -> dict[str, Any]:
     window = bpy.context.window
     if window is None:
