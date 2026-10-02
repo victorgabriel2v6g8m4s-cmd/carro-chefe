@@ -867,50 +867,7 @@ def _advance_workspace_capture_job() -> float:
 
                 job.phase = "finalize"
 
-            if job.phase == "restore_workspace":
-            window = bpy.context.window
-            if window is None:
-                raise RuntimeError("janela Blender indisponivel ao restaurar workspace da recipe")
-            if not job.restore_workspace or window.workspace.name == job.original_workspace_name:
-                job.phase = "finalize"
-                return 0.05
-            original = bpy.data.workspaces.get(job.original_workspace_name)
-            if original is None:
-                raise RuntimeError(f"workspace original da recipe nao existe mais: {job.original_workspace_name}")
-            window.workspace = original
-            _redraw_window()
-            job.phase = "restore_workspace_settle"
-            job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
-            job.last_screen_name = window.screen.name
-            return 0.05
-
-        if job.phase == "restore_workspace_settle":
-            window = bpy.context.window
-            if window is None:
-                raise RuntimeError("janela Blender indisponivel ao confirmar workspace da recipe")
-            if window.workspace.name != job.original_workspace_name:
-                original = bpy.data.workspaces.get(job.original_workspace_name)
-                if original is None:
-                    raise RuntimeError(f"workspace original da recipe nao existe mais: {job.original_workspace_name}")
-                window.workspace = original
-                _redraw_window()
-                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
-                job.last_screen_name = window.screen.name
-                return 0.05
-            current_screen = window.screen.name
-            if current_screen != job.last_screen_name:
-                job.last_screen_name = current_screen
-                job.settle_remaining = _WORKSPACE_CAPTURE_SETTLE_TICKS
-                _redraw_window()
-                return 0.05
-            if job.settle_remaining > 0:
-                job.settle_remaining -= 1
-                _redraw_window()
-                return 0.05
-            job.phase = "finalize"
-            return 0.05
-
-        if job.phase == "finalize":
+            if job.phase == "finalize":
                 result = _write_workspace_capture_manifest(job)
                 if not result["restored_original_workspace"]:
                     raise RuntimeError(
