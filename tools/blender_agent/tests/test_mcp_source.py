@@ -25,6 +25,10 @@ class McpAdapterSourceTests(unittest.TestCase):
             "blender_ui_orbit",
             "blender_checkpoint",
             "blender_action",
+            "blender_recipe_status",
+            "blender_recipe_run",
+            "blender_recipe_plan",
+            "blender_recipe_validate",
             "blender_sculpt_finish",
             "blender_sculpt_iteration",
             "blender_sculpt_stroke",
@@ -56,6 +60,12 @@ class McpAdapterSourceTests(unittest.TestCase):
         self.assertIn('capture_before": True', source)
         self.assertIn('Image(path=before["path"])', source)
         self.assertIn('Image(path=after["path"])', source)
+
+    def test_recipe_run_uses_extended_timeout(self) -> None:
+        source = SERVER.read_text(encoding="utf-8")
+        self.assertIn("def blender_recipe_run(", source)
+        self.assertIn('call("recipe.run"', source)
+        self.assertIn("timeout=120.0", source)
 
     def test_mcp_server_has_no_shell_or_dynamic_execution(self) -> None:
         tree = ast.parse(SERVER.read_text(encoding="utf-8"))
