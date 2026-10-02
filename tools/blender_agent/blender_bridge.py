@@ -1299,6 +1299,44 @@ def _advance_sculpt_prepare_job() -> float:
 
 
 
+def _sculpt_stroke_element_property_names(operator) -> set[str]:
+    fallback = {
+        "location",
+        "mouse",
+        "mouse_event",
+        "pressure",
+        "size",
+        "time",
+        "is_start",
+    }
+    try:
+        rna = operator.get_rna_type()
+        stroke_property = rna.properties.get("stroke")
+        fixed_type = getattr(stroke_property, "fixed_type", None)
+        if fixed_type is None:
+            return fallback
+
+        names: set[str] = set()
+        try:
+            for prop in fixed_type.properties:
+                identifier = getattr(prop, "identifier", None)
+                if identifier and identifier != "rna_type" and not getattr(prop, "is_readonly", False):
+                    names.add(str(identifier))
+        except Exception:
+            try:
+                names.update(
+                    str(name)
+                    for name in fixed_type.properties.keys()
+                    if str(name) != "rna_type"
+                )
+            except Exception:
+                pass
+
+        return names or fallback
+    except Exception:
+        return fallback
+
+
 def _normalize_sculpt_points(
     points: Any,
     *,
@@ -1306,6 +1344,7 @@ def _normalize_sculpt_points(
     region,
     default_pressure: float,
     radius: int,
+    allowed_properties: set[str],
 ) -> list[dict[str, Any]]:
     if not isinstance(points, list) or len(points) < 1:
         raise ValueError("sculpt.stroke exige lista points com pelo menos 1 ponto")
@@ -1343,7 +1382,7 @@ def _normalize_sculpt_points(
                 f"para {region.width}x{region.height}"
             )
 
-        normalized.append({
+        candidate = {
             "name": "CCSculptStroke",
             "location": (0.0, 0.0, 0.0),
             "mouse": (float(px), float(py)),
@@ -1355,7 +1394,17 @@ def _normalize_sculpt_points(
             "x_tilt": 0.0,
             "y_tilt": 0.0,
             "pen_flip": False,
-        })
+        }
+        element = {
+            key: value
+            for key, value in candidate.items()
+            if key in allowed_properties
+        }
+        if "mouse" not in element and "mouse_event" not in element:
+            raise RuntimeError(
+                "OperatorStrokeElement desta versao nao expoe mouse nem mouse_event"
+            )
+        normalized.append(element)
     return normalized
 
 
@@ -1434,12 +1483,15 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
     settings = _sculpt_set_radius_strength(radius, strength)
 
     window, area, region, _space, _region_3d = _sculpt_context()
+    operator = bpy.ops.sculpt.brush_stroke
+    stroke_element_properties = _sculpt_stroke_element_property_names(operator)
     points = _normalize_sculpt_points(
         params.get("points"),
         coordinate_space=str(params.get("coordinate_space", "NORMALIZED")),
         region=region,
         default_pressure=float(params.get("pressure", 1.0)),
         radius=radius,
+        allowed_properties=stroke_element_properties,
     )
 
     mode = str(params.get("mode", "NORMAL")).upper()
@@ -1456,7 +1508,6 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
             "filename": str(params.get("before_name", f"sculpt-before-{time.time_ns()}.png"))
         })
 
-    operator = bpy.ops.sculpt.brush_stroke
     rna = operator.get_rna_type()
     available = set(rna.properties.keys())
     kwargs: dict[str, Any] = {
@@ -1490,6 +1541,7 @@ def _sculpt_stroke(params: dict[str, Any]) -> dict[str, Any]:
         "mode": mode,
         "coordinate_space": str(params.get("coordinate_space", "NORMALIZED")).upper(),
         "point_count": len(points),
+        "stroke_element_properties": sorted(stroke_element_properties),
         "operator": sorted(result),
         "checkpoint": str(checkpoint_path) if checkpoint_path else None,
         "before_capture": before,
