@@ -228,3 +228,22 @@ Correção:
 - há teste de regressão garantindo que `sculpt-smoke-test.ps1` não volte a depender de JSON inline.
 
 Comandos usados pelo smoke agora atravessam PowerShell -> Python apenas como argumentos escalares.
+
+
+## Sincronizacao do workspace de Sculpt
+
+O segundo smoke V0.3 chegou ate `sculpt.prepare`, mas o Windows PowerShell interrompeu a exibicao do erro nativo e mostrou apenas o primeiro caractere do JSON de erro.
+
+A analise tambem revelou a mesma classe de risco encontrada anteriormente no capture-set: atribuir `window.workspace = Sculpting` e consultar a VIEW_3D na mesma passagem do event loop pode observar o screen anterior.
+
+Correcao adotada:
+
+- `sculpt.prepare` passou a ser um job assincrono do scheduler do bridge;
+- a ferramenta troca para o workspace solicitado;
+- cede ciclos ao event loop;
+- espera o screen estabilizar pelos mesmos ticks de redraw usados no capture-set;
+- so depois seleciona o mesh, entra em Sculpt Mode e ativa o brush;
+- em falha, sai de Sculpt quando necessario e restaura o workspace original antes de responder;
+- o smoke test agora captura toda a saida stderr do Python antes de gerar a excecao, preservando diagnostico completo.
+
+Isso evita tanto falso contexto de VIEW_3D quanto erros truncados no Windows PowerShell 5.1.
