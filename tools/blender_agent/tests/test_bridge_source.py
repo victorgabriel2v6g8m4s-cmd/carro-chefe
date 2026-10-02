@@ -150,6 +150,19 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("bpy.context.temp_override", source)
         self.assertIn("_SCULPT_BRUSH_TYPES", source)
 
+    def test_irregularity_is_seeded_and_bounded(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("def _deterministic_signed", source)
+        self.assertIn('if action == "object.irregularize":', source)
+        self.assertIn("amplitude de irregularidade excede limite seguro de 0.5", source)
+        self.assertIn('"geometry_hash": fingerprint', source)
+
+    def test_material_preset_uses_versioned_library(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("from tools.blender_agent.materials import material_preset", source)
+        self.assertIn('if action == "material.preset":', source)
+        self.assertIn('"library_version": preset["library_version"]', source)
+
     def test_recipe_status_bypasses_main_thread_queue(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn('if request.get("action") == "recipe.status":', source)
