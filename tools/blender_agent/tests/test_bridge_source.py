@@ -150,6 +150,24 @@ class BridgeSourceTests(unittest.TestCase):
         self.assertIn("bpy.context.temp_override", source)
         self.assertIn("_SCULPT_BRUSH_TYPES", source)
 
+    def test_recipe_runner_is_scheduler_driven_and_receipted(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn("class RecipeRunJob", source)
+        self.assertIn("def _start_recipe_run_job", source)
+        self.assertIn("def _advance_recipe_run_job", source)
+        self.assertIn("def _recipe_finalize", source)
+        self.assertIn('"receipt_hash"', source)
+        self.assertIn('action="recipe.step"', source)
+        self.assertIn('action="recipe.capture"', source)
+        self.assertIn('action="recipe.run"', source)
+        self.assertIn('if _RECIPE_RUN_JOB is not None:', source)
+        self.assertIn("return _advance_recipe_run_job()", source)
+
+    def test_recipe_run_is_not_generic_history_logged(self) -> None:
+        source = BRIDGE.read_text(encoding="utf-8")
+        self.assertIn('or action == "recipe.run"', source)
+        self.assertIn("stage_id=job.stage_id", source)
+
     def test_bridge_binds_through_loopback_constant(self) -> None:
         source = BRIDGE.read_text(encoding="utf-8")
         self.assertIn("(DEFAULT_HOST, port)", source)
