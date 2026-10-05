@@ -8,11 +8,12 @@ Este repositório reúne os ativos de marca existentes, a arquitetura do negóci
 
 1. Leia [AGENTS.md](./AGENTS.md) para conhecer a missão, as regras e as responsabilidades.
 2. Antes de qualquer tarefa, consulte o [catálogo operacional de ferramentas](./docs/ferramentas/README.md) e selecione as ferramentas adequadas.
-3. Abra o [índice da documentação](./docs/README.md) para navegar por categoria.
-4. Abra [docs/fundacao/ARQUITETURA.md](./docs/fundacao/ARQUITETURA.md) para visualizar o negócio e os sistemas.
-5. Consulte [docs/fundacao/ROADMAP.md](./docs/fundacao/ROADMAP.md) para a ordem de execução.
-6. Inicie a plataforma seguindo [docs/tecnologia/ARQUITETURA_TECNICA_V2.md](./docs/tecnologia/ARQUITETURA_TECNICA_V2.md).
-7. Use [docs/governanca/GITHUB_E_AGENTES.md](./docs/governanca/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
+3. Consulte o [mapa canônico do repositório](./docs/governanca/MAPA_REPOSITORIO.md) antes de criar, mover ou remover arquivos.
+4. Abra o [índice da documentação](./docs/README.md) para navegar por categoria.
+5. Abra [docs/fundacao/ARQUITETURA.md](./docs/fundacao/ARQUITETURA.md) para visualizar o negócio e os sistemas.
+6. Consulte [docs/fundacao/ROADMAP.md](./docs/fundacao/ROADMAP.md) para a ordem de execução.
+7. Inicie a plataforma seguindo [docs/tecnologia/ARQUITETURA_TECNICA_V2.md](./docs/tecnologia/ARQUITETURA_TECNICA_V2.md).
+8. Use [docs/governanca/GITHUB_E_AGENTES.md](./docs/governanca/GITHUB_E_AGENTES.md) para operar GitHub, chats e agentes com segurança.
 
 ## Protocolo obrigatório de ferramentas para agentes
 
@@ -22,22 +23,39 @@ Se nenhuma ferramenta atender uma necessidade recorrente, o agente deve registra
 
 Ferramentas próprias têm inventário executável em `tools/tool-health/catalog.json`. Use `npm run tools:status` para testar os checks aplicáveis e atualizar [`docs/ferramentas/STATUS_AUTOMATICO.md`](./docs/ferramentas/STATUS_AUTOMATICO.md).
 
+## Organização obrigatória
+
+A estrutura física do repositório é um contrato versionado em [`.repo/structure.json`](./.repo/structure.json). O mapa legível está em [`docs/governanca/MAPA_REPOSITORIO.md`](./docs/governanca/MAPA_REPOSITORIO.md) e as regras completas em [`docs/governanca/ORGANIZACAO_REPOSITORIO.md`](./docs/governanca/ORGANIZACAO_REPOSITORIO.md).
+
+Não crie diretório novo na raiz por conveniência. Mudanças estruturais devem atualizar o contrato e o mapa na mesma PR. `npm run policy:check` e o preflight dos agentes validam automaticamente a organização; uma estrutura fora do contrato não pode ser integrada à `main`.
+
+Comandos úteis:
+
+```bash
+npm run repo:map
+npm run repo:map:check
+npm run policy:check
+```
+
 ## Estrutura
 
 ```text
-apps/site/            Site público React/Vite (`/welcome` e `/cardapio`)
-apps/gestao/          Central Operacional React/Vite (`/gestao`)
-apps/api/             API TypeScript, SSE, webhooks e bridge do Codex
-apps/qr_manipulator/  QR Lab e tracking de derivados QR
-packages/             Banco Prisma, contratos e componentes compartilhados
-tools/                Runtime, policy, supervisor, snapshots e health check
-cardápio/             Materiais atuais do cardápio
-elementos gráficos/  Elementos visuais originais
+apps/                 Aplicações executáveis: API, Central, site e QR Lab
+packages/             Contratos, banco e componentes compartilhados
+tools/                Ferramentas internas, automação e validações
+deploy/               Infraestrutura e exemplos de deploy
+docs/                 Documentação categorizada e mapa do repositório
+mídias/               Acervo bruto, produtos e registros do espaço
 logos/                Variações oficiais da marca
-mídias/               Destino de fotos e vídeos aprovados
-docs/                 Documentação organizada por categoria
-planejamento/         Dados iniciais e implementação legada preservada
+cardápio/             Originais visuais do cardápio preservados
+elementos gráficos/  Elementos visuais originais de marca
+anexos/               Binários e dados operacionais de referência
+planejamento/         Implementação legada preservada até paridade
+site/                  Placeholder legado; código ativo está em apps/site
+.repo/                 Contrato machine-readable da organização
 ```
+
+A árvore detalhada e as subpastas permitidas ficam no [mapa do repositório](./docs/governanca/MAPA_REPOSITORIO.md).
 
 ## Entregas desta fundação
 
