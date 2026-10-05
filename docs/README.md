@@ -1,105 +1,74 @@
 # Documentação do Carro Chefe
 
-Este diretório concentra a documentação humana do projeto. Os documentos são organizados por **assunto**, mantendo poucos níveis para facilitar navegação, busca e referências estáveis.
+Este diretório concentra a documentação humana do projeto, organizada por **assunto** e por **escopo de negócio**.
 
 ## Separação de escopos de negócio
 
-A documentação possui duas operações distintas e elas não devem compartilhar decisões comerciais por acidente:
-
-- **Carro Chefe:** navegação canônica em [docs/carro-chefe/README.md](./carro-chefe/README.md).
-- **CookLily:** navegação canônica em [docs/cooklily/README.md](./cooklily/README.md); os documentos físicos permanecem em `docs/lily-acai/` por compatibilidade histórica/técnica.
-- **Compartilhado:** ferramentas, governança de repositório e componentes de infraestrutura só são compartilhados quando o documento declara esse escopo.
+- **Carro Chefe:** navegação canônica em [carro-chefe/README.md](./carro-chefe/README.md).
+- **CookLily:** navegação canônica em [cooklily/README.md](./cooklily/README.md); os documentos físicos permanecem em `docs/lily-acai/` por compatibilidade histórica/técnica até uma migração transacional aprovada.
+- **Compartilhado:** ferramentas, governança e infraestrutura só são compartilhadas quando o documento declara esse escopo.
 
 Uma decisão de CookLily não altera cardápio, marca ou operação do Carro Chefe automaticamente, e vice-versa.
 
 ## Comece por aqui
 
-1. [Catálogo operacional de ferramentas](./ferramentas/README.md) — seleção tool-first, custos relativos, limitações, saúde, pendências e bloqueios.
-2. [Arquitetura do negócio](./fundacao/ARQUITETURA.md) — visão geral da operação, experiência física e sistemas.
-3. [Roadmap](./fundacao/ROADMAP.md) — portões de decisão e ordem de execução.
-4. [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md) — aplicações, API, persistência e runtime.
-5. [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md) — fluxo de colaboração, branches e agentes.
-6. [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md) — edição transacional e auditável de workbook `.xlsm`.
-7. [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md) — mapa de dependências e renames seguros.
-8. [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md) — transformações físicas seguras de linhas, colunas, ranges e Tables.
-9. [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md) — DrawingML/ChartML clássico suportado de forma fail-closed.
-10. [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md) — status V3A/V3B e roadmap V3C/V3D.
-11. [Plano do Excel Recipe reutilizável](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md) — separação entre core genérico e integração da planilha do Carro Chefe, com roadmap G1–G4.
-12. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção de planilhas por receitas JSON.
-13. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
-14. [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md) — regras aprovadas para cardápio físico/digital, QR por mesa, personalização, totem e origem de pedidos.
+1. [Mapa do repositório](./governanca/MAPA_REPOSITORIO.md) — árvore, categorias, legado e política de branches.
+2. [Organização obrigatória](./governanca/ORGANIZACAO_REPOSITORIO.md) — regra que toda pessoa/agente deve seguir ao criar ou mover arquivos.
+3. [Catálogo operacional de ferramentas](./ferramentas/README.md) — seleção tool-first, custos relativos, limitações, saúde, pendências e bloqueios.
+4. [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md) — colaboração, branches e agentes.
+5. [Arquitetura do negócio](./fundacao/ARQUITETURA.md) e [Roadmap](./fundacao/ROADMAP.md).
+6. [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md).
+7. [Índice Carro Chefe](./carro-chefe/README.md) ou [índice CookLily](./cooklily/README.md), conforme a operação.
 
-## Organização
+## Organização canônica
 
 ```text
 docs/
+├── AGENTS.md
 ├── README.md
-├── carro-chefe/
-│   └── README.md
-├── cooklily/
-│   └── README.md
-├── lily-acai/  # namespace técnico legado dos documentos CookLily
-├── ferramentas/
-│   ├── README.md
-│   ├── GITHUB.md
-│   ├── AGENTES.md
-│   ├── SKILLS.md
-│   ├── PLUGINS.md
-│   ├── PROPRIAS.md
-│   ├── EXTERNAS.md
-│   ├── STATUS_AUTOMATICO.md
-│   ├── PENDENCIAS.md
-│   └── BLOQUEIOS.md
-├── fundacao/
-│   ├── ARQUITETURA.md
-│   └── ROADMAP.md
-├── negocio/
-│   ├── MARCA.md
-│   ├── MARKETING_MIDIAS.md
-│   └── PRODUTO_CARDAPIO.md
-├── tecnologia/
-│   ├── ARQUITETURA_TECNICA_V2.md
-│   ├── ATRIBUICAO_OMNICANAL.md
-│   ├── DADOS_ERP.md
-│   ├── EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md
-│   ├── EXCEL_RECIPE_V1.md
-│   ├── EXCEL_RECIPE_V2.md
-│   ├── EXCEL_RECIPE_V2_PLAN.md
-│   ├── EXCEL_RECIPE_V3A.md
-│   ├── EXCEL_RECIPE_V3B.md
-│   ├── EXCEL_RECIPE_V3_PLAN.md
-│   └── TOTEM_AUTOATENDIMENTO.md
-├── operacao/
-│   ├── COMPRAS.md
-│   └── OPERACAO.md
-└── governanca/
-    ├── AGENTES.md
-    ├── EXCEL_RECIPE_AGENT_GUIDE.md
-    ├── GITHUB_E_AGENTES.md
-    └── RISCOS_DECISOES.md
+├── carro-chefe/            fronteira/índice do Carro Chefe
+├── cooklily/               índice canônico CookLily
+├── lily-acai/              conteúdo físico CookLily legado/compatível
+├── execution-checkpoints/  checkpoints de execuções longas
+├── ferramentas/            inventário, saúde, pendências e bloqueios
+├── financeiro/             planilhas e documentação financeira não transacional
+├── fundacao/               arquitetura e roadmap de alto nível
+├── governanca/             agentes, GitHub, decisões e mapa do repositório
+├── historico/              snapshots e status antigos
+├── negocio/                marca, cardápio, marketing e funis do Carro Chefe
+├── operacao/               compras, operação física e equipe
+├── pre-lancamento/         campanha/implementação de pré-lançamento
+├── referencias/            artefatos externos e documentos de referência
+└── tecnologia/             arquitetura técnica, dados e ferramentas técnicas
 ```
+
+A lista acima é controlada por `.repo/structure.json`; mudanças estruturais devem atualizar o contrato e `MAPA_REPOSITORIO.md` na mesma PR.
 
 ## Categorias
 
-| Categoria | Finalidade | Documentos |
+| Categoria | Finalidade | Entrada principal |
 |---|---|---|
-| **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
-| **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
-| **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
-| **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [Compras](./operacao/COMPRAS.md), [Operação e qualidade](./operacao/OPERACAO.md) |
-| **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
+| **Carro Chefe** | índice e fronteira documental da marca/operação principal | [carro-chefe/README.md](./carro-chefe/README.md) |
+| **CookLily** | índice da operação isolada e compatibilidade com `lily-acai/` | [cooklily/README.md](./cooklily/README.md) |
+| **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [ferramentas/README.md](./ferramentas/README.md) |
+| **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [fundacao/ARQUITETURA.md](./fundacao/ARQUITETURA.md) |
+| **Negócio** | marca, produto, cardápio, marketing e experiência comercial do Carro Chefe | [negocio/PRODUTO_CARDAPIO.md](./negocio/PRODUTO_CARDAPIO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [tecnologia/ARQUITETURA_TECNICA_V2.md](./tecnologia/ARQUITETURA_TECNICA_V2.md) |
+| **Operação** | rotina física, qualidade, compras, fornecedores e contingência | [operacao/OPERACAO.md](./operacao/OPERACAO.md) |
+| **Governança** | agentes, GitHub, decisões, riscos e organização do repositório | [governanca/MAPA_REPOSITORIO.md](./governanca/MAPA_REPOSITORIO.md) |
+| **Histórico** | evidências antigas mantidas sem competir com documentos correntes | `historico/` |
+| **Referências** | PDFs e documentos externos usados como evidência | `referencias/` |
+| **Financeiro** | documentação de planilhas e artefatos financeiros versionados | `financeiro/` |
 
 ## Convenções
 
 - antes de qualquer tarefa, agentes consultam `docs/ferramentas/README.md` e priorizam ferramentas existentes adequadas;
-- capacidade inexistente é registrada em `docs/ferramentas/PENDENCIAS.md`; impedimento de acesso/recurso é registrado em `docs/ferramentas/BLOQUEIOS.md`;
-- novos documentos devem entrar na categoria mais próxima, evitando criar uma nova pasta para um único arquivo;
-- referências dentro de `docs/` devem usar links relativos;
-- referências partindo da raiz do repositório devem usar `docs/<categoria>/<arquivo>.md`;
-- nomes de arquivos permanecem em maiúsculas com `_` quando já fazem parte do vocabulário do projeto;
-- mudanças de estrutura precisam atualizar este índice e todas as referências encontradas no repositório;
-- documentos de plano devem distinguir claramente capacidade **disponível** de capacidade **planejada**;
-- documentos transacionais não substituem as fontes oficiais definidas em `AGENTS.md`.
-
-Os caminhos categorizados acima são os caminhos canônicos; branches posteriores devem atualizar referências antigas antes de serem integradas.
+- antes de criar, mover ou remover arquivo, consultar `docs/governanca/MAPA_REPOSITORIO.md`;
+- novos documentos entram na categoria mais próxima; não criar nova pasta apenas para um arquivo;
+- arquivos soltos diretamente em `docs/` ficam limitados a `README.md` e `AGENTS.md`;
+- referências internas usam links relativos;
+- mudanças de caminho atualizam todos os links, imports, manifests e scripts afetados na mesma entrega;
+- capacidade inexistente vai para `docs/ferramentas/PENDENCIAS.md`; impedimento de acesso/recurso vai para `docs/ferramentas/BLOQUEIOS.md`;
+- documentos de plano distinguem capacidade disponível de capacidade planejada;
+- documentos não substituem fontes transacionais oficiais definidas em `AGENTS.md`;
+- `npm run repo:map:check` e `npm run policy:check` devem passar antes da integração.
