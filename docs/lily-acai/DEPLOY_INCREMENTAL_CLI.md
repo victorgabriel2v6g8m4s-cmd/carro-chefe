@@ -88,7 +88,10 @@ O cache é por **gate**, não apenas por SHA. Cada gate possui uma lista explíc
 - implementação do motor de cache;
 - comando executado;
 - plataforma/arquitetura;
-- versões de Node, npm e Python.
+- versões de Node, npm e Python;
+- inputs de ambiente públicos declarados explicitamente para o gate.
+
+No build e no Tool Health, `VITE_GA4_ID` e `VITE_CLARITY_ID` participam do fingerprint porque são incorporados ao bundle Vite. Seus valores são usados somente como entrada do SHA-256: **não são gravados em claro no cache nem impressos no log**. Variáveis secretas não devem ser adicionadas como `envInputs`; segredos obrigatórios continuam sendo validados separadamente em todo deploy.
 
 Somente resultado `success` é cacheado. Falha remove a entrada do gate. Mudança de fingerprint executa o gate novamente.
 
