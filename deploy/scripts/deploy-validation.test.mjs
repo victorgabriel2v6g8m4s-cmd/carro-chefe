@@ -10,13 +10,19 @@ function git(root, ...args) {
   execFileSync('git', args, { cwd: root, stdio: 'ignore' });
 }
 
-function fixture() {
+function fixture({ envInputs = [] } = {}) {
   const root = mkdtempSync(path.join(os.tmpdir(), 'carro-chefe-validation-'));
   mkdirSync(path.join(root, 'deploy/validation'), { recursive: true });
   writeFileSync(path.join(root, 'input.txt'), 'v1\n');
   writeFileSync(path.join(root, 'deploy/validation/gates.json'), JSON.stringify({
     schemaVersion: 1,
-    gates: { probe: { description: 'probe', inputs: ['input.txt'] } },
+    gates: {
+      probe: {
+        description: 'probe',
+        inputs: ['input.txt'],
+        ...(envInputs.length > 0 ? { envInputs } : {}),
+      },
+    },
   }, null, 2));
   git(root, 'init');
   git(root, 'config', 'user.email', 'test@example.invalid');
@@ -77,6 +83,34 @@ test('artefato requerido ausente força nova execução', () => {
     assert.equal(runGate({ root, cacheDir, gateName: 'probe', command, requiredPaths: ['artifact.ok'] }), 0);
     assert.equal(readFileSync(counter, 'utf8'), 'xx');
   } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('envInput invalida fingerprint sem persistir valor bruto no cache', () => {
+  const variable = 'TEST_PUBLIC_BUILD_ID';
+  const previous = process.env[variable];
+  const root = fixture({ envInputs: [variable] });
+  try {
+    const cacheDir = path.join(root, '.cache');
+    const counter = path.join(root, 'counter.txt');
+    const command = [process.execPath, '-e', `require('node:fs').appendFileSync(${JSON.stringify(counter)}, 'x')`];
+
+    process.env[variable] = 'public-one';
+    assert.equal(runGate({ root, cacheDir, gateName: 'probe', command }), 0);
+    assert.equal(runGate({ root, cacheDir, gateName: 'probe', command }), 0);
+    assert.equal(readFileSync(counter, 'utf8'), 'x');
+
+    process.env[variable] = 'public-two';
+    assert.equal(runGate({ root, cacheDir, gateName: 'probe', command }), 0);
+    assert.equal(readFileSync(counter, 'utf8'), 'xx');
+
+    const cache = readFileSync(path.join(cacheDir, 'cache-v1.json'), 'utf8');
+    assert.equal(cache.includes('public-one'), false);
+    assert.equal(cache.includes('public-two'), false);
+  } finally {
+    if (previous === undefined) delete process.env[variable];
+    else process.env[variable] = previous;
     rmSync(root, { recursive: true, force: true });
   }
 });
