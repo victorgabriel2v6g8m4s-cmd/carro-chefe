@@ -101,6 +101,11 @@ export async function buildLilyPaymentMethodOptions(order: {
   });
 }
 
+function isDeterministicMercadoPagoRejection(error: unknown) {
+  if (!(error instanceof ApiError) || !error.details || typeof error.details !== "object") return false;
+  return (error.details as { code?: string }).code === "LILY_PAYMENT_PROVIDER_REJECTED";
+}
+
 export async function createLilyPixChoice(input: {
   paymentId: string;
   order: { id: string; orderNumber: string };
@@ -148,17 +153,25 @@ export async function createLilyPixChoice(input: {
         });
         continue;
       }
-      const result = await createMercadoPagoChoicePayment({
-        paymentId: input.paymentId,
-        orderId: input.order.id,
-        amountCents: input.quote.amountCents,
-        method: "pix",
-        idempotencyKey: input.idempotencyKey,
-        payer: input.request.payer
-      });
-      // A partir daqui o provider externo pode ter criado cobrança. Nunca cair
-      // silenciosamente para outro provider em caso de timeout/estado ambíguo.
-      return { provider, result: result as LilyChoiceProviderResult, attemptedProviders };
+      try {
+        const result = await createMercadoPagoChoicePayment({
+          paymentId: input.paymentId,
+          orderId: input.order.id,
+          amountCents: input.quote.amountCents,
+          method: "pix",
+          idempotencyKey: input.idempotencyKey,
+          payer: input.request.payer
+        });
+        return { provider, result: result as LilyChoiceProviderResult, attemptedProviders };
+      } catch (error) {
+        // Uma recusa HTTP determinística confirma que a operação não foi criada,
+        // então o fallback manual é seguro. Timeout/erro ambíguo continua fail-closed.
+        if (isDeterministicMercadoPagoRejection(error)) {
+          lastLocalError = error;
+          continue;
+        }
+        throw error;
+      }
     }
 
     return {
