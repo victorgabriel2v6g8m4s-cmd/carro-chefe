@@ -150,7 +150,7 @@ function Get-ValidBridgeSession {
 }
 
 for ($attempt = 1; $attempt -le $MaxRetry; $attempt++) {
-    Write-Host "Tentativa $attempt/$MaxRetry: aguardando bridge por ate $RetrySeconds segundos..."
+    Write-Host "Tentativa ${attempt}/${MaxRetry}: aguardando bridge por ate ${RetrySeconds} segundos..."
     $attemptDeadline = (Get-Date).AddSeconds($RetrySeconds)
 
     while ((Get-Date) -lt $attemptDeadline) {
