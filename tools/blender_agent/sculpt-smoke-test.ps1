@@ -8,8 +8,12 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\.." )).Path
 $SessionFile = Join-Path $RepoRoot ".runtime\blender-agent\session\bridge.json"
 $CompatFile = Join-Path $PSScriptRoot "runtime_compat.py"
 $EntryFile = Join-Path $PSScriptRoot "blender_bridge_v05_entry.py"
-$ExpectedRuntimeProfile = "v05-runtime-compat-20261005.2"
 Set-Location $RepoRoot
+
+$ExpectedRuntimeProfile = ((& $PythonExe -c 'from tools.blender_agent.runtime_compat import RUNTIME_PROFILE; print(RUNTIME_PROFILE)' 2>$null | Select-Object -First 1).ToString()).Trim()
+if (-not $ExpectedRuntimeProfile) {
+    throw "Could not read RUNTIME_PROFILE from tools.blender_agent.runtime_compat."
+}
 
 function Invoke-JsonCommand {
     param([string[]]$Arguments)
