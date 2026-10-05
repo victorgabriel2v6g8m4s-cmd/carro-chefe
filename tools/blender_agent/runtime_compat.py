@@ -9,6 +9,7 @@ from typing import Any
 
 from . import history, protocol
 
+RUNTIME_PROFILE = "v05-runtime-compat-20261005.3"
 DEFAULT_COMPAT_PATH_LIMIT = 240
 _MIN_FILENAME_BUDGET = 24
 _SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
@@ -230,6 +231,75 @@ def _make_sculpt_checkpoint(core):
     return _sculpt_checkpoint
 
 
+def _schedule_quit(core: Any, params: dict[str, Any]) -> dict[str, Any]:
+    """Schedule a modal-safe Blender shutdown after returning the response.
+
+    Agent-started sessions can make the native unsaved-changes prompt awkward
+    to interact with. This action never relies on that popup. The default mode
+    writes a recovery checkpoint first, then disables the prompt only for the
+    current process and quits a fraction of a second after the RPC response.
+    """
+    mode = str(params.get("mode", "checkpoint")).strip().lower()
+    if mode not in {"checkpoint", "save", "discard"}:
+        raise ValueError("app.quit mode deve ser checkpoint, save ou discard")
+
+    checkpoint = None
+    saved_file = None
+    if mode == "checkpoint":
+        stage = core.get_active_stage_id() or "stage"
+        label = str(params.get("label") or "shutdown-recovery")
+        filename = f"{stage}-{label}-{time.time_ns()}.blend"
+        output = safe_runtime_path("checkpoints", filename)
+        core.bpy.ops.wm.save_as_mainfile(filepath=str(output), copy=True)
+        checkpoint = str(output)
+    elif mode == "save":
+        current = str(core.bpy.data.filepath or "").strip()
+        if not current:
+            raise RuntimeError(
+                "arquivo atual ainda nao possui caminho; use mode=checkpoint ou salve manualmente antes"
+            )
+        result = core.bpy.ops.wm.save_mainfile(
+            filepath=current,
+            check_existing=False,
+            show_save_modified_images_dialog=False,
+        )
+        if not result or "FINISHED" not in result:
+            raise RuntimeError(f"nao foi possivel salvar o .blend atual: {sorted(result or [])}")
+        saved_file = current
+
+    def _quit_timer():
+        try:
+            core.bpy.context.preferences.view.use_save_prompt = False
+        except Exception:
+            pass
+        try:
+            core.bpy.ops.wm.quit_blender()
+        except Exception as exc:
+            print(f"[Carro Chefe Blender Agent] app.quit falhou: {type(exc).__name__}: {exc}")
+        return None
+
+    core.bpy.app.timers.register(_quit_timer, first_interval=0.35)
+    return {
+        "scheduled": True,
+        "mode": mode,
+        "checkpoint": checkpoint,
+        "saved_file": saved_file,
+        "delay_seconds": 0.35,
+    }
+
+
+def _install_lifecycle_dispatch(core: Any) -> None:
+    previous_dispatch = core._dispatch
+
+    def _dispatch_with_lifecycle(action: str, params: dict[str, Any]):
+        if action == "app.quit":
+            return _schedule_quit(core, params)
+        return previous_dispatch(action, params)
+
+    protocol.ALLOWED_ACTIONS.add("app.quit")
+    core._dispatch = _dispatch_with_lifecycle
+
+
 def install(core: Any, v05: Any) -> None:
     """Install compatibility guards into the canonical V0.5 runtime."""
     protocol.safe_runtime_path = safe_runtime_path
@@ -243,3 +313,4 @@ def install(core: Any, v05: Any) -> None:
 
     # V0.5 imported attachment_output_path by value, so update that module too.
     v05.attachment_output_path = attachment_output_path
+    _install_lifecycle_dispatch(core)
