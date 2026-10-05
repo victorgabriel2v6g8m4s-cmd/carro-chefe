@@ -13,18 +13,22 @@ Descreva o que mudou e o resultado esperado.
 
 - [ ] Revisei apenas arquivos pertencentes a esta entrega.
 - [ ] Consultei o catálogo de ferramentas antes de executar a tarefa.
-- [ ] Executei `npm run check` em `planejamento/` quando aplicável.
-- [ ] Executei `npm test` em `planejamento/` quando aplicável.
+- [ ] Consultei `docs/governanca/MAPA_REPOSITORIO.md` antes de criar/mover/remover arquivos.
+- [ ] Se alterei a estrutura, atualizei `.repo/structure.json` e executei `npm run repo:map`.
+- [ ] Executei `npm run repo:map:check` e `npm run policy:check`.
+- [ ] Executei checks/testes/build proporcionais ao escopo.
 - [ ] Executei `npm run tools:status` quando alterei ferramenta própria ou seu catálogo.
 - [ ] Verifiquei desktop, celular e teclado quando houve mudança visual.
 - [ ] Não incluí segredo, dado pessoal, `.env`, runtime ou ativo original sobrescrito.
 
 ## Impactos
 
+- Escopo: Carro Chefe / CookLily / compartilhado:
 - Tarefa/solicitação da Central Operacional:
 - ERP ou contrato de dados:
 - Cardápio, preço ou ficha técnica:
 - Marca, mídia ou ativo derivado:
+- Estrutura/caminhos do repositório:
 - Risco e plano de reversão:
 
 ## Aprovação necessária
