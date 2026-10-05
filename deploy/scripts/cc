@@ -5,7 +5,6 @@ APP_DIR="${CARRO_CHEFE_APP_DIR:-/srv/carro-chefe/current}"
 DATA_DIR="${CARRO_CHEFE_DATA_DIR:-/srv/carro-chefe/data}"
 ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
 NGINX_CONF="${CARRO_CHEFE_NGINX_CONF:-/etc/nginx/sites-available/carrochefe.com}"
-DEPLOYER="${CARRO_CHEFE_DEPLOYER:-/usr/local/sbin/carro-chefe-deploy}"
 CACHE_DIR="${CARRO_CHEFE_VALIDATION_CACHE_DIR:-${DATA_DIR}/deploy-validation}"
 
 fail() {
@@ -157,14 +156,18 @@ deploy_release() {
   local ref="${1:-canonical}"
   local mode="${2:-}"
   [[ -z "${mode}" || "${mode}" == "--full" ]] || fail "opção de deploy inválida: ${mode}"
-  local sha
+  local sha tmp
   sha="$(resolve_release "${ref}")"
-  [[ -x "${DEPLOYER}" ]] || fail "deployer ausente: ${DEPLOYER}"
+  tmp="$(mktemp "/tmp/carro-chefe-deploy-${sha:0:12}.XXXXXX")"
+  git -C "${APP_DIR}" show "${sha}:deploy/scripts/carro-chefe-deploy" > "${tmp}" \
+    || { rm -f "${tmp}"; fail "release não contém deploy/scripts/carro-chefe-deploy"; }
+  bash -n "${tmp}" || { rm -f "${tmp}"; fail "deployer do release possui sintaxe Bash inválida"; }
+  chmod 0700 "${tmp}"
   echo "release_resolved=${sha}"
   if [[ "${mode}" == "--full" ]]; then
-    exec "${DEPLOYER}" "${sha}" --full-validation
+    exec "${tmp}" "${sha}" --full-validation
   fi
-  exec "${DEPLOYER}" "${sha}"
+  exec "${tmp}" "${sha}"
 }
 
 validation_command() {
