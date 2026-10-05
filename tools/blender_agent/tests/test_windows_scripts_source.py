@@ -50,6 +50,13 @@ class WindowsPowerShellSourceTests(unittest.TestCase):
         source = (ROOT / "start.ps1").read_text(encoding="ascii")
         self.assertIn("blender_bridge_v05_entry.py", source)
 
+    def test_v05_entrypoint_bootstraps_repo_root_before_package_imports(self) -> None:
+        source = (ROOT / "blender_bridge_v05_entry.py").read_text(encoding="utf-8")
+        bootstrap = source.index("sys.path.insert(0, _REPO_ROOT_TEXT)")
+        core_import = source.index("from tools.blender_agent import blender_bridge as core")
+        self.assertLess(bootstrap, core_import)
+        self.assertIn("Path(__file__).resolve().parents[2]", source)
+
     def test_start_script_uses_retry_windows_and_startup_logs(self) -> None:
         source = (ROOT / "start.ps1").read_text(encoding="ascii")
         self.assertIn("[int]$MaxRetry = 9", source)
