@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "mapFile": "docs/governanca/MAPA_REPOSITORIO.md",
+  "allowedRootDirectories": [
+    ".agent-policy",
+    ".codex",
+    ".github",
+    ".repo",
+    "anexos",
+    "apps",
+    "cardápio",
+    "deploy",
+    "docs",
+    "elementos gráficos",
+    "logos",
+    "mídias",
+    "packages",
+    "planejamento",
+    "site",
+    "tools"
+  ],
+  "allowedRootFiles": [
+    ".env.example",
+    ".gitattributes",
+    ".gitignore",
+    "AGENTS.md",
+    "NOTICE.md",
+    "README.md",
+    "REGRAS.md",
+    "package-lock.json",
+    "package.json",
+    "prisma.config.ts",
+    "tsconfig.json",
+    "vitest.config.ts"
+  ],
+  "forbiddenRootEntries": [
+    "output",
+    "planta da estrutura"
+  ],
+  "managedDirectories": {
+    "anexos": {
+      "directories": ["financeiro"],
+      "files": []
+    },
+    "apps": {
+      "directories": ["api", "gestao", "qr_manipulator", "site"],
+      "files": ["AGENTS.md"]
+    },
+    "deploy": {
+      "directories": ["nginx", "systemd"],
+      "files": ["README.md"]
+    },
+    "docs": {
+      "directories": ["ferramentas", "financeiro", "fundacao", "governanca", "historico", "negocio", "operacao", "pre-lancamento", "referencias", "tecnologia"],
+      "files": ["AGENTS.md", "README.md"]
+    },
+    "mídias": {
+      "directories": ["espaco", "originais", "produtos"],
+      "files": ["AGENTS.md", "README.md"]
+    },
+    "packages": {
+      "directories": ["contracts", "database", "ui"],
+      "files": ["AGENTS.md"]
+    },
+    "tools": {
+      "directories": ["agent-policy", "excel_recipe", "excel_snapshot", "repo-map", "tool-health", "windows-supervisor"],
+      "files": ["AGENTS.md", "agent-runtime.mjs"]
+    }
+  },
+  "categories": [
+    {"path": "apps/", "category": "Aplicações", "purpose": "Aplicações executáveis: API, Central, site público e QR Lab."},
+    {"path": "packages/", "category": "Pacotes", "purpose": "Contratos, banco e UI compartilhados."},
+    {"path": "tools/", "category": "Ferramentas", "purpose": "Automação, políticas, Excel, supervisor, health checks e mapa."},
+    {"path": "deploy/", "category": "Infraestrutura", "purpose": "Configuração e exemplos de deploy; não é documentação geral."},
+    {"path": "docs/", "category": "Documentação", "purpose": "Decisões, arquitetura, operação, governança, histórico e referências."},
+    {"path": "mídias/", "category": "Mídias", "purpose": "Originais, catálogo de produtos e registros visuais do espaço."},
+    {"path": "logos/", "category": "Marca", "purpose": "Logotipos oficiais e elementos gráficos de marca."},
+    {"path": "cardápio/", "category": "Cardápio visual", "purpose": "Originais do cardápio preservados sob regras próprias."},
+    {"path": "anexos/", "category": "Anexos de dados", "purpose": "Arquivos binários de referência operacional, especialmente financeiro."},
+    {"path": "planejamento/", "category": "Legado operacional", "purpose": "Implementação legada preservada até paridade da arquitetura V2."},
+    {"path": "site/", "category": "Legado de site", "purpose": "Placeholder histórico; novas implementações pertencem a apps/site/."},
+    {"path": ".agent-policy/", "category": "Governança de agentes", "purpose": "Manifesto e cápsulas de política."},
+    {"path": ".codex/", "category": "Configuração de agentes", "purpose": "Perfis e configuração Codex."},
+    {"path": ".github/", "category": "Governança GitHub", "purpose": "CI, templates e automações do repositório."}
+  ],
+  "branchPolicy": {
+    "canonical": ["main", "cooklily/canonical"],
+    "archive": "history/evidence",
+    "temporaryPrefixes": ["feature/", "feat/", "fix/", "chore/", "docs/", "gate/", "dependabot/"],
+    "rules": [
+      "Branches temporárias existem apenas enquanto houver trabalho/PR ativo.",
+      "Branches concluídas ou substituídas devem ter a evidência preservada em history/evidence antes de serem removidas.",
+      "Gate branches nunca substituem uma branch canônica.",
+      "Não criar nova branch histórica por assunto; usar history/evidence."
+    ]
+  },
+  "legacyNotes": [
+    {"path": "planejamento/", "reason": "Preservado até paridade e migração definitiva da V2."},
+    {"path": "site/", "reason": "Placeholder histórico; código público ativo fica em apps/site/."},
+    {"path": "cardápio/", "reason": "Mantido por regras locais e preservação do original; novos derivados devem ser catalogados em mídias/."},
+    {"path": "elementos gráficos/", "reason": "Originais de marca preservados; não criar novos arquivos soltos aqui."}
+  ]
+}
