@@ -13,19 +13,16 @@ if _REPO_ROOT_TEXT not in sys.path:
     sys.path.insert(0, _REPO_ROOT_TEXT)
 
 
-# Production entrypoint for V0.5. Importing the extension patches the stable
-# V0.1-V0.4 core dispatch/capture functions without starting a second server.
+# Production entrypoint for V0.5. Importing the core currently starts the
+# legacy server as a side effect, so this entrypoint must patch both module
+# globals and the already-created TCPServer instance before accepting the
+# V0.5 runtime contract as ready.
 from tools.blender_agent import blender_bridge as core
 from tools.blender_agent import blender_bridge_v05 as v05
 from tools.blender_agent import runtime_compat
 
 
-# Install compatibility guards after both modules exist but before the bridge
-# starts accepting requests. This keeps generated artifacts within a complete
-# Windows path budget and replaces the regressed Sculpt prepare runner.
-runtime_compat.install(core, v05)
-
-
+_RUNTIME_PROFILE = "v05-runtime-compat-20261005.2"
 _CORE_RECORD_TASK_HISTORY = core._record_task_history
 
 
@@ -82,14 +79,23 @@ class HandlerV05(core.socketserver.StreamRequestHandler):
                 if not task.done.wait(timeout=wait_timeout):
                     raise TimeoutError("Blender nao processou a action no prazo")
                 response = task.response or {"ok": False, "error": "resposta vazia"}
+
+            if action == "health" and response.get("ok") and isinstance(response.get("result"), dict):
+                response["result"]["runtime_profile"] = _RUNTIME_PROFILE
         except Exception as exc:
             response = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
 
         self.wfile.write(core.encode_message(response))
 
 
+# Apply all runtime patches only after the V0.5 handler exists. The core module
+# starts its server while being imported, therefore changing core.Handler alone
+# is insufficient: update the live server's RequestHandlerClass as well.
 core._record_task_history = _record_task_history_once
 core.Handler = HandlerV05
+runtime_compat.install(core, v05)
+if core._SERVER is not None:
+    core._SERVER.RequestHandlerClass = HandlerV05
 
 
 if __name__ == "__main__":
