@@ -59,6 +59,9 @@ export function computeFingerprint({ root, gateName, command = [], configBundle 
   if (!gate || !Array.isArray(gate.inputs) || gate.inputs.length === 0) {
     throw new Error(`gate desconhecido ou sem inputs: ${gateName}`);
   }
+  if (gate.envInputs !== undefined && (!Array.isArray(gate.envInputs) || gate.envInputs.some((name) => typeof name !== 'string' || !name))) {
+    throw new Error(`gate ${gateName}: envInputs inválido`);
+  }
 
   const hash = createHash('sha256');
   const files = trackedFiles(root, gate.inputs);
@@ -70,6 +73,12 @@ export function computeFingerprint({ root, gateName, command = [], configBundle 
   hash.update(`gate-config:${JSON.stringify(gate)}\0`);
   hash.update(readFileSync(configBundle.path));
   hash.update(readFileSync(scriptPath));
+
+  for (const name of [...(gate.envInputs ?? [])].sort()) {
+    hash.update(`env:${name}\0`);
+    hash.update(process.env[name] ?? '');
+    hash.update('\0');
+  }
 
   for (const relative of files) {
     hash.update(`path:${relative}\0`);
