@@ -55,7 +55,7 @@
       "files": ["AGENTS.md", "README.md"]
     },
     "mídias": {
-      "directories": ["espaco", "originais", "produtos"],
+      "directories": ["espaco", "files", "produtos"],
       "files": ["AGENTS.md", "README.md"]
     },
     "packages": {
