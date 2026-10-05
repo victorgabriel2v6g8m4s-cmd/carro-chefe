@@ -10,27 +10,25 @@ O gargalo identificado não era gerar scripts Python isolados; era fechar o cicl
 
 A API de simulação de eventos depende do Blender iniciado com `--enable-event-simulate`.
 
-## Arquitetura V0.1
+## Arquitetura
 
 ```text
 ChatGPT / Codex / agente local
           |
           v
-tools.blender_agent.client
+MCP / CLI Blender Agent
           | JSONL TCP + token em 127.0.0.1
           v
-Blender + blender_bridge.py
-     |                         |
-     v                         v
-ações bpy                Window.event_simulate
-objetos/material         click/drag/wheel
-câmera/render/export           |
-     +------------+------------+
-                  v
-        .runtime/blender-agent/
+Blender + blender_bridge_v05_entry.py
+          |
+          +--> core V0.1–V0.4 (blender_bridge.py)
+          +--> extensão V0.5 (blender_bridge_v05.py)
+          |
+          v
+.runtime/blender-agent/
 ```
 
-O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main thread via `bpy.app.timers`.
+O socket roda em thread auxiliar; chamadas `bpy` são despachadas para a main thread via `bpy.app.timers`. O entrypoint V0.5 mantém o core estável e adiciona live status, deduplicação de history, captura focada e o plano iterativo.
 
 ## Contrato de segurança
 
@@ -40,13 +38,14 @@ O socket roda em thread auxiliar; toda chamada `bpy` é despachada para a main t
 - saídas automáticas confinadas a `.runtime/blender-agent`;
 - primeira versão não usa PyAutoGUI/AutoHotkey nem mouse global do Windows;
 - interação visual usa `bpy.types.Window.event_simulate`, confinada à janela Blender;
+- operações destrutivas de recipe/iteração usam checkpoint e/ou snapshot antes da mutação;
 - promoção de ativos para `mídias/`, `cardápio/` ou diretórios oficiais continua explícita.
 
-## Estado atual — V0.4 em validação
+## Estado atual — V0.5 em validação
 
-Implementado: protocolo local, sessão/token, CLI, inventário de cena, seleção/criação/transformação/duplicação/exclusão, mesh explícito, modifiers allowlisted, material Principled simples, câmera orbital, render PNG, checkpoint `.blend`, GLB/OBJ, controle de UI, captura VIEW_3D, múltiplos workspaces, auto-history por etapa, Sculpt assistido validado, MCP multimodal e engine V0.4 de recipes 3D JSON versionadas com variants, overrides, plano determinístico, execução step-by-step, validation views, critérios e receipts SHA-256.
+Implementado: protocolo local, sessão/token, CLI, inventário de cena, ações semânticas, UI simulada, checkpoint/render/export, captura VIEW_3D, workspaces, auto-history segmentado, Sculpt assistido, recipes 3D versionadas, irregularidade determinística, biblioteca de materiais, capturas focadas no produto e plano iterativo V0.5 com percepção, proposal, budget, aprovação opcional, snapshots, rollback, diff, critérios, receipt e MCP multimodal.
 
-Maturidade: **em desenvolvimento**.
+Maturidade: **em desenvolvimento / validação real**.
 
 ## Roadmap
 
@@ -62,8 +61,6 @@ Maturidade: **em desenvolvimento**.
 
 ### V0.2 — Feedback visual automático
 
-Objetivo: tornar o loop observação -> ação -> observação automático.
-
 - [x] bounds da maior VIEW_3D;
 - [x] `viewport.describe`;
 - [x] `viewport.capture` restrito à região 3D;
@@ -71,23 +68,21 @@ Objetivo: tornar o loop observação -> ação -> observação automático.
 - [x] receipts JSON e SHA-256;
 - [x] presets `FRONT`, `RIGHT`, `LEFT`, `TOP`, `BOTTOM`, `BACK`, `CAMERA` e `THREE_QUARTER`;
 - [x] shading previsível;
-- [x] CLI `viewport-capture-set` para frente/lateral/topo/3-4;
-- [x] smoke test real das imagens geradas no Windows 10/Blender 5.2 LTS, confirmado pelo proprietário em 29/09/2026;
-- [x] adaptador MCP stdio para entregar a captura como conteúdo de imagem ao modelo;
+- [x] CLI `viewport-capture-set`;
+- [x] smoke test real das imagens no Windows 10/Blender 5.2 LTS;
+- [x] adaptador MCP stdio para entregar imagem ao modelo;
 - [ ] smoke test da conexão MCP no ambiente local do proprietário;
-- [ ] grade comparativa referência vs captura/render.
+- [ ] grade comparativa referência vs captura/render como artefato dedicado.
 
-Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção humana.
+Critério de pronto: o agente recebe imagem atualizada após cada lote sem intervenção manual de captura.
 
 ### Log de validação V0.2
 
-- **29/09/2026 — primeiro smoke real:** bridge, descrição da viewport e preset 3/4 funcionaram; a captura foi solicitada, mas o PowerShell 5.1 corrompeu o caminho Unicode retornado pela CLI (`Área de Trabalho` -> representação inválida) e o teste reportou falsamente que o PNG não existia.
+- **29/09/2026 — primeiro smoke real:** bridge, descrição da viewport e preset 3/4 funcionaram; o PowerShell 5.1 corrompeu o caminho Unicode retornado pela CLI (`Área de Trabalho`), gerando falso negativo de arquivo ausente.
 - **Correção:** JSON da CLI passou a ser ASCII-safe com escapes Unicode; scripts PowerShell foram restringidos a ASCII e receberam teste de regressão.
-- **Segundo smoke real:** após a correção Unicode, `smoke-test.ps1 -OpenImage` foi confirmado como funcionando perfeitamente pelo proprietário; captura e receipt V0.2 estão validados na baseline Windows 10 + Blender 5.2 LTS.
+- **Segundo smoke real:** `smoke-test.ps1 -OpenImage` foi confirmado pelo proprietário; captura e receipt V0.2 estão validados.
 
 ### V0.2.1 — Contexto persistente e auto-history
-
-Objetivo: impedir perda de contexto operacional em chats e produções longas.
 
 - [x] listar workspaces/abas;
 - [x] consultar conteúdo estruturado de uma ou várias abas;
@@ -103,13 +98,11 @@ Objetivo: impedir perda de contexto operacional em chats e produções longas.
 - [x] busca por texto, stage, action, tempo, sucesso/falha, tags e anexos;
 - [x] contexto com etapa anterior/próximas e eventos recentes;
 - [x] ferramentas MCP para workspaces e auto-history;
-- [x] smoke test real de múltiplos workspaces e recuperação histórica no Windows 10/Blender 5.2 LTS, confirmado após a correção assíncrona de redraw.
+- [x] smoke real no Windows 10/Blender 5.2 LTS após sincronização assíncrona de redraw.
 
-Documento dedicado: [BLENDER_AGENT_CONTEXT.md](./BLENDER_AGENT_CONTEXT.md).
+Documento: [BLENDER_AGENT_CONTEXT.md](./BLENDER_AGENT_CONTEXT.md).
 
 ### V0.3 — Sculpt assistido
-
-Implementado e aguardando smoke test real:
 
 - [x] ativação explícita de Sculpt Mode;
 - [x] workspace Sculpting/Layout com restauração posterior;
@@ -117,27 +110,24 @@ Implementado e aguardando smoke test real:
 - [x] stroke multiponto;
 - [x] coordenadas normalizadas independentes da resolução;
 - [x] radius/strength/pressure limitados;
-- [x] modos NORMAL/INVERT/SMOOTH/ERASE com detecção da API disponível;
+- [x] modos compatíveis com a API disponível;
 - [x] checkpoint automático antes do stroke;
-- [x] captura "antes";
-- [x] captura "depois" via iteração MCP após redraw;
+- [x] captura before/after;
 - [x] auto-history de strokes e anexos;
-- [x] MCP `blender_sculpt_iteration` devolvendo before/after;
-- [x] smoke test destrutivo isolado em UV sphere temporária;
-- [x] smoke test real no Windows 10 + Blender 5.2 LTS, confirmado em 02/10/2026 com stroke, checkpoint, before/after distintos, history e restauração de workspace.
+- [x] MCP `blender_sculpt_iteration`;
+- [x] compatibilidade `UnifiedPaintSettings` e `OperatorStrokeElement` do Blender 5.2;
+- [x] smoke real no Windows 10 + Blender 5.2 LTS em 02/10/2026.
 
-Critério: corrigir a forma por strokes pequenos, produzir before/after diferentes, registrar checkpoint/history e restaurar o workspace. Documento: [BLENDER_AGENT_SCULPT.md](./BLENDER_AGENT_SCULPT.md).
+Critério atingido: stroke real, before/after distintos, checkpoint/history e workspace restaurado. Documento: [BLENDER_AGENT_SCULPT.md](./BLENDER_AGENT_SCULPT.md).
 
 ### V0.4 — Recipes 3D de produto
-
-Implementado e aguardando smoke test real:
 
 - [x] schema JSON fechado e versionado;
 - [x] metadata/id/version/tags;
 - [x] parâmetros tipados com bounds/enum;
 - [x] componentes declarativos;
 - [x] steps ordenados com actions recipe-safe;
-- [x] checkpoint antes de step;
+- [x] checkpoint antes de step destrutivo;
 - [x] captura depois de step;
 - [x] validation views;
 - [x] critérios simples de aceite;
@@ -145,23 +135,55 @@ Implementado e aguardando smoke test real:
 - [x] hashes determinísticos de recipe/plano/receipt;
 - [x] execução step-by-step pelo scheduler do Blender;
 - [x] stage próprio e eventos `recipe.start/step/capture/finish/run`;
-- [x] CLI validate/plan/run/status;
-- [x] MCP validate/plan/run/status;
+- [x] CLI e MCP validate/plan/run/status;
 - [x] recipe de exemplo da baguete base;
-- [x] smoke test isolado com cleanup;
-- [ ] smoke test real no Windows 10 + Blender 5.2 LTS;
-- [x] seeds determinísticos para irregularidade procedural com hash por vértice/eixo;
-- [x] biblioteca de materiais reutilizável/versionada por ID.
+- [x] seeds determinísticos para irregularidade procedural;
+- [x] biblioteca de materiais reutilizável/versionada por ID;
+- [x] smoke real confirmou execução, receipt, history e arquivos PNG válidos;
+- [x] bug de extensão em nomes longos corrigido com `sanitize_filename`;
+- [x] captura focada implementada: target isolado temporariamente + `view_selected`, sem apagar câmera/luz/outros objetos;
+- [ ] validar visualmente no Windows 10 que o novo capture focado não inclui o Cube/câmera/luz.
 
-Critério atual: regenerar uma base de produto a partir de recipe + variant/overrides, produzir capturas/receipt e passar critérios declarados. Documento: [BLENDER_AGENT_RECIPES.md](./BLENDER_AGENT_RECIPES.md).
+Documento: [BLENDER_AGENT_RECIPES.md](./BLENDER_AGENT_RECIPES.md).
 
 ### V0.5 — Agente 3D iterativo
 
-Planejado: planner de ações, percepção de render/viewport, comparação com fotos reais, limite de mudança por iteração, orçamento de iterações, rollback automático, relatório de diferenças e aprovação humana antes da promoção.
+Implementado e aguardando smoke real integrado:
+
+- [x] engine pura `iteration.py` para config/proposals/criteria;
+- [x] schema fechado, limites de targets/views/iterações/proposal;
+- [x] ações de proposal allowlisted e restritas aos targets;
+- [x] ciclo `observe -> propose -> apply -> evaluate`;
+- [x] budget de iterações;
+- [x] percepção estruturada de transforms/dimensões/modifiers/materiais/topologia;
+- [x] hash de geometria e state hash;
+- [x] capturas focadas por vista e target;
+- [x] MCP multimodal para observar e comparar before/after;
+- [x] snapshot em memória antes de mutação;
+- [x] checkpoint `.blend` persistente;
+- [x] rollback automático quando a action falha;
+- [x] rollback explícito por avaliação/manual;
+- [x] diff estruturado de métricas;
+- [x] critérios dimensionais, topológicos, budget, falhas, rollbacks e visual score;
+- [x] aprovação humana opcional antes de `apply`;
+- [x] auto-history `iteration.start/observe/propose/apply/evaluate/rollback/finish` sem duplicação genérica;
+- [x] receipt final SHA-256;
+- [x] CLI dedicada `iteration_cli.py`;
+- [x] MCP V0.5 dedicado `mcp_server_v05.py`;
+- [x] live `iteration.status` fora da fila da main thread;
+- [x] timeout ampliado para actions iterativas no entrypoint;
+- [x] smoke integrado partindo de recipe V0.4 e validando rollback por state hash;
+- [ ] smoke real integrado no Windows 10 + Blender 5.2 LTS;
+- [ ] validar conexão MCP local V0.5 no cliente do proprietário;
+- [ ] endurecer rollback de sessão que permaneça em Sculpt Mode antes de substituir o mesh; checkpoint `.blend` continua como recuperação persistente nesse caso.
+
+O planner é o agente externo: o bridge não executa código livre nem toma decisões irrestritas. A comparação visual é feita pelo modelo/humano sobre captures e retorna `visual_score`/notas para critérios estruturados.
+
+Documento: [BLENDER_AGENT_ITERATIVE.md](./BLENDER_AGENT_ITERATIVE.md).
 
 ### V1.0 — Ferramenta operacional
 
-Critérios: smoke tests Windows documentados, addon/painel instalável, protocolo estável, logs estruturados, recuperação de bridge, versionamento de recipes, integração completa com health, guia de agentes e regressão em Blender LTS.
+Critérios: smokes Windows documentados, addon/painel instalável, protocolo estável, logs estruturados, recuperação do bridge, versionamento de recipes, integração completa com health, guia de agentes e regressão em Blender LTS.
 
 ## Roadmap específico da baguete
 
@@ -173,7 +195,7 @@ Critérios: smoke tests Windows documentados, addon/painel instalável, protocol
 6. ajustar crosta/miolo;
 7. adicionar componentes do lanche;
 8. renderizar frente/lateral/topo/3-4;
-9. comparar com fotos reais;
+9. comparar com fotos reais no loop multimodal;
 10. usar Sculpt apenas onde a geometria semântica não bastar;
 11. checkpoint por marco;
 12. exportar GLB e render publicitário;
@@ -188,17 +210,19 @@ Critérios: smoke tests Windows documentados, addon/painel instalável, protocol
 - falhas de contexto de UI;
 - intervenções humanas;
 - reprodutibilidade de recipe;
-- desvio dimensional contra produto real.
+- desvio dimensional contra produto real;
+- iterações até critérios passarem;
+- visual score por view e versão.
 
 ## Custo relativo
 
-Processamento: **médio**, podendo chegar a **alto** em render/sculpt. Impacto Work: **baixo/médio**, dependente do número de iterações. Blender não adiciona licença paga. Checkpoints/renders podem crescer e devem permanecer em runtime até promoção. Não atribuir tokens/créditos oficiais quando a plataforma não os expõe.
+Processamento: **médio**, podendo chegar a **alto** em render/sculpt e loops com muitas views. Impacto Work: **baixo/médio**, dependente do número de iterações. Blender não adiciona licença paga. Checkpoints/renders/captures podem crescer e permanecem em runtime até promoção. Não atribuir tokens/créditos oficiais quando a plataforma não os expõe.
 
 ## Decisões
 
 ### ADR-BLENDER-001 — eventos internos em vez de mouse global
 
-Usar `bpy.types.Window.event_simulate` como primeira opção para gestos. Motivo: resolve clique/drag sem conceder automação do desktop inteiro. PyAutoGUI/AutoHotkey global ficam fora da V0.1 por superfície de risco e fragilidade de foco.
+Usar `bpy.types.Window.event_simulate` como primeira opção para gestos. PyAutoGUI/AutoHotkey global ficam fora por superfície de risco e fragilidade de foco.
 
 ### ADR-BLENDER-002 — actions em vez de Python arbitrário
 
@@ -210,8 +234,16 @@ Outputs automáticos ficam em `.runtime/blender-agent` para separar experimento 
 
 ### ADR-BLENDER-004 — MCP stdio como fronteira do agente
 
-O bridge TCP continua privado em loopback e com protocolo estreito. Agentes se conectam por um servidor MCP stdio separado, que reaproveita a allowlist do bridge e pode devolver `Image` ao modelo. Isso evita abrir uma API HTTP pública do Blender e separa claramente controle local, transporte do agente e futura conexão por túnel privado.
+O bridge TCP continua privado em loopback. Agentes se conectam por servidor MCP stdio que reaproveita a allowlist e devolve imagens ao modelo.
+
+### ADR-BLENDER-005 — V0.5 como extensão do core validado
+
+`blender_bridge_v05.py` importa e estende o core V0.1–V0.4 em vez de duplicar 100% da implementação. O entrypoint V0.5 instala as extensões, deduplica history e inicia o servidor. Isso reduz regressão nas capacidades já validadas.
+
+### ADR-BLENDER-006 — isolamento visual temporário
+
+Captures de recipe/iteração usam `hide_set` temporário e `view_selected`; objetos externos ao target são restaurados após a captura. A validação visual não deve apagar conteúdo da cena do usuário.
 
 ## Pendências conhecidas
 
-Acompanhar o item correspondente em `docs/ferramentas/PENDENCIAS.md` e o bloqueio de validação real em `docs/ferramentas/BLOQUEIOS.md`.
+Acompanhar `docs/ferramentas/PENDENCIAS.md`. A promoção V0.5 depende do smoke real integrado e, separadamente, da validação do cliente MCP local.
