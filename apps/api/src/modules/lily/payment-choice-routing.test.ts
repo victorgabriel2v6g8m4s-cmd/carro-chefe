@@ -1,6 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { configureLilySqlite, lilyPrisma } from "@lily-acai/database";
-import { ApiError } from "../../lib/errors";
 import { createLilyPixChoice } from "./payment-choice-routing";
 
 beforeAll(async () => {
@@ -75,7 +74,7 @@ describe("fallback Pix Mercado Pago", () => {
       quote,
       idempotencyKey: "payment-fallback-idempotency-0002",
       chain: ["mercado_pago", "manual"]
-    })).rejects.toMatchObject<ApiError>({
+    })).rejects.toMatchObject({
       statusCode: 502,
       details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", provider: "mercado_pago" }
     });
