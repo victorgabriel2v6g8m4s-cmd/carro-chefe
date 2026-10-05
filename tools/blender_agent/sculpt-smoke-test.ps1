@@ -8,6 +8,7 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\.." )).Path
 $SessionFile = Join-Path $RepoRoot ".runtime\blender-agent\session\bridge.json"
 $CompatFile = Join-Path $PSScriptRoot "runtime_compat.py"
 $EntryFile = Join-Path $PSScriptRoot "blender_bridge_v05_entry.py"
+$ExpectedRuntimeProfile = "v05-runtime-compat-20261005.2"
 Set-Location $RepoRoot
 
 function Invoke-JsonCommand {
@@ -96,6 +97,19 @@ try {
     Assert-BridgeRuntimeCurrent
     $status = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "status")
     if (-not $status.ok) { throw "Bridge unavailable." }
+    if ($status.result.runtime_profile -ne $ExpectedRuntimeProfile) {
+        throw @"
+The running Blender bridge is not using the current V0.5 compatibility runtime.
+Expected runtime profile: $ExpectedRuntimeProfile
+Observed runtime profile: $($status.result.runtime_profile)
+
+Save/close the current Blender window, then run:
+git pull --ff-only origin feature/blender-agent-bridge
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1
+
+Only after the new bridge reports ready, rerun this Sculpt smoke test.
+"@
+    }
     $previousStageId = $status.result.active_stage_id
 
     Write-Host "2/7 create history stage"
