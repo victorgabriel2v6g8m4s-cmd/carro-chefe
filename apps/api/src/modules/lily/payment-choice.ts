@@ -93,21 +93,22 @@ async function persistChoicePayment(input: {
   const amountMismatch = input.providerResult.status === "approved" && !exactApproval;
   const storedStatus = amountMismatch ? "pending" : input.providerResult.status;
   const now = new Date();
+  const orchestration = {
+    version: 1,
+    selectedMethod: input.body.method,
+    baseAmountCents: input.quote.baseAmountCents,
+    eligibleAmountCents: input.quote.eligibleAmountCents,
+    deliveryFeeCents: input.quote.deliveryFeeCents,
+    discountCents: input.quote.discountCents,
+    amountCents: input.quote.amountCents,
+    rule: input.quote.rule,
+    fallbackChain: input.availability.providers,
+    attemptedProviders: input.attemptedProviders,
+    actualProvider: input.provider
+  };
   const providerDataJson = stringifyLilyPaymentProviderData({
     ...(input.providerResult.providerData ?? {}),
-    orchestration: {
-      version: 1,
-      selectedMethod: input.body.method,
-      baseAmountCents: input.quote.baseAmountCents,
-      eligibleAmountCents: input.quote.eligibleAmountCents,
-      deliveryFeeCents: input.quote.deliveryFeeCents,
-      discountCents: input.quote.discountCents,
-      amountCents: input.quote.amountCents,
-      rule: input.quote.rule,
-      fallbackChain: input.availability.providers,
-      attemptedProviders: input.attemptedProviders,
-      actualProvider: input.provider
-    }
+    orchestration
   });
 
   return lilyPrisma.$transaction(async (tx) => {
@@ -138,14 +139,7 @@ async function persistChoicePayment(input: {
         eventType: "payment.created",
         fromStatus: null,
         toStatus: storedStatus,
-        payloadJson: safeLilyPaymentEventJson({
-          method: input.body.method,
-          provider: input.provider,
-          baseAmountCents: input.quote.baseAmountCents,
-          discountCents: input.quote.discountCents,
-          amountCents: input.quote.amountCents,
-          fallbackChain: input.availability.providers
-        })
+        payloadJson: safeLilyPaymentEventJson({ orchestration })
       }
     });
 
