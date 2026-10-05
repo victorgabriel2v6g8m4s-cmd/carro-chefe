@@ -8,7 +8,7 @@ import {
   LILY_BUILD_BUDGET,
   evaluateLilyBuildBudget,
   measureLilyBuildAssets
-} from "./lily-build-budget.mjs";
+} from "./index.mjs";
 
 test("budget mantém folga controlada acima da baseline real validada", () => {
   assert.ok(LILY_BUILD_BUDGET.jsRawBytes > LILY_BUILD_BASELINE.jsRawBytes);
