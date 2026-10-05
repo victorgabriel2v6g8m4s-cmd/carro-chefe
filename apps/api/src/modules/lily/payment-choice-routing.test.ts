@@ -1,10 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { configureLilySqlite, lilyPrisma } from "@lily-acai/database";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createLilyPixChoice } from "./payment-choice-routing";
-
-beforeAll(async () => {
-  await configureLilySqlite();
-});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -33,11 +28,6 @@ describe("fallback Pix Mercado Pago", () => {
   it("cai para Pix manual depois de recusa determinística do Mercado Pago", async () => {
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-access";
     process.env.MERCADO_PAGO_API_BASE_URL = "http://mercado-pago.test";
-    await lilyPrisma.lilyOperationalSettings.upsert({
-      where: { id: "default" },
-      create: { id: "default", manualPixEnabled: true, manualPixInstructions: "PIX MANUAL CONTINGÊNCIA" },
-      update: { manualPixEnabled: true, manualPixInstructions: "PIX MANUAL CONTINGÊNCIA" }
-    });
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ message: "rejected" }), {
       status: 400,
       headers: { "content-type": "application/json" }
@@ -49,7 +39,8 @@ describe("fallback Pix Mercado Pago", () => {
       request: { payer: { email: "cliente@example.com" } },
       quote,
       idempotencyKey: "payment-fallback-idempotency-0001",
-      chain: ["mercado_pago", "manual"]
+      chain: ["mercado_pago", "manual"],
+      manualInstructions: "PIX MANUAL CONTINGÊNCIA"
     });
 
     expect(created.provider).toBe("manual");
@@ -60,11 +51,6 @@ describe("fallback Pix Mercado Pago", () => {
   it("não cria fallback manual quando a tentativa no Mercado Pago fica ambígua", async () => {
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-access";
     process.env.MERCADO_PAGO_API_BASE_URL = "http://mercado-pago.test";
-    await lilyPrisma.lilyOperationalSettings.upsert({
-      where: { id: "default" },
-      create: { id: "default", manualPixEnabled: true, manualPixInstructions: "PIX MANUAL CONTINGÊNCIA" },
-      update: { manualPixEnabled: true, manualPixInstructions: "PIX MANUAL CONTINGÊNCIA" }
-    });
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("timeout"); }));
 
     await expect(createLilyPixChoice({
@@ -73,7 +59,8 @@ describe("fallback Pix Mercado Pago", () => {
       request: { payer: { email: "cliente@example.com" } },
       quote,
       idempotencyKey: "payment-fallback-idempotency-0002",
-      chain: ["mercado_pago", "manual"]
+      chain: ["mercado_pago", "manual"],
+      manualInstructions: "PIX MANUAL CONTINGÊNCIA"
     })).rejects.toMatchObject({
       statusCode: 502,
       details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", provider: "mercado_pago" }
