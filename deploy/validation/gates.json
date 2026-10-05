@@ -78,7 +78,8 @@
         "tools/lily-build-budget.mjs",
         "package.json",
         "package-lock.json"
-      ]
+      ],
+      "envInputs": ["VITE_GA4_ID", "VITE_CLARITY_ID"]
     },
     "tool-health": {
       "description": "Saúde das ferramentas próprias cadastradas",
@@ -99,7 +100,8 @@
         "planejamento",
         "package.json",
         "package-lock.json"
-      ]
+      ],
+      "envInputs": ["VITE_GA4_ID", "VITE_CLARITY_ID"]
     }
   }
 }
