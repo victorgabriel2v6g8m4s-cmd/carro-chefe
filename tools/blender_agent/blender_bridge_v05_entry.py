@@ -17,6 +17,13 @@ if _REPO_ROOT_TEXT not in sys.path:
 # V0.1-V0.4 core dispatch/capture functions without starting a second server.
 from tools.blender_agent import blender_bridge as core
 from tools.blender_agent import blender_bridge_v05 as v05
+from tools.blender_agent import runtime_compat
+
+
+# Install compatibility guards after both modules exist but before the bridge
+# starts accepting requests. This keeps generated artifacts within a complete
+# Windows path budget and replaces the regressed Sculpt prepare runner.
+runtime_compat.install(core, v05)
 
 
 _CORE_RECORD_TASK_HISTORY = core._record_task_history
