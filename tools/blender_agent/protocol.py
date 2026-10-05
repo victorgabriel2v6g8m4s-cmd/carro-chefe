@@ -61,6 +61,16 @@ ALLOWED_ACTIONS = {
     "recipe.plan",
     "recipe.run",
     "recipe.status",
+    "iteration.validate",
+    "iteration.start",
+    "iteration.status",
+    "iteration.context",
+    "iteration.observe",
+    "iteration.propose",
+    "iteration.apply",
+    "iteration.evaluate",
+    "iteration.rollback",
+    "iteration.finish",
 }
 
 _ID_RE = re.compile(r"^[A-Za-z0-9._:-]{1,120}$")
