@@ -44,6 +44,26 @@ function Show-StartupLogTail {
     }
 }
 
+function Test-StartupPythonFailure {
+    param([string]$StderrPath)
+
+    if (-not $StderrPath -or -not (Test-Path -LiteralPath $StderrPath)) {
+        return $false
+    }
+
+    $text = Get-Content -LiteralPath $StderrPath -Raw -ErrorAction SilentlyContinue
+    if (-not $text) {
+        return $false
+    }
+
+    return (
+        $text.Contains("Traceback (most recent call last):") -or
+        $text.Contains("ModuleNotFoundError:") -or
+        $text.Contains("ImportError:") -or
+        $text.Contains("SyntaxError:")
+    )
+}
+
 if ($WaitForBridgeSeconds -gt 0) {
     if ($PSBoundParameters.ContainsKey("MaxRetry")) {
         Write-Warning "-WaitForBridgeSeconds esta obsoleto e foi ignorado porque -MaxRetry foi informado."
@@ -172,6 +192,11 @@ for ($attempt = 1; $attempt -le $MaxRetry; $attempt++) {
         if ($process.HasExited) {
             Show-StartupLogTail -StdoutPath $StdoutLog -StderrPath $StderrLog
             throw "O Blender encerrou antes de criar a sessao do bridge (exit $($process.ExitCode)). Consulte os logs de startup acima."
+        }
+
+        if (Test-StartupPythonFailure -StderrPath $StderrLog) {
+            Show-StartupLogTail -StdoutPath $StdoutLog -StderrPath $StderrLog
+            throw "O script Python do bridge falhou durante o startup. Corrija o traceback acima antes de aumentar MaxRetry."
         }
 
         Start-Sleep -Milliseconds 250
