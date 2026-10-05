@@ -9,7 +9,11 @@ const html = readFileSync(resolve(sourceDirectory, "../index.html"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
-const paymentSource = readFileSync(resolve(sourceDirectory, "features/payments/PaymentPage.tsx"), "utf8");
+const paymentSource = [
+  "features/payments/PaymentPage.tsx",
+  "features/payments/PaymentChoicePage.tsx",
+  "features/payments/MercadoPagoCardChoiceBrick.tsx"
+].map((path) => readFileSync(resolve(sourceDirectory, path), "utf8")).join("\n");
 const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPage.tsx"), "utf8");
 const courierSource = readFileSync(resolve(sourceDirectory, "features/logistics/CourierPage.tsx"), "utf8");
 const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/account/AccountPages.tsx"), "utf8");
@@ -128,13 +132,18 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(paymentSource).not.toMatch(/name=["'](?:card_number|security_code|cvv)["']/i);
   });
 
+  it("separa crédito e débito explicitamente no Brick", () => {
+    expect(paymentSource).toContain('props.method === "debit_card"');
+    expect(paymentSource).toContain('["credit_card", "prepaid_card"]');
+    expect(paymentSource).toContain('["debit_card", "prepaid_card"]');
+  });
+
   it("exibe QR Pix e não expõe credenciais privadas no frontend", () => {
     expect(paymentSource).toContain("providerData?.qrCodeBase64");
     expect(paymentSource).toContain("providerData?.qrCode");
     expect(paymentSource).not.toContain("MERCADO_PAGO_ACCESS_TOKEN");
     expect(paymentSource).not.toContain("MERCADO_PAGO_WEBHOOK_SECRET");
   });
-
 
   it("mantém painel do entregador com coleta e entrega confirmadas por código", () => {
     expect(mainSource).toContain('path="/entregas"');
