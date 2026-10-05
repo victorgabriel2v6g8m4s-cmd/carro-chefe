@@ -12,6 +12,7 @@ const profileSource = readFileSync(resolve(sourceDirectory, "features/account/Pr
 const paymentSource = [
   "features/payments/PaymentPage.tsx",
   "features/payments/PaymentChoicePage.tsx",
+  "features/payments/PaymentChoiceComponents.tsx",
   "features/payments/MercadoPagoCardChoiceBrick.tsx"
 ].map((path) => readFileSync(resolve(sourceDirectory, path), "utf8")).join("\n");
 const kitchenSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPage.tsx"), "utf8");
