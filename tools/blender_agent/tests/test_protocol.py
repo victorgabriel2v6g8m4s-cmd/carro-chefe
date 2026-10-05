@@ -56,6 +56,16 @@ class ProtocolTests(unittest.TestCase):
             "recipe.status",
             "object.irregularize",
             "material.preset",
+            "iteration.validate",
+            "iteration.start",
+            "iteration.status",
+            "iteration.context",
+            "iteration.observe",
+            "iteration.propose",
+            "iteration.apply",
+            "iteration.evaluate",
+            "iteration.rollback",
+            "iteration.finish",
         ):
             request = normalize_request({
                 "version": 1,
