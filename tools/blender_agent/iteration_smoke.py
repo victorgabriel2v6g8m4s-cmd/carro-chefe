@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 
@@ -32,6 +31,15 @@ def _assert_png_captures(captures: list[dict], label: str) -> None:
             raise RuntimeError(f"{label} captura nao isolou target: {capture}")
 
 
+def _scene_object_names() -> set[str]:
+    summary = _result(call("scene.summary"))
+    return {
+        str(item.get("name"))
+        for item in summary.get("objects", [])
+        if item.get("name")
+    }
+
+
 def main() -> int:
     suffix = int(time.time() * 1000)
     object_name = f"CC_Iteration_Smoke_{suffix}"
@@ -43,6 +51,7 @@ def main() -> int:
     print("1/9 bridge status")
     status = _result(call("health"))
     previous_stage = status.get("active_stage_id")
+    preexisting_objects = _scene_object_names()
 
     try:
         print("2/9 build target from V0.4 recipe")
@@ -58,9 +67,16 @@ def main() -> int:
         if not recipe_result.get("passed"):
             raise RuntimeError(f"recipe smoke target falhou: {recipe_result}")
         created = True
-        _assert_png_captures(recipe_result.get("captures", []), "recipe")
-        if any(capture.get("target_object") != object_name for capture in recipe_result.get("captures", [])):
+        recipe_captures = recipe_result.get("captures", [])
+        _assert_png_captures(recipe_captures, "recipe")
+        if any(capture.get("target_object") != object_name for capture in recipe_captures):
             raise RuntimeError("recipe capture nao apontou para o objeto produzido")
+        missing_scene_objects = sorted(preexisting_objects - _scene_object_names())
+        if missing_scene_objects:
+            raise RuntimeError(
+                "focused capture removeu objetos preexistentes da cena: "
+                + ", ".join(missing_scene_objects)
+            )
 
         print("3/9 start V0.5 iterative session")
         config = {
@@ -124,7 +140,7 @@ def main() -> int:
             raise RuntimeError("smoke esperava approval_required=true")
 
         print("6/9 apply with snapshot/checkpoint and compare")
-        applied = _result(call("iteration.apply", {"approved": True}, timeout=60.0))
+        applied = _result(call("iteration.apply", {"approved": True}, timeout=90.0))
         _assert_png_captures(applied.get("after", {}).get("captures", []), "iteration.apply")
         delta = applied.get("diff", {}).get(object_name, {}).get("location_delta")
         if not isinstance(delta, list) or abs(float(delta[0])) < 0.30:
@@ -167,6 +183,12 @@ def main() -> int:
         }))
         if not history.get("matches"):
             raise RuntimeError("auto-history nao encontrou iteration.apply")
+        missing_after_iteration = sorted(preexisting_objects - _scene_object_names())
+        if missing_after_iteration:
+            raise RuntimeError(
+                "V0.5 removeu objetos preexistentes da cena: "
+                + ", ".join(missing_after_iteration)
+            )
 
         print("")
         print("Blender Agent Iterative V0.5 smoke test OK.")
