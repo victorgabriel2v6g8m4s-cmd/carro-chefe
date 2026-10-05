@@ -1,0 +1,11 @@
+{
+  "action": "object.transform",
+  "params": {
+    "name": "CC_Baguette_Base",
+    "location": [0.1, 0.0, 0.0]
+  },
+  "rationale": "Exemplo de ajuste pequeno e auditavel para validar o ciclo V0.5.",
+  "expected_effect": "Deslocar a baguete levemente no eixo X sem alterar a geometria.",
+  "confidence": 0.9,
+  "tags": ["example", "transform"]
+}
