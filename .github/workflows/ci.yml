@@ -175,9 +175,9 @@ jobs:
         shell: pwsh
         run: python -m pip install --disable-pip-version-check -r tools/blender_agent/requirements-mcp.txt
 
-      - name: Import Blender Agent MCP adapter
+      - name: Import Blender Agent MCP V0.5 adapter
         shell: pwsh
-        run: python -c "import tools.blender_agent.mcp_server"
+        run: python -c "import tools.blender_agent.mcp_server_v05"
 
       - name: Parse Blender Agent PowerShell scripts
         if: runner.os == 'Windows'
@@ -189,7 +189,8 @@ jobs:
             "tools/blender_agent/smoke-test.ps1",
             "tools/blender_agent/context-smoke-test.ps1",
             "tools/blender_agent/sculpt-smoke-test.ps1",
-            "tools/blender_agent/recipe-smoke-test.ps1"
+            "tools/blender_agent/recipe-smoke-test.ps1",
+            "tools/blender_agent/iteration-smoke-test.ps1"
           )) {
             $tokens = $null
             $errors = $null
@@ -215,8 +216,8 @@ jobs:
           New-Item -ItemType File -Force -Path $fakeExe | Out-Null
           $output = & powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -BlenderExe $fakeExe -DryRun | Out-String
           Write-Host $output
-          if ($output -notmatch 'Args:\s+--enable-event-simulate --python ".+blender_bridge\.py"') {
-            throw "Launcher não preservou aspas no caminho do bridge."
+          if ($output -notmatch 'Args:\s+--enable-event-simulate --python ".+blender_bridge_v05\.py"') {
+            throw "Launcher não preservou aspas no caminho do bridge V0.5."
           }
 
   windows-supervisor:
