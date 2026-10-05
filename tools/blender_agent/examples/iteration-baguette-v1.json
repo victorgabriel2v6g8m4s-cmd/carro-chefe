@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "label": "baguette-review",
+  "target_objects": ["CC_Baguette_Base"],
+  "max_iterations": 6,
+  "views": [
+    {
+      "name": "front",
+      "preset": "FRONT",
+      "shading": "MATERIAL",
+      "target_object": "CC_Baguette_Base",
+      "filename": "iter-front.png"
+    },
+    {
+      "name": "right",
+      "preset": "RIGHT",
+      "shading": "MATERIAL",
+      "target_object": "CC_Baguette_Base",
+      "filename": "iter-right.png"
+    },
+    {
+      "name": "top",
+      "preset": "TOP",
+      "shading": "MATERIAL",
+      "target_object": "CC_Baguette_Base",
+      "filename": "iter-top.png"
+    },
+    {
+      "name": "three-quarter",
+      "preset": "THREE_QUARTER",
+      "shading": "MATERIAL",
+      "target_object": "CC_Baguette_Base",
+      "filename": "iter-three-quarter.png"
+    }
+  ],
+  "criteria": {
+    "dimension_ranges": {
+      "CC_Baguette_Base": {
+        "x": [5.0, 10.0],
+        "y": [1.0, 4.0],
+        "z": [0.5, 3.0]
+      }
+    },
+    "vertex_ranges": {
+      "CC_Baguette_Base": [8, 100000]
+    },
+    "min_visual_score": 0.8,
+    "require_visual_review": true,
+    "max_failed_actions": 0,
+    "max_rollbacks": 3
+  },
+  "require_human_approval": true,
+  "create_stage": true,
+  "restore_stage": true,
+  "restore_workspace": true,
+  "tags": ["baguette", "review", "v0.5"]
+}

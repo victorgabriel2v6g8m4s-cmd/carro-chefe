@@ -142,6 +142,92 @@ jobs:
         shell: pwsh
         run: python -m tools.excel_recipe.probe_v3b_real
 
+  blender-agent-core:
+    name: Blender Agent Core / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify Python runtime
+        shell: pwsh
+        run: python --version
+
+      - name: Test Blender Agent protocol and client
+        shell: pwsh
+        run: python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
+
+      - name: Validate Blender Agent example recipe
+        shell: pwsh
+        run: python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
+
+      - name: Plan Blender Agent example recipe variant
+        shell: pwsh
+        run: python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=CI_Baguette
+
+      - name: Validate Blender Agent V0.5 iteration example
+        shell: pwsh
+        run: python -m tools.blender_agent.iteration_cli validate tools/blender_agent/examples/iteration-baguette-v1.json
+
+      - name: Validate Blender Agent V0.5 proposal example
+        shell: pwsh
+        run: python -m tools.blender_agent.iteration_cli validate-proposal tools/blender_agent/examples/iteration-proposal-transform-v1.json --target CC_Baguette_Base
+
+      - name: Install pinned MCP SDK
+        shell: pwsh
+        run: python -m pip install --disable-pip-version-check -r tools/blender_agent/requirements-mcp.txt
+
+      - name: Import Blender Agent MCP V0.5 adapter
+        shell: pwsh
+        run: python -c "import tools.blender_agent.mcp_server_v05"
+
+      - name: Parse Blender Agent PowerShell scripts
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          foreach ($script in @(
+            "tools/blender_agent/start.ps1",
+            "tools/blender_agent/install-mcp.ps1",
+            "tools/blender_agent/smoke-test.ps1",
+            "tools/blender_agent/context-smoke-test.ps1",
+            "tools/blender_agent/sculpt-smoke-test.ps1",
+            "tools/blender_agent/recipe-smoke-test.ps1",
+            "tools/blender_agent/iteration-smoke-test.ps1"
+          )) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $script),
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              Write-Host "Erros em $script"
+              $errors | ForEach-Object { Write-Error $_.Message }
+              exit 1
+            }
+          }
+
+      - name: Regress Windows path quoting with spaces
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $fakeDir = Join-Path $PWD ".runtime\Fake Blender Path"
+          New-Item -ItemType Directory -Force -Path $fakeDir | Out-Null
+          $fakeExe = Join-Path $fakeDir "blender.exe"
+          New-Item -ItemType File -Force -Path $fakeExe | Out-Null
+          $output = & powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -BlenderExe $fakeExe -DryRun | Out-String
+          Write-Host $output
+          if ($output -notmatch 'Args:\s+--enable-event-simulate --python ".+blender_bridge_v05_entry\.py"') {
+            throw "Launcher não preservou aspas no caminho do entrypoint V0.5."
+          }
+
   windows-supervisor:
     name: Windows Supervisor
     runs-on: windows-latest

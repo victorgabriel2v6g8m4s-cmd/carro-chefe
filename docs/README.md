@@ -18,6 +18,12 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 12. [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md) — procedimento obrigatório para manutenção de planilhas por receitas JSON.
 13. [Totem de autoatendimento](./tecnologia/TOTEM_AUTOATENDIMENTO.md) — hardware, offline-first, contingência e orçamento.
 14. [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md) — regras aprovadas para cardápio físico/digital, QR por mesa, personalização, totem e origem de pedidos.
+15. [Blender Agent](./tecnologia/BLENDER_AGENT.md) — bridge local, eventos de UI confinados ao Blender e roadmap do agente 3D.
+16. [Contexto persistente do Blender Agent](./tecnologia/BLENDER_AGENT_CONTEXT.md) — consulta/captura de workspaces, auto-history segmentado, busca e retenção por etapa.
+17. [Sculpt assistido do Blender Agent](./tecnologia/BLENDER_AGENT_SCULPT.md) — strokes seguros, checkpoints, before/after e integração MCP.
+18. [Recipes 3D do Blender Agent](./tecnologia/BLENDER_AGENT_RECIPES.md) — recipes JSON versionadas, variants, execução step-by-step, critérios e receipts.
+19. [Loop iterativo do Blender Agent](./tecnologia/BLENDER_AGENT_ITERATIVE.md) — percepção multimodal, proposals, budget, snapshots, rollback, critérios e aprovação humana da V0.5.
+20. [Manual de agentes do Blender Agent](./governanca/BLENDER_AGENT_AGENT_GUIDE.md) — procedimento operacional obrigatório para agentes que controlam, refinam ou retomam produções 3D.
 
 ## Organização
 
@@ -46,6 +52,11 @@ docs/
 │   └── REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md
 ├── tecnologia/
 │   ├── ARQUITETURA_TECNICA_V2.md
+│   ├── BLENDER_AGENT.md
+│   ├── BLENDER_AGENT_CONTEXT.md
+│   ├── BLENDER_AGENT_SCULPT.md
+│   ├── BLENDER_AGENT_RECIPES.md
+│   ├── BLENDER_AGENT_ITERATIVE.md
 │   ├── ATRIBUICAO_OMNICANAL.md
 │   ├── DADOS_ERP.md
 │   ├── EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md
@@ -63,6 +74,7 @@ docs/
 │   └── OPERACAO.md
 └── governanca/
     ├── AGENTES.md
+    ├── BLENDER_AGENT_AGENT_GUIDE.md
     ├── EXCEL_RECIPE_AGENT_GUIDE.md
     ├── GITHUB_E_AGENTES.md
     └── RISCOS_DECISOES.md
@@ -75,9 +87,9 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Radar social de Campo Grande](./negocio/REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md), [Funil social de pré-lançamento](./negocio/FUNIL_SOCIAL_PRE_LANCAMENTO.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Social Growth Engine](./tecnologia/SOCIAL_GROWTH_ENGINE.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Blender Agent](./tecnologia/BLENDER_AGENT.md), [Contexto do Blender Agent](./tecnologia/BLENDER_AGENT_CONTEXT.md), [Sculpt do Blender Agent](./tecnologia/BLENDER_AGENT_SCULPT.md), [Recipes 3D do Blender Agent](./tecnologia/BLENDER_AGENT_RECIPES.md), [Loop iterativo V0.5](./tecnologia/BLENDER_AGENT_ITERATIVE.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Social Growth Engine](./tecnologia/SOCIAL_GROWTH_ENGINE.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores, equipe e contingência | [Compras](./operacao/COMPRAS.md), [Modelo de declaração de vínculo empregatício](./operacao/DECLARACAO_VINCULO_EMPREGATICIO_MODELO.md), [Operação e qualidade](./operacao/OPERACAO.md) |
-| **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
+| **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Manual Blender Agent](./governanca/BLENDER_AGENT_AGENT_GUIDE.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 
 ## Convenções
 

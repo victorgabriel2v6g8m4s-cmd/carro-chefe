@@ -1,0 +1,441 @@
+# Blender Agent Bridge
+
+Integração local do Carro Chefe com Blender para permitir que agentes controlem modelagem 3D sem depender de Computer Use do sistema operacional.
+
+A ferramenta combina duas camadas: ações semânticas via Blender Python API e eventos de interface simulados pelo próprio Blender para clique, arrasto, middle-mouse e wheel quando a modelagem exigir interação parecida com mouse. A camada de UI usa `bpy.types.Window.event_simulate`; não existe automação genérica do mouse do Windows nesta versão.
+
+## Requisitos
+
+- Windows 10 ou superior para o fluxo principal do projeto;
+- Blender 5.2 LTS é a baseline validada para o fluxo completo; versões anteriores podem não possuir `Window.screenshot` usado na captura automática do viewport;
+- Python do sistema para o cliente CLI;
+- Blender iniciado com `--enable-event-simulate` para ações `ui.*`.
+- O core de protocolo/CLI é testável sem Blender em Linux, macOS e Windows.
+
+## Início rápido no Windows
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1
+```
+
+O launcher usa tentativas em vez de um timeout único. O padrão é `9` tentativas de até `10` segundos cada:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -MaxRetry 9 -RetrySeconds 10
+```
+
+`-WaitForBridgeSeconds` ainda é aceito por compatibilidade, mas é convertido para tentativas quando `-MaxRetry` não é informado.
+
+Em cada tentativa o launcher confirma que o processo do Blender continua vivo e que `.runtime/blender-agent/session/bridge.json` pertence ao PID recém-aberto e contém `port` e `token`. O stdout/stderr de startup ficam em `.runtime/blender-agent/startup-logs/`; se o bridge não subir, o launcher imprime as últimas linhas para distinguir máquina lenta de erro real no bootstrap.
+
+Se o Blender não estiver no PATH, passe `-BlenderExe`. Para abrir arquivo existente, passe `-BlendFile`. O bridge grava a sessão efêmera em `.runtime/blender-agent/session/bridge.json`; esse arquivo contém token local e nunca deve ser versionado.
+
+## Cliente
+
+```powershell
+python -m tools.blender_agent.client status
+python -m tools.blender_agent.client call scene.summary
+python -m tools.blender_agent.client object-add-primitive cube --name Baguete_Base --scale 3.8 1.05 0.65
+python -m tools.blender_agent.client object-delete Baguete_Base
+```
+
+Há um bootstrap de baguete em `examples/baguette_bootstrap.jsonl`.
+
+## Mouse/gestos dentro do Blender
+
+Primeiro consulte `python -m tools.blender_agent.client ui-window`. Depois use:
+
+```powershell
+python -m tools.blender_agent.client ui-click 640 420 --button left
+python -m tools.blender_agent.client ui-drag 620 430 760 360 --button middle
+python -m tools.blender_agent.client ui-drag 620 430 700 430 --button middle --shift
+python -m tools.blender_agent.client ui-wheel 3
+```
+
+As coordenadas são relativas à janela Blender. O bridge rejeita coordenadas fora dos limites reportados por `ui.window`. O launcher/bridge também tenta fechar automaticamente o splash inicial com `Esc` após a inicialização.
+
+## Actions disponíveis
+
+| Action | Finalidade |
+|---|---|
+| `health` | status do bridge/Blender |
+| `scene.summary` / `object.list` | inventário da cena |
+| `object.select` | seleção por nome |
+| `object.add_primitive` / `object.add_mesh` | criação de geometria |
+| `object.transform` | localização, escala e rotação |
+| `object.duplicate` / `object.delete` | duplicação e remoção |
+| `object.shade_smooth` | smooth shading |
+| `object.irregularize` | irregularidade geométrica determinística por seed |
+| `modifier.add` | modifiers allowlisted |
+| `material.simple` | Principled BSDF básico |
+| `material.preset` | aplica preset da biblioteca versionada de materiais |
+| `camera.orbit` | câmera determinística |
+| `render.still` | PNG em runtime |
+| `checkpoint.create` | cópia `.blend` em runtime |
+| `export.glb` / `export.obj` | export controlado |
+| `ui.window` / `ui.view3d` / `ui.event` | janela, bounds da viewport e evento allowlisted |
+| `ui.dismiss_modal` | envia `Esc` para fechar splash/modal atual |
+| `ui.orbit` | orbita automaticamente a maior VIEW_3D |
+| `ui.click` / `ui.drag` / `ui.wheel` | interação estilo mouse confinada ao Blender |
+| `viewport.describe` | estado da VIEW_3D, shading, perspectiva e seleção |
+| `viewport.set_view` / `viewport.frame_all` | presets de vista e enquadramento |
+| `viewport.set_shading` | wireframe/solid/material/rendered |
+| `viewport.capture` | captura PNG somente da região 3D + receipt JSON/SHA-256 |
+| `workspace.list` / `workspace.describe` | lista e consulta conteúdo de abas/workspaces |
+| `workspace.capture_set` | captura múltiplos workspaces/áreas e gera manifesto |
+| `history.stage.create/list/activate/describe` | ciclo de vida e contexto das etapas de produção |
+| `history.search` | pesquisa por texto, etapa, action, tempo, status, tags e anexos |
+| `history.note` | nota explícita na etapa ativa |
+| `sculpt.status` | estado do Sculpt/brush/objeto/viewport |
+| `sculpt.prepare` | entra em Sculpt Mode com brush/radius/strength allowlisted |
+| `sculpt.stroke` | stroke multiponto com checkpoint e captura anterior |
+| `sculpt.finish` | sai de Sculpt e restaura workspace anterior |
+| `recipe.validate` | valida schema/action allowlist/hash sem editar cena |
+| `recipe.plan` | resolve variant/overrides e gera plano determinístico |
+| `recipe.run` | executa recipe step-by-step com stage/history/capturas/receipt |
+| `recipe.status` | progresso/resultado resumido da recipe |
+
+## Feedback visual automático — V0.2
+
+A V0.2 permite que o agente capture exatamente a região 3D exibida no Blender 5.2 LTS. A implementação usa `Window.screenshot(region=...)` e grava o PNG via `imbuf`, sem capturar outros aplicativos ou o desktop inteiro.
+
+Diagnóstico da viewport:
+
+```powershell
+python -m tools.blender_agent.client viewport-describe
+```
+
+Definir vista e shading:
+
+```powershell
+python -m tools.blender_agent.client viewport-shading MATERIAL
+python -m tools.blender_agent.client viewport-view FRONT
+```
+
+Capturar a vista atual:
+
+```powershell
+python -m tools.blender_agent.client viewport-capture --name baguete-front.png
+```
+
+Gerar um conjunto previsível de vistas:
+
+```powershell
+python -m tools.blender_agent.client viewport-capture-set --label baguete-test
+```
+
+O conjunto padrão gera `FRONT`, `RIGHT`, `TOP` e `THREE_QUARTER`. Também podem ser escolhidas vistas específicas com `--views`.
+
+As capturas e receipts passam a ficar dentro da etapa ativa:
+
+```text
+.runtime/blender-agent/history/<stage-id>/attachments/
+```
+
+Isso mantém cada etapa de produção autocontida e permite que o auto-history associe as imagens aos comandos que as geraram.
+
+O receipt registra SHA-256, dimensões, cena e estado da viewport no momento da captura.
+
+## Integração direta com agentes via MCP
+
+Além do CLI, a ferramenta agora possui um servidor MCP stdio em `mcp_server.py`. Ele transforma o Blender Agent em ferramentas que um cliente MCP local pode chamar diretamente.
+
+Instalação isolada no Windows:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/install-mcp.ps1
+```
+
+O instalador cria:
+
+```text
+.runtime/blender-agent/mcp-venv/
+```
+
+e instala a versão pinada do MCP Python SDK. Ele **não altera automaticamente** o arquivo de configuração do Codex; ao final imprime o bloco sugerido para `%USERPROFILE%\.codex\config.toml`.
+
+Ferramentas MCP principais:
+
+| Tool MCP | Função |
+|---|---|
+| `blender_status` | verifica Blender/bridge |
+| `blender_scene_summary` | lê a cena atual |
+| `blender_viewport_describe` | lê estado da VIEW_3D |
+| `blender_viewport_set_view` | ajusta preset/shading |
+| `blender_viewport_capture` | captura a VIEW_3D e devolve a imagem diretamente ao modelo |
+| `blender_ui_orbit` | orbita a viewport |
+| `blender_checkpoint` | cria checkpoint |
+| `blender_action` | chama qualquer action segura/allowlisted do protocolo |
+| `blender_recipe_validate` / `blender_recipe_plan` | valida e resolve recipes sem execução |
+| `blender_recipe_run` / `blender_recipe_status` | executa/acompanhada recipes versionadas |
+
+O ponto importante da V0.2 é `blender_viewport_capture`: o MCP devolve a captura como conteúdo de imagem, portanto um modelo multimodal compatível consegue **ver a própria viewport** sem depender de captura manual do usuário.
+
+### Codex local
+
+A configuração stdio usa o Python do venv criado pelo instalador, módulo `tools.blender_agent.mcp_server` e `cwd` apontando para a raiz do repositório. O servidor depende do Blender Agent já aberto, porque ele se conecta ao arquivo de sessão local do bridge.
+
+Depois de configurar/reiniciar o cliente, o ciclo esperado é:
+
+```text
+agente
+  -> blender_status
+  -> blender_checkpoint
+  -> blender_action / blender_ui_orbit
+  -> blender_viewport_capture
+  -> modelo enxerga a imagem
+  -> decide o próximo ajuste
+  -> repete
+```
+
+### ChatGPT/Work
+
+Não exponha o bridge local do Blender diretamente na internet. Quando o ambiente ChatGPT/Work não puder iniciar um MCP stdio local, a integração remota deve usar um mecanismo privado suportado (por exemplo, Secure MCP Tunnel quando disponível para a conta/ambiente). O bridge Blender continua somente em `127.0.0.1`; quem faz a ponte é a camada MCP/túnel aprovada.
+
+Referências de integração:
+- https://developers.openai.com/docs/config-file/config-reference
+- https://developers.openai.com/api/docs/guides/agents-api/tools/mcp
+- https://developers.openai.com/api/docs/guides/secure-mcp-tunnels
+
+## Contexto persistente: abas + auto-history
+
+A ferramenta não depende mais apenas da memória da conversa para produções longas.
+
+### Consultar abas/workspaces
+
+```powershell
+python -m tools.blender_agent.client workspace-list
+python -m tools.blender_agent.client workspace-describe --name Layout --name Sculpting
+python -m tools.blender_agent.client workspace-describe --all
+```
+
+A consulta retorna editores/áreas, seleção, objeto ativo, modo, objetos da cena e contexto específico de VIEW_3D, Outliner, Properties, Text/Image/Node Editor quando disponível.
+
+### Capturar várias abas em uma operação
+
+```powershell
+python -m tools.blender_agent.client workspace-capture-set --workspace Layout --workspace Sculpting --target WINDOW --label baguete-context
+```
+
+Também existe `--plan-json` para capturas diferentes por workspace. Targets suportados: `VIEW_3D`, `WINDOW` e `AREA`.
+
+### Auto-history por etapa
+
+```powershell
+python -m tools.blender_agent.client history-start "Base do pão" --tag baguete
+python -m tools.blender_agent.client history-list
+python -m tools.blender_agent.client history-show
+python -m tools.blender_agent.client history-search bevel --action object.
+python -m tools.blender_agent.client history-note "Formato lateral aprovado" --tag decisao
+```
+
+Cada etapa possui pasta própria com `metadata.json`, segmentos `events-XXXX.jsonl` e `attachments/`. A nova etapa referencia `previous_stage_id`; o contexto também mostra próximas etapas derivadas.
+
+Todas as actions normais do bridge são registradas automaticamente, com redaction de campos sensíveis, resultados/erros e anexos de runtime com SHA-256. O histórico é rotacionado por segmento e possui limites configuráveis de retenção para evitar um arquivo monolítico.
+
+Arquitetura e política completa: [BLENDER_AGENT_CONTEXT.md](../../docs/tecnologia/BLENDER_AGENT_CONTEXT.md).
+
+## Sculpt assistido — V0.3
+
+O Sculpt assistido fecha o ciclo de deformação orgânica sem depender de mouse global. A interface para agentes usa coordenadas normalizadas de 0 a 1 sobre a VIEW_3D e limita cada stroke a 128 pontos.
+
+Fluxo recomendado:
+
+```text
+sculpt.prepare
+  -> checkpoint automático
+  -> captura antes
+  -> sculpt.stroke
+  -> aguarda redraw
+  -> captura depois
+  -> modelo compara
+  -> próximo stroke
+```
+
+Brushes allowlisted: `DRAW`, `SMOOTH`, `GRAB`, `INFLATE`, `CLAY_STRIPS`, `CREASE` e `SNAKE_HOOK`.
+
+CLI:
+
+```powershell
+python -m tools.blender_agent.client sculpt-prepare --name Baguete_Base --workspace Sculpting --brush GRAB --radius 70 --strength 0.3
+python -m tools.blender_agent.client sculpt-stroke --point 0.44 0.50 --point 0.50 0.50 --point 0.56 0.48 --brush GRAB --radius 70 --strength 0.3 --label ajustar-silhueta
+python -m tools.blender_agent.client viewport-capture --name ajustar-silhueta-after.png
+python -m tools.blender_agent.client sculpt-finish
+```
+
+No MCP, `blender_sculpt_iteration` executa o stroke com checkpoint e devolve duas imagens, antes/depois, para comparação multimodal.
+
+Documento completo: [BLENDER_AGENT_SCULPT.md](../../docs/tecnologia/BLENDER_AGENT_SCULPT.md).
+
+Smoke test:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/sculpt-smoke-test.ps1 -OpenImages
+```
+
+## Recipes 3D — V0.4
+
+A V0.4 permite reproduzir uma construção 3D a partir de JSON versionado, em vez de depender de uma sequência lembrada pelo chat.
+
+Recipe de exemplo:
+
+```text
+tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
+```
+
+Validar e planejar sem modificar o Blender:
+
+```powershell
+python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
+python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguete
+```
+
+Executar:
+
+```powershell
+python -m tools.blender_agent.client recipe-run tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant compact --set object_name=Minha_Baguete
+```
+
+Consultar status:
+
+```powershell
+python -m tools.blender_agent.client recipe-status
+```
+
+A recipe suporta parâmetros tipados, components, steps allowlisted, checkpoints, capture-after, validation views, variants, overrides, criteria e hashes SHA-256 de recipe/plano/receipt. A V0.4 também inclui irregularidade determinística por seed e biblioteca de materiais em `tools/blender_agent/materials/carro-chefe-materials-v1.json`.
+
+Cada execução cria um stage próprio por padrão e registra `recipe.start`, `recipe.step`, `recipe.capture`, `recipe.finish` e `recipe.run`.
+
+Documento completo: [BLENDER_AGENT_RECIPES.md](../../docs/tecnologia/BLENDER_AGENT_RECIPES.md).
+
+Smoke test:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/recipe-smoke-test.ps1 -OpenImages
+```
+
+## Segurança
+
+- bind somente em `127.0.0.1` e porta efêmera por padrão;
+- token aleatório por sessão;
+- sem action para `eval`, `exec`, shell ou Python arbitrário;
+- actions e eventos são allowlisted;
+- UI é simulada pelo próprio Blender, sem mouse global do Windows;
+- renders, exports e checkpoints ficam em `.runtime/blender-agent/`;
+- mesh customizado possui limites de tamanho;
+- a ferramenta não publica ativos nem sobrescreve automaticamente mídia oficial.
+
+Preferir ações semânticas. `ui.*` é fallback para Sculpt, seleção visual, viewport e outras operações contextuais.
+
+## Testes
+
+```bash
+python -m unittest discover -s tools/blender_agent/tests -p "test_*.py" -v
+```
+
+Smoke test automatizado da V0.2, após abrir o Blender pelo launcher:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/smoke-test.ps1 -OpenImage
+```
+
+Ele valida bridge, descrição do viewport, preset 3/4, geração do PNG, receipt e, se o venv MCP já existir, import do adaptador MCP. O `-OpenImage` é opcional.
+
+Smoke test de contexto/workspaces/auto-history:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/context-smoke-test.ps1 -OpenImages
+```
+
+Smoke test manual detalhado:
+
+```powershell
+python -m tools.blender_agent.client status
+python -m tools.blender_agent.client ui-window
+python -m tools.blender_agent.client ui-dismiss
+python -m tools.blender_agent.client ui-view3d
+python -m tools.blender_agent.client ui-orbit --dx 120 --dy 60
+python -m tools.blender_agent.client call scene.summary
+```
+
+## Limitações atuais
+
+- controle, captura VIEW_3D, captura multi-workspace e Sculpt V0.3 já foram validados no Windows 10 + Blender 5.2 LTS; recipes V0.4 e a conexão MCP local ainda aguardam smoke test real;
+- `event_simulate` exige `--enable-event-simulate`;
+- Sculpt V0.3 depende de mesh visível na VIEW_3D e brush compatível; strokes são intencionalmente limitados;
+- checkpoint automático existe para Sculpt, mas rollback automático de decisão continua no roadmap V0.5;
+- OBJ varia por versão e usa fallback;
+- ainda não há addon/painel instalável nem reconhecimento visual automático da UI.
+
+Roadmap completo em `docs/tecnologia/BLENDER_AGENT.md`.
+
+## Troubleshooting do launcher
+
+Se o Blender abrir e mostrar `Unable to Load File`, ou se `python -m tools.blender_agent.client status` disser que `bridge.json` não existe, o bridge não iniciou.
+
+A partir da correção de 29/09/2026 o launcher preserva aspas em caminhos Windows com espaços, inclusive pastas como `Área de Trabalho`, e espera a criação real da sessão antes de retornar sucesso.
+
+Diagnóstico sem abrir o Blender:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -DryRun
+```
+
+Na linha `Args:`, o caminho completo de `blender_bridge.py` deve aparecer entre aspas. No fluxo normal, só prossiga para `client status` depois de o launcher imprimir `Blender Agent pronto.`.
+
+### Splash inicial / interface aparentemente travada
+
+O splash do Blender é modal: enquanto está aberto, a viewport atrás dele não recebe cliques. O Blender 5.2 fecha esse splash com `Esc`. A V0.1.1 envia esse `Esc` automaticamente 0,75 s após a inicialização. Se ainda aparecer, rode `python -m tools.blender_agent.client ui-dismiss`. Depois confirme a viewport com `ui-view3d` e use `ui-orbit`, que calcula automaticamente o centro da maior VIEW_3D em vez de depender de coordenadas fixas.
+
+### Windows PowerShell 5.1 e caminhos com acentos
+
+O smoke test V0.2 revelou uma incompatibilidade de code page quando a CLI Python devolvia JSON contendo caminhos Unicode, por exemplo `Área de Trabalho`. O Python retornava o caminho correto, mas o Windows PowerShell 5.1 podia reinterpretar os bytes e transformar `Área` em texto corrompido, fazendo `Test-Path` procurar um caminho inexistente.
+
+Correção adotada:
+
+- a CLI imprime JSON ASCII-safe, com Unicode representado por escapes `\uXXXX`;
+- `ConvertFrom-Json` reconstrói o caminho Unicode correto antes de `Test-Path`;
+- os scripts `.ps1` do Blender Agent usam somente bytes ASCII para evitar mojibake de literais no Windows PowerShell 5.1;
+- há teste automatizado impedindo a reintrodução de caracteres não ASCII nesses scripts.
+
+Essa correção não altera o nome real das pastas nem exige mover o repositório para um caminho sem acentos.
+
+
+### Capturas multi-workspace e redraw assíncrono
+
+A captura de abas diferentes não é feita imediatamente após `window.workspace = ...`. O Blender pode manter o frame anterior visível por um curto período, mesmo com o workspace lógico já alterado.
+
+O `workspace.capture_set` usa uma máquina de estados no timer do Blender, cedendo ciclos ao event loop antes de cada screenshot. Cada captura registra `workspace_requested`, `workspace_captured`, `screen_captured` e `workspace_match`. Mismatch é falha explícita.
+
+O número padrão de ticks de estabilização é 3 e pode ser sobrescrito por `CC_BLENDER_WORKSPACE_SETTLE_TICKS`.
+
+O `context-smoke-test.ps1` prioriza as abas `Animation` e `Compositing` quando elas existem e valida que cada imagem veio realmente do workspace solicitado.
+
+
+### Sculpt prepare e redraw do workspace
+
+Assim como nas capturas multi-workspace, a troca para a aba `Sculpting` precisa ceder ciclos ao event loop antes de consultar a VIEW_3D. `sculpt.prepare` agora usa o scheduler assincrono do bridge e espera o screen estabilizar antes de entrar em Sculpt Mode.
+
+O `sculpt-smoke-test.ps1` tambem coleta stderr nativo com `ErrorActionPreference=Continue` dentro do helper para que uma falha do bridge seja exibida por inteiro em vez de aparecer apenas como `python.exe : {`.
+
+
+### Blender 5.2: UnifiedPaintSettings
+
+No Blender 5.x, radius/strength do Sculpt são resolvidos por `tool_settings.sculpt.unified_paint_settings`. O bridge detecta esse caminho e mantém fallback para `tool_settings.unified_paint_settings` em versões antigas. `sculpt.status` informa `settings_source` para auditoria de compatibilidade.
+
+
+### Blender 5.2: OperatorStrokeElement
+
+O payload de cada ponto de `sculpt.stroke` é filtrado dinamicamente pelas propriedades RNA aceitas pelo `OperatorStrokeElement` da instalação atual. Isso evita falhas quando campos antigos, como `pen_flip`, deixam de existir na coleção de stroke. O resultado informa `stroke_element_properties` para diagnóstico.
+
+
+### Sculpt finish e restauracao do workspace
+
+`sculpt.finish` usa timer-yield para sair de Sculpt Mode, estabilizar o screen, voltar ao workspace original e confirmar a restauracao antes de responder. Isso evita falso negativo/positivo causado por troca de workspace e redraw no mesmo ciclo do Blender.
+
+
+### Nomes longos de captures e extensões
+
+Capturas de recipes combinam recipe id, versão, run id, step e nome da imagem. Isso pode produzir nomes maiores que o limite interno de 100 caracteres.
+
+A sanitização de arquivos agora trunca somente o stem e preserva o sufixo. Portanto uma captura PNG longa continua terminando em `.png`; o mesmo vale para receipts/checkpoints/exports com extensões conhecidas. O `recipe-smoke-test.ps1` falha se qualquer capture não terminar em `.png`.
