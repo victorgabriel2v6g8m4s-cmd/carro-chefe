@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from . import history, protocol
 
 DEFAULT_COMPAT_PATH_LIMIT = 240
 _MIN_FILENAME_BUDGET = 24
+_SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def windows_path_units(value: str | Path) -> int:
@@ -26,6 +28,15 @@ def _compat_path_limit() -> int:
     return max(120, min(32767, value))
 
 
+def _clean_filename_unbounded(value: str, fallback: str) -> str:
+    raw = str(value or "").strip()
+    clean = _SAFE_FILENAME_RE.sub("-", raw).strip("._-")
+    if clean:
+        return clean
+    fallback_clean = _SAFE_FILENAME_RE.sub("-", str(fallback or "item")).strip("._-")
+    return fallback_clean or "item"
+
+
 def filename_for_parent(
     parent: Path,
     filename: str,
@@ -36,13 +47,13 @@ def filename_for_parent(
 ) -> str:
     """Sanitize a filename while budgeting the complete Windows path.
 
-    Long names receive a deterministic hash suffix before the extension. This
-    preserves both uniqueness and extensions while keeping legacy Windows APIs
-    below the configured compatibility limit.
+    Any shortened name receives a deterministic hash suffix before the
+    extension. This preserves uniqueness and the extension while keeping
+    legacy Windows APIs below the configured compatibility limit.
     """
     parent = parent.expanduser().resolve()
     raw = str(filename or "").strip()
-    clean = protocol.sanitize_filename(raw, fallback, max_length=max_filename_length)
+    clean = _clean_filename_unbounded(raw, fallback)
     limit = int(max_path_length) if max_path_length is not None else _compat_path_limit()
     limit = max(120, min(32767, limit))
     available = limit - windows_path_units(parent) - 1
@@ -52,11 +63,13 @@ def filename_for_parent(
             "configure CC_BLENDER_RUNTIME para um caminho mais curto"
         )
 
-    allowed = min(max_filename_length, available)
+    allowed = min(max(16, int(max_filename_length)), 240, available)
     if len(clean) <= allowed and windows_path_units(parent / clean) <= limit:
         return clean
 
     suffix = Path(clean).suffix
+    if suffix and not re.fullmatch(r"\.[A-Za-z0-9]{1,16}", suffix):
+        suffix = ""
     stem = clean[:-len(suffix)] if suffix else clean
     digest = hashlib.sha256((raw or clean).encode("utf-8")).hexdigest()[:10]
     token = f"-{digest}"
