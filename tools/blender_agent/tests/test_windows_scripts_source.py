@@ -69,6 +69,12 @@ class WindowsPowerShellSourceTests(unittest.TestCase):
         self.assertIn("-RedirectStandardError", source)
         self.assertIn("WaitForBridgeSeconds esta obsoleto", source)
 
+    def test_start_script_fails_fast_on_python_traceback(self) -> None:
+        source = (ROOT / "start.ps1").read_text(encoding="ascii")
+        self.assertIn("function Test-StartupPythonFailure", source)
+        self.assertIn('Traceback (most recent call last):', source)
+        self.assertIn("Corrija o traceback acima antes de aumentar MaxRetry", source)
+
     def test_install_mcp_uses_v05_server(self) -> None:
         source = (ROOT / "install-mcp.ps1").read_text(encoding="ascii")
         self.assertIn("tools.blender_agent.mcp_server_v05", source)
