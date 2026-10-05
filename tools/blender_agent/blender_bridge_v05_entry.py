@@ -22,7 +22,7 @@ from tools.blender_agent import blender_bridge_v05 as v05
 from tools.blender_agent import runtime_compat
 
 
-_RUNTIME_PROFILE = "v05-runtime-compat-20261005.2"
+_RUNTIME_PROFILE = runtime_compat.RUNTIME_PROFILE
 _CORE_RECORD_TASK_HISTORY = core._record_task_history
 
 
