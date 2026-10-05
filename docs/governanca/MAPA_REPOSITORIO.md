@@ -102,8 +102,8 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 ## Legado preservado
 
 - `planejamento/` — Preservado até paridade e migração definitiva da V2.
-- `site/` — Placeholder histórico; código público ativo fica em `apps/site/`.
-- `cardápio/` — Mantido por regras locais e preservação do original; novos derivados devem ser catalogados em `mídias/`.
+- `site/` — Placeholder histórico; código público ativo fica em apps/site/.
+- `cardápio/` — Mantido por regras locais e preservação do original; novos derivados devem ser catalogados em mídias/.
 - `elementos gráficos/` — Originais de marca preservados; não criar novos arquivos soltos aqui.
 - `mídias/files/` — Acervo bruto legado preservado porque manifests e referências históricas apontam para esses caminhos; não receber novos arquivos.
 
@@ -113,9 +113,9 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 - Evidências históricas: `history/evidence`.
 - Prefixos temporários aceitos: `feature/`, `feat/`, `fix/`, `chore/`, `docs/`, `gate/`, `dependabot/`.
 - Branches temporárias existem apenas enquanto houver trabalho/PR ativo.
-- Branches concluídas ou substituídas devem ter a evidência preservada em `history/evidence` antes de serem removidas.
+- Branches concluídas ou substituídas devem ter a evidência preservada em history/evidence antes de serem removidas.
 - Gate branches nunca substituem uma branch canônica.
-- Não criar nova branch histórica por assunto; usar `history/evidence`.
+- Não criar nova branch histórica por assunto; usar history/evidence.
 
 ## Como alterar a estrutura
 
