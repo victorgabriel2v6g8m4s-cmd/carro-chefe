@@ -82,6 +82,15 @@
       "timeoutMs": 180000
     },
     {
+      "id": "repo-map",
+      "name": "Repository Map",
+      "path": "tools/repo-map",
+      "maturity": "complete",
+      "platforms": ["linux", "darwin", "win32"],
+      "command": "npm run repo:map:check",
+      "timeoutMs": 30000
+    },
+    {
       "id": "windows-supervisor",
       "name": "Windows Supervisor",
       "path": "tools/windows-supervisor",
