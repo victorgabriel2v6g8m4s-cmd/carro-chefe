@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRY = ROOT / "blender_bridge_v05_entry.py"
 COMPAT = ROOT / "runtime_compat.py"
 STOP = ROOT / "stop.ps1"
+SCULPT_SMOKE = ROOT / "sculpt-smoke-test.ps1"
 
 
 class RuntimeCompatTests(unittest.TestCase):
@@ -114,6 +115,12 @@ class RuntimeCompatTests(unittest.TestCase):
         self.assertLess(install_at, start_at)
         self.assertIn("runtime_compat.RUNTIME_PROFILE", source)
         self.assertTrue(RUNTIME_PROFILE.endswith(".3"))
+
+    def test_sculpt_smoke_reads_runtime_profile_from_runtime_compat(self) -> None:
+        source = SCULPT_SMOKE.read_text(encoding="utf-8")
+        self.assertIn("from tools.blender_agent.runtime_compat import RUNTIME_PROFILE", source)
+        self.assertIn("$ExpectedRuntimeProfile", source)
+        self.assertNotIn('ExpectedRuntimeProfile = "v05-runtime-compat-', source)
 
     def test_modal_safe_shutdown_is_allowlisted_at_runtime(self) -> None:
         source = COMPAT.read_text(encoding="utf-8")
