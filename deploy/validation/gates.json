@@ -88,6 +88,7 @@
       "description": "Saúde das ferramentas próprias cadastradas",
       "inputs": [
         "tools/tool-health",
+        "docs/ferramentas/STATUS_AUTOMATICO.md",
         "apps/api",
         "apps/gestao",
         "apps/site",
