@@ -59,7 +59,7 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 ├── logos/
 ├── mídias/
 │   ├── espaco/
-│   ├── originais/
+│   ├── files/
 │   └── produtos/
 ├── packages/
 │   ├── contracts/
@@ -94,7 +94,7 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 - `apps/`: subpastas permitidas = `api/`, `gestao/`, `qr_manipulator/`, `site/`; arquivos diretos permitidos = `AGENTS.md`.
 - `deploy/`: subpastas permitidas = `nginx/`, `systemd/`; arquivos diretos permitidos = `README.md`.
 - `docs/`: subpastas permitidas = `ferramentas/`, `financeiro/`, `fundacao/`, `governanca/`, `historico/`, `negocio/`, `operacao/`, `pre-lancamento/`, `referencias/`, `tecnologia/`; arquivos diretos permitidos = `AGENTS.md`, `README.md`.
-- `mídias/`: subpastas permitidas = `espaco/`, `originais/`, `produtos/`; arquivos diretos permitidos = `AGENTS.md`, `README.md`.
+- `mídias/`: subpastas permitidas = `espaco/`, `files/`, `produtos/`; arquivos diretos permitidos = `AGENTS.md`, `README.md`.
 - `packages/`: subpastas permitidas = `contracts/`, `database/`, `ui/`; arquivos diretos permitidos = `AGENTS.md`.
 - `tools/`: subpastas permitidas = `agent-policy/`, `excel_recipe/`, `excel_snapshot/`, `repo-map/`, `tool-health/`, `windows-supervisor/`; arquivos diretos permitidos = `AGENTS.md`, `agent-runtime.mjs`.
 
