@@ -18,6 +18,16 @@ A ferramenta combina duas camadas: ações semânticas via Blender Python API e 
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1
 ```
 
+O launcher usa tentativas em vez de um timeout único. O padrão é `9` tentativas de até `10` segundos cada:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -MaxRetry 9 -RetrySeconds 10
+```
+
+`-WaitForBridgeSeconds` ainda é aceito por compatibilidade, mas é convertido para tentativas quando `-MaxRetry` não é informado.
+
+Em cada tentativa o launcher confirma que o processo do Blender continua vivo e que `.runtime/blender-agent/session/bridge.json` pertence ao PID recém-aberto e contém `port` e `token`. O stdout/stderr de startup ficam em `.runtime/blender-agent/startup-logs/`; se o bridge não subir, o launcher imprime as últimas linhas para distinguir máquina lenta de erro real no bootstrap.
+
 Se o Blender não estiver no PATH, passe `-BlenderExe`. Para abrir arquivo existente, passe `-BlendFile`. O bridge grava a sessão efêmera em `.runtime/blender-agent/session/bridge.json`; esse arquivo contém token local e nunca deve ser versionado.
 
 ## Cliente
@@ -277,7 +287,7 @@ Validar e planejar sem modificar o Blender:
 
 ```powershell
 python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
-python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguete
+python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguette
 ```
 
 Executar:
