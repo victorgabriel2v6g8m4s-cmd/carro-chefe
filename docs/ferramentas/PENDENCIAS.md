@@ -48,7 +48,6 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 - **Critérios de aceite:** artefato estruturado por plataforma; merge determinístico; referência ao commit; status final por ferramenta; sem escrita concorrente na documentação.
 - **Prioridade:** média se o relatório automático passar a ser gate de release.
 
-
 ### TOOL-PEND-005 — Social Growth Engine
 
 - **Data:** 24/09/2026
@@ -70,10 +69,10 @@ Estados: `proposta`, `planejada`, `em desenvolvimento`, `validando`, `concluída
 - **Origem:** necessidade de modelagem 3D iterativa sem Computer Use capaz de controlar o Blender no Windows 10.
 - **Problema:** scripts únicos não fecham o ciclo observar/editar/corrigir e a conta atual não expõe controle de mouse do aplicativo.
 - **Capacidade necessária:** evoluir `tools/blender_agent` de bridge V0.1 para feedback visual automático, contexto persistente de workspaces, auto-history segmentado, Sculpt assistido, recipes 3D e agente iterativo com rollback.
-- **Alternativa temporária:** V0.1–V0.3 foram validadas no Windows 10/Blender 5.2 LTS. A V0.4 de recipes 3D versionadas já está implementada com validate/plan/run/status, variants, history, captures, criteria e receipts; falta smoke real da V0.4 e validar a conexão MCP local antes do loop iterativo autônomo V0.5.
+- **Alternativa temporária:** V0.1–V0.3 estão validadas no Windows 10/Blender 5.2 LTS. A V0.4 executou recipe real e gerou PNGs válidos; a correção atual isola/enquadra somente o target sem remover câmera/luz/outros objetos. A V0.5 está implementada em validação com observe/propose/apply/evaluate, budget, snapshots, checkpoint, diff, aprovação opcional, rollback, history, receipt, CLI e MCP multimodal. Falta smoke real integrado da V0.5 e validação da conexão MCP local.
 - **Prioridade:** média/alta para produção dos ativos 3D de produto.
-- **Critérios de aceite:** seguir [BLENDER_AGENT.md](../tecnologia/BLENDER_AGENT.md); smoke test em Blender real no Windows 10; captura de viewport; Sculpt com contexto controlado; checkpoints/rollback; recipes versionadas; testes e documentação; promoção explícita de ativos.
-- **Dependências/bloqueios:** Blender instalado na máquina real, sessão gráfica, validação de `--enable-event-simulate` e referências físicas aprovadas do produto.
+- **Critérios de aceite:** seguir [BLENDER_AGENT.md](../tecnologia/BLENDER_AGENT.md) e [BLENDER_AGENT_ITERATIVE.md](../tecnologia/BLENDER_AGENT_ITERATIVE.md); smoke test em Blender real no Windows 10; captura focada de viewport; Sculpt com contexto controlado; checkpoints/rollback; recipes versionadas; loop iterativo com budget; testes e documentação; promoção explícita de ativos.
+- **Dependências/bloqueios:** Blender instalado na máquina real, sessão gráfica, validação de `--enable-event-simulate`, referências físicas aprovadas do produto e cliente MCP local quando a etapa MCP for validada.
 
 ## Regra para agentes
 
