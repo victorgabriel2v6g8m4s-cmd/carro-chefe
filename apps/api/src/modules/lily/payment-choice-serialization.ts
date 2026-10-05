@@ -12,11 +12,19 @@ function parseStoredData(raw: string | null | undefined) {
   }
 }
 
+function eventOrchestration(payment: any) {
+  const created = (payment.events ?? []).find((event: any) => event.eventType === "payment.created");
+  const payload = parseStoredData(created?.payloadJson);
+  return payload.orchestration && typeof payload.orchestration === "object"
+    ? payload.orchestration as Record<string, any>
+    : null;
+}
+
 export function serializeLilyChoicePayment(payment: any) {
   const providerData = parseStoredData(payment.providerDataJson);
   const orchestration = providerData.orchestration && typeof providerData.orchestration === "object"
-    ? providerData.orchestration
-    : null;
+    ? providerData.orchestration as Record<string, any>
+    : eventOrchestration(payment);
   return {
     id: payment.id,
     orderId: payment.orderId,
@@ -52,9 +60,11 @@ export function serializeLilyChoicePayment(payment: any) {
     },
     routing: orchestration ? {
       fallbackChain: Array.isArray(orchestration.fallbackChain) ? orchestration.fallbackChain : [payment.provider],
+      attemptedProviders: Array.isArray(orchestration.attemptedProviders) ? orchestration.attemptedProviders : [payment.provider],
       actualProvider: payment.provider
     } : {
       fallbackChain: [payment.provider],
+      attemptedProviders: [payment.provider],
       actualProvider: payment.provider
     },
     expiresAt: payment.expiresAt,
