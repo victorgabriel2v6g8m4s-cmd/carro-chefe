@@ -6,7 +6,23 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 const toPosix = (value) => value.split(path.sep).join("/");
-const normalizeGeneratedText = (value) => value.replace(/\r\n/g, "\n").replace(/[ \t]+$/gm, "").trimEnd();
+const normalizeGeneratedText = (value) => value
+  .normalize("NFC")
+  .replace(/\r\n/g, "\n")
+  .replace(/[ \t]+$/gm, "")
+  .trimEnd();
+
+function firstTextDifference(current, expected) {
+  const currentLines = normalizeGeneratedText(current).split("\n");
+  const expectedLines = normalizeGeneratedText(expected).split("\n");
+  const length = Math.max(currentLines.length, expectedLines.length);
+  for (let index = 0; index < length; index += 1) {
+    if (currentLines[index] !== expectedLines[index]) {
+      return `primeira divergência na linha ${index + 1}: atual=${JSON.stringify(currentLines[index] ?? "<ausente>")} esperado=${JSON.stringify(expectedLines[index] ?? "<ausente>")}`;
+    }
+  }
+  return "conteúdo divergente sem linha identificável";
+}
 
 export async function loadStructure(projectRoot) {
   const raw = await fs.readFile(path.join(projectRoot, ".repo", "structure.json"), "utf8");
@@ -159,7 +175,7 @@ export async function assertRepositoryMapCurrent(projectRoot) {
   const current = await fs.readFile(target, "utf8").catch(() => "");
   const expected = renderRepositoryMap(contract);
   if (normalizeGeneratedText(current) !== normalizeGeneratedText(expected)) {
-    errors.push(`Mapa desatualizado: execute npm run repo:map e versione ${contract.mapFile}.`);
+    errors.push(`Mapa desatualizado: execute npm run repo:map e versione ${contract.mapFile}; ${firstTextDifference(current, expected)}.`);
   }
   if (errors.length) throw new Error(errors.join("\n"));
   return { contract, trackedFiles };
