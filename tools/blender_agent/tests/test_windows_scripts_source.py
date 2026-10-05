@@ -50,6 +50,17 @@ class WindowsPowerShellSourceTests(unittest.TestCase):
         source = (ROOT / "start.ps1").read_text(encoding="ascii")
         self.assertIn("blender_bridge_v05_entry.py", source)
 
+    def test_start_script_uses_retry_windows_and_startup_logs(self) -> None:
+        source = (ROOT / "start.ps1").read_text(encoding="ascii")
+        self.assertIn("[int]$MaxRetry = 9", source)
+        self.assertIn("[int]$RetrySeconds = 10", source)
+        self.assertIn("for ($attempt = 1; $attempt -le $MaxRetry; $attempt++)", source)
+        self.assertIn("Tentativa $attempt/$MaxRetry", source)
+        self.assertIn("startup-logs", source)
+        self.assertIn("-RedirectStandardOutput", source)
+        self.assertIn("-RedirectStandardError", source)
+        self.assertIn("WaitForBridgeSeconds esta obsoleto", source)
+
     def test_install_mcp_uses_v05_server(self) -> None:
         source = (ROOT / "install-mcp.ps1").read_text(encoding="ascii")
         self.assertIn("tools.blender_agent.mcp_server_v05", source)
