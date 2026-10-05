@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$Bridge = (Resolve-Path (Join-Path $PSScriptRoot "blender_bridge.py")).Path
+$Bridge = (Resolve-Path (Join-Path $PSScriptRoot "blender_bridge_v05.py")).Path
 $SessionFile = Join-Path $RepoRoot ".runtime\blender-agent\session\bridge.json"
 
 function Quote-NativeArgument {
@@ -109,5 +109,5 @@ $SessionFile
 Confira se a janela do Blender mostrou algum erro e rode:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1 -DryRun
 
-Os argumentos impressos devem preservar entre aspas o caminho completo de blender_bridge.py.
+Os argumentos impressos devem preservar entre aspas o caminho completo de blender_bridge_v05.py.
 "@
