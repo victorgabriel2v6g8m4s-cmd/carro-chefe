@@ -1,5 +1,18 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+
+# Blender's embedded Python does not guarantee that the process working
+# directory is present in sys.path when a script is launched through --python.
+# Bootstrap the repository root from this file before importing the package.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT_TEXT = str(_REPO_ROOT)
+if _REPO_ROOT_TEXT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT_TEXT)
+
+
 # Production entrypoint for V0.5. Importing the extension patches the stable
 # V0.1-V0.4 core dispatch/capture functions without starting a second server.
 from tools.blender_agent import blender_bridge as core
