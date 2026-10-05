@@ -27,7 +27,7 @@ O preflight de política executado pelos agentes valida o contrato e o mapa. O C
 | automação, CLI, supervisor, gerador, verificador | `tools/<ferramenta>/` |
 | configuração de deploy | `deploy/` |
 | documentação humana | `docs/<categoria>/` |
-| fotos e vídeos originais | `mídias/originais/` ou categoria específica de `mídias/` |
+| acervo bruto legado já catalogado | `mídias/files/` — somente preservação/compatibilidade; não usar como destino genérico novo |
 | mídia tratada/catalogada de produto | `mídias/produtos/<produto>/` |
 | fotos/vídeos do espaço físico | `mídias/espaco/` |
 | logos oficiais | `logos/` |
@@ -54,13 +54,13 @@ Categorias canônicas atuais:
 
 ## Mídias
 
-`mídias/` separa origem de curadoria:
+`mídias/` separa acervo bruto legado de curadoria sem quebrar referências históricas:
 
-- `mídias/originais/` — arquivos recebidos sem tratamento; nomes originais podem ser preservados para rastreabilidade;
+- `mídias/files/` — acervo bruto legado já referenciado por manifests e documentação. Deve permanecer imutável quando possível; novos conjuntos não entram aqui por padrão;
 - `mídias/produtos/` — catálogos, seleção e derivados por produto;
-- `mídias/espaco/` — imagens e vídeos do imóvel/estrutura física.
+- `mídias/espaco/` — imagens e vídeos do imóvel/estrutura física, incluindo originais migrados da antiga pasta de raiz `planta da estrutura/`.
 
-A regra de inspeção visual definida em `mídias/AGENTS.md` continua obrigatória.
+Quando surgir um novo tipo estável de mídia que não caiba nessas categorias, a nova categoria só pode ser criada após atualizar `.repo/structure.json` e o mapa na mesma PR. A regra de inspeção visual definida em `mídias/AGENTS.md` continua obrigatória.
 
 ## Legado
 
