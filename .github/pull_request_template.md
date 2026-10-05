@@ -13,6 +13,10 @@ Descreva o que mudou e o resultado esperado.
 
 - [ ] Revisei apenas arquivos pertencentes a esta entrega.
 - [ ] Consultei o catálogo de ferramentas antes de executar a tarefa.
+- [ ] Consultei `docs/governanca/MAPA_REPOSITORIO.md` antes de criar/mover arquivos.
+- [ ] Executei `npm run repo:map:check` quando a estrutura/caminhos foram alterados.
+- [ ] Atualizei `.repo/structure.json` e o mapa na mesma PR quando houve mudança estrutural.
+- [ ] Executei `npm run policy:check`.
 - [ ] Executei `npm run check` em `planejamento/` quando aplicável.
 - [ ] Executei `npm test` em `planejamento/` quando aplicável.
 - [ ] Executei `npm run tools:status` quando alterei ferramenta própria ou seu catálogo.
@@ -25,6 +29,7 @@ Descreva o que mudou e o resultado esperado.
 - ERP ou contrato de dados:
 - Cardápio, preço ou ficha técnica:
 - Marca, mídia ou ativo derivado:
+- Estrutura/mapa do repositório:
 - Risco e plano de reversão:
 
 ## Aprovação necessária
