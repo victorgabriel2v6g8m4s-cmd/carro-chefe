@@ -41,27 +41,51 @@
         "package-lock.json"
       ]
     },
-    "tests": {
-      "description": "Suítes Node/Vitest que validam runtime e regressões",
+    "test-legacy": {
+      "description": "Planejamento legado",
+      "inputs": ["planejamento", "package.json", "package-lock.json"]
+    },
+    "test-tool-health-unit": {
+      "description": "Testes unitários do Tool Health",
+      "inputs": ["tools/tool-health", "package.json", "package-lock.json"]
+    },
+    "test-deploy-validation": {
+      "description": "Testes unitários do cache/fingerprint de deploy",
+      "inputs": ["deploy/scripts/deploy-validation.mjs", "deploy/scripts/deploy-validation.test.mjs", "deploy/validation", "package.json", "package-lock.json"]
+    },
+    "test-lily-budget": {
+      "description": "Testes do budget de build CookLily",
+      "inputs": ["tools/lily-build-budget.mjs", "tools/lily-build-budget.test.mjs", "package.json", "package-lock.json"]
+    },
+    "test-api": {
+      "description": "Testes Vitest da API e domínios backend",
       "inputs": [
         "vitest.config.ts",
         "tsconfig.json",
         "apps/api",
-        "apps/gestao",
-        "apps/site",
-        "apps/qr_manipulator",
-        "apps/lily_acai",
         "packages/database",
         "packages/lily-database",
-        "planejamento",
-        "tools/tool-health",
-        "tools/lily-build-budget.mjs",
-        "tools/lily-build-budget.test.mjs",
         "deploy/scripts",
         "deploy/validation",
         "package.json",
         "package-lock.json"
       ]
+    },
+    "test-lily-ui": {
+      "description": "Testes Vitest do frontend CookLily",
+      "inputs": ["vitest.config.ts", "apps/lily_acai", "package.json", "package-lock.json"]
+    },
+    "test-site": {
+      "description": "Testes Vitest do site público",
+      "inputs": ["vitest.config.ts", "apps/site", "package.json", "package-lock.json"]
+    },
+    "test-qr": {
+      "description": "Testes Vitest do QR Lab",
+      "inputs": ["vitest.config.ts", "apps/qr_manipulator", "package.json", "package-lock.json"]
+    },
+    "test-gestao": {
+      "description": "Testes Vitest da Central Operacional",
+      "inputs": ["vitest.config.ts", "apps/gestao", "package.json", "package-lock.json"]
     },
     "build": {
       "description": "Builds de produção e compilação da API",
