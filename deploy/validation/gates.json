@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "gates": {
+    "node-dependencies": {
+      "description": "Dependências Node instaladas na VPS",
+      "inputs": ["package.json", "package-lock.json"]
+    },
+    "python-tooling": {
+      "description": "Ambiente Python usado pelas ferramentas de planilha",
+      "inputs": ["tools/excel_snapshot/requirements.txt"]
+    },
+    "preflight-migrations": {
+      "description": "Aplicação das migrations em bancos temporários isolados",
+      "inputs": [
+        "prisma.config.ts",
+        "packages/database/prisma",
+        "packages/lily-database/prisma.config.ts",
+        "packages/lily-database/prisma",
+        "package.json",
+        "package-lock.json"
+      ]
+    },
+    "policy": {
+      "description": "Integridade das políticas de agentes",
+      "inputs": ["AGENTS.md", "REGRAS.md", ".agent-policy", "tools/agent-policy", "package.json", "package-lock.json"]
+    },
+    "static-checks": {
+      "description": "Prisma validate e TypeScript sem emissão",
+      "inputs": [
+        "tsconfig.json",
+        "prisma.config.ts",
+        "apps/api/tsconfig.json",
+        "apps/api/src",
+        "apps/gestao/src",
+        "apps/site/src",
+        "apps/qr_manipulator/src",
+        "apps/lily_acai/src",
+        "packages/database",
+        "packages/lily-database",
+        "package.json",
+        "package-lock.json"
+      ]
+    },
+    "tests": {
+      "description": "Suítes automatizadas Node/Vitest do runtime",
+      "inputs": [
+        "vitest.config.ts",
+        "tsconfig.json",
+        "apps/api",
+        "apps/gestao",
+        "apps/site",
+        "apps/qr_manipulator",
+        "apps/lily_acai",
+        "packages/database",
+        "packages/lily-database",
+        "planejamento",
+        "tools/tool-health",
+        "tools/lily-build-budget.mjs",
+        "tools/lily-build-budget.test.mjs",
+        "deploy/scripts",
+        "deploy/validation",
+        "package.json",
+        "package-lock.json"
+      ]
+    },
+    "build": {
+      "description": "Builds de produção e compilação da API",
+      "inputs": [
+        "tsconfig.json",
+        "apps/api/tsconfig.json",
+        "apps/api/src",
+        "apps/gestao",
+        "apps/site",
+        "apps/qr_manipulator",
+        "apps/lily_acai",
+        "packages/database",
+        "packages/lily-database",
+        "tools/lily-build-budget.mjs",
+        "package.json",
+        "package-lock.json"
+      ],
+      "envInputs": ["VITE_GA4_ID", "VITE_CLARITY_ID"]
+    },
+    "tool-health": {
+      "description": "Saúde das ferramentas próprias cadastradas",
+      "inputs": [
+        "tools/tool-health",
+        "docs/ferramentas/STATUS_AUTOMATICO.md",
+        "apps/api",
+        "apps/gestao",
+        "apps/site",
+        "apps/lily_acai",
+        "apps/qr_manipulator",
+        ".agent-policy",
+        "tools/agent-policy",
+        "tools/agent-runtime.mjs",
+        "tools/excel_snapshot",
+        "tools/excel_recipe",
+        "tools/windows-supervisor",
+        "planejamento",
+        "package.json",
+        "package-lock.json"
+      ],
+      "envInputs": ["VITE_GA4_ID", "VITE_CLARITY_ID"]
+    }
+  }
+}

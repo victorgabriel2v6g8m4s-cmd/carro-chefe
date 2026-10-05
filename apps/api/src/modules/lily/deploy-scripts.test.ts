@@ -10,6 +10,7 @@ describe("scripts operacionais CookLily", () => {
   it.skipIf(process.platform === "win32")("mantém sintaxe Bash válida", () => {
     for (const relative of [
       "deploy/scripts/carro-chefe-deploy",
+      "deploy/scripts/cc",
       "deploy/scripts/lily-promote-user",
       "deploy/scripts/enable-lily-entrega06-nginx",
       "deploy/scripts/enable-lily-entrega07-nginx",
@@ -21,6 +22,13 @@ describe("scripts operacionais CookLily", () => {
       });
       expect(result.status, `${relative}: ${result.stderr || result.stdout}`).toBe(0);
     }
+  });
+
+  it("mantém motor de cache com sintaxe Node válida", () => {
+    const result = spawnSync(process.execPath, ["--check", path.join(root, "deploy/scripts/deploy-validation.mjs")], {
+      encoding: "utf8"
+    });
+    expect(result.status, result.stderr || result.stdout).toBe(0);
   });
 
   it("mantém bootstrap Nginx da Entrega 07 idempotente e fail-closed", () => {
@@ -43,7 +51,6 @@ describe("scripts operacionais CookLily", () => {
       helper.indexOf('marker = "    location ^~ /api/ { return 404; }"')
     );
   });
-
 
   it.skipIf(process.platform === "win32")("valida backup SQLite por cópia isolada e rejeita arquivo inválido", () => {
     const sqliteAvailable = spawnSync("sqlite3", ["--version"], { encoding: "utf8" });
@@ -88,6 +95,24 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer.indexOf('PHASE="backup-verify"')).toBeLessThan(deployer.indexOf("npm run db:deploy:core"));
   });
 
+  it("cacheia somente gates repetíveis e mantém gates operacionais sempre executáveis", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    expect(deployer).toContain("VALIDATION_CACHE_DIR");
+    expect(deployer).toContain("--full-validation");
+    expect(deployer).toContain("run_cached_gate node-dependencies");
+    expect(deployer).toContain("run_cached_gate python-tooling");
+    expect(deployer).toContain("run_cached_gate preflight-migrations");
+    expect(deployer).toContain("run_cached_gate policy");
+    expect(deployer).toContain("run_cached_gate static-checks");
+    expect(deployer).toContain("run_cached_gate tests");
+    expect(deployer).toContain("run_cached_gate build");
+    expect(deployer).toContain("run_cached_gate tool-health");
+    expect(deployer).not.toContain("run_cached_gate backup");
+    expect(deployer).not.toContain("run_cached_gate production-migrations");
+    expect(deployer).not.toContain("run_cached_gate health");
+    expect(deployer).not.toContain("run_cached_gate external-smoke");
+  });
+
   it.skipIf(process.platform === "win32")("preserva o descritor do lock através do reexec", () => {
     const temp = mkdtempSync(path.join(os.tmpdir(), "carro-chefe-lock-reexec-"));
     try {
@@ -113,14 +138,14 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain('reexec do deployer sem lock herdado');
     expect(deployer).toContain('[[ -e "/proc/self/fd/9" ]]');
     expect(deployer).not.toContain('"/proc/$/fd/9"');
-    expect(deployer).toContain('exec env CARRO_CHEFE_DEPLOY_REEXEC=1');
+    expect(deployer).toContain('exec env CARRO_CHEFE_DEPLOY_REEXEC=1 "${TARGET_DEPLOYER_TMP}" "${ORIGINAL_ARGS[@]}"');
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="nginx-precheck"'));
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="backup"'));
   });
 
   it("força NODE_ENV=test somente durante a suíte de preflight", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
-    expect(deployer).toContain('preflight env NODE_ENV=test npm test');
+    expect(deployer).toContain('run_cached_gate tests 0 env NODE_ENV=test npm test');
   });
 
   it("faz deploy falhar fechado sem chaves de segurança de produção", () => {
@@ -129,5 +154,17 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain("COOKLILY_LOGISTICS_CODE_KEY ausente");
     expect(deployer).toContain("COOKLILY_LOGISTICS_CODE_KEY deve conter 32 bytes em base64url");
     expect(deployer).toContain("'location ^~ /api/v1/lily/courier/'");
+  });
+
+  it("instala e documenta a CLI curta sem revelar segredos", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    const cli = readFileSync(path.join(root, "deploy/scripts/cc"), "utf8");
+    expect(deployer).toContain('/usr/local/sbin/cc');
+    expect(cli).toContain("cc deploy canonical");
+    expect(cli).toContain("cc prepare lily");
+    expect(cli).toContain("cc check logistics-key");
+    expect(cli).toContain("cc key logistics ensure");
+    expect(cli).toContain("git -C \"${APP_DIR}\" ls-tree -r --name-only");
+    expect(cli).not.toContain('echo "${key}"');
   });
 });

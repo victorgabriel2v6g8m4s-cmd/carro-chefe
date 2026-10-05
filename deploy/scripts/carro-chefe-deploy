@@ -11,17 +11,19 @@ SERVICE_GROUP="${CARRO_CHEFE_SERVICE_GROUP:-carrochefe}"
 BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-${DATA_DIR}/backups}"
 LOG_DIR="${CARRO_CHEFE_DEPLOY_LOG_DIR:-${DATA_DIR}/deploy-logs}"
 LOCK_FILE="${CARRO_CHEFE_DEPLOY_LOCK:-/run/lock/carro-chefe-deploy.lock}"
+VALIDATION_CACHE_DIR="${CARRO_CHEFE_VALIDATION_CACHE_DIR:-${DATA_DIR}/deploy-validation}"
 READINESS_ATTEMPTS="${CARRO_CHEFE_READINESS_ATTEMPTS:-30}"
 READINESS_DELAY_SECONDS="${CARRO_CHEFE_READINESS_DELAY_SECONDS:-1}"
+ORIGINAL_ARGS=("$@")
 
 usage() {
   cat <<'EOF'
 Uso:
-  sudo carro-chefe-deploy <release-sha>
+  sudo carro-chefe-deploy <release-sha> [--full-validation]
 
-Executa deploy fail-closed por SHA imutável:
-  fetch -> checkout -> npm ci -> preflight isolado -> backups -> stop ->
-  migrations -> permissões -> nginx -t/reload -> restart -> health checks.
+Executa deploy fail-closed por SHA imutável. Gates repetíveis usam cache por
+fingerprint de inputs; backup, migrations reais, Nginx, restart e health/smoke
+sempre executam. Use --full-validation para ignorar o cache nesta execução.
 
 O script NÃO:
   - executa prisma reset/seed;
@@ -38,12 +40,25 @@ early_die() {
 
 [[ "${READINESS_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_ATTEMPTS deve ser inteiro positivo"
 [[ "${READINESS_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_DELAY_SECONDS deve ser inteiro positivo"
-
 [[ ${EUID} -eq 0 ]] || early_die "execute como root/sudo"
-[[ $# -eq 1 ]] || { usage; exit 64; }
 
-RELEASE_SHA="$1"
-[[ "${RELEASE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]] || early_die "release SHA deve ter 40 caracteres hexadecimais"
+RELEASE_SHA=""
+FULL_VALIDATION=0
+for arg in "$@"; do
+  case "${arg}" in
+    --full-validation) FULL_VALIDATION=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *)
+      if [[ -z "${RELEASE_SHA}" && "${arg}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+        RELEASE_SHA="${arg,,}"
+      else
+        usage
+        early_die "argumento inválido: ${arg}"
+      fi
+      ;;
+  esac
+done
+[[ -n "${RELEASE_SHA}" ]] || { usage; exit 64; }
 
 for command in git npm node sqlite3 systemctl nginx curl python3 flock tee sha256sum readlink; do
   command -v "${command}" >/dev/null 2>&1 || early_die "comando obrigatório ausente: ${command}"
@@ -55,7 +70,8 @@ done
 
 DEPLOYER_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 
-mkdir -p "${BACKUP_DIR}" "${LOG_DIR}"
+mkdir -p "${BACKUP_DIR}" "${LOG_DIR}" "${VALIDATION_CACHE_DIR}"
+chmod 700 "${VALIDATION_CACHE_DIR}" || true
 if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
   exec 9>"${LOCK_FILE}"
   flock -n 9 || early_die "outro deploy já está em execução"
@@ -84,7 +100,11 @@ cleanup_on_error() {
   if [[ "${MIGRATION_STARTED}" -eq 0 ]]; then
     echo "Nenhuma migration real foi iniciada; restaurando checkout anterior."
     git checkout --detach "${PREVIOUS_SHA}" || true
-    npm ci --include=dev || true
+    if [[ -d node_modules ]] && git diff --quiet "${PREVIOUS_SHA}" "${RELEASE_SHA}" -- package.json package-lock.json; then
+      echo "rollback_dependencies=reused"
+    else
+      npm ci --include=dev || true
+    fi
     if [[ "${SERVICE_STOPPED}" -eq 1 ]]; then
       systemctl start "${SERVICE}" || true
     fi
@@ -105,6 +125,8 @@ echo "== Carro Chefe deploy =="
 echo "timestamp=${STAMP}"
 echo "previous_sha=${PREVIOUS_SHA}"
 echo "release_sha=${RELEASE_SHA}"
+echo "validation_mode=$([[ "${FULL_VALIDATION}" -eq 1 ]] && echo full || echo incremental)"
+echo "validation_cache_dir=${VALIDATION_CACHE_DIR}"
 echo "log=${LOG_FILE}"
 
 PHASE="validate-worktree"
@@ -118,10 +140,6 @@ git fetch origin --prune
 git cat-file -e "${RELEASE_SHA}^{commit}" || fail "SHA não existe no repositório local após fetch"
 git show --no-patch --format='release_commit=%H %s' "${RELEASE_SHA}"
 
-# O entrypoint instalado em /usr/local/sbin pode ser mais antigo que o release.
-# Depois do fetch, compare este processo com o deployer versionado no SHA alvo.
-# Se forem diferentes, extraia para /tmp e reexecute exatamente a versão do release.
-# O guard evita loop infinito. Nenhuma migration real ocorreu neste ponto.
 if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
   TARGET_DEPLOYER_TMP="/tmp/carro-chefe-deploy-${RELEASE_SHA}"
   git show "${RELEASE_SHA}:deploy/scripts/carro-chefe-deploy" > "${TARGET_DEPLOYER_TMP}" \
@@ -133,7 +151,7 @@ if [[ "${CARRO_CHEFE_DEPLOY_REEXEC:-0}" != "1" ]]; then
   TARGET_DEPLOYER_SHA="$(sha256sum "${TARGET_DEPLOYER_TMP}" | awk '{print $1}')"
   if [[ "${CURRENT_DEPLOYER_SHA}" != "${TARGET_DEPLOYER_SHA}" ]]; then
     echo "deployer_update=reexec target=${RELEASE_SHA} current_sha256=${CURRENT_DEPLOYER_SHA} target_sha256=${TARGET_DEPLOYER_SHA}"
-    exec env CARRO_CHEFE_DEPLOY_REEXEC=1 "${TARGET_DEPLOYER_TMP}" "${RELEASE_SHA}"
+    exec env CARRO_CHEFE_DEPLOY_REEXEC=1 "${TARGET_DEPLOYER_TMP}" "${ORIGINAL_ARGS[@]}"
   fi
   rm -f "${TARGET_DEPLOYER_TMP}"
 else
@@ -161,6 +179,8 @@ nginx -t
 PHASE="checkout"
 git checkout --detach "${RELEASE_SHA}"
 [[ "$(git rev-parse HEAD)" == "${RELEASE_SHA}" ]] || fail "checkout não ficou no SHA solicitado"
+[[ -f deploy/scripts/deploy-validation.mjs ]] || fail "release não contém deploy/scripts/deploy-validation.mjs"
+[[ -f deploy/validation/gates.json ]] || fail "release não contém deploy/validation/gates.json"
 
 PHASE="environment"
 set -a
@@ -172,65 +192,78 @@ set +a
 [[ -n "${LILY_DATABASE_URL:-}" ]] || fail "LILY_DATABASE_URL ausente"
 [[ -n "${LILY_UPLOAD_DIR:-}" ]] || fail "LILY_UPLOAD_DIR ausente"
 [[ -n "${LILY_MFA_ENCRYPTION_KEY:-}" ]] || fail "LILY_MFA_ENCRYPTION_KEY ausente"
-node -e 'const value=process.env.LILY_MFA_ENCRYPTION_KEY||""; const key=Buffer.from(value,"base64url"); if (key.length !== 32) process.exit(1);' \
+node -e 'const value=process.env.LILY_MFA_ENCRYPTION_KEY||""; const key=Buffer.from(value,"base64url"); if (key.length !== 32 || key.toString("base64url") !== value) process.exit(1);' \
   || fail "LILY_MFA_ENCRYPTION_KEY deve conter 32 bytes em base64url"
 
 [[ -n "${COOKLILY_LOGISTICS_CODE_KEY:-}" ]] || fail "COOKLILY_LOGISTICS_CODE_KEY ausente"
-node -e 'const value=process.env.COOKLILY_LOGISTICS_CODE_KEY||""; const key=Buffer.from(value,"base64url"); if (key.length !== 32) process.exit(1);' \
+node -e 'const value=process.env.COOKLILY_LOGISTICS_CODE_KEY||""; const key=Buffer.from(value,"base64url"); if (key.length !== 32 || key.toString("base64url") !== value) process.exit(1);' \
   || fail "COOKLILY_LOGISTICS_CODE_KEY deve conter 32 bytes em base64url"
 
 [[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "DATABASE_URL fora do volume esperado"
 [[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "LILY_DATABASE_URL fora do volume esperado"
 [[ "${LILY_UPLOAD_DIR}" == /srv/carro-chefe/data/* ]] || fail "LILY_UPLOAD_DIR fora do volume esperado"
 
+run_cached_gate() {
+  local gate="$1"
+  local local_force="$2"
+  shift 2
+  local args=(run "${gate}" --cache-dir "${VALIDATION_CACHE_DIR}")
+  if [[ "${FULL_VALIDATION}" -eq 1 || "${local_force}" -eq 1 ]]; then
+    args+=(--force)
+  fi
+  node deploy/scripts/deploy-validation.mjs "${args[@]}" -- "$@"
+}
+
 PHASE="dependencies"
-npm ci --include=dev
+NODE_DEPS_FORCE=0
+[[ -f node_modules/.package-lock.json ]] || NODE_DEPS_FORCE=1
+run_cached_gate node-dependencies "${NODE_DEPS_FORCE}" npm ci --include=dev
 
 PHASE="python-tooling"
-mkdir -p .runtime
-rm -rf .runtime/tool-health-venv
-python3 -m venv .runtime/tool-health-venv
-.runtime/tool-health-venv/bin/python -m pip install \
-  --disable-pip-version-check \
-  --requirement tools/excel_snapshot/requirements.txt
+PYTHON_FORCE=0
+if [[ ! -x .runtime/tool-health-venv/bin/python ]] || ! .runtime/tool-health-venv/bin/python -c 'import openpyxl, oletools' >/dev/null 2>&1; then
+  PYTHON_FORCE=1
+fi
+run_cached_gate python-tooling "${PYTHON_FORCE}" bash -c 'mkdir -p .runtime && rm -rf .runtime/tool-health-venv && python3 -m venv .runtime/tool-health-venv && .runtime/tool-health-venv/bin/python -m pip install --disable-pip-version-check --requirement tools/excel_snapshot/requirements.txt'
 export PATH="${APP_DIR}/.runtime/tool-health-venv/bin:${PATH}"
 hash -r
 python3 -c "import openpyxl, oletools; print('python_tooling=ok')"
 
+PROD_DATABASE_URL="${DATABASE_URL}"
+PROD_LILY_DATABASE_URL="${LILY_DATABASE_URL}"
 PRE_CORE="${APP_DIR}/.runtime/deploy-preflight-core.db"
 PRE_LILY="${APP_DIR}/.runtime/deploy-preflight-lily.db"
 rm -f "${PRE_CORE}" "${PRE_CORE}-wal" "${PRE_CORE}-shm" \
       "${PRE_LILY}" "${PRE_LILY}-wal" "${PRE_LILY}-shm"
-
-preflight() {
-  DATABASE_URL="file:${PRE_CORE}" \
-  LILY_DATABASE_URL="file:${PRE_LILY}" \
-  "$@"
-}
+export DATABASE_URL="file:${PRE_CORE}"
+export LILY_DATABASE_URL="file:${PRE_LILY}"
 
 PHASE="preflight-migrations"
-preflight npm run db:deploy
+run_cached_gate preflight-migrations 0 npm run db:deploy
 
 PHASE="policy"
-preflight npm run policy:check
+run_cached_gate policy 0 npm run policy:check
 
 PHASE="static-checks"
-preflight npm run check
+run_cached_gate static-checks 0 npm run check
 
 PHASE="tests"
-# A suíte Vitest precisa de semântica de teste estável mesmo quando o arquivo de
-# ambiente da VPS define NODE_ENV=production. Build/migrations continuam usando
-# a configuração real de produção; somente a execução da suíte força test.
-preflight env NODE_ENV=test npm test
+run_cached_gate tests 0 env NODE_ENV=test npm test
 
 PHASE="build"
-preflight npm run build
+BUILD_FORCE=0
+for artifact in apps/gestao/dist/index.html apps/site/dist/index.html apps/qr_manipulator/dist/index.html apps/lily_acai/dist/index.html dist/api; do
+  [[ -e "${artifact}" ]] || BUILD_FORCE=1
+done
+run_cached_gate build "${BUILD_FORCE}" npm run build
 
 PHASE="tool-health"
-preflight npm run tools:status:check
+run_cached_gate tool-health 0 npm run tools:status:check
+
+export DATABASE_URL="${PROD_DATABASE_URL}"
+export LILY_DATABASE_URL="${PROD_LILY_DATABASE_URL}"
 
 PHASE="post-gates-cleanliness"
-# Os testes Python geram caches não versionados; remover somente esse artefato conhecido.
 find tools -type d -name '__pycache__' -prune -exec rm -rf {} +
 find tools -type f -name '*.pyc' -delete
 
@@ -371,6 +404,10 @@ if [[ -f "${APP_DIR}/deploy/scripts/verify-sqlite-backup" ]]; then
   install -m 0755 "${APP_DIR}/deploy/scripts/verify-sqlite-backup" /usr/local/sbin/carro-chefe-verify-backup
   echo "operator_tool=/usr/local/sbin/carro-chefe-verify-backup"
 fi
+if [[ -f "${APP_DIR}/deploy/scripts/cc" ]]; then
+  install -m 0755 "${APP_DIR}/deploy/scripts/cc" /usr/local/sbin/cc
+  echo "operator_tool=/usr/local/sbin/cc"
+fi
 
 PHASE="evidence"
 EVIDENCE_FILE="${LOG_DIR}/deploy-${STAMP}-${RELEASE_SHA:0:12}.evidence"
@@ -378,6 +415,8 @@ cat > "${EVIDENCE_FILE}" <<EOF
 timestamp=${STAMP}
 previous_sha=${PREVIOUS_SHA}
 release_sha=${RELEASE_SHA}
+validation_mode=$([[ "${FULL_VALIDATION}" -eq 1 ]] && echo full || echo incremental)
+validation_cache_dir=${VALIDATION_CACHE_DIR}
 core_backup=${CORE_BACKUP}
 core_backup_sha256=${CORE_BACKUP_SHA256}
 lily_backup=${LILY_BACKUP:-not_applicable}
@@ -398,8 +437,12 @@ echo
 echo "DEPLOY CONCLUÍDO"
 echo "release_sha=${RELEASE_SHA}"
 echo "previous_sha=${PREVIOUS_SHA}"
+echo "validation_mode=$([[ "${FULL_VALIDATION}" -eq 1 ]] && echo full || echo incremental)"
 echo "evidence=${EVIDENCE_FILE}"
 echo "log=${LOG_FILE}"
+echo
+echo "Próximos deploys podem usar: sudo cc deploy canonical"
+echo "Validação completa forçada: sudo cc deploy canonical --full"
 echo
 echo "Rollback de aplicação, se compatível com o schema:"
 echo "  cd ${APP_DIR} && git checkout --detach ${PREVIOUS_SHA} && npm ci --include=dev && systemctl restart ${SERVICE}"
