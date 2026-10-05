@@ -41,10 +41,10 @@ Write-Host "Configuracao Codex sugerida para %USERPROFILE%\.codex\config.toml:"
 Write-Host ""
 Write-Host "[mcp_servers.carro_chefe_blender]"
 Write-Host ('command = "' + $VenvPython.Replace("\", "\\") + '"')
-Write-Host 'args = ["-m", "tools.blender_agent.mcp_server"]'
+Write-Host 'args = ["-m", "tools.blender_agent.mcp_server_v05"]'
 Write-Host ('cwd = "' + $RepoRoot.Replace("\", "\\") + '"')
 Write-Host "required = false"
 Write-Host "startup_timeout_sec = 20"
-Write-Host "tool_timeout_sec = 60"
+Write-Host "tool_timeout_sec = 90"
 Write-Host ""
-Write-Host "Depois reinicie o Codex/Work local e confirme a descoberta das ferramentas."
+Write-Host "Depois reinicie o Codex/Work local e confirme a descoberta das ferramentas V0.5."
