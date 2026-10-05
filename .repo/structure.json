@@ -55,7 +55,7 @@
       "files": ["AGENTS.md", "README.md"]
     },
     "mídias": {
-      "directories": ["espaco", "files", "produtos"],
+      "directories": ["espaco", "files", "originais", "produtos"],
       "files": ["AGENTS.md", "README.md"]
     },
     "packages": {
@@ -98,6 +98,7 @@
     {"path": "planejamento/", "reason": "Preservado até paridade e migração definitiva da V2."},
     {"path": "site/", "reason": "Placeholder histórico; código público ativo fica em apps/site/."},
     {"path": "cardápio/", "reason": "Mantido por regras locais e preservação do original; novos derivados devem ser catalogados em mídias/."},
-    {"path": "elementos gráficos/", "reason": "Originais de marca preservados; não criar novos arquivos soltos aqui."}
+    {"path": "elementos gráficos/", "reason": "Originais de marca preservados; não criar novos arquivos soltos aqui."},
+    {"path": "mídias/files/", "reason": "Acervo bruto legado preservado porque manifests e referências históricas apontam para esses caminhos; não receber novos arquivos."}
   ]
 }
