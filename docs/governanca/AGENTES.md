@@ -25,6 +25,18 @@ Cada agente recebe: objetivo, contexto, tarefa, restrições, dependências e cr
 
 Agentes não autoaprovam gastos, publicações, mudanças legais/fiscais ou alterações críticas de produção. A Gestão revisa; o proprietário decide quando houver custo, exposição pública ou mudança de escopo.
 
+## Ferramentas especializadas e manuais obrigatórios
+
+Quando uma tarefa possui ferramenta própria documentada, o agente deve ler o manual correspondente antes de operar a ferramenta e seguir o fluxo auditável definido por ela.
+
+Para modelagem, inspeção, Sculpt, recipes ou refinamento iterativo no Blender, o manual obrigatório é:
+
+- [Manual de agentes — Blender Agent V0.1–V0.5](./BLENDER_AGENT_AGENT_GUIDE.md).
+
+Esse manual exige, entre outras regras, ações pequenas/reversíveis, preferência por recipes/actions semânticas, captures focados, checkpoints, auto-history, receipts e o ciclo `observe → propose → apply → evaluate → rollback/finish` para V0.5. O agente não deve substituir esse fluxo por Python arbitrário, shell ou automação global do mouse.
+
+Para manutenção de planilhas `.xlsm`, siga [Guia de agentes do Excel Recipe](./EXCEL_RECIPE_AGENT_GUIDE.md).
+
 ## Frentes primordiais
 
 ### Gestão
@@ -109,4 +121,3 @@ Legenda: R responsável, A aprovador, C consultado, I informado.
 ### Atualização executiva
 
 > Leia tarefas, decisões, riscos e requisições. Resuma apenas mudanças desde o último ciclo: resultados, evidências, bloqueios, decisões vencidas, orçamento afetado e próximos passos. Não transforme hipótese em fato.
-
