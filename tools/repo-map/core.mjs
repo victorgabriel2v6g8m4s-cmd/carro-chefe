@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 const toPosix = (value) => value.split(path.sep).join("/");
+const normalizeGeneratedText = (value) => value.replace(/\r\n/g, "\n").replace(/[ \t]+$/gm, "").trimEnd();
 
 export async function loadStructure(projectRoot) {
   const raw = await fs.readFile(path.join(projectRoot, ".repo", "structure.json"), "utf8");
@@ -157,7 +158,9 @@ export async function assertRepositoryMapCurrent(projectRoot) {
   const target = path.join(projectRoot, ...contract.mapFile.split("/"));
   const current = await fs.readFile(target, "utf8").catch(() => "");
   const expected = renderRepositoryMap(contract);
-  if (current !== expected) errors.push(`Mapa desatualizado: execute npm run repo:map e versione ${contract.mapFile}.`);
+  if (normalizeGeneratedText(current) !== normalizeGeneratedText(expected)) {
+    errors.push(`Mapa desatualizado: execute npm run repo:map e versione ${contract.mapFile}.`);
+  }
   if (errors.length) throw new Error(errors.join("\n"));
   return { contract, trackedFiles };
 }
