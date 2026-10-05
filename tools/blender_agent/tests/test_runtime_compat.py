@@ -8,6 +8,7 @@ from pathlib import Path
 from tools.blender_agent import history
 from tools.blender_agent.runtime_compat import (
     DEFAULT_COMPAT_PATH_LIMIT,
+    RUNTIME_PROFILE,
     attachment_output_path,
     filename_for_parent,
     safe_runtime_path,
@@ -18,6 +19,7 @@ from tools.blender_agent.runtime_compat import (
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY = ROOT / "blender_bridge_v05_entry.py"
 COMPAT = ROOT / "runtime_compat.py"
+STOP = ROOT / "stop.ps1"
 
 
 class RuntimeCompatTests(unittest.TestCase):
@@ -110,6 +112,23 @@ class RuntimeCompatTests(unittest.TestCase):
         install_at = source.index("runtime_compat.install(core, v05)")
         start_at = source.index("core.start_bridge()")
         self.assertLess(install_at, start_at)
+        self.assertIn("runtime_compat.RUNTIME_PROFILE", source)
+        self.assertTrue(RUNTIME_PROFILE.endswith(".3"))
+
+    def test_modal_safe_shutdown_is_allowlisted_at_runtime(self) -> None:
+        source = COMPAT.read_text(encoding="utf-8")
+        self.assertIn('protocol.ALLOWED_ACTIONS.add("app.quit")', source)
+        self.assertIn('if action == "app.quit"', source)
+        self.assertIn("use_save_prompt = False", source)
+        self.assertIn("core.bpy.ops.wm.quit_blender()", source)
+        self.assertIn('mode not in {"checkpoint", "save", "discard"}', source)
+
+    def test_stop_script_defaults_to_recovery_checkpoint(self) -> None:
+        source = STOP.read_text(encoding="utf-8")
+        self.assertIn('[string]$Mode = "checkpoint"', source)
+        self.assertIn("tools.blender_agent.client call app.quit", source)
+        self.assertIn("Stop-Process -Id $pidValue -Force", source)
+        self.assertIn("can lose changes not already saved/checkpointed", source)
 
 
 if __name__ == "__main__":
