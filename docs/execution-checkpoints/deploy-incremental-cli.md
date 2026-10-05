@@ -2,12 +2,13 @@
 
 - Tarefa: reduzir o tempo de deploy com cache por fingerprint/gate e criar comandos operacionais curtos para a VPS.
 - Responsável: AG-DEV.
-- Estado: implementação validada tecnicamente; aguardando integração/deploy real.
-- Branch: `feat/deploy-incremental-cli`.
-- Base branch: `cooklily/canonical`.
+- Estado: implementação validada tecnicamente e integrada; deploy real/cache warm-up pendentes.
+- Branch de origem: `feat/deploy-incremental-cli`.
+- Branch canônica: `cooklily/canonical`.
 - Base SHA verificado: `58a81359096743f354197c25f128d3d16eec7e93`.
 - SHA funcional validado: `45bb8fb7fa4c51439f772fd0a024c848a662cd35`.
-- PR canônico: #126.
+- Merge SHA do PR #126: `383d6deca0c56c5d3fb284095f1f6e8baa51e907`.
+- PR canônico: #126, integrado por squash.
 - PR temporário de gate: #127, fechado sem merge após validação.
 
 ## Motivação verificada
@@ -59,7 +60,7 @@ Head funcional validado: `45bb8fb7fa4c51439f772fd0a024c848a662cd35`.
 - Excel Recipe / Windows: **success**;
 - Windows Supervisor: **success**.
 
-O commit que atualiza este checkpoint é somente documental e sucede o SHA funcional acima; não altera código executável, configuração de gates ou dependências.
+O merge por squash preserva o conteúdo funcional validado e adiciona o checkpoint documental. A atualização posterior deste checkpoint é apenas documental.
 
 ## Próximos passos
 
@@ -71,7 +72,7 @@ O commit que atualiza este checkpoint é somente documental e sucede o SHA funci
 - [x] abrir PR para `cooklily/canonical` (#126);
 - [x] executar CI/CodeQL pelo gate temporário #127;
 - [x] fechar #127 sem merge;
-- [ ] integrar #126 na canonical;
+- [x] integrar #126 na canonical (`383d6deca0c56c5d3fb284095f1f6e8baa51e907`);
 - [ ] bootstrap único de `cc` na VPS;
 - [ ] primeiro deploy para semear o cache;
 - [ ] segundo deploy/redeploy controlado para confirmar `validation_cache=hit` nos gates inalterados.
