@@ -106,7 +106,7 @@ O smoke PowerShell agora também valida freshness do processo e identidade do ru
 As correções estão implementadas e testadas no código, mas estes dois incidentes só devem ser marcados como resolvidos em máquina real após:
 
 1. salvar/fechar qualquer Blender Agent iniciado antes do último `git pull` e iniciar uma nova sessão pelo `start.ps1`;
-2. confirmar no `status` o perfil `v05-runtime-compat-20261005.2`;
+2. confirmar que `python -m tools.blender_agent.client status` retorna `runtime_profile: v05-runtime-compat-20261005.2`;
 3. repetir a recipe de 49 etapas e confirmar que as capturas automáticas passam o critério;
 4. confirmar que os caminhos gerados ficam abaixo do orçamento configurado e preservam `.png`;
 5. executar `sculpt-smoke-test.ps1 -OpenImages` e confirmar que `sculpt.prepare` chega ao stroke;
