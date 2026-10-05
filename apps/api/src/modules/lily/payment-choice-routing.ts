@@ -113,6 +113,7 @@ export async function createLilyPixChoice(input: {
   quote: LilyPaymentQuote;
   idempotencyKey: string;
   chain: LilyChoiceProviderId[];
+  manualInstructions?: string | null;
 }): Promise<{
   provider: LilyChoiceProviderId;
   result: LilyChoiceProviderResult;
@@ -174,6 +175,9 @@ export async function createLilyPixChoice(input: {
       }
     }
 
+    const instructions = input.manualInstructions?.trim()
+      ?? (await getLilyOperationalSettings()).manualPixInstructions?.trim()
+      ?? null;
     return {
       provider: "manual",
       result: {
@@ -181,7 +185,7 @@ export async function createLilyPixChoice(input: {
         providerReference: null,
         status: "pending",
         paidCents: null,
-        instructions: (await getLilyOperationalSettings()).manualPixInstructions?.trim() ?? null,
+        instructions,
         expiresAt: null,
         providerData: null
       },
