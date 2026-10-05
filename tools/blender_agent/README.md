@@ -287,7 +287,7 @@ Validar e planejar sem modificar o Blender:
 
 ```powershell
 python -m tools.blender_agent.client recipe-validate tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json
-python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguette
+python -m tools.blender_agent.client recipe-plan tools/blender_agent/recipes/carro-chefe-baguette-base-v1.json --variant long --set object_name=Teste_Baguete
 ```
 
 Executar:
