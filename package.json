@@ -34,7 +34,7 @@
     "tools:status": "node tools/tool-health/cli.mjs",
     "tools:status:dry": "node tools/tool-health/cli.mjs --dry-run",
     "tools:status:check": "node tools/tool-health/cli.mjs --check",
-    "repo:map": "node tools/repo-map/generate.mjs",
+    "repo:map": "node tools/repo-map/generate.mjs --write",
     "repo:map:check": "node tools/repo-map/generate.mjs --check",
     "policy:build": "node tools/agent-policy/cli.mjs build",
     "policy:check": "node tools/agent-policy/cli.mjs check",
