@@ -5,6 +5,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\.." )).Path
+$SessionFile = Join-Path $RepoRoot ".runtime\blender-agent\session\bridge.json"
+$CompatFile = Join-Path $PSScriptRoot "runtime_compat.py"
+$EntryFile = Join-Path $PSScriptRoot "blender_bridge_v05_entry.py"
 Set-Location $RepoRoot
 
 function Invoke-JsonCommand {
@@ -28,6 +31,53 @@ function Invoke-JsonCommand {
     catch { throw "Output is not valid JSON: $text" }
 }
 
+function Assert-BridgeRuntimeCurrent {
+    if (-not (Test-Path -LiteralPath $SessionFile)) {
+        throw "Bridge session not found. Start Blender Agent with tools/blender_agent/start.ps1 before this smoke test."
+    }
+    if (-not (Test-Path -LiteralPath $CompatFile)) {
+        throw "runtime_compat.py is missing. Pull the latest feature/blender-agent-bridge before testing Sculpt."
+    }
+    if (-not (Test-Path -LiteralPath $EntryFile)) {
+        throw "blender_bridge_v05_entry.py is missing. Pull the latest feature/blender-agent-bridge before testing Sculpt."
+    }
+
+    $entryText = Get-Content -LiteralPath $EntryFile -Raw
+    if (-not $entryText.Contains("runtime_compat.install(core, v05)")) {
+        throw "Local V0.5 entrypoint does not install runtime_compat. Pull the latest feature/blender-agent-bridge."
+    }
+
+    try {
+        $session = Get-Content -LiteralPath $SessionFile -Raw | ConvertFrom-Json
+        $bridgeProcess = Get-Process -Id ([int]$session.pid) -ErrorAction Stop
+    }
+    catch {
+        throw "Bridge session is stale or its PID is no longer running. Restart Blender Agent with tools/blender_agent/start.ps1."
+    }
+
+    $sourceTimes = @(
+        (Get-Item -LiteralPath $CompatFile).LastWriteTimeUtc,
+        (Get-Item -LiteralPath $EntryFile).LastWriteTimeUtc
+    )
+    $latestSourceWrite = ($sourceTimes | Sort-Object -Descending | Select-Object -First 1)
+    $processStarted = $bridgeProcess.StartTime.ToUniversalTime()
+
+    if ($processStarted -lt $latestSourceWrite) {
+        throw @"
+The running Blender bridge predates the current compatibility fix.
+PID: $($session.pid)
+Bridge started (UTC): $($processStarted.ToString("o"))
+Runtime source updated (UTC): $($latestSourceWrite.ToString("o"))
+
+Save/close the current Blender window, then run:
+git pull --ff-only origin feature/blender-agent-bridge
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/blender_agent/start.ps1
+
+Only after the new bridge reports ready, rerun this Sculpt smoke test.
+"@
+    }
+}
+
 $suffix = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
 $objectName = "CC_Sculpt_Smoke_$suffix"
 $createdObject = $false
@@ -43,6 +93,7 @@ $smokeStageId = $null
 
 try {
     Write-Host "1/7 bridge status"
+    Assert-BridgeRuntimeCurrent
     $status = Invoke-JsonCommand @("-m", "tools.blender_agent.client", "status")
     if (-not $status.ok) { throw "Bridge unavailable." }
     $previousStageId = $status.result.active_stage_id
