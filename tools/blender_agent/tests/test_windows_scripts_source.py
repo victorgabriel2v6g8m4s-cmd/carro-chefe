@@ -46,9 +46,9 @@ class WindowsPowerShellSourceTests(unittest.TestCase):
         self.assertIn("tools.blender_agent.iteration_smoke", source)
         self.assertIn("V0.5 iterative smoke", source)
 
-    def test_start_script_loads_v05_extension_bridge(self) -> None:
+    def test_start_script_loads_v05_entrypoint(self) -> None:
         source = (ROOT / "start.ps1").read_text(encoding="ascii")
-        self.assertIn("blender_bridge_v05.py", source)
+        self.assertIn("blender_bridge_v05_entry.py", source)
 
     def test_install_mcp_uses_v05_server(self) -> None:
         source = (ROOT / "install-mcp.ps1").read_text(encoding="ascii")
