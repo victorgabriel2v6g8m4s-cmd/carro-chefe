@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { ApiError } from "../../lib/errors";
 import { createCookLilyPixPayment, cookLilyPixConfiguration } from "./cooklily-pix-provider";
 import { getLilyOperationalSettings } from "./fulfillment";
@@ -94,7 +93,7 @@ export async function buildLilyPaymentMethodOptions(order: {
       available: availability.available,
       providers: availability.providers,
       preferredProvider: availability.providers[0] ?? null,
-      requiresPayerEmail: rule.method !== "pix" || availability.providers[0] === "mercado_pago",
+      requiresPayerEmail: rule.method !== "pix" || availability.providers.includes("mercado_pago"),
       fallbackMayUsePayerEmail: rule.method === "pix" && availability.providers.includes("mercado_pago"),
       discountLabel: lilyPaymentDiscountLabel(rule),
       pricing: quote
