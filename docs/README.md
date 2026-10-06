@@ -25,6 +25,7 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 19. [Loop iterativo do Blender Agent](./tecnologia/BLENDER_AGENT_ITERATIVE.md) — percepção multimodal, proposals, budget, snapshots, rollback, critérios e aprovação humana da V0.5.
 20. [Manual de agentes do Blender Agent](./governanca/BLENDER_AGENT_AGENT_GUIDE.md) — procedimento operacional obrigatório para agentes que controlam, refinam ou retomam produções 3D.
 21. [Limitações de execução real do Blender Agent](./tecnologia/BLENDER_AGENT_REAL_RUN_LIMITS.md) — incidentes da recipe de 49 etapas, path Windows de 262 caracteres e regressão de `SculptPrepareJob`.
+22. [Imagens de referência e texturas do Blender Agent](./tecnologia/BLENDER_AGENT_IMAGES.md) — Image Empty, Base Color por imagem, asset roots e CLI/MCP.
 
 ## Organização
 
@@ -58,6 +59,7 @@ docs/
 │   ├── BLENDER_AGENT_SCULPT.md
 │   ├── BLENDER_AGENT_RECIPES.md
 │   ├── BLENDER_AGENT_ITERATIVE.md
+│   ├── BLENDER_AGENT_IMAGES.md
 │   ├── BLENDER_AGENT_REAL_RUN_LIMITS.md
 │   ├── ATRIBUICAO_OMNICANAL.md
 │   ├── DADOS_ERP.md
@@ -89,7 +91,7 @@ docs/
 | **Ferramentas** | inventário, seleção, saúde automática, pendências e bloqueios | [Índice](./ferramentas/README.md), [Próprias](./ferramentas/PROPRIAS.md), [Status](./ferramentas/STATUS_AUTOMATICO.md) |
 | **Fundação** | visão do negócio, arquitetura geral e sequência de implantação | [Arquitetura](./fundacao/ARQUITETURA.md), [Roadmap](./fundacao/ROADMAP.md) |
 | **Negócio** | marca, produto, cardápio, marketing e experiência comercial | [Marca](./negocio/MARCA.md), [Marketing e mídias](./negocio/MARKETING_MIDIAS.md), [Radar social de Campo Grande](./negocio/REDES_SOCIAIS_TRENDS_CAMPO_GRANDE_2026.md), [Funil social de pré-lançamento](./negocio/FUNIL_SOCIAL_PRE_LANCAMENTO.md), [Produto e cardápio](./negocio/PRODUTO_CARDAPIO.md) |
-| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Blender Agent](./tecnologia/BLENDER_AGENT.md), [Contexto do Blender Agent](./tecnologia/BLENDER_AGENT_CONTEXT.md), [Sculpt do Blender Agent](./tecnologia/BLENDER_AGENT_SCULPT.md), [Recipes 3D do Blender Agent](./tecnologia/BLENDER_AGENT_RECIPES.md), [Loop iterativo V0.5](./tecnologia/BLENDER_AGENT_ITERATIVE.md), [Incidentes reais do Blender Agent](./tecnologia/BLENDER_AGENT_REAL_RUN_LIMITS.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Social Growth Engine](./tecnologia/SOCIAL_GROWTH_ENGINE.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
+| **Tecnologia** | sistemas, integrações, dados, ERP e ferramentas internas | [Arquitetura técnica V2](./tecnologia/ARQUITETURA_TECNICA_V2.md), [Blender Agent](./tecnologia/BLENDER_AGENT.md), [Contexto do Blender Agent](./tecnologia/BLENDER_AGENT_CONTEXT.md), [Sculpt do Blender Agent](./tecnologia/BLENDER_AGENT_SCULPT.md), [Recipes 3D do Blender Agent](./tecnologia/BLENDER_AGENT_RECIPES.md), [Loop iterativo V0.5](./tecnologia/BLENDER_AGENT_ITERATIVE.md), [Imagens do Blender Agent](./tecnologia/BLENDER_AGENT_IMAGES.md), [Incidentes reais do Blender Agent](./tecnologia/BLENDER_AGENT_REAL_RUN_LIMITS.md), [Atribuição omnicanal](./tecnologia/ATRIBUICAO_OMNICANAL.md), [Dados e ERP](./tecnologia/DADOS_ERP.md), [Excel Recipe genérico](./tecnologia/EXCEL_RECIPE_GENERIC_ENGINE_PLAN.md), [Excel Recipe V1](./tecnologia/EXCEL_RECIPE_V1.md), [Excel Recipe V2](./tecnologia/EXCEL_RECIPE_V2.md), [Excel Recipe V3A](./tecnologia/EXCEL_RECIPE_V3A.md), [Excel Recipe V3B](./tecnologia/EXCEL_RECIPE_V3B.md), [Plano Excel Recipe V3](./tecnologia/EXCEL_RECIPE_V3_PLAN.md), [Social Growth Engine](./tecnologia/SOCIAL_GROWTH_ENGINE.md), [Totem](./tecnologia/TOTEM_AUTOATENDIMENTO.md) |
 | **Operação** | rotina física, qualidade, compras, fornecedores, equipe e contingência | [Compras](./operacao/COMPRAS.md), [Modelo de declaração de vínculo empregatício](./operacao/DECLARACAO_VINCULO_EMPREGATICIO_MODELO.md), [Operação e qualidade](./operacao/OPERACAO.md) |
 | **Governança** | agentes, GitHub, decisões, riscos e regras de coordenação | [Agentes](./governanca/AGENTES.md), [Manual Blender Agent](./governanca/BLENDER_AGENT_AGENT_GUIDE.md), [Guia de agentes do Excel Recipe](./governanca/EXCEL_RECIPE_AGENT_GUIDE.md), [GitHub e agentes](./governanca/GITHUB_E_AGENTES.md), [Riscos e decisões](./governanca/RISCOS_DECISOES.md) |
 
