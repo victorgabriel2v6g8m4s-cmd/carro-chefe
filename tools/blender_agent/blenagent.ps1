@@ -26,21 +26,40 @@ function Assert-LastExitCode {
     }
 }
 
+function Invoke-AgentPowerShell {
+    param(
+        [Parameter(Mandatory = $true)][string]$ScriptName,
+        [string[]]$Arguments = @()
+    )
+
+    $scriptPath = Join-Path $PSScriptRoot $ScriptName
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath @Arguments
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        throw "$ScriptName failed with exit code $exitCode."
+    }
+}
+
 function Start-Agent {
-    & (Join-Path $PSScriptRoot "start.ps1") `
-        -BlenderExe $BlenderExe `
-        -BlendFile $BlendFile `
-        -MaxRetry $MaxRetry `
-        -RetrySeconds $RetrySeconds
+    $arguments = @(
+        "-MaxRetry", [string]$MaxRetry,
+        "-RetrySeconds", [string]$RetrySeconds
+    )
+    if ($BlenderExe) {
+        $arguments += @("-BlenderExe", $BlenderExe)
+    }
+    if ($BlendFile) {
+        $arguments += @("-BlendFile", $BlendFile)
+    }
+    Invoke-AgentPowerShell -ScriptName "start.ps1" -Arguments $arguments
 }
 
 function Stop-Agent {
+    $arguments = @("-PythonExe", $PythonExe, "-Mode", $Mode)
     if ($Force) {
-        & (Join-Path $PSScriptRoot "stop.ps1") -PythonExe $PythonExe -Mode $Mode -Force
+        $arguments += "-Force"
     }
-    else {
-        & (Join-Path $PSScriptRoot "stop.ps1") -PythonExe $PythonExe -Mode $Mode
-    }
+    Invoke-AgentPowerShell -ScriptName "stop.ps1" -Arguments $arguments
 }
 
 function Restart-Agent {
@@ -83,10 +102,10 @@ exit /b %ERRORLEVEL%
     if (-not [string]::IsNullOrWhiteSpace($userPath)) {
         $entries = $userPath.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
     }
-    $normalizedBin = $binDir.TrimEnd("\")
+    $normalizedBin = $binDir.TrimEnd([char]'\')
     $alreadyPresent = $false
     foreach ($entry in $entries) {
-        if ($entry.Trim().TrimEnd("\") -ieq $normalizedBin) {
+        if ($entry.Trim().TrimEnd([char]'\') -ieq $normalizedBin) {
             $alreadyPresent = $true
             break
         }
@@ -166,55 +185,49 @@ switch ($Command.ToLowerInvariant()) {
         if (-not $ImagePath) {
             $ImagePath = ".runtime\blender-agent\assets\referencia.jpg"
         }
+        $arguments = @("-PythonExe", $PythonExe, "-ImagePath", $ImagePath)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "image-smoke-test.ps1") -PythonExe $PythonExe -ImagePath $ImagePath -OpenImages
+            $arguments += "-OpenImages"
         }
-        else {
-            & (Join-Path $PSScriptRoot "image-smoke-test.ps1") -PythonExe $PythonExe -ImagePath $ImagePath
-        }
+        Invoke-AgentPowerShell -ScriptName "image-smoke-test.ps1" -Arguments $arguments
     }
     "sculpt-smoke" {
+        $arguments = @("-PythonExe", $PythonExe)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "sculpt-smoke-test.ps1") -PythonExe $PythonExe -OpenImages
+            $arguments += "-OpenImages"
         }
-        else {
-            & (Join-Path $PSScriptRoot "sculpt-smoke-test.ps1") -PythonExe $PythonExe
-        }
+        Invoke-AgentPowerShell -ScriptName "sculpt-smoke-test.ps1" -Arguments $arguments
     }
     "recipe-smoke" {
+        $arguments = @("-PythonExe", $PythonExe)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "recipe-smoke-test.ps1") -PythonExe $PythonExe -OpenImages
+            $arguments += "-OpenImages"
         }
-        else {
-            & (Join-Path $PSScriptRoot "recipe-smoke-test.ps1") -PythonExe $PythonExe
-        }
+        Invoke-AgentPowerShell -ScriptName "recipe-smoke-test.ps1" -Arguments $arguments
     }
     "iteration-smoke" {
+        $arguments = @("-PythonExe", $PythonExe)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "iteration-smoke-test.ps1") -PythonExe $PythonExe -OpenImages
+            $arguments += "-OpenImages"
         }
-        else {
-            & (Join-Path $PSScriptRoot "iteration-smoke-test.ps1") -PythonExe $PythonExe
-        }
+        Invoke-AgentPowerShell -ScriptName "iteration-smoke-test.ps1" -Arguments $arguments
     }
     "context-smoke" {
+        $arguments = @("-PythonExe", $PythonExe)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "context-smoke-test.ps1") -PythonExe $PythonExe -OpenImages
+            $arguments += "-OpenImages"
         }
-        else {
-            & (Join-Path $PSScriptRoot "context-smoke-test.ps1") -PythonExe $PythonExe
-        }
+        Invoke-AgentPowerShell -ScriptName "context-smoke-test.ps1" -Arguments $arguments
     }
     "smoke" {
+        $arguments = @("-PythonExe", $PythonExe, "-CaptureName", $CaptureName)
         if ($OpenImages) {
-            & (Join-Path $PSScriptRoot "smoke-test.ps1") -PythonExe $PythonExe -CaptureName $CaptureName -OpenImage
+            $arguments += "-OpenImage"
         }
-        else {
-            & (Join-Path $PSScriptRoot "smoke-test.ps1") -PythonExe $PythonExe -CaptureName $CaptureName
-        }
+        Invoke-AgentPowerShell -ScriptName "smoke-test.ps1" -Arguments $arguments
     }
     "install-mcp" {
-        & (Join-Path $PSScriptRoot "install-mcp.ps1")
+        Invoke-AgentPowerShell -ScriptName "install-mcp.ps1"
     }
     "help" {
         Show-Help
