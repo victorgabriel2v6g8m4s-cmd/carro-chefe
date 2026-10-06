@@ -11,6 +11,7 @@ from tools.blender_agent import assets, protocol
 ROOT = Path(__file__).resolve().parents[1]
 MCP = ROOT / "mcp_server_v05.py"
 CLI = ROOT / "image_cli.py"
+SMOKE = ROOT / "image-smoke-test.ps1"
 
 
 class AssetActionTests(unittest.TestCase):
@@ -68,7 +69,8 @@ class AssetActionTests(unittest.TestCase):
         self.assertIn('"material.image_texture"', source)
         self.assertIn("ShaderNodeTexImage", source)
         self.assertIn('principled.inputs.get("Base Color")', source)
-        self.assertIn('empty_display_type = "IMAGE"', source)
+        self.assertIn("core.bpy.ops.object.empty_image_add", source)
+        self.assertIn("CC_BLENDER_ASSET_ROOT", source)
 
     def test_mcp_and_typed_cli_expose_asset_actions(self) -> None:
         mcp_source = MCP.read_text(encoding="utf-8")
@@ -77,6 +79,13 @@ class AssetActionTests(unittest.TestCase):
         self.assertIn("def blender_material_image_texture", mcp_source)
         self.assertIn('sub.add_parser("reference-add"', cli_source)
         self.assertIn('sub.add_parser("material-texture"', cli_source)
+
+    def test_image_smoke_is_ascii_safe_for_windows_powershell(self) -> None:
+        SMOKE.read_bytes().decode("ascii")
+        source = SMOKE.read_text(encoding="ascii")
+        self.assertIn("tools.blender_agent.image_cli", source)
+        self.assertIn("material-texture", source)
+        self.assertIn("reference-add", source)
 
 
 if __name__ == "__main__":
