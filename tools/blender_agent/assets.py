@@ -89,14 +89,9 @@ def add_reference_image(core: Any, params: dict[str, Any]) -> dict[str, Any]:
             f"reference.image.add exige Object Mode; modo atual={core.bpy.context.mode}"
         )
     source = resolve_asset_path(str(params.get("path") or ""))
-    image = _load_image(
-        core,
-        source,
-        colorspace=str(params["colorspace"]) if params.get("colorspace") else None,
-        pack=bool(params.get("pack", False)),
-    )
     location = _vec3(core, params.get("location", [0, 0, 0]), "location")
     rotation = _vec3(core, params.get("rotation_deg", [90, 0, 0]), "rotation_deg")
+    rotation_rad = tuple(math.radians(v) for v in rotation)
     scale = _vec3(core, params.get("scale", [1, 1, 1]), "scale")
     display_size = max(0.0001, min(1000.0, float(params.get("display_size", 5.0))))
     opacity = max(0.0, min(1.0, float(params.get("opacity", 0.55))))
@@ -107,18 +102,36 @@ def add_reference_image(core: Any, params: dict[str, Any]) -> dict[str, Any]:
     if side not in REFERENCE_SIDES:
         raise ValueError(f"side invalido: {side}")
 
-    core.bpy.ops.object.empty_add(type="IMAGE", location=location)
+    result = core.bpy.ops.object.empty_image_add(
+        filepath=str(source),
+        check_existing=True,
+        relative_path=False,
+        align="WORLD",
+        location=location,
+        rotation=rotation_rad,
+        scale=scale,
+        background=False,
+    )
+    if not result or "FINISHED" not in result:
+        raise RuntimeError(f"Blender recusou Image Empty: {sorted(result or [])}")
     obj = core.bpy.context.object
-    if obj is None:
-        raise RuntimeError("Blender nao criou o image empty")
+    if obj is None or obj.type != "EMPTY" or obj.data is None:
+        raise RuntimeError("Blender nao criou Image Empty valido")
+    image = obj.data
+    if params.get("colorspace"):
+        try:
+            image.colorspace_settings.name = str(params["colorspace"])
+        except Exception as exc:
+            raise ValueError(f"colorspace invalido: {params['colorspace']}") from exc
+    if bool(params.get("pack", False)) and image.packed_file is None:
+        image.pack()
+
     obj.name = str(params.get("name") or f"REF_{source.stem}")[:63]
-    obj.data = image
-    obj.empty_display_type = "IMAGE"
     obj.empty_display_size = display_size
     obj.empty_image_depth = depth
     obj.empty_image_side = side
     obj.color[3] = opacity
-    obj.rotation_euler = tuple(math.radians(v) for v in rotation)
+    obj.rotation_euler = rotation_rad
     obj.scale = scale
     obj.hide_render = True
     core.bpy.context.view_layer.update()
