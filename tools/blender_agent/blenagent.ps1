@@ -100,7 +100,7 @@ exit /b %ERRORLEVEL%
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
     $entries = @()
     if (-not [string]::IsNullOrWhiteSpace($userPath)) {
-        $entries = $userPath.Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
+        $entries = @($userPath -split ";" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     }
     $normalizedBin = $binDir.TrimEnd([char]'\')
     $alreadyPresent = $false
