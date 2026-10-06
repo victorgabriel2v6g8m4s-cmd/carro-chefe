@@ -9,6 +9,8 @@ O runtime V0.5 passou a oferecer duas actions semânticas para eliminar a depend
 
 Essas actions fazem parte do runtime `v05-runtime-compat-20261005.4` e são expostas por RPC, CLI tipada e MCP V0.5.
 
+Para operação diária no Windows, prefira a CLI curta `blenagent`; o uso completo está em [BLENDER_AGENT_CLI.md](./BLENDER_AGENT_CLI.md).
+
 ## Segurança de arquivos
 
 O agente não recebe acesso irrestrito ao disco. A imagem deve estar em uma destas raízes:
@@ -37,7 +39,7 @@ mídias/referencias/baguete-frontal.jpg
 
 ## 1. Inserir imagem de referência
 
-CLI tipada:
+CLI tipada de baixo nível:
 
 ```powershell
 python -m tools.blender_agent.image_cli reference-add "mídias/referencias/baguete-frontal.jpg" `
@@ -79,7 +81,7 @@ A action exige **Object Mode**. Se uma sessão Sculpt estiver ativa, finalize-a 
 
 ## 2. Atribuir imagem ao material
 
-CLI tipada:
+CLI tipada de baixo nível:
 
 ```powershell
 python -m tools.blender_agent.image_cli material-texture CC_Baguette `
@@ -116,7 +118,43 @@ Parâmetros principais:
 
 Se o objeto for MESH e não possuir UV map, a action retorna `warning` e `has_uv=false`. A action **não inventa UV automaticamente**, porque isso mudaria a topologia/mapeamento de forma implícita.
 
-## 3. Uso via MCP V0.5
+## 3. Smoke test pela CLI curta
+
+O caminho preferido para validar as duas actions no Windows é:
+
+```powershell
+blenagent image-smoke -OpenImages
+```
+
+O arquivo padrão é:
+
+```text
+.runtime\blender-agent\assets\referencia.jpg
+```
+
+Outra imagem pode ser usada com:
+
+```powershell
+blenagent image-smoke -ImagePath "mídias\referencias\produto.jpg" -OpenImages
+```
+
+O smoke executa sete etapas:
+
+1. confirma health do bridge;
+2. cria um stage de auto-history;
+3. adiciona a imagem como referência;
+4. captura a referência e remove o Image Empty;
+5. cria um mesh com UV e aplica a imagem ao Base Color;
+6. captura o mesh em shading `MATERIAL`;
+7. confirma que as duas actions foram registradas no auto-history.
+
+As capturas ficam em:
+
+```text
+.runtime/blender-agent/history/<stage-id>/attachments/
+```
+
+## 4. Uso via MCP V0.5
 
 Ferramentas novas:
 
@@ -148,7 +186,7 @@ blender_status
   -> avaliar visualmente
 ```
 
-## 4. Limitações atuais
+## 5. Limitações atuais
 
 Nesta primeira versão:
 
@@ -160,15 +198,58 @@ Nesta primeira versão:
 
 Essas limitações são intencionais para manter a primeira entrega pequena, previsível e reversível.
 
-## 5. Critério de validação real
+## 6. Execução real registrada — 2026-10-05
 
-Antes de considerar a capacidade validada no Windows 10 + Blender 5.2 LTS:
+Smoke executado em Windows com o runtime:
 
-1. iniciar runtime `.4`;
-2. adicionar uma referência JPG/PNG e confirmar que aparece no viewport;
-3. capturar a viewport com a referência presente;
-4. atribuir uma imagem Base Color a um mesh com UV;
-5. mudar shading para `MATERIAL` e confirmar a textura visualmente;
-6. validar auto-history das duas actions;
-7. confirmar que caminho fora das raízes permitidas é rejeitado;
-8. confirmar que `CC_BLENDER_ASSET_ROOT` permite uma pasta externa explicitamente autorizada.
+```text
+v05-runtime-compat-20261005.4
+```
+
+Comando:
+
+```powershell
+blenagent image-smoke -OpenImages
+```
+
+Resultado registrado:
+
+```text
+1/7 bridge status
+2/7 create image smoke stage
+3/7 add reference image
+4/7 capture reference and remove it
+5/7 create UV sphere and assign image texture
+6/7 capture textured mesh
+7/7 verify auto-history
+
+Blender Agent image smoke test OK.
+```
+
+Artefatos gerados na execução:
+
+```text
+.runtime/blender-agent/history/20261006T022511Z-Image-actions-smoke/attachments/image-smoke-reference.png
+.runtime/blender-agent/history/20261006T022511Z-Image-actions-smoke/attachments/image-smoke-texture.png
+```
+
+Observação visual do operador: a imagem de referência foi vista sendo inserida no viewport durante o smoke. A captura final da textura não apresentou uma diferença visual muito evidente nessa imagem de teste específica, embora a action de material tenha concluído, a captura tenha sido produzida e o auto-history tenha registrado sucesso. Portanto:
+
+- **Image Empty / referência:** validado em execução real e confirmado visualmente;
+- **pipeline de atribuição Base Color + UV + captura + history:** validado pelo smoke real;
+- **legibilidade visual da textura:** ainda merece um teste adicional com uma imagem diagnóstica de alto contraste para confirmar o mapeamento de forma inequívoca.
+
+## 7. Critério de validação real
+
+Estado atual:
+
+1. iniciar runtime `.4` — **validado**;
+2. adicionar referência JPG/PNG e confirmar que aparece no viewport — **validado**;
+3. capturar viewport com a referência presente — **validado**;
+4. atribuir imagem Base Color a mesh com UV — **validado pelo smoke**;
+5. mudar shading para `MATERIAL` e confirmar textura visualmente — **parcial; captura produzida, diferença visual pouco evidente**;
+6. validar auto-history das duas actions — **validado**;
+7. confirmar que caminho fora das raízes permitidas é rejeitado — coberto por teste automatizado, ainda pode ser repetido em smoke real se necessário;
+8. confirmar que `CC_BLENDER_ASSET_ROOT` permite pasta externa explicitamente autorizada — coberto por teste automatizado, ainda pode ser repetido em smoke real se necessário.
+
+Para fechar o item 5 de modo inequívoco, use no próximo teste uma textura de diagnóstico com quadrantes ou faixas de cores contrastantes e confirme sua orientação sobre o mesh.
