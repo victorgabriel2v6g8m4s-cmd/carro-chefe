@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import history, protocol
+from . import assets, history, protocol
 
-RUNTIME_PROFILE = "v05-runtime-compat-20261005.3"
+RUNTIME_PROFILE = "v05-runtime-compat-20261005.4"
 DEFAULT_COMPAT_PATH_LIMIT = 240
 _MIN_FILENAME_BUDGET = 24
 _SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
@@ -46,12 +46,7 @@ def filename_for_parent(
     max_filename_length: int = 240,
     max_path_length: int | None = None,
 ) -> str:
-    """Sanitize a filename while budgeting the complete Windows path.
-
-    Any shortened name receives a deterministic hash suffix before the
-    extension. This preserves uniqueness and the extension while keeping
-    legacy Windows APIs below the configured compatibility limit.
-    """
+    """Sanitize a filename while budgeting the complete Windows path."""
     parent = parent.expanduser().resolve()
     raw = str(filename or "").strip()
     clean = _clean_filename_unbounded(raw, fallback)
@@ -232,13 +227,7 @@ def _make_sculpt_checkpoint(core):
 
 
 def _schedule_quit(core: Any, params: dict[str, Any]) -> dict[str, Any]:
-    """Schedule a modal-safe Blender shutdown after returning the response.
-
-    Agent-started sessions can make the native unsaved-changes prompt awkward
-    to interact with. This action never relies on that popup. The default mode
-    writes a recovery checkpoint first, then disables the prompt only for the
-    current process and quits a fraction of a second after the RPC response.
-    """
+    """Schedule a modal-safe Blender shutdown after returning the response."""
     mode = str(params.get("mode", "checkpoint")).strip().lower()
     if mode not in {"checkpoint", "save", "discard"}:
         raise ValueError("app.quit mode deve ser checkpoint, save ou discard")
@@ -305,12 +294,11 @@ def install(core: Any, v05: Any) -> None:
     protocol.safe_runtime_path = safe_runtime_path
     history.attachment_output_path = attachment_output_path
 
-    # Core functions resolve these names from their module globals at runtime.
     core.safe_runtime_path = safe_runtime_path
     core.attachment_output_path = attachment_output_path
     core._advance_sculpt_prepare_job = _make_sculpt_prepare_runner(core)
     core._sculpt_checkpoint = _make_sculpt_checkpoint(core)
 
-    # V0.5 imported attachment_output_path by value, so update that module too.
     v05.attachment_output_path = attachment_output_path
+    assets.install(core, v05)
     _install_lifecycle_dispatch(core)
