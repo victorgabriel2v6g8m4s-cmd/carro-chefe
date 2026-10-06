@@ -70,6 +70,8 @@ class AssetActionTests(unittest.TestCase):
         self.assertIn("ShaderNodeTexImage", source)
         self.assertIn('principled.inputs.get("Base Color")', source)
         self.assertIn("core.bpy.ops.object.empty_image_add", source)
+        self.assertIn("core.bpy.context.temp_override", source)
+        self.assertIn("core._view3d_context()", source)
         self.assertIn("CC_BLENDER_ASSET_ROOT", source)
 
     def test_mcp_and_typed_cli_expose_asset_actions(self) -> None:
