@@ -27,6 +27,13 @@ class BlenagentCliTests(unittest.TestCase):
         self.assertLess(block.index("Stop-Agent"), block.index("Start-Agent"))
         self.assertIn("$SessionFile", block)
 
+    def test_lifecycle_scripts_run_in_child_powershell(self) -> None:
+        source = LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn("function Invoke-AgentPowerShell", source)
+        self.assertIn("& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $scriptPath @Arguments", source)
+        self.assertIn('Invoke-AgentPowerShell -ScriptName "start.ps1"', source)
+        self.assertIn('Invoke-AgentPowerShell -ScriptName "stop.ps1"', source)
+
     def test_installer_creates_user_command_without_baking_unicode_repo_path(self) -> None:
         source = LAUNCHER.read_text(encoding="utf-8")
         self.assertIn('SetEnvironmentVariable("CARRO_CHEFE_REPO", $RepoRoot, "User")', source)
