@@ -11,6 +11,58 @@ _result = base._result
 
 
 @mcp.tool()
+def blender_reference_image_add(
+    path: str,
+    name: str | None = None,
+    location: list[float] | None = None,
+    rotation_deg: list[float] | None = None,
+    scale: list[float] | None = None,
+    display_size: float = 5.0,
+    opacity: float = 0.55,
+    depth: str = "BACK",
+    side: str = "DOUBLE_SIDED",
+    pack: bool = False,
+) -> dict[str, Any]:
+    """Insere uma imagem local permitida como Image Empty de referência na cena."""
+    return _result(call("reference.image.add", {
+        "path": path,
+        "name": name,
+        "location": location or [0.0, 0.0, 0.0],
+        "rotation_deg": rotation_deg or [90.0, 0.0, 0.0],
+        "scale": scale or [1.0, 1.0, 1.0],
+        "display_size": display_size,
+        "opacity": opacity,
+        "depth": depth,
+        "side": side,
+        "pack": pack,
+    }))
+
+
+@mcp.tool()
+def blender_material_image_texture(
+    name: str,
+    path: str,
+    material_name: str | None = None,
+    node_name: str = "CC_BaseColorImage",
+    colorspace: str = "sRGB",
+    extension: str = "REPEAT",
+    use_alpha: bool = False,
+    pack: bool = False,
+) -> dict[str, Any]:
+    """Carrega uma imagem permitida e liga seu Color ao Base Color do Principled BSDF do objeto."""
+    return _result(call("material.image_texture", {
+        "name": name,
+        "path": path,
+        "material_name": material_name,
+        "node_name": node_name,
+        "colorspace": colorspace,
+        "extension": extension,
+        "use_alpha": use_alpha,
+        "pack": pack,
+    }))
+
+
+@mcp.tool()
 def blender_iteration_validate(config: dict[str, Any]) -> dict[str, Any]:
     """Valida a configuração V0.5 sem iniciar uma sessão."""
     return _result(call("iteration.validate", {"config": config}))
