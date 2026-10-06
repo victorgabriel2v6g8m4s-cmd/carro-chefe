@@ -26,11 +26,6 @@ function Assert-LastExitCode {
     }
 }
 
-function Invoke-Start {
-    & (Join-Path $PSScriptRoot "start.ps1") `
-        -PythonExe:$null 2>$null
-}
-
 function Start-Agent {
     & (Join-Path $PSScriptRoot "start.ps1") `
         -BlenderExe $BlenderExe `
