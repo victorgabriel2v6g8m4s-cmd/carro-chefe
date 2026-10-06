@@ -17,15 +17,42 @@ class BlenagentCliTests(unittest.TestCase):
         self.assertIn("-ExecutionPolicy Bypass", source)
         self.assertIn("%*", source)
 
-    def test_restart_stops_then_starts(self) -> None:
+    def test_restart_stops_then_starts_when_bridge_is_healthy(self) -> None:
         source = LAUNCHER.read_text(encoding="utf-8")
         start = source.index("function Restart-Agent")
-        end = source.index("function Install-BlenagentCommand")
+        end = source.index("function Show-AgentStatus")
         block = source[start:end]
+        self.assertIn("Test-BridgeHealth", block)
         self.assertIn("Stop-Agent", block)
         self.assertIn("Start-Agent", block)
         self.assertLess(block.index("Stop-Agent"), block.index("Start-Agent"))
-        self.assertIn("$SessionFile", block)
+
+    def test_restart_recovers_dead_stale_session_without_force(self) -> None:
+        source = LAUNCHER.read_text(encoding="utf-8")
+        start = source.index("function Restart-Agent")
+        end = source.index("function Show-AgentStatus")
+        block = source[start:end]
+        self.assertIn("Remove-StaleSession", block)
+        self.assertIn("-not $state.ProcessAlive", block)
+        self.assertIn("Starting Blender Agent", block)
+
+    def test_restart_does_not_kill_live_unreachable_blender_implicitly(self) -> None:
+        source = LAUNCHER.read_text(encoding="utf-8")
+        start = source.index("function Restart-Agent")
+        end = source.index("function Show-AgentStatus")
+        block = source[start:end]
+        self.assertIn("$state.ProcessAlive -and $state.BlenderProcess", block)
+        self.assertIn("if (-not $Force)", block)
+        self.assertIn("blenagent restart -Force", block)
+
+    def test_status_reports_offline_without_throwing_generic_assertion(self) -> None:
+        source = LAUNCHER.read_text(encoding="utf-8")
+        self.assertIn("function Show-AgentStatus", source)
+        self.assertIn('Write-Host "Blender Agent: offline"', source)
+        self.assertIn('Write-Host "Next:    blenagent restart"', source)
+        status_block = source[source.index('"status" {'):source.index('"image-smoke" {')]
+        self.assertIn("Show-AgentStatus", status_block)
+        self.assertNotIn("Assert-LastExitCode", status_block)
 
     def test_lifecycle_scripts_run_in_child_powershell(self) -> None:
         source = LAUNCHER.read_text(encoding="utf-8")
