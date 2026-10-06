@@ -138,7 +138,9 @@ class RuntimeCompatTests(unittest.TestCase):
     def test_stop_script_defaults_to_recovery_checkpoint(self) -> None:
         source = STOP.read_text(encoding="utf-8")
         self.assertIn('[string]$Mode = "checkpoint"', source)
-        self.assertIn("tools.blender_agent.client call app.quit", source)
+        self.assertIn("from tools.blender_agent.client import call", source)
+        self.assertIn("$PythonExe -c $pythonCode $Mode $Label", source)
+        self.assertNotIn("call app.quit --json", source)
         self.assertIn("Stop-Process -Id $pidValue -Force", source)
         self.assertIn("can lose changes not already saved/checkpointed", source)
 
