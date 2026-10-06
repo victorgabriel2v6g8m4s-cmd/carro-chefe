@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from . import iteration, protocol, recipes
+from . import protocol
 
 IMAGE_ACTIONS = {"reference.image.add", "material.image_texture"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".exr", ".hdr"}
@@ -185,7 +185,7 @@ def assign_image_texture(core: Any, params: dict[str, Any]) -> dict[str, Any]:
     texture = nodes.get(node_name)
     if texture is not None and getattr(texture, "type", "") != "TEX_IMAGE":
         raise ValueError(
-            f"node_name ja existe com tipo incompatível: {node_name} ({texture.type})"
+            f"node_name ja existe com tipo incompativel: {node_name} ({texture.type})"
         )
     if texture is None:
         texture = nodes.new(type="ShaderNodeTexImage")
@@ -234,9 +234,6 @@ def assign_image_texture(core: Any, params: dict[str, Any]) -> dict[str, Any]:
 
 def install(core: Any, v05: Any) -> None:
     protocol.ALLOWED_ACTIONS.update(IMAGE_ACTIONS)
-    recipes.RECIPE_SAFE_ACTIONS.update(IMAGE_ACTIONS)
-    iteration.ITERATION_SAFE_ACTIONS.add("material.image_texture")
-
     previous_dispatch = core._dispatch
 
     def _dispatch_with_assets(action: str, params: dict[str, Any]):
