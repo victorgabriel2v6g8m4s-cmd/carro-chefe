@@ -37,11 +37,14 @@ if ($Force) {
     exit 0
 }
 
-$params = @{ mode = $Mode; label = $Label } | ConvertTo-Json -Compress
+# Windows PowerShell 5.1 can strip the quotes inside a JSON argument when it
+# invokes a native executable. Do not send JSON through argv here. Pass only
+# scalar values and build the params dict inside Python instead.
+$pythonCode = "import json,sys; from tools.blender_agent.client import call; print(json.dumps(call('app.quit', {'mode': sys.argv[1], 'label': sys.argv[2]}), ensure_ascii=True))"
 $previousPreference = $ErrorActionPreference
 try {
     $ErrorActionPreference = "Continue"
-    $output = & $PythonExe -m tools.blender_agent.client call app.quit --json $params 2>&1
+    $output = & $PythonExe -c $pythonCode $Mode $Label 2>&1
     $exitCode = $LASTEXITCODE
 }
 finally {
