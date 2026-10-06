@@ -19,13 +19,6 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $SessionFile = Join-Path $RepoRoot ".runtime\blender-agent\session\bridge.json"
 Set-Location $RepoRoot
 
-function Assert-LastExitCode {
-    param([string]$Context)
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Context failed with exit code $LASTEXITCODE."
-    }
-}
-
 function Invoke-AgentPowerShell {
     param(
         [Parameter(Mandatory = $true)][string]$ScriptName,
@@ -40,7 +33,94 @@ function Invoke-AgentPowerShell {
     }
 }
 
+function Get-SessionState {
+    if (-not (Test-Path -LiteralPath $SessionFile)) {
+        return [pscustomobject]@{
+            Exists = $false
+            Valid = $false
+            Pid = $null
+            ProcessAlive = $false
+            BlenderProcess = $false
+            Error = $null
+        }
+    }
+
+    try {
+        $session = Get-Content -LiteralPath $SessionFile -Raw | ConvertFrom-Json
+        $pidValue = [int]$session.pid
+    }
+    catch {
+        return [pscustomobject]@{
+            Exists = $true
+            Valid = $false
+            Pid = $null
+            ProcessAlive = $false
+            BlenderProcess = $false
+            Error = "bridge.json is not valid session JSON"
+        }
+    }
+
+    $process = Get-Process -Id $pidValue -ErrorAction SilentlyContinue
+    $isBlender = $false
+    if ($process) {
+        $isBlender = $process.ProcessName -like "blender*"
+    }
+
+    return [pscustomobject]@{
+        Exists = $true
+        Valid = $true
+        Pid = $pidValue
+        ProcessAlive = [bool]$process
+        BlenderProcess = [bool]$isBlender
+        Error = $null
+    }
+}
+
+function Test-BridgeHealth {
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $output = & $PythonExe -m tools.blender_agent.client status 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousPreference
+    }
+
+    $text = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    return [pscustomobject]@{
+        Healthy = ($exitCode -eq 0)
+        ExitCode = $exitCode
+        Text = $text
+    }
+}
+
+function Remove-StaleSession {
+    if (Test-Path -LiteralPath $SessionFile) {
+        Remove-Item -LiteralPath $SessionFile -Force
+        Write-Host "Removed stale Blender Agent session metadata."
+    }
+}
+
 function Start-Agent {
+    $state = Get-SessionState
+    if ($state.Exists) {
+        $health = Test-BridgeHealth
+        if ($health.Healthy) {
+            throw "Blender Agent is already running. Use 'blenagent restart' to restart it."
+        }
+
+        if ($state.Valid -and $state.ProcessAlive -and $state.BlenderProcess) {
+            throw "A Blender process (PID $($state.Pid)) exists but its bridge is unreachable. Use 'blenagent restart -Force' only if that Blender session can be terminated safely."
+        }
+
+        if (-not $state.Valid) {
+            throw "Blender Agent session metadata is invalid. Inspect $SessionFile before starting another Blender process."
+        }
+
+        Remove-StaleSession
+    }
+
     $arguments = @(
         "-MaxRetry", [string]$MaxRetry,
         "-RetrySeconds", [string]$RetrySeconds
@@ -63,16 +143,80 @@ function Stop-Agent {
 }
 
 function Restart-Agent {
-    if (Test-Path -LiteralPath $SessionFile) {
-        Write-Host "Stopping Blender Agent..."
-        Stop-Agent
-    }
-    else {
-        Write-Host "No active Blender Agent session found; starting a new one."
+    $state = Get-SessionState
+    if (-not $state.Exists) {
+        Write-Host "No Blender Agent session found; starting a new one."
+        Start-Agent
+        return
     }
 
-    Write-Host "Starting Blender Agent..."
-    Start-Agent
+    $health = Test-BridgeHealth
+    if ($health.Healthy) {
+        Write-Host "Stopping Blender Agent..."
+        Stop-Agent
+        Write-Host "Starting Blender Agent..."
+        Start-Agent
+        return
+    }
+
+    if ($state.Valid -and (-not $state.ProcessAlive -or -not $state.BlenderProcess)) {
+        Write-Host "Bridge session is stale; cleaning it before restart."
+        Remove-StaleSession
+        Write-Host "Starting Blender Agent..."
+        Start-Agent
+        return
+    }
+
+    if ($state.Valid -and $state.ProcessAlive -and $state.BlenderProcess) {
+        if (-not $Force) {
+            Write-Host "Blender Agent bridge is unreachable, but Blender PID $($state.Pid) is still running."
+            Write-Host "For safety, automatic restart will not kill that process."
+            Write-Host "If the current Blender session is disposable or already checkpointed, run:"
+            Write-Host "  blenagent restart -Force"
+            exit 2
+        }
+
+        Write-Warning "Forcing restart of unreachable Blender PID $($state.Pid). Unsaved changes can be lost."
+        Stop-Agent
+        Write-Host "Starting Blender Agent..."
+        Start-Agent
+        return
+    }
+
+    Write-Host "Blender Agent session metadata is invalid: $SessionFile"
+    Write-Host "Automatic restart stopped to avoid launching a duplicate Blender process."
+    exit 2
+}
+
+function Show-AgentStatus {
+    $health = Test-BridgeHealth
+    if ($health.Healthy) {
+        Write-Output $health.Text
+        return
+    }
+
+    $state = Get-SessionState
+    Write-Host "Blender Agent: offline"
+    if (-not $state.Exists) {
+        Write-Host "Session: none"
+        Write-Host "Next:    blenagent start"
+    }
+    elseif (-not $state.Valid) {
+        Write-Host "Session: invalid metadata"
+        Write-Host "File:    $SessionFile"
+    }
+    elseif (-not $state.ProcessAlive -or -not $state.BlenderProcess) {
+        Write-Host "Session: stale (recorded PID $($state.Pid) is not a live Blender process)"
+        Write-Host "Next:    blenagent restart"
+    }
+    else {
+        Write-Host "Session: Blender PID $($state.Pid) is alive, but bridge is unreachable"
+        Write-Host "Next:    blenagent restart -Force  # only if safe to terminate that Blender session"
+    }
+    if ($health.Text) {
+        Write-Host "Detail:  $($health.Text -replace '[\r\n]+', ' ')"
+    }
+    exit 1
 }
 
 function Install-BlenagentCommand {
@@ -159,7 +303,8 @@ Useful options:
   -RetrySeconds 10
   -PythonExe python
 
-restart defaults to a recovery checkpoint before closing the current bridge.
+restart defaults to a recovery checkpoint before closing a healthy bridge.
+A stale dead session is cleaned automatically. A live Blender with an unreachable bridge is never killed unless -Force is explicit.
 image-smoke defaults to .runtime\blender-agent\assets\referencia.jpg.
 "@
 }
@@ -178,8 +323,7 @@ switch ($Command.ToLowerInvariant()) {
         Restart-Agent
     }
     "status" {
-        & $PythonExe -m tools.blender_agent.client status
-        Assert-LastExitCode "Blender Agent status"
+        Show-AgentStatus
     }
     "image-smoke" {
         if (-not $ImagePath) {
