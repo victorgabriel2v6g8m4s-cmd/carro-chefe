@@ -102,19 +102,35 @@ def add_reference_image(core: Any, params: dict[str, Any]) -> dict[str, Any]:
     if side not in REFERENCE_SIDES:
         raise ValueError(f"side invalido: {side}")
 
-    result = core.bpy.ops.object.empty_image_add(
-        filepath=str(source),
-        check_existing=True,
-        relative_path=False,
-        align="WORLD",
-        location=location,
-        rotation=rotation_rad,
-        scale=scale,
-        background=False,
-    )
+    window = core.bpy.context.window
+    if window is None:
+        raise RuntimeError("reference.image.add exige uma janela Blender ativa")
+    try:
+        area, region, _space, _region_3d = core._view3d_context()
+    except Exception as exc:
+        raise RuntimeError(
+            "reference.image.add exige um VIEW_3D ativo no workspace atual"
+        ) from exc
+
+    with core.bpy.context.temp_override(
+        window=window,
+        screen=window.screen,
+        area=area,
+        region=region,
+    ):
+        result = core.bpy.ops.object.empty_image_add(
+            filepath=str(source),
+            check_existing=True,
+            relative_path=False,
+            align="WORLD",
+            location=location,
+            rotation=rotation_rad,
+            scale=scale,
+            background=False,
+        )
     if not result or "FINISHED" not in result:
         raise RuntimeError(f"Blender recusou Image Empty: {sorted(result or [])}")
-    obj = core.bpy.context.object
+    obj = core.bpy.context.view_layer.objects.active
     if obj is None or obj.type != "EMPTY" or obj.data is None:
         raise RuntimeError("Blender nao criou Image Empty valido")
     image = obj.data
