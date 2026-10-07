@@ -114,7 +114,7 @@ class RuntimeCompatTests(unittest.TestCase):
         start_at = source.index("core.start_bridge()")
         self.assertLess(install_at, start_at)
         self.assertIn("runtime_compat.RUNTIME_PROFILE", source)
-        self.assertTrue(RUNTIME_PROFILE.endswith(".4"))
+        self.assertTrue(RUNTIME_PROFILE.endswith(".5"))
 
     def test_sculpt_smoke_reads_runtime_profile_from_runtime_compat(self) -> None:
         source = SCULPT_SMOKE.read_text(encoding="utf-8")
@@ -122,9 +122,10 @@ class RuntimeCompatTests(unittest.TestCase):
         self.assertIn("$ExpectedRuntimeProfile", source)
         self.assertNotIn('ExpectedRuntimeProfile = "v05-runtime-compat-', source)
 
-    def test_runtime_compat_installs_asset_actions(self) -> None:
+    def test_runtime_compat_installs_asset_and_comparison_actions(self) -> None:
         source = COMPAT.read_text(encoding="utf-8")
-        self.assertIn("from . import assets, history, protocol", source)
+        self.assertIn("from . import assets, comparison_snapshot, history, protocol", source)
+        self.assertIn("comparison_snapshot.install(core, v05)", source)
         self.assertIn("assets.install(core, v05)", source)
 
     def test_modal_safe_shutdown_is_allowlisted_at_runtime(self) -> None:
