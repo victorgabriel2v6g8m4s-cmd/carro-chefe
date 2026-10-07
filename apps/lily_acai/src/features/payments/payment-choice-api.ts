@@ -128,7 +128,7 @@ export async function createLilyPaymentChoice(input: {
     installments: number;
   };
 }) {
-  const response = await fetch("/api/v1/lily/payment-options", {
+  const response = await fetch("/api/v1/lily/payments/options", {
     method: "POST",
     credentials: "same-origin",
     headers: {
