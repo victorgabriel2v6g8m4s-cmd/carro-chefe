@@ -40,8 +40,13 @@ export async function lilyPaymentChoiceNginxAliasRoutes(app: FastifyInstance) {
       payload: request.body ?? {}
     });
 
-    const contentType = forwarded.headers["content-type"];
-    if (contentType) reply.header("content-type", contentType);
-    return reply.code(forwarded.statusCode).send(forwarded.body);
+    let body: unknown = null;
+    try {
+      body = forwarded.body ? JSON.parse(forwarded.body) : null;
+    } catch {
+      body = { error: "Resposta interna inválida ao criar pagamento." };
+      return reply.code(502).send(body);
+    }
+    return reply.code(forwarded.statusCode).send(body);
   });
 }
