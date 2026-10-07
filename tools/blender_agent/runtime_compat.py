@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import assets, history, protocol
+from . import assets, comparison_snapshot, history, protocol
 
-RUNTIME_PROFILE = "v05-runtime-compat-20261005.4"
+RUNTIME_PROFILE = "v05-runtime-compat-20261006.5"
 DEFAULT_COMPAT_PATH_LIMIT = 240
 _MIN_FILENAME_BUDGET = 24
 _SAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
@@ -300,5 +300,6 @@ def install(core: Any, v05: Any) -> None:
     core._sculpt_checkpoint = _make_sculpt_checkpoint(core)
 
     v05.attachment_output_path = attachment_output_path
+    comparison_snapshot.install(core, v05)
     assets.install(core, v05)
     _install_lifecycle_dispatch(core)
