@@ -110,8 +110,6 @@ set_pix_key() {
   local key confirm tmp
   read -r -s -p "Chave Pix da InfinitePay (entrada oculta): " key
   echo
-  key="${key#" "}"
-  key="${key%" "}"
   [[ -n "${key}" ]] || fail "chave Pix vazia"
   [[ ${#key} -le 77 ]] || fail "chave Pix excede 77 caracteres"
   [[ "${key}" != *[[:space:]]* && "${key}" != *"'"* ]] || fail "chave Pix contém caracteres não suportados"
@@ -126,13 +124,13 @@ set_pix_key() {
   PIX_VALUE="${key}" awk '
     BEGIN { found=0 }
     /^COOKLILY_PIX_KEY=/ {
-      print "COOKLILY_PIX_KEY='''" ENVIRON["PIX_VALUE"] "'''"
+      print "COOKLILY_PIX_KEY=" ENVIRON["PIX_VALUE"]
       found=1
       next
     }
     { print }
     END {
-      if (!found) print "COOKLILY_PIX_KEY='''" ENVIRON["PIX_VALUE"] "'''"
+      if (!found) print "COOKLILY_PIX_KEY=" ENVIRON["PIX_VALUE"]
     }
   ' "${ENV_FILE}" > "${tmp}"
   chown --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || true
