@@ -4,7 +4,7 @@
 
 `blenagent` é o comando curto de operação do Blender Agent no Windows. Ele encapsula os scripts PowerShell em `tools/blender_agent/` para evitar repetir comandos longos com `powershell -NoProfile -ExecutionPolicy Bypass -File ...`.
 
-O comando cobre ciclo de vida do bridge, diagnóstico e smoke tests mais usados.
+O comando cobre ciclo de vida do bridge, diagnóstico, instalação de ambientes auxiliares e smoke tests mais usados.
 
 ## Instalação
 
@@ -100,7 +100,27 @@ blenagent restart -MaxRetry 12 -RetrySeconds 10
 blenagent restart -Force
 ```
 
-Quando existe apenas um arquivo de sessão stale e o PID correspondente já morreu, a CLI pode limpar essa sessão e iniciar novamente. Se o PID ainda estiver vivo mas o bridge estiver inacessível, a CLI não deve matar o processo silenciosamente; o operador precisa decidir se `-Force` é seguro.
+Quando existe apenas um arquivo de sessão stale e o PID correspondente já morreu, a CLI pode limpar essa sessão e iniciar novamente. Se o PID ainda estiver vivo mas o bridge estiver inacessível, a CLI não mata o processo silenciosamente; o operador precisa decidir se `-Force` é seguro.
+
+## Ambientes auxiliares
+
+### Comparação mesh × referência
+
+```powershell
+blenagent install-compare
+```
+
+Cria `.runtime/blender-agent/compare-venv/` e instala a versão pinada de Pillow usada pela composição 2D. O Blender não recebe essa dependência.
+
+A CLI completa da comparação é documentada em [BLENDER_AGENT_MESH_REFERENCE_COMPARE_USAGE.md](./BLENDER_AGENT_MESH_REFERENCE_COMPARE_USAGE.md).
+
+### MCP
+
+```powershell
+blenagent install-mcp
+```
+
+Cria o ambiente MCP isolado em `.runtime/blender-agent/mcp-venv/`.
 
 ## Smoke tests
 
@@ -123,6 +143,20 @@ blenagent image-smoke -ImagePath "mídias\referencias\produto.jpg" -OpenImages
 ```
 
 O smoke verifica status do bridge, cria stage de histórico, adiciona Image Empty, captura a referência, remove a referência, cria mesh com UV, aplica imagem ao Base Color, captura em `MATERIAL` e verifica auto-history.
+
+### Comparação mesh × referência
+
+```powershell
+blenagent compare-smoke -OpenImages
+```
+
+Também usa `.runtime/blender-agent/assets/referencia.jpg` por padrão. Para outra referência:
+
+```powershell
+blenagent compare-smoke -ImagePath "mídias\referencias\produto.jpg" -OpenImages
+```
+
+O smoke exige `blenagent install-compare`, cria um mesh temporário na cena, lê a geometria pela action read-only `mesh.comparison_snapshot`, gera PNG + receipt em `runtime/exports`, verifica auto-history e remove o objeto de teste.
 
 ### Sculpt
 
@@ -154,14 +188,6 @@ blenagent context-smoke -OpenImages
 blenagent smoke -OpenImages
 ```
 
-## MCP
-
-```powershell
-blenagent install-mcp
-```
-
-Executa o instalador MCP do Blender Agent mantendo a mesma política de isolamento em `.runtime/blender-agent/mcp-venv/`.
-
 ## Ajuda
 
 ```powershell
@@ -179,7 +205,7 @@ blenagent help
 | `-MaxRetry N` | quantidade de tentativas de startup |
 | `-RetrySeconds N` | janela por tentativa |
 | `-PythonExe PATH` | Python usado pelos clientes/smokes |
-| `-ImagePath PATH` | imagem do `image-smoke` |
+| `-ImagePath PATH` | imagem de `image-smoke` ou `compare-smoke` |
 | `-OpenImages` | abre artefatos visuais produzidos pelo smoke |
 
 ## Exemplos do fluxo de desenvolvimento
@@ -196,6 +222,14 @@ Depois de alterar suporte a imagens:
 ```powershell
 blenagent restart
 blenagent image-smoke -OpenImages
+```
+
+Depois de alterar a comparação mesh × referência:
+
+```powershell
+blenagent install-compare
+blenagent restart
+blenagent compare-smoke -OpenImages
 ```
 
 Para diagnóstico rápido:
