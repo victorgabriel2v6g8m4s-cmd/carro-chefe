@@ -13,6 +13,7 @@ import { ProfilePage, RankingPage } from "./features/account/ProfilePage";
 import { AdminFulfillmentPage } from "./features/admin/AdminFulfillmentPage";
 import { AdminDeliveriesPage } from "./features/admin/AdminDeliveriesPage";
 import { AdminPaymentsPage } from "./features/admin/AdminPaymentsPage";
+import { AdminPaymentMethodsPage } from "./features/admin/AdminPaymentMethodsPage";
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
 import { AdminObservabilityPage } from "./features/admin/AdminObservabilityPage";
@@ -491,6 +492,7 @@ function App() {
     <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
     <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
+    <Route path="/painel/pagamentos/metodos" element={<Shell><AdminPaymentMethodsPage /></Shell>} />
     <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
     <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
     <Route path="/painel/saude" element={<Shell><AdminObservabilityPage /></Shell>} />
