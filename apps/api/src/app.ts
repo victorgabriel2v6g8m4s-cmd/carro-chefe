@@ -22,6 +22,7 @@ import { knowledgeRoutes } from "./modules/knowledge/routes";
 import { prelaunchRoutes } from "./modules/prelaunch/routes";
 import { lilyRoutes } from "./modules/lily/routes";
 import { lilyPaymentChoiceRoutes } from "./modules/lily/payment-choice";
+import { lilyPaymentChoiceNginxAliasRoutes } from "./modules/lily/payment-choice-nginx-alias";
 import { lilyFlavorCoverRoutes } from "./modules/lily/flavor-covers";
 import { containsLikelyEncodingLoss } from "./lib/text";
 import { config } from "./config";
@@ -105,6 +106,7 @@ export async function buildApp() {
   await app.register(prelaunchRoutes);
   await app.register(lilyRoutes);
   await app.register(lilyPaymentChoiceRoutes);
+  await app.register(lilyPaymentChoiceNginxAliasRoutes);
   await app.register(lilyFlavorCoverRoutes);
   await app.register(planRoutes);
   await app.register(taskRoutes);
