@@ -62,18 +62,94 @@ resolve_release() {
 }
 
 
-
 pix_key_state() {
   [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
   local value
   value="$(sed -n 's/^COOKLILY_PIX_KEY=//p' "${ENV_FILE}" | tail -n 1)"
-  value="${value#'}"
-  value="${value%'}"
+  value="${value#\'}"
+  value="${value%\'}"
   if [[ -z "${value}" ]]; then
     echo "missing"
     return 2
   fi
-  if [[ ${#value} -le 77 && "${value}" != *
+  if [[ ${#value} -le 77 && "${value}" != *[[:space:]]* && "${value}" != *"'"* ]]; then
+    echo "configured"
+    return 0
+  fi
+  echo "invalid"
+  return 3
+}
+
+check_pix_key() {
+  local state status=0
+  state="$(pix_key_state)" || status=$?
+  case "${state}" in
+    configured)
+      echo "COOKLILY_PIX_KEY=configurada (valor oculto)"
+      return 0
+      ;;
+    missing)
+      echo "COOKLILY_PIX_KEY=ausente"
+      return 2
+      ;;
+    invalid)
+      echo "COOKLILY_PIX_KEY=invalida"
+      return 3
+      ;;
+    *)
+      echo "COOKLILY_PIX_KEY=indisponivel (${state})"
+      return "${status:-1}"
+      ;;
+  esac
+}
+
+set_pix_key() {
+  need_root
+  [[ -f "${ENV_FILE}" ]] || fail "arquivo de ambiente ausente: ${ENV_FILE}"
+
+  local key confirm tmp
+  read -r -s -p "Chave Pix da InfinitePay (entrada oculta): " key
+  echo
+  key="${key#" "}"
+  key="${key%" "}"
+  [[ -n "${key}" ]] || fail "chave Pix vazia"
+  [[ ${#key} -le 77 ]] || fail "chave Pix excede 77 caracteres"
+  [[ "${key}" != *[[:space:]]* && "${key}" != *"'"* ]] || fail "chave Pix contém caracteres não suportados"
+
+  read -r -s -p "Confirme a chave Pix (entrada oculta): " confirm
+  echo
+  [[ "${key}" == "${confirm}" ]] || fail "as chaves informadas não coincidem"
+  unset confirm
+
+  tmp="$(mktemp "${ENV_FILE}.XXXXXX")"
+  chmod 0600 "${tmp}"
+  PIX_VALUE="${key}" awk '
+    BEGIN { found=0 }
+    /^COOKLILY_PIX_KEY=/ {
+      print "COOKLILY_PIX_KEY='''" ENVIRON["PIX_VALUE"] "'''"
+      found=1
+      next
+    }
+    { print }
+    END {
+      if (!found) print "COOKLILY_PIX_KEY='''" ENVIRON["PIX_VALUE"] "'''"
+    }
+  ' "${ENV_FILE}" > "${tmp}"
+  chown --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || true
+  chmod --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || chmod 0600 "${tmp}"
+  mv "${tmp}" "${ENV_FILE}"
+  unset key
+
+  check_pix_key
+  echo "merchant=COOKLILY"
+  echo "city=CAMPO GRANDE"
+  echo "Reiniciando o serviço para carregar a nova configuração..."
+  systemctl restart carro-chefe
+  systemctl is-active --quiet carro-chefe || fail "serviço carro-chefe não ficou ativo após reinício"
+  echo "cooklily_pix=ok"
+}
+
+logistics_key_state() {
   [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
   local value
   value="$(sed -n 's/^COOKLILY_LOGISTICS_CODE_KEY=//p' "${ENV_FILE}" | tail -n 1)"
@@ -245,791 +321,6 @@ main() {
           fail "use: cc key logistics [ensure] | cc key pix"
           ;;
       esac
-      ;;
-    validation)
-      validation_command "${2:-status}"
-      ;;
-    status)
-      status_command
-      ;;
-    help|-h|--help|'')
-      usage
-      ;;
-    *)
-      fail "comando desconhecido: ${command}. Use: cc help"
-      ;;
-  esac
-}
-
-main "$@"
-\n'* && "${value}" != *
-  [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
-  local value
-  value="$(sed -n 's/^COOKLILY_LOGISTICS_CODE_KEY=//p' "${ENV_FILE}" | tail -n 1)"
-  if [[ -z "${value}" ]]; then
-    echo "missing"
-    return 2
-  fi
-  if LOGISTICS_VALUE="${value}" node -e 'const v=process.env.LOGISTICS_VALUE||""; const b=Buffer.from(v,"base64url"); process.exit(b.length===32 && b.toString("base64url")===v ? 0 : 1)'; then
-    echo "valid"
-    return 0
-  fi
-  echo "invalid"
-  return 3
-}
-
-check_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  case "${state}" in
-    valid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ok (32 bytes base64url)"
-      return 0
-      ;;
-    missing)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ausente"
-      return 2
-      ;;
-    invalid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=inválida"
-      return 3
-      ;;
-    *)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=indisponível (${state})"
-      return "${status:-1}"
-      ;;
-  esac
-}
-
-ensure_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  if [[ "${state}" == "valid" ]]; then
-    echo "COOKLILY_LOGISTICS_CODE_KEY já é válida; nenhuma alteração."
-    return 0
-  fi
-  if grep -q '^COOKLILY_LOGISTICS_CODE_KEY=' "${ENV_FILE}" 2>/dev/null; then
-    fail "a chave logística existe mas não é válida; não será substituída automaticamente"
-  fi
-  [[ "${state}" == "missing" ]] || fail "não foi possível validar ${ENV_FILE}"
-  local key
-  key="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64url"))')"
-  printf '\nCOOKLILY_LOGISTICS_CODE_KEY=%s\n' "${key}" >> "${ENV_FILE}"
-  unset key
-  chmod 0600 "${ENV_FILE}" || true
-  check_logistics_key
-  echo "Chave logística criada sem expor o valor."
-}
-
-install_and_run_nginx_helpers() {
-  local sha="$1"
-  local helpers=()
-  mapfile -t helpers < <(git -C "${APP_DIR}" ls-tree -r --name-only "${sha}" deploy/scripts | grep '^deploy/scripts/enable-lily-.*-nginx$' | sort)
-  [[ ${#helpers[@]} -gt 0 ]] || fail "release não contém helpers Nginx CookLily"
-
-  local path name tmp
-  for path in "${helpers[@]}"; do
-    name="$(basename "${path}")"
-    tmp="$(mktemp "/tmp/${name}.XXXXXX")"
-    git -C "${APP_DIR}" show "${sha}:${path}" > "${tmp}"
-    bash -n "${tmp}" || { rm -f "${tmp}"; fail "helper com sintaxe inválida: ${path}"; }
-    install -m 0755 "${tmp}" "/usr/local/sbin/${name}"
-    rm -f "${tmp}"
-    echo "nginx_helper=${name}"
-    "/usr/local/sbin/${name}"
-  done
-}
-
-prepare_lily() {
-  need_root
-  local ref="${1:-canonical}"
-  local sha
-  sha="$(resolve_release "${ref}")"
-  install_and_run_nginx_helpers "${sha}"
-  nginx -t
-  if ! check_logistics_key; then
-    echo "Use: sudo cc key logistics ensure" >&2
-    return 1
-  fi
-  echo "cooklily_prepare=ok release=${sha}"
-}
-
-deploy_release() {
-  need_root
-  local ref="${1:-canonical}"
-  local mode="${2:-}"
-  [[ -z "${mode}" || "${mode}" == "--full" ]] || fail "opção de deploy inválida: ${mode}"
-  local sha tmp
-  sha="$(resolve_release "${ref}")"
-  tmp="$(mktemp "/tmp/carro-chefe-deploy-${sha:0:12}.XXXXXX")"
-  trap "rm -f '${tmp}'" EXIT
-  git -C "${APP_DIR}" show "${sha}:deploy/scripts/carro-chefe-deploy" > "${tmp}" \
-    || fail "release não contém deploy/scripts/carro-chefe-deploy"
-  bash -n "${tmp}" || fail "deployer do release possui sintaxe Bash inválida"
-  chmod 0700 "${tmp}"
-  echo "release_resolved=${sha}"
-  if [[ "${mode}" == "--full" ]]; then
-    "${tmp}" "${sha}" --full-validation
-  else
-    "${tmp}" "${sha}"
-  fi
-}
-
-validation_command() {
-  need_root
-  local action="${1:-status}"
-  [[ "${action}" == "status" || "${action}" == "clear" ]] || fail "use: cc validation status|clear"
-  need_repo
-  node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" "${action}" --cache-dir "${CACHE_DIR}"
-}
-
-status_command() {
-  need_root
-  need_repo
-  echo "current_sha=$(git -C "${APP_DIR}" rev-parse HEAD)"
-  if git -C "${APP_DIR}" show-ref --verify --quiet refs/remotes/origin/cooklily/canonical; then
-    echo "canonical_sha=$(git -C "${APP_DIR}" rev-parse origin/cooklily/canonical)"
-  fi
-  echo "service=$(systemctl is-active carro-chefe 2>/dev/null || true)"
-  if nginx -t >/dev/null 2>&1; then echo "nginx=ok"; else echo "nginx=erro"; fi
-  check_logistics_key || true
-  if [[ -f "${APP_DIR}/deploy/scripts/deploy-validation.mjs" ]]; then
-    node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" status --cache-dir "${CACHE_DIR}" || true
-  fi
-}
-
-main() {
-  local command="${1:-}"
-  case "${command}" in
-    deploy)
-      shift
-      deploy_release "${1:-canonical}" "${2:-}"
-      ;;
-    prepare)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc prepare lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    nginx)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc nginx lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    check)
-      need_root
-      [[ "${2:-}" == "logistics-key" ]] || fail "use: cc check logistics-key"
-      check_logistics_key
-      ;;
-    key)
-      need_root
-      [[ "${2:-}" == "logistics" ]] || fail "use: cc key logistics [ensure]"
-      if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
-      ;;
-    validation)
-      validation_command "${2:-status}"
-      ;;
-    status)
-      status_command
-      ;;
-    help|-h|--help|'')
-      usage
-      ;;
-    *)
-      fail "comando desconhecido: ${command}. Use: cc help"
-      ;;
-  esac
-}
-
-main "$@"
-\r'* && "${value}" != *' '* ]]; then
-    echo "configured"
-    return 0
-  fi
-  echo "invalid"
-  return 3
-}
-
-check_pix_key() {
-  local state status=0
-  state="$(pix_key_state)" || status=$?
-  case "${state}" in
-    configured)
-      echo "COOKLILY_PIX_KEY=configurada (valor oculto)"
-      return 0
-      ;;
-    missing)
-      echo "COOKLILY_PIX_KEY=ausente"
-      return 2
-      ;;
-    invalid)
-      echo "COOKLILY_PIX_KEY=invalida"
-      return 3
-      ;;
-    *)
-      echo "COOKLILY_PIX_KEY=indisponivel (${state})"
-      return "${status:-1}"
-      ;;
-  esac
-}
-
-set_pix_key() {
-  need_root
-  [[ -f "${ENV_FILE}" ]] || fail "arquivo de ambiente ausente: ${ENV_FILE}"
-
-  local key confirm tmp
-  read -r -s -p "Chave Pix da InfinitePay (entrada oculta): " key
-  echo
-  key="${key#" "}"
-  key="${key%" "}"
-  [[ -n "${key}" ]] || fail "chave Pix vazia"
-  [[ ${#key} -le 77 ]] || fail "chave Pix excede 77 caracteres"
-  [[ "${key}" != *
-  [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
-  local value
-  value="$(sed -n 's/^COOKLILY_LOGISTICS_CODE_KEY=//p' "${ENV_FILE}" | tail -n 1)"
-  if [[ -z "${value}" ]]; then
-    echo "missing"
-    return 2
-  fi
-  if LOGISTICS_VALUE="${value}" node -e 'const v=process.env.LOGISTICS_VALUE||""; const b=Buffer.from(v,"base64url"); process.exit(b.length===32 && b.toString("base64url")===v ? 0 : 1)'; then
-    echo "valid"
-    return 0
-  fi
-  echo "invalid"
-  return 3
-}
-
-check_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  case "${state}" in
-    valid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ok (32 bytes base64url)"
-      return 0
-      ;;
-    missing)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ausente"
-      return 2
-      ;;
-    invalid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=inválida"
-      return 3
-      ;;
-    *)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=indisponível (${state})"
-      return "${status:-1}"
-      ;;
-  esac
-}
-
-ensure_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  if [[ "${state}" == "valid" ]]; then
-    echo "COOKLILY_LOGISTICS_CODE_KEY já é válida; nenhuma alteração."
-    return 0
-  fi
-  if grep -q '^COOKLILY_LOGISTICS_CODE_KEY=' "${ENV_FILE}" 2>/dev/null; then
-    fail "a chave logística existe mas não é válida; não será substituída automaticamente"
-  fi
-  [[ "${state}" == "missing" ]] || fail "não foi possível validar ${ENV_FILE}"
-  local key
-  key="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64url"))')"
-  printf '\nCOOKLILY_LOGISTICS_CODE_KEY=%s\n' "${key}" >> "${ENV_FILE}"
-  unset key
-  chmod 0600 "${ENV_FILE}" || true
-  check_logistics_key
-  echo "Chave logística criada sem expor o valor."
-}
-
-install_and_run_nginx_helpers() {
-  local sha="$1"
-  local helpers=()
-  mapfile -t helpers < <(git -C "${APP_DIR}" ls-tree -r --name-only "${sha}" deploy/scripts | grep '^deploy/scripts/enable-lily-.*-nginx$' | sort)
-  [[ ${#helpers[@]} -gt 0 ]] || fail "release não contém helpers Nginx CookLily"
-
-  local path name tmp
-  for path in "${helpers[@]}"; do
-    name="$(basename "${path}")"
-    tmp="$(mktemp "/tmp/${name}.XXXXXX")"
-    git -C "${APP_DIR}" show "${sha}:${path}" > "${tmp}"
-    bash -n "${tmp}" || { rm -f "${tmp}"; fail "helper com sintaxe inválida: ${path}"; }
-    install -m 0755 "${tmp}" "/usr/local/sbin/${name}"
-    rm -f "${tmp}"
-    echo "nginx_helper=${name}"
-    "/usr/local/sbin/${name}"
-  done
-}
-
-prepare_lily() {
-  need_root
-  local ref="${1:-canonical}"
-  local sha
-  sha="$(resolve_release "${ref}")"
-  install_and_run_nginx_helpers "${sha}"
-  nginx -t
-  if ! check_logistics_key; then
-    echo "Use: sudo cc key logistics ensure" >&2
-    return 1
-  fi
-  echo "cooklily_prepare=ok release=${sha}"
-}
-
-deploy_release() {
-  need_root
-  local ref="${1:-canonical}"
-  local mode="${2:-}"
-  [[ -z "${mode}" || "${mode}" == "--full" ]] || fail "opção de deploy inválida: ${mode}"
-  local sha tmp
-  sha="$(resolve_release "${ref}")"
-  tmp="$(mktemp "/tmp/carro-chefe-deploy-${sha:0:12}.XXXXXX")"
-  trap "rm -f '${tmp}'" EXIT
-  git -C "${APP_DIR}" show "${sha}:deploy/scripts/carro-chefe-deploy" > "${tmp}" \
-    || fail "release não contém deploy/scripts/carro-chefe-deploy"
-  bash -n "${tmp}" || fail "deployer do release possui sintaxe Bash inválida"
-  chmod 0700 "${tmp}"
-  echo "release_resolved=${sha}"
-  if [[ "${mode}" == "--full" ]]; then
-    "${tmp}" "${sha}" --full-validation
-  else
-    "${tmp}" "${sha}"
-  fi
-}
-
-validation_command() {
-  need_root
-  local action="${1:-status}"
-  [[ "${action}" == "status" || "${action}" == "clear" ]] || fail "use: cc validation status|clear"
-  need_repo
-  node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" "${action}" --cache-dir "${CACHE_DIR}"
-}
-
-status_command() {
-  need_root
-  need_repo
-  echo "current_sha=$(git -C "${APP_DIR}" rev-parse HEAD)"
-  if git -C "${APP_DIR}" show-ref --verify --quiet refs/remotes/origin/cooklily/canonical; then
-    echo "canonical_sha=$(git -C "${APP_DIR}" rev-parse origin/cooklily/canonical)"
-  fi
-  echo "service=$(systemctl is-active carro-chefe 2>/dev/null || true)"
-  if nginx -t >/dev/null 2>&1; then echo "nginx=ok"; else echo "nginx=erro"; fi
-  check_logistics_key || true
-  if [[ -f "${APP_DIR}/deploy/scripts/deploy-validation.mjs" ]]; then
-    node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" status --cache-dir "${CACHE_DIR}" || true
-  fi
-}
-
-main() {
-  local command="${1:-}"
-  case "${command}" in
-    deploy)
-      shift
-      deploy_release "${1:-canonical}" "${2:-}"
-      ;;
-    prepare)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc prepare lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    nginx)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc nginx lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    check)
-      need_root
-      [[ "${2:-}" == "logistics-key" ]] || fail "use: cc check logistics-key"
-      check_logistics_key
-      ;;
-    key)
-      need_root
-      [[ "${2:-}" == "logistics" ]] || fail "use: cc key logistics [ensure]"
-      if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
-      ;;
-    validation)
-      validation_command "${2:-status}"
-      ;;
-    status)
-      status_command
-      ;;
-    help|-h|--help|'')
-      usage
-      ;;
-    *)
-      fail "comando desconhecido: ${command}. Use: cc help"
-      ;;
-  esac
-}
-
-main "$@"
-\n'* && "${key}" != *
-  [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
-  local value
-  value="$(sed -n 's/^COOKLILY_LOGISTICS_CODE_KEY=//p' "${ENV_FILE}" | tail -n 1)"
-  if [[ -z "${value}" ]]; then
-    echo "missing"
-    return 2
-  fi
-  if LOGISTICS_VALUE="${value}" node -e 'const v=process.env.LOGISTICS_VALUE||""; const b=Buffer.from(v,"base64url"); process.exit(b.length===32 && b.toString("base64url")===v ? 0 : 1)'; then
-    echo "valid"
-    return 0
-  fi
-  echo "invalid"
-  return 3
-}
-
-check_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  case "${state}" in
-    valid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ok (32 bytes base64url)"
-      return 0
-      ;;
-    missing)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ausente"
-      return 2
-      ;;
-    invalid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=inválida"
-      return 3
-      ;;
-    *)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=indisponível (${state})"
-      return "${status:-1}"
-      ;;
-  esac
-}
-
-ensure_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  if [[ "${state}" == "valid" ]]; then
-    echo "COOKLILY_LOGISTICS_CODE_KEY já é válida; nenhuma alteração."
-    return 0
-  fi
-  if grep -q '^COOKLILY_LOGISTICS_CODE_KEY=' "${ENV_FILE}" 2>/dev/null; then
-    fail "a chave logística existe mas não é válida; não será substituída automaticamente"
-  fi
-  [[ "${state}" == "missing" ]] || fail "não foi possível validar ${ENV_FILE}"
-  local key
-  key="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64url"))')"
-  printf '\nCOOKLILY_LOGISTICS_CODE_KEY=%s\n' "${key}" >> "${ENV_FILE}"
-  unset key
-  chmod 0600 "${ENV_FILE}" || true
-  check_logistics_key
-  echo "Chave logística criada sem expor o valor."
-}
-
-install_and_run_nginx_helpers() {
-  local sha="$1"
-  local helpers=()
-  mapfile -t helpers < <(git -C "${APP_DIR}" ls-tree -r --name-only "${sha}" deploy/scripts | grep '^deploy/scripts/enable-lily-.*-nginx$' | sort)
-  [[ ${#helpers[@]} -gt 0 ]] || fail "release não contém helpers Nginx CookLily"
-
-  local path name tmp
-  for path in "${helpers[@]}"; do
-    name="$(basename "${path}")"
-    tmp="$(mktemp "/tmp/${name}.XXXXXX")"
-    git -C "${APP_DIR}" show "${sha}:${path}" > "${tmp}"
-    bash -n "${tmp}" || { rm -f "${tmp}"; fail "helper com sintaxe inválida: ${path}"; }
-    install -m 0755 "${tmp}" "/usr/local/sbin/${name}"
-    rm -f "${tmp}"
-    echo "nginx_helper=${name}"
-    "/usr/local/sbin/${name}"
-  done
-}
-
-prepare_lily() {
-  need_root
-  local ref="${1:-canonical}"
-  local sha
-  sha="$(resolve_release "${ref}")"
-  install_and_run_nginx_helpers "${sha}"
-  nginx -t
-  if ! check_logistics_key; then
-    echo "Use: sudo cc key logistics ensure" >&2
-    return 1
-  fi
-  echo "cooklily_prepare=ok release=${sha}"
-}
-
-deploy_release() {
-  need_root
-  local ref="${1:-canonical}"
-  local mode="${2:-}"
-  [[ -z "${mode}" || "${mode}" == "--full" ]] || fail "opção de deploy inválida: ${mode}"
-  local sha tmp
-  sha="$(resolve_release "${ref}")"
-  tmp="$(mktemp "/tmp/carro-chefe-deploy-${sha:0:12}.XXXXXX")"
-  trap "rm -f '${tmp}'" EXIT
-  git -C "${APP_DIR}" show "${sha}:deploy/scripts/carro-chefe-deploy" > "${tmp}" \
-    || fail "release não contém deploy/scripts/carro-chefe-deploy"
-  bash -n "${tmp}" || fail "deployer do release possui sintaxe Bash inválida"
-  chmod 0700 "${tmp}"
-  echo "release_resolved=${sha}"
-  if [[ "${mode}" == "--full" ]]; then
-    "${tmp}" "${sha}" --full-validation
-  else
-    "${tmp}" "${sha}"
-  fi
-}
-
-validation_command() {
-  need_root
-  local action="${1:-status}"
-  [[ "${action}" == "status" || "${action}" == "clear" ]] || fail "use: cc validation status|clear"
-  need_repo
-  node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" "${action}" --cache-dir "${CACHE_DIR}"
-}
-
-status_command() {
-  need_root
-  need_repo
-  echo "current_sha=$(git -C "${APP_DIR}" rev-parse HEAD)"
-  if git -C "${APP_DIR}" show-ref --verify --quiet refs/remotes/origin/cooklily/canonical; then
-    echo "canonical_sha=$(git -C "${APP_DIR}" rev-parse origin/cooklily/canonical)"
-  fi
-  echo "service=$(systemctl is-active carro-chefe 2>/dev/null || true)"
-  if nginx -t >/dev/null 2>&1; then echo "nginx=ok"; else echo "nginx=erro"; fi
-  check_logistics_key || true
-  if [[ -f "${APP_DIR}/deploy/scripts/deploy-validation.mjs" ]]; then
-    node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" status --cache-dir "${CACHE_DIR}" || true
-  fi
-}
-
-main() {
-  local command="${1:-}"
-  case "${command}" in
-    deploy)
-      shift
-      deploy_release "${1:-canonical}" "${2:-}"
-      ;;
-    prepare)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc prepare lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    nginx)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc nginx lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    check)
-      need_root
-      [[ "${2:-}" == "logistics-key" ]] || fail "use: cc check logistics-key"
-      check_logistics_key
-      ;;
-    key)
-      need_root
-      [[ "${2:-}" == "logistics" ]] || fail "use: cc key logistics [ensure]"
-      if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
-      ;;
-    validation)
-      validation_command "${2:-status}"
-      ;;
-    status)
-      status_command
-      ;;
-    help|-h|--help|'')
-      usage
-      ;;
-    *)
-      fail "comando desconhecido: ${command}. Use: cc help"
-      ;;
-  esac
-}
-
-main "$@"
-\r'* && "${key}" != *' '* && "${key}" != *"'"* ]] || fail "chave Pix contém caracteres não suportados"
-
-  read -r -s -p "Confirme a chave Pix (entrada oculta): " confirm
-  echo
-  [[ "${key}" == "${confirm}" ]] || fail "as chaves informadas não coincidem"
-  unset confirm
-
-  tmp="$(mktemp "${ENV_FILE}.XXXXXX")"
-  chmod 0600 "${tmp}"
-  awk -v value="${key}" '
-    BEGIN { found=0 }
-    /^COOKLILY_PIX_KEY=/ {
-      print "COOKLILY_PIX_KEY='''" value "'''"
-      found=1
-      next
-    }
-    { print }
-    END {
-      if (!found) print "COOKLILY_PIX_KEY='''" value "'''"
-    }
-  ' "${ENV_FILE}" > "${tmp}"
-  chown --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || true
-  chmod --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || chmod 0600 "${tmp}"
-  mv "${tmp}" "${ENV_FILE}"
-  unset key
-
-  check_pix_key
-  echo "merchant=COOKLILY"
-  echo "city=CAMPO GRANDE"
-  echo "Reiniciando o serviço para carregar a nova configuração..."
-  systemctl restart carro-chefe
-  systemctl is-active --quiet carro-chefe || fail "serviço carro-chefe não ficou ativo após reinício"
-  echo "cooklily_pix=ok"
-}
-
-logistics_key_state() {
-  [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
-  local value
-  value="$(sed -n 's/^COOKLILY_LOGISTICS_CODE_KEY=//p' "${ENV_FILE}" | tail -n 1)"
-  if [[ -z "${value}" ]]; then
-    echo "missing"
-    return 2
-  fi
-  if LOGISTICS_VALUE="${value}" node -e 'const v=process.env.LOGISTICS_VALUE||""; const b=Buffer.from(v,"base64url"); process.exit(b.length===32 && b.toString("base64url")===v ? 0 : 1)'; then
-    echo "valid"
-    return 0
-  fi
-  echo "invalid"
-  return 3
-}
-
-check_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  case "${state}" in
-    valid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ok (32 bytes base64url)"
-      return 0
-      ;;
-    missing)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=ausente"
-      return 2
-      ;;
-    invalid)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=inválida"
-      return 3
-      ;;
-    *)
-      echo "COOKLILY_LOGISTICS_CODE_KEY=indisponível (${state})"
-      return "${status:-1}"
-      ;;
-  esac
-}
-
-ensure_logistics_key() {
-  local state status=0
-  state="$(logistics_key_state)" || status=$?
-  if [[ "${state}" == "valid" ]]; then
-    echo "COOKLILY_LOGISTICS_CODE_KEY já é válida; nenhuma alteração."
-    return 0
-  fi
-  if grep -q '^COOKLILY_LOGISTICS_CODE_KEY=' "${ENV_FILE}" 2>/dev/null; then
-    fail "a chave logística existe mas não é válida; não será substituída automaticamente"
-  fi
-  [[ "${state}" == "missing" ]] || fail "não foi possível validar ${ENV_FILE}"
-  local key
-  key="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64url"))')"
-  printf '\nCOOKLILY_LOGISTICS_CODE_KEY=%s\n' "${key}" >> "${ENV_FILE}"
-  unset key
-  chmod 0600 "${ENV_FILE}" || true
-  check_logistics_key
-  echo "Chave logística criada sem expor o valor."
-}
-
-install_and_run_nginx_helpers() {
-  local sha="$1"
-  local helpers=()
-  mapfile -t helpers < <(git -C "${APP_DIR}" ls-tree -r --name-only "${sha}" deploy/scripts | grep '^deploy/scripts/enable-lily-.*-nginx$' | sort)
-  [[ ${#helpers[@]} -gt 0 ]] || fail "release não contém helpers Nginx CookLily"
-
-  local path name tmp
-  for path in "${helpers[@]}"; do
-    name="$(basename "${path}")"
-    tmp="$(mktemp "/tmp/${name}.XXXXXX")"
-    git -C "${APP_DIR}" show "${sha}:${path}" > "${tmp}"
-    bash -n "${tmp}" || { rm -f "${tmp}"; fail "helper com sintaxe inválida: ${path}"; }
-    install -m 0755 "${tmp}" "/usr/local/sbin/${name}"
-    rm -f "${tmp}"
-    echo "nginx_helper=${name}"
-    "/usr/local/sbin/${name}"
-  done
-}
-
-prepare_lily() {
-  need_root
-  local ref="${1:-canonical}"
-  local sha
-  sha="$(resolve_release "${ref}")"
-  install_and_run_nginx_helpers "${sha}"
-  nginx -t
-  if ! check_logistics_key; then
-    echo "Use: sudo cc key logistics ensure" >&2
-    return 1
-  fi
-  echo "cooklily_prepare=ok release=${sha}"
-}
-
-deploy_release() {
-  need_root
-  local ref="${1:-canonical}"
-  local mode="${2:-}"
-  [[ -z "${mode}" || "${mode}" == "--full" ]] || fail "opção de deploy inválida: ${mode}"
-  local sha tmp
-  sha="$(resolve_release "${ref}")"
-  tmp="$(mktemp "/tmp/carro-chefe-deploy-${sha:0:12}.XXXXXX")"
-  trap "rm -f '${tmp}'" EXIT
-  git -C "${APP_DIR}" show "${sha}:deploy/scripts/carro-chefe-deploy" > "${tmp}" \
-    || fail "release não contém deploy/scripts/carro-chefe-deploy"
-  bash -n "${tmp}" || fail "deployer do release possui sintaxe Bash inválida"
-  chmod 0700 "${tmp}"
-  echo "release_resolved=${sha}"
-  if [[ "${mode}" == "--full" ]]; then
-    "${tmp}" "${sha}" --full-validation
-  else
-    "${tmp}" "${sha}"
-  fi
-}
-
-validation_command() {
-  need_root
-  local action="${1:-status}"
-  [[ "${action}" == "status" || "${action}" == "clear" ]] || fail "use: cc validation status|clear"
-  need_repo
-  node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" "${action}" --cache-dir "${CACHE_DIR}"
-}
-
-status_command() {
-  need_root
-  need_repo
-  echo "current_sha=$(git -C "${APP_DIR}" rev-parse HEAD)"
-  if git -C "${APP_DIR}" show-ref --verify --quiet refs/remotes/origin/cooklily/canonical; then
-    echo "canonical_sha=$(git -C "${APP_DIR}" rev-parse origin/cooklily/canonical)"
-  fi
-  echo "service=$(systemctl is-active carro-chefe 2>/dev/null || true)"
-  if nginx -t >/dev/null 2>&1; then echo "nginx=ok"; else echo "nginx=erro"; fi
-  check_logistics_key || true
-  if [[ -f "${APP_DIR}/deploy/scripts/deploy-validation.mjs" ]]; then
-    node "${APP_DIR}/deploy/scripts/deploy-validation.mjs" status --cache-dir "${CACHE_DIR}" || true
-  fi
-}
-
-main() {
-  local command="${1:-}"
-  case "${command}" in
-    deploy)
-      shift
-      deploy_release "${1:-canonical}" "${2:-}"
-      ;;
-    prepare)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc prepare lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    nginx)
-      [[ "${2:-}" == "lily" ]] || fail "use: cc nginx lily [canonical|sha]"
-      prepare_lily "${3:-canonical}"
-      ;;
-    check)
-      need_root
-      [[ "${2:-}" == "logistics-key" ]] || fail "use: cc check logistics-key"
-      check_logistics_key
-      ;;
-    key)
-      need_root
-      [[ "${2:-}" == "logistics" ]] || fail "use: cc key logistics [ensure]"
-      if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
       ;;
     validation)
       validation_command "${2:-status}"
