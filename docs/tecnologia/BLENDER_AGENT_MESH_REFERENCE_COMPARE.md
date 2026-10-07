@@ -1,9 +1,11 @@
 # Especificação de feature — comparação de malha 3D com imagem de referência
 
 **Produto:** Blender Agent (`tools/blender_agent`)
-**Status:** especificação para implementação; esta entrega não implementa código
+**Status:** implementada na branch `feature/blender-agent-bridge`; validação real Windows + Blender e fixture CookLily ainda pendentes
 **Responsabilidade sugerida:** AG-DEV
 **Data:** 06/10/2026
+
+> Implementação e comandos atuais: [BLENDER_AGENT_MESH_REFERENCE_COMPARE_USAGE.md](./BLENDER_AGENT_MESH_REFERENCE_COMPARE_USAGE.md). Esta especificação permanece como contrato de comportamento e critérios de aceite; presença do código não substitui o preflight, testes e smoke real exigidos abaixo.
 
 ## 1. Objetivo
 
