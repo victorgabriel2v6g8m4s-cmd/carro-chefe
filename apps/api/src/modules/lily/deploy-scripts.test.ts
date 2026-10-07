@@ -163,7 +163,13 @@ describe("scripts operacionais CookLily", () => {
     expect(cli).toContain("cc deploy canonical");
     expect(cli).toContain("cc prepare lily");
     expect(cli).toContain("cc check logistics-key");
+    expect(cli).toContain("cc check pix-key");
     expect(cli).toContain("cc key logistics ensure");
+    expect(cli).toContain("cc key pix");
+    expect(cli).toContain("Chave Pix da InfinitePay (entrada oculta)");
+    expect(cli).toContain("Nome do recebedor no Pix [COOKLILY]");
+    expect(cli).toContain("Cidade do recebedor [CAMPO GRANDE]");
+    expect(cli).toContain("systemctl restart carro-chefe");
     expect(cli).toContain("git -C \"${APP_DIR}\" ls-tree -r --name-only");
     expect(cli).not.toContain('echo "${key}"');
   });

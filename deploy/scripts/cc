@@ -23,6 +23,8 @@ Uso rápido:
   sudo cc check logistics-key
   sudo cc key logistics
   sudo cc key logistics ensure
+  sudo cc check pix-key
+  sudo cc key pix
   sudo cc validation status
   sudo cc validation clear
   sudo cc status
@@ -57,6 +59,112 @@ resolve_release() {
   fi
   git -C "${APP_DIR}" cat-file -e "${sha}^{commit}" || fail "release não existe após fetch: ${sha}"
   printf '%s\n' "${sha}"
+}
+
+
+pix_key_state() {
+  [[ -f "${ENV_FILE}" ]] || { echo "missing-env"; return 1; }
+  local value
+  value="$(sed -n 's/^COOKLILY_PIX_KEY=//p' "${ENV_FILE}" | tail -n 1)"
+  value="${value#\'}"
+  value="${value%\'}"
+  if [[ -z "${value}" ]]; then
+    echo "missing"
+    return 2
+  fi
+  if [[ ${#value} -le 77 && "${value}" != *[[:space:]]* && "${value}" != *"'"* ]]; then
+    echo "configured"
+    return 0
+  fi
+  echo "invalid"
+  return 3
+}
+
+check_pix_key() {
+  local state status=0
+  state="$(pix_key_state)" || status=$?
+  case "${state}" in
+    configured)
+      echo "COOKLILY_PIX_KEY=configurada (valor oculto)"
+      return 0
+      ;;
+    missing)
+      echo "COOKLILY_PIX_KEY=ausente"
+      return 2
+      ;;
+    invalid)
+      echo "COOKLILY_PIX_KEY=invalida"
+      return 3
+      ;;
+    *)
+      echo "COOKLILY_PIX_KEY=indisponivel (${state})"
+      return "${status:-1}"
+      ;;
+  esac
+}
+
+set_pix_key() {
+  need_root
+  [[ -f "${ENV_FILE}" ]] || fail "arquivo de ambiente ausente: ${ENV_FILE}"
+
+  local key confirm merchant_name merchant_city tmp
+  read -r -s -p "Chave Pix da InfinitePay (entrada oculta): " key
+  echo
+  [[ -n "${key}" ]] || fail "chave Pix vazia"
+  [[ ${#key} -le 77 ]] || fail "chave Pix excede 77 caracteres"
+  [[ "${key}" != *[[:space:]]* && "${key}" != *"'"* ]] || fail "chave Pix contém caracteres não suportados"
+
+  read -r -s -p "Confirme a chave Pix (entrada oculta): " confirm
+  echo
+  [[ "${key}" == "${confirm}" ]] || fail "as chaves informadas não coincidem"
+  unset confirm
+
+  read -r -p "Nome do recebedor no Pix [COOKLILY]: " merchant_name
+  merchant_name="${merchant_name:-COOKLILY}"
+  [[ ${#merchant_name} -le 25 ]] || fail "nome do recebedor excede 25 caracteres"
+
+  read -r -p "Cidade do recebedor [CAMPO GRANDE]: " merchant_city
+  merchant_city="${merchant_city:-CAMPO GRANDE}"
+  [[ ${#merchant_city} -le 15 ]] || fail "cidade do recebedor excede 15 caracteres"
+
+  tmp="$(mktemp "${ENV_FILE}.XXXXXX")"
+  chmod 0600 "${tmp}"
+  PIX_VALUE="${key}" PIX_MERCHANT_NAME="${merchant_name}" PIX_MERCHANT_CITY="${merchant_city}" awk '
+    BEGIN { found_key=0; found_name=0; found_city=0 }
+    /^COOKLILY_PIX_KEY=/ {
+      print "COOKLILY_PIX_KEY=" ENVIRON["PIX_VALUE"]
+      found_key=1
+      next
+    }
+    /^COOKLILY_PIX_MERCHANT_NAME=/ {
+      print "COOKLILY_PIX_MERCHANT_NAME=" ENVIRON["PIX_MERCHANT_NAME"]
+      found_name=1
+      next
+    }
+    /^COOKLILY_PIX_MERCHANT_CITY=/ {
+      print "COOKLILY_PIX_MERCHANT_CITY=" ENVIRON["PIX_MERCHANT_CITY"]
+      found_city=1
+      next
+    }
+    { print }
+    END {
+      if (!found_key) print "COOKLILY_PIX_KEY=" ENVIRON["PIX_VALUE"]
+      if (!found_name) print "COOKLILY_PIX_MERCHANT_NAME=" ENVIRON["PIX_MERCHANT_NAME"]
+      if (!found_city) print "COOKLILY_PIX_MERCHANT_CITY=" ENVIRON["PIX_MERCHANT_CITY"]
+    }
+  ' "${ENV_FILE}" > "${tmp}"
+  chown --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || true
+  chmod --reference="${ENV_FILE}" "${tmp}" 2>/dev/null || chmod 0600 "${tmp}"
+  mv "${tmp}" "${ENV_FILE}"
+  unset key merchant_name merchant_city
+
+  check_pix_key
+  echo "merchant_configured=yes"
+  echo "city_configured=yes"
+  echo "Reiniciando o serviço para carregar a nova configuração..."
+  systemctl restart carro-chefe
+  systemctl is-active --quiet carro-chefe || fail "serviço carro-chefe não ficou ativo após reinício"
+  echo "cooklily_pix=ok"
 }
 
 logistics_key_state() {
@@ -212,13 +320,25 @@ main() {
       ;;
     check)
       need_root
-      [[ "${2:-}" == "logistics-key" ]] || fail "use: cc check logistics-key"
-      check_logistics_key
+      case "${2:-}" in
+        logistics-key) check_logistics_key ;;
+        pix-key) check_pix_key ;;
+        *) fail "use: cc check logistics-key | cc check pix-key" ;;
+      esac
       ;;
     key)
       need_root
-      [[ "${2:-}" == "logistics" ]] || fail "use: cc key logistics [ensure]"
-      if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
+      case "${2:-}" in
+        logistics)
+          if [[ "${3:-}" == "ensure" ]]; then ensure_logistics_key; else check_logistics_key; fi
+          ;;
+        pix)
+          set_pix_key
+          ;;
+        *)
+          fail "use: cc key logistics [ensure] | cc key pix"
+          ;;
+      esac
       ;;
     validation)
       validation_command "${2:-status}"
