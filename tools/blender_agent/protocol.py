@@ -47,6 +47,7 @@ ALLOWED_ACTIONS = {
     "workspace.list",
     "workspace.describe",
     "workspace.capture_set",
+    "mesh.comparison_snapshot",
     "history.stage.create",
     "history.stage.list",
     "history.stage.activate",
