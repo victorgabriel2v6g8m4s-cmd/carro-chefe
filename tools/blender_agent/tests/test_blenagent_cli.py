@@ -76,15 +76,19 @@ class BlenagentCliTests(unittest.TestCase):
             '"restart"',
             '"status"',
             '"image-smoke"',
+            '"compare-smoke"',
             '"sculpt-smoke"',
             '"recipe-smoke"',
             '"iteration-smoke"',
             '"context-smoke"',
             '"smoke"',
+            '"install-compare"',
             '"install-mcp"',
         ):
             self.assertIn(command, source)
         self.assertIn('.runtime\\blender-agent\\assets\\referencia.jpg', source)
+        self.assertIn('Invoke-AgentPowerShell -ScriptName "comparison-smoke-test.ps1"', source)
+        self.assertIn('Invoke-AgentPowerShell -ScriptName "install-compare.ps1"', source)
 
 
 if __name__ == "__main__":
