@@ -1,3 +1,5 @@
+export {};
+
 type ToastKind = "success" | "error";
 
 type AdminCatalogProduct = {
