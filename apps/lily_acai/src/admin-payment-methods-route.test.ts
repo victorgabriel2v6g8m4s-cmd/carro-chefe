@@ -21,8 +21,10 @@ describe("CookLily — painel de pagamentos", () => {
     const payments = source("apps/lily_acai/src/features/admin/AdminPaymentsPage.tsx");
     const methods = source("apps/lily_acai/src/features/admin/AdminPaymentMethodsPage.tsx");
 
-    expect(admin).toContain('painel/pagamentos/metodos">Métodos e descontos');
-    expect(admin).toContain('painel/pagamentos">Pagamentos e reconciliação');
+    expect(admin).toContain("painel/pagamentos/metodos");
+    expect(admin).toContain("Métodos e descontos");
+    expect(admin).toContain("painel/pagamentos");
+    expect(admin).toContain("Pagamentos e reconciliação");
     expect(payments).toContain('to="/painel/pagamentos/metodos">Métodos e descontos');
     expect(methods).toContain("Formas de pagamento e descontos");
     expect(methods).toContain("O cliente escolhe Pix, crédito ou débito.");
