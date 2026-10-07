@@ -63,6 +63,26 @@ def blender_material_image_texture(
 
 
 @mcp.tool()
+def blender_mesh_comparison_snapshot(
+    name: str,
+    space: str = "WORLD",
+    modifiers: str = "evaluated",
+    include_camera_projection: bool = False,
+) -> dict[str, Any]:
+    """Lê uma malha por nome exato para comparação 2D, sem alterar seleção, modo ou arquivo Blender.
+
+    Retorna vertices/faces, matrix_world, bounds, counts, unidade, hashes e política de modifiers.
+    Use include_camera_projection somente quando a comparação realmente usar a câmera ativa.
+    """
+    return _result(call("mesh.comparison_snapshot", {
+        "name": name,
+        "space": space,
+        "modifiers": modifiers,
+        "include_camera_projection": include_camera_projection,
+    }))
+
+
+@mcp.tool()
 def blender_iteration_validate(config: dict[str, Any]) -> dict[str, Any]:
     """Valida a configuração V0.5 sem iniciar uma sessão."""
     return _result(call("iteration.validate", {"config": config}))
