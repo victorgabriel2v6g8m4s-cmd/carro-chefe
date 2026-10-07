@@ -18,6 +18,10 @@
         "packages/lily-database/prisma",
         "package.json",
         "package-lock.json"
+      ],
+      "requiredPaths": [
+        ".runtime/deploy-preflight-core.db",
+        ".runtime/deploy-preflight-lily.db"
       ]
     },
     "policy": {
