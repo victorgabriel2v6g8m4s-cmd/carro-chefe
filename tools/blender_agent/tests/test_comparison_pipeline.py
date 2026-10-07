@@ -134,6 +134,20 @@ class ComparisonPipelineTests(unittest.TestCase):
         self.assertAlmostEqual(alignment["offset_y"], -7.0)
         self.assertAlmostEqual(alignment["rotate_deg"], 0.4)
 
+    def test_missing_recipe_object_fails_explicitly(self) -> None:
+        options = self._options()
+        options["object"] = "MissingObject"
+        with self.assertRaisesRegex(ComparisonError, "MissingObject"):
+            compose(options)
+        self.assertFalse(Path(options["output"]).exists())
+
+    def test_invalid_resolution_fails_before_output(self) -> None:
+        options = self._options()
+        options["resolution"] = [99999, 32]
+        with self.assertRaisesRegex(ComparisonError, "resolution"):
+            compose(options)
+        self.assertFalse(Path(options["output"]).exists())
+
     def test_strict_auto_rejects_inconclusive_uniform_reference(self) -> None:
         options = self._options()
         options["align"] = "auto"
@@ -168,6 +182,24 @@ class ComparisonPipelineTests(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertTrue(payload["ok"])
         self.assertTrue(payload["dry_run"])
+
+    def test_cli_json_has_nonzero_exit_on_runtime_error(self) -> None:
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            code = compare_main([
+                "compose",
+                "--reference", str(self.reference),
+                "--source", "recipe",
+                "--recipe", str(self.recipe),
+                "--object", "MissingObject",
+                "--view", "FRONT",
+                "--json",
+                "--no-history",
+            ])
+        self.assertNotEqual(code, 0)
+        payload = json.loads(stderr.getvalue())
+        self.assertFalse(payload["ok"])
+        self.assertIn("MissingObject", payload["error"])
 
     def test_output_cannot_escape_runtime_exports(self) -> None:
         options = self._options()
