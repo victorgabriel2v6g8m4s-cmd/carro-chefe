@@ -133,7 +133,7 @@ def snapshot(core: Any, params: dict[str, Any]) -> dict[str, Any]:
     if modifier_policy == "evaluated" and any(item["type"] == "NODES" for item in modifiers):
         raise RuntimeError(
             "Geometry Nodes nao e suportado na primeira versao de mesh.comparison_snapshot; "
-            "converta/preparare uma malha finita ou use modifiers=base conscientemente"
+            "converta/prepare uma malha finita ou use modifiers=base conscientemente"
         )
 
     depsgraph = None
