@@ -46,7 +46,7 @@ export function PaymentChoicePage() {
   const guestAccessToken = useMemo(() => orderId ? readGuestOrderToken(orderId) : null, [orderId]);
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<LilyPaymentOptionsPayload | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<LilyCheckoutPaymentMethod>("pix");
+  const [selectedMethod, setSelectedMethod] = useState<LilyCheckoutPaymentMethod | null>(null);
   const [payment, setPayment] = useState<LilyChoicePayment | null>(null);
   const [payerEmail, setPayerEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,9 +65,7 @@ export function PaymentChoicePage() {
       if (cancelled) return;
       setData(payload);
       setPayment(payload.activePayment);
-      const preferred = payload.methods.find((method) => method.id === "pix" && method.available)
-        ?? payload.methods.find((method) => method.available);
-      if (preferred) setSelectedMethod(preferred.id);
+      setSelectedMethod(null);
     })().catch((cause) => {
       if (!cancelled) setError(cause instanceof Error ? cause.message : "Não foi possível carregar o pagamento.");
     }).finally(() => {
@@ -108,8 +106,9 @@ export function PaymentChoicePage() {
     });
   }, [payment?.id, payment?.status, payment?.method]);
 
-  const availableMethods = data?.methods.filter((method) => method.available) ?? [];
-  const option = data?.methods.find((method) => method.id === selectedMethod) ?? availableMethods[0] ?? null;
+  const option = selectedMethod
+    ? data?.methods.find((method) => method.id === selectedMethod) ?? null
+    : null;
 
   async function submit(input: {
     method: LilyCheckoutPaymentMethod;
@@ -165,6 +164,7 @@ export function PaymentChoicePage() {
   function retry() {
     clearPaymentKeys(orderId);
     setPayment(null);
+    setSelectedMethod(null);
     setError("");
   }
 
@@ -209,6 +209,8 @@ export function PaymentChoicePage() {
               {method.label}{method.discountLabel ? ` · ${method.discountLabel}` : ""}
             </button>)}
           </div>
+
+          {!selectedMethod && <p>Selecione uma forma de pagamento para continuar. Nenhuma cobrança será iniciada antes da sua escolha.</p>}
 
           {option && <>
             <PaymentPriceSummary option={option} />
