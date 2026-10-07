@@ -54,14 +54,21 @@ export function trackedFiles(root, inputs) {
     .sort((a, b) => a.localeCompare(b));
 }
 
-export function computeFingerprint({ root, gateName, command = [], configBundle = loadGateConfig(root) }) {
-  const gate = configBundle.config.gates[gateName];
+function validateGateDefinition(gateName, gate) {
   if (!gate || !Array.isArray(gate.inputs) || gate.inputs.length === 0) {
     throw new Error(`gate desconhecido ou sem inputs: ${gateName}`);
   }
   if (gate.envInputs !== undefined && (!Array.isArray(gate.envInputs) || gate.envInputs.some((name) => typeof name !== 'string' || !name))) {
     throw new Error(`gate ${gateName}: envInputs inválido`);
   }
+  if (gate.requiredPaths !== undefined && (!Array.isArray(gate.requiredPaths) || gate.requiredPaths.some((path) => typeof path !== 'string' || !path))) {
+    throw new Error(`gate ${gateName}: requiredPaths inválido`);
+  }
+}
+
+export function computeFingerprint({ root, gateName, command = [], configBundle = loadGateConfig(root) }) {
+  const gate = configBundle.config.gates[gateName];
+  validateGateDefinition(gateName, gate);
 
   const hash = createHash('sha256');
   const files = trackedFiles(root, gate.inputs);
@@ -127,8 +134,13 @@ function currentSha(root) {
 }
 
 export function runGate({ root, cacheDir, gateName, command, force = false, requiredPaths = [] }) {
-  const missing = requiredPaths.filter((path) => !existsSync(resolve(root, path)));
-  const computed = computeFingerprint({ root, gateName, command });
+  const configBundle = loadGateConfig(root);
+  const gate = configBundle.config.gates[gateName];
+  validateGateDefinition(gateName, gate);
+  const configuredRequiredPaths = gate.requiredPaths ?? [];
+  const allRequiredPaths = [...new Set([...configuredRequiredPaths, ...requiredPaths])];
+  const missing = allRequiredPaths.filter((path) => !existsSync(resolve(root, path)));
+  const computed = computeFingerprint({ root, gateName, command, configBundle });
   const { path: cachePath, cache } = readCache(cacheDir);
   const previous = cache.gates[gateName];
   const hit = !force && missing.length === 0 && previous?.status === 'success' && previous.fingerprint === computed.fingerprint;
@@ -152,6 +164,14 @@ export function runGate({ root, cacheDir, gateName, command, force = false, requ
     writeCache(cachePath, cache);
     if (result.error) console.error(`gate ${gateName}: ${result.error.message}`);
     return result.status ?? 1;
+  }
+
+  const missingAfterRun = allRequiredPaths.filter((path) => !existsSync(resolve(root, path)));
+  if (missingAfterRun.length > 0) {
+    delete cache.gates[gateName];
+    writeCache(cachePath, cache);
+    console.error(`gate ${gateName}: artefatos obrigatórios ausentes após execução: ${missingAfterRun.join(',')}`);
+    return 1;
   }
 
   cache.gates[gateName] = {
