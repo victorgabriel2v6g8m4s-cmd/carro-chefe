@@ -47,6 +47,26 @@ class ComparisonRenderTests(unittest.TestCase):
         )
         self.assertEqual(image.getpixel((32, 32)), reference.getpixel((32, 32)))
 
+    def test_opacity_half_blends_once(self) -> None:
+        reference, points, faces = self._fixture()
+        image, _ = render_comparison(
+            reference=reference,
+            points=points,
+            faces=faces,
+            width=64,
+            height=64,
+            fill=True,
+            opacity=50,
+            fill_color=(220, 20, 20),
+            lines=False,
+            border=False,
+        )
+        pixel = image.getpixel((32, 32))
+        self.assertGreater(pixel[0], 110)
+        self.assertLess(pixel[0], 130)
+        self.assertGreaterEqual(pixel[1], 18)
+        self.assertLessEqual(pixel[1], 22)
+
     def test_opacity_full_changes_center(self) -> None:
         reference, points, faces = self._fixture()
         image, _ = render_comparison(
@@ -89,6 +109,30 @@ class ComparisonRenderTests(unittest.TestCase):
         )
         self.assertNotEqual(with_lines.getpixel((16, 16)), reference.getpixel((16, 16)))
         self.assertNotEqual(with_border.getpixel((14, 32)), reference.getpixel((14, 32)))
+
+    def test_invalid_line_width_is_rejected(self) -> None:
+        reference, points, faces = self._fixture()
+        with self.assertRaises(ComparisonRenderError):
+            render_comparison(
+                reference=reference,
+                points=points,
+                faces=faces,
+                width=64,
+                height=64,
+                line_width=0,
+            )
+
+    def test_invalid_border_width_is_rejected(self) -> None:
+        reference, points, faces = self._fixture()
+        with self.assertRaises(ComparisonRenderError):
+            render_comparison(
+                reference=reference,
+                points=points,
+                faces=faces,
+                width=64,
+                height=64,
+                border_width=1000,
+            )
 
     def test_visible_line_mode_is_rejected_instead_of_mislabeled(self) -> None:
         reference, points, faces = self._fixture()
