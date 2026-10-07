@@ -54,7 +54,7 @@ const analyticsMetadataSchema = z.object({
   addonCount: z.number().int().min(0).max(100).optional(),
   itemCount: z.number().int().min(0).max(200).optional(),
   fulfillmentType: z.enum(["pickup", "delivery"]).optional(),
-  paymentMethod: z.enum(["pix", "manual_pix", "credit_card"]).optional()
+  paymentMethod: z.enum(["pix", "manual_pix", "credit_card", "debit_card"]).optional()
 }).strict().default({});
 
 const analyticsEventSchema = z.object({
@@ -177,52 +177,18 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
       orderAttributionPaid,
       funnelSessionRows
     ] = await Promise.all([
-      lilyPrisma.lilyAnalyticsEvent.groupBy({
-        by: ["event"],
-        where: eventWhere,
-        _count: { _all: true }
-      }),
-      lilyPrisma.lilyAnalyticsEvent.groupBy({
-        by: ["surface"],
-        where: { ...eventWhere, surface: { not: null } },
-        _count: { _all: true }
-      }),
-      lilyPrisma.lilyAnalyticsEvent.groupBy({
-        by: ["laCampaign", "laQr", "laVariant"],
-        where: eventWhere,
-        _count: { _all: true }
-      }),
+      lilyPrisma.lilyAnalyticsEvent.groupBy({ by: ["event"], where: eventWhere, _count: { _all: true } }),
+      lilyPrisma.lilyAnalyticsEvent.groupBy({ by: ["surface"], where: { ...eventWhere, surface: { not: null } }, _count: { _all: true } }),
+      lilyPrisma.lilyAnalyticsEvent.groupBy({ by: ["laCampaign", "laQr", "laVariant"], where: eventWhere, _count: { _all: true } }),
       lilyPrisma.lilyAnalyticsEvent.groupBy({
         by: ["productSlug", "event"],
-        where: {
-          ...eventWhere,
-          productSlug: { not: null },
-          event: { in: ["product_view", "add_to_cart"] }
-        },
+        where: { ...eventWhere, productSlug: { not: null }, event: { in: ["product_view", "add_to_cart"] } },
         _count: { _all: true }
       }),
-      lilyPrisma.lilyOrder.aggregate({
-        where: orderWhere,
-        _count: { _all: true },
-        _sum: { grandTotalCents: true }
-      }),
-      lilyPrisma.lilyOrder.aggregate({
-        where: { ...orderWhere, paidAt: { not: null } },
-        _count: { _all: true },
-        _sum: { grandTotalCents: true }
-      }),
-      lilyPrisma.lilyOrder.groupBy({
-        by: ["laCampaign", "laQr", "laVariant"],
-        where: orderWhere,
-        _count: { _all: true },
-        _sum: { grandTotalCents: true }
-      }),
-      lilyPrisma.lilyOrder.groupBy({
-        by: ["laCampaign", "laQr", "laVariant"],
-        where: { ...orderWhere, paidAt: { not: null } },
-        _count: { _all: true },
-        _sum: { grandTotalCents: true }
-      }),
+      lilyPrisma.lilyOrder.aggregate({ where: orderWhere, _count: { _all: true }, _sum: { grandTotalCents: true } }),
+      lilyPrisma.lilyOrder.aggregate({ where: { ...orderWhere, paidAt: { not: null } }, _count: { _all: true }, _sum: { grandTotalCents: true } }),
+      lilyPrisma.lilyOrder.groupBy({ by: ["laCampaign", "laQr", "laVariant"], where: orderWhere, _count: { _all: true }, _sum: { grandTotalCents: true } }),
+      lilyPrisma.lilyOrder.groupBy({ by: ["laCampaign", "laQr", "laVariant"], where: { ...orderWhere, paidAt: { not: null } }, _count: { _all: true }, _sum: { grandTotalCents: true } }),
       Promise.all(funnelEvents.map(async (event) => ({
         event,
         sessions: (await lilyPrisma.lilyAnalyticsEvent.findMany({
@@ -234,20 +200,12 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
     ]);
 
     const attribution = attributionGroups
-      .map((row) => ({
-        campaign: row.laCampaign,
-        qr: row.laQr,
-        variant: row.laVariant,
-        events: row._count._all
-      }))
+      .map((row) => ({ campaign: row.laCampaign, qr: row.laQr, variant: row.laVariant, events: row._count._all }))
       .sort((a, b) => b.events - a.events)
       .slice(0, 50);
 
     const paidByAttribution = new Map(
-      orderAttributionPaid.map((row) => [
-        JSON.stringify([row.laCampaign, row.laQr, row.laVariant]),
-        row
-      ])
+      orderAttributionPaid.map((row) => [JSON.stringify([row.laCampaign, row.laQr, row.laVariant]), row])
     );
     const orderAttribution = orderAttributionCreated.map((row) => {
       const paid = paidByAttribution.get(JSON.stringify([row.laCampaign, row.laQr, row.laVariant]));
@@ -265,10 +223,7 @@ export async function lilyAnalyticsRoutes(app: FastifyInstance) {
     return {
       generatedAt: now,
       window: { from, to: now, days: query.days },
-      filters: {
-        campaign: query.campaign ?? null,
-        includeHomologation: query.includeHomologation
-      },
+      filters: { campaign: query.campaign ?? null, includeHomologation: query.includeHomologation },
       events: Object.fromEntries(eventCounts.map((row) => [row.event, row._count._all])),
       surfaces: Object.fromEntries(surfaceGroups.filter((row) => row.surface).map((row) => [row.surface!, row._count._all])),
       funnel: funnelSessionRows,
