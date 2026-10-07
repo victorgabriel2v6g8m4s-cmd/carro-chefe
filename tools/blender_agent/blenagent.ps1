@@ -272,6 +272,8 @@ exit /b %ERRORLEVEL%
     Write-Host "  blenagent status"
     Write-Host "  blenagent restart"
     Write-Host "  blenagent image-smoke -OpenImages"
+    Write-Host "  blenagent install-compare"
+    Write-Host "  blenagent compare-smoke -OpenImages"
 }
 
 function Show-Help {
@@ -287,11 +289,13 @@ After opening a new PowerShell window:
   blenagent restart
   blenagent status
   blenagent image-smoke [-ImagePath PATH] [-OpenImages]
+  blenagent compare-smoke [-ImagePath PATH] [-OpenImages]
   blenagent sculpt-smoke [-OpenImages]
   blenagent recipe-smoke [-OpenImages]
   blenagent iteration-smoke [-OpenImages]
   blenagent context-smoke [-OpenImages]
   blenagent smoke [-OpenImages]
+  blenagent install-compare
   blenagent install-mcp
 
 Useful options:
@@ -305,7 +309,7 @@ Useful options:
 
 restart defaults to a recovery checkpoint before closing a healthy bridge.
 A stale dead session is cleaned automatically. A live Blender with an unreachable bridge is never killed unless -Force is explicit.
-image-smoke defaults to .runtime\blender-agent\assets\referencia.jpg.
+image-smoke and compare-smoke default to .runtime\blender-agent\assets\referencia.jpg.
 "@
 }
 
@@ -334,6 +338,16 @@ switch ($Command.ToLowerInvariant()) {
             $arguments += "-OpenImages"
         }
         Invoke-AgentPowerShell -ScriptName "image-smoke-test.ps1" -Arguments $arguments
+    }
+    "compare-smoke" {
+        if (-not $ImagePath) {
+            $ImagePath = ".runtime\blender-agent\assets\referencia.jpg"
+        }
+        $arguments = @("-PythonExe", $PythonExe, "-ImagePath", $ImagePath)
+        if ($OpenImages) {
+            $arguments += "-OpenImages"
+        }
+        Invoke-AgentPowerShell -ScriptName "comparison-smoke-test.ps1" -Arguments $arguments
     }
     "sculpt-smoke" {
         $arguments = @("-PythonExe", $PythonExe)
@@ -369,6 +383,9 @@ switch ($Command.ToLowerInvariant()) {
             $arguments += "-OpenImage"
         }
         Invoke-AgentPowerShell -ScriptName "smoke-test.ps1" -Arguments $arguments
+    }
+    "install-compare" {
+        Invoke-AgentPowerShell -ScriptName "install-compare.ps1" -Arguments @("-PythonExe", $PythonExe)
     }
     "install-mcp" {
         Invoke-AgentPowerShell -ScriptName "install-mcp.ps1"
