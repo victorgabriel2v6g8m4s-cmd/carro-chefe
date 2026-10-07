@@ -6,6 +6,8 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any
 
+from . import protocol
+
 
 RECEIPT_SCHEMA_VERSION = 1
 FEATURE_VERSION = "mesh-reference-compare-v1"
@@ -54,9 +56,15 @@ def receipt_path_for(output: str | Path) -> Path:
 
 def public_path(path: str | Path, *, runtime_root: Path | None = None) -> str:
     target = Path(path).resolve()
+    roots: list[tuple[str, Path]] = []
     if runtime_root is not None:
+        roots.append(("runtime", runtime_root.resolve()))
+    roots.append(("repo", protocol.repo_root().resolve()))
+    for prefix, root in roots:
         try:
-            return str(target.relative_to(runtime_root.resolve())).replace("\\", "/")
+            relative = str(target.relative_to(root)).replace("\\", "/")
+            return relative if prefix == "repo" else f".runtime/blender-agent/{relative}"
         except ValueError:
-            pass
+            continue
+    # External opt-in assets should not leak the user's absolute filesystem path.
     return target.name
