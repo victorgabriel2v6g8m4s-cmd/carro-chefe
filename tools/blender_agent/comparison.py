@@ -312,11 +312,13 @@ def _target_bbox(reference, mask_path: Path | None) -> dict[str, Any]:
     width, height = reference.size
     if mask_path is not None:
         with Image.open(mask_path) as raw_mask:
-            mask = raw_mask.convert("L")
-            if mask.size != reference.size:
+            _validate_resolution(*raw_mask.size)
+            if raw_mask.size != reference.size:
                 raise ComparisonError(
-                    f"reference-mask deve ter mesma dimensao da referencia: mask={mask.size}, reference={reference.size}"
+                    f"reference-mask deve ter mesma dimensao da referencia: mask={raw_mask.size}, reference={reference.size}"
                 )
+            raw_mask.load()
+            mask = raw_mask.convert("L")
             binary = mask.point(lambda value: 255 if value > 0 else 0)
             bbox = binary.getbbox()
         if bbox is None:
@@ -392,6 +394,29 @@ def _target_bbox(reference, mask_path: Path | None) -> dict[str, Any]:
     }
 
 
+def _scale_alignment_target(
+    target: dict[str, Any],
+    source_size: tuple[int, int],
+    output_size: tuple[int, int],
+) -> dict[str, Any]:
+    result = dict(target)
+    bbox = result.get("bbox")
+    result["source_resolution"] = [int(source_size[0]), int(source_size[1])]
+    result["output_resolution"] = [int(output_size[0]), int(output_size[1])]
+    if bbox is None or source_size == output_size:
+        return result
+    sx = output_size[0] / float(source_size[0])
+    sy = output_size[1] / float(source_size[1])
+    result["bbox"] = [
+        float(bbox[0]) * sx,
+        float(bbox[1]) * sy,
+        float(bbox[2]) * sx,
+        float(bbox[3]) * sy,
+    ]
+    result["bbox_scaled_to_output"] = True
+    return result
+
+
 def _validate_anchor_image_bounds(anchors: list[tuple[float, float, float, float]], width: int, height: int) -> None:
     for index, (_sx, _sy, image_x, image_y) in enumerate(anchors):
         if not (-width <= image_x <= width * 2 and -height <= image_y <= height * 2):
@@ -426,6 +451,7 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
         mesh, source_meta = _scene_geometry(object_name, view)
 
     with Image.open(reference_path) as raw_reference:
+        reference_size = _validate_resolution(*raw_reference.size)
         raw_reference.load()
         reference = raw_reference.convert("RGBA")
     requested_resolution = options.get("resolution")
@@ -434,7 +460,7 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
             raise ComparisonError("resolution deve conter WIDTH HEIGHT")
         width, height = _validate_resolution(int(requested_resolution[0]), int(requested_resolution[1]))
     else:
-        width, height = _validate_resolution(*reference.size)
+        width, height = reference_size
 
     if view == "CAMERA":
         if source != "scene":
@@ -476,7 +502,11 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
         _validate_anchor_image_bounds(parsed_anchors, width, height)
         alignment = anchors_alignment(parsed_anchors)
     else:
-        alignment_target = _target_bbox(reference, mask_path)
+        alignment_target = _scale_alignment_target(
+            _target_bbox(reference, mask_path),
+            reference_size,
+            (width, height),
+        )
         if alignment_target.get("bbox") is None:
             alignment = manual_alignment(projected)
             alignment["method"] = str(alignment_target.get("method") or "auto-failed")
@@ -537,6 +567,11 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
         view=view,
         force=force,
     )
+    receipt_path = receipt_path_for(output_path)
+    if receipt_path.exists() and not force:
+        raise ComparisonError(
+            f"receipt pareado ja existe: {receipt_path}; use --force ou outro --output"
+        )
     align_report_path = _resolve_report_path(
         str(options.get("align_report") or "") or None,
         force=force,
@@ -608,7 +643,6 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
 
     stage_id = history.get_active_stage_id()
     runtime_root = protocol.runtime_root()
-    receipt_path = receipt_path_for(output_path)
     receipt = {
         "schema_version": RECEIPT_SCHEMA_VERSION,
         "feature": FEATURE_VERSION,
@@ -694,9 +728,8 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
         )
         history_event_id = event.get("event_id")
         history_stage_id = event.get("stage_id")
-        # Do not rewrite the receipt after record_event: history hashes attachments at
-        # event creation time, so mutating the receipt afterward would make its stored
-        # attachment SHA stale. The event id is returned separately by the CLI result.
+        # History hashes output/receipt attachments while the event is created.
+        # Keep the receipt immutable after this point so the stored SHA stays valid.
 
     return {
         "ok": True,
