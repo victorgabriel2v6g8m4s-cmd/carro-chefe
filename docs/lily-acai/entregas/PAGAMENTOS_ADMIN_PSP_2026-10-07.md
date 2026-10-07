@@ -57,3 +57,18 @@ Se a prioridade passar de "receber na InfinitePay" para "conciliação bancária
 
 O novo painel deve permanecer sem reload global após salvar regras. Mutations administrativas usam o feedback discreto existente e mensagens específicas de sucesso/erro.
 
+
+
+## Configuração segura da chave Pix na VPS
+
+A CLI operacional `cc` agora possui:
+
+- `sudo cc check pix-key`: verifica somente presença/validade básica, sem exibir a chave;
+- `sudo cc key pix`: solicita a chave Pix em entrada oculta, confirma a digitação, solicita nome/cidade do recebedor e grava as variáveis no arquivo de ambiente da VPS;
+- o comando reinicia o serviço `carro-chefe` para carregar a nova configuração;
+- o segredo nunca é impresso no terminal nem versionado no Git.
+
+A chave deve ser uma chave Pix realmente registrada na conta InfinitePay que receberá os pagamentos. O nome do recebedor informado no BR Code deve corresponder ao usuário recebedor registrado, conforme o padrão Pix do Banco Central. 
+
+Após configurar a chave, a homologação financeira deve ser feita com um pedido explicitamente marcado como homologação e com `X-Lily-Homologation: 1`. O modo de homologação exige staff/MFA e não habilita pagamento real em pedidos normais.
+
