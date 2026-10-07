@@ -189,10 +189,8 @@ export function AdminPaymentsPage() {
         <h1>Pagamentos e reconciliação</h1>
         <p>Camada financeira própria com Pix manual ou Mercado Pago. Cartões são tokenizados pelo processador e nunca armazenados pela CookLily.</p>
       </div>
-      <div className="admin-heading-actions">
-        <Link className="button ghost" to="/painel/pagamentos/metodos">Métodos e descontos</Link>
-        <Link className="button ghost" to="/painel">Painel</Link>
-      </div>
+      <Link className="button ghost" to="/painel/pagamentos/metodos">Métodos e descontos</Link>
+      <Link className="button ghost" to="/painel">Painel</Link>
     </div>
 
     {!isAdmin && <div className="operation-warning">
