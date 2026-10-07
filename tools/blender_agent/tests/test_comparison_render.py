@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import unittest
 
 from tools.blender_agent.comparison_render import (
@@ -10,6 +11,10 @@ from tools.blender_agent.comparison_render import (
 )
 
 
+PIL_AVAILABLE = importlib.util.find_spec("PIL") is not None
+
+
+@unittest.skipUnless(PIL_AVAILABLE, "Pillow optional comparison dependency is not installed")
 class ComparisonRenderTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
