@@ -43,6 +43,11 @@ class ComparisonSnapshotContractTests(unittest.TestCase):
         self.assertIn("CC_BLENDER_COMPARE_MAX_PAYLOAD_BYTES", source)
         self.assertIn("payload_bytes", source)
 
+    def test_snapshot_has_typed_mcp_adapter(self) -> None:
+        source = MCP.read_text(encoding="utf-8")
+        self.assertIn("def blender_mesh_comparison_snapshot", source)
+        self.assertIn('call("mesh.comparison_snapshot"', source)
+
 
 if __name__ == "__main__":
     unittest.main()
