@@ -232,7 +232,7 @@ function onCatalogAdminPage() {
 
 function ensureMounted() {
   if (!onCatalogAdminPage() || document.getElementById(PANEL_ID)) return;
-  const summary = Array.from(document.querySelectorAll<HTMLSummaryElement>("details.admin-create > summary"))
+  const summary = Array.from(document.querySelectorAll<HTMLElement>("details.admin-create > summary"))
     .find((item) => item.textContent?.includes("Sabores e compatibilidade"));
   const details = summary?.parentElement;
   if (!details) return;
