@@ -18,14 +18,12 @@ from .comparison_alignment import (
     parse_anchor,
 )
 from .comparison_geometry import (
-    ComparisonGeometryError,
     apply_object_transform,
     camera_pixel_projection,
     canonical_pixel_projection,
     cube_mesh,
     normalize_mesh,
     project_vertices,
-    stable_hash,
 )
 from .comparison_receipt import (
     FEATURE_VERSION,
@@ -36,7 +34,7 @@ from .comparison_receipt import (
     sha256_file,
     write_json_atomic,
 )
-from .comparison_render import ComparisonRenderError, render_comparison, require_pillow, save_png_atomic
+from .comparison_render import render_comparison, require_pillow, save_png_atomic
 from .recipes import load_recipe, plan_recipe
 from .runtime_compat import RUNTIME_PROFILE, safe_runtime_path
 
@@ -120,7 +118,7 @@ def _resolve_export_path(value: str | None, *, object_name: str, view: str, forc
     return candidate
 
 
-def _resolve_report_path(value: str | None) -> Path | None:
+def _resolve_report_path(value: str | None, *, force: bool) -> Path | None:
     if not value:
         return None
     export_root = (protocol.runtime_root() / "exports").resolve()
@@ -132,6 +130,10 @@ def _resolve_report_path(value: str | None) -> Path | None:
         raise protocol.SecurityError("align-report deve ficar em runtime/exports")
     if target.suffix.lower() != ".json":
         raise ComparisonError("--align-report deve terminar em .json")
+    if target.exists() and not force:
+        raise ComparisonError(
+            f"align-report ja existe: {target}; use --force ou escolha outro arquivo"
+        )
     return target
 
 
@@ -145,8 +147,7 @@ def _primitive_or_mesh_from_step(step: dict[str, Any]) -> tuple[list[list[float]
             raise ComparisonError("object.add_mesh da recipe nao contem vertices/faces declarativos")
         return vertices, faces
     if action == "object.add_primitive" and str(params.get("kind") or "").lower() == "cube":
-        vertices, faces = cube_mesh()
-        return vertices, faces
+        return cube_mesh()
     raise ComparisonError(
         "recipe source v1 exige object.add_mesh declarativo ou primitive cube para o objeto alvo; "
         f"action recebida={action!r}"
@@ -529,13 +530,17 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
     if not (0.0 <= render_options["line_opacity"] <= 100.0):
         raise ComparisonError("line-opacity deve estar em 0..100")
 
+    force = bool(options.get("force", False))
     output_path = _resolve_export_path(
         str(options.get("output") or "") or None,
         object_name=object_name,
         view=view,
-        force=bool(options.get("force", False)),
+        force=force,
     )
-    align_report_path = _resolve_report_path(str(options.get("align_report") or "") or None)
+    align_report_path = _resolve_report_path(
+        str(options.get("align_report") or "") or None,
+        force=force,
+    )
 
     result_summary = {
         "source": source_meta,
@@ -656,6 +661,8 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
             f"PNG salvo em {output_path}, mas receipt falhou; execucao incompleta: {type(exc).__name__}: {exc}"
         ) from exc
 
+    history_event_id = None
+    history_stage_id = stage_id
     if not bool(options.get("no_history", False)):
         event = history.record_event(
             action="mesh.reference.compare",
@@ -685,9 +692,11 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
             ok=True,
             tags=["comparison", "mesh-reference", source],
         )
-        receipt["history_event_id"] = event.get("event_id")
-        receipt["stage_id"] = event.get("stage_id")
-        write_json_atomic(receipt_path, receipt)
+        history_event_id = event.get("event_id")
+        history_stage_id = event.get("stage_id")
+        # Do not rewrite the receipt after record_event: history hashes attachments at
+        # event creation time, so mutating the receipt afterward would make its stored
+        # attachment SHA stale. The event id is returned separately by the CLI result.
 
     return {
         "ok": True,
@@ -695,6 +704,6 @@ def compose(options: dict[str, Any]) -> dict[str, Any]:
         "output": output_info,
         "receipt": str(receipt_path),
         "align_report": str(align_report_path) if align_report_path else None,
-        "stage_id": receipt.get("stage_id"),
-        "history_event_id": receipt.get("history_event_id"),
+        "stage_id": history_stage_id,
+        "history_event_id": history_event_id,
     }
