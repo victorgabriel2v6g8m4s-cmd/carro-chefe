@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import importlib.util
 import io
 import json
 import os
@@ -14,6 +15,10 @@ from tools.blender_agent.comparison import ComparisonError, compose
 from tools.blender_agent.comparison_render import require_pillow
 
 
+PIL_AVAILABLE = importlib.util.find_spec("PIL") is not None
+
+
+@unittest.skipUnless(PIL_AVAILABLE, "Pillow optional comparison dependency is not installed")
 class ComparisonPipelineTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -169,6 +174,17 @@ class ComparisonPipelineTests(unittest.TestCase):
         options["output"] = str(self.assets / "forbidden.png")
         with self.assertRaises(protocol.SecurityError):
             compose(options)
+
+    def test_paired_receipt_is_not_overwritten_without_force(self) -> None:
+        options = self._options()
+        options["force"] = False
+        output = Path(options["output"])
+        output.parent.mkdir(parents=True, exist_ok=True)
+        receipt = output.with_suffix(".receipt.json")
+        receipt.write_text("{}", encoding="utf-8")
+        with self.assertRaises(ComparisonError):
+            compose(options)
+        self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":
