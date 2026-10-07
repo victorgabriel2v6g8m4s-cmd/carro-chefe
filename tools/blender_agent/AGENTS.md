@@ -8,12 +8,14 @@ Antes de controlar ou alterar uma cena Blender, leia:
 
 1. `docs/governanca/BLENDER_AGENT_AGENT_GUIDE.md` — manual operacional obrigatório;
 2. `tools/blender_agent/README.md` — comandos e capacidades;
-3. o documento técnico da camada usada (`BLENDER_AGENT_CONTEXT.md`, `BLENDER_AGENT_SCULPT.md`, `BLENDER_AGENT_RECIPES.md`, `BLENDER_AGENT_ITERATIVE.md` ou `BLENDER_AGENT_IMAGES.md`).
+3. o documento técnico da camada usada (`BLENDER_AGENT_CONTEXT.md`, `BLENDER_AGENT_SCULPT.md`, `BLENDER_AGENT_RECIPES.md`, `BLENDER_AGENT_ITERATIVE.md`, `BLENDER_AGENT_IMAGES.md` ou `BLENDER_AGENT_MESH_REFERENCE_COMPARE_USAGE.md`).
 
 ## Regras de operação
 
 - prefira recipe/action semântica a UI simulada;
 - para imagem de referência ou Base Color por imagem, use `reference.image.add` / `material.image_texture`; não use file browser por UI como primeira opção;
+- para comparação visual entre malha e foto, use `compare_cli`/`mesh.comparison_snapshot`; a composição de pixels deve permanecer fora do processo Blender e a action de snapshot deve ser read-only;
+- comparação mesh × referência é auxílio visual de edição, não medição metrológica nem aprovação automática do produto;
 - imagens lidas pelo agente devem ficar no repositório/runtime ou numa raiz explicitamente autorizada por `CC_BLENDER_ASSET_ROOT`;
 - `material.image_texture` não substitui UV unwrap: confirme `has_uv`/`uv_layers` antes de aprovar uma textura;
 - use UI somente dentro do Blender e apenas quando não houver action adequada;
