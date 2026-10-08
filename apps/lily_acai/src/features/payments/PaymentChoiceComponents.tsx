@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { LilyChoicePayment, LilyPaymentOption } from "./payment-choice-api";
+import { CookLilyPixQrCode } from "./CookLilyPixQrCode";
 
 export function paymentMoney(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -44,6 +45,8 @@ export function PaymentChoiceResult(props: {
 }) {
   const payment = props.payment;
   const pixValue = payment.providerData?.qrCode || payment.instructions;
+  const pixText = typeof pixValue === "string" ? pixValue.trim() : "";
+  const hasBrCode = payment.method === "pix" && pixText.startsWith("000201");
   const providerLabel = payment.provider === "cooklily_pix" ? "Pix CookLily"
     : payment.provider === "mercado_pago" ? "Mercado Pago"
     : payment.provider === "manual" ? "Pix manual de contingência"
@@ -71,20 +74,26 @@ export function PaymentChoiceResult(props: {
     <span className="eyebrow">Pagamento pendente · {providerLabel}</span>
     <h2>{paymentMoney(payment.amountCents)}</h2>
     {payment.pricing.discountCents > 0 && <p>Desconto aplicado: {paymentMoney(payment.pricing.discountCents)}.</p>}
+    {payment.method === "pix" && (hasBrCode || payment.providerData?.qrCodeBase64) && <div className="cooklily-pix-layout">
+      <div className="cooklily-pix-qr-panel">
+        <CookLilyPixQrCode
+          payload={hasBrCode ? pixText : null}
+          fallbackBase64={payment.providerData?.qrCodeBase64 ?? null}
+        />
+        <p className="cooklily-pix-qr-caption">Escaneie com o app do seu banco</p>
+      </div>
+      <p className="cooklily-pix-help">Abra o Pix no aplicativo do seu banco e aponte a câmera para o QR Code. Se preferir, use o Pix Copia e Cola abaixo.</p>
+    </div>}
     {pixValue && <>
-      {payment.providerData?.qrCodeBase64 && <img
-        className="pix-qr-image"
-        src={`data:image/png;base64,${payment.providerData.qrCodeBase64}`}
-        alt="QR Code Pix"
-      />}
-      <label className="payment-pix-code">Pix Copia e Cola
-        <textarea readOnly rows={5} value={pixValue} />
+      <label className="payment-pix-code">
+        <span>{hasBrCode ? "Pix Copia e Cola" : payment.method === "pix" ? "Instruções para pagar" : "Detalhes do pagamento"}</span>
+        <textarea readOnly rows={hasBrCode ? 4 : 5} value={pixValue} />
       </label>
-      <button className="button primary" type="button" onClick={props.onCopy}>
-        {props.copied ? "Copiado" : "Copiar código Pix"}
+      <button className="button primary payment-pix-copy-button" type="button" onClick={props.onCopy}>
+        {props.copied ? "Copiado" : hasBrCode ? "Copiar código Pix" : "Copiar instruções"}
       </button>
     </>}
-    {!pixValue && <p>{payment.instructions || "Aguardando confirmação do processador."}</p>}
+    {!pixValue && !payment.providerData?.qrCodeBase64 && <p>{payment.instructions || "Aguardando confirmação do processador."}</p>}
     {payment.provider === "manual" && <div className="operation-warning">
       <strong>Contingência manual ativada.</strong>
       <p>Use as instruções acima. A equipe confirma o recebimento antes de liberar o pedido.</p>
