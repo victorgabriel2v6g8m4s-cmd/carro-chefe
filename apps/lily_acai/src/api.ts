@@ -432,7 +432,7 @@ export async function getLilyProfile() {
 }
 
 export async function updateLilyProfile(
-  input: { displayName?: string | null; rankingOptIn?: boolean },
+  input: { displayName?: string | null; rankingOptIn?: boolean; whatsappUpdatesOptIn?: boolean; whatsappOffersOptIn?: boolean },
   csrfToken: string
 ) {
   const response = await fetch("/api/v1/lily/customer/profile", {
