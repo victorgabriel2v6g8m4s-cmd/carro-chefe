@@ -155,6 +155,21 @@ async function profilePayload(userId: string) {
   if (!user) throw new ApiError(404, "Perfil não encontrado.");
 
   const [own] = await loyaltyRows({ userIds: [userId] });
+  const preferenceRecords = await lilyPrisma.lilyConsentRecord.findMany({
+    where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers", "lily_marketing"] } },
+    orderBy: { recordedAt: "desc" },
+    select: { purpose: true, granted: true, recordedAt: true, revokedAt: true }
+  });
+  const latestPreferences = new Map<string, boolean>();
+  for (const record of preferenceRecords) {
+    if (!latestPreferences.has(record.purpose)) {
+      latestPreferences.set(record.purpose, record.granted && !record.revokedAt);
+    }
+  }
+  const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers")
+    ?? latestPreferences.get("lily_marketing")
+    ?? false;
+  const whatsappUpdatesOptIn = latestPreferences.get("whatsapp_order_updates") ?? true;
   const publicRows = await loyaltyRows({ onlyOptedIn: true });
   const publicIndex = publicRows.findIndex((row) => row.userId === userId);
 
@@ -252,12 +267,34 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
       throw new ApiError(400, "Informe um nome antes de aparecer no ranking.", { code: "LILY_RANKING_NAME_REQUIRED" });
     }
 
-    await lilyPrisma.lilyUser.update({
-      where: { id: context.user.id },
-      data: {
-        ...(input.displayName === undefined ? {} : { displayName }),
-        ...(input.rankingOptIn === undefined ? {} : { rankingOptIn: input.rankingOptIn })
-      }
+    await lilyPrisma.$transaction(async (tx) => {
+      await tx.lilyUser.update({
+        where: { id: context.user.id },
+        data: {
+          ...(input.displayName === undefined ? {} : { displayName }),
+          ...(input.rankingOptIn === undefined ? {} : { rankingOptIn: input.rankingOptIn })
+        }
+      });
+      const recordedAt = new Date();
+      const preferences = [
+        input.whatsappUpdatesOptIn === undefined ? null : {
+          userId: context.user.id,
+          purpose: "whatsapp_order_updates",
+          version: "2026-10-08",
+          granted: input.whatsappUpdatesOptIn,
+          source: "profile_settings",
+          recordedAt
+        },
+        input.whatsappOffersOptIn === undefined ? null : {
+          userId: context.user.id,
+          purpose: "whatsapp_offers",
+          version: "2026-10-08",
+          granted: input.whatsappOffersOptIn,
+          source: "profile_settings",
+          recordedAt
+        }
+      ].filter((item): item is NonNullable<typeof item> => item !== null);
+      if (preferences.length) await tx.lilyConsentRecord.createMany({ data: preferences });
     });
 
     return profilePayload(context.user.id);
