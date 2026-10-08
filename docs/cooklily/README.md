@@ -17,6 +17,7 @@ Não criar uma segunda cópia dos mesmos documentos em `docs/cooklily/`. Este di
 - [Decisões e pendências](../lily-acai/DECISOES_PENDENCIAS.md)
 - [Status de implementação — 30/09/2026](../lily-acai/STATUS_IMPLEMENTACAO_2026-09-30.md)
 - [Roadmap CookLily](../lily-acai/ROADMAP_COOKLILY.md)
+- [Homologação do QR Pix — 08/10/2026](../lily-acai/entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md) — QR lido e valor conferido; liquidação e transição do pedido ainda pendentes.
 - [Pagamentos](../lily-acai/PAGAMENTOS_GATEWAY_2026-09-27.md)
 - [Pix próprio e operação](../lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md)
 - [Entrega 12 — alergênicos](../lily-acai/entregas/ENTREGA_12_ALERGENICOS_2026-09-30.md)
