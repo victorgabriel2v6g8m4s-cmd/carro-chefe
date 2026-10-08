@@ -1,61 +1,50 @@
 # Correção do teste do painel de métodos de pagamento CookLily
 
-- status: merged_pending_vps_validation
+- status: candidate
 - owner: AG-DEV
-- branch: chore/cooklily-payment-methods-test-fix
+- branch: fix/cooklily-payment-methods-regex-escape
 - base_branch: cooklily/canonical
-- base_sha_verified: 9e9fac1797f2bb1343a55fb30b6b82b59d0e0158
-- head_sha_verified: 459dd180ee1b681efcdc255e724cd2b3dbc6bbaf
-- pull_requests: #142 (merged)
-- last_verified_at: 2026-10-08T12:10:00Z
+- base_sha_verified: 2b5f130e07bd4a8acfb88cab2abf1c7cb87fa7c2
+- head_sha_verified: 09f669725a4125e66e3fd2c77c3f8f67aa660678
+- pull_requests: #142 (merged; correção anterior, insuficiente), PR desta correção pendente
+- last_verified_at: 2026-10-08T12:15:00Z
 - interruption_state: none
 
-## Concluído e persistido
+## Contexto e causa confirmada
 
-- Releitura da cadeia de governança aplicável: REGRAS.md, AGENTS.md, apps/AGENTS.md e apps/lily_acai/AGENTS.md.
-- Revisado o roadmap vigente e o procedimento de checkpoints.
-- Confirmado que cooklily/canonical aponta para 9e9fac1797f2bb1343a55fb30b6b82b59d0e0158.
-- Confirmado o erro: apps/lily_acai/src/admin-payment-methods-route.test.ts exigia a sequência painel/...">, mas apps/lily_acai/src/admin.tsx usa links com template literal e import.meta.env.BASE_URL, produzindo painel/... seguido de backtick e } no fonte.
-- Corrigido o teste para validar a associação entre caminho e rótulo por expressão regular, sem depender da sintaxe concreta do href.
-- A alteração permanece exclusivamente no teste; nenhum comportamento de produção foi modificado.
-- Commit inicial da correção: 6ef5b48073e70899bcfdc4f3a83fad717847fdc6.
-- Commit de endurecimento da asserção: 459dd180ee1b681efcdc255e724cd2b3dbc6bbaf.
-- Checkpoint persistente criado e atualizado.
-- PR #142 aberto como draft e depois marcado ready para review.
+- A primeira correção foi integrada pelo PR #142 (merge commit `75526ed8623ec203472ba7ce5e7fa52f683f3d00`), mas o deploy de validação falhou de novo no teste `apps/lily_acai/src/admin-payment-methods-route.test.ts`.
+- O log da VPS mostrou que as regex resultantes no arquivo eram `[\\s\\S]` no literal regex, ou seja, a expressão tentava casar barras invertidas literais em vez de qualquer caractere. Por isso não correspondia ao conteúdo real de `apps/lily_acai/src/admin.tsx`.
+- A VPS confirmou 1 teste falho e 267 aprovados, dentre 268 testes; 48 arquivos passaram e 1 falhou.
+- O deploy abortou na fase `tests`, não iniciou migrations e restaurou o checkout anterior `fef09f5f0dbf112dc451e12c309d6e2eb2167a45`. A release tentada era `2b5f130e07bd4a8acfb88cab2abf1c7cb87fa7c2`.
 
-## Merge concluído
+## Correção atual persistida
 
-- PR #142 integrado em `cooklily/canonical` por squash merge.
-- Merge commit: `75526ed8623ec203472ba7ce5e7fa52f683f3d00`.
-- O fix está disponível na branch de teste da VPS; nenhum deploy foi executado nesta sessão.
-- Próxima validação: executar `sudo cc deploy canonical` na VPS e conferir o resultado do teste.
+- Corrigidas as duas regex para usarem `[\s\S]` corretamente no literal regex TypeScript, permitindo casar qualquer caractere entre o caminho e o rótulo.
+- Alterado somente o teste; sem mudanças de código de produção, schema ou migrations.
+- Commit da correção: `09f669725a4125e66e3fd2c77c3f8f67aa660678`.
+- Branch criada a partir de `cooklily/canonical`, cujo HEAD verificado era `2b5f130e07bd4a8acfb88cab2abf1c7cb87fa7c2`.
 
 ## Gates e testes
 
-- Teste que falhou no deploy: apps/lily_acai/src/admin-payment-methods-route.test.ts — causa analisada e asserção corrigida.
-- Validação estrutural remota da branch: caminhos, rótulos e implementação de AdminPaymentMethodsPage/AdminPaymentsPage conferidos; as relações esperadas agora são representadas por regex no teste.
-- Testes locais: não executados porque o ambiente de execução desta sessão não conseguiu acessar o GitHub para materializar o checkout (git clone falhou por resolução de host).
-- CI: não há workflow associado ao head porque o workflow CI está configurado para pull_request/push apenas contra main, enquanto este PR tem base cooklily/canonical. O commit de merge também não possui status checks reportados.
-- npm run check: pendente.
-- npm test: pendente.
-- npm run build: pendente.
+- Evidência do teste anterior: 1 falhou, 267 passaram; falha era o escape incorreto das regex.
+- Após a correção atual, testes automatizados ainda não executados neste ambiente.
+- `npm run policy:preflight -- --agent AG-DEV --scope apps/lily_acai`: pendente, pois esta sessão não dispõe de checkout/terminal para executar comandos.
+- `npm run check`, `npm test` e `npm run build`: pendentes.
+- O checkpoint e o teste foram inspecionados via GitHub; isso não substitui execução de testes.
+- CI padrão não é acionado para a base `cooklily/canonical` conforme registrado na execução anterior; não afirmar que o teste passou antes da validação na VPS.
 
-## Migrations
+## Migrations e deploy
 
 - Nenhuma migration criada ou alterada.
-- Nenhum banco de produção ou preflight de migration foi iniciado.
+- Nenhum deploy foi iniciado por esta execução. A VPS já havia revertido automaticamente a tentativa anterior após a falha de teste.
 
-## Bloqueios/riscos
+## Bloqueios e riscos
 
-- Validação local bloqueada por indisponibilidade de rede do ambiente de execução.
-- A branch não recebe o CI padrão porque o workflow está restrito à main; isso deve ser considerado antes de qualquer merge.
-- A alteração é exclusivamente de teste; nenhum comportamento de produção foi modificado.
-
-## Homologação/dependências externas
-
-- Merge realizado; nenhuma homologação ou deploy executado nesta sessão.
-- PR #142: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/142
+- Sem ambiente local disponível nesta sessão para rodar preflight, teste focado ou gates completos.
+- Risco remanescente: confirmar na VPS que a regex corrigida realmente passa antes de considerar a entrega validada.
 
 ## Próxima ação exata
 
-Executar `sudo cc deploy canonical` na VPS para validar o teste e observar os gates de deploy. Se falhar, registrar o log completo e corrigir a causa; não declarar os testes aprovados antes do resultado.
+1. Abrir PR para `cooklily/canonical`, revisar o diff e registrar o merge.
+2. Na VPS, executar `sudo cc deploy canonical`; se falhar, anexar o log completo e corrigir a causa real.
+3. Não declarar testes aprovados até haver saída confirmando o sucesso.
