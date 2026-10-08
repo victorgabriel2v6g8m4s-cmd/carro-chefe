@@ -80,6 +80,7 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`, `entregas/ENTREGA_07_PAG
 
 - produtos/CARDAPIO_INICIAL_DEFINITIVO.md;
 - ROADMAP_COOKLILY.md;
+- entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md;
 - marca/KIT_DE_MARCA.md;
 - marca/ATIVOS.md;
 - TRACKING_COMPATIBILIDADE.md;
