@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { getLilySession, lilyAdminJson, parseResponse, type AuthPayload } from "../../api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 type BusinessHour = { dayOfWeek: number; opensAt: string; closesAt: string };
 type Zone = {
@@ -72,7 +73,7 @@ export function AdminFulfillmentPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <section className="admin-state"><h1>Carregando configurações...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando configurações"/></section>;
   if (!session || !data) return <section className="admin-state"><span className="eyebrow">CookLily</span><h1>Acesso staff necessário.</h1><p>{error}</p><a className="button primary" href={import.meta.env.BASE_URL + "entrar?next=" + encodeURIComponent("/painel/entrega")}>Entrar</a></section>;
 
   const csrfToken = session.csrfToken;
