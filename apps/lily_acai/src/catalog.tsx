@@ -453,7 +453,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
             </div>
             <small>Disponibilidade, preço e composição são validados novamente pelo servidor antes de entrar no carrinho.</small>
           </> : <>
-            {loadingOptions && <p>Carregando opções do combo...</p>}
+            {loadingOptions && <LilyLoadingSpinner size="sm" label="Carregando opções do combo" />}
             {builder && Array.from({ length: builder.quantity }, (_, index) => {
               const selectedProduct = builder.options.find((product) => product.id === selectionIds[index]);
               const addons = slotAddons[index] ?? {};
@@ -643,7 +643,7 @@ function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect:
             aria-hidden={!active}
           >
             <div className="combo-slide-image">
-              <img src={cover} alt={combo.cover?.altText ?? `Capa do combo ${combo.name}`} draggable={false} />
+              <img src={cover} alt={combo.cover?.altText ?? `Capa do combo ${combo.name}`} loading="lazy" draggable={false} />
               <span className="offer-pill">{money(combo.savingsCents)} OFF</span>
             </div>
             <div className="combo-slide-copy">
