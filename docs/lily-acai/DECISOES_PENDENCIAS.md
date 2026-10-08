@@ -76,7 +76,7 @@
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
 | LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
-| LILY-PEND-038 | Pix próprio | **homologação parcial:** adapter, BR Code, QR personalizado e Copia e Cola integrados; QR lido em segundo celular e valor conferido. Falta pagar uma cobrança e validar recebimento, conciliação/confirmacão e transição do pedido para pago | Entrega 11A / ADR-002 |
+| LILY-PEND-038 | Pix próprio | **homologação parcial:** adapter, BR Code, QR personalizado e Copia e Cola integrados; QR lido em segundo celular e valor conferido. Falta pagar uma cobrança e validar recebimento, conciliação/confirmação e transição do pedido para pago | Entrega 11A / ADR-002 |
 | LILY-PEND-039 | Conciliação Pix próprio | **resolvida tecnicamente pela 11I:** ledger, poller e adapter API Pix v2 integrados; falta banco/conta real, OAuth/mTLS/certificado, smoke e tarifas | Entrega 11I |
 | LILY-PEND-040 | Painel do cliente | **resolvido tecnicamente:** timeline, guest tracking, ETA/mapa sem coordenadas e WhatsApp operacional integrados; falta QA real/credenciais externas aplicáveis | Entregas 11C/11F/11G/11H |
 | LILY-PEND-041 | Painel cozinha | **resolvido tecnicamente:** fila, handoff, SLA/alertas e impressão integrados; faltam SLA operacional real, QA em tablet e impressora | Entregas 11B/11J/11K |
