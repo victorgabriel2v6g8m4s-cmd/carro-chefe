@@ -1,3 +1,5 @@
+import { openImageCropper } from "./image-crop-editor";
+
 export {};
 
 type ToastKind = "success" | "error";
@@ -20,7 +22,7 @@ const nativeFetch = window.fetch.bind(window);
 const TOAST_ROOT_ID = "cooklily-admin-toast-root";
 const COVER_MARKER = "data-product-cover-uploader";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const maxImageBytes = 10 * 1024 * 1024;
+const maxImageBytes = 25 * 1024 * 1024;
 let catalogPromise: Promise<AdminCatalogPayload> | null = null;
 let pendingSnapshot: { node: HTMLElement; rect: DOMRect; openDetails: string[] } | null = null;
 let snapshotOverlay: HTMLElement | null = null;
@@ -272,7 +274,7 @@ function productCoverPanel(details: HTMLDetailsElement, product: AdminCatalogPro
   const title = document.createElement("strong");
   title.textContent = "Foto de capa";
   const description = document.createElement("small");
-  description.textContent = "Envie JPEG, PNG ou WebP de até 10 MB diretamente neste produto.";
+  description.textContent = "Ajuste a foto no mesmo enquadramento do catálogo (4:5). O círculo central mostra a área segura para a Escolha da semana.";
   const actions = document.createElement("div");
   actions.className = "cooklily-product-cover-actions";
   const input = document.createElement("input");
@@ -324,15 +326,28 @@ function productCoverPanel(details: HTMLDetailsElement, product: AdminCatalogPro
       return;
     }
     if (file.size > maxImageBytes) {
-      showToast("Falha ao enviar capa: a imagem deve ter no máximo 10 MB.", "error");
+      showToast("Falha ao preparar capa: a imagem original é grande demais para o navegador processar.", "error");
       return;
     }
 
     upload.disabled = true;
-    upload.textContent = "Enviando...";
+    upload.textContent = "Preparando...";
     try {
+      const cropped = await openImageCropper(file, {
+        aspectRatio: 4 / 5,
+        title: `Ajustar capa de “${product.displayName}”`,
+        description: "Arraste e aproxime a foto até o produto ficar bem enquadrado. O retângulo é o corte real do catálogo; o círculo indica a área segura para a Escolha da semana.",
+        maxOutputBytes: 5 * 1024 * 1024,
+        maxLongEdge: 1600
+      });
+      if (!cropped) {
+        upload.textContent = product.cover ? "Substituir foto" : "Enviar foto de capa";
+        return;
+      }
+
+      upload.textContent = "Enviando...";
       const csrf = await csrfToken();
-      const media = await uploadMedia(file, csrf);
+      const media = await uploadMedia(cropped, csrf);
       await setProductCover(product.id, media.id, csrf);
       catalogPromise = null;
       syncReactCoverSelect(details, media);

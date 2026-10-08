@@ -24,6 +24,8 @@ const checkoutSource = readFileSync(resolve(sourceDirectory, "features/checkout/
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
 const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
+const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-interaction-enhancements.ts"), "utf8");
+const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("mantém idioma e viewport declarados no documento", () => {
@@ -131,6 +133,19 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(catalogSource).toContain('next.set("produto", product.slug)');
     expect(catalogSource).toContain('next.delete("produto")');
     expect(catalogSource).toContain('onClose={closeProduct}');
+  });
+
+  it("reutiliza o editor de recorte no perfil e nas capas de produto", () => {
+    expect(profileSource).toContain('openImageCropper(file, {');
+    expect(profileSource).toContain("aspectRatio: 1");
+    expect(profileSource).toContain("maxOutputBytes: 5 * 1024 * 1024");
+    expect(adminEnhancementsSource).toContain('openImageCropper(file, {');
+    expect(adminEnhancementsSource).toContain("aspectRatio: 4 / 5");
+    expect(adminEnhancementsSource).toContain("maxOutputBytes: 5 * 1024 * 1024");
+    expect(cropEditorSource).toContain("Arraste a foto");
+    expect(cropEditorSource).toContain("image/webp");
+    expect(css).toContain(".cooklily-image-cropper");
+    expect(css).toContain(".cooklily-image-cropper-circle");
   });
 
   it("mantém logout e controle explícito de sessões acessíveis no perfil", () => {

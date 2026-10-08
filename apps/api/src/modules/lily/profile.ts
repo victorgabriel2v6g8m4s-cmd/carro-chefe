@@ -8,6 +8,8 @@ import { ApiError } from "../../lib/errors";
 import { hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
 
+export const LILY_PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+
 const profilePatchSchema = z.object({
   displayName: z.string().trim().min(2).max(80).nullable().optional(),
   rankingOptIn: z.boolean().optional(),
@@ -380,8 +382,8 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
     if (!extension) throw new ApiError(400, "Formato não permitido. Use JPEG, PNG ou WebP.");
 
     const buffer = await part.toBuffer();
-    if (!buffer.length || buffer.length > 2 * 1024 * 1024) {
-      throw new ApiError(400, "A foto deve ter no máximo 2 MB.");
+    if (!buffer.length || buffer.length > LILY_PROFILE_AVATAR_MAX_BYTES) {
+      throw new ApiError(400, "A foto deve ter no máximo 5 MB.");
     }
 
     const current = await lilyPrisma.lilyUser.findUnique({ where: { id: context.user.id } });

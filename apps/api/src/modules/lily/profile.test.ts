@@ -2,6 +2,7 @@ import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
+import { LILY_PROFILE_AVATAR_MAX_BYTES } from "./profile";
 
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
@@ -70,7 +71,11 @@ afterAll(async () => {
   await app.close();
 });
 
-describe("CookLily perfil e fidelidade", () => {
+describe("CookLily perfil e fidelidade", () => {\n  it("mantém o limite server-side da foto de perfil em 5 MB", () => {
+    expect(LILY_PROFILE_AVATAR_MAX_BYTES).toBe(5 * 1024 * 1024);
+  });
+
+
   it("lê status de autenticação sem exigir sessão", async () => {
     const guest = await app.inject({ method: "GET", url: "/api/v1/lily/auth/status" });
     expect(guest.statusCode).toBe(200);
