@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getLilyAdminCatalog, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
+import { LilyLoadingSpinner } from "./loading-spinner";
 
 function moneyInput(cents: number | null | undefined) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -149,7 +150,7 @@ function useAdminData() {
 
 function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => ReactNode }) {
   const state = useAdminData();
-  if (state.loading) return <section className="admin-state"><h1>Carregando painel...</h1></section>;
+  if (state.loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando painel"/></section>;
   if (!state.session || !state.data) return <section className="admin-state">
     <span className="eyebrow">Painel CookLily</span>
     <h1>Acesso staff necessário.</h1>
