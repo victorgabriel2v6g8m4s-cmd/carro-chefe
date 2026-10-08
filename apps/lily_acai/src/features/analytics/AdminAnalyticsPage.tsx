@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { getLilyAnalyticsSummary, type LilyAnalyticsSummary } from "./api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const FUNNEL_LABELS: Record<string, string> = {
   catalog_view: "Cardápio",
@@ -83,7 +84,7 @@ export function AdminAnalyticsPage() {
     setAppliedCampaign(campaign.trim());
   }
 
-  if (loading) return <section className="admin-state"><h1>Carregando analytics...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando analytics"/></section>;
   if (!session || !data) return <section className="admin-state">
     <span className="eyebrow">CookLily · analytics</span>
     <h1>Acesso staff necessário.</h1>
