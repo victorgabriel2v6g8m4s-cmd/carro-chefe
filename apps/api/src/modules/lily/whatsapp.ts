@@ -276,7 +276,8 @@ export async function processLilyWhatsAppQueue(limit = 20) {
     if (claimed.count !== 1) continue;
 
     const attempt = candidate.attempts + 1;
-    const accountOptIn = candidate.order.userId ? accountWhatsAppOptIns.get(candidate.order.userId) : undefined;\n    if (!candidate.order.whatsappUpdatesOptIn || accountOptIn === false) {
+    const accountOptIn = candidate.order.userId ? accountWhatsAppOptIns.get(candidate.order.userId) : undefined;
+    if (!candidate.order.whatsappUpdatesOptIn || accountOptIn === false) {
       await lilyPrisma.lilyWhatsAppNotification.update({
         where: { id: candidate.id },
         data: {
