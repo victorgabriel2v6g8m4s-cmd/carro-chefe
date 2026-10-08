@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
 import { readGuestOrderToken } from "./guest-token";
 import { AllergenNotice } from "../allergens/AllergenNotice";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const LABELS: Record<string, string> = {
   received: "Pedido recebido",
@@ -136,7 +137,7 @@ export function GuestOrderTrackingPage() {
     }
   }
 
-    if (!loaded) return <section className="checkout-page"><h1>Carregando acompanhamento...</h1></section>;
+    if (!loaded) return <section className="checkout-page"><LilyLoadingSpinner size="lg" label="Carregando acompanhamento"/></section>;
 
   if (!order) return <section className="checkout-page empty-state">
     <span className="eyebrow">Acompanhamento seguro</span>
