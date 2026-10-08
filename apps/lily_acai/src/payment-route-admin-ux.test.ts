@@ -20,6 +20,20 @@ describe("CookLily — pagamento e UX administrativa", () => {
     expect(app).toContain("lilyPaymentChoiceNginxAliasRoutes");
   });
 
+  it("não mantém o HTML da SPA em cache e responde ao favicon sem erro de tipo", () => {
+    const server = source("apps/api/src/server.ts");
+    expect(server).toContain('response.header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")');
+    expect(server).toContain('app.get("/favicon.ico"');
+    expect(server).toContain("reply.code(204)");
+  });
+
+  it("não consulta a sessão obrigatória quando o pagamento é de visitante", () => {
+    const page = source("apps/lily_acai/src/features/payments/PaymentChoicePage.tsx");
+    expect(page).toContain("getLilyAuthStatus");
+    expect(page).toContain("if (status.user)");
+    expect(page).toContain("current = await getLilySession()");
+  });
+
   it("oferece upload direto de capa por produto e feedback discreto", () => {
     const enhancement = source("apps/lily_acai/src/admin-interaction-enhancements.ts");
     expect(enhancement).toContain("Enviar foto de capa");
