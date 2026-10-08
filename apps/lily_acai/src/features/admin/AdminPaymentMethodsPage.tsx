@@ -8,6 +8,7 @@ import {
   type LilyCheckoutPaymentMethod,
   type LilyPaymentMethodRule
 } from "../payments/payment-choice-api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function moneyInput(cents: number | null) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -139,7 +140,7 @@ export function AdminPaymentMethodsPage() {
     }
   }
 
-  if (!loaded) return <section className="admin-state"><h1>Carregando configuração financeira...</h1></section>;
+  if (!loaded) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando configuração financeira"/></section>;
   if (!session || !settings) return <section className="admin-state">
     <span className="eyebrow">CookLily · pagamentos</span>
     <h1>Acesso staff necessário.</h1>
