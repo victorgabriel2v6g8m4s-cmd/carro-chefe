@@ -234,3 +234,16 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(kitchenSource).toContain("Despachar pedido");
   });
 });
+
+
+describe("CookLily loading e performance visual", () => {
+  it("usa spinner visual compartilhado em vez de mensagens de carregamento visíveis", () => {
+    const spinner = read("loading-spinner.tsx");
+    const catalog = read("catalog.tsx");
+    expect(spinner).toContain("lily-loading-spinner-orbit");
+    expect(catalog).toContain("LilyLoadingSpinner");
+    expect(catalog).toContain('loading="lazy"');
+    expect(catalog).toContain("data-lily-reveal");
+    expect(catalog).toContain("IntersectionObserver");
+  });
+});
