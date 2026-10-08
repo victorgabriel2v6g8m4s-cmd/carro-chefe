@@ -127,10 +127,10 @@ describe("CookLily Entrega 11H WhatsApp", () => {
 
   it("respeita opt-out de atualizações do WhatsApp salvo nas preferências da conta", async () => {
     configureMeta();
-    const suffix = Math.random().toString(36).slice(2, 10);
+    const phoneSuffix = String(Math.floor(Math.random() * 100)).padStart(2, "0");
     const user = await lilyPrisma.lilyUser.create({
       data: {
-        phoneNormalized: `+5567${Date.now().toString().slice(-7)}${suffix.slice(0, 2)}`,
+        phoneNormalized: `+5567${Date.now().toString().slice(-7)}${phoneSuffix}`,
         passwordHash: "test-hash",
         displayName: "Cliente Opt-out",
         role: "customer",
