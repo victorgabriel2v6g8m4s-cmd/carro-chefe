@@ -5,10 +5,10 @@ export function formatBrazilianPhone(input: string): string {
     : digits;
 
   if (national.length === 11) {
-    return \`+55 (\${national.slice(0, 2)}) \${national.slice(2, 7)}-\${national.slice(7)}\`;
+    return "+55 (" + national.slice(0, 2) + ") " + national.slice(2, 7) + "-" + national.slice(7);
   }
   if (national.length === 10) {
-    return \`+55 (\${national.slice(0, 2)}) \${national.slice(2, 6)}-\${national.slice(6)}\`;
+    return "+55 (" + national.slice(0, 2) + ") " + national.slice(2, 6) + "-" + national.slice(6);
   }
   return input;
 }
