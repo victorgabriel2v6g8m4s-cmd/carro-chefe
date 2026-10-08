@@ -34,6 +34,23 @@ describe("CookLily — pagamento e UX administrativa", () => {
     expect(page).toContain("current = await getLilySession()");
   });
 
+  it("renderiza o Pix com o QR Lab e o visual da marca CookLily", () => {
+    const qr = source("apps/lily_acai/src/features/payments/CookLilyPixQrCode.tsx");
+    const result = source("apps/lily_acai/src/features/payments/PaymentChoiceComponents.tsx");
+    const styles = source("apps/lily_acai/src/styles.css");
+    expect(qr).toContain('from "../../../../qr_manipulator/src/lib/render"');
+    expect(qr).toContain('foreground: "#44042D"');
+    expect(qr).toContain('background: "#FFF7FA"');
+    expect(qr).toContain('moduleStyle: "dot"');
+    expect(qr).toContain('eyeStyle: "rounded"');
+    expect(qr).toContain('projectFor(payload, "M")');
+    expect(qr).toContain('projectFor(payload, "L")');
+    expect(result).toContain('pixText.startsWith("000201")');
+    expect(result).toContain("CookLilyPixQrCode");
+    expect(styles).toContain(".cooklily-pix-qr-canvas");
+    expect(styles).toContain(".payment-pix-code textarea");
+  });
+
   it("oferece upload direto de capa por produto e feedback discreto", () => {
     const enhancement = source("apps/lily_acai/src/admin-interaction-enhancements.ts");
     expect(enhancement).toContain("Enviar foto de capa");

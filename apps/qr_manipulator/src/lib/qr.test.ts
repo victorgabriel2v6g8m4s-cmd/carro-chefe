@@ -30,3 +30,22 @@ const FIX=`11111110100001101010001111111
 11111110011100000001110010011`;
 describe("QR encoder",()=>{it("matches reference fixture",()=>expect(generateQrMatrixWithMask("https://carrochefe.com","H",0).map(r=>r.map(c=>c?"1":"0").join("")).join("\n")).toBe(FIX));it("selects version",()=>{const r=generateQrMatrix("https://carrochefe.com","H");expect(r.version).toBe(3);expect(r.modules).toHaveLength(29)})});
 describe("tracking",()=>{it("preserves query and hash",()=>{const p=cloneDefaultProject();p.value="https://carrochefe.com/cardapio?origem=fachada#chefao";p.tracking={enabled:true,id:"QR-20260817-A1B2C3D4",campaign:"inauguracao",variant:"chefao-cartaz-a"};const u=new URL(buildPayload(p));expect(u.searchParams.get("origem")).toBe("fachada");expect(u.searchParams.get("cc_qr")).toBe("QR-20260817-A1B2C3D4");expect(u.searchParams.get("cc_campaign")).toBe("inauguracao");expect(u.searchParams.get("cc_variant")).toBe("chefao-cartaz-a");expect(u.hash).toBe("#chefao")})});
+
+
+describe("QR Lab — payload Pix", () => {
+  it("gera uma matriz para um BR Code de tamanho comum com correção M", () => {
+    const payload = `000201${"1".repeat(180)}6304ABCD`;
+    const qr = generateQrMatrix(payload, "M");
+    expect(qr.modules.length).toBeGreaterThan(21);
+    expect(qr.modules.length).toBeLessThanOrEqual(57);
+    expect(qr.byteLength).toBe(payload.length);
+  });
+
+  it("permite reduzir para correção L quando um BR Code maior excede M", () => {
+    const payload = `000201${"1".repeat(225)}6304ABCD`;
+    expect(() => generateQrMatrix(payload, "M")).toThrow(/excede o limite/i);
+    const qr = generateQrMatrix(payload, "L");
+    expect(qr.modules.length).toBeLessThanOrEqual(57);
+    expect(qr.byteLength).toBe(payload.length);
+  });
+});
