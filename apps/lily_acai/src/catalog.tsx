@@ -14,6 +14,7 @@ import { useCart } from "./features/cart/CartContext";
 import { trackLilyAnalytics } from "./analytics";
 import { AllergenNotice } from "./features/allergens/AllergenNotice";
 import { groupCatalogProductsByCategory } from "./catalog-category-navigation";
+import { LilyLoadingSpinner } from "./loading-spinner";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -245,7 +246,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
     </section>
     {fullscreen && <div className="fullscreen-media" role="dialog" aria-modal="true" onClick={() => setFullscreen(false)}>
       <button type="button" onClick={() => setFullscreen(false)} aria-label="Fechar imagem">×</button>
-      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
+      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} loading="lazy" />
     </div>}
   </div>;
 }
@@ -638,7 +639,7 @@ function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect:
           return <article
             key={combo.id}
             ref={(node) => { slideRefs.current[slideIndex] = node; }}
-            className={`combo-carousel-slide ${active ? "is-active" : ""}`}
+            data-lily-reveal className={`combo-carousel-slide ${active ? "is-active" : ""}`}
             aria-hidden={!active}
           >
             <div className="combo-slide-image">
@@ -675,7 +676,7 @@ function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect:
 function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () => void }) {
   const price = minimumPrice(product);
   const bestOffer = product.offers[0];
-  return <article className={`product-card ${product.soldOut ? "sold-out" : ""}`}>
+  return <article data-lily-reveal className={`product-card ${product.soldOut ? "sold-out" : ""}`}>
     <div className="product-card-media">
       <ProductImage product={product} onOpen={onOpen} />
       {bestOffer && <span className="offer-badge">{money(bestOffer.savingsCents)} OFF</span>}
@@ -720,7 +721,7 @@ export function WeeklyProductBanner({
       </button>
     : <Link className="button primary weekly-product-cta" to={`/cardapio?produto=${encodeURIComponent(product.slug)}`}>Ver no cardápio</Link>;
 
-  return <section className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Escolha da semana">
+  return <section data-lily-reveal className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Escolha da semana">
     <div className="weekly-product-media">
       <div className="weekly-product-photo">
         <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
@@ -869,6 +870,17 @@ export function CatalogPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-lily-reveal]"));
+    if (reducedMotion) nodes.forEach((node) => node.classList.add("is-visible"));
+    else {
+      const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add("is-visible"); observer.unobserve(entry.target); } }), { rootMargin: "0px 0px 120px 0px", threshold: 0.01 });
+      nodes.forEach((node) => { if (!node.classList.contains("is-visible")) observer.observe(node); });
+      return () => observer.disconnect();
+    }
+  }, [products.length, meta?.combos.length]);
 
   useEffect(() => {
     if (!productSlug) {
@@ -1061,7 +1073,7 @@ export function CatalogPage() {
         key={group.key}
         ref={(node) => { categoryRefs.current[group.key] = node; }}
         data-category-key={group.key}
-        className={`catalog-category-section ${index === 0 ? "first" : ""}`}
+        data-lily-reveal className={`catalog-category-section ${index === 0 ? "first" : ""}`}
         aria-labelledby={`catalog-category-${group.key}`}
       >
         <div className="catalog-category-heading">
@@ -1078,7 +1090,7 @@ export function CatalogPage() {
     </section>
     {!loading && products.length === 0 && <section className="empty-state"><h2>Nenhum produto com esses filtros.</h2><p>Tente limpar um filtro ou pesquisar outro sabor.</p></section>}
     <div className="catalog-sentinel" ref={sentinel}>
-      {loading && <span>Carregando...</span>}
+      {loading && <LilyLoadingSpinner label="Carregando produtos" />}
       {!loading && nextOffset != null && <button className="button ghost" type="button" onClick={loadMore}>Carregar mais</button>}
     </div>
 
