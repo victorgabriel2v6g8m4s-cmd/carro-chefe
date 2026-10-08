@@ -36,7 +36,7 @@ async function createOrder(optedIn = true, userId?: string) {
       idempotencyKey: `cooklily:wa:test:${suffix}`,
       requestFingerprint: `fingerprint-${suffix}`,
       phoneNormalized: "+5567999999999",
-      userId,
+      ...(userId ? { userId } : {}),
       fulfillmentType: "pickup",
       status: "awaiting_payment",
       operationStatus: "received",
