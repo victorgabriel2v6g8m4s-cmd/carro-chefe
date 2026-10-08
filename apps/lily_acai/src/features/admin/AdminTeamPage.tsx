@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { getLilyTeam, promoteLilyTeamMember, updateLilyTeamMember, type LilyTeamMember } from "./team-api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 export function AdminTeamPage() {
   const [session, setSession] = useState<AuthPayload | null>(null);
@@ -65,7 +66,7 @@ export function AdminTeamPage() {
     }
   }
 
-  if (!loaded) return <section className="admin-state"><h1>Carregando equipe...</h1></section>;
+  if (!loaded) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando equipe"/></section>;
   if (!session || !members) return <section className="admin-state">
     <span className="eyebrow">CookLily · segurança</span>
     <h1>Acesso admin necessário.</h1>
