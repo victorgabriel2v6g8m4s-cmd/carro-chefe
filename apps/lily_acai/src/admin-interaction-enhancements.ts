@@ -1,6 +1,6 @@
-export {};
-
 import { openImageCropper } from "./image-crop-editor";
+
+export {};
 
 type ToastKind = "success" | "error";
 
@@ -22,7 +22,7 @@ const nativeFetch = window.fetch.bind(window);
 const TOAST_ROOT_ID = "cooklily-admin-toast-root";
 const COVER_MARKER = "data-product-cover-uploader";
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const maxImageBytes = 10 * 1024 * 1024;
+const maxImageBytes = 25 * 1024 * 1024;
 let catalogPromise: Promise<AdminCatalogPayload> | null = null;
 let pendingSnapshot: { node: HTMLElement; rect: DOMRect; openDetails: string[] } | null = null;
 let snapshotOverlay: HTMLElement | null = null;
