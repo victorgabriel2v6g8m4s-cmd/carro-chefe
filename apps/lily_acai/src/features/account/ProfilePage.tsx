@@ -442,7 +442,20 @@ export function ProfilePage() {
     {avatarPreviewOpen && <div className="profile-avatar-modal" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) setAvatarPreviewOpen(false);
     }}>
-      <section className="profile-avatar-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-avatar-modal-title">
+      <section className="profile-avatar-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-avatar-modal-title" onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const actions = event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+        const first = actions[0];
+        const last = actions[actions.length - 1];
+        if (!first || !last) return;
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}>
         <div className="profile-avatar-modal-toolbar">
           <button className="profile-avatar-modal-action" type="button" aria-label="Trocar foto de perfil" title="Trocar foto de perfil" onClick={() => avatarInputRef.current?.click()} disabled={busy}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>
