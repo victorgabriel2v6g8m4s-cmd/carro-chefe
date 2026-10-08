@@ -4168,3 +4168,132 @@ img, svg { max-width: 100%; }
     animation: none;
   }
 }
+
+/* Editor compartilhado de enquadramento de imagens */
+.cooklily-image-cropper {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(27 2 17 / 78%);
+  backdrop-filter: blur(12px);
+}
+.cooklily-image-cropper-dialog {
+  width: min(100%, 560px);
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 22px;
+  background: var(--cl-color-secondary, #5f0635);
+  color: white;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 32%);
+}
+.cooklily-image-cropper-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 12px;
+}
+.cooklily-image-cropper-header strong {
+  font-size: 18px;
+}
+.cooklily-image-cropper-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 10%);
+  color: white;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cooklily-image-cropper-description {
+  margin: 6px 0 14px;
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.cooklily-image-cropper-viewport {
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  max-width: 100%;
+  border-radius: 14px;
+  background: #16030e;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.cooklily-image-cropper-viewport.is-dragging {
+  cursor: grabbing;
+}
+.cooklily-image-cropper-viewport > img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
+  pointer-events: none;
+  user-select: none;
+}
+.cooklily-image-cropper-circle {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 100%);
+  aspect-ratio: 1;
+  margin: auto;
+  border: 2px solid rgb(255 255 255 / 88%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 34%), 0 0 0 1px rgb(0 0 0 / 18%);
+  pointer-events: none;
+}
+.cooklily-image-cropper-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.cooklily-image-cropper-zoom {
+  display: grid;
+  gap: 7px;
+}
+.cooklily-image-cropper-zoom span {
+  font-size: 13px;
+  font-weight: 750;
+}
+.cooklily-image-cropper-zoom input {
+  width: 100%;
+  accent-color: white;
+}
+.cooklily-image-cropper-controls small {
+  color: rgb(255 255 255 / 68%);
+  line-height: 1.4;
+}
+.cooklily-image-cropper-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.cooklily-image-cropper-actions .button:disabled,
+.cooklily-image-cropper-close:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+@media (max-width: 600px) {
+  .cooklily-image-cropper {
+    padding: 10px;
+  }
+  .cooklily-image-cropper-dialog {
+    padding: 14px;
+    border-radius: 18px;
+  }
+  .cooklily-image-cropper-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
