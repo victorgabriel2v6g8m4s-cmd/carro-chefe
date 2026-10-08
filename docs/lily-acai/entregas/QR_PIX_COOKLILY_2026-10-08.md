@@ -18,6 +18,8 @@ Mostrar um QR Code escaneável na tela de pagamento do Pix próprio, sem depende
 - Regressão da tela de pagamento para confirmar que o QR Lab é reutilizado com pontos, olhos arredondados e cores da marca.
 - Testes de capacidade do encoder com payloads longos, cobrindo correção M e fallback para L.
 
-## Validação de produção
+## Homologação realizada — 08/10/2026
 
-A correção só estará publicada depois de integrar em `cooklily/canonical` e executar `sudo cc deploy canonical`. Depois do deploy, abrir novamente o pedido em homologação e testar a leitura do QR por outro aparelho/banco, além de validar o Pix Copia e Cola. Não marcar pagamento como aprovado sem confirmação real do PSP.
+O proprietário confirmou que o QR foi escaneado em outro celular, abriu a cobrança no aplicativo bancário e apresentou o valor esperado. O QR e a apresentação do valor estão homologados. O pagamento não foi concluído, então recebimento, confirmação financeira e transição do pedido permanecem pendentes. Evidência detalhada: [HOMOLOGACAO_QR_PIX_2026-10-08.md](HOMOLOGACAO_QR_PIX_2026-10-08.md).
+
+A próxima prioridade é finalizar a UI pública do site. O teste financeiro ponta a ponta será realizado em etapa posterior; não marcar pagamento como aprovado sem confirmação autoritativa.
