@@ -18,6 +18,7 @@ import {
   type LilyChoicePayment,
   type LilyPaymentOptionsPayload
 } from "./payment-choice-api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function idempotencyStorageKey(orderId: string, method: LilyCheckoutPaymentMethod) {
   return `cooklily:payment-choice-idempotency:${orderId}:${method}`;
@@ -173,7 +174,7 @@ export function PaymentChoicePage() {
     setError("");
   }
 
-  if (!loaded) return <section className="payment-page"><h1>Carregando pagamento...</h1></section>;
+  if (!loaded) return <section className="payment-page"><LilyLoadingSpinner size="lg" label="Carregando pagamento"/></section>;
   if (!data) return <section className="payment-page empty-state">
     <span className="eyebrow">Pagamento CookLily</span>
     <h1>Não foi possível abrir este pagamento.</h1>
