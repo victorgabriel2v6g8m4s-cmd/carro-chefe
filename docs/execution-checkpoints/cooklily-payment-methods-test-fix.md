@@ -1,13 +1,13 @@
 # Correção do teste do painel de métodos de pagamento CookLily
 
-- status: candidate
+- status: merged_pending_vps_validation
 - owner: AG-DEV
 - branch: fix/cooklily-payment-methods-regex-escape
 - base_branch: cooklily/canonical
 - base_sha_verified: 2b5f130e07bd4a8acfb88cab2abf1c7cb87fa7c2
-- head_sha_verified: 09f669725a4125e66e3fd2c77c3f8f67aa660678
-- pull_requests: #142 (merged; correção anterior, insuficiente), PR desta correção pendente
-- last_verified_at: 2026-10-08T12:15:00Z
+- head_sha_verified: 50fa18d2ce7af7d274363489f5f6985bee5059d9
+- pull_requests: #142 (merged; correção anterior, insuficiente), #143 (merged)
+- last_verified_at: 2026-10-08T12:16:00Z
 - interruption_state: none
 
 ## Contexto e causa confirmada
@@ -18,6 +18,10 @@
 - O deploy abortou na fase `tests`, não iniciou migrations e restaurou o checkout anterior `fef09f5f0dbf112dc451e12c309d6e2eb2167a45`. A release tentada era `2b5f130e07bd4a8acfb88cab2abf1c7cb87fa7c2`.
 
 ## Correção atual persistida
+
+- PR #143 integrado por squash merge em `cooklily/canonical`.
+- Merge commit verificado: `50fa18d2ce7af7d274363489f5f6985bee5059d9`.
+- As duas regex corrigidas foram verificadas contra o conteúdo atual de `apps/lily_acai/src/admin.tsx`: ambas estão presentes corretamente e casam os trechos esperados. Essa verificação de fonte não substitui executar Vitest.
 
 - Corrigidas as duas regex para usarem `[\s\S]` corretamente no literal regex TypeScript, permitindo casar qualquer caractere entre o caminho e o rótulo.
 - Alterado somente o teste; sem mudanças de código de produção, schema ou migrations.
@@ -45,6 +49,5 @@
 
 ## Próxima ação exata
 
-1. Abrir PR para `cooklily/canonical`, revisar o diff e registrar o merge.
-2. Na VPS, executar `sudo cc deploy canonical`; se falhar, anexar o log completo e corrigir a causa real.
-3. Não declarar testes aprovados até haver saída confirmando o sucesso.
+1. Na VPS, executar `sudo cc deploy canonical`; se falhar, anexar o log completo e corrigir a causa real.
+2. Não declarar testes aprovados até haver saída confirmando o sucesso.
