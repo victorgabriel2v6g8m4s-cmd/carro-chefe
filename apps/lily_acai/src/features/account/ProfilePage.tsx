@@ -309,7 +309,7 @@ export function ProfilePage() {
     </div>}
 
     <div className="profile-heading">
-      <button ref={avatarTriggerRef} className="profile-avatar-trigger" type="button" aria-label="Ampliar foto de perfil" onClick={() => setAvatarPreviewOpen(true)}>
+      <button ref={avatarTriggerRef} className="profile-avatar-trigger" type="button" aria-label="Ampliar foto de perfil" onClick={() => { setError(""); setMessage(""); setAvatarPreviewOpen(true); }}>
         <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
       </button>
       <input ref={avatarInputRef} className="profile-avatar-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher nova foto de perfil" onChange={handleAvatarFileChange} />
@@ -471,6 +471,8 @@ export function ProfilePage() {
             : <ProfileAvatar name={profile.user.displayName} url={null} large />}
         </div>
         {busy && <p className="profile-avatar-modal-status" role="status">Enviando foto...</p>}
+        {error && <p className="profile-avatar-modal-error" role="alert">{error}</p>}
+        {message && !busy && <p className="profile-avatar-modal-status" role="status">{message}</p>}
         <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto.</p>
       </section>
     </div>
