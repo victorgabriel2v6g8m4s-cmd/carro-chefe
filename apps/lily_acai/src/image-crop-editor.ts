@@ -136,7 +136,7 @@ async function createOutputFile(
         quality
       );
       if (blob.size <= maxOutputBytes) {
-        const stem = originalName.replace(/.[^.]+$/, "") || "imagem";
+        const stem = originalName.replace(/\.[^.]+$/, "") || "imagem";
         const extension = blob.type === "image/webp" ? "webp" : "jpg";
         return new File([blob], `${stem}-recortada.${extension}`, {
           type: blob.type,
@@ -163,6 +163,7 @@ export async function openImageCropper(
   }
 
   const image = await loadImage(file);
+  const previewUrl = URL.createObjectURL(file);
   const aspectRatio = Math.max(0.2, Math.min(5, options.aspectRatio));
   const maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
   const maxLongEdge = options.maxLongEdge ?? DEFAULT_MAX_LONG_EDGE;
