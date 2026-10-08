@@ -242,7 +242,7 @@ export async function processLilyWhatsAppQueue(limit = 20) {
   const accountPreferenceRecords = accountIds.length
     ? await lilyPrisma.lilyConsentRecord.findMany({
         where: { userId: { in: accountIds }, purpose: "whatsapp_order_updates" },
-        orderBy: { recordedAt: "desc" },
+        orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
         select: { userId: true, granted: true, recordedAt: true, revokedAt: true }
       })
     : [];
