@@ -73,6 +73,22 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(mainSource).toContain("first.focus()");
   });
 
+  it("agrupa o cardápio em seções e mantém abas sincronizadas com a rolagem", () => {
+    expect(catalogSource).toContain("groupCatalogProductsByCategory(products)");
+    expect(catalogSource).toContain('className="catalog-category-tabs"');
+    expect(catalogSource).toContain('role="tablist"');
+    expect(catalogSource).toContain('aria-selected={activeCategory === group.key}');
+    expect(catalogSource).toContain("scrollIntoView");
+    expect(catalogSource).toContain('localStorage.setItem("cooklily.catalog.activeCategory", key)');
+    expect(catalogSource).toContain('localStorage.getItem("cooklily.catalog.activeCategory")');
+    expect(catalogSource).toContain("IntersectionObserver");
+    expect(catalogSource).toContain('data-category-key={group.key}');
+    expect(catalogSource).toContain('limit: 40');
+    expect(css).toContain(".catalog-category-section");
+    expect(css).toContain("scroll-margin-top");
+    expect(css).toContain(".catalog-category-tab.active");
+  });
+
   it("prioriza produtos antes dos combos no cardápio", () => {
     const summary = catalogSource.indexOf('className="catalog-summary"');
     const grid = catalogSource.indexOf('className="catalog-grid"');
