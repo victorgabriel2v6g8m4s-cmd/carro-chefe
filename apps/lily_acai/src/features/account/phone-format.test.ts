@@ -10,6 +10,10 @@ describe("formatBrazilianPhone", () => {
     expect(formatBrazilianPhone("67999864851")).toBe("+55 (67) 99986-4851");
   });
 
+  it("normaliza telefone já digitado com pontuação", () => {
+    expect(formatBrazilianPhone("+55 (67) 99986-4851")).toBe("+55 (67) 99986-4851");
+  });
+
   it("formata telefone fixo de dez dígitos", () => {
     expect(formatBrazilianPhone("+556733334444")).toBe("+55 (67) 3333-4444");
   });
