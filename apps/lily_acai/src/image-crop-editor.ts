@@ -15,6 +15,7 @@ type CropState = {
 
 const DEFAULT_MAX_OUTPUT_BYTES = 5 * 1024 * 1024;
 const DEFAULT_MAX_LONG_EDGE = 1600;
+const DEFAULT_MAX_INPUT_BYTES = 25 * 1024 * 1024;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 
@@ -155,6 +156,10 @@ export async function openImageCropper(
 ): Promise<File | null> {
   if (!allowedImage(file)) {
     throw new Error("Formato não permitido. Use JPEG, PNG ou WebP.");
+  }
+
+  if (file.size > DEFAULT_MAX_INPUT_BYTES) {
+    throw new Error("A imagem original deve ter no máximo 25 MB para ser processada com segurança.");
   }
 
   const image = await loadImage(file);
