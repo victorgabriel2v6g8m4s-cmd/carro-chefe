@@ -4243,10 +4243,11 @@ img, svg { max-width: 100%; }
 }
 .cooklily-image-cropper-circle {
   position: absolute;
-  inset: 0;
-  width: min(100%, 100%);
+  left: 0;
+  top: 50%;
+  width: 100%;
   aspect-ratio: 1;
-  margin: auto;
+  transform: translateY(-50%);
   border: 2px solid rgb(255 255 255 / 88%);
   border-radius: 50%;
   box-shadow: 0 0 0 9999px rgb(0 0 0 / 34%), 0 0 0 1px rgb(0 0 0 / 18%);
