@@ -31,7 +31,13 @@ function isMissingFile(error: unknown) {
 async function sendFile(reply: FastifyReply, root: string, requested: string) {
   try {
     const file = await readStaticFile(root, requested);
-    return reply.type(file.mimeType).send(file.body);
+    const response = reply.type(file.mimeType);
+    if (requested === "index.html") {
+      response.header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      response.header("Pragma", "no-cache");
+      response.header("Expires", "0");
+    }
+    return response.send(file.body);
   } catch (error) {
     if (isMissingFile(error)) return reply.code(404).send({ error: "Arquivo estático não encontrado." });
     throw error;
@@ -61,6 +67,10 @@ app.get("/gestao/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" }
   return sendFile(reply, managementDist, "index.html");
 });
 app.get("/gestao", async (_request, reply) => reply.redirect("/gestao/visao-geral"));
+app.get("/favicon.ico", async (_request, reply) => {
+  return reply.code(204).header("Cache-Control", "public, max-age=86400").send();
+});
+
 app.get("/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" } } }, async (request, reply) => {
   const pathname = new URL(request.url, "http://local").pathname;
   const relative = pathname.slice(1);
