@@ -71,7 +71,8 @@ afterAll(async () => {
   await app.close();
 });
 
-describe("CookLily perfil e fidelidade", () => {\n  it("mantém o limite server-side da foto de perfil em 5 MB", () => {
+describe("CookLily perfil e fidelidade", () => {
+  it("mantém o limite server-side da foto de perfil em 5 MB", () => {
     expect(LILY_PROFILE_AVATAR_MAX_BYTES).toBe(5 * 1024 * 1024);
   });
 
