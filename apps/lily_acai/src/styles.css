@@ -3955,7 +3955,7 @@ img, svg { max-width: 100%; }
 }
 .profile-avatar-trigger { display: inline-grid; flex: none; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: zoom-in; }
 .profile-avatar-trigger:focus-visible, .profile-edit-icon:focus-visible, .profile-avatar-modal-action:focus-visible, .profile-logout-link:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }
-.profile-avatar-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.profile-avatar-file-input { display: none; }
 .profile-edit-form { scroll-margin-top: 90px; }
 .profile-logout-footer { display: flex; justify-content: flex-end; margin-top: 34px; }
 .profile-logout-link {
@@ -3990,3 +3990,5 @@ img, svg { max-width: 100%; }
   .profile-avatar.large { width: 76px; height: 76px; font-size: 26px; }
   .profile-logout-footer { margin-top: 22px; }
 }
+
+.profile-avatar-modal-error { margin: 6px 0 0; color: #ffd5df; text-align: center; font-size: 13px; }
