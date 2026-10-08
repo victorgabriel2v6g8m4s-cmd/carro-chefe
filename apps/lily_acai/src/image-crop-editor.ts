@@ -217,7 +217,7 @@ export async function openImageCropper(
     viewport.style.width = `${viewportWidth}px`;
     viewport.style.height = `${viewportHeight}px`;
     const imageElement = document.createElement("img");
-    imageElement.src = image.src;
+    imageElement.src = previewUrl;
     imageElement.alt = "Pré-visualização do corte";
     imageElement.draggable = false;
     const circle = document.createElement("div");
@@ -271,6 +271,7 @@ export async function openImageCropper(
       if (settled) return;
       settled = true;
       overlay.remove();
+      URL.revokeObjectURL(previewUrl);
       document.removeEventListener("keydown", onKeyDown);
       resolve(value);
     };
