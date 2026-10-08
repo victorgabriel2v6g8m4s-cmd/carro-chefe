@@ -3,6 +3,14 @@
 **Última auditoria:** 30/09/2026 16:50 UTC-03:00  
 **Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
 
+## Atualização pontual — 08/10/2026
+
+- O QR Pix próprio foi lido em outro celular e o valor da cobrança foi conferido no aplicativo bancário.
+- O pagamento não foi concluído. Não marcar como homologados o recebimento efetivo, a confirmação do pagamento, a transição do pedido para pago ou a liberação da cozinha.
+- A próxima prioridade do projeto é a UI definitiva do site público. A homologação financeira ponta a ponta fica para etapa posterior.
+- Evidência: [HOMOLOGACAO_QR_PIX_2026-10-08.md](entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md).
+
+
 ## Confirmado
 
 - nome público definitivo: **CookLily**;
@@ -43,7 +51,7 @@
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | **parcial:** crédito Mercado Pago e infraestrutura financeira estão implementados; ADR-002 agora exige débito Mercado Pago e coexistência simultânea com Pix próprio; credenciais/deploy/homologação continuam pendentes | Entrega 07 / ADR-002 |
+| LILY-PEND-013 | Pagamento | **parcial:** infraestrutura financeira integrada; QR Pix próprio foi lido em outro celular e o valor da cobrança foi conferido. Nenhum pagamento foi concluído, portanto recebimento, confirmação financeira e atualização do pedido continuam pendentes. Crédito/débito Mercado Pago e coexistência com Pix próprio também dependem de disponibilidade real/credenciais/homologação | Entrega 07 / ADR-002 |
 | LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
 | LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
@@ -60,7 +68,7 @@
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
 | LILY-PEND-028 | Alergênicos | **domínio técnico resolvido pela Entrega 12:** taxonomia, admin, agregação e snapshot integrados; faltam dados reais/contato cruzado e a sanfona fechada por padrão definida no ADR-002 | compliance / ADR-002 |
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
-| LILY-PEND-030 | Checkout | carrinho/pedido concluídos; pagamento continua fail-closed; **fluxo público ainda precisa refletir ADR-002 (Pix próprio + crédito/débito Mercado Pago escolhidos pelo cliente)** e depois ser homologado | Entregas 06–07 |
+| LILY-PEND-030 | Checkout | carrinho/pedido concluídos; QR Pix e valor da cobrança homologados em aparelho externo; **pagamento ponta a ponta não testado**. A UI pública ainda deve refletir ADR-002 e métodos realmente habilitados; confirmação e atualização do pedido serão testadas em etapa financeira posterior | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
@@ -68,7 +76,7 @@
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
 | LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
-| LILY-PEND-038 | Pix próprio | **resolvido tecnicamente:** adapter `cooklily_pix`, BR Code, valor e txid próprios integrados; falta configuração real na VPS e homologação da conta recebedora | Entrega 11A/ADR-002 |
+| LILY-PEND-038 | Pix próprio | **homologação parcial:** adapter, BR Code, QR personalizado e Copia e Cola integrados; QR lido em segundo celular e valor conferido. Falta pagar uma cobrança e validar recebimento, conciliação/confirmacão e transição do pedido para pago | Entrega 11A / ADR-002 |
 | LILY-PEND-039 | Conciliação Pix próprio | **resolvida tecnicamente pela 11I:** ledger, poller e adapter API Pix v2 integrados; falta banco/conta real, OAuth/mTLS/certificado, smoke e tarifas | Entrega 11I |
 | LILY-PEND-040 | Painel do cliente | **resolvido tecnicamente:** timeline, guest tracking, ETA/mapa sem coordenadas e WhatsApp operacional integrados; falta QA real/credenciais externas aplicáveis | Entregas 11C/11F/11G/11H |
 | LILY-PEND-041 | Painel cozinha | **resolvido tecnicamente:** fila, handoff, SLA/alertas e impressão integrados; faltam SLA operacional real, QA em tablet e impressora | Entregas 11B/11J/11K |
@@ -82,6 +90,7 @@
 | LILY-PEND-049 | Matriz pública de pagamento | implementar decisão ADR-002: Pix próprio + cartão crédito/débito Mercado Pago simultaneamente selecionáveis; hoje débito não existe e o provider é global/exclusivo | ADR-002 / pagamentos |
 | LILY-PEND-050 | UX de alergênicos | implementar sanfona fechada por padrão e revelar aviso/conteúdo somente após ação do usuário, preservando acessibilidade e snapshots | ADR-002 / Entrega 12 |
 | LILY-PEND-051 | Deploy da canonical | hotfix do deployer integrado no head `24bef161...`; executar novo deploy e comprovar health, backup, migrations e rollback antes de chamar a versão atual de homologada | deploy/homologação |
+| LILY-PEND-052 | UI definitiva do site | **próxima prioridade:** finalizar a experiência pública conforme kit de marca/ADR-002; revisar estrutura compartilhada, landing, catálogo, produto/carrinho, checkout/pagamento, acompanhamento, responsividade, acessibilidade e estados vazios/erro/carregamento. A leitura do QR está homologada; a liquidação do pagamento fica em etapa posterior | UI / QA real |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
