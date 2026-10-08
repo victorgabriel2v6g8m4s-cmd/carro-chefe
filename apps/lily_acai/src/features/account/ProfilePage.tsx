@@ -22,6 +22,7 @@ import {
 } from "../../api";
 import { formatBrazilianPhone } from "./phone-format";
 import { openImageCropper } from "../../image-crop-editor";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();
@@ -140,6 +141,7 @@ export function ProfilePage() {
         ...current,
         user: { ...current.user, avatarUrl: updated.user.avatarUrl }
       } : current);
+      window.dispatchEvent(new CustomEvent("cooklily:profile-updated"));
       setMessage("Foto de perfil atualizada.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível enviar a foto.");
@@ -297,7 +299,7 @@ export function ProfilePage() {
     }
   }
 
-  if (!loaded) return <section className="checkout-page"><h1>Carregando perfil...</h1></section>;
+  if (!loaded) return <section className="checkout-page loading-state"><LilyLoadingSpinner size="lg" label="Carregando perfil" /></section>;
   if (!session || !profile) return <AccountRequired />;
 
   const passwordMinimum = ["staff", "courier", "admin"].includes(session.user.role) ? 12 : 8;
@@ -364,7 +366,7 @@ export function ProfilePage() {
           <input name="whatsappOffersOptIn" type="checkbox" defaultChecked={profile.user.whatsappOffersOptIn} />
           <span>Receber ofertas especiais e cupons pelo WhatsApp.</span>
         </label>
-        <button className="button primary" type="submit" disabled={busy}>{busy ? "Salvando..." : "Salvar perfil"}</button>
+        <button className="button primary" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Salvando perfil" /> : "Salvar perfil"}</button>
       </form>
 
       {privileged && <section className="checkout-section security-mfa-section">
@@ -376,7 +378,7 @@ export function ProfilePage() {
                 <label>Código do autenticador ou recuperação
                   <input name="code" inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={32} required />
                 </label>
-                <button className="button primary" type="submit" disabled={busy}>{busy ? "Verificando..." : "Confirmar segundo fator"}</button>
+                <button className="button primary" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Verificando segundo fator" /> : "Confirmar segundo fator"}</button>
               </form>}
               <small>{mfaStatus.recoveryCodesRemaining} código(s) de recuperação ainda disponíveis.</small>
             </>
@@ -388,7 +390,7 @@ export function ProfilePage() {
                   <label>Senha atual
                     <input name="currentPassword" type="password" autoComplete="current-password" required />
                   </label>
-                  <button className="button primary" type="submit" disabled={busy}>{busy ? "Preparando..." : "Configurar MFA"}</button>
+                  <button className="button primary" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Preparando MFA" /> : "Configurar MFA"}</button>
                 </form>}
                 {mfaSetup && <>
                   <div className="mfa-secret-box">
@@ -400,7 +402,7 @@ export function ProfilePage() {
                     <label>Código de 6 dígitos
                       <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required />
                     </label>
-                    <button className="button primary" type="submit" disabled={busy}>{busy ? "Confirmando..." : "Ativar MFA"}</button>
+                    <button className="button primary" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Confirmando MFA" /> : "Ativar MFA"}</button>
                   </form>
                 </>}
               </>}
@@ -436,7 +438,7 @@ export function ProfilePage() {
         <label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
         <label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
         <label>Confirmar nova senha<input name="confirmPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
-        <button className="button ghost" type="submit" disabled={busy}>{busy ? "Atualizando..." : "Trocar senha"}</button>
+        <button className="button ghost" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Atualizando senha" /> : "Trocar senha"}</button>
       </form>
     </div>
 
@@ -450,7 +452,7 @@ export function ProfilePage() {
     </div>
     <div className="profile-logout-footer">
       <button className="profile-logout-link" type="button" onClick={handleLogout} disabled={logoutBusy}>
-        {logoutBusy ? "Saindo..." : "Sair da conta"}
+        {logoutBusy ? <LilyLoadingSpinner size="sm" label="Saindo da conta" /> : "Sair da conta"}
       </button>
     </div>
 
@@ -485,7 +487,7 @@ export function ProfilePage() {
             ? <img className="profile-avatar-modal-image" src={profile.user.avatarUrl} alt={profile.user.displayName ? `Foto de perfil de ${profile.user.displayName}` : "Foto de perfil"} />
             : <ProfileAvatar name={profile.user.displayName} url={null} large />}
         </div>
-        {busy && <p className="profile-avatar-modal-status" role="status">Enviando foto...</p>}
+        {busy && <p className="profile-avatar-modal-status" role="status"><LilyLoadingSpinner size="sm" label="Enviando foto" /></p>}
         {error && <p className="profile-avatar-modal-error" role="alert">{error}</p>}
         {message && !busy && <p className="profile-avatar-modal-status" role="status">{message}</p>}
         <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto. O editor permite mover e aproximar a imagem antes de salvar.</p>
