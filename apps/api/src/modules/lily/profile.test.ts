@@ -34,7 +34,7 @@ async function register(phone: string, displayName?: string) {
   return { cookie, csrf: me.json().csrfToken, user: me.json().user };
 }
 
-const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003", "+5567999970004"];
+const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003", "+5567999970004", "+5567999970005"];
 
 async function cleanup() {
   const users = await lilyPrisma.lilyUser.findMany({ where: { phoneNormalized: { in: testPhones } }, select: { id: true } });
@@ -140,6 +140,45 @@ describe("CookLily perfil e fidelidade", () => {
     expect(updated.statusCode).toBe(200);
     expect(updated.json().user.displayName).toBe("Cliente Ranking");
     expect(updated.json().user.rankingOptIn).toBe(true);
+  });
+
+  it("usa os padrões de preferências e persiste consentimentos do perfil com histórico", async () => {
+    const account = await register("67999970005", "Cliente Preferências");
+    expect(account.user.rankingOptIn).toBe(true);
+
+    const before = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/customer/profile",
+      headers: { cookie: account.cookie }
+    });
+    expect(before.statusCode).toBe(200);
+    expect(before.json().user.rankingOptIn).toBe(true);
+    expect(before.json().user.whatsappUpdatesOptIn).toBe(true);
+    expect(before.json().user.whatsappOffersOptIn).toBe(false);
+
+    const updated = await app.inject({
+      method: "PATCH",
+      url: "/api/v1/lily/customer/profile",
+      headers: { origin, cookie: account.cookie, "x-lily-csrf": account.csrf },
+      payload: {
+        rankingOptIn: false,
+        whatsappUpdatesOptIn: false,
+        whatsappOffersOptIn: true
+      }
+    });
+    expect(updated.statusCode).toBe(200);
+    expect(updated.json().user.rankingOptIn).toBe(false);
+    expect(updated.json().user.whatsappUpdatesOptIn).toBe(false);
+    expect(updated.json().user.whatsappOffersOptIn).toBe(true);
+
+    const records = await lilyPrisma.lilyConsentRecord.findMany({
+      where: { userId: account.user.id, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers"] } },
+      orderBy: { recordedAt: "desc" }
+    });
+    expect(records).toHaveLength(2);
+    expect(records.find((record) => record.purpose === "whatsapp_order_updates")?.granted).toBe(false);
+    expect(records.find((record) => record.purpose === "whatsapp_offers")?.granted).toBe(true);
+    expect(records.every((record) => record.source === "profile_settings")).toBe(true);
   });
 
   it("calcula ranking automaticamente com compras pagas, campanha e ledger de cupom", async () => {
