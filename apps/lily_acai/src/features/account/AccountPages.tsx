@@ -11,6 +11,7 @@ import {
   type LilyOrder
 } from "../orders/api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -151,7 +152,7 @@ export function AddressesPage() {
     }
   }
 
-  if (!loaded) return <section className="checkout-page"><h1>Carregando...</h1></section>;
+  if (!loaded) return <section className="checkout-page"><LilyLoadingSpinner size="lg" label="Carregando"/></section>;
   if (!session) return <AccountRequired />;
 
   return <section className="checkout-page">
@@ -189,7 +190,7 @@ export function OrdersPage() {
     getCustomerOrders().then((value) => setOrders(value.orders)).catch(() => setAuthenticated(false));
   }, []);
   if (!authenticated) return <AccountRequired />;
-  if (!orders) return <section className="checkout-page"><h1>Carregando pedidos...</h1></section>;
+  if (!orders) return <section className="checkout-page"><LilyLoadingSpinner size="lg" label="Carregando pedidos"/></section>;
 
   return <section className="checkout-page">
     <div className="checkout-heading"><div><span className="eyebrow">Minha conta</span><h1>Meus pedidos</h1></div><Link className="button ghost" to="/enderecos">Endereços</Link></div>
@@ -234,7 +235,7 @@ export function OrderDetailPage() {
   }
 
     if (error) return <section className="checkout-page empty-state"><h1>{error}</h1><Link className="button primary" to="/pedidos">Meus pedidos</Link></section>;
-  if (!order) return <section className="checkout-page"><h1>Carregando pedido...</h1></section>;
+  if (!order) return <section className="checkout-page"><LilyLoadingSpinner size="lg" label="Carregando pedido"/></section>;
 
   return <section className="checkout-page">
     <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(customerOrderStatus(order))}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>

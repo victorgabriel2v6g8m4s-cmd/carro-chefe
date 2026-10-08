@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getKitchenPrintTicket, type KitchenPrintTicket } from "./api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function fulfillmentLabel(value: KitchenPrintTicket["fulfillmentType"]) {
   return value === "delivery" ? "Entrega" : "Retirada";
@@ -40,7 +41,7 @@ export function KitchenPrintPage() {
   }, [id]);
 
   if (loading) {
-    return <main className="kitchen-print-page"><p>Carregando comanda...</p></main>;
+    return <main className="kitchen-print-page"><LilyLoadingSpinner size="lg" label="Carregando comanda" /></main>;
   }
 
   if (!ticket) {

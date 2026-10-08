@@ -21,6 +21,7 @@ const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/acco
 const cartSource = readFileSync(resolve(sourceDirectory, "features/cart/CartPage.tsx"), "utf8");
 const cartContextSource = readFileSync(resolve(sourceDirectory, "features/cart/CartContext.tsx"), "utf8");
 const checkoutSource = readFileSync(resolve(sourceDirectory, "features/checkout/CheckoutPage.tsx"), "utf8");
+const spinnerSource = readFileSync(resolve(sourceDirectory, "loading-spinner.tsx"), "utf8");
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
 const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
@@ -232,5 +233,16 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(kitchenSource).toContain("Aguardando pagamento");
     expect(kitchenSource).toContain("Montar pedido");
     expect(kitchenSource).toContain("Despachar pedido");
+  });
+});
+
+
+describe("CookLily loading e performance visual", () => {
+  it("usa spinner visual compartilhado em vez de mensagens de carregamento visíveis", () => {
+    expect(spinnerSource).toContain("lily-loading-spinner-orbit");
+    expect(catalogSource).toContain("LilyLoadingSpinner");
+    expect(catalogSource).toContain('loading="lazy"');
+    expect(catalogSource).toContain("data-lily-reveal");
+    expect(catalogSource).toContain("IntersectionObserver");
   });
 });

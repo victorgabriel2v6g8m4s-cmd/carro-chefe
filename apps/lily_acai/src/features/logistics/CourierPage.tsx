@@ -14,6 +14,7 @@ import {
   type CourierDelivery,
   type CourierDeliveryAction
 } from "./api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const STATUS_LABELS: Record<string, string> = {
   waiting_courier: "Disponível",
@@ -337,7 +338,7 @@ export function CourierPage() {
     }
   }
 
-  if (loading) return <section className="admin-state"><h1>Carregando entregas...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando entregas"/></section>;
 
   if (!session || !payload) return <section className="admin-state">
     <span className="eyebrow">CookLily · entregas</span>

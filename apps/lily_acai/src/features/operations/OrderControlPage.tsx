@@ -8,6 +8,7 @@ import {
   type OrderControlPayload,
   type OrderControlRow
 } from "./order-control-api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const FINANCIAL_LABELS: Record<string, string> = {
   awaiting_payment: "Aguardando pagamento",
@@ -227,7 +228,7 @@ export function OrderControlPage() {
     }
   }
 
-  if (loading) return <section className="admin-state"><h1>Carregando pedidos...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando pedidos"/></section>;
   if (!session || !data) return <section className="admin-state">
     <span className="eyebrow">CookLily · pedidos</span>
     <h1>Acesso staff necessário.</h1>

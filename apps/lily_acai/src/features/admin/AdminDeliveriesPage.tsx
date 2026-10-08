@@ -9,6 +9,7 @@ import {
   type AdminDeliveryHistoryPayload,
   type CourierDelivery
 } from "../logistics/api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const STATUS_LABELS: Record<string, string> = {
   waiting_courier: "Aguardando entregador",
@@ -105,7 +106,7 @@ export function AdminDeliveriesPage() {
     }
   }
 
-  if (loading) return <section className="admin-state"><h1>Carregando logística...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando logística"/></section>;
   if (!session || !data) return <section className="admin-state">
     <span className="eyebrow">CookLily · logística</span>
     <h1>Acesso admin necessário.</h1>

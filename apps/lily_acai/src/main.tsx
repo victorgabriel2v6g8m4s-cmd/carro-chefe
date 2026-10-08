@@ -26,6 +26,7 @@ import { PaymentPage } from "./features/payments/PaymentPage";
 import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
+import { LilyLoadingSpinner } from "./loading-spinner";
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -109,6 +110,9 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     getLilyConfig().then(setConfig).catch(() => setConfig(null));
     getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => setUser(null));
+    const onProfileUpdated = () => { void getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => undefined); };
+    window.addEventListener("cooklily:profile-updated", onProfileUpdated);
+    return () => window.removeEventListener("cooklily:profile-updated", onProfileUpdated);
   }, []);
 
   useEffect(() => {
@@ -332,7 +336,7 @@ function Landing() {
         <p className="privacy-note">Ao enviar, você concorda com o uso do telefone para esta finalidade. <Link to="/privacidade">Veja como tratamos os dados.</Link></p>
         {message && <p className={state === "success" ? "success" : "error"} role="status">{message}</p>}
         <button className="button primary" disabled={state === "submitting" || !config}>
-          {state === "submitting" ? "Cadastrando..." : "Entrar na lista"}
+          {state === "submitting" ? <LilyLoadingSpinner size="sm" label="Cadastrando" /> : "Entrar na lista"}
         </button>
       </form>
     </section>
@@ -408,7 +412,7 @@ function Cadastro() {
         <label className="check"><input name="analyticsOptional" type="checkbox" /> <span>Permito analytics não essencial para melhorar a experiência.</span></label>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="button primary" disabled={busy || !config}>{busy ? "Criando..." : "Criar conta"}</button>
+      <button className="button primary" disabled={busy || !config}>{busy ? <LilyLoadingSpinner size="sm" label="Criando conta" /> : "Criar conta"}</button>
       <p className="form-switch">Já tem conta? <Link to="/entrar">Entrar</Link></p>
     </form>
   </section></Shell>;
@@ -450,7 +454,7 @@ function Entrar() {
       <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
       <label>Senha<input name="password" type="password" autoComplete="current-password" required /></label>
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="button primary" disabled={busy}>{busy ? "Entrando..." : "Entrar"}</button>
+      <button className="button primary" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Entrando" /> : "Entrar"}</button>
       <p className="form-switch">Primeira vez? <Link to="/cadastro">Criar conta</Link></p>
     </form>
   </section></Shell>;

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { getLilyObservabilitySummary, type LilyObservabilitySummary } from "./observability-api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 function formatDate(value: string | null) {
   return value ? new Date(value).toLocaleString("pt-BR") : "—";
@@ -56,7 +57,7 @@ export function AdminObservabilityPage() {
     };
   }, []);
 
-  if (loading) return <section className="admin-state"><h1>Carregando saúde operacional...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando saúde operacional"/></section>;
   if (!session || !data) return <section className="admin-state">
     <span className="eyebrow">CookLily · observabilidade</span>
     <h1>Acesso staff necessário.</h1>

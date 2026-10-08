@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { getLilySession, lilyAdminJson, parseResponse, type AuthPayload } from "../../api";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 type StoreSettings = {
   instagramHandle: string;
@@ -62,7 +63,7 @@ export function AdminStoreSettingsPage() {
     }
   }
 
-  if (!loaded) return <section className="admin-state"><h1>Carregando configurações da loja...</h1></section>;
+  if (!loaded) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando configurações da loja"/></section>;
   if (!session || !settings) return <section className="admin-state">
     <span className="eyebrow">CookLily · administração</span>
     <h1>Acesso staff necessário.</h1>
