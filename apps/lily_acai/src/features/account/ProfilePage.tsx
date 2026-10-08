@@ -475,7 +475,7 @@ export function ProfilePage() {
         {message && !busy && <p className="profile-avatar-modal-status" role="status">{message}</p>}
         <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto.</p>
       </section>
-    </div>
+    </div>}
   </section>;
 }
 
