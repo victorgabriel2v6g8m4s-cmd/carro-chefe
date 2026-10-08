@@ -8,6 +8,7 @@ import {
   type KitchenOrder
 } from "./api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
+import { LilyLoadingSpinner } from "../../loading-spinner";
 
 const COLUMNS: Array<{
   status: KitchenOperationStatus;
@@ -224,7 +225,7 @@ export function KitchenPage() {
     setOrders((current) => current.map((order) => order.id === next.id ? next : order));
   }
 
-  if (loading) return <section className="admin-state"><h1>Carregando cozinha...</h1></section>;
+  if (loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando cozinha"/></section>;
 
   if (!session) return <section className="admin-state">
     <span className="eyebrow">CookLily · cozinha</span>
