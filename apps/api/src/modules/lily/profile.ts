@@ -159,7 +159,7 @@ async function profilePayload(userId: string) {
   const [own] = await loyaltyRows({ userIds: [userId] });
   const preferenceRecords = await lilyPrisma.lilyConsentRecord.findMany({
     where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers"] } },
-    orderBy: { recordedAt: "desc" },
+    orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
     select: { purpose: true, granted: true, recordedAt: true, revokedAt: true }
   });
   const latestPreferences = new Map<string, boolean>();
