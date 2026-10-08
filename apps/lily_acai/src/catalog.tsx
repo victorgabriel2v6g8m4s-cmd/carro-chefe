@@ -13,6 +13,7 @@ import {
 import { useCart } from "./features/cart/CartContext";
 import { trackLilyAnalytics } from "./analytics";
 import { AllergenNotice } from "./features/allergens/AllergenNotice";
+import { groupCatalogProductsByCategory } from "./catalog-category-navigation";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -803,6 +804,9 @@ export function CatalogPage() {
   const [selected, setSelected] = useState<CatalogProduct | null>(null);
   const [selectedCombo, setSelectedCombo] = useState<CatalogCombo | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
+  const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
+  const restoredCategoryRef = useRef(false);
+  const [activeCategory, setActiveCategory] = useState("");
 
   function openProduct(product: CatalogProduct) {
     const next = new URLSearchParams(searchParams);
@@ -826,7 +830,7 @@ export function CatalogPage() {
     size: filters.size || undefined,
     availability: filters.availability,
     offer: filters.offer ? "true" : undefined,
-    limit: 12
+    limit: 40
   }), [filters]);
 
   useEffect(() => {
@@ -905,6 +909,77 @@ export function CatalogPage() {
     return () => observer.disconnect();
   }, [nextOffset, loading, query]);
 
+  const categoryGroups = useMemo(() => groupCatalogProductsByCategory(products), [products]);
+
+  function persistActiveCategory(key: string) {
+    setActiveCategory(key);
+    try {
+      window.localStorage.setItem("cooklily.catalog.activeCategory", key);
+    } catch {
+      // Storage may be unavailable in private/restricted browsing contexts.
+    }
+  }
+
+  function scrollToCategory(key: string, restore = false) {
+    const node = categoryRefs.current[key];
+    if (!node) return;
+    persistActiveCategory(key);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start"
+    });
+    if (restore) restoredCategoryRef.current = true;
+  }
+
+  useEffect(() => {
+    if (!categoryGroups.length) {
+      setActiveCategory("");
+      return;
+    }
+
+    let savedCategory = "";
+    try {
+      savedCategory = window.localStorage.getItem("cooklily.catalog.activeCategory") ?? "";
+    } catch {
+      savedCategory = "";
+    }
+
+    const target = categoryGroups.some((group) => group.key === savedCategory)
+      ? savedCategory
+      : categoryGroups[0].key;
+
+    setActiveCategory(target);
+    if (restoredCategoryRef.current || target !== savedCategory || !savedCategory) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => scrollToCategory(target, true));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [categoryGroups]);
+
+  useEffect(() => {
+    if (!categoryGroups.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      const key = visible[0]?.target.getAttribute("data-category-key");
+      if (key) persistActiveCategory(key);
+    }, {
+      rootMargin: "-150px 0px -55% 0px",
+      threshold: [0.05, 0.25, 0.5, 0.75]
+    });
+
+    for (const group of categoryGroups) {
+      const node = categoryRefs.current[group.key];
+      if (node) observer.observe(node);
+    }
+
+    return () => observer.disconnect();
+  }, [categoryGroups]);
+
   const selectedCategory = meta?.categories.find((category) => category.slug === filters.category);
   const activeFilterCount = [
     filters.category,
@@ -955,6 +1030,22 @@ export function CatalogPage() {
       </div>}
     </section>
 
+    {categoryGroups.length > 0 && <nav className="catalog-category-tabs" aria-label="Categorias do cardápio">
+      <div className="catalog-category-tabs-track" role="tablist" aria-label="Categorias">
+        {categoryGroups.map((group) => <button
+          key={group.key}
+          type="button"
+          role="tab"
+          aria-selected={activeCategory === group.key}
+          className={`catalog-category-tab ${activeCategory === group.key ? "active" : ""}`}
+          onClick={() => scrollToCategory(group.key)}
+        >
+          <span>{group.name}</span>
+          <small>{group.products.length}</small>
+        </button>)}
+      </div>
+    </nav>}
+
     <section className="catalog-hero">
       <span className="eyebrow">Cardápio CookLily</span>
       <h1>Escolha pelo sabor. A gente cuida da cremosidade.</h1>
@@ -965,8 +1056,25 @@ export function CatalogPage() {
 
     {error && <p className="error" role="alert">{error}</p>}
     <div className="catalog-summary"><strong>{meta?.total ?? 0}</strong> produtos encontrados</div>
-    <section className="catalog-grid" aria-live="polite">
-      {products.map((product) => <ProductCard key={product.id} product={product} onOpen={() => openProduct(product)} />)}
+    <section className="catalog-groups" aria-live="polite">
+      {categoryGroups.map((group, index) => <section
+        key={group.key}
+        ref={(node) => { categoryRefs.current[group.key] = node; }}
+        data-category-key={group.key}
+        className={`catalog-category-section ${index === 0 ? "first" : ""}`}
+        aria-labelledby={`catalog-category-${group.key}`}
+      >
+        <div className="catalog-category-heading">
+          <div>
+            <span className="eyebrow">Categoria</span>
+            <h2 id={`catalog-category-${group.key}`}>{group.name}</h2>
+          </div>
+          <span className="catalog-category-count">{group.products.length} {group.products.length === 1 ? "produto" : "produtos"}</span>
+        </div>
+        <div className="catalog-grid">
+          {group.products.map((product) => <ProductCard key={product.id} product={product} onOpen={() => openProduct(product)} />)}
+        </div>
+      </section>)}
     </section>
     {!loading && products.length === 0 && <section className="empty-state"><h2>Nenhum produto com esses filtros.</h2><p>Tente limpar um filtro ou pesquisar outro sabor.</p></section>}
     <div className="catalog-sentinel" ref={sentinel}>
