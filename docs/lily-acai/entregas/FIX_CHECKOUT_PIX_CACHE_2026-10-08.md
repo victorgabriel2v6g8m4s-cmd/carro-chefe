@@ -15,4 +15,4 @@
 
 ## Validação e deploy
 
-Não considerar a correção validada em produção até o deploy concluir com sucesso. Após integrar em `cooklily/canonical`, executar `sudo cc deploy canonical` e fazer uma recarga forçada do navegador uma vez (`Ctrl+Shift+R) no desktop; em seguida testar novamente a criação de Pix.
+Não considerar a correção validada em produção até o deploy concluir com sucesso. Após integrar em `cooklily/canonical`, executar `sudo cc deploy canonical` e fazer uma recarga forçada do navegador uma vez (`Ctrl+Shift+R`) no desktop; em seguida testar novamente a criação de Pix.
