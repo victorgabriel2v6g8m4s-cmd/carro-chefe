@@ -243,7 +243,8 @@ export async function lilyRoutes(app: FastifyInstance) {
             passwordHash,
             displayName: normalizeDisplayName(input.displayName),
             role: "customer",
-            status: "active"
+            status: "active",
+            rankingOptIn: true
           }
         });
         await tx.lilyConsentRecord.createMany({ data: consentRows(user.id, input) });

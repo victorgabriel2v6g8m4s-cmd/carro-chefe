@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   changeLilyPassword,
@@ -20,6 +20,7 @@ import {
   type LilyRankingRow,
   type LilySessionRow
 } from "../../api";
+import { formatBrazilianPhone } from "./phone-format";
 
 function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();
@@ -53,6 +54,28 @@ export function ProfilePage() {
   const [sessions, setSessions] = useState<LilySessionRow[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const avatarTriggerRef = useRef<HTMLButtonElement>(null);
+  const avatarCloseRef = useRef<HTMLButtonElement>(null);
+  const editFormRef = useRef<HTMLFormElement>(null);
+  const displayNameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!avatarPreviewOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAvatarPreviewOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    avatarCloseRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      avatarTriggerRef.current?.focus();
+    };
+  }, [avatarPreviewOpen]);
 
   async function refresh() {
     const current = await getLilySession();
@@ -104,12 +127,8 @@ export function ProfilePage() {
     }
   }
 
-  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) return;
-    const data = new FormData(event.currentTarget);
-    const file = data.get("avatar");
-    if (!(file instanceof File) || file.size === 0) return;
+  async function uploadAvatar(file: File) {
+    if (!session || !file.size) return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -120,13 +139,23 @@ export function ProfilePage() {
         ...current,
         user: { ...current.user, avatarUrl: updated.user.avatarUrl }
       } : current);
-      event.currentTarget.reset();
       setMessage("Foto de perfil atualizada.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível enviar a foto.");
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (file) void uploadAvatar(file);
+  }
+
+  function focusProfileEditor() {
+    editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => displayNameInputRef.current?.focus(), 150);
   }
 
   async function handleLogout() {
@@ -280,15 +309,20 @@ export function ProfilePage() {
     </div>}
 
     <div className="profile-heading">
-      <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
+      <button ref={avatarTriggerRef} className="profile-avatar-trigger" type="button" aria-label="Ampliar foto de perfil" onClick={() => { setError(""); setMessage(""); setAvatarPreviewOpen(true); }}>
+        <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
+      </button>
+      <input ref={avatarInputRef} className="profile-avatar-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher nova foto de perfil" onChange={handleAvatarFileChange} />
       <div className="profile-heading-copy">
         <span className="eyebrow">Minha conta</span>
-        <h1>{profile.user.displayName || "Seu perfil CookLily"}</h1>
-        <p>{profile.user.phone}</p>
+        <div className="profile-heading-name">
+          <h1>{profile.user.displayName || "Seu perfil CookLily"}</h1>
+          <button className="profile-edit-icon" type="button" aria-label="Editar perfil" title="Editar perfil" onClick={focusProfileEditor}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>
+          </button>
+        </div>
+        <p>{formatBrazilianPhone(profile.user.phone)}</p>
       </div>
-      <button className="button ghost profile-logout-button" type="button" onClick={handleLogout} disabled={logoutBusy}>
-        {logoutBusy ? "Saindo..." : "Sair da conta"}
-      </button>
     </div>
 
     <div className="profile-stats">
@@ -298,23 +332,24 @@ export function ProfilePage() {
     </div>
 
     <div className="profile-grid">
-      <form className="checkout-section" onSubmit={submit}>
-        <h2>Editar perfil</h2>
+      <form ref={editFormRef} id="profile-edit-form" className="checkout-section profile-edit-form" onSubmit={submit}>
+        <h2>Dados do perfil</h2>
         <label>Nome público
-          <input name="displayName" defaultValue={profile.user.displayName ?? ""} maxLength={80} autoComplete="name" />
+          <input ref={displayNameInputRef} name="displayName" defaultValue={profile.user.displayName ?? ""} maxLength={80} autoComplete="name" />
         </label>
         <label className="check">
           <input name="rankingOptIn" type="checkbox" defaultChecked={profile.user.rankingOptIn} />
           <span>Quero aparecer no ranking público CookLily com meu nome e foto.</span>
         </label>
+        <label className="check">
+          <input name="whatsappUpdatesOptIn" type="checkbox" defaultChecked={profile.user.whatsappUpdatesOptIn} />
+          <span>Receber atualizações do pedido pelo WhatsApp.</span>
+        </label>
+        <label className="check">
+          <input name="whatsappOffersOptIn" type="checkbox" defaultChecked={profile.user.whatsappOffersOptIn} />
+          <span>Receber ofertas especiais e cupons pelo WhatsApp.</span>
+        </label>
         <button className="button primary" type="submit" disabled={busy}>{busy ? "Salvando..." : "Salvar perfil"}</button>
-      </form>
-
-      <form className="checkout-section" onSubmit={uploadAvatar}>
-        <h2>Foto de perfil</h2>
-        <p>JPEG, PNG ou WebP de até 2 MB.</p>
-        <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required />
-        <button className="button ghost" type="submit" disabled={busy}>{busy ? "Enviando..." : "Atualizar foto"}</button>
       </form>
 
       {privileged && <section className="checkout-section security-mfa-section">
@@ -397,6 +432,49 @@ export function ProfilePage() {
       <Link to="/pedidos"><strong>Meus pedidos</strong><span>Veja seu histórico</span></Link>
       <Link to="/enderecos"><strong>Endereços</strong><span>Gerencie entrega</span></Link>
       <Link to="/ranking"><strong>Ranking CookLily</strong><span>Veja os clientes com mais pontos</span></Link>
+    </div>
+    <div className="profile-logout-footer">
+      <button className="profile-logout-link" type="button" onClick={handleLogout} disabled={logoutBusy}>
+        {logoutBusy ? "Saindo..." : "Sair da conta"}
+      </button>
+    </div>
+
+    {avatarPreviewOpen && <div className="profile-avatar-modal" role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) setAvatarPreviewOpen(false);
+    }}>
+      <section className="profile-avatar-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-avatar-modal-title" onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const actions = event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+        const first = actions[0];
+        const last = actions[actions.length - 1];
+        if (!first || !last) return;
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}>
+        <div className="profile-avatar-modal-toolbar">
+          <button className="profile-avatar-modal-action" type="button" aria-label="Trocar foto de perfil" title="Trocar foto de perfil" onClick={() => avatarInputRef.current?.click()} disabled={busy}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg>
+          </button>
+          <span id="profile-avatar-modal-title">Foto de perfil</span>
+          <button ref={avatarCloseRef} className="profile-avatar-modal-action" type="button" aria-label="Fechar visualização da foto" title="Fechar" onClick={() => setAvatarPreviewOpen(false)}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12" /><path d="m6 6 12 12" /></svg>
+          </button>
+        </div>
+        <div className="profile-avatar-modal-content">
+          {profile.user.avatarUrl
+            ? <img className="profile-avatar-modal-image" src={profile.user.avatarUrl} alt={profile.user.displayName ? `Foto de perfil de ${profile.user.displayName}` : "Foto de perfil"} />
+            : <ProfileAvatar name={profile.user.displayName} url={null} large />}
+        </div>
+        {busy && <p className="profile-avatar-modal-status" role="status">Enviando foto...</p>}
+        {error && <p className="profile-avatar-modal-error" role="alert">{error}</p>}
+        {message && !busy && <p className="profile-avatar-modal-status" role="status">{message}</p>}
+        <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto.</p>
+      </section>
     </div>
   </section>;
 }

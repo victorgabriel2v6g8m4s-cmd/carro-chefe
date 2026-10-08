@@ -10,7 +10,9 @@ import { getLilyOperationalSettings } from "./fulfillment";
 
 const profilePatchSchema = z.object({
   displayName: z.string().trim().min(2).max(80).nullable().optional(),
-  rankingOptIn: z.boolean().optional()
+  rankingOptIn: z.boolean().optional(),
+  whatsappUpdatesOptIn: z.boolean().optional(),
+  whatsappOffersOptIn: z.boolean().optional()
 }).strict();
 
 const leaderboardLimitSchema = z.coerce.number().int().min(1).max(50).default(20);
@@ -155,6 +157,19 @@ async function profilePayload(userId: string) {
   if (!user) throw new ApiError(404, "Perfil não encontrado.");
 
   const [own] = await loyaltyRows({ userIds: [userId] });
+  const preferenceRecords = await lilyPrisma.lilyConsentRecord.findMany({
+    where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers"] } },
+    orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
+    select: { purpose: true, granted: true, recordedAt: true, revokedAt: true }
+  });
+  const latestPreferences = new Map<string, boolean>();
+  for (const record of preferenceRecords) {
+    if (!latestPreferences.has(record.purpose)) {
+      latestPreferences.set(record.purpose, record.granted && !record.revokedAt);
+    }
+  }
+  const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers") ?? false;
+  const whatsappUpdatesOptIn = latestPreferences.get("whatsapp_order_updates") ?? true;
   const publicRows = await loyaltyRows({ onlyOptedIn: true });
   const publicIndex = publicRows.findIndex((row) => row.userId === userId);
 
@@ -164,7 +179,9 @@ async function profilePayload(userId: string) {
       phone: user.phoneNormalized,
       displayName: user.displayName,
       avatarUrl: mediaUrl(user.avatarMediaId),
-      rankingOptIn: user.rankingOptIn
+      rankingOptIn: user.rankingOptIn,
+      whatsappUpdatesOptIn,
+      whatsappOffersOptIn
     },
     loyalty: {
       points: own?.points ?? 0,
@@ -252,12 +269,44 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
       throw new ApiError(400, "Informe um nome antes de aparecer no ranking.", { code: "LILY_RANKING_NAME_REQUIRED" });
     }
 
-    await lilyPrisma.lilyUser.update({
-      where: { id: context.user.id },
-      data: {
-        ...(input.displayName === undefined ? {} : { displayName }),
-        ...(input.rankingOptIn === undefined ? {} : { rankingOptIn: input.rankingOptIn })
+    await lilyPrisma.$transaction(async (tx) => {
+      await tx.lilyUser.update({
+        where: { id: context.user.id },
+        data: {
+          ...(input.displayName === undefined ? {} : { displayName }),
+          ...(input.rankingOptIn === undefined ? {} : { rankingOptIn: input.rankingOptIn })
+        }
+      });
+      const recordedAt = new Date();
+      const preferences: Array<{
+        userId: string;
+        purpose: string;
+        version: string;
+        granted: boolean;
+        source: string;
+        recordedAt: Date;
+      }> = [];
+      if (input.whatsappUpdatesOptIn !== undefined) {
+        preferences.push({
+          userId: context.user.id,
+          purpose: "whatsapp_order_updates",
+          version: "2026-10-08",
+          granted: input.whatsappUpdatesOptIn,
+          source: "profile_settings",
+          recordedAt
+        });
       }
+      if (input.whatsappOffersOptIn !== undefined) {
+        preferences.push({
+          userId: context.user.id,
+          purpose: "whatsapp_offers",
+          version: "2026-10-08",
+          granted: input.whatsappOffersOptIn,
+          source: "profile_settings",
+          recordedAt
+        });
+      }
+      if (preferences.length) await tx.lilyConsentRecord.createMany({ data: preferences });
     });
 
     return profilePayload(context.user.id);

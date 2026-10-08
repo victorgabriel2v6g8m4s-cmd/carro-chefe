@@ -231,11 +231,27 @@ export async function processLilyWhatsAppQueue(limit = 20) {
           id: true,
           orderNumber: true,
           phoneNormalized: true,
+          userId: true,
           whatsappUpdatesOptIn: true
         }
       }
     }
   });
+
+  const accountIds = [...new Set(candidates.map((candidate) => candidate.order.userId).filter((id): id is string => Boolean(id)))];
+  const accountPreferenceRecords = accountIds.length
+    ? await lilyPrisma.lilyConsentRecord.findMany({
+        where: { userId: { in: accountIds }, purpose: "whatsapp_order_updates" },
+        orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
+        select: { userId: true, granted: true, recordedAt: true, revokedAt: true }
+      })
+    : [];
+  const accountWhatsAppOptIns = new Map<string, boolean>();
+  for (const preference of accountPreferenceRecords) {
+    if (!accountWhatsAppOptIns.has(preference.userId)) {
+      accountWhatsAppOptIns.set(preference.userId, preference.granted && !preference.revokedAt);
+    }
+  }
 
   let sent = 0;
   let failed = 0;
@@ -260,7 +276,8 @@ export async function processLilyWhatsAppQueue(limit = 20) {
     if (claimed.count !== 1) continue;
 
     const attempt = candidate.attempts + 1;
-    if (!candidate.order.whatsappUpdatesOptIn) {
+    const accountOptIn = candidate.order.userId ? accountWhatsAppOptIns.get(candidate.order.userId) : undefined;
+    if (!candidate.order.whatsappUpdatesOptIn || accountOptIn === false) {
       await lilyPrisma.lilyWhatsAppNotification.update({
         where: { id: candidate.id },
         data: {

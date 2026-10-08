@@ -125,6 +125,18 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(profileSource).toContain("revokeOtherLilySessions");
   });
 
+  it("mantém preferências de WhatsApp, visualização da foto e logout discreto no perfil", () => {
+    expect(profileSource).toContain("whatsappUpdatesOptIn");
+    expect(profileSource).toContain("whatsappOffersOptIn");
+    expect(profileSource).toContain('aria-modal="true"');
+    expect(profileSource).toContain('aria-label="Trocar foto de perfil"');
+    expect(profileSource).toContain('aria-label="Fechar visualização da foto"');
+    expect(profileSource).toContain('className="profile-logout-footer"');
+    expect(profileSource).toContain("formatBrazilianPhone(profile.user.phone)");
+    expect(css).toContain(".profile-avatar-modal");
+    expect(css).toContain(".profile-logout-link");
+  });
+
   it("tokeniza cartão no Brick sem criar campos próprios de PAN/CVV", () => {
     expect(paymentSource).toContain("https://sdk.mercadopago.com/js/v2");
     expect(paymentSource).toContain('bricks.create("cardPayment"');

@@ -3939,3 +3939,56 @@ img, svg { max-width: 100%; }
 .checkout-line-allergens .allergen-notice {
   width: 100%;
 }
+
+
+/* Perfil CookLily: ações compactas e visualização imersiva da foto */
+.profile-heading-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.profile-heading-name h1 { min-width: 0; overflow-wrap: anywhere; }
+.profile-edit-icon {
+  width: 38px; height: 38px; flex: none; display: inline-grid; place-items: center;
+  border: 1px solid rgb(130 0 35 / 14%); border-radius: 50%; background: rgb(255 255 255 / 86%);
+  color: var(--cl-color-primary); cursor: pointer;
+}
+.profile-edit-icon svg, .profile-avatar-modal-action svg {
+  width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.profile-avatar-trigger { display: inline-grid; flex: none; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: zoom-in; }
+.profile-avatar-trigger:focus-visible, .profile-edit-icon:focus-visible, .profile-avatar-modal-action:focus-visible, .profile-logout-link:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }
+.profile-avatar-file-input { display: none; }
+.profile-edit-form { scroll-margin-top: 90px; }
+.profile-logout-footer { display: flex; justify-content: flex-end; margin-top: 34px; }
+.profile-logout-link {
+  border: 0; padding: 10px 4px; background: transparent; color: var(--cl-color-text-muted); font: inherit;
+  font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.profile-logout-link:hover { color: var(--cl-color-primary); }
+.profile-avatar-modal {
+  position: fixed; inset: 0; z-index: 300; display: grid; place-items: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  background: rgb(30 4 20 / 96%); color: white;
+}
+.profile-avatar-modal-dialog { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(100%, 900px); height: min(100%, 100dvh); min-height: 0; }
+.profile-avatar-modal-toolbar { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 12px; min-height: 52px; }
+.profile-avatar-modal-toolbar > span { text-align: center; font-weight: 750; }
+.profile-avatar-modal-action {
+  display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 50%; background: rgb(255 255 255 / 10%); color: white; cursor: pointer;
+}
+.profile-avatar-modal-action:disabled { opacity: .5; cursor: wait; }
+.profile-avatar-modal-content { display: grid; min-height: 0; place-items: center; padding: 12px 0; }
+.profile-avatar-modal-image { display: block; max-width: min(92vw, 860px); max-height: min(76dvh, 820px); width: auto; height: auto; object-fit: contain; border-radius: 8px; }
+.profile-avatar-modal-content .profile-avatar.large { width: min(62vw, 320px); height: min(62vw, 320px); font-size: clamp(64px, 18vw, 120px); }
+.profile-avatar-modal-status, .profile-avatar-modal-hint { margin: 6px 0 0; text-align: center; color: rgb(255 255 255 / 78%); font-size: 13px; }
+.profile-avatar-modal-hint { padding-bottom: 8px; }
+@media (max-width: 760px) {
+  .profile-page, .ranking-page { padding-top: 28px; }
+  .profile-heading { gap: 12px; align-items: flex-start; }
+  .profile-heading-copy { flex: 1 1 calc(100% - 106px); }
+  .profile-heading-name h1 { font-size: clamp(28px, 8vw, 42px); }
+  .profile-edit-icon { width: 34px; height: 34px; }
+  .profile-avatar.large { width: 76px; height: 76px; font-size: 26px; }
+  .profile-logout-footer { margin-top: 22px; }
+}
+
+.profile-avatar-modal-error { margin: 6px 0 0; color: #ffd5df; text-align: center; font-size: 13px; }

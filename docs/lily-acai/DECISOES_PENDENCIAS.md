@@ -1,6 +1,6 @@
 # Decisões e pendências — CookLily
 
-**Última auditoria:** 30/09/2026 16:50 UTC-03:00  
+**Última auditoria:** 08/10/2026  
 **Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
 
 ## Atualização pontual — 08/10/2026
@@ -10,6 +10,14 @@
 - A próxima prioridade do projeto é a UI definitiva do site público. A homologação financeira ponta a ponta fica para etapa posterior.
 - Evidência: [HOMOLOGACAO_QR_PIX_2026-10-08.md](entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md).
 
+
+## Atualização de perfil — 08/10/2026
+
+- O perfil público mantém logout discreto no rodapé; edição por ícone junto ao nome; foto abre em visualização de tela cheia, com lápis à esquerda e fechar à direita.
+- O ranking fica ativado por padrão em novos cadastros. Contas existentes mantêm a escolha salva para não alterar silenciosamente a visibilidade pública.
+- Preferência de atualizações de pedido pelo WhatsApp: padrão ativo para contas sem registro, com opção de desligar; o worker respeita o opt-out da conta além do opt-in individual do pedido.
+- Ofertas especiais/cupons pelo WhatsApp: padrão desligado, salvo consentimento de marketing anterior; a escolha explícita no perfil passa a prevalecer e é registrada no histórico de consentimentos.
+- O telefone é exibido no perfil em formato brasileiro `+55 (DD) 9XXXX-XXXX` (ou formato fixo de 10 dígitos).
 
 ## Confirmado
 

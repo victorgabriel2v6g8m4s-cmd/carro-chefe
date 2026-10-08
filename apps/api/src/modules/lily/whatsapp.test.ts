@@ -17,6 +17,7 @@ const envNames = [
 
 const originalEnv = Object.fromEntries(envNames.map((name) => [name, process.env[name]]));
 const createdOrderIds: string[] = [];
+const createdUserIds: string[] = [];
 
 function configureMeta() {
   process.env.COOKLILY_WHATSAPP_PROVIDER = "meta_cloud";
@@ -27,7 +28,7 @@ function configureMeta() {
   process.env.COOKLILY_WHATSAPP_TEMPLATE_LANGUAGE = "pt_BR";
 }
 
-async function createOrder(optedIn = true) {
+async function createOrder(optedIn = true, userId?: string) {
   const suffix = Math.random().toString(36).slice(2, 10);
   const order = await lilyPrisma.lilyOrder.create({
     data: {
@@ -35,6 +36,7 @@ async function createOrder(optedIn = true) {
       idempotencyKey: `cooklily:wa:test:${suffix}`,
       requestFingerprint: `fingerprint-${suffix}`,
       phoneNormalized: "+5567999999999",
+      ...(userId ? { userId } : {}),
       fulfillmentType: "pickup",
       status: "awaiting_payment",
       operationStatus: "received",
@@ -68,6 +70,11 @@ afterEach(async () => {
       where: { id: { in: [...createdOrderIds] } }
     });
     createdOrderIds.length = 0;
+  }
+  if (createdUserIds.length) {
+    await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: { in: [...createdUserIds] } } });
+    await lilyPrisma.lilyUser.deleteMany({ where: { id: { in: [...createdUserIds] } } });
+    createdUserIds.length = 0;
   }
 });
 
@@ -116,6 +123,43 @@ describe("CookLily Entrega 11H WhatsApp", () => {
     expect(await lilyPrisma.lilyWhatsAppNotification.count({
       where: { orderId: optedOut.id }
     })).toBe(0);
+  });
+
+  it("respeita opt-out de atualizações do WhatsApp salvo nas preferências da conta", async () => {
+    configureMeta();
+    const phoneSuffix = String(Math.floor(Math.random() * 100)).padStart(2, "0");
+    const user = await lilyPrisma.lilyUser.create({
+      data: {
+        phoneNormalized: `+5567${Date.now().toString().slice(-7)}${phoneSuffix}`,
+        passwordHash: "test-hash",
+        displayName: "Cliente Opt-out",
+        role: "customer",
+        status: "active"
+      }
+    });
+    createdUserIds.push(user.id);
+    await lilyPrisma.lilyConsentRecord.create({
+      data: {
+        userId: user.id,
+        purpose: "whatsapp_order_updates",
+        version: "2026-10-08",
+        granted: false,
+        source: "profile_settings"
+      }
+    });
+    const order = await createOrder(true, user.id);
+    const notification = await enqueueLilyWhatsAppStage(lilyPrisma, {
+      orderId: order.id,
+      optedIn: true,
+      stage: "preparing"
+    });
+    vi.stubGlobal("fetch", vi.fn());
+
+    await processLilyWhatsAppQueue(10);
+    const stored = await lilyPrisma.lilyWhatsAppNotification.findUnique({ where: { id: notification!.id } });
+    expect(stored?.status).toBe("skipped");
+    expect(stored?.lastErrorCode).toBe("OPT_OUT");
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("envia template utilitário pelo endpoint Meta sem colocar token na URL ou persistir segredo", async () => {
