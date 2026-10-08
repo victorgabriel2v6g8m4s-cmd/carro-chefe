@@ -158,7 +158,7 @@ async function profilePayload(userId: string) {
 
   const [own] = await loyaltyRows({ userIds: [userId] });
   const preferenceRecords = await lilyPrisma.lilyConsentRecord.findMany({
-    where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers", "lily_marketing"] } },
+    where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers"] } },
     orderBy: { recordedAt: "desc" },
     select: { purpose: true, granted: true, recordedAt: true, revokedAt: true }
   });
@@ -168,9 +168,7 @@ async function profilePayload(userId: string) {
       latestPreferences.set(record.purpose, record.granted && !record.revokedAt);
     }
   }
-  const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers")
-    ?? latestPreferences.get("lily_marketing")
-    ?? false;
+  const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers") ?? false;
   const whatsappUpdatesOptIn = latestPreferences.get("whatsapp_order_updates") ?? true;
   const publicRows = await loyaltyRows({ onlyOptedIn: true });
   const publicIndex = publicRows.findIndex((row) => row.userId === userId);
