@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { getLilySession, type AuthPayload } from "../../api";
+import { getLilyAuthStatus, getLilySession, type AuthPayload } from "../../api";
 import { trackLilyAnalytics } from "../../analytics";
 import { readGuestOrderToken } from "../orders/guest-token";
 import { getLilyPayment } from "./api";
@@ -58,7 +58,12 @@ export function PaymentChoicePage() {
     let cancelled = false;
     void (async () => {
       let current: AuthPayload | null = null;
-      try { current = await getLilySession(); } catch { current = null; }
+      try {
+        const status = await getLilyAuthStatus();
+        if (status.user) {
+          try { current = await getLilySession(); } catch { current = null; }
+        }
+      } catch { current = null; }
       if (cancelled) return;
       setSession(current);
       const payload = await getLilyPaymentOptions({ orderId, session: current, guestAccessToken, homologation });
