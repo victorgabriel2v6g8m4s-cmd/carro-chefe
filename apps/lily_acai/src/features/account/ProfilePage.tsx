@@ -21,6 +21,7 @@ import {
   type LilySessionRow
 } from "../../api";
 import { formatBrazilianPhone } from "./phone-format";
+import { openImageCropper } from "../../image-crop-editor";
 
 function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();
@@ -147,10 +148,24 @@ export function ProfilePage() {
     }
   }
 
-  function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
-    if (file) void uploadAvatar(file);
+    if (!file) return;
+    setError("");
+    setMessage("");
+    try {
+      const cropped = await openImageCropper(file, {
+        aspectRatio: 1,
+        title: "Ajustar foto de perfil",
+        description: "Mova a foto e aproxime até deixar o rosto bem enquadrado dentro do círculo. A imagem salva será somente o recorte.",
+        maxOutputBytes: 5 * 1024 * 1024,
+        maxLongEdge: 1200
+      });
+      if (cropped) await uploadAvatar(cropped);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível preparar a foto.");
+    }
   }
 
   function focusProfileEditor() {
@@ -473,7 +488,7 @@ export function ProfilePage() {
         {busy && <p className="profile-avatar-modal-status" role="status">Enviando foto...</p>}
         {error && <p className="profile-avatar-modal-error" role="alert">{error}</p>}
         {message && !busy && <p className="profile-avatar-modal-status" role="status">{message}</p>}
-        <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto.</p>
+        <p className="profile-avatar-modal-hint">Toque no lápis para escolher outra foto. O editor permite mover e aproximar a imagem antes de salvar.</p>
       </section>
     </div>}
   </section>;
