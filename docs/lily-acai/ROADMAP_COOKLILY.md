@@ -7,6 +7,71 @@
 **Branch canônica de integração:** `cooklily/canonical`  
 **Namespaces técnicos preservados:** /lilyacai/, /api/v1/lily/, lily-acai.db.
 
+## Estado atual — 08/10/2026
+
+- **Fase ativa:** finalizar a UI pública da CookLily. O foco imediato é consistência visual, hierarquia de compra, responsividade, acessibilidade e estados de interface.
+- **QR Pix próprio — etapa homologada:** o proprietário escaneou o QR em outro celular, abriu a cobrança no aplicativo bancário e confirmou que o valor apresentado correspondia ao pedido. Registro: [Homologação do QR Pix](entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md).
+- **Limite da homologação:** nenhum pagamento foi concluído. Liquidação/recebimento, confirmação financeira, atualização do pedido para pago e liberação operacional continuam pendentes para uma etapa posterior de teste financeiro.
+- **Princípio de sequência:** finalizar a experiência visual agora; não usar a leitura do QR como prova de que o fluxo financeiro ponta a ponta foi homologado.
+
+## Próxima fase prioritária — UI definitiva do site público
+
+O escopo principal desta fase é a experiência do cliente. A implementação deve seguir o [kit de marca](marca/KIT_DE_MARCA.md), o cardápio canônico e as decisões do ADR-002. Os painéis operacionais continuam em sua trilha própria.
+
+### U1 — estrutura visual compartilhada
+
+- [ ] revisar header, navegação desktop/mobile, drawer, conta, carrinho, rodapé e largura máxima do conteúdo;
+- [ ] aplicar tokens CookLily e hierarquia tipográfica consistente, sem misturar a estética do Carro Chefe;
+- [ ] garantir que os ativos reais aprovados sejam usados corretamente e que placeholders não dominem o catálogo;
+- [ ] revisar feedbacks discretos e estados de foco/hover/pressed, sem reload global desnecessário.
+
+### U2 — landing e descoberta do catálogo
+
+- [ ] revisar a primeira dobra e a ordem busca → destaque compacto → produto/grade → combos;
+- [ ] harmonizar cards, selos de oferta, preço, disponibilidade e fotografia;
+- [ ] validar busca, filtros, contador, rolagem incremental, carrossel de combos e deep-link;
+- [ ] garantir que produtos esgotados permaneçam visíveis com estado inequívoco.
+
+### U3 — produto, opções e carrinho
+
+- [ ] finalizar modal/página de produto, seleção de 300/500 ml, LilyMix, compatibilidade de sabores e adicionais;
+- [ ] tornar preço, quantidade, observações e subtotal claros antes de adicionar ao carrinho;
+- [ ] revisar carrinho vazio, item indisponível, alteração de quantidade, remoção e recotação;
+- [ ] manter regras e preços derivados do backend; a UI não pode ser fonte autoritativa do valor.
+
+### U4 — checkout e apresentação do pagamento
+
+- [ ] harmonizar endereço, entrega/retirada, taxa, mínimo, prazo e resumo final do pedido;
+- [ ] finalizar visual da tela Pix: QR em destaque, valor, Copia e Cola legível, botão de copiar e confirmação discreta de cópia;
+- [ ] revisar carregamento, pendência, expiração, falha e retorno ao pedido, sem simular aprovação;
+- [ ] refletir somente os métodos realmente habilitados no backend. A arquitetura-alvo do ADR-002 continua sendo Pix próprio + crédito/débito Mercado Pago; métodos ainda não prontos não devem parecer disponíveis para pagamento real;
+- [ ] preservar a homologação já feita do QR, sem reabrir o teste de liquidação nesta fase visual.
+
+### U5 — conta, pedido e acompanhamento do cliente
+
+- [ ] harmonizar login/cadastro, perfil e histórico com a identidade visual;
+- [ ] revisar a confirmação do pedido e a timeline guest/autenticada em desktop e mobile;
+- [ ] garantir que cada estado financeiro/operacional tenha texto claro e que não prometa pagamento aprovado antes da confirmação autoritativa;
+- [ ] manter recuperação de senha bloqueada até existir um canal seguro de verificação aprovado.
+
+### U6 — acessibilidade, responsividade e aceite visual
+
+- [ ] revisar em 320, 360, 390, 430, 768 px e desktop: sem overflow horizontal, cortes ou sobreposição;
+- [ ] testar teclado, foco, Escape, leitor de tela, contraste, alvos de toque e reduced motion;
+- [ ] implementar a sanfona de alergênicos fechada por padrão, exibindo o aviso/conteúdo somente após abertura, conforme ADR-002;
+- [ ] conferir estados loading, vazio, erro, sucesso, desabilitado e indisponível em cada tela;
+- [ ] fazer uma passada visual ponta a ponta e registrar pendências restantes antes de chamar a UI de definitiva.
+
+### Etapa financeira posterior — fora do escopo desta fase
+
+- [ ] realizar um pagamento controlado, depois da fase visual;
+- [ ] verificar recebimento/PSP e evento autoritativo de confirmação;
+- [ ] confirmar pagamento aprovado → pedido pago → liberação correta da cozinha;
+- [ ] verificar tracking/timeline, idempotência e tratamento de evento duplicado/divergente.
+
+A UI pode ser finalizada sem fingir que essa etapa financeira já passou. O aceite do QR e o aceite do pagamento ponta a ponta são portões diferentes.
+
+
 ## Entrega 03 — marca e rebranding
 
 - logo e acervo inicial catalogados;
@@ -102,7 +167,7 @@ Relatório: `docs/lily-acai/entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`.
 
 ## Entrega 07 — checkout/pagamento
 
-**Status:** domínio financeiro e adapter automático Mercado Pago implementados na linha canônica; pagamentos continuam fail-closed e deploy/homologação operacional dependem de gate do SHA exato e credenciais reais.
+**Status:** domínio financeiro e integrações de pagamento estão implementados na linha canônica. Em 08/10/2026 foi homologada a apresentação/leitura do QR Pix próprio e conferido o valor da cobrança em outro celular. O pagamento não foi concluído; recebimento, confirmação financeira, transição do pedido para pago e liberação operacional continuam sem homologação ponta a ponta.
 
 Implementado:
 
@@ -251,6 +316,8 @@ Objetivos:
 - automações/integrações bancárias posteriores.
 
 ### 11A — Pix próprio CookLily
+
+**Homologação parcial em 08/10/2026:** QR personalizado lido em outro celular e valor da cobrança conferido. Isso homologa geração visual/leitura/valor, não liquidação nem atualização do estado do pedido. Ver [relatório de homologação](entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md).
 
 Implementado no candidato atual:
 
