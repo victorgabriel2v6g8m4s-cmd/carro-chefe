@@ -10,7 +10,9 @@ import { getLilyOperationalSettings } from "./fulfillment";
 
 const profilePatchSchema = z.object({
   displayName: z.string().trim().min(2).max(80).nullable().optional(),
-  rankingOptIn: z.boolean().optional()
+  rankingOptIn: z.boolean().optional(),
+  whatsappUpdatesOptIn: z.boolean().optional(),
+  whatsappOffersOptIn: z.boolean().optional()
 }).strict();
 
 const leaderboardLimitSchema = z.coerce.number().int().min(1).max(50).default(20);
@@ -179,7 +181,9 @@ async function profilePayload(userId: string) {
       phone: user.phoneNormalized,
       displayName: user.displayName,
       avatarUrl: mediaUrl(user.avatarMediaId),
-      rankingOptIn: user.rankingOptIn
+      rankingOptIn: user.rankingOptIn,
+      whatsappUpdatesOptIn,
+      whatsappOffersOptIn
     },
     loyalty: {
       points: own?.points ?? 0,
@@ -276,24 +280,34 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
         }
       });
       const recordedAt = new Date();
-      const preferences = [
-        input.whatsappUpdatesOptIn === undefined ? null : {
+      const preferences: Array<{
+        userId: string;
+        purpose: string;
+        version: string;
+        granted: boolean;
+        source: string;
+        recordedAt: Date;
+      }> = [];
+      if (input.whatsappUpdatesOptIn !== undefined) {
+        preferences.push({
           userId: context.user.id,
           purpose: "whatsapp_order_updates",
           version: "2026-10-08",
           granted: input.whatsappUpdatesOptIn,
           source: "profile_settings",
           recordedAt
-        },
-        input.whatsappOffersOptIn === undefined ? null : {
+        });
+      }
+      if (input.whatsappOffersOptIn !== undefined) {
+        preferences.push({
           userId: context.user.id,
           purpose: "whatsapp_offers",
           version: "2026-10-08",
           granted: input.whatsappOffersOptIn,
           source: "profile_settings",
           recordedAt
-        }
-      ].filter((item): item is NonNullable<typeof item> => item !== null);
+        });
+      }
       if (preferences.length) await tx.lilyConsentRecord.createMany({ data: preferences });
     });
 
