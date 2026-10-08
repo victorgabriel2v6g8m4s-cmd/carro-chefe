@@ -41,7 +41,7 @@ export function KitchenPrintPage() {
   }, [id]);
 
   if (loading) {
-    return <main className="kitchen-print-page"><p>Carregando comanda...</p></main>;
+    return <main className="kitchen-print-page"><LilyLoadingSpinner size="lg" label="Carregando comanda" /></main>;
   }
 
   if (!ticket) {
