@@ -408,6 +408,8 @@ export type LilyProfilePayload = {
     displayName: string | null;
     avatarUrl: string | null;
     rankingOptIn: boolean;
+    whatsappUpdatesOptIn: boolean;
+    whatsappOffersOptIn: boolean;
   };
   loyalty: {
     points: number;
