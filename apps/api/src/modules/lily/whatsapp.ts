@@ -409,10 +409,11 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/admin/whatsapp/settings", async (request) => {
     await requireLilyStaff(request);
     const configuration = lilyWhatsAppConfiguration();
-    const [pending, failed, dead] = await Promise.all([
+    const [pending, failed, dead, templates] = await Promise.all([
       lilyPrisma.lilyWhatsAppNotification.count({ where: { status: "pending" } }),
       lilyPrisma.lilyWhatsAppNotification.count({ where: { status: "failed" } }),
-      lilyPrisma.lilyWhatsAppNotification.count({ where: { status: "dead" } })
+      lilyPrisma.lilyWhatsAppNotification.count({ where: { status: "dead" } }),
+      lilyPrisma.lilyWhatsAppMessageTemplate.count()
     ]);
     return {
       provider: configuration.provider,
@@ -426,6 +427,11 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         languageConfigured: configuration.languageConfigured
       },
       queue: { pending, failed, dead },
+      templates: { total: templates },
+      webhook: {
+        verifyTokenConfigured: Boolean(env("COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN")),
+        appSecretConfigured: Boolean(env("COOKLILY_WHATSAPP_APP_SECRET"))
+      },
       consentVersion: LILY_WHATSAPP_CONSENT_VERSION
     };
   });
@@ -575,7 +581,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     category: z.enum(["utility", "marketing", "authentication"]).default("utility"),
     language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
     bodyTemplate: z.string().trim().min(1).max(4000),
-    variables: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+    variables: z.array(z.enum(["orderNumber", "stageLabel"])).max(20).default([]),
     metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
     status: z.enum(["draft", "active", "archived"]).default("draft")
   }).strict();
