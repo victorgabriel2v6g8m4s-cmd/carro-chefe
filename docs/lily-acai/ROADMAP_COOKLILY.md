@@ -62,6 +62,44 @@ O escopo principal desta fase é a experiência do cliente. A implementação de
 - [ ] conferir estados loading, vazio, erro, sucesso, desabilitado e indisponível em cada tela;
 - [ ] fazer uma passada visual ponta a ponta e registrar pendências restantes antes de chamar a UI de definitiva.
 
+### U7 — Reels de produtos e descoberta imersiva
+
+- [ ] auditar e reutilizar a janela de produto, adicionais, carrinho e modelo de mídia existentes;
+- [ ] implementar carrossel horizontal de mídias por produto, com a capa como primeiro item;
+- [ ] implementar navegação vertical entre produtos e gestos horizontais de saída somente nos limites definidos;
+- [ ] implementar pausa/retomada, controle de som e pressão na borda superior para reprodução 2× em vídeo;
+- [ ] implementar os modos relacionados, ordem atual dos filtros e aleatório com ícones e mensagem temporária;
+- [ ] integrar salvar, curtir, comentários, compartilhamento e botão de carrinho com feedback visual de 250 ms;
+- [ ] definir autenticação/moderação para comentários e regras de salvar/curtir antes de ativar essas ações;
+- [ ] definir contrato de analytics/atribuição para usuários autenticados e visitantes, com minimização de dados;
+- [ ] validar fallback de mídia, ciclo de vida de vídeos, acessibilidade e gestos em aparelhos reais.
+
+### U8 — navegação mobile, Dashboard e repetição de pedidos
+
+- [ ] organizar as cinco abas na ordem Cardápio, Ranking, Reels (centro), Dashboard e Perfil;
+- [ ] preservar contexto e carrinho ao trocar de aba ou voltar dos Reels;
+- [ ] implementar os estados do Dashboard para pedido ativo, último pedido dentro de sete dias e ausência de pedido recente;
+- [ ] omitir completamente o bloco de status quando não houver pedido aplicável;
+- [ ] criar carrossel de histórico de pedidos e ação “Pedir novamente” com últimas escolhas pré-preenchidas;
+- [ ] recotar preço/disponibilidade no servidor e tratar adicionais removidos sem usar valores antigos;
+- [ ] preparar histórico de pontos, gráficos, metas, missões e reivindicações;
+- [ ] implementar a barra de progressão vertical de baixo para cima, com marcas e recompensas por nível, adaptada ao mobile.
+
+### U9 — fidelidade configurável: pontos, ranks, missões e recompensas
+
+- [ ] fechar a semântica e a tabela completa dos 21 níveis antes de codificar a progressão;
+- [ ] preservar os valores iniciais fornecidos: 200 pontos Bronze I → II, fator 1,66 para progressão subsequente conforme regra aprovada, e 10.000.000 Mestre → Elite;
+- [ ] manter 990 pontos = R$ 1 como referência interna não pública, sem expor a equivalência ao cliente;
+- [ ] separar saldo disponível, pontos acumulados de progressão, custo do próximo avanço e rank atual;
+- [ ] definir regras de ganho, estorno, idempotência e auditoria de pontos;
+- [ ] desbloquear missões especiais/personalizadas e pontuação melhor conforme o rank, por configuração;
+- [ ] suportar recompensas em cupons, cashback ou produtos, com elegibilidade, validade e prevenção de resgates duplicados;
+- [ ] criar página administrativa para configurar pontos, ranks, limiares, missões, recompensas, permissões e versionamento;
+- [ ] decidir como mudanças de configuração afetam usuários existentes e como tratar reembolsos/estornos;
+- [ ] homologar o fluxo de progressão e resgate com evidência antes de declarar fidelidade pronta.
+
+Especificação detalhada: [UX, Reels, Dashboard e fidelidade](UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md). Os itens U7–U9 são planejamento novo; não representam funcionalidades já implementadas.
+
 ### Etapa financeira posterior — fora do escopo desta fase
 
 - [ ] realizar um pagamento controlado, depois da fase visual;
