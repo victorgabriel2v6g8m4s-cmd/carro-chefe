@@ -50,6 +50,22 @@ function env(name: string) {
   return process.env[name]?.trim() || "";
 }
 
+export function verifyLilyWhatsAppWebhookToken(supplied: string, expected: string) {
+  const expectedBytes = Buffer.from(expected);
+  const suppliedBytes = Buffer.from(supplied);
+  return expectedBytes.length === suppliedBytes.length
+    && crypto.timingSafeEqual(expectedBytes, suppliedBytes);
+}
+
+export function verifyLilyWhatsAppWebhookSignature(rawBody: string, signature: string, appSecret: string) {
+  if (!/^sha256=[a-f0-9]{64}$/i.test(signature)) return false;
+  const expected = "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+  const expectedBytes = Buffer.from(expected);
+  const suppliedBytes = Buffer.from(signature);
+  return expectedBytes.length === suppliedBytes.length
+    && crypto.timingSafeEqual(expectedBytes, suppliedBytes);
+}
+
 function safeErrorMessage(input: unknown) {
   const text = input instanceof Error ? input.message : String(input ?? "erro desconhecido");
   return text.replace(/Bearer\s+[^\s]+/gi, "Bearer [redacted]").slice(0, 300);
@@ -484,10 +500,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     const expected = env("COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN");
     if (!expected) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
     const supplied = query["hub.verify_token"] ?? "";
-    const expectedBytes = Buffer.from(expected);
-    const suppliedBytes = Buffer.from(supplied);
-    const valid = expectedBytes.length === suppliedBytes.length
-      && crypto.timingSafeEqual(expectedBytes, suppliedBytes);
+    const valid = verifyLilyWhatsAppWebhookToken(supplied, expected);
     if (query["hub.mode"] !== "subscribe" || !valid || !query["hub.challenge"]) {
       return reply.code(403).send({ error: "Verificação de webhook recusada." });
     }
@@ -501,13 +514,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     if (!appSecret) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
     const rawBody = request.rawBody;
     const signature = request.headers["x-hub-signature-256"];
-    if (!rawBody || typeof signature !== "string" || !/^sha256=[a-f0-9]{64}$/i.test(signature)) {
-      return reply.code(401).send({ error: "Assinatura de webhook ausente ou inválida." });
-    }
-    const expectedSignature = "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
-    const expectedBytes = Buffer.from(expectedSignature);
-    const suppliedBytes = Buffer.from(signature);
-    if (expectedBytes.length !== suppliedBytes.length || !crypto.timingSafeEqual(expectedBytes, suppliedBytes)) {
+    if (!rawBody || typeof signature !== "string" || !verifyLilyWhatsAppWebhookSignature(rawBody, signature, appSecret)) {
       return reply.code(401).send({ error: "Assinatura de webhook inválida." });
     }
 
