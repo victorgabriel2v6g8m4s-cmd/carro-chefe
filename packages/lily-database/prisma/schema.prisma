@@ -61,6 +61,36 @@ model LilyOrderDeliveryEvent {
   @@index([toStatus, createdAt])
 }
 
+model LilyWhatsAppMessageTemplate {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  displayName     String
+  category        String   @default("utility")
+  language        String   @default("pt_BR")
+  bodyTemplate    String
+  variablesJson   String   @default("[]")
+  metaTemplateName String? @unique
+  status          String   @default("draft")
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, category, updatedAt])
+}
+
+model LilyWhatsAppWebhookEvent {
+  id                String   @id @default(cuid())
+  dedupeKey         String   @unique
+  eventType         String
+  providerMessageId String?
+  providerStatus    String?
+  payloadHash       String
+  receivedAt        DateTime @default(now())
+
+  @@index([eventType, receivedAt])
+  @@index([providerMessageId, receivedAt])
+}
+
 model LilyWhatsAppNotification {
   id                String    @id @default(cuid())
   orderId           String
