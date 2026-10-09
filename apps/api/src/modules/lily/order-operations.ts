@@ -171,7 +171,16 @@ export async function lilyOrderOperationsRoutes(app: FastifyInstance) {
     const rows = await lilyPrisma.lilyOrder.findMany({
       where: {
         ...(query.fulfillment ? { fulfillmentType: query.fulfillment } : {}),
-        ...(query.q ? { orderNumber: { contains: query.q } } : {})
+        ...(query.q ? { orderNumber: { contains: query.q } } : {}),
+        // Apply the cancellation filter in the database before take=200.
+        // Otherwise recent active orders can push older cancelled orders out of the result set.
+        ...(query.state === "cancelled" ? {
+          OR: [
+            { status: { in: ["cancelled", "refunded"] } },
+            { operationStatus: "cancelled" },
+            { deliveryStatus: "cancelled" }
+          ]
+        } : {})
       },
       select: {
         id: true,

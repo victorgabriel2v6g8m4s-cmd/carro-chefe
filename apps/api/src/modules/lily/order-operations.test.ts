@@ -324,4 +324,45 @@ describe("CookLily Entrega 08 — torre de controle de pedidos", () => {
     expect(completed.statusCode).toBe(200);
     expect(completed.json().orders.some((item: any) => item.id === order.id)).toBe(true);
   });
+  it("busca cancelados no banco antes do limite de 200 pedidos recentes", async () => {
+    const staff = await register("67999908208", "staff", "127.0.0.238");
+    const cancelled = await createOrder({
+      financialStatus: "awaiting_payment",
+      operationStatus: "cancelled",
+      fulfillmentType: "delivery",
+      deliveryStatus: "waiting_courier"
+    });
+
+    await lilyPrisma.lilyOrder.update({
+      where: { id: cancelled.id },
+      data: { createdAt: new Date(Date.now() - 24 * 60 * 60_000) }
+    });
+
+    // More recent active orders used to crowd this cancelled order out before
+    // the in-memory state filter ran.
+    for (let index = 0; index < 201; index += 1) {
+      await createOrder({
+        financialStatus: "awaiting_payment",
+        operationStatus: "received",
+        fulfillmentType: "pickup",
+        deliveryStatus: "not_applicable"
+      });
+    }
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/orders/overview?state=cancelled",
+      headers: { cookie: staff.cookie }
+    });
+
+    expect(response.statusCode).toBe(200);
+    const row = response.json().orders.find((item: any) => item.id === cancelled.id);
+    expect(row).toMatchObject({
+      id: cancelled.id,
+      flowState: "cancelled",
+      operationStatus: "cancelled"
+    });
+    expect(response.json().orders).toHaveLength(1);
+  });
+
 });
