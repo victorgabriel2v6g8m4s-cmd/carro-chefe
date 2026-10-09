@@ -6,7 +6,7 @@ import { isAllowedOrigin } from "./origins";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const LOOPBACK_ADDRESSES = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-const SIGNED_WEBHOOK_PATH = /^\/api\/v1\/integrations\/[^/]+\/webhook(?:\?|$)/;
+const SIGNED_WEBHOOK_PATH = /^\/api\/v1\/integrations\/(?:cooklily|carro-chefe)\/whatsapp\/webhook(?:\?|$)/;
 const PUBLIC_PRELAUNCH_MUTATION = /^\/api\/v1\/public\/prelaunch\/(?:signup|events)(?:\?|$)/;
 
 function hasLoopbackHost(host: string | undefined) {
