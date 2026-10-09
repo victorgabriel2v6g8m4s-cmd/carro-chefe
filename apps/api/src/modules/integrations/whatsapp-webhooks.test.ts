@@ -7,6 +7,7 @@ vi.mock("@lily-acai/database", () => ({
   lilyPrisma: { lilyWhatsAppWebhookEvent: { upsert } }
 }));
 
+import { protectSensitiveMutation } from "../../security/request-trust";
 import { integrationWhatsAppWebhookRoutes } from "./whatsapp-webhooks";
 
 const envNames = [
@@ -29,6 +30,7 @@ beforeEach(async () => {
   process.env.CARRO_CHEFE_WHATSAPP_APP_SECRET = "carro-chefe-app-secret-test";
   upsert.mockReset().mockResolvedValue({});
   app = Fastify();
+  app.addHook("onRequest", protectSensitiveMutation);
   app.removeContentTypeParser("application/json");
   app.addContentTypeParser("application/json", { parseAs: "string" }, (request, body, done) => {
     request.rawBody = body as string;
