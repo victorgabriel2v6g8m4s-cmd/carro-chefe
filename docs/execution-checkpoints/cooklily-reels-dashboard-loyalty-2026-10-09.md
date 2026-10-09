@@ -84,3 +84,12 @@ Iniciar a Fase 0 do documento `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026
 ### Próxima ação
 
 Executar CI/revisão da branch de correção; resolver qualquer falha; merge para `cooklily/canonical` se permitido; deploy separado e repetição manual de T09 após autorização.
+
+## Resultado da correção T09 — 2026-10-09
+
+- PR [#158](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/158) **merged** para `cooklily/canonical`.
+- Commit squash: `287b5327bc750597aca4d187c68e5ac6c63a5727`.
+- Código e testes de regressão foram integrados.
+- O conector GitHub retornou nenhum status de commit nem execução de workflow para o HEAD consultado; logo, **testes não confirmados como executados/passando**.
+- Nenhum deploy ou teste manual pós-correção foi realizado.
+- Próximo passo: executar preflight, testes da API de pedidos e testes de UI Lily em checkout canonical; corrigir qualquer falha; fazer deploy controlado; reexecutar T09 na interface e confirmar também um pedido ativo normal.
