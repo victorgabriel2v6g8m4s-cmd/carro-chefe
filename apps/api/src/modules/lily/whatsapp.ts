@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Prisma, PrismaClient } from "@lily-acai/database";
 import { lilyPrisma } from "@lily-acai/database";
@@ -465,4 +466,208 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
 
     return { retried: reset.count };
   });
+
+  // Public Meta webhook. This route intentionally lives under /api/v1/integrations/
+  // because the global request-trust hook exempts only signed integration webhooks.
+  app.get("/api/v1/integrations/whatsapp/webhook", async (request, reply) => {
+    const query = z.object({
+      "hub.mode": z.string().optional(),
+      "hub.verify_token": z.string().optional(),
+      "hub.challenge": z.string().optional()
+    }).passthrough().parse(request.query);
+    const expected = env("COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN");
+    if (!expected) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
+    const supplied = query["hub.verify_token"] ?? "";
+    const expectedBytes = Buffer.from(expected);
+    const suppliedBytes = Buffer.from(supplied);
+    const valid = expectedBytes.length === suppliedBytes.length
+      && crypto.timingSafeEqual(expectedBytes, suppliedBytes);
+    if (query["hub.mode"] !== "subscribe" || !valid || !query["hub.challenge"]) {
+      return reply.code(403).send({ error: "Verificação de webhook recusada." });
+    }
+    return reply.type("text/plain; charset=utf-8").send(query["hub.challenge"]);
+  });
+
+  app.post("/api/v1/integrations/whatsapp/webhook", {
+    config: { rateLimit: { max: 300, timeWindow: "1 minute" } }
+  }, async (request, reply) => {
+    const appSecret = env("COOKLILY_WHATSAPP_APP_SECRET");
+    if (!appSecret) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
+    const rawBody = request.rawBody;
+    const signature = request.headers["x-hub-signature-256"];
+    if (!rawBody || typeof signature !== "string" || !/^sha256=[a-f0-9]{64}$/i.test(signature)) {
+      return reply.code(401).send({ error: "Assinatura de webhook ausente ou inválida." });
+    }
+    const expectedSignature = "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+    const expectedBytes = Buffer.from(expectedSignature);
+    const suppliedBytes = Buffer.from(signature);
+    if (expectedBytes.length !== suppliedBytes.length || !crypto.timingSafeEqual(expectedBytes, suppliedBytes)) {
+      return reply.code(401).send({ error: "Assinatura de webhook inválida." });
+    }
+
+    const body = request.body as {
+      entry?: Array<{ changes?: Array<{ value?: { messages?: unknown[]; statuses?: unknown[] } }> }>;
+    };
+    const records: Array<{ kind: string; item: Record<string, unknown> }> = [];
+    for (const entry of body?.entry ?? []) {
+      for (const change of entry.changes ?? []) {
+        const value = change.value ?? {};
+        for (const item of value.messages ?? []) {
+          if (item && typeof item === "object" && !Array.isArray(item)) {
+            records.push({ kind: "message.received", item: item as Record<string, unknown> });
+          }
+        }
+        for (const item of value.statuses ?? []) {
+          if (item && typeof item === "object" && !Array.isArray(item)) {
+            const statusItem = item as Record<string, unknown>;
+            const status = typeof statusItem.status === "string" ? statusItem.status : "unknown";
+            records.push({ kind: `message.status.${status.slice(0, 40)}`, item: statusItem });
+          }
+        }
+      }
+    }
+
+    const receivedAt = new Date();
+    for (const record of records) {
+      const serialized = JSON.stringify(record.item);
+      const payloadHash = crypto.createHash("sha256").update(serialized).digest("hex");
+      const dedupeKey = crypto.createHash("sha256").update(record.kind + ":" + serialized).digest("hex");
+      const providerMessageId = typeof record.item.id === "string"
+        ? record.item.id.slice(0, 200)
+        : null;
+      const providerStatus = typeof record.item.status === "string"
+        ? record.item.status.slice(0, 40)
+        : null;
+      await lilyPrisma.lilyWhatsAppWebhookEvent.upsert({
+        where: { dedupeKey },
+        update: {},
+        create: {
+          dedupeKey,
+          eventType: record.kind,
+          providerMessageId,
+          providerStatus,
+          payloadHash,
+          receivedAt
+        }
+      });
+    }
+
+    // Deliberately do not persist message text, contact phone numbers or the raw webhook body.
+    return reply.code(200).send({ received: true, events: records.length });
+  });
+
+  const templateInputSchema = z.object({
+    key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/),
+    displayName: z.string().trim().min(2).max(120),
+    category: z.enum(["utility", "marketing", "authentication"]).default("utility"),
+    language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
+    bodyTemplate: z.string().trim().min(1).max(4000),
+    variables: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
+    metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
+    status: z.enum(["draft", "active", "archived"]).default("draft")
+  }).strict();
+
+  app.get("/api/v1/lily/admin/whatsapp/templates", async (request) => {
+    await requireLilyStaff(request);
+    const query = z.object({
+      status: z.enum(["draft", "active", "archived"]).optional(),
+      category: z.enum(["utility", "marketing", "authentication"]).optional(),
+      limit: z.coerce.number().int().min(1).max(200).default(100)
+    }).parse(request.query);
+    const rows = await lilyPrisma.lilyWhatsAppMessageTemplate.findMany({
+      where: {
+        ...(query.status ? { status: query.status } : {}),
+        ...(query.category ? { category: query.category } : {})
+      },
+      orderBy: [{ updatedAt: "desc" }],
+      take: query.limit
+    });
+    return {
+      templates: rows.map((row) => ({
+        id: row.id,
+        key: row.key,
+        displayName: row.displayName,
+        category: row.category,
+        language: row.language,
+        bodyTemplate: row.bodyTemplate,
+        variables: JSON.parse(row.variablesJson),
+        metaTemplateName: row.metaTemplateName,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt
+      }))
+    };
+  });
+
+  app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
+    const context = await requireLilyAdmin(request, true);
+    const input = templateInputSchema.parse(request.body);
+    if (input.status === "active" && !input.metaTemplateName) {
+      throw new Error("Para ativar uma mensagem, informe o nome do template aprovado na Meta.");
+    }
+    const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
+      data: {
+        key: input.key,
+        displayName: input.displayName,
+        category: input.category,
+        language: input.language,
+        bodyTemplate: input.bodyTemplate,
+        variablesJson: JSON.stringify(input.variables),
+        metaTemplateName: input.metaTemplateName ?? null,
+        status: input.status,
+        createdBy: context.user.id
+      }
+    });
+    await auditLilyAdmin(context.user.id, "whatsapp.template.create", "whatsapp-template", created.id, {
+      key: created.key,
+      category: created.category,
+      status: created.status
+    });
+    return reply.code(201).send({ template: {
+      id: created.id, key: created.key, displayName: created.displayName, category: created.category,
+      language: created.language, bodyTemplate: created.bodyTemplate, variables: input.variables,
+      metaTemplateName: created.metaTemplateName, status: created.status, createdAt: created.createdAt,
+      updatedAt: created.updatedAt
+    } });
+  });
+
+  app.patch("/api/v1/lily/admin/whatsapp/templates/:id", async (request) => {
+    const context = await requireLilyAdmin(request, true);
+    const { id } = z.object({ id: z.string().trim().min(1).max(120) }).parse(request.params);
+    const patchSchema = templateInputSchema.partial().strict().refine((value) => Object.keys(value).length > 0, {
+      message: "Informe ao menos um campo para atualizar."
+    });
+    const input = patchSchema.parse(request.body);
+    const current = await lilyPrisma.lilyWhatsAppMessageTemplate.findUnique({ where: { id } });
+    if (!current) return { error: "Template não encontrado." };
+    const nextMetaName = input.metaTemplateName === undefined ? current.metaTemplateName : input.metaTemplateName;
+    const nextStatus = input.status ?? current.status;
+    if (nextStatus === "active" && !nextMetaName) {
+      throw new Error("Para ativar uma mensagem, informe o nome do template aprovado na Meta.");
+    }
+    const updated = await lilyPrisma.lilyWhatsAppMessageTemplate.update({
+      where: { id },
+      data: {
+        ...(input.key !== undefined ? { key: input.key } : {}),
+        ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+        ...(input.category !== undefined ? { category: input.category } : {}),
+        ...(input.language !== undefined ? { language: input.language } : {}),
+        ...(input.bodyTemplate !== undefined ? { bodyTemplate: input.bodyTemplate } : {}),
+        ...(input.variables !== undefined ? { variablesJson: JSON.stringify(input.variables) } : {}),
+        ...(input.metaTemplateName !== undefined ? { metaTemplateName: input.metaTemplateName } : {}),
+        ...(input.status !== undefined ? { status: input.status } : {})
+      }
+    });
+    await auditLilyAdmin(context.user.id, "whatsapp.template.update", "whatsapp-template", id, {
+      changedFields: Object.keys(input),
+      status: updated.status
+    });
+    return { template: {
+      id: updated.id, key: updated.key, displayName: updated.displayName, category: updated.category,
+      language: updated.language, bodyTemplate: updated.bodyTemplate, variables: JSON.parse(updated.variablesJson),
+      metaTemplateName: updated.metaTemplateName, status: updated.status, createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt
+    } };
+  });
+
 }
