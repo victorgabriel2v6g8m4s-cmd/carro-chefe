@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Prisma, PrismaClient } from "@lily-acai/database";
 import { lilyPrisma } from "@lily-acai/database";
+import { ApiError } from "../../lib/errors";
 import { z } from "zod";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "./admin-security";
 
@@ -127,8 +128,12 @@ async function sendMetaTemplate(input: {
   const accessToken = env("COOKLILY_WHATSAPP_ACCESS_TOKEN");
   const phoneNumberId = env("COOKLILY_WHATSAPP_PHONE_NUMBER_ID");
   const graphVersion = env("COOKLILY_WHATSAPP_GRAPH_VERSION");
-  const templateName = env("COOKLILY_WHATSAPP_TEMPLATE_NAME");
-  const language = env("COOKLILY_WHATSAPP_TEMPLATE_LANGUAGE") || "pt_BR";
+  const registeredTemplate = await lilyPrisma.lilyWhatsAppMessageTemplate.findFirst({
+    where: { key: input.stage, status: "active" }
+  });
+  const templateName = registeredTemplate?.metaTemplateName || env("COOKLILY_WHATSAPP_TEMPLATE_NAME");
+  const language = registeredTemplate?.language || env("COOKLILY_WHATSAPP_TEMPLATE_LANGUAGE") || "pt_BR";
+  const templateVariables = registeredTemplate ? JSON.parse(registeredTemplate.variablesJson) as string[] : ["orderNumber", "stageLabel"];
   const timeoutRaw = Number(process.env.COOKLILY_WHATSAPP_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
   const timeoutMs = Number.isFinite(timeoutRaw)
     ? Math.min(15_000, Math.max(1_000, Math.round(timeoutRaw)))
@@ -152,10 +157,11 @@ async function sendMetaTemplate(input: {
           language: { code: language },
           components: [{
             type: "body",
-            parameters: [
-              { type: "text", text: input.orderNumber },
-              { type: "text", text: STAGE_LABELS[input.stage] }
-            ]
+            parameters: templateVariables.map((variable) => {
+              if (variable === "orderNumber") return { type: "text", text: input.orderNumber };
+              if (variable === "stageLabel") return { type: "text", text: STAGE_LABELS[input.stage] };
+              throw new Error(`Variável WhatsApp não suportada: ${variable}`);
+            })
           }]
         }
       }),
@@ -603,7 +609,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     const context = await requireLilyAdmin(request, true);
     const input = templateInputSchema.parse(request.body);
     if (input.status === "active" && !input.metaTemplateName) {
-      throw new Error("Para ativar uma mensagem, informe o nome do template aprovado na Meta.");
+      throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
     }
     const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
       data: {
@@ -639,7 +645,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     });
     const input = patchSchema.parse(request.body);
     const current = await lilyPrisma.lilyWhatsAppMessageTemplate.findUnique({ where: { id } });
-    if (!current) return { error: "Template não encontrado." };
+    if (!current) throw new ApiError(404, "Template WhatsApp não encontrado.", { code: "WHATSAPP_TEMPLATE_NOT_FOUND" });
     const nextMetaName = input.metaTemplateName === undefined ? current.metaTemplateName : input.metaTemplateName;
     const nextStatus = input.status ?? current.status;
     if (nextStatus === "active" && !nextMetaName) {
