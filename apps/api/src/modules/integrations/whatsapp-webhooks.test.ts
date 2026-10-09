@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
-import Fastify from "fastify";
+import Fastify, { type FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const upsert = vi.fn();
+const { upsert } = vi.hoisted(() => ({ upsert: vi.fn() }));
 vi.mock("@lily-acai/database", () => ({
   lilyPrisma: { lilyWhatsAppWebhookEvent: { upsert } }
 }));
@@ -16,7 +16,7 @@ const envNames = [
   "CARRO_CHEFE_WHATSAPP_APP_SECRET"
 ] as const;
 const originalEnv = Object.fromEntries(envNames.map((name) => [name, process.env[name]]));
-let app: Fastify.FastifyInstance;
+let app: FastifyInstance;
 
 function sign(body: string, secret: string) {
   return "sha256=" + crypto.createHmac("sha256", secret).update(body, "utf8").digest("hex");
@@ -108,7 +108,7 @@ describe("isolated WhatsApp integration webhooks", () => {
     });
     expect(response.statusCode).toBe(200);
     expect(upsert).toHaveBeenCalledOnce();
-    const create = upsert.mock.calls[0]![0].create;
+    const create = (upsert.mock.calls[0]![0] as { create: Record<string, unknown> }).create;
     expect(create.eventType).toBe("message.received");
     expect(create.payloadHash).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.stringify(create)).not.toContain("private text");
