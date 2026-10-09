@@ -20,6 +20,18 @@ Para não transformar propostas em decisões involuntárias, cada requisito pert
 
 A estrutura atual de catálogo e janela de produto, incluindo detalhes, adicionais e botões de ação, foi descrita como já implementada. A documentação não declara a nova experiência Reels, as novas abas, o dashboard ou o sistema de fidelidade como implementados.
 
+### Contexto anterior de UI já homologado
+
+O proprietário informou que, na revisão de UI anterior a este planejamento, já foram homologados:
+
+- lazy-loading das imagens;
+- profile picture picker com editor integrado;
+- spinners personalizados;
+- separators/separadores para organizar as categorias no catálogo;
+- correções avulsas de UI.
+
+Esses itens são o baseline de referência informado para a continuação do trabalho. Esta entrega documental não os reimplementa nem substitui a homologação anterior. Ao auditar os componentes na Fase 0, a equipe deve preservar esses comportamentos, identificar seus componentes reais no código e incluir verificações de regressão nas fases que possam afetá-los.
+
 ## 2. Objetivos e princípios
 
 A experiência combina três modos conectados:
