@@ -24,6 +24,7 @@ import { lilyRoutes } from "./modules/lily/routes";
 import { lilyPaymentChoiceRoutes } from "./modules/lily/payment-choice";
 import { lilyPaymentChoiceNginxAliasRoutes } from "./modules/lily/payment-choice-nginx-alias";
 import { lilyFlavorCoverRoutes } from "./modules/lily/flavor-covers";
+import { integrationWhatsAppWebhookRoutes } from "./modules/integrations/whatsapp-webhooks";
 import { containsLikelyEncodingLoss } from "./lib/text";
 import { config } from "./config";
 import { corsOrigin, protectSensitiveMutation } from "./security";
@@ -109,6 +110,7 @@ export async function buildApp() {
   await app.register(lilyPaymentChoiceRoutes);
   await app.register(lilyPaymentChoiceNginxAliasRoutes);
   await app.register(lilyFlavorCoverRoutes);
+  await app.register(integrationWhatsAppWebhookRoutes);
   await app.register(planRoutes);
   await app.register(taskRoutes);
   await app.register(uiStateRoutes);
