@@ -71,3 +71,16 @@ Iniciar a Fase 0 do documento `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026
 5. Só então propor a implementação, separando causa confirmada, hipótese, funcionalidade ausente e decisão pendente.
 
 **Limites:** não foi feita correção de aplicação; o agente não executou testes automatizados, não fez deploy e não confirmou tecnicamente a causa de T09. Os estados OK refletem apenas os testes manuais relatados pelo proprietário. A especificação funcional contém o registro detalhado na seção 18.
+
+## Investigação de T09 — atualização de código (2026-10-09)
+
+- **Causa técnica confirmada:** a torre de controle filtrava os pedidos cancelados apenas em memória depois de buscar os 200 mais recentes; cancelados mais antigos podiam ser excluídos antes do filtro. Nas telas do cliente, `customerOrderStatus` não considerava `operationStatus = cancelled` antes de exibir um status logístico antigo.
+- **Correção preparada:** filtro de estado terminal no Prisma antes do limite; regra de status do cliente centralizada e compartilhada entre histórico/detalhe autenticado e tracking guest.
+- **Testes adicionados:** integração com 201 pedidos ativos mais recentes para verificar o filtro de um cancelado antigo; testes unitários para precedência de cancelamento operacional/logístico e preservação de estorno.
+- **Branch de trabalho:** `fix/cooklily-cancelled-orders`; destino pretendido: `cooklily/canonical`.
+- **Status de validação:** os testes ainda não foram executados neste ambiente. Aguardar CI do PR. Sem deploy ou homologação manual.
+- **Atenção semântica:** “Cancelar cobrança” no financeiro permanece diferente de “Cancelar pedido”; essa ação não foi alterada para cancelar automaticamente o pedido.
+
+### Próxima ação
+
+Executar CI/revisão da branch de correção; resolver qualquer falha; merge para `cooklily/canonical` se permitido; deploy separado e repetição manual de T09 após autorização.
