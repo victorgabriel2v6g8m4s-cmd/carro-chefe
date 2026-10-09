@@ -1,6 +1,6 @@
 # CookLily — base de integração com WhatsApp Cloud API
 
-**Estado desta entrega:** código e endpoints na branch de trabalho; aguarda revisão/merge, configuração de segredos no servidor e validação no Meta Developers. Nenhum token, App Secret ou Verify Token real deve ser versionado.
+**Estado desta entrega:** código e endpoints integrados à branch `cooklily/canonical`; ainda aguarda validação de migration/testes, configuração de segredos no servidor, deploy e validação no Meta Developers. Nenhum token, App Secret ou Verify Token real deve ser versionado.
 
 ## Objetivo e escopo
 
@@ -127,4 +127,4 @@ Teste local antes de apontar a Meta para produção:
 4. Confirme GET válido (200 + challenge), Verify Token incorreto (403), App Secret ausente (503), assinatura ausente/inválida (401) e POST assinado (200).
 5. Só então configure o callback no Meta Developers e faça o teste de envio com número autorizado.
 
-**Limite desta entrega:** a documentação e os endpoints ficam prontos para serem conectados, mas não estão ativos publicamente até a branch ser integrada, o banco migrado, o serviço reiniciado e os segredos reais configurados no servidor. Nenhuma credencial real foi fornecida ou configurada aqui.
+**Limite desta entrega:** a documentação e os endpoints estão versionados em `cooklily/canonical`, mas não estão ativos publicamente até o banco ser migrado, a aplicação ser implantada/reiniciada e os segredos reais serem configurados no servidor. Nenhuma credencial real foi fornecida ou configurada aqui.
