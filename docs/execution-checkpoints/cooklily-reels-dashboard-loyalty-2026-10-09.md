@@ -6,7 +6,7 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: 9fc8854f4f0398c4231973a443ac6d95b02e7cc9
 - head_sha_verified: 9f45769f0d95d1f6cc1da82dc753e1ae172d614c
-- pull_requests: #154 (merged; squash commit 76af8dac2974c6bbecebd9df8fefaced38052c5a)
+- pull_requests: #154 (merged; squash commit 76af8dac2974c6bbecebd9df8fefaced38052c5a), #155 (checkpoint merged; squash commit c6d3ec957878320718641f0a45ee678a74450f15), #156 (UI baseline supplement merged; squash commit b54d4b33f37b7b3813c36e8c27cede1bc8bc533d)
 - last_verified_at: 2026-10-09T14:00:00Z
 - interruption_state: none
 
@@ -16,7 +16,8 @@ Documentar a nova UI pública CookLily e o sistema de fidelidade. Esta entrega �
 
 ## Concluído e persistido
 
-- Criado `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md` com 844 linhas de especificação funcional, regras, requisitos não funcionais, roadmap, testes, critérios de aceite, riscos e questões em aberto.
+- Criado `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md` com 856 linhas de especificação funcional, regras, requisitos não funcionais, roadmap, testes, critérios de aceite, riscos e questões em aberto.
+- PR #156 acrescentou o baseline de UI já homologado informado pelo proprietário: lazy-loading de imagens, profile picture picker com editor integrado, spinners personalizados, separadores de categorias e correções avulsas; estes itens devem ser preservados e cobertos por testes de regressão.
 - Atualizado `docs/lily-acai/ROADMAP_COOKLILY.md` com fases U7–U9 (Reels, Dashboard/repetição de pedidos, fidelidade configurável).
 - Atualizado `docs/lily-acai/README.md` e `docs/cooklily/README.md` com links para a nova especificação.
 - Diferenciadas as decisões dadas pelo proprietário, propostas de planejamento e questões pendentes.
@@ -26,7 +27,8 @@ Documentar a nova UI pública CookLily e o sistema de fidelidade. Esta entrega �
 ## Gates e testes
 
 - Verificados via GitHub API os conteúdos e links dos quatro arquivos na branch da tarefa e novamente na `cooklily/canonical`.
-- Commit da branch de documentação: `9f45769f0d95d1f6cc1da82dc753e1ae172d614c`.
+- Commit da branch de documentação original: `9f45769f0d95d1f6cc1da82dc753e1ae172d614c`.
+- Complemento do baseline de UI: branch head `27aa3388c3f60e8fe361a3d2519ef414fc8965cc`, merge SHA `b54d4b33f37b7b3813c36e8c27cede1bc8bc533d`.
 - Merge SHA: `76af8dac2974c6bbecebd9df8fefaced38052c5a`.
 - Status checks e workflow runs consultados para o HEAD do PR: nenhum status ou workflow run foi retornado.
 - Testes de aplicação não executados, pois a alteração é exclusivamente documental.
