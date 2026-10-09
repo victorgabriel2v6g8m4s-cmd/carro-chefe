@@ -29,7 +29,7 @@ beforeEach(async () => {
   process.env.CARRO_CHEFE_WHATSAPP_WEBHOOK_VERIFY_TOKEN = "carro-chefe-verify-test";
   process.env.CARRO_CHEFE_WHATSAPP_APP_SECRET = "carro-chefe-app-secret-test";
   upsert.mockReset().mockResolvedValue({});
-  app = Fastify();
+  app = Fastify({ trustProxy: true });
   app.addHook("onRequest", protectSensitiveMutation);
   app.removeContentTypeParser("application/json");
   app.addContentTypeParser("application/json", { parseAs: "string" }, (request, body, done) => {
@@ -82,7 +82,7 @@ describe("isolated WhatsApp integration webhooks", () => {
     const invalid = await app.inject({
       method: "POST",
       url: "/api/v1/integrations/carro-chefe/whatsapp/webhook",
-      headers: { "content-type": "application/json", "x-hub-signature-256": sign(body, "wrong-secret") },
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10", "x-hub-signature-256": sign(body, "wrong-secret") },
       payload: body
     });
     expect(invalid.statusCode).toBe(401);
@@ -90,7 +90,7 @@ describe("isolated WhatsApp integration webhooks", () => {
     const valid = await app.inject({
       method: "POST",
       url: "/api/v1/integrations/carro-chefe/whatsapp/webhook",
-      headers: { "content-type": "application/json", "x-hub-signature-256": sign(body, "carro-chefe-app-secret-test") },
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10", "x-hub-signature-256": sign(body, "carro-chefe-app-secret-test") },
       payload: body
     });
     expect(valid.statusCode).toBe(200);
@@ -105,7 +105,7 @@ describe("isolated WhatsApp integration webhooks", () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/integrations/cooklily/whatsapp/webhook",
-      headers: { "content-type": "application/json", "x-hub-signature-256": sign(body, "cooklily-app-secret-test") },
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10", "x-hub-signature-256": sign(body, "cooklily-app-secret-test") },
       payload: body
     });
     expect(response.statusCode).toBe(200);
@@ -121,7 +121,7 @@ describe("isolated WhatsApp integration webhooks", () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/integrations/carro-chefe/whatsapp/webhook",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10" },
       payload: "{}"
     });
     expect(response.statusCode).toBe(503);
