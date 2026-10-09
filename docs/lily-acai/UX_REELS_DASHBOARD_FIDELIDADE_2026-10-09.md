@@ -853,3 +853,45 @@ Não declarar homologado somente porque o código existe ou um teste estrutural 
 **Não decidido:** fórmula completa/semântica dos limiares de rank; autenticação e moderação de comentários; detalhes do algoritmo de relacionados; janela de atribuição/retensão anônima; comportamento exato de repetição de pedido completo; política de recalcular ranks após mudança administrativa.
 
 Este documento é uma especificação e um roadmap. A implementação, os testes e a homologação devem ser acompanhados separadamente com evidências verificáveis.
+
+---
+
+## 18. Registro da auditoria manual — Fase 0 (2026-10-09)
+
+**Origem e confiabilidade:** resultados informados manualmente pelo proprietário após testar a versão atualmente disponível. Estes registros são observações de uso, não uma auditoria do código nem execução automatizada independente. Os comportamentos relatados como ausentes ainda precisam ser confirmados por inspeção do repositório antes da implementação.
+
+| ID | Área | Estado | Resultado relatado |
+|---|---|---|---|
+| T01 | Abertura do catálogo | **OK** | Catálogo abriu normalmente. |
+| T02 | Navegação por categorias | **OK** | Navegação entre categorias funcionou. |
+| T03 | Abrir um produto | **OK** | A visualização do produto abriu. |
+| T04 | Adicionais e escolhas | **OK** | Seleção de adicionais/opções funcionou. |
+| T05 | Adicionar ao carrinho | **OK** | Inclusão no carrinho funcionou. |
+| T06 | Mídia do produto | **OK** | Mídias dos produtos testados funcionaram. |
+| T07 | Foto de perfil | **OK** | Seletor/editor de foto de perfil funcionou. |
+| T08 | Spinners e carregamento | **OK** | Indicadores e carregamentos observados funcionaram. |
+| T09 | Histórico e pedido ativo | **FALHOU — prioridade alta** | Pedidos cancelados continuam aparecendo como ativos; o filtro de cancelados não retorna pedidos apesar de existirem; o cliente ainda vê seu pedido como ativo depois do cancelamento. |
+| T10 | Navegação mobile | **PARCIAL / INCOMPLETO** | A aba Ranking existe, mas a página ainda não foi construída; Reels e Dashboard não existem; o Perfil não mostra o selo de ranking do usuário. |
+| T11 | Compartilhamento | **AUSENTE** | Não existe botão de compartilhar na interface testada. |
+| T12 | Console e rede (DevTools) | **OK — sem erro aparente** | O proprietário não observou erros aparentes no DevTools. Isso não substitui inspeção de logs, respostas de API ou testes automatizados. |
+
+### Resultado dos testes específicos de Reels
+
+O proprietário relatou que **nenhum dos recursos planejados para Reels está implementado na versão testada**, incluindo carrossel de mídias em experiência Reels, controles de pausa/áudio/2×, ações sociais, botão de carrinho integrado à experiência Reels, gestos de navegação, modos de ordenação e compartilhamento. Este é um resultado manual; a confirmação de componentes/rotas/serviços existentes faz parte da auditoria do código.
+
+### Ações de auditoria derivadas
+
+1. **Investigar T09 antes de novas telas:** rastrear o estado de cancelamento desde a persistência/backend até filtros, lista/histórico e acompanhamento do cliente; verificar possíveis estados divergentes, filtros incompatíveis, cache/atualização e atualização de status. Não presumir a causa sem evidência.
+2. Mapear no código as rotas, componentes e serviços existentes para catálogo, janela do produto, adicionais, carrinho, mídia, conta/perfil, pedidos e analytics.
+3. Identificar o que já existe da aba Ranking e quais contratos/dados seriam necessários para o selo de rank, Dashboard e Reels.
+4. Mapear se existe infraestrutura reutilizável de compartilhamento/atribuição; não assumir que existe apenas por estar descrita na especificação.
+5. Preservar e revalidar o baseline homologado: lazy-loading de imagens, seletor/editor de foto de perfil, spinners personalizados, separadores de categorias e demais correções de UI.
+6. Depois da investigação de T09, definir testes de regressão para pedido ativo, pedido cancelado, filtro de cancelados e atualização do status visto pelo próprio cliente.
+
+### Limites deste registro
+
+- Nenhuma causa técnica de T09 foi confirmada nesta etapa.
+- Nenhuma alteração de aplicação foi feita como parte deste registro.
+- Não foram executados testes automatizados, inspeção de código, deploy ou nova homologação pelo agente.
+- T01–T08 e T12 são aprovados apenas no escopo observado manualmente pelo proprietário; não equivalem a garantia geral de ausência de regressões.
+- A Fase 0 permanece **em andamento** até concluir o mapeamento de código/contratos e registrar evidências técnicas.
