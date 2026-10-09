@@ -12,6 +12,7 @@ import {
 } from "../orders/api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { customerOrderStatus } from "../orders/status";
 
 function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -39,20 +40,6 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 
 function orderStatusLabel(status: string) {
   return ORDER_STATUS_LABELS[status] ?? status.replace(/_/g, " ");
-}
-
-function customerOrderStatus(order: LilyOrder) {
-  if (["refunded", "cancelled"].includes(order.status)) return order.status;
-  if (order.status === "awaiting_payment") return order.status;
-  if (order.fulfillmentType === "delivery"
-    && !["not_ready", "not_applicable"].includes(order.deliveryStatus)) {
-    return order.deliveryStatus;
-  }
-  if (order.fulfillmentType === "pickup" && order.operationStatus === "ready_for_dispatch") {
-    return "ready_for_pickup";
-  }
-  if (order.operationStatus && order.operationStatus !== "received") return order.operationStatus;
-  return order.status === "paid" ? "paid" : order.operationStatus || order.status;
 }
 
 function OrderTimeline({ order }: { order: LilyOrder }) {
