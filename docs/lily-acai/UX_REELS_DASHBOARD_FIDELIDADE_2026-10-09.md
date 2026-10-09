@@ -933,3 +933,11 @@ O proprietário relatou que **nenhum dos recursos planejados para Reels está im
 - Não houve deploy nem homologação manual da correção.
 - A ação financeira “Cancelar cobrança” continua sendo distinta de “Cancelar pedido”; não foi alterada para cancelar automaticamente o pedido, pois isso poderia impedir uma nova tentativa de pagamento.
 - Após CI verde e merge, implantar na VPS e repetir T09: filtro Cancelados, fila Ativos, status em conta autenticada e status no link de acompanhamento guest.
+
+### Atualização após merge — 2026-10-09
+
+- PR [#158](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/158) foi integrado por squash à branch `cooklily/canonical`.
+- Commit de merge: `287b5327bc750597aca4d187c68e5ac6c63a5727`.
+- A verificação dos status do commit e das execuções de workflow retornou **nenhum status/execução de CI disponível**. Portanto, não afirmar que os testes passaram: os testes de regressão estão no repositório, mas não foram executados neste ambiente.
+- A correção está no código da branch canonical, mas **não foi implantada na VPS nem homologada manualmente**.
+- Próxima ação operacional: executar os testes relevantes e o preflight num checkout da branch canonical; depois implantar em janela controlada e repetir T09 para pedido cancelado operacionalmente, cancelado logisticamente, cancelado antigo fora dos 200 mais recentes e pedido ativo normal.
