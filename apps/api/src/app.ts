@@ -40,6 +40,7 @@ export const SENSITIVE_LOG_REDACT_PATHS = [
   'req.headers["x-agent-key"]',
   'req.headers["x-carrochefe-signature"]',
   'req.headers["x-signature"]',
+  'req.headers["x-hub-signature-256"]',
   'req.headers["x-api-key"]',
   'res.headers["set-cookie"]'
 ] as const;
