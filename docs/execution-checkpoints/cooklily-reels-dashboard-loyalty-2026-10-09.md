@@ -51,3 +51,23 @@ Não aplicável nesta entrega documental. Quando houver implementação, a UI de
 ## Próxima ação exata
 
 Iniciar a Fase 0 do documento `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md`: auditar componentes/rotas/serviços atuais de catálogo, janela do produto, mídia, carrinho, tracking e pedidos; registrar contratos reutilizáveis e dependências antes de implementar Reels. Antes da Fase 5, fechar e aprovar a tabela matemática de progressão dos 21 ranks.
+
+## Atualização do checkpoint — resultados manuais da Fase 0 (2026-10-09)
+
+**Estado da Fase 0:** em andamento. Resultados abaixo foram relatados pelo proprietário após testes manuais; ainda não representam confirmação por inspeção do código ou testes executados pelo agente.
+
+- **OK:** T01 catálogo; T02 categorias; T03 abertura do produto; T04 adicionais/escolhas; T05 carrinho; T06 mídia; T07 seletor/editor de foto de perfil; T08 spinners/carregamento; T12 DevTools sem erros aparentes.
+- **FALHOU — prioridade alta:** T09. Pedidos cancelados continuam sendo exibidos como ativos; o filtro de cancelados não apresenta os pedidos cancelados existentes; o próprio cliente continua vendo o pedido como ativo após o cancelamento.
+- **PARCIAL/INCOMPLETO:** T10. Aba Ranking existe, mas sua página não foi construída; Reels e Dashboard não existem; o Perfil não mostra selo de ranking.
+- **AUSENTE:** T11. Não há botão de compartilhamento na interface testada.
+- **Reels:** o proprietário relata que nenhum dos recursos planejados de Reels está disponível na versão testada.
+
+### Próximas ações exatas
+
+1. Investigar T09 de ponta a ponta: persistência/status do pedido, regras de pedido ativo, filtros de cancelados, histórico e atualização do status no acompanhamento do cliente. Registrar evidência e causa antes de alterar código.
+2. Auditar no repositório rotas, componentes e serviços reutilizáveis para catálogo, janela de produto, adicionais, carrinho, mídia, conta/perfil, pedidos e tracking/analytics.
+3. Mapear a aba Ranking existente e as dependências de backend necessárias para Ranking, selo de rank, Reels, Dashboard e compartilhamento.
+4. Preservar os fluxos aprovados manualmente e incluir regressão para lazy-loading, editor de foto de perfil, spinners personalizados, separadores de categoria e correções de UI.
+5. Só então propor a implementação, separando causa confirmada, hipótese, funcionalidade ausente e decisão pendente.
+
+**Limites:** não foi feita correção de aplicação; o agente não executou testes automatizados, não fez deploy e não confirmou tecnicamente a causa de T09. Os estados OK refletem apenas os testes manuais relatados pelo proprietário. A especificação funcional contém o registro detalhado na seção 18.
