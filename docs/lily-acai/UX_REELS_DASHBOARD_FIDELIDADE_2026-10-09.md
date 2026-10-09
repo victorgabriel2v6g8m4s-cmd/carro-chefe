@@ -895,3 +895,41 @@ O proprietário relatou que **nenhum dos recursos planejados para Reels está im
 - Não foram executados testes automatizados, inspeção de código, deploy ou nova homologação pelo agente.
 - T01–T08 e T12 são aprovados apenas no escopo observado manualmente pelo proprietário; não equivalem a garantia geral de ausência de regressões.
 - A Fase 0 permanece **em andamento** até concluir o mapeamento de código/contratos e registrar evidências técnicas.
+
+---
+
+## 19. Investigação técnica de T09 — cancelamento e filtro (2026-10-09)
+
+**Status:** causa confirmada por inspeção do código; correção preparada em branch de trabalho, aguardando CI/revisão e ainda não implantada.
+
+### Causas confirmadas
+
+1. Em `apps/api/src/modules/lily/order-operations.ts`, a visão da torre de controle consultava os 200 pedidos mais recentes e só depois aplicava `matchesState` em memória. Pedidos cancelados mais antigos podiam ficar fora do conjunto carregado e, por isso, não aparecer no filtro “Cancelados”.
+2. Em `apps/lily_acai/src/features/account/AccountPages.tsx` e `apps/lily_acai/src/features/orders/GuestOrderTrackingPage.tsx`, o status visível ao cliente priorizava o status financeiro e depois o de entrega. Um pedido com `operationStatus = cancelled` e um estado logístico antigo ainda ativo podia ser exibido como em andamento.
+
+### Correção preparada
+
+- O endpoint de visão da torre de controle aplica um filtro Prisma por estado terminal no banco antes de limitar os resultados, incluindo `status` cancelado/estornado, `operationStatus = cancelled` e `deliveryStatus = cancelled`.
+- A regra de status visível ao cliente foi centralizada em `apps/lily_acai/src/features/orders/status.ts`; cancelamento operacional/logístico passa a prevalecer sobre estados não terminais antigos, preservando “estornado” quando o estado financeiro for `refunded`.
+- As telas de pedidos da conta e de acompanhamento guest usam a mesma função para evitar divergência de comportamento.
+
+### Arquivos de código alterados
+
+- `apps/api/src/modules/lily/order-operations.ts`
+- `apps/api/src/modules/lily/order-operations.test.ts`
+- `apps/lily_acai/src/features/account/AccountPages.tsx`
+- `apps/lily_acai/src/features/orders/GuestOrderTrackingPage.tsx`
+- Novo: `apps/lily_acai/src/features/orders/status.ts`
+- Novo: `apps/lily_acai/src/features/orders/status.test.ts`
+
+### Regressões adicionadas
+
+- Teste de integração da torre de controle com mais de 200 pedidos ativos recentes, verificando que um pedido cancelado mais antigo ainda aparece no filtro “Cancelados”.
+- Testes unitários para garantir que cancelamento operacional/logístico prevaleça sobre estados ativos antigos, sem substituir um estorno financeiro por “cancelado”.
+
+### Limites e próximos passos
+
+- Os testes foram adicionados, mas **ainda não foram executados neste ambiente**. A execução de CI no PR é necessária para confirmar compilação e comportamento.
+- Não houve deploy nem homologação manual da correção.
+- A ação financeira “Cancelar cobrança” continua sendo distinta de “Cancelar pedido”; não foi alterada para cancelar automaticamente o pedido, pois isso poderia impedir uma nova tentativa de pagamento.
+- Após CI verde e merge, implantar na VPS e repetir T09: filtro Cancelados, fila Ativos, status em conta autenticada e status no link de acompanhamento guest.
