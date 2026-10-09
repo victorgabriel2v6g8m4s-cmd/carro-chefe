@@ -4,6 +4,7 @@ import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder
 import { readGuestOrderToken } from "./guest-token";
 import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { customerOrderStatus } from "./status";
 
 const LABELS: Record<string, string> = {
   received: "Pedido recebido",
@@ -33,17 +34,6 @@ function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
-function currentStatus(order: LilyGuestTrackingOrder) {
-  if (["refunded", "cancelled"].includes(order.status)) return order.status;
-  if (order.status === "awaiting_payment") return order.status;
-  if (order.fulfillmentType === "delivery" && !["not_ready", "not_applicable"].includes(order.deliveryStatus)) {
-    return order.deliveryStatus;
-  }
-  if (order.fulfillmentType === "pickup" && order.operationStatus === "ready_for_dispatch") return "ready_for_pickup";
-  if (order.operationStatus && order.operationStatus !== "received") return order.operationStatus;
-  return order.status === "paid" ? "paid" : order.operationStatus || order.status;
-}
-
 function GuestTimeline({ order }: { order: LilyGuestTrackingOrder }) {
   const events = [
     { key: "created", label: "Pedido recebido", at: order.createdAt },
@@ -68,7 +58,7 @@ function GuestTimeline({ order }: { order: LilyGuestTrackingOrder }) {
 
   return <section className="order-timeline-card" aria-label="Acompanhamento do pedido">
     <div className="order-timeline-heading">
-      <div><span className="eyebrow">Acompanhamento</span><h2>{label(currentStatus(order))}</h2></div>
+      <div><span className="eyebrow">Acompanhamento</span><h2>{label(customerOrderStatus(order))}</h2></div>
       <small>Atualização automática</small>
     </div>
     <ol className="order-timeline">
@@ -152,7 +142,7 @@ export function GuestOrderTrackingPage() {
       <div>
         <span className="eyebrow">Pedido guest</span>
         <h1>{order.orderNumber}</h1>
-        <p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {label(currentStatus(order))}</p>
+        <p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {label(customerOrderStatus(order))}</p>
       </div>
       <Link className="button ghost" to="/cardapio">Cardápio</Link>
     </div>
