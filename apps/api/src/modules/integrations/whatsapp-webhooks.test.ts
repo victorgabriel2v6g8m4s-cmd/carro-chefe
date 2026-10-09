@@ -116,6 +116,16 @@ describe("isolated WhatsApp integration webhooks", () => {
     expect(JSON.stringify(create)).not.toContain("private text");
   });
 
+  it("does not exempt or register the legacy shared webhook path", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/integrations/whatsapp/webhook",
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.10" },
+      payload: "{}"
+    });
+    expect(response.statusCode).toBe(403);
+  });
+
   it("fails closed when the integration app secret is missing", async () => {
     delete process.env.CARRO_CHEFE_WHATSAPP_APP_SECRET;
     const response = await app.inject({
