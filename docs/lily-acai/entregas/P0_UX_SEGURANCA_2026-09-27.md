@@ -1,5 +1,7 @@
 # Patch P0 — UX mobile e segurança privilegiada CookLily
 
+> **Atualização de estado — 21/10/2026:** a implementação de código para header/menu mobile, prevenção de overflow, logout e MFA privilegiado está documentada abaixo. A sanfona de alergênicos do ADR-002 foi implementada e integrada pelo PR #169 (commit `135179e73e2e5ca34554a0767b6af3fe6bd885d8`). Isso não encerra a P0 operacional: QA real em breakpoints/dispositivos, validação do fluxo MFA em aparelho, configuração segura da VPS e gates de publicação continuam pendentes. Nenhum teste novo ou deploy foi executado nesta atualização.
+
 **Data:** 27/09/2026  
 **Branch:** `cooklily/canonical`  
 **Runtime validado:** `0f3e894f4993eea1c07aed881bad4ea4525e1674`  
