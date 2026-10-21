@@ -1,5 +1,7 @@
 # Auditoria do roadmap da UI pública CookLily — 2026-10-08
 
+> **Atualização de implementação — 21/10/2026:** a pendência DEC-CL-101 foi implementada na branch `fix/cooklily-p0-allergen-accordion`: sanfona fechada por padrão no cliente, controle acessível e conteúdo mantido expandido na cozinha/impressão. Esta atualização é de código, não de QA visual em navegador real nem de publicação. O relatório abaixo preserva o estado histórico da auditoria de 08/10.
+
 **Base auditada:** `cooklily/canonical`, commit de base `4ff91e9f99b29cf36be76b540cbcf5aed654fcf1`.  
 **Escopo:** comparação documental e estática do roadmap U1–U6 com arquivos do frontend e pendências de QA. Esta auditoria não substitui teste em navegador real.  
 **Regra de classificação:** “implementado” significa que existe código; “validado” exige evidência para o comportamento específico. Itens que os documentos já marcam como “QA real pendente” continuam sem aceite visual.

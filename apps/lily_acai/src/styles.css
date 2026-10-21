@@ -4327,3 +4327,39 @@ img, svg { max-width: 100%; }
 .catalog-category-section[data-lily-reveal] { contain-intrinsic-size:520px; }
 .weekly-product-banner[data-lily-reveal] { contain-intrinsic-size:360px; }
 @media (prefers-reduced-motion: reduce) { [data-lily-reveal] { opacity:1; transform:none; transition:none; } .lily-loading-spinner-orbit,.lily-loading-spinner-core { animation:none; } }
+
+
+/* ADR-002 — alergênicos recolhidos por padrão no fluxo do cliente */
+.allergen-notice-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cl-color-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+.allergen-notice-trigger strong { font-weight: 800; }
+.allergen-notice-trigger:focus-visible {
+  outline: 3px solid var(--cl-color-primary);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+.allergen-notice-chevron {
+  flex: none;
+  font-size: 22px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 160ms ease;
+}
+.allergen-notice-chevron.is-expanded { transform: rotate(180deg); }
+.allergen-notice-details { display: grid; gap: 5px; }
+.allergen-notice-details[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .allergen-notice-chevron { transition: none; }
+}

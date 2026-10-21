@@ -87,7 +87,7 @@ export function KitchenPrintPage() {
           {item.addons.length > 0 && <p>
             <strong>Adicionais:</strong> {item.addons.map((addon) => addon.quantity + "× " + addon.name).join(" · ")}
           </p>}
-          <AllergenNotice summary={item.allergens} compact heading="ALERGÊNICOS" />
+          <AllergenNotice summary={item.allergens} compact heading="ALERGÊNICOS" collapsible={false} />
           {item.note && <p className="kitchen-print-note"><strong>Obs. item:</strong> {item.note}</p>}
         </article>)}
       </section>

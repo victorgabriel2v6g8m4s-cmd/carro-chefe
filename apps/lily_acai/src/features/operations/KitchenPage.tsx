@@ -129,7 +129,7 @@ function KitchenCard(props: {
         {item.addons.length > 0 && <small>
           + {item.addons.map((addon) => `${addon.quantity}× ${addon.name}`).join(" · ")}
         </small>}
-        <AllergenNotice summary={item.allergens} compact heading="Alergênicos do item" />
+        <AllergenNotice summary={item.allergens} compact heading="Alergênicos do item" collapsible={false} />
         {item.note && <em>Obs.: {item.note}</em>}
       </li>)}
     </ul>
