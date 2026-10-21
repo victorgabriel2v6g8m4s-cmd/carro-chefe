@@ -210,14 +210,18 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(accountOrdersSource).toContain("deliveryEvents");
   });
 
-  it("mantém alergênicos visíveis no funil do cliente e na produção", () => {
+  it("mantém alergênicos recolhidos no cliente e expandidos na produção", () => {
     expect(catalogSource).toContain("AllergenNotice");
     expect(cartSource).toContain("AllergenNotice");
     expect(cartContextSource).toContain("item salvo antes da revisão de alergênicos");
     expect(checkoutSource).toContain("AllergenNotice");
     expect(accountOrdersSource).toContain("AllergenNotice");
-    expect(kitchenSource).toContain("AllergenNotice");
-    expect(printSource).toContain("AllergenNotice");
+    expect(kitchenSource).toContain('collapsible={false}');
+    expect(printSource).toContain('collapsible={false}');
+    expect(allergenSource).toContain('const collapsible = props.collapsible ?? true');
+    expect(allergenSource).toContain('aria-expanded={expanded}');
+    expect(allergenSource).toContain('aria-controls={detailsId}');
+    expect(allergenSource).toContain('hidden={!expanded}');
     expect(allergenSource).toContain("Informação em revisão");
     expect(allergenSource).toContain("CONTÉM:");
     expect(allergenSource).toContain("PODE CONTER:");
