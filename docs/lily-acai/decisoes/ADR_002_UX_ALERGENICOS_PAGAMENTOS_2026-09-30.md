@@ -63,7 +63,7 @@ Esta decisão **substitui somente a apresentação aberta por padrão no cliente
 - Cozinha e impressão mantêm os detalhes expandidos, para não ocultar informação operacional.
 - A guarda estrutural foi atualizada para proteger a diferença entre o fluxo do cliente e a produção.
 
-A alteração está na branch `fix/cooklily-p0-allergen-accordion`; não declarar integração/publicação até o PR ser integrado. A validação visual e de teclado em navegador real continua pendente.
+Integrado pelo PR #169 no commit `135179e73e2e5ca34554a0767b6af3fe6bd885d8`. A validação visual e de teclado em navegador real continua pendente; integração de código não equivale a publicação.
 
 ---
 
@@ -105,23 +105,19 @@ Mercado Pago Pix não faz parte da seleção pública aprovada por esta decisão
 
 Pix manual pode permanecer como contingência administrativa, não como opção principal do cliente.
 
-### Estado de implementação auditado em 30/09/2026
+### Estado de implementação — atualização 21/10/2026
 
-**PARCIAL / REQUER REFATORAÇÃO.**
+**ROTEAMENTO IMPLEMENTADO NO CÓDIGO; HOMOLOGAÇÃO FINANCEIRA PENDENTE.**
 
-Já existe:
+A revisão estática do código canônico confirma:
 
-- provider `cooklily_pix` com BR Code, valor e `txid`;
-- Mercado Pago com cartão de crédito tokenizado;
-- tela capaz de apresentar mais de um método retornado pela configuração;
-- reconciliação Pix automática tecnicamente integrada.
+- o contrato frontend/backend inclui `pix`, `credit_card` e `debit_card`;
+- Pix usa a cadeia de providers configurada, com CookLily Pix como primeira opção quando pronta;
+- crédito e débito são roteados ao Mercado Pago, com tokenização pelo Brick oficial;
+- os métodos são configurados individualmente e podem coexistir quando habilitados e com credenciais prontas;
+- a idempotência do frontend é separada por pedido e método.
 
-Ainda não corresponde à decisão porque:
-
-- o domínio aceita `manual_pix | pix | credit_card`, sem `debit_card`;
-- o Card Payment Brick atual exclui explicitamente `debit_card`;
-- a configuração atual escolhe um `paymentProvider` global por vez, impedindo publicar simultaneamente Pix próprio e cartão Mercado Pago;
-- a configuração Mercado Pago ainda inclui Pix próprio do Mercado Pago como possibilidade, que deixa de ser método público necessário pelo ADR-002.
+Isso não comprova transação real nem liquidação. Permanecem pendentes execução de testes sob solicitação, configuração/validação das credenciais e webhook na VPS, pagamento controlado real, confirmação autoritativa, atualização do pedido e liberação correta da cozinha. Não habilitar vendas com base apenas na existência do código.
 
 ### Critério de pronto
 
