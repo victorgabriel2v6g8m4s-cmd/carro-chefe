@@ -54,11 +54,16 @@ A Entrega 12 continua válida para:
 
 Esta decisão **substitui somente a apresentação aberta por padrão no cliente**.
 
-### Estado de implementação auditado em 30/09/2026
+### Estado de implementação — atualização 21/10/2026
 
-**PENDENTE DE IMPLEMENTAÇÃO.**
+**IMPLEMENTADO NO CÓDIGO; QA visual real ainda pendente.**
 
-O componente atual `AllergenNotice.tsx` renderiza o aviso diretamente quando existe um resumo e não possui sanfona fechada por padrão. Portanto, a decisão está aprovada, mas não pode ser marcada como implementada até o frontend e seus testes serem atualizados.
+- O fluxo do cliente usa sanfona fechada por padrão, com `aria-expanded`, `aria-controls` e conteúdo oculto até acionamento.
+- O conteúdo autoritativo continua completo ao expandir, inclusive informação em revisão e orientação de contato cruzado.
+- Cozinha e impressão mantêm os detalhes expandidos, para não ocultar informação operacional.
+- A guarda estrutural foi atualizada para proteger a diferença entre o fluxo do cliente e a produção.
+
+A alteração está na branch `fix/cooklily-p0-allergen-accordion`; não declarar integração/publicação até o PR ser integrado. A validação visual e de teclado em navegador real continua pendente.
 
 ---
 
