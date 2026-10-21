@@ -74,7 +74,7 @@
 | LILY-PEND-025 | Densidade Nutella | medição futura melhora precisão; não bloqueia cardápio | financeiro |
 | LILY-PEND-026 | Operação LilyShake | **resolvida** | — |
 | LILY-PEND-027 | Workbook | aplicar receita de sincronização com decisões finais | financeiro |
-| LILY-PEND-028 | Alergênicos | **domínio técnico resolvido pela Entrega 12:** taxonomia, admin, agregação e snapshot integrados; faltam dados reais/contato cruzado e a sanfona fechada por padrão definida no ADR-002 | compliance / ADR-002 |
+| LILY-PEND-028 | Alergênicos | **domínio técnico e sanfona fechada por padrão implementados no código:** taxonomia, admin, agregação, snapshot e apresentação acessível; faltam QA visual/teclado real e revisão de dados/contato cruzado por produto | compliance / ADR-002 |
 | LILY-PEND-029 | Catálogo | **resolvida tecnicamente e publicada:** LilyMix, subcategorias, ofertas, combos, adicionais, mídia e painel; homologação conjunta 05/06 pendente | Entrega 05 |
 | LILY-PEND-030 | Checkout | carrinho/pedido concluídos; QR Pix e valor da cobrança homologados em aparelho externo; **pagamento ponta a ponta não testado**. A UI pública ainda deve refletir ADR-002 e métodos realmente habilitados; confirmação e atualização do pedido serão testadas em etapa financeira posterior | Entregas 06–07 |
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
