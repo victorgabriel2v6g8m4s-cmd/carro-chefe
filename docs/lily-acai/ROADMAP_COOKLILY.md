@@ -60,7 +60,9 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 ### 5. Finalizar landing page e UI pública
 - [ ] Fechar itens abertos de UI/UX conforme U1–U6 da especificação detalhada.
 - [ ] Corrigir hierarquia de compra, responsividade, acessibilidade, estados de interface e conteúdo provisório.
-- [ ] Implementar a apresentação de alergênicos definida no ADR-002 e revisar dados reais antes de vender.
+- [x] Implementar a apresentação de alergênicos em sanfona fechada por padrão, conforme ADR-002 (PR #169 integrado).
+- [ ] Validar visualmente e por teclado a sanfona em navegador/dispositivos reais.
+- [ ] Revisar dados reais de alergênicos e contato cruzado por produto/sabor/adicional antes de vender.
 - [ ] Usar ativos aprovados; placeholders devem ser distinguíveis de conteúdo publicado.
 - [ ] Mostrar somente preços, disponibilidade, prazos e métodos de pagamento autorizados pelo backend.
 
