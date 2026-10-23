@@ -368,7 +368,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <button className="button primary" type="button" disabled={busy} onClick={save}>{busy ? "Salvando..." : "Salvar produto"}</button>
     </div>
     <div className="variant-admin">
-      <h4>Variações e preços</h4>
+      <h4>{product.rawVariants.length === 1 && product.rawVariants[0]?.name === "Preço fixo" ? "Preço fixo do produto" : "Variações e preços"}</h4>
       {product.rawVariants.map((variant: any, index: number) => <form key={variant.id} className="variant-row" onSubmit={(event) => {
         event.preventDefault();
         const form = event.currentTarget;
@@ -378,14 +378,14 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
           form.elements.namedItem("price") as HTMLInputElement,
           form.elements.namedItem("available") as HTMLInputElement,
           form.elements.namedItem("status") as HTMLSelectElement,
-          (form.elements.namedItem(`default-${product.id}`) as RadioNodeList).value === variant.id
+          (form.elements.namedItem("isDefault") as HTMLInputElement).checked
         );
       }}>
         <label>Nome da opção<input name="name" required defaultValue={variant.name} /></label>
         <label>Preço<input name="price" required defaultValue={moneyInput(variant.priceCents)} inputMode="decimal" /></label>
         <label>Status<select name="status" defaultValue={variant.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select></label>
         <label className="toggle"><input name="available" type="checkbox" defaultChecked={variant.isAvailable} /> Disponível</label>
-        <label className="toggle"><input type="radio" name={`default-${product.id}`} value={variant.id} defaultChecked={index === 0} /> Padrão</label>
+        <label className="toggle"><input name="isDefault" type="checkbox" defaultChecked={index === 0} /> Definir como padrão</label>
         <button className="button ghost" type="submit">Salvar opção</button>
       </form>)}
       <form className="variant-row" onSubmit={createVariant}>
