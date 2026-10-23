@@ -5,7 +5,7 @@ import { ApiError } from "../../lib/errors";
 import { aggregateLilyAllergens, mergeLilyAllergenSummaries, parseLilyAllergenJson } from "./allergens";
 
 const idSchema = z.string().trim().min(1).max(120);
-const sizeSchema = z.number().int().min(100).max(5000);
+const sizeSchema = z.number().int().min(100).max(2_000_000_000);
 
 export const lilyConfigurationSchema = z.object({
   productId: idSchema,
