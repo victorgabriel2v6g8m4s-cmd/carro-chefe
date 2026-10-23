@@ -80,7 +80,7 @@ export function KitchenPrintPage() {
         {ticket.items.length === 0 && <p>Nenhum item encontrado.</p>}
         {ticket.items.map((item) => <article key={item.id}>
           <h3>{item.quantity}× {item.productName}</h3>
-          <p>{item.variantName}</p>
+          {item.variantName !== "Preço fixo" && <p>{item.variantName}</p>
           {item.flavors.length > 0 && <p>
             <strong>Sabores:</strong> {item.flavors.map((flavor) => flavor.name).filter(Boolean).join(" · ")}
           </p>}
