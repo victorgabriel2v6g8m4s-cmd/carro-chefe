@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
@@ -50,6 +51,7 @@ beforeEach(async () => {
   await lilyPrisma.lilySession.deleteMany();
   await lilyPrisma.lilyUser.deleteMany();
   await lilyPrisma.lilyProduct.updateMany({ data: { isAvailable: true } });
+  await lilyPrisma.lilyProduct.updateMany({ data: { minimumAddonUnits: 0, maximumAddonUnits: 4 } });
   await lilyPrisma.lilyProductVariant.updateMany({ data: { isAvailable: true } });
 });
 
@@ -219,6 +221,90 @@ describe("CookLily catálogo", () => {
     });
     expect(response.statusCode).toBe(400);
     expect(response.json().details.code).toBe("LILY_ADDON_TOTAL_LIMIT");
+  });
+
+  it("exige o mínimo e valida máximo, limite individual e preço configurado por produto", async () => {
+    const productId = "prod-lilymix";
+    const banana = await lilyPrisma.lilyFlavorComponent.findUniqueOrThrow({ where: { slug: "banana" } });
+    const product = await lilyPrisma.lilyProduct.findUniqueOrThrow({ where: { id: productId } });
+    const link = await lilyPrisma.lilyProductAddon.findUniqueOrThrow({ where: { productId_addonId: { productId, addonId: "add-ninho" } } });
+    try {
+      await lilyPrisma.lilyProduct.update({ where: { id: productId }, data: { minimumAddonUnits: 2, maximumAddonUnits: 3 } });
+      await lilyPrisma.lilyProductAddon.update({
+        where: { productId_addonId: { productId, addonId: "add-ninho" } },
+        data: { individualLimit: 1, priceOverride: 777 }
+      });
+
+      const minimum = await app.inject({ method: "POST", url: "/api/v1/lily/public/configure-item", payload: {
+        productId, sizeMl: 300, flavorIds: [banana.id], addons: []
+      } });
+      expect(minimum.statusCode).toBe(400);
+      expect(minimum.json().details.code).toBe("LILY_ADDON_MINIMUM_REQUIRED");
+      expect(minimum.json().error).toContain("Selecione pelo menos 2 adicional(is) para continuar");
+
+      const total = await app.inject({ method: "POST", url: "/api/v1/lily/public/configure-item", payload: {
+        productId, sizeMl: 300, flavorIds: [banana.id], addons: [
+          { addonId: "add-ninho", quantity: 1 }, { addonId: "add-nutella", quantity: 2 }, { addonId: "add-oreo", quantity: 1 }
+        ]
+      } });
+      expect(total.statusCode).toBe(400);
+      expect(total.json().details.code).toBe("LILY_ADDON_TOTAL_LIMIT");
+
+      const individual = await app.inject({ method: "POST", url: "/api/v1/lily/public/configure-item", payload: {
+        productId, sizeMl: 300, flavorIds: [banana.id], addons: [{ addonId: "add-ninho", quantity: 2 }]
+      } });
+      expect(individual.statusCode).toBe(400);
+      expect(individual.json().details.code).toBe("LILY_ADDON_INDIVIDUAL_LIMIT");
+
+      const priced = await app.inject({ method: "POST", url: "/api/v1/lily/public/configure-item", payload: {
+        productId, sizeMl: 300, flavorIds: [banana.id], addons: [
+          { addonId: "add-ninho", quantity: 1 }, { addonId: "add-oreo", quantity: 1 }
+        ]
+      } });
+      expect(priced.statusCode).toBe(200);
+      expect(priced.json().addons.find((item: any) => item.addonId === "add-ninho").unitPriceCents).toBe(777);
+    } finally {
+      await lilyPrisma.lilyProduct.update({ where: { id: productId }, data: {
+        minimumAddonUnits: product.minimumAddonUnits, maximumAddonUnits: product.maximumAddonUnits
+      } });
+      await lilyPrisma.lilyProductAddon.update({
+        where: { productId_addonId: { productId, addonId: "add-ninho" } },
+        data: { individualLimit: link.individualLimit, priceOverride: link.priceOverride }
+      });
+    }
+  });
+
+  it("reutiliza o mesmo adicional cadastrado em produtos distintos com preços próprios", async () => {
+    const staff = await register("staff");
+    const productIds = ["prod-lilymix", "prod-acai-sol-lily"];
+    const existingLinks = await lilyPrisma.lilyProductAddon.findMany({ where: { productId: { in: productIds } } });
+    const created = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/addons",
+      headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+      payload: { slug: `reuso-${crypto.randomUUID()}`, name: "Adicional de teste", priceCents: 300, portion300: 10, portion500: 15 }
+    });
+    expect(created.statusCode).toBe(201);
+    const addonId = created.json().id as string;
+    try {
+      for (const [index, productId] of productIds.entries()) {
+        const prior = existingLinks.filter((link) => link.productId === productId).map((link) => ({
+          addonId: link.addonId, allowed: link.allowed, individualLimit: link.individualLimit,
+          priceOverride: link.priceOverride, portion300: link.portion300, portion500: link.portion500
+        }));
+        const response = await app.inject({
+          method: "PUT", url: `/api/v1/lily/admin/products/${productId}/addons`,
+          headers: { origin, cookie: staff.cookie, "x-lily-csrf": staff.csrf },
+          payload: { addons: [...prior, { addonId, allowed: true, individualLimit: 2, priceOverride: index === 0 ? 444 : 555 }] }
+        });
+        expect(response.statusCode).toBe(200);
+      }
+      const links = await lilyPrisma.lilyProductAddon.findMany({ where: { addonId } });
+      expect(links).toHaveLength(2);
+      expect(links.map((link) => link.priceOverride).sort()).toEqual([444, 555]);
+    } finally {
+      await lilyPrisma.lilyProductAddon.deleteMany({ where: { addonId } });
+      await lilyPrisma.lilyAddon.delete({ where: { id: addonId } });
+    }
   });
 
   it("nega admin para customer e exige CSRF de staff", async () => {

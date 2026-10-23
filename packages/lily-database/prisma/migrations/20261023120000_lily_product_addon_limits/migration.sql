@@ -1,0 +1,2 @@
+ALTER TABLE "LilyProduct" ADD COLUMN "minimumAddonUnits" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "LilyProduct" ADD COLUMN "maximumAddonUnits" INTEGER NOT NULL DEFAULT 4;

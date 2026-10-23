@@ -13,8 +13,8 @@ export const lilyConfigurationSchema = z.object({
   flavorIds: z.array(idSchema).max(3).default([]),
   addons: z.array(z.object({
     addonId: idSchema,
-    quantity: z.number().int().min(1).max(2)
-  }).strict()).max(3).default([])
+    quantity: z.number().int().min(1).max(10)
+  }).strict()).max(10).default([])
 }).strict();
 
 export type LilyConfigurationInput = z.infer<typeof lilyConfigurationSchema>;
@@ -108,11 +108,15 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   if (applicableOffer) basePriceCents = applicableOffer.offerPriceCents;
 
   const uniqueAddonIds = new Set(input.addons.map((item) => item.addonId));
-  if (uniqueAddonIds.size !== input.addons.length || uniqueAddonIds.size > 3) {
-    throw new ApiError(400, "Use no máximo 3 tipos diferentes de adicional.", { code: "LILY_ADDON_TYPES_LIMIT" });
+  if (uniqueAddonIds.size !== input.addons.length || uniqueAddonIds.size > 10) {
+    throw new ApiError(400, "Use no máximo 10 tipos diferentes de adicional.", { code: "LILY_ADDON_TYPES_LIMIT" });
   }
-  if (input.addons.reduce((sum, item) => sum + item.quantity, 0) > 4) {
-    throw new ApiError(400, "Limite de 4 porções adicionais por item.", { code: "LILY_ADDON_TOTAL_LIMIT" });
+  const requestedAddonUnits = input.addons.reduce((sum, item) => sum + item.quantity, 0);
+  if (requestedAddonUnits > product.maximumAddonUnits) {
+    throw new ApiError(400, `Limite de ${product.maximumAddonUnits} adicionais por item.`, { code: "LILY_ADDON_TOTAL_LIMIT" });
+  }
+  if (requestedAddonUnits < product.minimumAddonUnits) {
+    throw new ApiError(400, `Selecione pelo menos ${product.minimumAddonUnits} adicional(is) para continuar.`, { code: "LILY_ADDON_MINIMUM_REQUIRED" });
   }
 
   let addonPriceCents = 0;
@@ -210,10 +214,7 @@ function canonicalSelection(input: LilyConfigurationInput) {
   return JSON.stringify({
     productId: input.productId,
     sizeMl: input.sizeMl,
-    flavorIds: [...input.flavorIds].sort(),
-    addons: [...input.addons]
-      .map((addon) => ({ addonId: addon.addonId, quantity: addon.quantity }))
-      .sort((a, b) => a.addonId.localeCompare(b.addonId))
+    flavorIds: [...input.flavorIds].sort()
   });
 }
 
@@ -306,7 +307,9 @@ export async function quoteLilyComboConfiguration(input: LilyComboConfigurationI
   const rules = parseComboRules(combo.rulesJson);
   const mode = lilyComboModeFromRules(rules);
   const presetSelections = mode === "preset" ? await resolveLilyComboPresetSelections(combo) : null;
-  const requestedSelections = presetSelections ?? input.selections;
+  const requestedSelections = presetSelections
+    ? presetSelections.map((selection, index) => ({ ...selection, addons: input.selections[index]?.addons ?? [] }))
+    : input.selections;
   const requiredQuantity = presetSelections?.length
     ?? (typeof rules.quantity === "number" ? Math.trunc(rules.quantity) : null);
 

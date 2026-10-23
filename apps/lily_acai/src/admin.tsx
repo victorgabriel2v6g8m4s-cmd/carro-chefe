@@ -223,6 +223,14 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
 
   const [flavorIds, setFlavorIds] = useState<string[]>(product.rawFlavorIds ?? []);
   const [addonIds, setAddonIds] = useState<string[]>((product.rawAddonLinks ?? []).filter((item: any) => item.allowed).map((item: any) => item.addonId));
+  const [minimumAddonUnits, setMinimumAddonUnits] = useState<number>(product.minimumAddonUnits ?? 0);
+  const [maximumAddonUnits, setMaximumAddonUnits] = useState<number>(product.maximumAddonUnits ?? 4);
+  const [addonOverrides, setAddonOverrides] = useState<Record<string, { priceCents: number; individualLimit: number }>>(() =>
+    Object.fromEntries((product.rawAddonLinks ?? []).map((item: any) => [item.addonId, {
+      priceCents: item.priceOverride ?? data.addons.find((addon: any) => addon.id === item.addonId)?.priceCents ?? 0,
+      individualLimit: item.individualLimit ?? data.addons.find((addon: any) => addon.id === item.addonId)?.individualLimit ?? 2
+    }]))
+  );
   const [mixTiers, setMixTiers] = useState<Array<{ flavorCount: number; sizeMl: number; priceCents: number; status: string }>>(
     (product.mixTiers ?? []).map((tier: any) => ({ flavorCount: tier.flavorCount, sizeMl: tier.sizeMl, priceCents: tier.priceCents, status: "published" }))
   );
@@ -316,6 +324,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     setError("");
     try {
       await lilyAdminJson(`products/${product.id}/flavors`, "PUT", csrf, { flavorIds });
+      await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, { minimumAddonUnits, maximumAddonUnits });
       const nutellaFlavor = data.flavors.find((flavor: any) => flavor.slug === "nutella");
       const productHasNutella = Boolean(nutellaFlavor && flavorIds.includes(nutellaFlavor.id));
       await lilyAdminJson(`products/${product.id}/addons`, "PUT", csrf, {
@@ -325,7 +334,8 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
           return {
             addonId,
             allowed: true,
-            individualLimit: existing?.individualLimit ?? (productHasNutella && addon?.slug === "nutella" ? 1 : addon?.individualLimit ?? 2)
+            individualLimit: addonOverrides[addonId]?.individualLimit ?? existing?.individualLimit ?? (productHasNutella && addon?.slug === "nutella" ? 1 : addon?.individualLimit ?? 2),
+            priceOverride: addonOverrides[addonId]?.priceCents ?? existing?.priceOverride ?? null
           };
         })
       });
@@ -335,6 +345,32 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao salvar regras do produto.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createAddonForProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setBusy(true);
+    setError("");
+    try {
+      const created = await lilyAdminJson<any>("addons", "POST", csrf, {
+        slug: String(form.get("slug")),
+        name: String(form.get("name")),
+        priceCents: parseMoney(String(form.get("price"))),
+        portion300: Number(form.get("portion300")),
+        portion500: Number(form.get("portion500")),
+        individualLimit: 2,
+        status: "published"
+      });
+      setAddonIds((current) => [...new Set([...current, created.id])]);
+      setAddonOverrides((current) => ({ ...current, [created.id]: { priceCents: created.priceCents, individualLimit: created.individualLimit } }));
+      event.currentTarget.reset();
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao criar adicional para o produto.");
     } finally {
       setBusy(false);
     }
@@ -411,13 +447,32 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <div>
         <h4>Adicionais aceitos</h4>
         <div className="admin-check-grid">
-          {data.addons.map((addon: any) => <label key={addon.id} className="toggle">
-            <input type="checkbox" checked={addonIds.includes(addon.id)} onChange={(event) =>
-              setAddonIds((current) => event.target.checked ? [...new Set([...current, addon.id])] : current.filter((id) => id !== addon.id))
-            } />
-            {addon.name}
-          </label>)}
+          <p>Use adicionais já cadastrados ou crie um no cadastro de adicionais; preço e limite abaixo valem apenas para este produto.</p>
+          {data.addons.map((addon: any) => <div key={addon.id} className="addon-row">
+            <label className="toggle"><input type="checkbox" checked={addonIds.includes(addon.id)} onChange={(event) => {
+              setAddonIds((current) => event.target.checked ? [...new Set([...current, addon.id])] : current.filter((id) => id !== addon.id));
+              setAddonOverrides((current) => current[addon.id] ? current : { ...current, [addon.id]: { priceCents: addon.priceCents, individualLimit: addon.individualLimit } });
+            }} />{addon.name}</label>
+            {addonIds.includes(addon.id) && <>
+              <label>Preço neste produto<input inputMode="decimal" value={moneyInput(addonOverrides[addon.id]?.priceCents ?? addon.priceCents)} onChange={(event) => setAddonOverrides((current) => ({ ...current, [addon.id]: { ...current[addon.id], priceCents: parseMoney(event.target.value) } }))} /></label>
+              <label>Máximo deste adicional<input type="number" min="1" max="10" value={addonOverrides[addon.id]?.individualLimit ?? addon.individualLimit} onChange={(event) => setAddonOverrides((current) => ({ ...current, [addon.id]: { ...current[addon.id], individualLimit: Number(event.target.value) } }))} /></label>
+            </>}
+          </div>)}
+          <form className="admin-form-grid compact admin-span" onSubmit={createAddonForProduct}>
+            <strong>Criar adicional reutilizável para este produto</strong>
+            <label>Nome<input name="name" required minLength={2} /></label>
+            <label>Slug único<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /></label>
+            <label>Preço inicial<input name="price" required inputMode="decimal" placeholder="0,00" /></label>
+            <label>Porção 300 ml<input name="portion300" type="number" min="0" required /></label>
+            <label>Porção 500 ml<input name="portion500" type="number" min="0" required /></label>
+            <button className="button ghost" type="submit" disabled={busy}>Criar e selecionar adicional</button>
+          </form>
         </div>
+      </div>
+      <div className="admin-span">
+        <h4>Quantidade de adicionais do produto</h4>
+        <label>Mínimo obrigatório<input type="number" min="0" max="20" value={minimumAddonUnits} onChange={(event) => setMinimumAddonUnits(Number(event.target.value))} /></label>
+        <label>Máximo total<input type="number" min="0" max="20" value={maximumAddonUnits} onChange={(event) => setMaximumAddonUnits(Number(event.target.value))} /></label>
       </div>
       {product.configurationType === "lilymix" && <div className="admin-span">
         <h4>Preços LilyMix por número de sabores</h4>
