@@ -1,14 +1,14 @@
 # CookLily — opções de produto e falha de deploy (2026-10-23)
 
-- status: `candidate`
+- status: `merged`
 - owner: `AG-DEV`
 - branch: `fix/cooklily-launch-products-and-payment-deploy`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1cdc134c3908ce94980ac5a8d1e3be63814ef42c`
-- head_sha_verified: `4e5486a09b8ffca0cea8c25e82152657dee313aa` (último commit de código verificado antes deste checkpoint)
-- pull_requests: [#171](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/171) — draft aberto
+- head_sha_verified: `ed7e599b4a569a9c21f019bea7dbefbcc2194217` (commit de squash integrado em `cooklily/canonical`)
+- pull_requests: [#171](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/171) — merged por squash em `ed7e599b4a569a9c21f019bea7dbefbcc2194217`
 - last_verified_at: 2026-10-23
-- interruption_state: `in_progress`
+- interruption_state: `none`
 
 ## Concluído e persistido
 
@@ -19,11 +19,11 @@
 - Catálogo, carrinho, checkout, rastreio e cozinha mostram o nome da opção, sem expor chaves internas.
 - Teste estrutural atualizado para cobrir rota única e os modos de preço.
 
-## Em andamento
+## Estado final
 
-- Revisão final do diff do PR #171 e inspeção dos gates disponíveis.
-- Testes/build locais não foram executados; a preferência vigente é não executá-los em cada entrega sem solicitação explícita.
-- Nenhum deploy foi executado.
+- PR #171 revisado estaticamente e integrado por squash.
+- Testes/build locais não foram executados; não foram retornados workflow runs nem status checks para o HEAD consultado.
+- Nenhum deploy foi executado. A VPS permanece no rollback registrado no log fornecido.
 
 ## Gates e testes
 
@@ -50,7 +50,6 @@
 
 ## Próxima ação exata
 
-1. Atualizar o diff/HEAD do PR #171 e revisar os arquivos de UI/API afetados.
-2. Consultar os gates de CI para o HEAD mais recente; não alegar sucesso se não houver execução.
-3. Se os gates necessários estiverem verdes e a revisão estática continuar sem bloqueios, integrar o PR por squash.
-4. Não publicar/deployar sem autorização explícita para o SHA exato.
+1. Executar os gates de teste/build quando houver solicitação explícita ou quando autorizado para preparar o deploy.
+2. Homologar um doce com preço fixo e um produto com várias opções, incluindo a opção padrão e o preço cotado pelo servidor.
+3. Solicitar aprovação explícita do proprietário para deploy do SHA exato `ed7e599b4a569a9c21f019bea7dbefbcc2194217`; não publicar antes disso.
