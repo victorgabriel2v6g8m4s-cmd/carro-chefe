@@ -467,8 +467,10 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
       } else if (pricingMode === "fixed") {
         options = [{ name: "Preço fixo", price: fixedPrice, sizeMl: 1_000_000_000, sortOrder: 0 }];
       } else {
-        const valid = variants.map((variant) => ({ ...variant, name: variant.name.trim() })).filter((variant) => variant.name);
-        if (!valid.length) throw new Error("Adicione pelo menos uma opção com nome e preço.");
+        const valid = variants.map((variant) => ({ ...variant, name: variant.name.trim() }));
+        if (!valid.length || valid.some((variant) => !variant.name)) {
+          throw new Error("Informe um nome para cada opção ou remova a linha vazia.");
+        }
         options = valid.map((variant, index) => ({
           ...variant,
           sizeMl: 1_000_000_000 + index,
