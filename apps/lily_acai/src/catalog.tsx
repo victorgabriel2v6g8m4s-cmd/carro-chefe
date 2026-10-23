@@ -173,8 +173,8 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
           {product.description && <p>{product.description}</p>}
           {product.soldOut && <div className="soldout-banner">Esgotado no momento</div>}
 
-          <fieldset className="config-group">
-            <legend>Tamanho</legend>
+          {product.variants.length > 1 && <fieldset className="config-group">
+            <legend>Opções</legend>
             <div className="option-row">
               {product.variants.map((variant) => <button
                 key={variant.id}
@@ -183,10 +183,10 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
                 disabled={!variant.isAvailable}
                 onClick={() => { setSizeMl(variant.sizeMl); setAdded(false); }}
               >
-                {variant.sizeMl} ml · {money(variant.priceCents)}
+                {variant.name} · {money(variant.priceCents)}
               </button>)}
             </div>
-          </fieldset>
+          </fieldset>}
 
           {product.configurationType === "lilymix" && <fieldset className="config-group">
             <legend>Sabores <small>{flavorIds.length}/3</small></legend>
@@ -691,7 +691,7 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
       <div className="product-price">
         {bestOffer
           ? <><small>Oferta</small><s>{money(bestOffer.regularPriceCents)}</s><strong>{money(bestOffer.offerPriceCents)}</strong></>
-          : price > 0 ? <><small>A partir de</small><strong>{money(price)}</strong></> : <strong>Em breve</strong>}
+          : price > 0 ? <><small>{product.variants.length > 1 ? "A partir de" : "Preço"}</small><strong>{money(price)}</strong></> : <strong>Em breve</strong>}
       </div>
     </button>
   </article>;
