@@ -35,7 +35,7 @@ export type AgentPolicyContext = {
 };
 
 const toPosix = (value: string) => value.split(path.sep).join("/");
-const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
+const sha256 = (value: string) => createHash("sha256").update(value.replace(/\r\n/g, "\n")).digest("hex");
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;

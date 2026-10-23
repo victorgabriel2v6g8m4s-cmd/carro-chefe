@@ -78,6 +78,8 @@ export type CatalogProduct = {
   tags: string[];
   allergens: LilyAllergenComponentInfo;
   configurationType: "fixed" | "lilymix";
+  minimumAddonUnits: number;
+  maximumAddonUnits: number;
   status: string;
   isAvailable: boolean;
   isPurchasable: boolean;
@@ -136,7 +138,10 @@ export type CatalogPayload = {
       sizeMl: number;
       flavorIds: string[];
       addons: Array<{ addonId: string; quantity: number }>;
-      product: { id: string; slug: string; name: string; cover: { id: string; url: string; altText: string } | null } | null;
+      product: {
+        id: string; slug: string; name: string; cover: { id: string; url: string; altText: string } | null;
+        minimumAddonUnits: number; maximumAddonUnits: number; addons: CatalogAddon[];
+      } | null;
       flavors: Array<{ id: string; slug: string; name: string; premium: boolean }>;
     }>;
   }>;

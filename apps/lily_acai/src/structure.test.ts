@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
-const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8");
+const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8").replace(/\r\n/g, "\n");
 const html = readFileSync(resolve(sourceDirectory, "../index.html"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");

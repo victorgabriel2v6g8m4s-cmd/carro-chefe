@@ -49,6 +49,8 @@ const productCreateSchema = z.object({
   allowPlaceholder: z.boolean().default(true),
   sortOrder: z.number().int().min(-10000).max(10000).default(0),
   preparationLeadMinutes: z.number().int().min(0).max(7 * 24 * 60).nullable().optional(),
+  minimumAddonUnits: z.number().int().min(0).max(20).default(0),
+  maximumAddonUnits: z.number().int().min(0).max(20).default(4),
   coverMediaId: idSchema.nullable().optional()
 }).strict();
 
@@ -240,6 +242,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
     tags: parseStringArray(product.tagsJson),
     allergens: allergenApiData(product),
     configurationType: product.configurationType,
+    minimumAddonUnits: product.minimumAddonUnits,
+    maximumAddonUnits: product.maximumAddonUnits,
     status: product.status,
     isAvailable: product.isAvailable,
     isPurchasable,
@@ -386,7 +390,10 @@ async function publicCatalog(queryInput: unknown) {
               id: product.id,
               slug: product.slug,
               name: product.displayName,
-              cover: product.cover
+              cover: product.cover,
+              minimumAddonUnits: product.minimumAddonUnits,
+              maximumAddonUnits: product.maximumAddonUnits,
+              addons: product.addons
             } : null,
             flavors: product
               ? product.flavors.filter((flavor) => selection.flavorIds.includes(flavor.id))
@@ -629,7 +636,9 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
           priceOverride: link.priceOverride,
           portion300: link.portion300,
           portion500: link.portion500
-        }))
+        })),
+        minimumAddonUnits: product.minimumAddonUnits,
+        maximumAddonUnits: product.maximumAddonUnits
       })),
       flavors: flavors.map((flavor) => ({
         ...flavor,
@@ -676,6 +685,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/products", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = productCreateSchema.parse(request.body);
+    if (input.minimumAddonUnits > input.maximumAddonUnits) throw new ApiError(400, "O mínimo de adicionais não pode superar o máximo.");
     const { tags, allergens, ...rest } = input;
     const created = await lilyPrisma.$transaction(async (tx) => {
       const product = await tx.lilyProduct.create({
@@ -704,6 +714,10 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const parsed = productCreateSchema.partial().parse(request.body);
     const input = patchFromRequest(parsed, request.body);
+    const currentLimits = await lilyPrisma.lilyProduct.findUniqueOrThrow({ where: { id }, select: { minimumAddonUnits: true, maximumAddonUnits: true } });
+    const minimumAddonUnits = input.minimumAddonUnits ?? currentLimits.minimumAddonUnits;
+    const maximumAddonUnits = input.maximumAddonUnits ?? currentLimits.maximumAddonUnits;
+    if (minimumAddonUnits > maximumAddonUnits) throw new ApiError(400, "O mínimo de adicionais não pode superar o máximo.");
     const { tags, allergens, ...rest } = input;
     const updated = await lilyPrisma.$transaction(async (tx) => {
       if (rest.weeklyHighlight === true) {
@@ -750,7 +764,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       addons: z.array(z.object({
         addonId: idSchema,
         allowed: z.boolean().default(true),
-        individualLimit: z.number().int().min(1).max(10).nullable().optional(),
+        individualLimit: z.number().int().min(1).max(20).nullable().optional(),
         priceOverride: moneySchema.nullable().optional(),
         portion300: z.number().int().min(0).max(1000).nullable().optional(),
         portion500: z.number().int().min(0).max(1500).nullable().optional()

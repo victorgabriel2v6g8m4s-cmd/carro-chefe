@@ -123,6 +123,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
   }, [product.id, product.soldOut, product.configurationType, sizeMl, flavorSignature, addonSignature]);
 
   const selectedAddonUnits = Object.values(addons).reduce((sum, value) => sum + value, 0);
+  const addonMinimumUnmet = selectedAddonUnits < product.minimumAddonUnits;
 
   function addToCart() {
     if (!quote) return;
@@ -204,7 +205,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
           </fieldset>}
 
           {product.addons.length > 0 && <fieldset className="config-group">
-            <legend>Adicionais <small>{selectedAddonUnits}/4 porções</small></legend>
+            <legend>Adicionais <small>{selectedAddonUnits}/{product.maximumAddonUnits} porções</small></legend>
             <div className="addon-list">
               {product.addons.map((addon) => {
                 const quantity = addons[addon.id] ?? 0;
@@ -214,7 +215,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
                     <button type="button" onClick={() => setAddon(addon.id, quantity - 1, addon.individualLimit)} disabled={quantity === 0}>−</button>
                     <span>{quantity}</span>
                     <button type="button" onClick={() => setAddon(addon.id, quantity + 1, addon.individualLimit)}
-                      disabled={quantity >= addon.individualLimit || selectedAddonUnits >= 4}>+</button>
+                      disabled={quantity >= addon.individualLimit || selectedAddonUnits >= product.maximumAddonUnits}>+</button>
                   </div>
                 </div>;
               })}
@@ -224,6 +225,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
           {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
           {busy && <p className="config-status" role="status">Atualizando preço e validação...</p>}
+          {addonMinimumUnmet && <p className="config-status" role="status">Selecione pelo menos {product.minimumAddonUnits} adicional(is) para continuar</p>}
           {!busy && !quote && product.configurationType === "lilymix" && flavorIds.length === 0
             && <p className="config-status">Escolha pelo menos um sabor para ver o preço final.</p>}
         </div>
@@ -234,7 +236,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
             <strong>{quote ? money(quote.totalPriceCents) : "—"}</strong>
           </div>
           {!added
-            ? <button className="button primary" type="button" onClick={addToCart} disabled={!quote || busy || Boolean(error) || product.soldOut}>
+            ? <button className="button primary" type="button" onClick={addToCart} disabled={!quote || busy || Boolean(error) || addonMinimumUnmet || product.soldOut}>
               Adicionar ao carrinho
             </button>
             : <>
@@ -281,11 +283,11 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
     if (combo.mode === "preset") {
       setLoadingOptions(false);
       setQuoting(true);
-      const selections = combo.presetSelections.map((selection) => ({
+      const selections = combo.presetSelections.map((selection, index) => ({
         productId: selection.productId,
         sizeMl: selection.sizeMl,
         flavorIds: selection.flavorIds,
-        addons: selection.addons
+        addons: Object.entries(slotAddons[index] ?? {}).map(([addonId, quantity]) => ({ addonId, quantity }))
       }));
       configureLilyCombo({ comboId: combo.id, selections })
         .then((result) => { if (!cancelled) setQuote(result); })
@@ -310,7 +312,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
       })
       .finally(() => { if (!cancelled) setLoadingOptions(false); });
     return () => { cancelled = true; };
-  }, [combo.id, combo.mode]);
+  }, [combo.id, combo.mode, slotAddons]);
 
   function setSlot(index: number, productId: string) {
     setAdded(false);
@@ -420,6 +422,17 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
   }
 
   const modalCover = combo.cover?.url ?? combo.presetSelections.find((selection) => selection.product?.cover)?.product?.cover?.url ?? brandPlaceholder;
+  const unmetAddonMinimums = combo.mode === "preset"
+    ? combo.presetSelections.flatMap((selection, index) => {
+        const minimum = selection.product?.minimumAddonUnits ?? 0;
+        const selectedUnits = Object.values(slotAddons[index] ?? {}).reduce((sum, value) => sum + value, 0);
+        return selectedUnits < minimum ? [minimum] : [];
+      })
+    : selectionIds.flatMap((id, index) => {
+        const minimum = builder?.options.find((item) => item.id === id)?.minimumAddonUnits ?? 0;
+        const selectedUnits = Object.values(slotAddons[index] ?? {}).reduce((sum, value) => sum + value, 0);
+        return selectedUnits < minimum ? [minimum] : [];
+      });
 
   return <div className="product-modal-backdrop" role="presentation" onMouseDown={(event) => {
     if (event.target === event.currentTarget) onClose();
@@ -442,14 +455,35 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
             <h3>Este combo já vem pronto.</h3>
             <p>Os produtos e sabores abaixo são definidos pela CookLily. Você só confirma e adiciona ao carrinho.</p>
             <div className="preset-combo-items">
-              {combo.presetSelections.map((selection, index) => <article key={`${selection.productId}-${index}`}>
-                <img src={selection.product?.cover?.url ?? brandPlaceholder} alt="" />
-                <div>
-                  <strong>{selection.product?.name ?? `Item ${index + 1}`}</strong>
-                  <small>{selection.sizeMl} ml</small>
-                  <span>{selection.flavors.length ? selection.flavors.map((flavor) => flavor.name).join(" + ") : "Sabor do produto"}</span>
-                </div>
-              </article>)}
+              {combo.presetSelections.map((selection, index) => {
+                const product = selection.product;
+                const addons = slotAddons[index] ?? {};
+                const addonUnits = Object.values(addons).reduce((sum, value) => sum + value, 0);
+                return <div key={`${selection.productId}-${index}`}>
+                  <article>
+                    <img src={product?.cover?.url ?? brandPlaceholder} alt="" />
+                    <div>
+                      <strong>{product?.name ?? `Item ${index + 1}`}</strong>
+                      <small>{selection.sizeMl} ml</small>
+                      <span>{selection.flavors.length ? selection.flavors.map((flavor) => flavor.name).join(" + ") : "Sabor do produto"}</span>
+                    </div>
+                  </article>
+                  {product?.addons.length ? <fieldset className="combo-addon-list">
+                    <legend>Adicionais · {addonUnits}/{product.maximumAddonUnits}</legend>
+                    {product.addons.map((addon) => {
+                      const quantity = addons[addon.id] ?? 0;
+                      return <div className="addon-row compact" key={addon.id}>
+                        <div><strong>{addon.name}</strong><small>+ {money(addon.priceCents)}</small></div>
+                        <div className="stepper">
+                          <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity - 1, addon.individualLimit)} disabled={quantity === 0}>−</button>
+                          <span>{quantity}</span>
+                          <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity + 1, addon.individualLimit)} disabled={quantity >= addon.individualLimit || addonUnits >= product.maximumAddonUnits}>+</button>
+                        </div>
+                      </div>;
+                    })}
+                  </fieldset> : null}
+                </div>;
+              })}
             </div>
             <small>Disponibilidade, preço e composição são validados novamente pelo servidor antes de entrar no carrinho.</small>
           </> : <>
@@ -475,7 +509,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
                 </div>}
 
                 {selectedProduct && selectedProduct.addons.length > 0 && <div className="combo-addon-list">
-                  <small>Adicionais deste item · {addonUnits}/4 porções</small>
+                  <small>Adicionais deste item · {addonUnits}/{selectedProduct.maximumAddonUnits} porções</small>
                   {selectedProduct.addons.map((addon) => {
                     const quantity = addons[addon.id] ?? 0;
                     return <div className="addon-row compact" key={addon.id}>
@@ -484,7 +518,7 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
                         <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity - 1, addon.individualLimit)} disabled={quantity === 0}>−</button>
                         <span>{quantity}</span>
                         <button type="button" onClick={() => setSlotAddon(index, addon.id, quantity + 1, addon.individualLimit)}
-                          disabled={quantity >= addon.individualLimit || addonUnits >= 4}>+</button>
+                          disabled={quantity >= addon.individualLimit || addonUnits >= selectedProduct.maximumAddonUnits}>+</button>
                       </div>
                     </div>;
                   })}
@@ -496,6 +530,9 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
 
           {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
+          {unmetAddonMinimums.length > 0 && <p className="config-status" role="status">
+            Selecione pelo menos {unmetAddonMinimums[0]} adicional(is) para continuar em cada item indicado.
+          </p>}
           {quoting && <p className="config-status" role="status">Validando combo e recalculando...</p>}
         </div>
 

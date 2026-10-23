@@ -12,6 +12,8 @@ function product(id: string, category: CatalogProduct["category"]): CatalogProdu
     tags: [],
     allergens: { reviewStatus: "reviewed", contains: [], mayContain: [] },
     configurationType: "fixed",
+    minimumAddonUnits: 0,
+    maximumAddonUnits: 4,
     status: "published",
     isAvailable: true,
     isPurchasable: true,
