@@ -279,9 +279,9 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       }
     }
     let sizeMl = 100;
-    while (used.has(sizeMl) && sizeMl <= 5000) sizeMl += 1;
-    if (sizeMl > 5000) {
-      setError("Este produto atingiu o limite técnico atual de opções. Remova opções antigas ou contate o suporte.");
+    while (used.has(sizeMl) && sizeMl < 2_000_000_000) sizeMl += 1;
+    if (sizeMl >= 2_000_000_000) {
+      setError("Não foi possível gerar um identificador interno para esta opção.");
       return;
     }
     setBusy(true);
