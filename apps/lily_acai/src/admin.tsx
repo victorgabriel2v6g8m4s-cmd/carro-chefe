@@ -272,6 +272,12 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const used = new Set<number>((product.rawVariants ?? []).map((item: any) => Number(item.sizeMl)));
+    const makeDefault = form.get("isDefault") === "on";
+    if (makeDefault) {
+      for (const [index, other] of (product.rawVariants ?? []).entries()) {
+        await lilyAdminJson(`variants/${other.id}`, "PATCH", csrf, { sortOrder: index + 10 });
+      }
+    }
     let sizeMl = 100;
     while (used.has(sizeMl) && sizeMl <= 5000) sizeMl += 1;
     if (sizeMl > 5000) {
@@ -288,7 +294,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
         priceCents: parseMoney(String(form.get("price") ?? "")),
         status: "draft",
         isAvailable: false,
-        sortOrder: (product.rawVariants?.length ?? 0) + 10
+        sortOrder: makeDefault ? 0 : (product.rawVariants?.length ?? 0) + 10
       });
       formElement.reset();
       await refresh();
@@ -377,8 +383,9 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
         <button className="button ghost" type="submit">Salvar opção</button>
       </form>)}
       <form className="variant-row" onSubmit={createVariant}>
-        <label>Nova opção<input name="name" required minLength={1} maxLength={80} placeholder="Ex.: Unidade, Caixa com 6, Fatia" /></label>
+        <label>Nova opção<input name="name" required minLength={2} maxLength={80} placeholder="Ex.: Unidade, Caixa com 6, Fatia" /></label>
         <label>Preço<input name="price" required inputMode="decimal" placeholder="12,00" /></label>
+        <label className="toggle"><input name="isDefault" type="checkbox" /> Tornar padrão</label>
         <button className="button ghost" type="submit" disabled={busy}>Adicionar opção</button>
       </form>
     </div>
