@@ -13,11 +13,25 @@ describe("CookLily — pagamento e UX administrativa", () => {
     const client = source("apps/lily_acai/src/features/payments/payment-choice-api.ts");
     const alias = source("apps/api/src/modules/lily/payment-choice-nginx-alias.ts");
     const app = source("apps/api/src/app.ts");
+    const lilyRoutes = source("apps/api/src/modules/lily/routes.ts");
     expect(client).toContain('fetch("/api/v1/lily/payments/options"');
     expect(client).not.toContain('fetch("/api/v1/lily/payment-options"');
     expect(alias).toContain('app.post("/api/v1/lily/payments/options"');
     expect(alias).toContain('url: "/api/v1/lily/payment-options"');
     expect(app).toContain("lilyPaymentChoiceNginxAliasRoutes");
+    expect(app).toContain("await app.register(lilyPaymentChoiceRoutes)");
+    expect(lilyRoutes).not.toContain("await app.register(lilyPaymentChoiceRoutes)");
+  });
+
+  it("permite preço fixo e opções de produto com nome, preço e padrão", () => {
+    const admin = source("apps/lily_acai/src/admin.tsx");
+    const catalog = source("apps/lily_acai/src/catalog.tsx");
+    expect(admin).toContain("Preço fixo (sem variações)");
+    expect(admin).toContain("Criar variações personalizadas");
+    expect(admin).toContain("Adicionar variação");
+    expect(admin).toContain("Tornar padrão");
+    expect(catalog).toContain("product.variants.length > 1");
+    expect(catalog).toContain("{variant.name} · {money(variant.priceCents)}");
   });
 
   it("não mantém o HTML da SPA em cache e responde ao favicon sem erro de tipo", () => {

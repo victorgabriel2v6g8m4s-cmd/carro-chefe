@@ -294,7 +294,7 @@ export function CheckoutPage() {
       <aside className="checkout-summary">
         <h2>Resumo</h2>
         {cart.items.map((item, index) => <div className="checkout-line checkout-line-item" key={item.id}>
-          <span>{item.quantity}× {item.productName}{item.kind === "combo" ? "" : ` · ${item.sizeMl} ml`}</span>
+          <span>{item.quantity}× {item.productName}{item.kind === "combo" || item.variantName === "Preço fixo" ? "" : ` · ${item.variantName}`}</span>
           <strong>{money(item.unitPriceCents * item.quantity)}</strong>
           <div className="checkout-line-allergens">
             <AllergenNotice summary={quote?.items[index]?.allergens ?? item.allergens} compact />

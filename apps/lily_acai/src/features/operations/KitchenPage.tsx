@@ -122,7 +122,7 @@ function KitchenCard(props: {
     <ul className="kitchen-items">
       {order.items.map((item) => <li key={item.id}>
         <strong>{item.quantity}× {item.productName}</strong>
-        <span>{item.sizeMl > 0 ? `${item.sizeMl} ml` : item.variantName}</span>
+        {item.variantName !== "Preço fixo" && <span>{item.variantName}</span>
         {item.flavors.length > 0 && <small>
           {item.flavors.map((flavor) => flavor.name).filter(Boolean).join(" · ")}
         </small>}

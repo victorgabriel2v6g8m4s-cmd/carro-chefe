@@ -15,6 +15,7 @@ const slugSchema = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
 const sizeSchema = z.number().int().min(100).max(5000);
+const variantKeySchema = z.number().int().min(100).max(2_000_000_000);
 const marginFloorBps = 1000;
 const defaultAllergenInput: z.infer<typeof lilyAllergenInputSchema> = {
   allergenReviewStatus: "unreviewed",
@@ -53,7 +54,7 @@ const productCreateSchema = z.object({
 
 const variantCreateSchema = z.object({
   productId: idSchema,
-  sizeMl: sizeSchema,
+  sizeMl: variantKeySchema,
   name: z.string().trim().min(2).max(80),
   priceCents: moneySchema,
   compareAtPriceCents: moneySchema.nullable().optional(),

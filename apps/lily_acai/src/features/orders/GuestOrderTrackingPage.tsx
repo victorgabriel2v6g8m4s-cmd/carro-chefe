@@ -174,7 +174,7 @@ export function GuestOrderTrackingPage() {
         {order.items.map((item) => <article key={item.id}>
           <div>
             <strong>{item.quantity}× {item.productName}</strong>
-            <small>{item.kind === "combo" ? "Combo" : `${item.sizeMl} ml · ${item.variantName}`}</small>
+            {item.variantName !== "Preço fixo" && <small>{item.variantName}</small>}
             {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
             {item.addons.length > 0 && <small>{item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
             <AllergenNotice summary={item.allergens} compact />
