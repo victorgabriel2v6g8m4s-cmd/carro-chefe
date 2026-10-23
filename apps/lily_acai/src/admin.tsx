@@ -273,7 +273,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     const form = new FormData(formElement);
     const used = new Set<number>((product.rawVariants ?? []).map((item: any) => Number(item.sizeMl)));
     const makeDefault = form.get("isDefault") === "on";
-    let sizeMl = 100;
+    let sizeMl = 1_000_000_000;
     while (used.has(sizeMl) && sizeMl < 2_000_000_000) sizeMl += 1;
     if (sizeMl >= 2_000_000_000) {
       setError("Não foi possível gerar um identificador interno para esta opção.");
@@ -465,13 +465,13 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
           { name: "500 ml", price: String(form.get("price500") || "22,00"), sizeMl: 500, sortOrder: 20 }
         ];
       } else if (pricingMode === "fixed") {
-        options = [{ name: "Preço fixo", price: fixedPrice, sizeMl: 300, sortOrder: 0 }];
+        options = [{ name: "Preço fixo", price: fixedPrice, sizeMl: 1_000_000_000, sortOrder: 0 }];
       } else {
         const valid = variants.map((variant) => ({ ...variant, name: variant.name.trim() })).filter((variant) => variant.name);
         if (!valid.length) throw new Error("Adicione pelo menos uma opção com nome e preço.");
         options = valid.map((variant, index) => ({
           ...variant,
-          sizeMl: 100 + index,
+          sizeMl: 1_000_000_000 + index,
           sortOrder: index === defaultVariant ? 0 : index + 10
         }));
       }
