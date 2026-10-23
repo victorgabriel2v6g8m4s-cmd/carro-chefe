@@ -1,11 +1,11 @@
 # Adicionais reutilizáveis e regras por produto CookLily
 
-- status: validated
+- status: candidate
 - owner: AG-DEV
 - branch: feat/cooklily-product-addons
 - base_branch: cooklily/canonical
 - base_sha_verified: e1af3e21e07e3c39459f6fe34a5e536833e8150e
-- head_sha_verified: c5d84cec7d1d663a5121299d1f12f114d1927803 (pré-correção do manifesto; novo commit pendente)
+- head_sha_verified: f2cdeac37a08bde6683bfc3a063367131141c7ac (correção cross-platform commitada e enviada)
 - pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/174 (ready for review)
 - last_verified_at: 2026-10-23 America/Sao_Paulo
 - interruption_state: none
@@ -19,7 +19,7 @@
 - Quote server-side aplica mínimo, máximo total, limite individual e override de preço já persistidos no vínculo produto-adicional.
 - UI de produto mostra a mensagem explícita do mínimo e impede adicionar ao carrinho enquanto não for atendido; painel permite configurar mínimo/máximo e preço/limite por produto.
 - Testes de regressão adicionados para mínimo, máximo total, limite por adicional, preço por produto e reutilização do mesmo adicional em dois produtos.
-- Implementação, migration, testes e checkpoint commitados em `af172de76cadf8855f7aebfa874dc3274bb511d8`.
+- Implementação e migration commitadas em `af172de76cadf8855f7aebfa874dc3274bb511d8`; checkpoint de PR em `c5d84cec7d1d663a5121299d1f12f114d1927803`.
 
 ## Em andamento
 - Rever UX de combo e executar gates locais, corrigindo falhas encontradas.
@@ -33,7 +33,7 @@
 - Normalização LF/CRLF adicionada ao gerador e check do manifesto e ao verificador usado pelo worker; regressão dedicada passou.
 - Manifesto regenerado com hash canônico `10f90a07329472f6b8a451d6e7b825fbfb264eb78450a3e9f87bf3a489aa7dec`.
 - `policy:check` e preflight AG-DEV para `apps/api/src/workers` e `tools/agent-policy`: passaram.
-- CI do novo SHA: pendente.
+- Correção enviada em `f2cdeac37a08bde6683bfc3a063367131141c7ac`; CI execução 40029175231: queued.
 - `npm run db:deploy:lily`: migration testada somente no banco local ignorado `.runtime/lily-acai.db`.
 - CI/CodeQL: pendente para o novo SHA; CodeQL não está configurado para PRs contra `cooklily/canonical` no workflow atual.
 
@@ -47,4 +47,4 @@
 - Sem deploy e sem acesso a VPS/produção; migrations apenas versionadas para aplicação pelo fluxo normal.
 
 ## Próxima ação exata
-- Commitar e enviar a correção do manifesto, atualizar o checkpoint com o novo SHA e confirmar CI antes de integrar o PR.
+- Aguardar CI execução 40029175231; corrigir qualquer falha, registrar o SHA mais recente e integrar somente com os gates verdes.
