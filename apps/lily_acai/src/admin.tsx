@@ -273,25 +273,31 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     const form = new FormData(formElement);
     const used = new Set<number>((product.rawVariants ?? []).map((item: any) => Number(item.sizeMl)));
     const makeDefault = form.get("isDefault") === "on";
-    if (makeDefault) {
-      for (const [index, other] of (product.rawVariants ?? []).entries()) {
-        await lilyAdminJson(`variants/${other.id}`, "PATCH", csrf, { sortOrder: index + 10 });
-      }
-    }
     let sizeMl = 100;
     while (used.has(sizeMl) && sizeMl < 2_000_000_000) sizeMl += 1;
     if (sizeMl >= 2_000_000_000) {
       setError("Não foi possível gerar um identificador interno para esta opção.");
       return;
     }
+    const name = String(form.get("name") ?? "").trim();
+    const price = String(form.get("price") ?? "").trim();
+    if (name.length < 2 || name.length > 80 || !price || parseMoney(price) <= 0) {
+      setError("Informe o nome da opção e um preço maior que zero.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
+      if (makeDefault) {
+        for (const [index, other] of (product.rawVariants ?? []).entries()) {
+          await lilyAdminJson(`variants/${other.id}`, "PATCH", csrf, { sortOrder: index + 10 });
+        }
+      }
       await lilyAdminJson("variants", "POST", csrf, {
         productId: product.id,
         sizeMl,
-        name: String(form.get("name") ?? "").trim(),
-        priceCents: parseMoney(String(form.get("price") ?? "")),
+        name,
+        priceCents: parseMoney(price),
         status: "draft",
         isAvailable: false,
         sortOrder: makeDefault ? 0 : (product.rawVariants?.length ?? 0) + 10
@@ -463,12 +469,14 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
       } else {
         const valid = variants.map((variant) => ({ ...variant, name: variant.name.trim() })).filter((variant) => variant.name);
         if (!valid.length) throw new Error("Adicione pelo menos uma opção com nome e preço.");
-        if (valid.some((variant) => parseMoney(variant.price) < 0)) throw new Error("Informe um preço válido para cada opção.");
         options = valid.map((variant, index) => ({
           ...variant,
           sizeMl: 100 + index,
           sortOrder: index === defaultVariant ? 0 : index + 10
         }));
+      }
+      if (options.some((option) => !option.price.trim() || parseMoney(option.price) <= 0)) {
+        throw new Error("Informe um preço maior que zero para cada opção.");
       }
 
       const product = await lilyAdminJson<any>("products", "POST", csrf, {
