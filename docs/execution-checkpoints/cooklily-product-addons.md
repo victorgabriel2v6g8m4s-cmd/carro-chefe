@@ -1,12 +1,12 @@
 # Adicionais reutilizáveis e regras por produto CookLily
 
-- status: candidate
+- status: validated
 - owner: AG-DEV
 - branch: feat/cooklily-product-addons
 - base_branch: cooklily/canonical
 - base_sha_verified: e1af3e21e07e3c39459f6fe34a5e536833e8150e
-- head_sha_verified: af172de76cadf8855f7aebfa874dc3274bb511d8
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/174 (draft)
+- head_sha_verified: c5d84cec7d1d663a5121299d1f12f114d1927803 (pré-correção do manifesto; novo commit pendente)
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/174 (ready for review)
 - last_verified_at: 2026-10-23 America/Sao_Paulo
 - interruption_state: none
 
@@ -26,12 +26,16 @@
 
 ## Gates e testes
 - `npm run policy:preflight ...`: passou.
-- `npm test`: passou em 2026-10-23; 53 arquivos, 294 passaram e 3 foram ignorados.
-- `npm run check`: passou em 2026-10-23 após os ajustes finais.
-- `npm run build`: passou; todos os pacotes, incluindo Lily, foram compilados e o budget do bundle ficou dentro do limite.
+- `npm test`: passou após a correção do manifesto; 53 arquivos, 294 passaram e 3 foram ignorados.
+- `npm run check`: passou após a correção do manifesto.
+- `npm run build`: passou após a correção do manifesto; budgets do bundle aprovados.
+- CI PR #174, execução 40028179103: jobs Excel, snapshot e Windows Supervisor passaram; Quality Node 20/24 falharam em `policy:check` antes dos demais gates porque hashes do manifesto variavam com finais de linha.
+- Normalização LF/CRLF adicionada ao gerador e check do manifesto e ao verificador usado pelo worker; regressão dedicada passou.
+- Manifesto regenerado com hash canônico `10f90a07329472f6b8a451d6e7b825fbfb264eb78450a3e9f87bf3a489aa7dec`.
+- `policy:check` e preflight AG-DEV para `apps/api/src/workers` e `tools/agent-policy`: passaram.
+- CI do novo SHA: pendente.
 - `npm run db:deploy:lily`: migration testada somente no banco local ignorado `.runtime/lily-acai.db`.
-- CI/CodeQL: aguardando workflows do PR #174.
-- CI/CodeQL: pendentes de PR.
+- CI/CodeQL: pendente para o novo SHA; CodeQL não está configurado para PRs contra `cooklily/canonical` no workflow atual.
 
 ## Migrations
 - `20261023120000_lily_product_addon_limits`: SQL aditivo para duas colunas com defaults; sem execução em banco de produção.
@@ -43,4 +47,4 @@
 - Sem deploy e sem acesso a VPS/produção; migrations apenas versionadas para aplicação pelo fluxo normal.
 
 ## Próxima ação exata
-- Atualizar o checkpoint com o SHA do PR após sincronizar este registro; aguardar CI/CodeQL verdes antes do squash merge.
+- Commitar e enviar a correção do manifesto, atualizar o checkpoint com o novo SHA e confirmar CI antes de integrar o PR.

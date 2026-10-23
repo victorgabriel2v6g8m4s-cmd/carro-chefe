@@ -16,6 +16,7 @@ export function stableJson(value) {
 }
 
 export const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+export const normalizeLineEndings = (value) => value.replace(/\r\n/g, "\n");
 
 async function discoverAgentFiles(projectRoot, directory = projectRoot) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
@@ -44,7 +45,7 @@ function resolveAgentCapsules(settings, agentId) {
 
 export async function buildManifest(projectRoot) {
   const settingsPath = path.join(projectRoot, ".agent-policy", "capsules.json");
-  const settingsRaw = await fs.readFile(settingsPath, "utf8");
+  const settingsRaw = normalizeLineEndings(await fs.readFile(settingsPath, "utf8"));
   const settings = JSON.parse(settingsRaw);
   const agentPaths = await discoverAgentFiles(projectRoot);
   if (!agentPaths.includes("AGENTS.md")) throw new Error("AGENTS.md raiz não encontrado.");
@@ -52,7 +53,7 @@ export async function buildManifest(projectRoot) {
   const sourcePaths = ["REGRAS.md", ".agent-policy/capsules.json", ...agentPaths];
   const sourceContents = new Map();
   for (const sourcePath of sourcePaths) {
-    sourceContents.set(sourcePath, await fs.readFile(path.join(projectRoot, ...sourcePath.split("/")), "utf8"));
+    sourceContents.set(sourcePath, normalizeLineEndings(await fs.readFile(path.join(projectRoot, ...sourcePath.split("/")), "utf8")));
   }
 
   const scopes = agentPaths.map(scopeFromAgentPath).sort(compareText);
@@ -99,7 +100,7 @@ export function renderManifest(manifest) {
 export async function assertManifestCurrent(projectRoot) {
   const expected = renderManifest(await buildManifest(projectRoot));
   const manifestPath = path.join(projectRoot, ".agent-policy", "manifest.json");
-  const current = await fs.readFile(manifestPath, "utf8").catch(() => "");
+  const current = normalizeLineEndings(await fs.readFile(manifestPath, "utf8").catch(() => ""));
   if (current !== expected) {
     throw new Error("Manifesto de política ausente ou desatualizado. Execute npm run policy:build e revise o diff.");
   }
