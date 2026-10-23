@@ -269,7 +269,8 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
 
   async function createVariant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const used = new Set<number>((product.rawVariants ?? []).map((item: any) => Number(item.sizeMl)));
     let sizeMl = 100;
     while (used.has(sizeMl) && sizeMl <= 5000) sizeMl += 1;
@@ -289,7 +290,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
         isAvailable: false,
         sortOrder: (product.rawVariants?.length ?? 0) + 10
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar variação.");
@@ -365,14 +366,14 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
           form.elements.namedItem("price") as HTMLInputElement,
           form.elements.namedItem("available") as HTMLInputElement,
           form.elements.namedItem("status") as HTMLSelectElement,
-          (form.elements.namedItem("isDefault") as HTMLInputElement).checked
+          (form.elements.namedItem(`default-${product.id}`) as RadioNodeList).value === variant.id
         );
       }}>
         <label>Nome da opção<input name="name" required defaultValue={variant.name} /></label>
         <label>Preço<input name="price" required defaultValue={moneyInput(variant.priceCents)} inputMode="decimal" /></label>
         <label>Status<select name="status" defaultValue={variant.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select></label>
         <label className="toggle"><input name="available" type="checkbox" defaultChecked={variant.isAvailable} /> Disponível</label>
-        <label className="toggle"><input name="isDefault" type="radio" name={`default-${product.id}`} defaultChecked={index === 0} /> Padrão</label>
+        <label className="toggle"><input type="radio" name={`default-${product.id}`} value={variant.id} defaultChecked={index === 0} /> Padrão</label>
         <button className="button ghost" type="submit">Salvar opção</button>
       </form>)}
       <form className="variant-row" onSubmit={createVariant}>
@@ -444,22 +445,6 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
     setError("");
     setBusy(true);
     try {
-      const product = await lilyAdminJson<any>("products", "POST", csrf, {
-        categoryId: String(form.get("categoryId")),
-        slug: String(form.get("slug")),
-        displayName: String(form.get("displayName")),
-        descriptiveName: String(form.get("descriptiveName") || "") || null,
-        description: String(form.get("description") || "") || null,
-        tags: String(form.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean),
-        configurationType,
-        status: "draft",
-        isAvailable: false,
-        featured: false,
-        weeklyHighlight: false,
-        allowPlaceholder: true,
-        sortOrder: 500
-      });
-
       let options: Array<{ name: string; price: string; sizeMl: number; sortOrder: number }>;
       if (configurationType === "lilymix") {
         options = [
@@ -478,6 +463,22 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
           sortOrder: index === defaultVariant ? 0 : index + 10
         }));
       }
+
+      const product = await lilyAdminJson<any>("products", "POST", csrf, {
+        categoryId: String(form.get("categoryId")),
+        slug: String(form.get("slug")),
+        displayName: String(form.get("displayName")),
+        descriptiveName: String(form.get("descriptiveName") || "") || null,
+        description: String(form.get("description") || "") || null,
+        tags: String(form.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean),
+        configurationType,
+        status: "draft",
+        isAvailable: false,
+        featured: false,
+        weeklyHighlight: false,
+        allowPlaceholder: true,
+        sortOrder: 500
+      });
 
       for (const option of options) {
         await lilyAdminJson("variants", "POST", csrf, {
