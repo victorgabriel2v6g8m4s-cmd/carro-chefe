@@ -27,7 +27,7 @@ export function CartPage() {
         {cart.items.map((item) => <article className="cart-item" key={item.id}>
           <div>
             <strong>{item.productName}</strong>
-            <span>{item.kind === "combo" ? "Combo" : item.variantName}</span>
+            <span>{item.kind === "combo" ? "Combo" : item.variantName === "Preço fixo" ? null : item.variantName}</span>
             {item.kind === "combo" && item.comboSelections?.length ? <small>Inclui: {item.comboSelections.map((selection) => selection.productName).join(" + ")}</small> : null}
             {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
             {item.addons.length > 0 && <small>Adicionais: {item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
