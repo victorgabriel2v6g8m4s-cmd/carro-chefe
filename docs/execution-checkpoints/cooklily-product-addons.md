@@ -6,7 +6,7 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: e1af3e21e07e3c39459f6fe34a5e536833e8150e
 - head_sha_verified: af172de76cadf8855f7aebfa874dc3274bb511d8
-- pull_requests: nenhum
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/174 (draft)
 - last_verified_at: 2026-10-23 America/Sao_Paulo
 - interruption_state: none
 
@@ -30,7 +30,7 @@
 - `npm run check`: passou em 2026-10-23 após os ajustes finais.
 - `npm run build`: passou; todos os pacotes, incluindo Lily, foram compilados e o budget do bundle ficou dentro do limite.
 - `npm run db:deploy:lily`: migration testada somente no banco local ignorado `.runtime/lily-acai.db`.
-- CI/CodeQL: aguardando abertura do PR.
+- CI/CodeQL: aguardando workflows do PR #174.
 - CI/CodeQL: pendentes de PR.
 
 ## Migrations
@@ -43,4 +43,4 @@
 - Sem deploy e sem acesso a VPS/produção; migrations apenas versionadas para aplicação pelo fluxo normal.
 
 ## Próxima ação exata
-- Commitar as alterações validadas, enviar a branch e abrir PR para `cooklily/canonical`; aguardar CI/CodeQL verdes antes do squash merge.
+- Atualizar o checkpoint com o SHA do PR após sincronizar este registro; aguardar CI/CodeQL verdes antes do squash merge.
