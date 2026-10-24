@@ -1,0 +1,126 @@
+import { z } from "zod";
+
+export const SURVEY_QUESTION_TYPES = [
+  "single_choice", "multiple_choice", "free_text", "media", "choice_text",
+  "binary_swipe", "short_answer", "paragraph", "checkboxes", "dropdown",
+  "linear_scale", "multiple_choice_grid", "checkbox_grid", "date", "datetime"
+] as const;
+
+const questionSchema = z.object({
+  id: z.string().trim().regex(/^[a-zA-Z0-9_-]{1,80}$/),
+  type: z.enum(SURVEY_QUESTION_TYPES),
+  title: z.string().trim().min(1).max(240),
+  description: z.string().max(4000).optional().default(""),
+  required: z.boolean().default(false),
+  options: z.array(z.string().trim().min(1).max(180)).max(100).default([]),
+  rows: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
+  columns: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
+  scale: z.object({ min: z.number().int().min(0).max(100), max: z.number().int().min(1).max(100), minLabel: z.string().max(80).optional(), maxLabel: z.string().max(80).optional() }).optional(),
+  media: z.object({ mimeTypes: z.array(z.string().regex(/^[\w.+-]+\/[\w.+*-]+$/)).max(20), maxBytes: z.number().int().min(1).max(10 * 1024 * 1024) }).optional(),
+  textAfterChoice: z.boolean().optional(),
+  positiveLabel: z.string().max(80).optional(),
+  negativeLabel: z.string().max(80).optional(),
+  style: z.object({ fontSize: z.enum(["sm", "md", "lg", "xl"]).default("md"), bold: z.boolean().default(false), italic: z.boolean().default(false), markdown: z.boolean().default(false), html: z.string().max(4000).optional() }).default({ fontSize: "md", bold: false, italic: false, markdown: false })
+}).strict().superRefine((question, context) => {
+  if (["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text"].includes(question.type) && question.options.length === 0) {
+    context.addIssue({ code: "custom", path: ["options"], message: "Este tipo de pergunta exige opções." });
+  }
+  if (["multiple_choice_grid", "checkbox_grid"].includes(question.type) && (!question.rows.length || !question.columns.length)) {
+    context.addIssue({ code: "custom", path: ["rows"], message: "Grades exigem linhas e colunas." });
+  }
+  if (question.type === "media" && (!question.media || !question.media.mimeTypes.length)) {
+    context.addIssue({ code: "custom", path: ["media"], message: "Configure tipos de arquivo e tamanho máximo." });
+  }
+  if (question.type === "linear_scale" && (!question.scale || question.scale.min >= question.scale.max)) {
+    context.addIssue({ code: "custom", path: ["scale"], message: "Configure uma escala crescente válida." });
+  }
+});
+
+export const surveyDefinitionSchema = z.object({
+  title: z.string().trim().min(1).max(180),
+  subtitle: z.string().trim().max(240).optional().nullable(),
+  description: z.string().max(4000).optional().nullable(),
+  questions: z.array(questionSchema).min(1).max(100),
+  prerequisites: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
+  unlocksMissions: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
+  pointsPerForm: z.number().int().min(0).max(100000).default(0),
+  pointsPerAnswer: z.number().int().min(0).max(100000).default(0),
+  showPoints: z.boolean().default(false),
+  allowNavigation: z.boolean().default(true),
+  mediaMimeTypes: z.array(z.string().regex(/^[\w.+-]+\/[\w.+*-]+$/)).max(20).default([]),
+  mediaMaxBytes: z.number().int().min(0).max(10 * 1024 * 1024).default(0)
+}).strict().superRefine((definition, context) => {
+  const ids = definition.questions.map((question) => question.id);
+  if (new Set(ids).size !== ids.length) context.addIssue({ code: "custom", path: ["questions"], message: "Os identificadores das perguntas devem ser únicos." });
+  const mediaQuestions = definition.questions.filter((question) => question.media);
+  if (mediaQuestions.length && (!definition.mediaMimeTypes.length || definition.mediaMaxBytes < 1)) context.addIssue({ code: "custom", path: ["mediaMimeTypes"], message: "Pesquisas com anexos precisam configurar formatos e limite de mídia." });
+  for (const question of mediaQuestions) {
+    if (question.media!.maxBytes > definition.mediaMaxBytes || question.media!.mimeTypes.some((mime) => !definition.mediaMimeTypes.includes(mime))) context.addIssue({ code: "custom", path: ["questions"], message: "Os limites e formatos das perguntas devem estar dentro da configuração geral da pesquisa." });
+  }
+});
+
+export type SurveyDefinition = z.infer<typeof surveyDefinitionSchema>;
+export type SurveyQuestion = SurveyDefinition["questions"][number];
+
+export function sanitizeSurveyHtml(input: string) {
+  const allowed = new Set(["p", "br", "strong", "b", "em", "i", "ul", "ol", "li", "h2", "h3", "blockquote", "code", "pre"]);
+  return input.replace(/<\/?([a-z0-9]+)(?:\s[^>]*)?>/gi, (tag, rawName: string) => {
+    const name = rawName.toLowerCase();
+    if (!allowed.has(name)) return "";
+    return tag.startsWith("</") ? `</${name}>` : `<${name}>`;
+  });
+}
+
+export function normalizeDefinition(definition: SurveyDefinition): SurveyDefinition {
+  return {
+    ...definition,
+    questions: definition.questions.map((question) => ({
+      ...question,
+      style: { ...question.style, html: question.style.html ? sanitizeSurveyHtml(question.style.html) : undefined }
+    }))
+  };
+}
+
+export function answerIsPresent(value: unknown) {
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === "object") return Object.keys(value).length > 0;
+  return value !== null && value !== undefined;
+}
+
+export function questionAnswerIsPresent(question: SurveyQuestion, value: unknown) {
+  if (question.type === "free_text" && question.media && value && typeof value === "object" && !Array.isArray(value)) {
+    const response = value as Record<string, unknown>;
+    const upload = response.upload as Record<string, unknown> | undefined;
+    return (typeof response.text === "string" && response.text.trim().length > 0) || typeof upload?.uploadId === "string";
+  }
+  if (question.type === "media" && value && typeof value === "object" && !Array.isArray(value)) return typeof (value as Record<string, unknown>).uploadId === "string";
+  return answerIsPresent(value);
+}
+
+export function validateSurveyAnswers(definition: SurveyDefinition, answers: unknown) {
+  if (!answers || typeof answers !== "object" || Array.isArray(answers)) return null;
+  const values = answers as Record<string, unknown>;
+  for (const question of definition.questions) {
+    const value = values[question.id];
+    if (question.required && !questionAnswerIsPresent(question, value)) return question.id;
+    if (!questionAnswerIsPresent(question, value)) continue;
+    if (["single_choice", "dropdown", "binary_swipe"].includes(question.type) && (typeof value !== "string" || (question.type !== "binary_swipe" && !question.options.includes(value)))) return question.id;
+    if (["multiple_choice", "checkboxes"].includes(question.type) && (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !question.options.includes(item)))) return question.id;
+    if (question.type === "choice_text" && (!value || typeof value !== "object" || Array.isArray(value) || !question.options.includes(String((value as Record<string, unknown>).choice ?? "")) || (question.textAfterChoice !== true && answerIsPresent((value as Record<string, unknown>).text)))) return question.id;
+    if (question.type === "binary_swipe" && value !== "positive" && value !== "negative") return question.id;
+    if (["multiple_choice_grid", "checkbox_grid"].includes(question.type)) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return question.id;
+      const grid = value as Record<string, unknown>;
+      if (Object.entries(grid).some(([row, selected]) => !question.rows.includes(row) || (question.type === "multiple_choice_grid" ? typeof selected !== "string" || !question.columns.includes(selected) : !Array.isArray(selected) || selected.some((column) => typeof column !== "string" || !question.columns.includes(column))))) return question.id;
+    }
+    if (question.type === "media" && (!value || typeof value !== "object" || Array.isArray(value) || typeof (value as Record<string, unknown>).uploadId !== "string")) return question.id;
+    if (question.type === "linear_scale" && (!Number.isInteger(value) || Number(value) < question.scale!.min || Number(value) > question.scale!.max)) return question.id;
+    if (question.type === "free_text" && question.media && value && typeof value === "object" && !Array.isArray(value)) {
+      const response = value as Record<string, unknown>;
+      if ((response.text !== undefined && (typeof response.text !== "string" || response.text.length > 10000)) || (response.upload !== undefined && (!response.upload || typeof response.upload !== "object" || typeof (response.upload as Record<string, unknown>).uploadId !== "string"))) return question.id;
+    } else if (["free_text", "short_answer", "paragraph"].includes(question.type) && (typeof value !== "string" || value.length > 10000)) return question.id;
+    if (["date", "datetime"].includes(question.type) && (typeof value !== "string" || !Number.isFinite(Date.parse(value)) || value.length > 40)) return question.id;
+  }
+  return null;
+}

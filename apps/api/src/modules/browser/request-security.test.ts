@@ -16,7 +16,7 @@ async function securityFixture() {
   await app.register(cors, { origin: corsOrigin });
   app.addHook("onRequest", protectSensitiveMutation);
   app.post("/change", async () => ({ changed: true }));
-  app.post("/api/v1/integrations/erp/webhook", async () => ({ reachedSignatureBoundary: true }));
+  app.post("/api/v1/integrations/cooklily/whatsapp/webhook", async () => ({ reachedSignatureBoundary: true }));
   return app;
 }
 
@@ -34,7 +34,7 @@ describe("proteção de origem", () => {
 
   it("deixa webhook assinado chegar à própria fronteira de autenticação", async () => {
     const app = await securityFixture();
-    const response = await app.inject({ method: "POST", url: "/api/v1/integrations/erp/webhook", headers: { origin: "https://erp.example" } });
+    const response = await app.inject({ method: "POST", url: "/api/v1/integrations/cooklily/whatsapp/webhook", headers: { origin: "https://meta.example" } });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ reachedSignatureBoundary: true });
   });

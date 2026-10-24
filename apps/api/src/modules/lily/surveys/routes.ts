@@ -1,0 +1,267 @@
+import type { FastifyInstance } from "fastify";
+import { lilyPrisma } from "@lily-acai/database";
+import { z } from "zod";
+import crypto from "node:crypto";
+import path from "node:path";
+import { promises as fs } from "node:fs";
+import { ApiError, parseJson } from "../../../lib/errors";
+import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "../admin-security";
+import { requireLilyCsrf, requireLilySession } from "../auth";
+import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, type SurveyDefinition } from "./contracts";
+
+const idSchema = z.string().trim().min(1).max(80);
+const pageSchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), offset: z.coerce.number().int().min(0).default(0) });
+const answersSchema = z.record(z.string(), z.unknown()).refine((answers) => Object.keys(answers).length <= 100, "Máximo de 100 respostas.");
+const submitSchema = z.object({ participationId: idSchema, answers: answersSchema, consentToLinkAnswers: z.boolean() }).strict();
+const missionSchema = z.object({ id: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,79}$/), title: z.string().trim().min(1).max(180), description: z.string().max(2000).optional().nullable(), points: z.number().int().min(0).max(100000), prerequisites: z.array(idSchema).max(100).default([]) }).strict();
+
+function definitionOf(row: { formJson: string; title: string; subtitle: string | null; description: string | null; prerequisitesJson: string; unlocksMissionsJson: string; pointsPerForm: number; pointsPerAnswer: number; showPoints: boolean; allowNavigation: boolean; mediaMimeTypesJson: string; mediaMaxBytes: number }): SurveyDefinition {
+  return surveyDefinitionSchema.parse({
+    ...parseJson<Partial<SurveyDefinition>>(row.formJson, {}), title: row.title, subtitle: row.subtitle, description: row.description,
+    prerequisites: parseJson(row.prerequisitesJson, []), unlocksMissions: parseJson(row.unlocksMissionsJson, []),
+    pointsPerForm: row.pointsPerForm, pointsPerAnswer: row.pointsPerAnswer, showPoints: row.showPoints,
+    allowNavigation: row.allowNavigation, mediaMimeTypes: parseJson(row.mediaMimeTypesJson, []), mediaMaxBytes: row.mediaMaxBytes
+  });
+}
+
+function surveyData(definition: SurveyDefinition) {
+  const safe = normalizeDefinition(definition);
+  const { title, subtitle, description, prerequisites, unlocksMissions, pointsPerForm, pointsPerAnswer, showPoints, allowNavigation, mediaMimeTypes, mediaMaxBytes, questions } = safe;
+  return {
+    title, subtitle: subtitle || null, description: description || null, prerequisitesJson: JSON.stringify(prerequisites),
+    unlocksMissionsJson: JSON.stringify(unlocksMissions), pointsPerForm, pointsPerAnswer, showPoints,
+    allowNavigation, mediaMimeTypesJson: JSON.stringify(mediaMimeTypes), mediaMaxBytes,
+    formJson: JSON.stringify({ questions })
+  };
+}
+
+async function completedSurveyIds(userId: string) {
+  const completed = await lilyPrisma.lilySurveyParticipation.findMany({ where: { userId, status: "completed" }, select: { surveyId: true } });
+  return new Set(completed.map((row) => row.surveyId));
+}
+
+function surveyUnlocked(prerequisitesJson: string, completed: Set<string>) {
+  return parseJson<string[]>(prerequisitesJson, []).every((id) => completed.has(id));
+}
+
+async function currentPoints(userId: string) {
+  const events = await lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId }, select: { points: true } });
+  return events.reduce((total, event) => total + event.points, 0);
+}
+
+function serializePublicSurvey(row: { id: string; title: string; subtitle: string | null; description: string | null; formJson: string; showPoints: boolean; pointsPerForm: number; pointsPerAnswer: number; allowNavigation: boolean; version: number }, definition: SurveyDefinition) {
+  return {
+    id: row.id, title: row.title, subtitle: row.subtitle, description: row.description,
+    questions: definition.questions, showPoints: row.showPoints,
+    pointsPerForm: row.showPoints ? row.pointsPerForm : null,
+    pointsPerAnswer: row.showPoints ? row.pointsPerAnswer : null,
+    allowNavigation: row.allowNavigation, version: row.version
+  };
+}
+
+export async function lilySurveyRoutes(app: FastifyInstance) {
+  app.post("/api/v1/lily/surveys/:id/uploads", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const part = await request.file();
+    if (!part) throw new ApiError(400, "Selecione um arquivo para anexar.");
+    const maxAllowed = Number(process.env.LILY_SURVEY_UPLOAD_MAX_BYTES ?? 10 * 1024 * 1024);
+    const allowed = new Set((process.env.LILY_SURVEY_UPLOAD_MIME_TYPES ?? "image/jpeg,image/png,image/webp,application/pdf,audio/mpeg,audio/mp4,video/mp4").split(",").map((mime) => mime.trim()).filter(Boolean));
+    if (!allowed.has(part.mimetype)) throw new ApiError(400, "Este tipo de arquivo não é permitido.");
+    const buffer = await part.toBuffer();
+    if (!buffer.length || buffer.length > maxAllowed) throw new ApiError(400, "Arquivo vazio ou acima do limite permitido.");
+    const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    const participation = await lilyPrisma.lilySurveyParticipation.findFirst({ where: { userId: context.user.id, surveyId: id, status: "in_progress" } });
+    if (!survey || survey.status !== "published" || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
+    const definition = definitionOf(survey);
+    const questionId = String((part.fields.questionId as { value?: string } | undefined)?.value ?? "");
+    const question = definition.questions.find((item) => item.id === questionId);
+    const config = question?.media;
+    if (!question || !["media", "free_text"].includes(question.type) || !config || !config.mimeTypes.includes(part.mimetype) || !definition.mediaMimeTypes.includes(part.mimetype) || buffer.length > config.maxBytes || buffer.length > definition.mediaMaxBytes) throw new ApiError(400, "O arquivo não corresponde às regras desta pergunta.");
+    const idToken = crypto.randomUUID();
+    const storageName = `${idToken}${path.extname(part.filename || "").toLowerCase().slice(0, 8)}`;
+    const root = path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "surveys");
+    await fs.mkdir(root, { recursive: true });
+    await fs.writeFile(path.join(root, storageName), buffer, { flag: "wx" });
+    const upload = await lilyPrisma.lilySurveyUpload.create({ data: { id: idToken, participationId: participation.id, userId: context.user.id, questionId, storageName, originalName: path.basename(part.filename || "anexo"), mime: part.mimetype, size: buffer.length } });
+    return reply.code(201).send({ uploadId: upload.id, name: upload.originalName, mime: upload.mime, size: upload.size });
+  });
+
+  app.get("/api/v1/lily/surveys", async (request) => {
+    const context = await requireLilySession(request);
+    const completed = await completedSurveyIds(context.user.id);
+    const rows = await lilyPrisma.lilySurvey.findMany({ where: { status: "published" }, orderBy: { publishedAt: "desc" }, take: 100 });
+    const surveys = rows.filter((row) => !completed.has(row.id) && surveyUnlocked(row.prerequisitesJson, completed)).map((row) => {
+      const definition = definitionOf(row);
+      return { id: row.id, title: row.title, subtitle: row.subtitle, description: row.description, questionCount: definition.questions.length, showPoints: row.showPoints, points: row.showPoints ? row.pointsPerForm : null };
+    });
+    const points = await currentPoints(context.user.id);
+    return { surveys, points };
+  });
+
+  app.post("/api/v1/lily/surveys/:id/start", async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    if (!survey || survey.status !== "published") throw new ApiError(404, "Pesquisa não encontrada.");
+    const completed = await completedSurveyIds(context.user.id);
+    if (!surveyUnlocked(survey.prerequisitesJson, completed)) throw new ApiError(403, "Conclua as pesquisas anteriores para desbloquear esta.");
+    const definition = definitionOf(survey);
+    const existing = await lilyPrisma.lilySurveyParticipation.findUnique({ where: { userId_surveyId_surveyVersion: { userId: context.user.id, surveyId: survey.id, surveyVersion: survey.version } } });
+    if (existing?.status === "completed") throw new ApiError(409, "Esta pesquisa já foi respondida.");
+    const participation = existing ?? await lilyPrisma.lilySurveyParticipation.create({ data: { userId: context.user.id, surveyId: survey.id, surveyVersion: survey.version } });
+    return { participationId: participation.id, currentPoints: await currentPoints(context.user.id), survey: serializePublicSurvey(survey, definition), progressTarget: null };
+  });
+
+  app.post("/api/v1/lily/surveys/:id/progress", async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const body = z.object({ participationId: idSchema, answers: answersSchema }).strict().parse(request.body);
+    const [survey, participation] = await Promise.all([
+      lilyPrisma.lilySurvey.findUnique({ where: { id } }),
+      lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: body.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } })
+    ]);
+    if (!survey || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
+    const definition = definitionOf(survey);
+    const answered = definition.questions.filter((question) => questionAnswerIsPresent(question, body.answers[question.id])).length;
+    const progressPercent = Math.round(answered / definition.questions.length * 100);
+    await lilyPrisma.lilySurveyParticipation.update({ where: { id: participation.id }, data: { progressPercent } });
+    return { progressPercent };
+  });
+
+  app.post("/api/v1/lily/surveys/:id/submit", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const input = submitSchema.parse(request.body);
+    const [survey, participation] = await Promise.all([
+      lilyPrisma.lilySurvey.findUnique({ where: { id } }),
+      lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: input.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } })
+    ]);
+    if (!survey || survey.status !== "published" || !participation || survey.version !== participation.surveyVersion) throw new ApiError(409, "A pesquisa mudou. Atualize a página e tente novamente.");
+    const definition = definitionOf(survey);
+    const invalidQuestionId = validateSurveyAnswers(definition, input.answers);
+    if (invalidQuestionId) throw new ApiError(400, "Revise as respostas obrigatórias da pesquisa.", { questionId: invalidQuestionId });
+    const answeredCount = definition.questions.filter((question) => questionAnswerIsPresent(question, input.answers[question.id])).length;
+    const answerPoints = Math.max(0, answeredCount * survey.pointsPerAnswer);
+    const awarded = answerPoints + survey.pointsPerForm;
+    const sourceKey = `survey:${survey.id}:v${survey.version}:user:${context.user.id}`;
+    const now = new Date();
+    const safeAnswers = Object.fromEntries(Object.entries(input.answers).filter(([key]) => definition.questions.some((question) => question.id === key)));
+    const uploadIds = definition.questions.flatMap((question) => {
+      const answer = safeAnswers[question.id];
+      if (question.type === "media" && answer && typeof answer === "object" && !Array.isArray(answer) && typeof (answer as Record<string, unknown>).uploadId === "string") return [{ id: (answer as Record<string, string>).uploadId, questionId: question.id }];
+      if (question.type === "free_text" && question.media && answer && typeof answer === "object" && !Array.isArray(answer)) {
+        const upload = (answer as Record<string, unknown>).upload as Record<string, unknown> | undefined;
+        if (typeof upload?.uploadId === "string") return [{ id: upload.uploadId, questionId: question.id }];
+      }
+      return [];
+    });
+    for (const upload of uploadIds) {
+      const saved = await lilyPrisma.lilySurveyUpload.findFirst({ where: { id: upload.id, participationId: participation.id, userId: context.user.id, questionId: upload.questionId } });
+      if (!saved) throw new ApiError(400, "Um anexo não corresponde a esta sessão da pesquisa.");
+    }
+    await lilyPrisma.$transaction(async (tx) => {
+      const claimed = await tx.lilySurveyParticipation.updateMany({ where: { id: participation.id, userId: context.user.id, status: "in_progress", surveyVersion: survey.version }, data: { status: "completed", progressPercent: 100, pointsAwarded: awarded, completedAt: now } });
+      if (claimed.count !== 1) throw new ApiError(409, "Esta pesquisa já foi concluída nesta sessão.");
+      if (input.consentToLinkAnswers) {
+        await tx.lilyConsentRecord.create({ data: { userId: context.user.id, purpose: "survey_answers", version: "survey-answers-v1", granted: true, source: "survey_submit", recordedAt: now } });
+      }
+      await tx.lilySurveyResponse.create({ data: { surveyId: survey.id, surveyVersion: survey.version, respondentUserId: input.consentToLinkAnswers ? context.user.id : null, respondentConsented: input.consentToLinkAnswers, answersJson: JSON.stringify(safeAnswers), submittedAt: now } });
+      if (awarded > 0) {
+        await tx.lilyLoyaltyEvent.upsert({ where: { sourceKey }, update: {}, create: { userId: context.user.id, type: "survey_reward", points: awarded, sourceKey, metadataJson: JSON.stringify({ surveyId: survey.id, version: survey.version }) } });
+      }
+    });
+    const unlockedMissions = await lilyPrisma.lilyMission.findMany({ where: { id: { in: definition.unlocksMissions }, status: "published" }, select: { id: true, title: true, description: true, points: true } });
+    return { completed: true, pointsAwarded: awarded, currentPoints: await currentPoints(context.user.id), unlockedMissions };
+  });
+
+  app.get("/api/v1/lily/admin/surveys", async (request) => {
+    await requireLilyStaff(request);
+    const { limit, offset } = pageSchema.parse(request.query);
+    const [rows, total] = await Promise.all([
+      lilyPrisma.lilySurvey.findMany({ orderBy: { updatedAt: "desc" }, take: limit, skip: offset }),
+      lilyPrisma.lilySurvey.count()
+    ]);
+    return { surveys: rows.map((row) => ({ id: row.id, title: row.title, subtitle: row.subtitle, description: row.description, status: row.status, version: row.version, updatedAt: row.updatedAt, publishedAt: row.publishedAt, definition: definitionOf(row) })), total, limit, offset };
+  });
+
+  app.post("/api/v1/lily/admin/surveys", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const input = surveyDefinitionSchema.parse(request.body);
+    const row = await lilyPrisma.lilySurvey.create({ data: { ...surveyData(input), createdByUserId: context.user.id } });
+    await auditLilyAdmin(context.user.id, "create", "survey", row.id, { version: row.version });
+    return { survey: row };
+  });
+
+  app.put("/api/v1/lily/admin/surveys/:id", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const input = surveyDefinitionSchema.parse(request.body);
+    const current = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    if (!current || current.status !== "draft") throw new ApiError(409, "Somente pesquisas em rascunho podem ser editadas.");
+    const survey = await lilyPrisma.lilySurvey.update({ where: { id }, data: { ...surveyData(input), version: { increment: 1 } } });
+    await auditLilyAdmin(context.user.id, "update", "survey", id, { version: survey.version });
+    return { survey };
+  });
+
+  app.post("/api/v1/lily/admin/surveys/:id/publish", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    if (!survey) throw new ApiError(404, "Pesquisa não encontrada.");
+    const definition = definitionOf(survey);
+    const missingMission = definition.unlocksMissions.length ? await lilyPrisma.lilyMission.count({ where: { id: { in: definition.unlocksMissions } } }) !== definition.unlocksMissions.length : false;
+    if (missingMission) throw new ApiError(400, "Uma missão configurada para desbloqueio não existe.");
+    const published = await lilyPrisma.lilySurvey.update({ where: { id }, data: { status: "published", publishedAt: new Date() } });
+    await auditLilyAdmin(context.user.id, "publish", "survey", id, { version: published.version });
+    return { survey: published };
+  });
+
+  app.get("/api/v1/lily/admin/surveys/:id/responses", async (request) => {
+    await requireLilyStaff(request);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const { limit, offset } = pageSchema.parse(request.query);
+    const [rows, total] = await Promise.all([
+      lilyPrisma.lilySurveyResponse.findMany({ where: { surveyId: id }, orderBy: { submittedAt: "desc" }, take: limit, skip: offset, include: { respondent: { select: { id: true, displayName: true, phoneNormalized: true } } } }),
+      lilyPrisma.lilySurveyResponse.count({ where: { surveyId: id } })
+    ]);
+    return { responses: rows.map((row) => ({ id: row.id, submittedAt: row.submittedAt, surveyVersion: row.surveyVersion, consented: row.respondentConsented, respondent: row.respondentConsented ? row.respondent : null, answers: parseJson(row.answersJson, {}) })), total, limit, offset };
+  });
+
+  app.get("/api/v1/lily/admin/missions", async (request) => {
+    await requireLilyStaff(request);
+    const { limit, offset } = pageSchema.parse(request.query);
+    const [missions, total] = await Promise.all([lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" }, take: limit, skip: offset }), lilyPrisma.lilyMission.count()]);
+    return { missions: missions.map((mission) => ({ ...mission, prerequisites: parseJson(mission.prerequisiteJson, []) })), total };
+  });
+
+  app.post("/api/v1/lily/admin/missions", async (request) => {
+    const context = await requireLilyAdmin(request, true);
+    const input = missionSchema.parse(request.body);
+    const mission = await lilyPrisma.lilyMission.create({ data: { id: input.id, title: input.title, description: input.description, points: input.points, prerequisiteJson: JSON.stringify(input.prerequisites), status: "published" } });
+    await auditLilyAdmin(context.user.id, "create", "mission", mission.id, { points: mission.points });
+    return { mission };
+  });
+
+  app.get("/api/v1/lily/admin/survey-uploads/:uploadId", async (request, reply) => {
+    await requireLilyStaff(request);
+    const uploadId = idSchema.parse((request.params as { uploadId: string }).uploadId);
+    const root = path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "surveys");
+    const upload = await lilyPrisma.lilySurveyUpload.findUnique({ where: { id: uploadId } });
+    if (!upload || path.basename(upload.storageName) !== upload.storageName) throw new ApiError(404, "Anexo não encontrado.");
+    return reply.type(upload.mime).header("Cache-Control", "private, no-store").header("X-Content-Type-Options", "nosniff").header("Content-Disposition", `attachment; filename="${upload.originalName.replace(/[\"\r\n]/g, "_")}"`).send(await fs.readFile(path.join(root, upload.storageName)));
+  });
+
+  app.get("/api/v1/lily/missions", async (request) => {
+    const context = await requireLilySession(request);
+    const completed = await completedSurveyIds(context.user.id);
+    const rows = await lilyPrisma.lilyMission.findMany({ where: { status: "published" }, orderBy: { createdAt: "desc" }, take: 100 });
+    const surveys = completed.size ? await lilyPrisma.lilySurvey.findMany({ where: { id: { in: [...completed] } }, select: { unlocksMissionsJson: true } }) : [];
+    const unlockedBySurvey = new Set(surveys.flatMap((survey) => parseJson<string[]>(survey.unlocksMissionsJson, [])));
+    return { missions: rows.filter((mission) => unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id))).map(({ id, title, description, points }) => ({ id, title, description, points })) };
+  });
+}

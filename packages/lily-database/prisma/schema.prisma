@@ -21,6 +21,9 @@ model LilyUser {
   addresses       LilyAddress[]
   orders          LilyOrder[]
   loyaltyEvents   LilyLoyaltyEvent[]
+  surveyParticipations LilySurveyParticipation[]
+  surveyResponses LilySurveyResponse[]
+  surveyUploads   LilySurveyUpload[]
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -739,6 +742,96 @@ model LilyLoyaltyEvent {
 
   @@index([userId, createdAt])
   @@index([type, createdAt])
+}
+
+model LilySurvey {
+  id                    String   @id @default(cuid())
+  title                 String
+  subtitle              String?
+  description           String?
+  status                String   @default("draft")
+  version               Int      @default(1)
+  formJson              String   @default("[]")
+  prerequisitesJson     String   @default("[]")
+  unlocksMissionsJson   String   @default("[]")
+  pointsPerForm         Int      @default(0)
+  pointsPerAnswer       Int      @default(0)
+  showPoints            Boolean  @default(false)
+  allowNavigation       Boolean  @default(true)
+  mediaMimeTypesJson    String   @default("[]")
+  mediaMaxBytes         Int      @default(0)
+  createdByUserId       String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  publishedAt           DateTime?
+  participations        LilySurveyParticipation[]
+  responses             LilySurveyResponse[]
+
+  @@index([status, publishedAt])
+}
+
+model LilySurveyParticipation {
+  id              String   @id @default(cuid())
+  userId          String
+  surveyId        String
+  surveyVersion   Int
+  status          String   @default("in_progress")
+  progressPercent Int      @default(0)
+  pointsAwarded   Int      @default(0)
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  user            LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  survey          LilySurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  uploads         LilySurveyUpload[]
+
+  @@unique([userId, surveyId, surveyVersion])
+  @@index([userId, status, completedAt])
+  @@index([surveyId, status, startedAt])
+}
+
+model LilySurveyResponse {
+  id                    String   @id @default(cuid())
+  surveyId              String
+  surveyVersion         Int
+  respondentUserId      String?
+  respondentConsented   Boolean  @default(false)
+  answersJson           String   @default("{}")
+  submittedAt           DateTime @default(now())
+  survey                LilySurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  respondent            LilyUser? @relation(fields: [respondentUserId], references: [id], onDelete: SetNull)
+
+  @@index([surveyId, submittedAt])
+  @@index([respondentUserId, submittedAt])
+}
+
+model LilyMission {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  status           String   @default("draft")
+  points           Int      @default(0)
+  prerequisiteJson String   @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model LilySurveyUpload {
+  id              String   @id @default(cuid())
+  participationId String
+  userId          String
+  questionId      String
+  storageName     String   @unique
+  originalName    String
+  mime            String
+  size            Int
+  createdAt       DateTime @default(now())
+  participation   LilySurveyParticipation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  user            LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([participationId, questionId])
+  @@index([userId, createdAt])
 }
 
 

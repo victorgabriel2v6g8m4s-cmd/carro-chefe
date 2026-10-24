@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
@@ -27,6 +27,14 @@ import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, rea
 import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import { LilyLoadingSpinner } from "./loading-spinner";
+import { formatBrazilianPhone } from "./features/account/phone-format";
+const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
+const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
+const DashboardPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.DashboardPage })));
+const NotificationsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.NotificationsPage })));
+const ReelsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.ReelsPage })));
+const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyListPage })));
+const SurveyRespondPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyRespondPage })));
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -42,6 +50,15 @@ function MenuIcon() {
 function PersonIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M5.5 19c.8-4 3-6 6.5-6s5.7 2 6.5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
 }
+
+function BellIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+
+function PasswordInput(props: { name: string; autoComplete: string; required?: boolean; minLength?: number; maxLength?: number }) {
+  const [visible, setVisible] = useState(false);
+  return <span className="password-field"><input {...props} type={visible ? "text" : "password"} /><button type="button" className="password-toggle" aria-label={visible ? "Ocultar senha" : "Mostrar senha"} aria-pressed={visible} onClick={() => setVisible((value) => !value)}>{visible ? "Ocultar" : "Mostrar"}</button></span>;
+}
+
+function formatPhoneInput(event: React.ChangeEvent<HTMLInputElement>) { event.currentTarget.value = formatBrazilianPhone(event.currentTarget.value); }
 
 function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
   const initial = user?.displayName?.trim()[0]?.toUpperCase();
@@ -169,6 +186,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="header-actions">
+          <Link className="header-icon notifications-icon" to="/notificacoes" aria-label="Notificações"><BellIcon /></Link>
           {!user && <div className="auth-actions-desktop">
             <Link to="/entrar">Entrar</Link>
             <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
@@ -221,6 +239,14 @@ function Shell({ children }: { children: ReactNode }) {
     </header>
 
     <main id="lily-main-content" tabIndex={-1}>{children}</main>
+
+    <nav className="mobile-footer-nav" aria-label="Navegação principal mobile">
+      <NavLink to="/cardapio"><span aria-hidden="true">▦</span><small>Cardápio</small></NavLink>
+      <NavLink to="/ranking"><span aria-hidden="true">♛</span><small>Ranking</small></NavLink>
+      <NavLink to="/reels"><span aria-hidden="true">▶</span><small>Reels</small></NavLink>
+      <NavLink to="/dashboard"><span aria-hidden="true">◷</span><small>Dashboard</small></NavLink>
+      <NavLink to="/perfil"><span aria-hidden="true">♙</span><small>Perfil</small></NavLink>
+    </nav>
 
     <footer>
       <div>
@@ -346,6 +372,7 @@ function Landing() {
         ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click", { surface: "landing" })}>Acompanhar pelo WhatsApp</a>
         : <Link className="button primary" to="/cardapio">Ver cardápio</Link>}
     </section>
+    <section className="survey-home-card"><div><span className="eyebrow">CookLily · participe</span><h2>Responda uma pesquisa rápida para ganhar pontos.</h2><p>Sua opinião pode desbloquear novas missões.</p></div><Link className="button primary" to="/pesquisas">Ver pesquisas</Link></section>
   </Shell>;
 }
 
@@ -402,9 +429,9 @@ function Cadastro() {
     <div className="form-copy"><span className="eyebrow">Conta CookLily</span><h1>Crie sua conta.</h1><p>Crie sua conta para ter uma experiência mais rápida. Preferências opcionais não impedem o uso da loja.</p></div>
     <form className="auth-card" onSubmit={submit}>
       <label>Nome <span>opcional</span><input name="displayName" autoComplete="name" maxLength={80} /></label>
-      <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
-      <label>Senha <span>mínimo 8 caracteres</span><input name="password" type="password" autoComplete="new-password" minLength={8} maxLength={128} required /></label>
-      <label>Confirmar senha<input name="passwordConfirmation" type="password" autoComplete="new-password" minLength={8} maxLength={128} required /></label>
+      <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" onChange={formatPhoneInput} required /></label>
+      <label>Senha <span>mínimo 8 caracteres</span><PasswordInput name="password" autoComplete="new-password" minLength={8} maxLength={128} required /></label>
+      <label>Confirmar senha<PasswordInput name="passwordConfirmation" autoComplete="new-password" minLength={8} maxLength={128} required /></label>
       <label className="check"><input type="checkbox" required /> <span>Li e aceito os <Link to="/privacidade">termos operacionais e o aviso de privacidade</Link>.</span></label>
       <div className="optional-box"><strong>Preferências opcionais</strong>
         <label className="check"><input name="lilyMarketing" type="checkbox" /> <span>Quero receber novidades e ofertas da CookLily.</span></label>
@@ -451,8 +478,8 @@ function Entrar() {
   return <Shell><section className="form-page">
     <div className="form-copy"><span className="eyebrow">Bem-vindo de volta</span><h1>Entrar na CookLily.</h1><p>Esta sessão vale somente para a operação CookLily.</p></div>
     <form className="auth-card" onSubmit={submit}>
-      <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" required /></label>
-      <label>Senha<input name="password" type="password" autoComplete="current-password" required /></label>
+      <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" onChange={formatPhoneInput} required /></label>
+      <label>Senha<PasswordInput name="password" autoComplete="current-password" required /></label>
       {error && <p className="error" role="alert">{error}</p>}
       <button className="button primary" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Entrando" /> : "Entrar"}</button>
       <p className="form-switch">Primeira vez? <Link to="/cadastro">Criar conta</Link></p>
@@ -490,8 +517,15 @@ function App() {
     <Route path="/acompanhar/:id" element={<Shell><GuestOrderTrackingPage /></Shell>} />
     <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
     <Route path="/ranking" element={<Shell><RankingPage /></Shell>} />
+    <Route path="/reels" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando Reels" />}><Shell><ReelsPage /></Shell></Suspense>} />
+    <Route path="/dashboard" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando dashboard" />}><Shell><DashboardPage /></Shell></Suspense>} />
+    <Route path="/notificacoes" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando notificações" />}><Shell><NotificationsPage /></Shell></Suspense>} />
+    <Route path="/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><SurveyListPage /></Shell></Suspense>} />
+    <Route path="/pesquisas/:id" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisa" />}><Shell><SurveyRespondPage /></Shell></Suspense>} />
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
+    <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><AdminSurveysPage /></Shell></Suspense>} />
+    <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><Shell><AdminSurveyResponsesPage /></Shell></Suspense>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
     <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
     <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />

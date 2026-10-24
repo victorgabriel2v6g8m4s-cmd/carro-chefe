@@ -34,7 +34,7 @@ function ProductImage({ product, onOpen }: { product: CatalogProduct; onOpen?: (
   const src = product.cover?.url ?? brandPlaceholder;
   const alt = product.cover?.altText ?? `${product.displayName} — imagem temporária CookLily`;
   return <button className="catalog-image-button" type="button" onClick={onOpen} aria-label={`Ampliar imagem de ${product.displayName}`}>
-    <img src={src} alt={alt} loading="lazy" />
+    <img src={src} alt={alt} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = brandPlaceholder; }} />
     {!product.cover && <span className="placeholder-label">Foto em breve</span>}
   </button>;
 }
@@ -248,7 +248,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
     </section>
     {fullscreen && <div className="fullscreen-media" role="dialog" aria-modal="true" onClick={() => setFullscreen(false)}>
       <button type="button" onClick={() => setFullscreen(false)} aria-label="Fechar imagem">×</button>
-      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} loading="lazy" />
+      <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = brandPlaceholder; }} />
     </div>}
   </div>;
 }
@@ -761,7 +761,7 @@ export function WeeklyProductBanner({
   return <section data-lily-reveal className={`weekly-product-banner ${product.soldOut ? "is-sold-out" : ""}`} aria-label="Escolha da semana">
     <div className="weekly-product-media">
       <div className="weekly-product-photo">
-        <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} />
+        <img src={product.cover?.url ?? brandPlaceholder} alt={product.cover?.altText ?? product.displayName} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = brandPlaceholder; }} />
       </div>
     </div>
     <div className="weekly-product-copy">
