@@ -217,7 +217,6 @@ function retryDelayMs(attempt: number) {
   const seconds = Math.min(3600, 15 * (2 ** Math.max(0, attempt - 1)));
   return seconds * 1000;
 }
-
 export async function processLilyWhatsAppQueue(limit = 20) {
   const configuration = lilyWhatsAppConfiguration();
   if (!configuration.ready) {
@@ -437,8 +436,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   });
 
   app.get("/api/v1/lily/admin/whatsapp/notifications", async (request) => {
-    await requireLilyStaff(request);
-    const query = z.object({
+    await requireLilyStaff(request);    const query = z.object({
       status: z.enum(["pending", "processing", "sent", "failed", "dead", "skipped"]).optional(),
       limit: z.coerce.number().int().min(1).max(200).default(100)
     }).parse(request.query);
@@ -493,86 +491,6 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     });
 
     return { retried: reset.count };
-  });
-
-  // Public Meta webhook. This route intentionally lives under /api/v1/integrations/
-  // because the global request-trust hook exempts only signed integration webhooks.
-  app.get("/api/v1/integrations/whatsapp/webhook", async (request, reply) => {
-    const query = z.object({
-      "hub.mode": z.string().optional(),
-      "hub.verify_token": z.string().optional(),
-      "hub.challenge": z.string().optional()
-    }).passthrough().parse(request.query);
-    const expected = env("COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN");
-    if (!expected) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
-    const supplied = query["hub.verify_token"] ?? "";
-    const valid = verifyLilyWhatsAppWebhookToken(supplied, expected);
-    if (query["hub.mode"] !== "subscribe" || !valid || !query["hub.challenge"]) {
-      return reply.code(403).send({ error: "Verificação de webhook recusada." });
-    }
-    return reply.type("text/plain; charset=utf-8").send(query["hub.challenge"]);
-  });
-
-  app.post("/api/v1/integrations/whatsapp/webhook", {
-    config: { rateLimit: { max: 300, timeWindow: "1 minute" } }
-  }, async (request, reply) => {
-    const appSecret = env("COOKLILY_WHATSAPP_APP_SECRET");
-    if (!appSecret) return reply.code(503).send({ error: "Webhook WhatsApp ainda não configurado." });
-    const rawBody = request.rawBody;
-    const signature = request.headers["x-hub-signature-256"];
-    if (!rawBody || typeof signature !== "string" || !verifyLilyWhatsAppWebhookSignature(rawBody, signature, appSecret)) {
-      return reply.code(401).send({ error: "Assinatura de webhook inválida." });
-    }
-
-    const body = request.body as {
-      entry?: Array<{ changes?: Array<{ value?: { messages?: unknown[]; statuses?: unknown[] } }> }>;
-    };
-    const records: Array<{ kind: string; item: Record<string, unknown> }> = [];
-    for (const entry of body?.entry ?? []) {
-      for (const change of entry.changes ?? []) {
-        const value = change.value ?? {};
-        for (const item of value.messages ?? []) {
-          if (item && typeof item === "object" && !Array.isArray(item)) {
-            records.push({ kind: "message.received", item: item as Record<string, unknown> });
-          }
-        }
-        for (const item of value.statuses ?? []) {
-          if (item && typeof item === "object" && !Array.isArray(item)) {
-            const statusItem = item as Record<string, unknown>;
-            const status = typeof statusItem.status === "string" ? statusItem.status : "unknown";
-            records.push({ kind: `message.status.${status.slice(0, 40)}`, item: statusItem });
-          }
-        }
-      }
-    }
-
-    const receivedAt = new Date();
-    for (const record of records) {
-      const serialized = JSON.stringify(record.item);
-      const payloadHash = crypto.createHash("sha256").update(serialized).digest("hex");
-      const dedupeKey = crypto.createHash("sha256").update(record.kind + ":" + serialized).digest("hex");
-      const providerMessageId = typeof record.item.id === "string"
-        ? record.item.id.slice(0, 200)
-        : null;
-      const providerStatus = typeof record.item.status === "string"
-        ? record.item.status.slice(0, 40)
-        : null;
-      await lilyPrisma.lilyWhatsAppWebhookEvent.upsert({
-        where: { dedupeKey },
-        update: {},
-        create: {
-          dedupeKey,
-          eventType: record.kind,
-          providerMessageId,
-          providerStatus,
-          payloadHash,
-          receivedAt
-        }
-      });
-    }
-
-    // Deliberately do not persist message text, contact phone numbers or the raw webhook body.
-    return reply.code(200).send({ received: true, events: records.length });
   });
 
   const templateInputSchema = z.object({
