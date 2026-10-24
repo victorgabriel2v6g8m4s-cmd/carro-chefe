@@ -1,21 +1,21 @@
 # CookLily surveys and canonical integration — execution checkpoint
 
 - **Responsible:** AG-DEV
-- **Status:** in_progress
-- **Branch:** `codex/cooklily-surveys-work`
+- **Status:** merged
+- **Branch:** `cooklily/canonical`
 - **Worktree:** `C:\Users\valdi\OneDrive\Área de Trabalho\cezar-surveys-work`
 - **Base branch:** `cooklily/canonical`
 - **Verified base SHA:** `c572c2cdfdf06fe6c3396c48a019409d0ce84c7c`
-- **HEAD verified:** `b3e9fc36424087ff955f5aca68bfc0be3ba479fe` (implementation `c20c4a0` and checkpoint update `b3e9fc3`, both pushed to origin)
+- **HEAD verified:** `6e588fea672154f7cf7d748e4d2a15c99f462142` (PR #176 squash commit on canonical)
 - **Feature source:** `origin/feat/separate-whatsapp-webhooks` at `357cb92bce0c2971e51f940f6837e3c407eabc7a`; divergent history requires reconciliation, not fast-forward.
-- **PRs:** draft [#176](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/176), base `cooklily/canonical` SHA `c572c2cdfdf06fe6c3396c48a019409d0ce84c7c`; head SHA `c20c4a0c58f5f6f397c1664b0dbb13eb9d103964`; open and attached to task.
+- **PRs:** [#176](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/176) merged by squash; merge SHA `6e588fea672154f7cf7d748e4d2a15c99f462142`.
 - **Migrations:** survey/mission Prisma schema and hand-authored SQLite migration `20261024170000_lily_surveys_and_missions`; Prisma generate/validate PASS; all 23 Lily migrations applied sequentially to disposable SQLite and `foreign_key_check` PASS. `prisma migrate deploy`/`migrate dev --create-only` still return opaque `Schema engine error` on this Windows environment.
 - **Completed evidence:** policy check and all three AG-DEV preflights passed; survey API/contracts/upload/consent/points/mission routes, customer/admin UI, five-tab mobile navigation, home CTA, sticky notifications, phone/password controls, image fallback, selective webhook integration, and emergency checkpoint-only push script exist. Five unrelated personal/financial JPEG screenshots safely moved out of repo to `C:\Users\valdi\OneDrive\Área de Trabalho\cooklily-media-quarantine-2026-10-24`.
-- **In progress:** GitHub Actions run `40135105541` remains active with `Quality / Node 20` in_progress and no output after ~2 minutes; the diagnostics endpoint returned no logs/checks. Visual browser/mobile homologation remains a deployment follow-up.
-- **Tests/gates:** GitHub checks `Excel Recipe / ubuntu-22.04`, `Excel Recipe / windows-latest`, `Workbook Snapshot`, `Windows Supervisor`, `Tool Health / Linux`, `Quality / Node 24` PASS; `Quality / Node 20` in_progress. `npm run policy:check` PASS; all three AG-DEV preflights PASS; Prisma generate/validate and `npm run check` PASS; `npm test` PASS (303 passed, 3 skipped; 55 files); `npm run build` PASS (repeat after final edits) with Vite chunk-size warning for CookLily main chunk (548.94 kB; build budget PASS); `git diff --cached --check` PASS; targeted security/survey tests PASS (20 tests).
+- **Completed:** all seven GitHub Actions checks passed on PR head, including `Quality / Node 20`. Visual browser/mobile homologation will be performed on the live site after deployment.
+- **Tests/gates:** GitHub checks `Excel Recipe / ubuntu-22.04`, `Excel Recipe / windows-latest`, `Workbook Snapshot`, `Windows Supervisor`, `Tool Health / Linux`, `Quality / Node 24` PASS; `Quality / Node 20` in_progress. `npm run policy:check` PASS; all three AG-DEV preflights PASS; Prisma generate/validate and `npm run check` PASS; `npm test` PASS (303 passed, 3 skipped; 55 files); `npm run build` PASS with Vite chunk-size warning for CookLily main chunk (548.94 kB; build budget PASS); `git diff --cached --check` PASS; all seven remote checks PASS; targeted security/survey tests PASS (20 tests).
 - **Risks/blockers:** no reward-redemption/level configuration exists, so proximity progress and abandon warnings stay hidden and the API returns null. No CookLily product photos were present in the unrelated image set; current catalog media remains admin-managed and missing images fall back to the verified brand logo. Prisma migration CLI failure is local to this Windows run; the full migration SQL history and foreign keys were validated through SQLite, but Linux CI/deploy has not run. Vite reports the existing overall CookLily entry chunk above its generic 500 kB warning threshold although the project's explicit build budget passes.
 - **External homologation:** VPS deployment remains for owner to run with `sudo cc deploy canonical`; this task prepares and validates files, does not run a production deployment.
-- **Next exact action:** resume by checking Actions run `40135105541` and commit statuses; once Node 20 finishes, update this checkpoint. If it fails, retrieve diagnostics, fix the cause, rerun local gates and push a follow-up commit to PR #176.
+- **Next exact action:** run `sudo cc deploy canonical` on the VPS, then perform practical site homologation on desktop/mobile and update this checkpoint with deployment result, migration status, and observed issues.
 - **Updated:** 2026-10-24
 
 ## Roadmap detalhado
