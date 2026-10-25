@@ -17,6 +17,15 @@ describe("CookLily survey contracts", () => {
     expect(() => surveyDefinitionSchema.parse({ title: "ok", questions: [{ id: "x", type: "short_answer", title: "Q" }, { id: "x", type: "paragraph", title: "Q2" }] })).toThrow();
   });
 
+  it("validates survey duration, distinct option rows, and secure media bounds", () => {
+    expect(surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "short_answer", title: "Q" }] }).estimatedMinutes).toBe(5);
+    expect(() => surveyDefinitionSchema.parse({ title: "T", estimatedMinutes: 181, questions: [{ id: "q", type: "short_answer", title: "Q" }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "multiple_choice", title: "Q", options: ["A", "A"] }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "checkbox_grid", title: "Q", rows: ["A", "A"], columns: ["X"] }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "binary_swipe", title: "Q", cardMedia: { url: "http://example.com/card.jpg", type: "image" } }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "media", title: "Q", media: { mimeTypes: ["image/png"], maxBytes: 10 * 1024 * 1024 + 1 } }] })).toThrow();
+  });
+
   it("validates choices, swipe values, grids, and numeric scales", () => {
     expect(validateSurveyAnswers(definition, { choice: "A", swipe: "positive", grid: { R1: "C2" }, scale: 4 })).toBeNull();
     expect(validateSurveyAnswers(definition, { choice: "unknown", swipe: "positive" })).toBe("choice");

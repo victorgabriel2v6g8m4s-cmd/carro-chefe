@@ -75,6 +75,8 @@ A aba Reels deve ficar no meio, não apenas ser uma rota acessível a partir do 
 
 **PROPOSTA DE PLANEJAMENTO:** preservar a posição de rolagem do catálogo e o produto de origem ao voltar dos Reels; manter carrinho e personalização válidos durante a navegação; mostrar claramente a aba ativa; adaptar a navegação em desktop sem impor uma barra mobile artificial.
 
+**ERRATA DECIDIDA PELO PROPRIETÁRIO — 2026-10-25:** para a entrega atual, a navegação inferior passa a ser **Início, Dashboard, Reels, Carrinho e Perfil**, nesta ordem, com Reels como ação central. O Ranking continua disponível no Dashboard e na navegação desktop. Esta decisão mais recente substitui a ordem anterior nesta seção para a implementação corrente.
+
 ### 3.3 Modelo de navegação
 
 - **Navegação vertical entre Reels:** muda o produto/Reel atual.

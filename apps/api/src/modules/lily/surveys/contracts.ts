@@ -17,6 +17,7 @@ const questionSchema = z.object({
   columns: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
   scale: z.object({ min: z.number().int().min(0).max(100), max: z.number().int().min(1).max(100), minLabel: z.string().max(80).optional(), maxLabel: z.string().max(80).optional() }).optional(),
   media: z.object({ mimeTypes: z.array(z.string().regex(/^[\w.+-]+\/[\w.+*-]+$/)).max(20), maxBytes: z.number().int().min(1).max(10 * 1024 * 1024) }).optional(),
+  cardMedia: z.object({ url: z.string().url().max(2048).refine((value) => value.startsWith("https://"), "A mídia da pergunta precisa usar HTTPS."), type: z.enum(["image", "video"]), altText: z.string().trim().max(240).default("") }).optional(),
   textAfterChoice: z.boolean().optional(),
   positiveLabel: z.string().max(80).optional(),
   negativeLabel: z.string().max(80).optional(),
@@ -27,6 +28,12 @@ const questionSchema = z.object({
   }
   if (["multiple_choice_grid", "checkbox_grid"].includes(question.type) && (!question.rows.length || !question.columns.length)) {
     context.addIssue({ code: "custom", path: ["rows"], message: "Grades exigem linhas e colunas." });
+  }
+  if (new Set(question.options).size !== question.options.length || new Set(question.rows).size !== question.rows.length || new Set(question.columns).size !== question.columns.length) {
+    context.addIssue({ code: "custom", path: ["options"], message: "Opções, linhas e colunas não podem se repetir." });
+  }
+  if (question.cardMedia && question.type !== "binary_swipe") {
+    context.addIssue({ code: "custom", path: ["cardMedia"], message: "A mídia do cartão está disponível apenas para respostas de arrastar." });
   }
   if (question.type === "media" && (!question.media || !question.media.mimeTypes.length)) {
     context.addIssue({ code: "custom", path: ["media"], message: "Configure tipos de arquivo e tamanho máximo." });
@@ -48,7 +55,8 @@ export const surveyDefinitionSchema = z.object({
   showPoints: z.boolean().default(false),
   allowNavigation: z.boolean().default(true),
   mediaMimeTypes: z.array(z.string().regex(/^[\w.+-]+\/[\w.+*-]+$/)).max(20).default([]),
-  mediaMaxBytes: z.number().int().min(0).max(10 * 1024 * 1024).default(0)
+  mediaMaxBytes: z.number().int().min(0).max(10 * 1024 * 1024).default(0),
+  estimatedMinutes: z.number().int().min(1).max(180).default(5)
 }).strict().superRefine((definition, context) => {
   const ids = definition.questions.map((question) => question.id);
   if (new Set(ids).size !== ids.length) context.addIssue({ code: "custom", path: ["questions"], message: "Os identificadores das perguntas devem ser únicos." });

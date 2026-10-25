@@ -24,6 +24,7 @@ model LilyUser {
   surveyParticipations LilySurveyParticipation[]
   surveyResponses LilySurveyResponse[]
   surveyUploads   LilySurveyUpload[]
+  notifications   LilyCustomerNotification[]
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -760,6 +761,7 @@ model LilySurvey {
   allowNavigation       Boolean  @default(true)
   mediaMimeTypesJson    String   @default("[]")
   mediaMaxBytes         Int      @default(0)
+  estimatedMinutes     Int      @default(5)
   createdByUserId       String
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -768,6 +770,22 @@ model LilySurvey {
   responses             LilySurveyResponse[]
 
   @@index([status, publishedAt])
+}
+
+model LilyCustomerNotification {
+  id           String   @id @default(cuid())
+  userId       String
+  sourceKey    String
+  type         String
+  title        String
+  body         String
+  metadataJson String   @default("{}")
+  readAt       DateTime?
+  createdAt    DateTime @default(now())
+  user         LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sourceKey])
+  @@index([userId, readAt, createdAt])
 }
 
 model LilySurveyParticipation {
