@@ -125,6 +125,8 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .reward-points { margin: 22px auto; padding: 22px; max-width: 320px; display: grid; gap: 5px; border-radius: 20px; color: var(--cl-color-secondary); background: linear-gradient(145deg,#fff2c5,#fde1e8); }
 .reward-points strong { font-size: 52px; color: var(--cl-color-primary); }
 .reward-points small { color: var(--cl-color-text-muted); }
+.reward-meter { height: 14px; margin: 12px 0 8px; overflow: hidden; border-radius: 99px; background: rgb(130 0 35 / 13%); }
+.reward-meter span { display: block; width: 100%; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#df9f24,#f0c85c,#e66f91); transform: scaleX(0); transform-origin: left; animation: reward-fill 1.15s cubic-bezier(.2,.8,.2,1) .2s forwards; }
 .survey-unlocked { padding: 12px; border-radius: 16px; background: var(--cl-color-surface-strong); }
 .survey-admin-list { grid-template-columns: repeat(auto-fill,minmax(min(100%,260px),1fr)); align-items: start; }
 .survey-admin-card-wrap { display: grid; gap: 9px; min-width: 0; }
@@ -234,6 +236,7 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .binary-positive { color: #147640; }
 @keyframes survey-arrive { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes survey-glow { from { transform: scale(.96); box-shadow: 0 0 0 0 rgb(238 170 57 / 5%); } to { transform: scale(1.04); box-shadow: 0 0 35px 8px rgb(238 170 57 / 22%); } }
+@keyframes reward-fill { to { transform: scaleX(1); } }
 @media (max-width:760px) {
   .lily-shell { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
   .mobile-footer-nav { position: fixed; inset: auto 0 0; z-index: 80; display: grid; grid-template-columns: repeat(5,1fr); gap: 2px; padding: 7px 5px calc(7px + env(safe-area-inset-bottom)); border-top: 1px solid rgb(130 0 35 / 14%); background: rgb(255 250 252 / 96%); backdrop-filter: blur(16px); }
@@ -250,7 +253,7 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .survey-card .button,.survey-actions .button { width: 100%; }
   .survey-actions { width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .survey-progress span,.survey-reward,.reward-glow { animation: none; transition: none; } }
+@media (prefers-reduced-motion: reduce) { .survey-progress span,.survey-reward,.reward-glow,.reward-meter span { animation: none; transition: none; transform: none; } }
 @media (max-width:760px) {
   .topbar { min-height: 68px; }
   .brand-copy small { display: none; }

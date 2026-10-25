@@ -61,6 +61,29 @@ beforeEach(async () => {
 afterAll(async () => { await app.close(); });
 
 describe.sequential("CookLily survey lifecycle", () => {
+  it("credits configured survey points to the customer's loyalty balance", async () => {
+    const staff = await register("staff", "67911114441");
+    const customer = await register("customer", "67911114442");
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/surveys",
+      headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin },
+      payload: { ...definition("Pesquisa pontuada"), pointsPerForm: 15, pointsPerAnswer: 25, showPoints: true }
+    });
+    expect(created.statusCode).toBe(200);
+    const survey = created.json().survey as { id: string; version: number };
+    await app.inject({ method: "POST", url: `/api/v1/lily/admin/surveys/${survey.id}/publish`, headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: {} });
+    const participation = await lilyPrisma.lilySurveyParticipation.create({ data: { userId: customer.userId, surveyId: survey.id, surveyVersion: survey.version } });
+
+    const submitted = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${survey.id}/submit`, headers: { cookie: customer.cookie, "x-lily-csrf": customer.csrf, origin }, payload: { participationId: participation.id, answers: { q1: "Resposta válida" }, consentToLinkAnswers: false } });
+    expect(submitted.statusCode).toBe(200);
+    expect(submitted.json().pointsAwarded).toBe(40);
+    expect(await lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: customer.userId, type: "survey_reward" } })).toMatchObject([{ points: 40 }]);
+
+    const profile = await app.inject({ method: "GET", url: "/api/v1/lily/customer/profile", headers: { cookie: customer.cookie } });
+    expect(profile.json().loyalty.points).toBe(40);
+  });
+
   it("requires pause before edit, lets existing responses finish, and resumes with a new version", async () => {
     const staff = await register("staff", "67911112221");
     const customer = await register("customer", "67911112222");
