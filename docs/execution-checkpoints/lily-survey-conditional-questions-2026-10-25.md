@@ -6,7 +6,7 @@
 - Branch: `codex/lily-survey-conditional-questions`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `94ea181a879ed64e09c84fe899bb684ff3a221a5`.
-- HEAD verificado: `94ea181a879ed64e09c84fe899bb684ff3a221a5`.
+- HEAD verificado nos gates: `8d53c6c1ab518b5049b51b6e70b7a831480d9622` (`feat(lily): support conditional survey questions`).
 - PRs: nenhum.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
