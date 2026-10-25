@@ -175,7 +175,7 @@ export function AdminHome() {
     </div>
     <div className="admin-actions">
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas e missões</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>

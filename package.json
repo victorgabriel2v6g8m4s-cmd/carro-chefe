@@ -23,7 +23,7 @@
     "test": "npm run db:generate && npm run test:legacy && npm run test:tool-health && npm run test:deploy-validation && npm run test:lily-budget && vitest run --config vitest.config.ts",
     "test:legacy": "npm --prefix planejamento test",
     "test:tool-health": "node --test tools/tool-health/*.test.mjs tools/agent-policy/*.test.mjs",
-    "test:deploy-validation": "node --test deploy/scripts/deploy-validation.test.mjs",
+    "test:deploy-validation": "node --test deploy/scripts/deploy-validation.test.mjs deploy/scripts/survey-ops.test.mjs",
     "test:lily-budget": "node --test tools/lily-build-budget.test.mjs",
     "test:api": "vitest run --config vitest.config.ts apps/api",
     "test:lily-ui": "vitest run --config vitest.config.ts apps/lily_acai",

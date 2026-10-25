@@ -768,6 +768,8 @@ model LilySurvey {
   publishedAt           DateTime?
   participations        LilySurveyParticipation[]
   responses             LilySurveyResponse[]
+  views                 LilySurveyView[]
+  questionMetrics       LilySurveyQuestionMetric[]
 
   @@index([status, publishedAt])
 }
@@ -788,6 +790,33 @@ model LilyCustomerNotification {
   @@index([userId, readAt, createdAt])
 }
 
+model LilySurveyView {
+  id        String   @id @default(cuid())
+  surveyId  String
+  viewId    String
+  viewedAt  DateTime @default(now())
+  survey    LilySurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, viewId])
+  @@index([surveyId, viewedAt])
+}
+
+model LilySurveyQuestionMetric {
+  id            String   @id @default(cuid())
+  surveyId      String
+  surveyVersion Int
+  questionId    String
+  optionKey     String
+  optionLabel   String
+  selectedCount Int      @default(0)
+  timeTotalMs   Float    @default(0)
+  timeSamples   Int      @default(0)
+  survey        LilySurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, surveyVersion, questionId, optionKey])
+  @@index([surveyId, surveyVersion, questionId])
+}
+
 model LilySurveyParticipation {
   id              String   @id @default(cuid())
   userId          String
@@ -795,6 +824,7 @@ model LilySurveyParticipation {
   surveyVersion   Int
   status          String   @default("in_progress")
   progressPercent Int      @default(0)
+  questionTimesJson String @default("{}")
   pointsAwarded   Int      @default(0)
   startedAt       DateTime @default(now())
   completedAt     DateTime?

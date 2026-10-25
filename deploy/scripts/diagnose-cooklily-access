@@ -1,0 +1,216 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+usage() {
+  echo "Uso: sudo bash deploy/scripts/diagnose-cooklily-access [--minutes 20]"
+  echo "Coleta logs recentes da rota CookLily, estado Nginx/API, DNS e HTTPS; grava relatório privado em /var/tmp."
+}
+
+MINUTES=20
+while (($#)); do
+  case "$1" in
+    --minutes)
+      [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]] || { usage >&2; exit 64; }
+      MINUTES="$2"
+      shift 2
+      ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 64 ;;
+  esac
+done
+(( MINUTES >= 1 && MINUTES <= 180 )) || { echo "--minutes deve ficar entre 1 e 180." >&2; exit 64; }
+
+OUT_DIR="${CARRO_CHEFE_DIAGNOSTIC_DIR:-/var/tmp}"
+mkdir -p "${OUT_DIR}"
+umask 077
+STAMP="$(date +%Y%m%d-%H%M%S)"
+REPORT="$(mktemp "${OUT_DIR%/}/cooklily-access-${STAMP}-XXXXXX.txt")"
+chmod 0600 "${REPORT}"
+exec > >(tee "${REPORT}") 2>&1
+
+echo "Diagnóstico de acesso CookLily"
+echo "Gerado: $(date --iso-8601=seconds 2>/dev/null || date)"
+echo "Janela: últimos ${MINUTES} minutos"
+echo "Host: $(hostname 2>/dev/null || echo indisponível)"
+echo "Relatório: ${REPORT}"
+echo "Dados pessoais e segredos: IPs de clientes mascarados, query strings removidas, cabeçalhos de autenticação/token/cookie redigidos."
+
+echo
+echo "== Serviços e configuração local =="
+for service in nginx carro-chefe; do
+  if command -v systemctl >/dev/null 2>&1; then
+    printf '%s=' "$service"
+    systemctl is-active "$service" 2>/dev/null || echo "indisponível/inativo"
+  else
+    echo "systemctl=indisponível"
+    break
+  fi
+done
+if command -v nginx >/dev/null 2>&1; then nginx -t 2>&1 || echo "nginx_config=inválida"; else echo "nginx=indisponível"; fi
+if command -v curl >/dev/null 2>&1; then
+  curl --silent --show-error --max-time 5 -o /dev/null -w 'api_health_local: HTTP %{http_code}\n' http://127.0.0.1:4173/api/health 2>&1 || echo "api_health_local=sem_resposta"
+fi
+
+echo
+echo "== DNS e HTTPS público =="
+if command -v getent >/dev/null 2>&1; then getent ahosts carrochefe.com | awk '!seen[$1]++ { print "DNS", $1 }' | head -n 8; else echo "getent=indisponível"; fi
+if command -v dig >/dev/null 2>&1; then
+  printf 'AAAA: '; dig +short AAAA carrochefe.com | head -n 4 | tr '\n' ' '; echo
+fi
+if command -v curl >/dev/null 2>&1; then
+  curl --silent --show-error --connect-timeout 8 --max-time 15 -o /dev/null -w 'cardapio: HTTP %{http_code}; TLS verify %{ssl_verify_result}\n' https://carrochefe.com/lilyacai/cardapio 2>&1 || echo "cardapio: HTTPS probe falhou"
+  curl --silent --show-error --connect-timeout 8 --max-time 15 -o /dev/null -w 'notificacoes (sem cookie): HTTP %{http_code}; TLS verify %{ssl_verify_result}\n' 'https://carrochefe.com/api/v1/lily/notifications?limit=1' 2>&1 || echo "notificacoes: HTTPS probe falhou"
+fi
+if command -v openssl >/dev/null 2>&1; then
+  for protocol in tls1_2 tls1_3; do
+    echo "TLS ${protocol}:"
+    timeout 12 openssl s_client "-${protocol}" -connect carrochefe.com:443 -servername carrochefe.com -brief </dev/null 2>&1 | sed -n '1,6p' || echo "negociação ${protocol} indisponível"
+  done
+  echo "Certificado apresentado pelo endpoint (somente emissor/validade/SAN):"
+  timeout 12 openssl s_client -connect carrochefe.com:443 -servername carrochefe.com -showcerts </dev/null 2>/dev/null | openssl x509 -noout -dates -issuer -ext subjectAltName 2>&1 || echo "não foi possível ler o certificado remoto"
+else
+  echo "openssl=indisponível"
+fi
+
+echo
+echo "== Acessos recentes relevantes (query strings e IP integral removidos) =="
+ACCESS_LOG="${CARRO_CHEFE_NGINX_ACCESS_LOG:-/var/log/nginx/access.log}"
+access_files=()
+for candidate in "${ACCESS_LOG}" "${ACCESS_LOG}.1" "${ACCESS_LOG}.2.gz"; do [[ -f "$candidate" ]] && access_files+=("$candidate"); done
+if ((${#access_files[@]})); then
+  python3 - "$MINUTES" "${access_files[@]}" <<'PY'
+from datetime import datetime, timedelta
+import gzip, ipaddress, re, sys
+
+cutoff = datetime.now().astimezone() - timedelta(minutes=int(sys.argv[1]))
+files = sys.argv[2:]
+request_re = re.compile(r'"(?:GET|HEAD|POST|PUT|PATCH|DELETE)\s+([^\s"]+)')
+error_re = re.compile(r'"\s+(?:400|403|404|495|496|497|499|500|502|503|504)\s')
+count = 0
+for name in files:
+    opener = gzip.open if name.endswith('.gz') else open
+    try:
+        with opener(name, 'rt', encoding='utf-8', errors='replace') as stream:
+            for line in stream:
+                stamp = re.search(r'\[([^\]]+)\]', line)
+                request = request_re.search(line)
+                relevant_path = request and request.group(1).split('?', 1)[0] in ('/lilyacai/cardapio', '/api/v1/lily/notifications')
+                if not relevant_path and not error_re.search(line):
+                    continue
+                if stamp:
+                    try:
+                        if datetime.strptime(stamp.group(1), '%d/%b/%Y:%H:%M:%S %z') < cutoff:
+                            continue
+                    except ValueError:
+                        pass
+                parts = line.rstrip().split(' ', 1)
+                if parts:
+                    try:
+                        address = ipaddress.ip_address(parts[0])
+                        masked = str(ipaddress.ip_network(f'{address}/{24 if address.version == 4 else 48}', strict=False).network_address)
+                        line = masked + ('/24' if address.version == 4 else '/48') + (' ' + parts[1] if len(parts) > 1 else '')
+                    except ValueError:
+                        line = '<ip-redacted>' + (' ' + parts[1] if len(parts) > 1 else '')
+                line = re.sub(r'((?:GET|HEAD|POST|PUT|PATCH|DELETE)\s+)[^\s"]+\?[^\s"]+', r'\1<path>?<query-redacted>', line)
+                line = re.sub(r'\?[^\s"\]]+', '?<query-redacted>', line)
+                line = re.sub(r'(?i)(authorization|cookie|token|secret|password|api[_-]?key)(?:=|:\s*)[^\s,;]+', r'\1=<redacted>', line)
+                print(line.rstrip())
+                count += 1
+                if count >= 200:
+                    break
+    except OSError as error:
+        print(f'<log indisponível: {name}: {error.strerror}>')
+    if count >= 200:
+        break
+if count == 0:
+    print('Nenhuma requisição correspondente encontrada na janela consultada. Uma falha TLS ocorre antes do access log HTTP.')
+PY
+else
+  echo "access log indisponível: ${ACCESS_LOG}"
+fi
+
+echo
+echo "== Erros recentes Nginx relacionados a TLS/rede =="
+ERROR_LOG="${CARRO_CHEFE_NGINX_ERROR_LOG:-/var/log/nginx/error.log}"
+error_files=()
+for candidate in "${ERROR_LOG}" "${ERROR_LOG}.1" "${ERROR_LOG}.2.gz"; do [[ -f "$candidate" ]] && error_files+=("$candidate"); done
+if ((${#error_files[@]})); then
+  python3 - "$MINUTES" "${error_files[@]}" <<'PY'
+from datetime import datetime, timedelta
+import gzip, ipaddress, re, sys
+
+cutoff = datetime.now().astimezone() - timedelta(minutes=int(sys.argv[1]))
+pattern = re.compile(r'ssl|tls|handshake|certificate|protocol|alert|closed|reset|upstream', re.I)
+count = 0
+for name in sys.argv[2:]:
+    opener = gzip.open if name.endswith('.gz') else open
+    try:
+        with opener(name, 'rt', encoding='utf-8', errors='replace') as stream:
+            for line in stream:
+                if not pattern.search(line):
+                    continue
+                stamp = re.match(r'^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2})', line)
+                if stamp:
+                    try:
+                        if datetime.strptime(stamp.group(1), '%Y/%m/%d %H:%M:%S').astimezone() < cutoff:
+                            continue
+                    except ValueError:
+                        pass
+                line = re.sub(r'(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])', '<ip-redacted>', line)
+                for candidate in re.findall(r'(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])', line):
+                    try:
+                        address = ipaddress.ip_address(candidate)
+                        if address.version == 6:
+                            masked = str(ipaddress.ip_network(f'{address}/48', strict=False).network_address) + '/48'
+                            line = line.replace(candidate, masked)
+                    except ValueError:
+                        pass
+                line = re.sub(r'((?:GET|HEAD|POST|PUT|PATCH|DELETE)\s+)[^\s"]+\?[^\s"]+', r'\1<path>?<query-redacted>', line)
+                line = re.sub(r'\?[^\s"\]]+', '?<query-redacted>', line)
+                line = re.sub(r'(?i)(authorization|cookie|token|secret|password|api[_-]?key)(?:=|:\s*)[^\s,;]+', r'\1=<redacted>', line)
+                print(line.rstrip())
+                count += 1
+                if count >= 200:
+                    break
+    except OSError as error:
+        print(f'<log indisponível: {name}: {error.strerror}>')
+    if count >= 200:
+        break
+if count == 0:
+    print('Nenhum erro TLS/rede correspondente encontrado na janela consultada.')
+PY
+else
+  echo "error log indisponível: ${ERROR_LOG}"
+fi
+
+echo
+echo "== Eventos recentes dos serviços =="
+if command -v journalctl >/dev/null 2>&1; then
+  for service in nginx certbot carro-chefe; do
+    echo "-- ${service} --"
+    journalctl -u "$service" --since "${MINUTES} minutes ago" --no-pager -n 200 2>/dev/null \
+      | grep -Ei 'ssl|tls|handshake|certificate|renew|error|failed|timeout|active|inactive|started|stopped|listening|health' \
+      | python3 -c '
+import ipaddress, re, sys
+for line in sys.stdin:
+    line = re.sub(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])", "<ip-redacted>", line)
+    for candidate in re.findall(r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])", line):
+        try:
+            address = ipaddress.ip_address(candidate)
+            if address.version == 6:
+                line = line.replace(candidate, str(ipaddress.ip_network(f"{address}/48", strict=False).network_address) + "/48")
+        except ValueError:
+            pass
+    line = re.sub(r"(?i)(authorization|cookie|token|secret|password|api[_-]?key)(=|: +)[^ ,;]+", r"\1=<redacted>", line)
+    line = re.sub(r"((?:GET|HEAD|POST|PUT|PATCH|DELETE) +)[^ ?\"]+\?[^ \"]+", r"\1<path>?<query-redacted>", line)
+    line = re.sub(r"\?[^ \"]+", "?<query-redacted>", line)
+    sys.stdout.write(line)
+' \
+      | tail -n 80 || true
+  done
+else
+  echo "journalctl=indisponível"
+fi
+
+echo
+echo "Concluído. Envie o arquivo ao responsável pelo diagnóstico: ${REPORT}"

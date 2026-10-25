@@ -23,6 +23,19 @@ export type CustomerNotification = {
   readAt: string | null; createdAt: string;
 };
 
+export type SurveyAnalytics = {
+  surveyId: string;
+  survey: { id: string; title: string; status: string; definition: SurveyDefinition };
+  views: number;
+  responses: number;
+  questions: Array<{
+    questionId: string;
+    answered: number;
+    averageTimeMs: number | null;
+    options: Array<{ label: string; count: number }>;
+  }>;
+};
+
 export async function surveyJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/v1/lily/${path}`, { credentials: "same-origin", ...init, headers: { "Content-Type": "application/json", ...init?.headers } });
   return parseResponse<T>(response);
