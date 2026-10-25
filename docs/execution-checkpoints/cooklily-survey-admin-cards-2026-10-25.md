@@ -6,7 +6,7 @@
 - Branch: `codex/cooklily-survey-admin-cards`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `47eb0977e21e20bad63de704ad7e4ab6372e9820`.
-- HEAD verificado: alterações ainda não commitadas sobre `47eb0977e21e20bad63de704ad7e4ab6372e9820`.
+- HEAD verificado: `99e075b` (`feat(lily): improve survey admin cards and diagnostics`).
 - PRs: nenhum.
 - Última verificação: 2026-10-25; `npm run check`, `npm test` e `npm run build` passaram localmente.
 - Estado de interrupção: não interrompido.
@@ -40,6 +40,7 @@
 - Teste unitário analytics: PASS (3/3); migration SQLite e scripts: PASS (5/5).
 - Playwright local com respostas mockadas: botão “Adicionar resposta” incluiu opção e manteve URL; duplo clique abriu preview; viewport 390 px permaneceu sem overflow horizontal. API local não estava ligada e endpoints não mockados apresentaram erro esperado.
 - CI/CodeQL/PR: pendentes.
+- Commit local: `99e075b`; alterações versionadas, push/PR pendentes.
 - CI/CodeQL/PR: pendentes.
 
 ## Migrations
