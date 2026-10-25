@@ -2,6 +2,7 @@ import { getLilySession, parseResponse } from "../../api";
 
 export type SurveyQuestion = {
   id: string; type: string; title: string; description: string; required: boolean;
+  visibility?: { questionId: string; operator: "answered" | "not_answered" | "equals" | "contains"; value?: string };
   options: string[]; rows: string[]; columns: string[];
   scale?: { min: number; max: number; minLabel?: string; maxLabel?: string };
   media?: { mimeTypes: string[]; maxBytes: number };
@@ -9,6 +10,7 @@ export type SurveyQuestion = {
   textAfterChoice?: boolean; positiveLabel?: string; negativeLabel?: string;
   style: { fontSize: "sm" | "md" | "lg" | "xl"; bold: boolean; italic: boolean; markdown: boolean; html?: string };
 };
+export type SurveyVisibility = NonNullable<SurveyQuestion["visibility"]>;
 
 export type SurveyDefinition = {
   title: string; subtitle?: string | null; description?: string | null; questions: SurveyQuestion[];

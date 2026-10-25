@@ -7,7 +7,7 @@ import { promises as fs } from "node:fs";
 import { ApiError, parseJson } from "../../../lib/errors";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "../admin-security";
 import { requireLilyCsrf, requireLilySession } from "../auth";
-import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, type SurveyDefinition } from "./contracts";
+import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, visibleSurveyQuestions, type SurveyDefinition } from "./contracts";
 import { MAX_QUESTION_TIME_MS, mergeQuestionTimes, questionMetricKey, questionAnswered, selectedSurveyOptions } from "./analytics";
 
 const idSchema = z.string().trim().min(1).max(80);
@@ -152,8 +152,9 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     ]);
     if (!survey || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
     const definition = definitionOf(survey);
-    const answered = definition.questions.filter((question) => questionAnswerIsPresent(question, body.answers[question.id])).length;
-    const progressPercent = Math.round(answered / definition.questions.length * 100);
+    const visibleQuestions = visibleSurveyQuestions(definition, body.answers);
+    const answered = visibleQuestions.filter((question) => questionAnswerIsPresent(question, body.answers[question.id])).length;
+    const progressPercent = Math.round(answered / visibleQuestions.length * 100);
     const questionTimesMs = mergeQuestionTimes(definition, parseJson(participation.questionTimesJson, {}), body.questionTimesMs);
     await lilyPrisma.lilySurveyParticipation.update({ where: { id: participation.id }, data: { progressPercent, questionTimesJson: JSON.stringify(questionTimesMs) } });
     return { progressPercent, questionTimesMs };
@@ -172,14 +173,16 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const definition = definitionOf(survey);
     const invalidQuestionId = validateSurveyAnswers(definition, input.answers);
     if (invalidQuestionId) throw new ApiError(400, "Revise as respostas obrigatórias da pesquisa.", { questionId: invalidQuestionId });
-    const answeredCount = definition.questions.filter((question) => questionAnswerIsPresent(question, input.answers[question.id])).length;
+    const visibleQuestions = visibleSurveyQuestions(definition, input.answers);
+    const answeredCount = visibleQuestions.filter((question) => questionAnswerIsPresent(question, input.answers[question.id])).length;
     const answerPoints = Math.max(0, answeredCount * survey.pointsPerAnswer);
     const awarded = answerPoints + survey.pointsPerForm;
     const sourceKey = `survey:${survey.id}:v${survey.version}:user:${context.user.id}`;
     const now = new Date();
-    const safeAnswers = Object.fromEntries(Object.entries(input.answers).filter(([key]) => definition.questions.some((question) => question.id === key)));
+    const visibleIds = new Set(visibleQuestions.map(({ id: questionId }) => questionId));
+    const safeAnswers = Object.fromEntries(Object.entries(input.answers).filter(([key]) => visibleIds.has(key)));
     const questionTimesMs = mergeQuestionTimes(definition, parseJson(participation.questionTimesJson, {}), input.questionTimesMs);
-    const uploadIds = definition.questions.flatMap((question) => {
+    const uploadIds = visibleQuestions.flatMap((question) => {
       const answer = safeAnswers[question.id];
       if (question.type === "media" && answer && typeof answer === "object" && !Array.isArray(answer) && typeof (answer as Record<string, unknown>).uploadId === "string") return [{ id: (answer as Record<string, string>).uploadId, questionId: question.id }];
       if (question.type === "free_text" && question.media && answer && typeof answer === "object" && !Array.isArray(answer)) {
@@ -199,7 +202,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
         await tx.lilyConsentRecord.create({ data: { userId: context.user.id, purpose: "survey_answers", version: "survey-answers-v1", granted: true, source: "survey_submit", recordedAt: now } });
       }
       await tx.lilySurveyResponse.create({ data: { surveyId: survey.id, surveyVersion: survey.version, respondentUserId: input.consentToLinkAnswers ? context.user.id : null, respondentConsented: input.consentToLinkAnswers, answersJson: JSON.stringify(safeAnswers), submittedAt: now } });
-      for (const question of definition.questions) {
+      for (const question of visibleQuestions) {
         const answer = safeAnswers[question.id];
         if (!questionAnswered(question, answer)) continue;
         const time = questionTimesMs[question.id] ?? 0;

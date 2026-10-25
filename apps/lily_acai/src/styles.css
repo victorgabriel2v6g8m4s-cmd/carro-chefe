@@ -117,6 +117,8 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .survey-grid { border-collapse: collapse; min-width: 500px; width: 100%; }
 .survey-grid th,.survey-grid td { padding: 10px; border-bottom: 1px solid rgb(130 0 35 / 12%); text-align: center; }
 .survey-grid th:first-child { text-align: left; }
+.survey-visibility-rule { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,190px),1fr)); align-items: end; gap: 12px; margin: 12px 0; padding: 14px; border-radius: 14px; background: #fff4f8; }
+.survey-visibility-rule small { grid-column: 1 / -1; color: var(--cl-color-text-muted); }
 .survey-consent { padding: 15px; background: var(--cl-color-surface-strong); border-radius: 14px; }
 .survey-consent label { align-items: flex-start; }
 .survey-actions { margin-top: 10px; }
