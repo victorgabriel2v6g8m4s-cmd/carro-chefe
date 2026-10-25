@@ -2,12 +2,12 @@
 
 - Tarefa: permitir exibir perguntas conforme respostas anteriores.
 - Responsável: AG-DEV.
-- Estado: `in_progress`.
-- Branch: `codex/lily-survey-conditional-questions`.
+- Estado: `merged`.
+- Branch de implementação: `codex/lily-survey-conditional-questions` (integrada); branch do fechamento: `codex/close-lily-survey-conditional-checkpoint`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `94ea181a879ed64e09c84fe899bb684ff3a221a5`.
-- HEAD verificado nos gates: `8d53c6c1ab518b5049b51b6e70b7a831480d9622` (`feat(lily): support conditional survey questions`).
-- PRs: nenhum.
+- HEAD verificado: `7cabe22fa1619e42d49f89596e8cb8a1c14aa676` (`CookLily: perguntas condicionais nas pesquisas (#187)`).
+- PRs: [#187](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/187), squash merge; CI 7/7 aprovado.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
@@ -24,7 +24,7 @@
 2. `[completed]` Implementar editor condicional e adaptar a página do respondente.
 3. `[completed]` Testar os caminhos sim/não, ocultação, progresso, pontos, condições encadeadas e proteção contra dependência futura.
 4. `[completed]` Rodar gates completos e validar interface.
-5. `[in_progress]` Abrir PR draft, acompanhar CI e integrar na canonical.
+5. `[completed]` Abrir PR, acompanhar CI e integrar na canonical.
 
 ## Gates e testes
 
@@ -34,6 +34,7 @@
 - `npm test`: PASS, 58 arquivos; 315 aprovados e 3 ignorados.
 - `npm run build`: PASS; budget CookLily aprovado. Aviso do Vite sobre chunk acima de 500 kB continua preexistente.
 - Playwright CLI: controle condicional aparece após selecionar pergunta anterior; viewport 360 px sem overflow horizontal.
+- PR #187: 7/7 checks aprovados (Node 20, Node 24, Workbook Snapshot, Excel Recipe Ubuntu e Windows, Windows Supervisor, Tool Health Linux).
 
 ## Migrations
 
@@ -49,4 +50,5 @@
 
 ## Próxima ação exata
 
-1. Abrir PR draft para `cooklily/canonical`, acompanhar CI e integrar quando todos os checks passarem.
+1. Integrar o fechamento documental deste checkpoint após CI.
+2. Proprietário executar `sudo cc deploy canonical` e homologar ambos os ramos de uma pesquisa condicional na VPS.
