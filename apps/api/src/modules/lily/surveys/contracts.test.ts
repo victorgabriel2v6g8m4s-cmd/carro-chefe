@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerIsPresent, normalizeDefinition, questionAnswerIsPresent, sanitizeSurveyHtml, surveyDefinitionSchema, validateSurveyAnswers } from "./contracts";
+import { answerIsPresent, normalizeDefinition, questionAnswerIsPresent, sanitizeSurveyHtml, surveyDefinitionSchema, validateSurveyAnswers, visibleSurveyQuestions } from "./contracts";
 
 const definition = surveyDefinitionSchema.parse({
   title: "Pesquisa",
@@ -32,6 +32,33 @@ describe("CookLily survey contracts", () => {
     expect(validateSurveyAnswers(definition, { choice: "A", swipe: "maybe" })).toBe("swipe");
     expect(validateSurveyAnswers(definition, { choice: "A", swipe: "negative", grid: { R2: "C1" } })).toBe("grid");
     expect(validateSurveyAnswers(definition, { choice: "A", swipe: "positive", scale: 8 })).toBe("scale");
+  });
+
+  it("shows only matching conditional questions and validates required answers on the selected branch", () => {
+    const branched = surveyDefinitionSchema.parse({
+      title: "Preferências de doces",
+      questions: [
+        { id: "tried", type: "single_choice", title: "Já provou?", required: true, options: ["Sim", "Não"] },
+        { id: "liked", type: "short_answer", title: "O que mais gostou?", required: true, visibility: { questionId: "tried", operator: "equals", value: "Sim" } },
+        { id: "want", type: "short_answer", title: "Qual doce gostaria?", required: true, visibility: { questionId: "tried", operator: "equals", value: "Não" } },
+        { id: "followup", type: "paragraph", title: "Mais detalhes", visibility: { questionId: "liked", operator: "answered" } }
+      ]
+    });
+    expect(visibleSurveyQuestions(branched, { tried: "Sim" }).map(({ id }) => id)).toEqual(["tried", "liked"]);
+    expect(visibleSurveyQuestions(branched, { tried: "Não", liked: "resposta antiga" }).map(({ id }) => id)).toEqual(["tried", "want"]);
+    expect(validateSurveyAnswers(branched, { tried: "Sim" })).toBe("liked");
+    expect(validateSurveyAnswers(branched, { tried: "Não", want: "Pudim", liked: "resposta antiga" })).toBeNull();
+  });
+
+  it("rejects conditional rules that point forward or select an unavailable answer", () => {
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [
+      { id: "q1", type: "short_answer", title: "A", visibility: { questionId: "q2", operator: "answered" } },
+      { id: "q2", type: "single_choice", title: "B", options: ["Sim"] }
+    ] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [
+      { id: "q1", type: "single_choice", title: "A", options: ["Sim"] },
+      { id: "q2", type: "short_answer", title: "B", visibility: { questionId: "q1", operator: "equals", value: "Não" } }
+    ] })).toThrow();
   });
 
   it("removes unsafe HTML tags and attributes before returning definitions", () => {

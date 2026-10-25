@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { QuestionInput } from "./QuestionInput";
-import { surveyJson, type SurveyAnalytics, type SurveyDefinition, type SurveyQuestion } from "./api";
+import { surveyJson, type SurveyAnalytics, type SurveyDefinition, type SurveyQuestion, type SurveyVisibility } from "./api";
 import { SurveyAnalyticsPanel } from "./SurveyAnalyticsPanel";
 
 type SurveyRow = { id: string; title: string; subtitle: string | null; description: string | null; estimatedMinutes: number; questionCount?: number; points: number | null; showPoints?: boolean; definition?: SurveyDefinition; status?: string; version?: number; createdAt: string; viewCount: number; responseCount: number };
@@ -26,7 +26,27 @@ function definitionForSave(definition: SurveyDefinition): SurveyDefinition {
 }
 
 function addGeneratedQuestionIds(definition: SurveyDefinition): SurveyDefinition {
-  return { ...definition, questions: definition.questions.map((question) => ({ ...question, id: crypto.randomUUID() })) };
+  const ids = new Map(definition.questions.map((question) => [question.id, crypto.randomUUID()]));
+  return { ...definition, questions: definition.questions.map((question) => ({ ...question, id: ids.get(question.id)!, visibility: question.visibility ? { ...question.visibility, questionId: ids.get(question.visibility.questionId) ?? question.visibility.questionId } : undefined })) };
+}
+
+function QuestionVisibilityRule({ question, previousQuestions, update }: { question: SurveyQuestion; previousQuestions: SurveyQuestion[]; update: (patch: Partial<SurveyQuestion>) => void }) {
+  const condition = question.visibility;
+  const parent = previousQuestions.find((item) => item.id === condition?.questionId);
+  const choiceValues = parent?.type === "binary_swipe" ? ["positive", "negative"] : parent?.options ?? [];
+  const choiceLabels = parent?.type === "binary_swipe" ? [parent.positiveLabel || "Positivo", parent.negativeLabel || "Negativo"] : choiceValues;
+  const supportsChoice = Boolean(parent && ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text", "binary_swipe"].includes(parent.type));
+  const isMultiple = Boolean(parent && ["multiple_choice", "checkboxes"].includes(parent.type));
+  function updateCondition(next: SurveyVisibility | undefined) { update({ visibility: next }); }
+  function setQuestion(questionId: string) {
+    const source = previousQuestions.find((item) => item.id === questionId);
+    if (!source) { updateCondition(undefined); return; }
+    const isMultiple = ["multiple_choice", "checkboxes"].includes(source.type);
+    const values = source.type === "binary_swipe" ? ["positive", "negative"] : source.options;
+    const sourceSupportsChoice = ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text", "binary_swipe"].includes(source.type);
+    updateCondition(sourceSupportsChoice && values.length ? { questionId, operator: isMultiple ? "contains" : "equals", value: values[0] } : { questionId, operator: "answered" });
+  }
+  return <div className="survey-visibility-rule"><label>Exibição condicional<select value={condition?.questionId ?? ""} onChange={(event) => setQuestion(event.target.value)}><option value="">Sempre exibir</option>{previousQuestions.map((item) => <option key={item.id} value={item.id}>{item.title || `Pergunta ${previousQuestions.indexOf(item) + 1}`}</option>)}</select></label>{condition && parent && <><label>Mostrar quando<select value={condition.operator} onChange={(event) => updateCondition({ ...condition, operator: event.target.value as SurveyVisibility["operator"], value: event.target.value === "equals" || event.target.value === "contains" ? choiceValues[0] : undefined })}><option value="answered">a pergunta anterior for respondida</option><option value="not_answered">a pergunta anterior ficar sem resposta</option>{supportsChoice && !isMultiple && <option value="equals">a resposta for</option>}{isMultiple && <option value="contains">a seleção incluir</option>}</select></label>{["equals", "contains"].includes(condition.operator) && <label>Resposta que ativa esta pergunta<select required value={condition.value ?? ""} onChange={(event) => updateCondition({ ...condition, value: event.target.value })}>{choiceValues.map((value, index) => <option key={value} value={value}>{choiceLabels[index]}</option>)}</select></label>}<small>Esta pergunta só aparece quando a condição for atendida.</small></>}</div>;
 }
 
 function MultiSelect({ label, values, options, onChange }: { label: string; values: string[]; options: Array<{ id: string; label: string }>; onChange: (values: string[]) => void }) {
@@ -131,7 +151,20 @@ export function AdminSurveysPage() {
   }, [previewSurveyId]);
 
   function updateQuestion(index: number, patch: Partial<SurveyQuestion>) {
-    setDraft((old) => ({ ...old, questions: old.questions.map((question, questionIndex) => questionIndex === index ? { ...question, ...patch } : question) }));
+    setDraft((old) => {
+      const questions = old.questions.map((question, questionIndex) => questionIndex === index ? { ...question, ...patch } : question);
+      const changed = questions[index]!;
+      const choiceTypes = ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text", "binary_swipe"];
+      return { ...old, questions: questions.map((question) => {
+        const condition = question.visibility;
+        if (!condition || condition.questionId !== changed.id || !["equals", "contains"].includes(condition.operator)) return question;
+        const values = changed.type === "binary_swipe" ? ["positive", "negative"] : changed.options;
+        const multiple = ["multiple_choice", "checkboxes"].includes(changed.type);
+        const valid = choiceTypes.includes(changed.type) && Boolean(condition.value && values.includes(condition.value)) && (condition.operator === "contains" ? multiple : !multiple);
+        if (valid) return question;
+        return { ...question, visibility: choiceTypes.includes(changed.type) && values.length ? { ...condition, operator: multiple ? "contains" : "equals", value: values[0] } : { questionId: condition.questionId, operator: "answered" as const } };
+      }) };
+    });
   }
 
   function editSurvey(row: SurveyRow) {
@@ -231,7 +264,7 @@ export function AdminSurveysPage() {
       <MultiSelect label="Pesquisas que precisam ser concluídas" values={draft.prerequisites} options={rows.map((row) => ({ id: row.id, label: `${row.title} · ${row.id.slice(0, 8)}` }))} onChange={(prerequisites) => setDraft({ ...draft, prerequisites })} />
       <div className="survey-builder-questions">{draft.questions.map((question, index) => {
         const set = (patch: Partial<SurveyQuestion>) => updateQuestion(index, patch);
-        return <fieldset className="survey-builder-question" key={question.id}><legend>Pergunta {index + 1}</legend><p className="survey-reference">Referência técnica: <code>{question.id}</code></p><label>Tipo<select value={question.type} onChange={(event) => set({ type: event.target.value, media: event.target.value === "media" ? { mimeTypes: ["image/jpeg", "image/png", "image/webp"], maxBytes: 5 * 1024 * 1024 } : undefined })}>{Object.entries(questionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Pergunta *<input required maxLength={240} value={question.title} onChange={(event) => set({ title: event.target.value })} /></label><label>Descrição opcional<textarea maxLength={4000} value={question.description} onChange={(event) => set({ description: event.target.value })} /></label><label className="check"><input type="checkbox" checked={question.required} onChange={(event) => set({ required: event.target.checked })} /><span>Resposta obrigatória</span></label><QuestionSettings question={question} update={set} /><div className="survey-question-actions"><button className="button ghost" type="button" disabled={draft.questions.length <= 1} onClick={() => setDraft((old) => ({ ...old, questions: old.questions.filter((_, questionIndex) => questionIndex !== index) }))}>Remover pergunta</button></div></fieldset>;
+        return <fieldset className="survey-builder-question" key={question.id}><legend>Pergunta {index + 1}</legend><p className="survey-reference">Referência técnica: <code>{question.id}</code></p><label>Tipo<select value={question.type} onChange={(event) => set({ type: event.target.value, media: event.target.value === "media" ? { mimeTypes: ["image/jpeg", "image/png", "image/webp"], maxBytes: 5 * 1024 * 1024 } : undefined })}>{Object.entries(questionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Pergunta *<input required maxLength={240} value={question.title} onChange={(event) => set({ title: event.target.value })} /></label><label>Descrição opcional<textarea maxLength={4000} value={question.description} onChange={(event) => set({ description: event.target.value })} /></label><label className="check"><input type="checkbox" checked={question.required} onChange={(event) => set({ required: event.target.checked })} /><span>Resposta obrigatória</span></label><QuestionVisibilityRule question={question} previousQuestions={draft.questions.slice(0, index)} update={set} /><QuestionSettings question={question} update={set} /><div className="survey-question-actions"><button className="button ghost" type="button" disabled={draft.questions.length <= 1} onClick={() => setDraft((old) => { const removedId = old.questions[index]?.id; return { ...old, questions: old.questions.filter((_, questionIndex) => questionIndex !== index).map((item) => item.visibility?.questionId === removedId ? { ...item, visibility: undefined } : item) }; })}>Remover pergunta</button></div></fieldset>;
       })}</div>
       <button className="button ghost" type="button" onClick={() => setDraft((old) => ({ ...old, questions: [...old.questions, newQuestion()] }))}>＋ Adicionar pergunta</button>
       <div className="survey-live-preview"><div className="survey-preview-heading"><div><span className="eyebrow">Prévia ao vivo</span><h3>{draft.title || "Título da pesquisa"}</h3></div><label>Pré-visualizar pergunta<select value={previewQuestion} onChange={(event) => setPreviewQuestion(Number(event.target.value))}>{draft.questions.map((question, index) => <option key={question.id} value={index}>Pergunta {index + 1}</option>)}</select></label></div>{draft.questions[previewQuestion] && <fieldset className={`survey-question font-${draft.questions[previewQuestion]!.style.fontSize} ${draft.questions[previewQuestion]!.style.bold ? "is-bold" : ""} ${draft.questions[previewQuestion]!.style.italic ? "is-italic" : ""}`}><legend>{draft.questions[previewQuestion]!.title || "Sua pergunta aparecerá aqui"}{draft.questions[previewQuestion]!.required && <span> *</span>}</legend>{draft.questions[previewQuestion]!.description && <p>{draft.questions[previewQuestion]!.description}</p>}<QuestionInput question={draft.questions[previewQuestion]!} value={undefined} onChange={() => undefined} surveyId="preview" disabled /></fieldset>}</div>

@@ -61,6 +61,33 @@ beforeEach(async () => {
 afterAll(async () => { await app.close(); });
 
 describe.sequential("CookLily survey lifecycle", () => {
+  it("counts and stores only the answers on the customer's selected branch", async () => {
+    const staff = await register("staff", "67911115551");
+    const customer = await register("customer", "67911115552");
+    const created = await app.inject({ method: "POST", url: "/api/v1/lily/admin/surveys", headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: {
+      title: "Preferências de doces",
+      questions: [
+        { id: "tried", type: "single_choice", title: "Já provou esse sabor?", required: true, options: ["Sim", "Não"] },
+        { id: "liked", type: "short_answer", title: "O que mais gostou?", required: true, visibility: { questionId: "tried", operator: "equals", value: "Sim" } },
+        { id: "want", type: "short_answer", title: "Qual doce gostaria?", required: true, visibility: { questionId: "tried", operator: "equals", value: "Não" } }
+      ],
+      pointsPerForm: 5, pointsPerAnswer: 10, showPoints: true
+    } });
+    expect(created.statusCode).toBe(200);
+    const survey = created.json().survey as { id: string; version: number };
+    await app.inject({ method: "POST", url: `/api/v1/lily/admin/surveys/${survey.id}/publish`, headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: {} });
+    const participation = await lilyPrisma.lilySurveyParticipation.create({ data: { userId: customer.userId, surveyId: survey.id, surveyVersion: survey.version } });
+    const answers = { tried: "Não", liked: "resposta antiga que não pode ser salva", want: "Pudim" };
+
+    const progress = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${survey.id}/progress`, headers: { cookie: customer.cookie, "x-lily-csrf": customer.csrf, origin }, payload: { participationId: participation.id, answers } });
+    expect(progress.json().progressPercent).toBe(100);
+    const submitted = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${survey.id}/submit`, headers: { cookie: customer.cookie, "x-lily-csrf": customer.csrf, origin }, payload: { participationId: participation.id, answers, consentToLinkAnswers: false } });
+    expect(submitted.statusCode).toBe(200);
+    expect(submitted.json().pointsAwarded).toBe(25);
+    const response = await lilyPrisma.lilySurveyResponse.findFirstOrThrow({ where: { surveyId: survey.id } });
+    expect(JSON.parse(response.answersJson)).toEqual({ tried: "Não", want: "Pudim" });
+  });
+
   it("credits configured survey points to the customer's loyalty balance", async () => {
     const staff = await register("staff", "67911114441");
     const customer = await register("customer", "67911114442");

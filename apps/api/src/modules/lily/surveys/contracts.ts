@@ -12,6 +12,7 @@ const questionSchema = z.object({
   title: z.string().trim().min(1).max(240),
   description: z.string().max(4000).optional().default(""),
   required: z.boolean().default(false),
+  visibility: z.object({ questionId: z.string().trim().min(1).max(80), operator: z.enum(["answered", "not_answered", "equals", "contains"]), value: z.string().max(180).optional() }).strict().optional(),
   options: z.array(z.string().trim().min(1).max(180)).max(100).default([]),
   rows: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
   columns: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
@@ -65,6 +66,25 @@ export const surveyDefinitionSchema = z.object({
   for (const question of mediaQuestions) {
     if (question.media!.maxBytes > definition.mediaMaxBytes || question.media!.mimeTypes.some((mime) => !definition.mediaMimeTypes.includes(mime))) context.addIssue({ code: "custom", path: ["questions"], message: "Os limites e formatos das perguntas devem estar dentro da configuração geral da pesquisa." });
   }
+  const questionIndex = new Map(definition.questions.map((question, index) => [question.id, index]));
+  for (const [index, question] of definition.questions.entries()) {
+    const condition = question.visibility;
+    if (!condition) continue;
+    const parent = definition.questions[questionIndex.get(condition.questionId) ?? -1];
+    if (!parent || (questionIndex.get(condition.questionId) ?? index) >= index) {
+      context.addIssue({ code: "custom", path: ["questions", index, "visibility"], message: "A condição deve referenciar uma pergunta anterior." });
+      continue;
+    }
+    if (["equals", "contains"].includes(condition.operator)) {
+      const choices = parent.type === "binary_swipe" ? ["positive", "negative"] : parent.options;
+      const multiple = ["multiple_choice", "checkboxes"].includes(parent.type);
+      if (!condition.value || !choices.includes(condition.value) || (condition.operator === "contains" && !multiple) || (condition.operator === "equals" && multiple)) {
+        context.addIssue({ code: "custom", path: ["questions", index, "visibility"], message: "A condição precisa usar uma resposta válida da pergunta anterior." });
+      }
+    } else if (condition.value !== undefined) {
+      context.addIssue({ code: "custom", path: ["questions", index, "visibility", "value"], message: "Esta condição não usa um valor de resposta." });
+    }
+  }
 });
 
 export type SurveyDefinition = z.infer<typeof surveyDefinitionSchema>;
@@ -106,10 +126,31 @@ export function questionAnswerIsPresent(question: SurveyQuestion, value: unknown
   return answerIsPresent(value);
 }
 
+export function visibleSurveyQuestions(definition: SurveyDefinition, answers: Record<string, unknown>) {
+  const visible: SurveyQuestion[] = [];
+  for (const question of definition.questions) {
+    const condition = question.visibility;
+    if (!condition) { visible.push(question); continue; }
+    const parent = visible.find((item) => item.id === condition.questionId);
+    if (!parent) continue;
+    const answer = answers[parent.id];
+    const answered = questionAnswerIsPresent(parent, answer);
+    const choice = answer && typeof answer === "object" && !Array.isArray(answer) ? (answer as Record<string, unknown>).choice : answer;
+    const matches = condition.operator === "answered" ? answered
+      : condition.operator === "not_answered" ? !answered
+        : condition.operator === "equals" ? choice === condition.value
+          : Array.isArray(answer) && answer.includes(condition.value);
+    if (matches) visible.push(question);
+  }
+  return visible;
+}
+
 export function validateSurveyAnswers(definition: SurveyDefinition, answers: unknown) {
   if (!answers || typeof answers !== "object" || Array.isArray(answers)) return null;
   const values = answers as Record<string, unknown>;
+  const visibleIds = new Set(visibleSurveyQuestions(definition, values).map(({ id }) => id));
   for (const question of definition.questions) {
+    if (!visibleIds.has(question.id)) continue;
     const value = values[question.id];
     if (question.required && !questionAnswerIsPresent(question, value)) return question.id;
     if (!questionAnswerIsPresent(question, value)) continue;
