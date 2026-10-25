@@ -2,29 +2,29 @@
 
 - Tarefa: permitir pausar/retomar e excluir pesquisas; corrigir edição indisponível.
 - Responsável: AG-DEV.
-- Estado: `in_progress`.
-- Branch: `codex/lily-survey-lifecycle-edit`.
+- Estado: `merged`.
+- Branch: `codex/lily-survey-lifecycle-edit` (integrada).
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `62147fb`.
-- HEAD verificado: `62147fb` (alterações locais concluídas, aguardando commit).
-- PRs: nenhum.
+- HEAD verificado: `ac7db2f` (`feat(lily): manage survey lifecycle and editing (#183)`).
+- PRs: [#183](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/183), merged por squash.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
-## Implementado localmente (pendente de commit)
+## Implementado e integrado
 
-- Confirmado em código: botão Editar fica desabilitado para status diferente de `draft`; endpoint PUT também aceita apenas `draft`.
-- Confirmado em código: não existe rota/ação administrativa para pausar, retomar ou remover pesquisas.
+- Causa confirmada: botão Editar ficava desabilitado fora de `draft`; endpoint PUT também aceitava apenas `draft`.
+- Antes não havia rota/ação administrativa para pausar, retomar ou remover pesquisas.
 - O modelo status é texto; as respostas e métricas têm histórico de versão ligado à pesquisa.
 - Preflights AG-DEV passaram para frontend surveys, API surveys, banco Lily e documentação de checkpoint.
 
-## Próximos marcos
+## Entregas
 
-- Implementadas transições `draft/published/paused/cancelled`, com autorização, CSRF, atualização condicional e auditoria server-side.
-- Painel permite editar rascunhos e pesquisas pausadas; edição publicada exige pausa e conclusão das participações abertas; o formulário rola até a área de edição.
-- Pausadas não aceitam novos inícios, mas usuários com participação em andamento podem enviar respostas/anexos.
-- Exclusão é cancelamento lógico, encerra participações em andamento e preserva respostas/estatísticas.
-- Testes de integração cobrem pausa, bloqueio de edição, conclusão de resposta durante pausa, incremento de versão, retomada e exclusão lógica.
+- Transições `draft/published/paused/cancelled` com autorização, CSRF, atualização condicional e auditoria server-side.
+- Painel edita rascunhos e pausadas. Para editar publicada, primeiro pause; aguarde participações abertas; o formulário rola até o editor.
+- Pausadas não aceitam novos inícios; participantes já ativos podem enviar respostas/anexos.
+- Excluir aplica cancelamento lógico, encerra participações abertas e preserva respostas/estatísticas.
+- Testes cobrem pausa, bloqueio de edição, conclusão em pausa, incremento de versão, retomada e exclusão lógica.
 
 ## Gates e testes
 
@@ -33,7 +33,7 @@
 - `npm test`: PASS, 57 arquivos; 309 aprovados, 3 ignorados.
 - `npm run build`: PASS; budget CookLily dentro do limite (aviso Vite de chunk >500 KB já existente).
 - Playwright CLI com APIs mockadas: edição paused habilitada, published exige pausa, pausa/retomada e cancelamento visíveis; viewport mobile 360 px sem overflow horizontal e foco de teclado presente.
-- CI/PR: pendentes.
+- CI PR #183: 7/7 checks passaram (Node 20, Node 24, Tool Health Linux, Windows Supervisor, Workbook Snapshot, Excel Recipe Ubuntu e Windows).
 
 ## Migrations
 
@@ -51,6 +51,5 @@
 
 ## Próxima ação exata
 
-1. Commitar e publicar as mudanças da branch.
-2. Abrir PR para `cooklily/canonical`, aguardar CI e integrar com o SHA esperado.
-3. Atualizar o checkpoint após o merge; proprietário executa `sudo cc deploy canonical` e homologa no site.
+1. Proprietário executar `sudo cc deploy canonical` na VPS.
+2. Homologar no site editar, pausar, retomar e excluir logicamente uma pesquisa, incluindo cliente com resposta em andamento.
