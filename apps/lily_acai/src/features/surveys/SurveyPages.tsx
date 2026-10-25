@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getLilyCatalog, getLilyProfile, getLilySession, type AuthPayload, type CatalogProduct, type LilyProfilePayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { getCustomerOrders } from "../orders/api";
-import { surveyJson, type CustomerNotification, type SurveyDefinition, type SurveyQuestion } from "./api";
+import { surveyJson, type CustomerNotification, type SurveyAnalytics, type SurveyDefinition, type SurveyQuestion } from "./api";
 import { QuestionInput } from "./QuestionInput";
+import { SurveyAnalyticsPanel } from "./SurveyAnalyticsPanel";
 
 type SurveyRow = { id: string; title: string; subtitle: string | null; description: string | null; estimatedMinutes?: number; questionCount?: number; points: number | null; showPoints?: boolean; definition?: SurveyDefinition; status?: string; version?: number };
 const labels: Record<string, string> = { single_choice:"Seleção única", multiple_choice:"Seleção múltipla", free_text:"Texto livre", media:"Mídia", choice_text:"Seleção + texto", binary_swipe:"Positivo / negativo", short_answer:"Resposta curta", paragraph:"Parágrafo", checkboxes:"Caixas de seleção", dropdown:"Lista suspensa", linear_scale:"Escala linear", multiple_choice_grid:"Grade de múltipla escolha", checkbox_grid:"Grade de caixas de seleção", date:"Data", datetime:"Data e hora" };
@@ -29,28 +30,67 @@ export function SurveyRespondPage() {
   const { id = "" } = useParams();
   const [auth, setAuth] = useState<AuthPayload | null | undefined>(undefined); const [survey, setSurvey] = useState<(SurveyDefinition & { version: number }) | null>(null);
   const [participationId, setParticipationId] = useState(""); const [answers, setAnswers] = useState<Record<string, unknown>>({}); const [progress, setProgress] = useState(0);
+  const [questionTimesMs, setQuestionTimesMs] = useState<Record<string, number>>({});
+  const questionTimesRef = useRef<Record<string, number>>({});
+  const activeQuestionRef = useRef<{ id: string; since: number } | null>(null);
+  const viewIdRef = useRef<{ surveyId: string; viewId: string } | null>(null);
   const [reward, setReward] = useState<{ pointsAwarded: number; currentPoints: number; unlockedMissions: Array<{ id: string; title: string; points: number }> } | null>(null);
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [consent, setConsent] = useState(false); const [current, setCurrent] = useState(0);
   useEffect(() => { getLilySession().then(setAuth).catch(() => setAuth(null)); }, []);
-  useEffect(() => { if (!auth) return; surveyJson<{ participationId: string; survey: SurveyDefinition & { version: number }; progressTarget: null | { label: string; remaining: number } }>(`surveys/${encodeURIComponent(id)}/start`, { method: "POST", headers: { "X-Lily-CSRF": auth.csrfToken }, body: "{}" }).then((started) => { setSurvey(started.survey); setParticipationId(started.participationId); }).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível abrir a pesquisa.")); }, [auth, id]);
+  useEffect(() => { if (!auth) return; const key = `cooklily.survey-view.${id}`; if (viewIdRef.current?.surveyId !== id) { let viewId: string; try { const saved = sessionStorage.getItem(key); viewId = saved && /^[0-9a-f-]{36}$/i.test(saved) ? saved : crypto.randomUUID(); sessionStorage.setItem(key, viewId); } catch { viewId = crypto.randomUUID(); } viewIdRef.current = { surveyId: id, viewId }; } surveyJson<{ participationId: string; survey: SurveyDefinition & { version: number }; questionTimesMs: Record<string, number>; progressTarget: null | { label: string; remaining: number } }>(`surveys/${encodeURIComponent(id)}/start`, { method: "POST", headers: { "X-Lily-CSRF": auth.csrfToken }, body: JSON.stringify({ viewId: viewIdRef.current.viewId }) }).then((started) => { setSurvey(started.survey); setParticipationId(started.participationId); questionTimesRef.current = started.questionTimesMs; setQuestionTimesMs(started.questionTimesMs); }).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível abrir a pesquisa.")); }, [auth, id]);
   const answered = useMemo(() => survey?.questions.filter((question) => hasAnswer(question, answers[question.id])).length ?? 0, [survey, answers]);
   const percent = survey ? Math.round(answered / survey.questions.length * 100) : 0;
-  useEffect(() => { if (!survey || !participationId) return; setProgress(percent); const timer = window.setTimeout(() => { void surveyJson(`surveys/${encodeURIComponent(id)}/progress`, { method: "POST", headers: { "X-Lily-CSRF": auth?.csrfToken ?? "" }, body: JSON.stringify({ participationId, answers }) }).catch(() => undefined); }, 450); return () => window.clearTimeout(timer); }, [percent, answers, survey, participationId, id, auth]);
+  useEffect(() => { if (!survey || !participationId) return; setProgress(percent); const timer = window.setTimeout(() => { void surveyJson(`surveys/${encodeURIComponent(id)}/progress`, { method: "POST", headers: { "X-Lily-CSRF": auth?.csrfToken ?? "" }, body: JSON.stringify({ participationId, answers, questionTimesMs }) }).catch(() => undefined); }, 450); return () => window.clearTimeout(timer); }, [percent, answers, questionTimesMs, survey, participationId, id, auth]);
+  useEffect(() => {
+    function checkpointActiveTime() {
+      const active = activeQuestionRef.current;
+      if (!active) return;
+      const now = performance.now();
+      const updated = { ...questionTimesRef.current, [active.id]: Math.min(2 * 60 * 60 * 1000, (questionTimesRef.current[active.id] ?? 0) + Math.max(0, Math.round(now - active.since))) };
+      activeQuestionRef.current = { ...active, since: now };
+      questionTimesRef.current = updated;
+      setQuestionTimesMs(updated);
+    }
+    function onVisibilityChange() { if (document.visibilityState === "hidden") { checkpointActiveTime(); activeQuestionRef.current = null; } }
+    const timer = window.setInterval(checkpointActiveTime, 10_000);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibilityChange); };
+  }, []);
+  function focusQuestion(questionId: string) {
+    const active = activeQuestionRef.current;
+    if (active?.id === questionId) return;
+    if (active) {
+      const now = performance.now();
+      const updated = { ...questionTimesRef.current, [active.id]: Math.min(2 * 60 * 60 * 1000, (questionTimesRef.current[active.id] ?? 0) + Math.max(0, Math.round(now - active.since))) };
+      questionTimesRef.current = updated;
+      setQuestionTimesMs(updated);
+    }
+    activeQuestionRef.current = { id: questionId, since: performance.now() };
+  }
+  function finishQuestion(questionId: string) {
+    const active = activeQuestionRef.current;
+    if (active?.id !== questionId) return;
+    const now = performance.now();
+    const updated = { ...questionTimesRef.current, [active.id]: Math.min(2 * 60 * 60 * 1000, (questionTimesRef.current[active.id] ?? 0) + Math.max(0, Math.round(now - active.since))) };
+    questionTimesRef.current = updated;
+    activeQuestionRef.current = null;
+    setQuestionTimesMs(updated);
+  }
   useEffect(() => { if (!survey || !survey.allowNavigation || reward) return; const onBeforeUnload = (event: BeforeUnloadEvent) => { if (answered) { event.preventDefault(); event.returnValue = ""; } }; window.addEventListener("beforeunload", onBeforeUnload); return () => window.removeEventListener("beforeunload", onBeforeUnload); }, [survey, reward, answered]);
   if (auth === undefined) return <section className="survey-state"><LilyLoadingSpinner size="lg" label="Carregando pesquisa" /></section>;
   if (!auth) return <AuthRequired />;
-  async function submit(event: FormEvent) { event.preventDefault(); if (!survey || !participationId) return; setBusy(true); setError(""); try { const result = await surveyJson<{ completed: boolean; pointsAwarded: number; currentPoints: number; unlockedMissions: Array<{ id: string; title: string; points: number }> }>(`surveys/${encodeURIComponent(id)}/submit`, { method: "POST", headers: { "X-Lily-CSRF": auth!.csrfToken }, body: JSON.stringify({ participationId, answers, consentToLinkAnswers: consent }) }); setReward(result); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível salvar suas respostas."); } finally { setBusy(false); } }
+  async function submit(event: FormEvent) { event.preventDefault(); if (!survey || !participationId) return; if (activeQuestionRef.current) finishQuestion(activeQuestionRef.current.id); setBusy(true); setError(""); try { const result = await surveyJson<{ completed: boolean; pointsAwarded: number; currentPoints: number; unlockedMissions: Array<{ id: string; title: string; points: number }> }>(`surveys/${encodeURIComponent(id)}/submit`, { method: "POST", headers: { "X-Lily-CSRF": auth!.csrfToken }, body: JSON.stringify({ participationId, answers, questionTimesMs: questionTimesRef.current, consentToLinkAnswers: consent }) }); setReward(result); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível salvar suas respostas."); } finally { setBusy(false); } }
   if (error && !survey) return <section className="survey-state"><h1>Pesquisa indisponível</h1><p role="alert">{error}</p><Link className="button ghost" to="/pesquisas">Voltar às pesquisas</Link></section>;
   if (reward) return <section className="survey-reward" aria-live="polite"><div className="reward-glow" aria-hidden="true">✦</div><span className="eyebrow">Pesquisa concluída</span><h1>Mandou bem!</h1><p>Obrigado por compartilhar sua opinião.</p>{reward.pointsAwarded > 0 && <div className="reward-points"><strong>+{reward.pointsAwarded}</strong><span>pontos ganhos</span><small>Seu saldo agora é {reward.currentPoints} pontos</small></div>}{reward.unlockedMissions.length > 0 && <div className="survey-unlocked"><h2>Nova missão desbloqueada</h2>{reward.unlockedMissions.map((mission) => <p key={mission.id}>{mission.title} · {mission.points} pontos</p>)}</div>}<p className="reward-note">{reward.pointsAwarded > 0 ? "Cada resposta aproxima você de novas experiências CookLily." : "Sua participação nos ajuda a melhorar a CookLily."}</p><div className="survey-actions"><Link className="button primary" to="/dashboard">Continuar</Link><Link className="button ghost" to="/pesquisas">Ver outras pesquisas</Link></div></section>;
   if (!survey) return <section className="survey-state"><LilyLoadingSpinner size="lg" label="Abrindo pesquisa" /></section>;
   const questions = survey.questions; const visible = survey.allowNavigation ? questions : [questions[current]].filter(Boolean);
   return <section className="survey-page"><Link className="survey-back" to="/pesquisas">← Pesquisas</Link><span className="eyebrow">Pesquisa CookLily</span><h1>{survey.title}</h1>{survey.subtitle && <h2>{survey.subtitle}</h2>}{survey.description && <p>{survey.description}</p>}<div className="survey-progress" role="progressbar" aria-label="Progresso da pesquisa" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /></div><p className="survey-progress-copy">{progress}% respondido · {answered} de {questions.length} perguntas</p>{survey.showPoints && ((survey.pointsPerForm ?? 0) + (survey.pointsPerAnswer ?? 0) * questions.length) > 0 && <p className="survey-points-hint">Esta pesquisa oferece até {((survey.pointsPerForm ?? 0) + (survey.pointsPerAnswer ?? 0) * questions.length).toLocaleString("pt-BR")} pontos.</p>}
-    <form className="survey-form" onSubmit={(event) => void submit(event)}>{visible.map((question) => <SurveyQuestionField key={question.id} question={question} value={answers[question.id]} surveyId={id} onChange={(value) => setAnswers((old) => ({ ...old, [question.id]: value }))} />)}<div className="survey-consent"><label><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} /><span>Autorizo vincular minhas respostas a esta conta para análise pela equipe. Sem esta autorização, as respostas serão salvas sem identificação da conta.</span></label></div>{error && <p className="error" role="alert">{error}</p>}<div className="survey-actions">{!survey.allowNavigation && current > 0 && <button className="button ghost" type="button" onClick={() => setCurrent((value) => value - 1)}>Anterior</button>}{!survey.allowNavigation && current < questions.length - 1 ? <button className="button primary" type="button" onClick={() => { const q = questions[current]; if (q.required && !answers[q.id]) { setError("Responda esta pergunta para continuar."); return; } setError(""); setCurrent((value) => value + 1); }}>Próxima</button> : <button className="button primary" type="submit" disabled={busy}>{busy ? "Salvando…" : "Concluir pesquisa"}</button>}</div></form>
+    <form className="survey-form" onSubmit={(event) => void submit(event)}>{visible.map((question) => <SurveyQuestionField key={question.id} question={question} value={answers[question.id]} surveyId={id} onChange={(value) => setAnswers((old) => ({ ...old, [question.id]: value }))} onActivity={() => focusQuestion(question.id)} onLeave={() => finishQuestion(question.id)} />)}<div className="survey-consent"><label><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} /><span>Autorizo vincular minhas respostas a esta conta para análise pela equipe. Sem esta autorização, as respostas serão salvas sem identificação da conta.</span></label></div>{error && <p className="error" role="alert">{error}</p>}<div className="survey-actions">{!survey.allowNavigation && current > 0 && <button className="button ghost" type="button" onClick={() => setCurrent((value) => value - 1)}>Anterior</button>}{!survey.allowNavigation && current < questions.length - 1 ? <button className="button primary" type="button" onClick={() => { const q = questions[current]; if (q.required && !answers[q.id]) { setError("Responda esta pergunta para continuar."); return; } setError(""); setCurrent((value) => value + 1); }}>Próxima</button> : <button className="button primary" type="submit" disabled={busy}>{busy ? "Salvando…" : "Concluir pesquisa"}</button>}</div></form>
   </section>;
 }
 
-function SurveyQuestionField({ question, value, onChange, surveyId }: { question: SurveyQuestion; value: unknown; onChange: (value: unknown) => void; surveyId: string }) {
-  return <fieldset className={`survey-question font-${question.style?.fontSize ?? "md"} ${question.style?.bold ? "is-bold" : ""} ${question.style?.italic ? "is-italic" : ""}`}><legend>{question.style?.markdown ? <span dangerouslySetInnerHTML={{ __html: safeMarkdown(question.title) }} /> : question.title}{question.required && <span aria-label="obrigatória"> *</span>}</legend>{question.description && (question.style?.markdown ? <p dangerouslySetInnerHTML={{ __html: safeMarkdown(question.description) }} /> : <p>{question.description}</p>)}{question.style?.html && <div className="survey-question-html" dangerouslySetInnerHTML={{ __html: question.style.html }} />}{<QuestionInput question={question} value={value} onChange={onChange} surveyId={surveyId} />}</fieldset>;
+function SurveyQuestionField({ question, value, onChange, surveyId, onActivity, onLeave }: { question: SurveyQuestion; value: unknown; onChange: (value: unknown) => void; surveyId: string; onActivity: () => void; onLeave: () => void }) {
+  return <fieldset className={`survey-question font-${question.style?.fontSize ?? "md"} ${question.style?.bold ? "is-bold" : ""} ${question.style?.italic ? "is-italic" : ""}`} onFocusCapture={onActivity} onPointerDownCapture={onActivity} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onLeave(); }}><legend>{question.style?.markdown ? <span dangerouslySetInnerHTML={{ __html: safeMarkdown(question.title) }} /> : question.title}{question.required && <span aria-label="obrigatória"> *</span>}</legend>{question.description && (question.style?.markdown ? <p dangerouslySetInnerHTML={{ __html: safeMarkdown(question.description) }} /> : <p>{question.description}</p>)}{question.style?.html && <div className="survey-question-html" dangerouslySetInnerHTML={{ __html: question.style.html }} />}{<QuestionInput question={question} value={value} onChange={onChange} surveyId={surveyId} />}</fieldset>;
 }
 
 export { AdminSurveysPage } from "./SurveyBuilder";
@@ -64,9 +104,20 @@ function findUploadedAnswers(value: unknown): Array<{ uploadId: string; name: st
 }
 
 export function AdminSurveyResponsesPage() {
-  const { id = "" } = useParams(); const [payload, setPayload] = useState<{ responses: Array<{ id: string; submittedAt: string; consented: boolean; respondent: null | { displayName: string | null; phoneNormalized: string }; answers: Record<string, unknown> }> } | null>(null); const [error,setError]=useState("");
-  useEffect(() => { surveyJson<typeof payload extends infer T ? NonNullable<T> : never>(`admin/surveys/${encodeURIComponent(id)}/responses`).then(setPayload).catch((cause) => setError(cause instanceof Error ? cause.message : "Falha ao carregar respostas.")); }, [id]);
-  return <section className="survey-admin"><div className="admin-heading"><div><span className="eyebrow">Acesso restrito à equipe</span><h1>Respostas da pesquisa</h1></div><Link className="button ghost" to="/painel/pesquisas">Voltar</Link></div>{error && <p className="error" role="alert">{error}</p>}{payload?.responses.map((row) => <article className="survey-response" key={row.id}><strong>{new Date(row.submittedAt).toLocaleString("pt-BR")}</strong><p>{row.consented ? `Vinculada por consentimento: ${row.respondent?.displayName ?? "Cliente"} · ${row.respondent?.phoneNormalized ?? ""}` : "Resposta sem vínculo à conta"}</p><pre>{JSON.stringify(row.answers,null,2)}</pre>{findUploadedAnswers(row.answers).map((file) => <a key={file.uploadId} href={`/api/v1/lily/admin/survey-uploads/${encodeURIComponent(file.uploadId)}`}>{file.name} · baixar</a>)}</article>)}</section>;
+  const { id = "" } = useParams();
+  const [payload, setPayload] = useState<{ responses: Array<{ id: string; submittedAt: string; consented: boolean; respondent: null | { displayName: string | null; phoneNormalized: string }; answers: Record<string, unknown> }> } | null>(null);
+  const [analytics, setAnalytics] = useState<SurveyAnalytics | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      surveyJson<NonNullable<typeof payload>>(`admin/surveys/${encodeURIComponent(id)}/responses`),
+      surveyJson<SurveyAnalytics>(`admin/surveys/${encodeURIComponent(id)}/analytics`)
+    ]).then(([responses, stats]) => { if (active) { setPayload(responses); setAnalytics(stats); } })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Falha ao carregar resultados."); });
+    return () => { active = false; };
+  }, [id]);
+  return <section className="survey-admin"><div className="admin-heading"><div><span className="eyebrow">Acesso restrito à equipe</span><h1>{analytics?.survey.title ?? "Resultados da pesquisa"}</h1></div><Link className="button ghost" to="/painel/pesquisas">Voltar</Link></div>{error && <p className="error" role="alert">{error}</p>}{analytics && <SurveyAnalyticsPanel definition={analytics.survey.definition} analytics={analytics} />}{payload?.responses.map((row) => <article className="survey-response" key={row.id}><strong>{new Date(row.submittedAt).toLocaleString("pt-BR")}</strong><p>{row.consented ? `Vinculada por consentimento: ${row.respondent?.displayName ?? "Cliente"} · ${row.respondent?.phoneNormalized ?? ""}` : "Resposta sem vínculo à conta"}</p><pre>{JSON.stringify(row.answers,null,2)}</pre>{findUploadedAnswers(row.answers).map((file) => <a key={file.uploadId} href={`/api/v1/lily/admin/survey-uploads/${encodeURIComponent(file.uploadId)}`}>{file.name} · baixar</a>)}</article>)}</section>;
 }
 
 export function DashboardPage() { const [profile,setProfile]=useState<LilyProfilePayload|null>(null); useEffect(()=>{getLilyProfile().then(setProfile).catch(()=>setProfile(null));},[]); return <section className="survey-page"><span className="eyebrow">CookLily · Dashboard</span><h1>Seu espaço CookLily.</h1><p>Acompanhe pedidos, pontos e missões disponíveis.</p>{profile && <div className="admin-kpis"><article><strong>{profile.loyalty.points}</strong><span>pontos disponíveis</span></article><article><strong>{profile.loyalty.orderCount}</strong><span>pedidos</span></article>{profile.loyalty.rank !== null && <article><strong>{profile.loyalty.rank}</strong><span>posição no ranking</span></article>}</div>}<div className="survey-actions"><Link className="button primary" to="/pedidos">Meus pedidos</Link><Link className="button ghost" to="/pesquisas">Pesquisas</Link><Link className="button ghost" to="/ranking">Meu ranking</Link><Link className="button ghost" to="/perfil">Editar perfil</Link></div><MissionList /></section>; }

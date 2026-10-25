@@ -60,7 +60,7 @@ for arg in "$@"; do
 done
 [[ -n "${RELEASE_SHA}" ]] || { usage; exit 64; }
 
-for command in git npm node sqlite3 systemctl nginx curl python3 flock tee sha256sum readlink; do
+for command in git npm node sqlite3 systemctl nginx curl python3 flock tee sha256sum readlink install; do
   command -v "${command}" >/dev/null 2>&1 || early_die "comando obrigatório ausente: ${command}"
 done
 
@@ -158,6 +158,20 @@ else
   echo "deployer_update=reexec_ok release=${RELEASE_SHA}"
 fi
 
+apply_survey_notification_nginx_routes() {
+  local helper="deploy/scripts/enable-lily-survey-notifications-nginx"
+  local helper_tmp
+  helper_tmp="$(mktemp "/tmp/enable-lily-survey-notifications-nginx-${RELEASE_SHA:0:12}.XXXXXX")"
+  git show "${RELEASE_SHA}:${helper}" > "${helper_tmp}" || fail "release não contém helper de notificações Nginx"
+  bash -n "${helper_tmp}" || fail "helper de notificações Nginx possui sintaxe Bash inválida"
+  install -m 0755 "${helper_tmp}" /usr/local/sbin/enable-lily-survey-notifications-nginx
+  rm -f "${helper_tmp}"
+  /usr/local/sbin/enable-lily-survey-notifications-nginx
+}
+
+PHASE="nginx-survey-notifications"
+apply_survey_notification_nginx_routes
+
 PHASE="nginx-precheck"
 required_nginx_patterns=(
   'location ^~ /api/v1/lily/public/'
@@ -168,6 +182,8 @@ required_nginx_patterns=(
   'location = /api/v1/lily/payments'
   'location ^~ /api/v1/lily/payments/'
   'location ^~ /api/v1/lily/customer/'
+  'location = /api/v1/lily/notifications'
+  'location ^~ /api/v1/lily/notifications/'
   'location ^~ /api/v1/lily/courier/'
   'location ^~ /api/ { return 404; }'
 )

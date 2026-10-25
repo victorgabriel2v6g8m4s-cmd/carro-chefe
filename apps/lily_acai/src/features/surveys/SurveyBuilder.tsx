@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { QuestionInput } from "./QuestionInput";
-import { surveyJson, type SurveyDefinition, type SurveyQuestion } from "./api";
+import { surveyJson, type SurveyAnalytics, type SurveyDefinition, type SurveyQuestion } from "./api";
+import { SurveyAnalyticsPanel } from "./SurveyAnalyticsPanel";
 
-type SurveyRow = { id: string; title: string; subtitle: string | null; description: string | null; estimatedMinutes: number; questionCount?: number; points: number | null; showPoints?: boolean; definition?: SurveyDefinition; status?: string; version?: number };
-type MissionRow = { id: string; title: string; description?: string | null; points: number };
+type SurveyRow = { id: string; title: string; subtitle: string | null; description: string | null; estimatedMinutes: number; questionCount?: number; points: number | null; showPoints?: boolean; definition?: SurveyDefinition; status?: string; version?: number; createdAt: string; viewCount: number; responseCount: number };
 const SAFE_MEDIA_BYTES = 10 * 1024 * 1024;
 const mediaUnits = [{ name: "bytes", size: 1 }, { name: "KB", size: 1024 }, { name: "MB", size: 1024 ** 2 }, { name: "GB", size: 1024 ** 3 }] as const;
 const mediaTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf", "audio/mpeg", "audio/mp4", "video/mp4"];
@@ -35,8 +35,8 @@ function MultiSelect({ label, values, options, onChange }: { label: string; valu
 
 function ItemListEditor({ label, items, onChange, placeholder }: { label: string; items: string[]; onChange: (items: string[]) => void; placeholder: string }) {
   const [draft, setDraft] = useState("");
-  function add(event: FormEvent) { event.preventDefault(); const value = draft.trim(); if (!value || items.includes(value) || items.length >= 100) return; onChange([...items, value]); setDraft(""); }
-  return <div className="survey-list-editor"><span className="survey-field-title">{label}</span><div className="survey-item-chips">{items.map((item, index) => <span className="survey-item-chip" key={`${item}-${index}`}>{item}<button type="button" aria-label={`Remover ${item}`} onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div><form className="survey-item-add" onSubmit={add}><input value={draft} maxLength={180} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} /><button type="submit" className="button ghost" disabled={!draft.trim()}>Adicionar</button></form></div>;
+  function add() { const value = draft.trim(); if (!value || items.includes(value) || items.length >= 100) return; onChange([...items, value]); setDraft(""); }
+  return <div className="survey-list-editor"><span className="survey-field-title">{label}</span><div className="survey-item-chips">{items.map((item, index) => <span className="survey-item-chip" key={`${item}-${index}`}>{item}<button type="button" aria-label={`Remover ${item}`} onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}>×</button></span>)}</div><div className="survey-item-add"><input value={draft} maxLength={180} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); add(); } }} /><button type="button" className="button ghost" disabled={!draft.trim()} onClick={add}>Adicionar resposta</button></div></div>;
 }
 
 function ByteLimit({ value, onChange }: { value: number; onChange: (bytes: number) => void }) {
@@ -68,8 +68,6 @@ function QuestionSettings({ question, update }: { question: SurveyQuestion; upda
 export function AdminSurveysPage() {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [rows, setRows] = useState<SurveyRow[]>([]);
-  const [missions, setMissions] = useState<MissionRow[]>([]);
-  const [missionPrerequisites, setMissionPrerequisites] = useState<string[]>([]);
   const [draft, setDraft] = useState<SurveyDefinition>(newDefinition);
   const [editing, setEditing] = useState("");
   const [error, setError] = useState("");
@@ -78,7 +76,32 @@ export function AdminSurveysPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [importText, setImportText] = useState("");
   const [previewQuestion, setPreviewQuestion] = useState(0);
-  const missionFormRef = useRef<HTMLFormElement>(null);
+  const [selectedSurveyIds, setSelectedSurveyIds] = useState<Set<string>>(() => new Set());
+  const [previewSurveyId, setPreviewSurveyId] = useState("");
+  const [analytics, setAnalytics] = useState<SurveyAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+  const selectionTimers = useRef(new Map<string, number>());
+
+  useEffect(() => () => { for (const timer of selectionTimers.current.values()) window.clearTimeout(timer); }, []);
+
+  function toggleSurveySelection(id: string) {
+    setSelectedSurveyIds((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }
+
+  function selectSurveyOnSingleClick(id: string, clickCount: number) {
+    if (clickCount !== 1) return;
+    const existing = selectionTimers.current.get(id);
+    if (existing) window.clearTimeout(existing);
+    selectionTimers.current.set(id, window.setTimeout(() => { toggleSurveySelection(id); selectionTimers.current.delete(id); }, 240));
+  }
+
+  function openSurveyPreview(id: string) {
+    const timer = selectionTimers.current.get(id);
+    if (timer) window.clearTimeout(timer);
+    selectionTimers.current.delete(id);
+    setPreviewSurveyId(id);
+  }
 
   useEffect(() => {
     let active = true;
@@ -86,17 +109,25 @@ export function AdminSurveysPage() {
       try {
         const current = await getLilySession();
         if (!["staff", "admin"].includes(current.user.role)) throw new Error("Acesso staff necessário.");
-        const [surveyData, missionData] = await Promise.all([
-          surveyJson<{ surveys: SurveyRow[] }>("admin/surveys"),
-          current.user.role === "admin" ? surveyJson<{ missions: MissionRow[] }>("admin/missions") : Promise.resolve({ missions: [] })
-        ]);
-        if (active) { setSession(current); setRows(surveyData.surveys); setMissions(missionData.missions); }
+        const surveyData = await surveyJson<{ surveys: SurveyRow[] }>("admin/surveys");
+        if (active) { setSession(current); setRows(surveyData.surveys); }
       } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : "Falha ao carregar pesquisas."); }
       finally { if (active) setInitialLoading(false); }
     }
     void load();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!previewSurveyId) { setAnalytics(null); setAnalyticsError(""); return; }
+    let active = true;
+    setAnalyticsLoading(true);
+    surveyJson<SurveyAnalytics>(`admin/surveys/${encodeURIComponent(previewSurveyId)}/analytics`)
+      .then((result) => { if (active) setAnalytics(result); })
+      .catch((cause) => { if (active) setAnalyticsError(cause instanceof Error ? cause.message : "Não foi possível carregar as estatísticas."); })
+      .finally(() => { if (active) setAnalyticsLoading(false); });
+    return () => { active = false; };
+  }, [previewSurveyId]);
 
   function updateQuestion(index: number, patch: Partial<SurveyQuestion>) {
     setDraft((old) => ({ ...old, questions: old.questions.map((question, questionIndex) => questionIndex === index ? { ...question, ...patch } : question) }));
@@ -133,8 +164,9 @@ export function AdminSurveysPage() {
     setBusy(true); setError(""); setStatus("");
     try {
       const path = editing ? `admin/surveys/${encodeURIComponent(editing)}` : "admin/surveys";
-      const result = await surveyJson<{ survey: { id: string; version: number; status: string; updatedAt: string } }>(path, { method: editing ? "PUT" : "POST", headers: { "X-Lily-CSRF": session.csrfToken }, body: JSON.stringify(definitionForSave(draft)) });
-      const row: SurveyRow = { id: result.survey.id, title: draft.title, subtitle: draft.subtitle || null, description: draft.description || null, estimatedMinutes: draft.estimatedMinutes, questionCount: draft.questions.length, points: draft.showPoints ? draft.pointsPerForm + draft.pointsPerAnswer * draft.questions.length : null, showPoints: draft.showPoints, definition: draft, status: result.survey.status, version: result.survey.version };
+      const result = await surveyJson<{ survey: { id: string; version: number; status: string; updatedAt: string; createdAt: string } }>(path, { method: editing ? "PUT" : "POST", headers: { "X-Lily-CSRF": session.csrfToken }, body: JSON.stringify(definitionForSave(draft)) });
+      const previous = rows.find((item) => item.id === result.survey.id);
+      const row: SurveyRow = { id: result.survey.id, title: draft.title, subtitle: draft.subtitle || null, description: draft.description || null, estimatedMinutes: draft.estimatedMinutes, questionCount: draft.questions.length, points: draft.showPoints ? draft.pointsPerForm + draft.pointsPerAnswer * draft.questions.length : null, showPoints: draft.showPoints, definition: draft, status: result.survey.status, version: result.survey.version, createdAt: previous?.createdAt ?? result.survey.createdAt, viewCount: previous?.viewCount ?? 0, responseCount: previous?.responseCount ?? 0 };
       setEditing(row.id);
       setRows((current) => current.some((item) => item.id === row.id) ? current.map((item) => item.id === row.id ? row : item) : [row, ...current]);
       setStatus("Rascunho salvo.");
@@ -151,37 +183,21 @@ export function AdminSurveysPage() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao publicar."); }
   }
 
-  async function createMission(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session) return;
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    try {
-      const result = await surveyJson<{ mission: MissionRow }>("admin/missions", { method: "POST", headers: { "X-Lily-CSRF": session.csrfToken }, body: JSON.stringify({ title: String(data.get("title")), description: String(data.get("description") || "") || null, points: Number(data.get("points") || 0), prerequisites: missionPrerequisites }) });
-      setMissions((current) => [result.mission, ...current]);
-      setMissionPrerequisites([]);
-      form.reset();
-      setStatus(`Missão criada. Referência: ${result.mission.id}`);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao criar missão."); }
-  }
-
   if (!session && initialLoading) return <section className="survey-state"><LilyLoadingSpinner size="lg" label="Carregando painel de pesquisas" /></section>;
   if (!session) return <section className="survey-state"><span className="eyebrow">Painel CookLily</span><h1>Não foi possível abrir as pesquisas.</h1><p className="error" role="alert">{error || "Sua sessão não está disponível. Entre novamente e tente outra vez."}</p><Link className="button primary" to={`/entrar?next=${encodeURIComponent(window.location.pathname)}`}>Entrar como staff</Link></section>;
-  const surveyOptions = rows.map((row) => ({ id: row.id, label: `${row.title} · ${row.id.slice(0, 8)}` }));
   const pointsEstimate = draft.pointsPerForm + draft.pointsPerAnswer * draft.questions.length;
   return <section className="survey-admin">
     <div className="admin-heading"><div><span className="eyebrow">Painel CookLily</span><h1>Montar pesquisas</h1><p>Edite e visualize o formulário sem recarregar o painel.</p></div><Link className="button ghost" to="/painel">Painel</Link></div>
     {error && <p className="error" role="alert">{error}</p>}{status && <p className="success" role="status">{status}</p>}
-    <div className="survey-admin-list">{rows.map((row) => <article key={row.id}><div><strong>{row.title}</strong><span>{row.status} · versão {row.version} · ref. {row.id}</span></div><div className="survey-actions"><button className="button ghost" type="button" disabled={!row.definition || row.status !== "draft"} onClick={() => { if (row.definition) { setDraft(row.definition); setEditing(row.id); setPreviewQuestion(0); } }}>Editar rascunho</button><Link className="button ghost" to={`/painel/pesquisas/${encodeURIComponent(row.id)}/respostas`}>Ver respostas</Link>{row.status === "draft" && <button className="button primary" type="button" onClick={() => void publish(row.id)}>Publicar</button>}</div></article>)}</div>
-    {session.user.role === "admin" && <form className="survey-builder" ref={missionFormRef} onSubmit={(event) => void createMission(event)}><h2>Criar missão</h2><div className="survey-builder-settings"><label>Título<input name="title" required maxLength={180} /></label><label>Descrição<input name="description" maxLength={2000} /></label><label>Pontos<input name="points" type="number" min="0" max="100000" defaultValue="0" /></label><MultiSelect label="Pesquisas necessárias" values={missionPrerequisites} options={surveyOptions} onChange={setMissionPrerequisites} /></div><button className="button primary">Criar missão</button>{missions.length > 0 && <ul className="survey-reference-list">{missions.map((mission) => <li key={mission.id}>{mission.title} · {mission.points} pontos <code>ref. {mission.id}</code></li>)}</ul>}</form>}
+    <div className="survey-admin-list" aria-label="Pesquisas cadastradas">{rows.map((row) => <div className="survey-admin-card-wrap" key={row.id}><button type="button" className={`survey-admin-card ${selectedSurveyIds.has(row.id) ? "is-selected" : ""}`} aria-pressed={selectedSurveyIds.has(row.id)} aria-label={`${selectedSurveyIds.has(row.id) ? "Desselecionar" : "Selecionar"} pesquisa ${row.title}. Clique duas vezes para visualizar.`} onClick={(event) => selectSurveyOnSingleClick(row.id, event.detail)} onDoubleClick={() => openSurveyPreview(row.id)}><span className="survey-card-id" title={row.id}>{row.id.slice(0, 8)}</span><span className={`survey-status-dot is-${row.status ?? "draft"}`} role="img" aria-label={`Status: ${row.status ?? "rascunho"}`} title={row.status ?? "rascunho"} /><strong>{row.title}</strong><span className="survey-card-metrics"><span aria-label={`${row.viewCount} visualizações`}><SurveyEyeIcon />{row.viewCount}</span><span aria-label={`${row.responseCount} respostas`}><SurveyReplyIcon />{row.responseCount}</span></span><time dateTime={row.createdAt}>{new Date(row.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</time></button><div className="survey-card-actions"><button className="button ghost" type="button" disabled={!row.definition || row.status !== "draft"} onClick={() => { if (row.definition) { setDraft(row.definition); setEditing(row.id); setPreviewQuestion(0); } }}>Editar</button><Link className="button ghost" to={`/painel/pesquisas/${encodeURIComponent(row.id)}/respostas`}>Resultados</Link>{row.status === "draft" && <button className="button primary" type="button" onClick={() => void publish(row.id)}>Publicar</button>}</div></div>)}</div>
+    {previewSurveyId && <SurveyPreviewDialog survey={rows.find((row) => row.id === previewSurveyId) ?? null} analytics={analytics} loading={analyticsLoading} error={analyticsError} onClose={() => setPreviewSurveyId("")} />}
     <form className="survey-builder" onSubmit={(event) => void save(event)}>
       <h2>{editing ? "Editar pesquisa" : "Nova pesquisa"}</h2>{editing && <p className="survey-reference">Referência da pesquisa: <code>{editing}</code></p>}
       <label>Título *<input required maxLength={180} value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label>
       <label>Subtítulo<input maxLength={240} value={draft.subtitle ?? ""} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} /></label>
       <label>Descrição<textarea rows={3} maxLength={4000} value={draft.description ?? ""} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
       <div className="survey-builder-settings"><label>Tempo estimado (minutos)<input type="number" min="1" max="180" value={draft.estimatedMinutes} onChange={(event) => setDraft({ ...draft, estimatedMinutes: Number(event.target.value) })} /></label><label>Pontos ao concluir<input type="number" min="0" max="100000" value={draft.pointsPerForm} onChange={(event) => setDraft({ ...draft, pointsPerForm: Number(event.target.value) })} /></label><label>Pontos por resposta<input type="number" min="0" max="100000" value={draft.pointsPerAnswer} onChange={(event) => setDraft({ ...draft, pointsPerAnswer: Number(event.target.value) })} /></label><label className="check"><input type="checkbox" checked={draft.showPoints} onChange={(event) => setDraft({ ...draft, showPoints: event.target.checked })} /><span>Mostrar recompensa ao cliente</span></label><label className="check"><input type="checkbox" checked={draft.allowNavigation} onChange={(event) => setDraft({ ...draft, allowNavigation: event.target.checked })} /><span>Permitir navegar e revisar respostas</span></label><div className="survey-estimate-preview"><strong>{draft.estimatedMinutes} min</strong><span>Tempo estimado</span>{draft.showPoints && <><strong>{pointsEstimate.toLocaleString("pt-BR")} pontos</strong><span>Recompensa máxima estimada</span></>}</div></div>
-      <MultiSelect label="Pesquisas que precisam ser concluídas" values={draft.prerequisites} options={surveyOptions} onChange={(prerequisites) => setDraft({ ...draft, prerequisites })} />
-      <MultiSelect label="Missões liberadas ao concluir" values={draft.unlocksMissions} options={missions.map((mission) => ({ id: mission.id, label: `${mission.title} · ${mission.id.slice(0, 8)}` }))} onChange={(unlocksMissions) => setDraft({ ...draft, unlocksMissions })} />
+      <MultiSelect label="Pesquisas que precisam ser concluídas" values={draft.prerequisites} options={rows.map((row) => ({ id: row.id, label: `${row.title} · ${row.id.slice(0, 8)}` }))} onChange={(prerequisites) => setDraft({ ...draft, prerequisites })} />
       <div className="survey-builder-questions">{draft.questions.map((question, index) => {
         const set = (patch: Partial<SurveyQuestion>) => updateQuestion(index, patch);
         return <fieldset className="survey-builder-question" key={question.id}><legend>Pergunta {index + 1}</legend><p className="survey-reference">Referência técnica: <code>{question.id}</code></p><label>Tipo<select value={question.type} onChange={(event) => set({ type: event.target.value, media: event.target.value === "media" ? { mimeTypes: ["image/jpeg", "image/png", "image/webp"], maxBytes: 5 * 1024 * 1024 } : undefined })}>{Object.entries(questionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Pergunta *<input required maxLength={240} value={question.title} onChange={(event) => set({ title: event.target.value })} /></label><label>Descrição opcional<textarea maxLength={4000} value={question.description} onChange={(event) => set({ description: event.target.value })} /></label><label className="check"><input type="checkbox" checked={question.required} onChange={(event) => set({ required: event.target.checked })} /><span>Resposta obrigatória</span></label><QuestionSettings question={question} update={set} /><div className="survey-question-actions"><button className="button ghost" type="button" disabled={draft.questions.length <= 1} onClick={() => setDraft((old) => ({ ...old, questions: old.questions.filter((_, questionIndex) => questionIndex !== index) }))}>Remover pergunta</button></div></fieldset>;
@@ -192,4 +208,27 @@ export function AdminSurveysPage() {
       <button className="button primary" disabled={busy}>{busy ? "Salvando rascunho…" : "Salvar rascunho"}</button>
     </form>
   </section>;
+}
+
+function SurveyPreviewDialog({ survey, analytics, loading, error, onClose }: { survey: SurveyRow | null; analytics: SurveyAnalytics | null; loading: boolean; error: string; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    return () => { if (dialog.open) dialog.close(); };
+  }, []);
+  if (!survey?.definition) return null;
+  return <dialog ref={dialogRef} className="survey-preview-dialog" aria-labelledby="survey-preview-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === dialogRef.current) onClose(); }}>
+    <header><div><span className="eyebrow">Prévia da pesquisa</span><h2 id="survey-preview-title">{survey.title}</h2></div><button type="button" className="button ghost" onClick={onClose} autoFocus>Fechar</button></header>
+    <SurveyAnalyticsPanel definition={survey.definition} analytics={analytics} loading={loading} error={error} />
+  </dialog>;
+}
+
+function SurveyEyeIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></svg>;
+}
+
+function SurveyReplyIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2" /></svg>;
 }
