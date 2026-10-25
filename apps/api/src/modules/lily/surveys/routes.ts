@@ -78,7 +78,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     if (!buffer.length || buffer.length > maxAllowed) throw new ApiError(400, "Arquivo vazio ou acima do limite permitido.");
     const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
     const participation = await lilyPrisma.lilySurveyParticipation.findFirst({ where: { userId: context.user.id, surveyId: id, status: "in_progress" } });
-    if (!survey || survey.status !== "published" || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
+    if (!survey || !["published", "paused"].includes(survey.status) || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
     const definition = definitionOf(survey);
     const questionId = String((part.fields.questionId as { value?: string } | undefined)?.value ?? "");
     const question = definition.questions.find((item) => item.id === questionId);
@@ -168,7 +168,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
       lilyPrisma.lilySurvey.findUnique({ where: { id } }),
       lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: input.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } })
     ]);
-    if (!survey || survey.status !== "published" || !participation || survey.version !== participation.surveyVersion) throw new ApiError(409, "A pesquisa mudou. Atualize a página e tente novamente.");
+    if (!survey || !["published", "paused"].includes(survey.status) || !participation || survey.version !== participation.surveyVersion) throw new ApiError(409, "A pesquisa mudou ou foi encerrada. Atualize a página e tente novamente.");
     const definition = definitionOf(survey);
     const invalidQuestionId = validateSurveyAnswers(definition, input.answers);
     if (invalidQuestionId) throw new ApiError(400, "Revise as respostas obrigatórias da pesquisa.", { questionId: invalidQuestionId });
@@ -278,9 +278,48 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const id = idSchema.parse((request.params as { id: string }).id);
     const input = surveyDefinitionSchema.parse(request.body);
     const current = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
-    if (!current || current.status !== "draft") throw new ApiError(409, "Somente pesquisas em rascunho podem ser editadas.");
-    const survey = await lilyPrisma.lilySurvey.update({ where: { id }, data: { ...surveyData(input), version: { increment: 1 } } });
+    if (!current || !["draft", "paused"].includes(current.status)) throw new ApiError(409, "Para editar uma pesquisa publicada, pause-a primeiro. Pesquisas canceladas não podem ser editadas.");
+    if (current.status === "paused") {
+      const activeParticipations = await lilyPrisma.lilySurveyParticipation.count({ where: { surveyId: id, surveyVersion: current.version, status: "in_progress" } });
+      if (activeParticipations > 0) throw new ApiError(409, `Ainda há ${activeParticipations} resposta(s) em andamento. Aguarde a conclusão antes de editar a pesquisa pausada.`);
+    }
+    const updated = await lilyPrisma.lilySurvey.updateMany({ where: { id, status: current.status, version: current.version }, data: { ...surveyData(input), version: { increment: 1 } } });
+    if (updated.count !== 1) throw new ApiError(409, "A pesquisa mudou durante a edição. Atualize o painel e tente novamente.");
+    const survey = await lilyPrisma.lilySurvey.findUniqueOrThrow({ where: { id } });
     await auditLilyAdmin(context.user.id, "update", "survey", id, { version: survey.version });
+    return { survey };
+  });
+
+  app.post("/api/v1/lily/admin/surveys/:id/pause", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const changed = await lilyPrisma.lilySurvey.updateMany({ where: { id, status: "published" }, data: { status: "paused" } });
+    if (changed.count !== 1) throw new ApiError(409, "Somente pesquisas publicadas podem ser pausadas.");
+    const survey = await lilyPrisma.lilySurvey.findUniqueOrThrow({ where: { id } });
+    await auditLilyAdmin(context.user.id, "pause", "survey", id, { version: survey.version });
+    return { survey };
+  });
+
+  app.post("/api/v1/lily/admin/surveys/:id/resume", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const changed = await lilyPrisma.lilySurvey.updateMany({ where: { id, status: "paused" }, data: { status: "published", publishedAt: new Date() } });
+    if (changed.count !== 1) throw new ApiError(409, "Somente pesquisas pausadas podem ser retomadas.");
+    const survey = await lilyPrisma.lilySurvey.findUniqueOrThrow({ where: { id } });
+    await auditLilyAdmin(context.user.id, "resume", "survey", id, { version: survey.version });
+    return { survey };
+  });
+
+  app.delete("/api/v1/lily/admin/surveys/:id", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const id = idSchema.parse((request.params as { id: string }).id);
+    const survey = await lilyPrisma.$transaction(async (tx) => {
+      const changed = await tx.lilySurvey.updateMany({ where: { id, status: { in: ["draft", "published", "paused"] } }, data: { status: "cancelled" } });
+      if (changed.count !== 1) throw new ApiError(409, "Esta pesquisa já foi excluída ou não pode ser excluída.");
+      await tx.lilySurveyParticipation.updateMany({ where: { surveyId: id, status: "in_progress" }, data: { status: "cancelled" } });
+      return tx.lilySurvey.findUniqueOrThrow({ where: { id } });
+    });
+    await auditLilyAdmin(context.user.id, "cancel", "survey", id, { version: survey.version });
     return { survey };
   });
 

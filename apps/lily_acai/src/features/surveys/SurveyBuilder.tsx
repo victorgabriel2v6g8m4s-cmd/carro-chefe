@@ -82,6 +82,7 @@ export function AdminSurveysPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState("");
   const selectionTimers = useRef(new Map<string, number>());
+  const builderRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => () => { for (const timer of selectionTimers.current.values()) window.clearTimeout(timer); }, []);
 
@@ -133,6 +134,36 @@ export function AdminSurveysPage() {
     setDraft((old) => ({ ...old, questions: old.questions.map((question, questionIndex) => questionIndex === index ? { ...question, ...patch } : question) }));
   }
 
+  function editSurvey(row: SurveyRow) {
+    if (!row.definition || !["draft", "paused"].includes(row.status ?? "")) return;
+    setDraft(row.definition);
+    setEditing(row.id);
+    setPreviewQuestion(0);
+    requestAnimationFrame(() => builderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  async function setSurveyLifecycle(id: string, action: "pause" | "resume") {
+    if (!session) return;
+    setError(""); setStatus("");
+    try {
+      const result = await surveyJson<{ survey: { status: string } }>(`admin/surveys/${encodeURIComponent(id)}/${action}`, { method: "POST", headers: { "X-Lily-CSRF": session.csrfToken }, body: "{}" });
+      setRows((current) => current.map((row) => row.id === id ? { ...row, status: result.survey.status } : row));
+      setStatus(action === "pause" ? "Pesquisa pausada. Quem já começou pode concluir; novas respostas estão suspensas." : "Pesquisa retomada e disponível para novas respostas.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o status da pesquisa."); }
+  }
+
+  async function deleteSurvey(row: SurveyRow) {
+    if (!session || !window.confirm(`Excluir “${row.title}”? Ela deixará de receber respostas, e o histórico de respostas e estatísticas será preservado.`)) return;
+    setError(""); setStatus("");
+    try {
+      const result = await surveyJson<{ survey: { status: string } }>(`admin/surveys/${encodeURIComponent(row.id)}`, { method: "DELETE", headers: { "X-Lily-CSRF": session.csrfToken } });
+      setRows((current) => current.map((item) => item.id === row.id ? { ...item, status: result.survey.status } : item));
+      setSelectedSurveyIds((current) => { const next = new Set(current); next.delete(row.id); return next; });
+      if (editing === row.id) { setEditing(""); setDraft(newDefinition()); }
+      setStatus("Pesquisa excluída da área de respostas. Histórico e resultados foram preservados.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível excluir a pesquisa."); }
+  }
+
   function importDefinition() {
     try {
       const parsed = JSON.parse(importText) as SurveyDefinition | { definition: SurveyDefinition };
@@ -169,7 +200,7 @@ export function AdminSurveysPage() {
       const row: SurveyRow = { id: result.survey.id, title: draft.title, subtitle: draft.subtitle || null, description: draft.description || null, estimatedMinutes: draft.estimatedMinutes, questionCount: draft.questions.length, points: draft.showPoints ? draft.pointsPerForm + draft.pointsPerAnswer * draft.questions.length : null, showPoints: draft.showPoints, definition: draft, status: result.survey.status, version: result.survey.version, createdAt: previous?.createdAt ?? result.survey.createdAt, viewCount: previous?.viewCount ?? 0, responseCount: previous?.responseCount ?? 0 };
       setEditing(row.id);
       setRows((current) => current.some((item) => item.id === row.id) ? current.map((item) => item.id === row.id ? row : item) : [row, ...current]);
-      setStatus("Rascunho salvo.");
+      setStatus(previous?.status === "paused" ? "Alterações salvas. A pesquisa continua pausada até você retomá-la." : "Rascunho salvo.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao salvar pesquisa."); }
     finally { setBusy(false); }
   }
@@ -189,10 +220,10 @@ export function AdminSurveysPage() {
   return <section className="survey-admin">
     <div className="admin-heading"><div><span className="eyebrow">Painel CookLily</span><h1>Montar pesquisas</h1><p>Edite e visualize o formulário sem recarregar o painel.</p></div><Link className="button ghost" to="/painel">Painel</Link></div>
     {error && <p className="error" role="alert">{error}</p>}{status && <p className="success" role="status">{status}</p>}
-    <div className="survey-admin-list" aria-label="Pesquisas cadastradas">{rows.map((row) => <div className="survey-admin-card-wrap" key={row.id}><button type="button" className={`survey-admin-card ${selectedSurveyIds.has(row.id) ? "is-selected" : ""}`} aria-pressed={selectedSurveyIds.has(row.id)} aria-label={`${selectedSurveyIds.has(row.id) ? "Desselecionar" : "Selecionar"} pesquisa ${row.title}. Clique duas vezes para visualizar.`} onClick={(event) => selectSurveyOnSingleClick(row.id, event.detail)} onDoubleClick={() => openSurveyPreview(row.id)}><span className="survey-card-id" title={row.id}>{row.id.slice(0, 8)}</span><span className={`survey-status-dot is-${row.status ?? "draft"}`} role="img" aria-label={`Status: ${row.status ?? "rascunho"}`} title={row.status ?? "rascunho"} /><strong>{row.title}</strong><span className="survey-card-metrics"><span aria-label={`${row.viewCount} visualizações`}><SurveyEyeIcon />{row.viewCount}</span><span aria-label={`${row.responseCount} respostas`}><SurveyReplyIcon />{row.responseCount}</span></span><time dateTime={row.createdAt}>{new Date(row.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</time></button><div className="survey-card-actions"><button className="button ghost" type="button" disabled={!row.definition || row.status !== "draft"} onClick={() => { if (row.definition) { setDraft(row.definition); setEditing(row.id); setPreviewQuestion(0); } }}>Editar</button><Link className="button ghost" to={`/painel/pesquisas/${encodeURIComponent(row.id)}/respostas`}>Resultados</Link>{row.status === "draft" && <button className="button primary" type="button" onClick={() => void publish(row.id)}>Publicar</button>}</div></div>)}</div>
+    <div className="survey-admin-list" aria-label="Pesquisas cadastradas">{rows.map((row) => <div className="survey-admin-card-wrap" key={row.id}><button type="button" className={`survey-admin-card ${selectedSurveyIds.has(row.id) ? "is-selected" : ""}`} aria-pressed={selectedSurveyIds.has(row.id)} aria-label={`${selectedSurveyIds.has(row.id) ? "Desselecionar" : "Selecionar"} pesquisa ${row.title}. Clique duas vezes para visualizar.`} onClick={(event) => selectSurveyOnSingleClick(row.id, event.detail)} onDoubleClick={() => openSurveyPreview(row.id)}><span className="survey-card-id" title={row.id}>{row.id.slice(0, 8)}</span><span className={`survey-status-dot is-${row.status ?? "draft"}`} role="img" aria-label={`Status: ${row.status ?? "rascunho"}`} title={row.status ?? "rascunho"} /><strong>{row.title}</strong><span className="survey-card-metrics"><span aria-label={`${row.viewCount} visualizações`}><SurveyEyeIcon />{row.viewCount}</span><span aria-label={`${row.responseCount} respostas`}><SurveyReplyIcon />{row.responseCount}</span></span><time dateTime={row.createdAt}>{new Date(row.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</time></button><div className="survey-card-actions"><button className="button ghost" type="button" disabled={!row.definition || !["draft", "paused"].includes(row.status ?? "")} title={row.status === "published" ? "Pause a pesquisa para editar" : undefined} onClick={() => editSurvey(row)}>{row.status === "published" ? "Pause para editar" : "Editar"}</button><Link className="button ghost" to={`/painel/pesquisas/${encodeURIComponent(row.id)}/respostas`}>Resultados</Link>{row.status === "draft" && <button className="button primary" type="button" onClick={() => void publish(row.id)}>Publicar</button>}{row.status === "published" && <button className="button ghost" type="button" onClick={() => void setSurveyLifecycle(row.id, "pause")}>Pausar</button>}{row.status === "paused" && <><button className="button primary" type="button" onClick={() => void setSurveyLifecycle(row.id, "resume")}>Retomar</button><span className="survey-edit-hint">Pause a pesquisa e aguarde as respostas em andamento antes de editar.</span></>}{row.status !== "cancelled" && <button className="button ghost" type="button" onClick={() => void deleteSurvey(row)}>Excluir</button>}</div></div>)}</div>
     {previewSurveyId && <SurveyPreviewDialog survey={rows.find((row) => row.id === previewSurveyId) ?? null} analytics={analytics} loading={analyticsLoading} error={analyticsError} onClose={() => setPreviewSurveyId("")} />}
-    <form className="survey-builder" onSubmit={(event) => void save(event)}>
-      <h2>{editing ? "Editar pesquisa" : "Nova pesquisa"}</h2>{editing && <p className="survey-reference">Referência da pesquisa: <code>{editing}</code></p>}
+    <form ref={builderRef} className="survey-builder" onSubmit={(event) => void save(event)}>
+      <h2>{editing ? "Editar pesquisa" : "Nova pesquisa"}</h2>{editing && <><p className="survey-reference">Referência da pesquisa: <code>{editing}</code></p><button className="button ghost" type="button" onClick={() => { setEditing(""); setDraft(newDefinition()); setStatus(""); setError(""); }}>Cancelar edição</button>{rows.find((row) => row.id === editing)?.status === "paused" && <p className="survey-reference">A pesquisa permanecerá pausada após salvar. As versões anteriores e suas respostas serão mantidas.</p>}</>}
       <label>Título *<input required maxLength={180} value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label>
       <label>Subtítulo<input maxLength={240} value={draft.subtitle ?? ""} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} /></label>
       <label>Descrição<textarea rows={3} maxLength={4000} value={draft.description ?? ""} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></label>
