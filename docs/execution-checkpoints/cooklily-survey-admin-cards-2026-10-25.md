@@ -7,7 +7,7 @@
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `47eb0977e21e20bad63de704ad7e4ab6372e9820`.
 - HEAD verificado: `99e075b` (`feat(lily): improve survey admin cards and diagnostics`).
-- PRs: nenhum.
+- PR: [#179](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/179), aberto para `cooklily/canonical`; head `76c08bade61745dca8e46bd3fc41b13622027f3c`.
 - Última verificação: 2026-10-25; `npm run check`, `npm test` e `npm run build` passaram localmente.
 - Estado de interrupção: não interrompido.
 
@@ -39,7 +39,7 @@
 - `git diff --check`: PASS.
 - Teste unitário analytics: PASS (3/3); migration SQLite e scripts: PASS (5/5).
 - Playwright local com respostas mockadas: botão “Adicionar resposta” incluiu opção e manteve URL; duplo clique abriu preview; viewport 390 px permaneceu sem overflow horizontal. API local não estava ligada e endpoints não mockados apresentaram erro esperado.
-- CI/CodeQL/PR: pendentes.
+- CI do PR #179: Excel Recipe windows/ubuntu, Workbook Snapshot e Windows Supervisor PASS; Quality Node 20/24 e Tool Health Linux em andamento na última consulta. Revisões: nenhuma.
 - Commit local: `99e075b`; alterações versionadas, push/PR pendentes.
 - CI/CodeQL/PR: pendentes.
 
@@ -60,6 +60,6 @@
 
 ## Próxima ação exata
 
-1. Revisar mudanças e escopos restantes, depois commit/push.
-2. Abrir PR, aguardar CI, corrigir achados e fazer squash merge.
-3. Atualizar checkpoint com fatos autoritativos e reportar os passos de deploy/homologação.
+1. Persistir neste checkpoint o PR aberto e os resultados mais recentes dos gates.
+2. Aguardar checks, corrigir eventuais falhas/comentários e integrar por squash.
+3. Atualizar o checkpoint com SHA/CI/merge e reportar os passos de deploy/homologação.
