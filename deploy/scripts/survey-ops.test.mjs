@@ -30,7 +30,7 @@ test('Nginx helper and diagnostic script have valid Bash syntax', () => {
   }
 });
 
-test('notification Nginx helper inserts exact and read subroutes before the API deny rule', () => {
+test('survey and notification Nginx routes are inserted before the API deny rule', () => {
   const python = pythonBlock(helperSource, /python3 - "\$\{CONF\}" <<'PY'\r?\n([\s\S]*?)\r?\nPY/);
   const directory = mkdtempSync(path.join(os.tmpdir(), 'lily-nginx-helper-'));
   try {
@@ -39,15 +39,25 @@ test('notification Nginx helper inserts exact and read subroutes before the API 
     const first = runPython(python, [config]);
     assert.equal(first.status, 0, first.stderr);
     const content = readFileSync(config, 'utf8');
+    const surveyExactAt = content.indexOf('location = /api/v1/lily/surveys');
+    const surveyPrefixAt = content.indexOf('location ^~ /api/v1/lily/surveys/');
     const exactAt = content.indexOf('location = /api/v1/lily/notifications');
     const prefixAt = content.indexOf('location ^~ /api/v1/lily/notifications/');
     const denyAt = content.indexOf('location ^~ /api/ { return 404; }');
-    assert.ok(exactAt >= 0 && prefixAt > exactAt && denyAt > prefixAt);
+    assert.ok(surveyExactAt >= 0 && surveyPrefixAt > surveyExactAt && exactAt > surveyPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
+    assert.equal((content.match(/location = \/api\/v1\/lily\/surveys\b/g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
     assert.equal(runPython(python, [config]).status, 0, 'second application should be idempotent');
 
     writeFileSync(config, 'server {\n    location = /api/v1/lily/notifications { }\n    location ^~ /api/ { return 404; }\n}\n');
     assert.equal(runPython(python, [config]).status, 2, 'partial route config must fail closed');
+    writeFileSync(config, 'server {\n    location ^~ /api/v1/lily/surveys/ { }\n    location ^~ /api/ { return 404; }\n}\n');
+    assert.equal(runPython(python, [config]).status, 2, 'partial survey config must fail closed');
+    writeFileSync(config, 'server {\n    location = /api/v1/lily/notifications { }\n    location ^~ /api/v1/lily/notifications/ { }\n    location ^~ /api/ { return 404; }\n}\n');
+    assert.equal(runPython(python, [config]).status, 0, 'survey routes should be added to an existing notification config');
+    const upgraded = readFileSync(config, 'utf8');
+    assert.equal((upgraded.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
+    assert.match(upgraded, /location = \/api\/v1\/lily\/surveys/);
     writeFileSync(config, 'server { }\n');
     assert.equal(runPython(python, [config]).status, 3, 'unknown Nginx layout must fail closed');
   } finally {
@@ -67,7 +77,8 @@ test('diagnostic access-log filter masks IPs and removes query strings and stale
     writeFileSync(log, [
       `203.0.113.84 - - [${toNginxTime(recent)}] "GET /lilyacai/cardapio?token=SECRET HTTP/1.1" 200 585`,
       `198.51.100.27 - - [${toNginxTime(old)}] "GET /lilyacai/cardapio HTTP/1.1" 200 585`,
-      `192.0.2.10 - - [${toNginxTime(recent)}] "GET /api/v1/lily/notifications?phone=PRIVATE HTTP/1.1" 404 20`
+      `192.0.2.10 - - [${toNginxTime(recent)}] "GET /api/v1/lily/notifications?phone=PRIVATE HTTP/1.1" 404 20`,
+      `198.51.100.52 - - [${toNginxTime(recent)}] "GET /api/v1/lily/surveys HTTP/1.1" 404 162`
     ].join('\n'));
     const result = runPython(python, ['20', log]);
     assert.equal(result.status, 0, result.stderr);
@@ -76,7 +87,8 @@ test('diagnostic access-log filter masks IPs and removes query strings and stale
     assert.match(result.stdout, /HTTP\/1\.1/);
     assert.doesNotMatch(result.stdout, /SECRET|PRIVATE|203\.0\.113\.84|198\.51\.100\.27|192\.0\.2\.10/);
     assert.doesNotMatch(result.stdout, /4 hours ago/);
-    assert.equal((result.stdout.match(/HTTP\/1\.1/g) ?? []).length, 2, result.stdout);
+    assert.match(result.stdout, /lily\/surveys/);
+    assert.equal((result.stdout.match(/HTTP\/1\.1/g) ?? []).length, 3, result.stdout);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -84,9 +96,14 @@ test('diagnostic access-log filter masks IPs and removes query strings and stale
 
 test('deployment applies the notification route helper before enforcing the Nginx precheck', () => {
   const source = readFileSync(deployerPath, 'utf8');
-  assert.ok(source.indexOf('apply_survey_notification_nginx_routes') < source.indexOf("PHASE=\"nginx-precheck\""));
+  assert.ok(source.indexOf('apply_lily_survey_api_nginx_routes') < source.indexOf("PHASE=\"nginx-precheck\""));
+  assert.match(source, /location = \/api\/v1\/lily\/surveys/);
+  assert.match(source, /location \^~ \/api\/v1\/lily\/surveys\//);
   assert.match(source, /location = \/api\/v1\/lily\/notifications/);
   assert.match(source, /location \^~ \/api\/v1\/lily\/notifications\//);
+  const template = readFileSync(path.join(root, 'deploy/nginx/carrochefe.com.conf.example'), 'utf8');
+  assert.match(template, /location = \/api\/v1\/lily\/surveys/);
+  assert.match(template, /location \^~ \/api\/v1\/lily\/surveys\//);
 });
 
 test('Lily survey analytics migration applies on a fresh SQLite schema', () => {

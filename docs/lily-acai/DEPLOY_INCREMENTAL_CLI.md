@@ -12,7 +12,7 @@ A CLI instalada na VPS é `cc`. Depois de um deploy saudável, `deploy/scripts/c
 sudo cc deploy canonical
 ```
 
-Resolve `origin/cooklily/canonical` para um SHA completo e imutável, aplica o helper versionado que libera as rotas de notificações CookLily no Nginx (com backup, `nginx -t` e rollback da configuração em falha) e chama o deployer.
+Resolve `origin/cooklily/canonical` para um SHA completo e imutável, aplica o helper versionado que libera as rotas de pesquisas e notificações CookLily no Nginx (com backup, `nginx -t` e rollback da configuração em falha) e chama o deployer. As subrotas autenticadas são encaminhadas ao Fastify, que valida sessão e CSRF; o fallback `/api/` continua negando rotas não autorizadas.
 
 ```bash
 sudo cc deploy <sha-completo>
@@ -46,7 +46,7 @@ Após uma tentativa do usuário de abrir o site, execute na VPS:
 sudo bash /srv/carro-chefe/current/deploy/scripts/diagnose-cooklily-access --minutes 20
 ```
 
-O comando imprime e salva um TXT privado em `/var/tmp`. Ele reúne somente eventos recentes da rota do cardápio/notificações, erros Nginx relacionados a TLS/rede, estado dos serviços, DNS, health local e sondas HTTPS/TLS. IPs de clientes são mascarados; query strings e campos de autenticação, token, cookie e senha são removidos/redigidos. A janela aceita de 1 a 180 minutos. Envie o caminho do relatório ao responsável sem copiar seu conteúdo para logs públicos.
+O comando imprime e salva um TXT privado em `/var/tmp`. Ele reúne somente eventos recentes da rota do cardápio/pesquisas/notificações, erros Nginx relacionados a TLS/rede, estado dos serviços, DNS, health local e sondas HTTPS/TLS. A sonda de pesquisas sem cookie deve chegar ao Fastify e retornar um erro de autenticação JSON, em vez da página HTML 404 do Nginx. IPs de clientes são mascarados; query strings e campos de autenticação, token, cookie e senha são removidos/redigidos. A janela aceita de 1 a 180 minutos. Envie o caminho do relatório ao responsável sem copiar seu conteúdo para logs públicos.
 
 ```bash
 sudo cc check logistics-key

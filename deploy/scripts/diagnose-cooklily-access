@@ -59,6 +59,7 @@ if command -v dig >/dev/null 2>&1; then
 fi
 if command -v curl >/dev/null 2>&1; then
   curl --silent --show-error --connect-timeout 8 --max-time 15 -o /dev/null -w 'cardapio: HTTP %{http_code}; TLS verify %{ssl_verify_result}\n' https://carrochefe.com/lilyacai/cardapio 2>&1 || echo "cardapio: HTTPS probe falhou"
+  curl --silent --show-error --connect-timeout 8 --max-time 15 -o /dev/null -w 'pesquisas (sem cookie): HTTP %{http_code}; content-type %{content_type}; TLS verify %{ssl_verify_result}\n' https://carrochefe.com/api/v1/lily/surveys 2>&1 || echo "pesquisas: HTTPS probe falhou"
   curl --silent --show-error --connect-timeout 8 --max-time 15 -o /dev/null -w 'notificacoes (sem cookie): HTTP %{http_code}; TLS verify %{ssl_verify_result}\n' 'https://carrochefe.com/api/v1/lily/notifications?limit=1' 2>&1 || echo "notificacoes: HTTPS probe falhou"
 fi
 if command -v openssl >/dev/null 2>&1; then
@@ -94,7 +95,7 @@ for name in files:
             for line in stream:
                 stamp = re.search(r'\[([^\]]+)\]', line)
                 request = request_re.search(line)
-                relevant_path = request and request.group(1).split('?', 1)[0] in ('/lilyacai/cardapio', '/api/v1/lily/notifications')
+                relevant_path = request and request.group(1).split('?', 1)[0] in ('/lilyacai/cardapio', '/api/v1/lily/surveys', '/api/v1/lily/notifications')
                 if not relevant_path and not error_re.search(line):
                     continue
                 if stamp:
