@@ -2,14 +2,14 @@
 
 - Tarefa: corrigir envio/reload ao adicionar resposta, rotear notificações no Nginx, substituir a lista do painel por cards selecionáveis com preview/estatísticas reutilizável, suspender a criação de missões na interface, e incluir coletor de diagnóstico seguro para a VPS.
 - Responsável: AG-DEV.
-- Estado: `in_progress`.
+- Estado: `merged`.
 - Branch: `codex/cooklily-survey-admin-cards`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `47eb0977e21e20bad63de704ad7e4ab6372e9820`.
-- HEAD verificado: `99e075b` (`feat(lily): improve survey admin cards and diagnostics`).
-- PR: [#179](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/179), aberto para `cooklily/canonical`; head `76c08bade61745dca8e46bd3fc41b13622027f3c`.
+- HEAD verificado: `fb8a09c5fe2178fd0ba080526bd3b728428276de` (squash merge em `cooklily/canonical`).
+- PR: [#179](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/179), merged em 2026-10-25; head `8bcd92c487d2fb8835705ff5891a59223f72c041`.
 - Última verificação: 2026-10-25; `npm run check`, `npm test` e `npm run build` passaram localmente.
-- Estado de interrupção: não interrompido.
+- Estado de interrupção: não interrompido; entrega concluída e aguardando deploy/homologação do proprietário.
 
 ## Concluído e persistido
 
@@ -27,9 +27,7 @@
 
 ## Em andamento
 
-- Revisar escopo/diff final; aplicar preflight nos caminhos restantes; commit e push do branch.
-- Abrir PR para `cooklily/canonical`, revisar CI e comentários, corrigir achados e integrar por squash com autorização prévia do proprietário.
-- Atualizar checkpoint com SHA/PR/CI/merge e entregar comando do diagnóstico pós-deploy.
+- Homologação real após deploy pelo proprietário.
 
 ## Gates e testes
 
@@ -39,9 +37,9 @@
 - `git diff --check`: PASS.
 - Teste unitário analytics: PASS (3/3); migration SQLite e scripts: PASS (5/5).
 - Playwright local com respostas mockadas: botão “Adicionar resposta” incluiu opção e manteve URL; duplo clique abriu preview; viewport 390 px permaneceu sem overflow horizontal. API local não estava ligada e endpoints não mockados apresentaram erro esperado.
-- CI do PR #179: Excel Recipe windows/ubuntu, Workbook Snapshot e Windows Supervisor PASS; Quality Node 20/24 e Tool Health Linux em andamento na última consulta. Revisões: nenhuma.
-- Commit local: `99e075b`; alterações versionadas, push/PR pendentes.
-- CI/CodeQL/PR: pendentes.
+- CI do PR #179 no head `8bcd92c`: Excel Recipe windows/ubuntu, Workbook Snapshot, Windows Supervisor, Quality Node 20/24 e Tool Health Linux PASS. Revisões: nenhuma.
+- CI pós-merge no SHA `fb8a09c`: todos os sete checks PASS.
+- Merge squash confirmado: `fb8a09c5fe2178fd0ba080526bd3b728428276de`.
 
 ## Migrations
 
@@ -51,7 +49,7 @@
 
 - A rota 404 é produzida pelo fallback restritivo do Nginx; será aplicada automaticamente por `sudo cc deploy canonical`, com backup e precheck `nginx -t`.
 - Métricas não devem expor resposta individual ao cliente; endpoints de estatística e resultados permanecem staff/admin autorizados.
-- Não executar deploy nem alterar estado da VPS; o proprietário fará deploy/homologação.
+- Deploy e migração de produção ainda não executados; o proprietário fará `sudo cc deploy canonical` e homologação.
 
 ## Homologação/dependências externas
 
@@ -60,6 +58,5 @@
 
 ## Próxima ação exata
 
-1. Persistir neste checkpoint o PR aberto e os resultados mais recentes dos gates.
-2. Aguardar checks, corrigir eventuais falhas/comentários e integrar por squash.
-3. Atualizar o checkpoint com SHA/CI/merge e reportar os passos de deploy/homologação.
+1. Proprietário executa `sudo cc deploy canonical` na VPS.
+2. Após tentativa do usuário, executar `sudo bash /srv/carro-chefe/current/deploy/scripts/diagnose-cooklily-access --minutes 20` e compartilhar o TXT privado se o erro persistir.
