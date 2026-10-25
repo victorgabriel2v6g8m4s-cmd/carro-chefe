@@ -6,8 +6,8 @@
 - Branch: `codex/lily-survey-reward-feedback`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `49aadc431362f3ee691515cf8fc73e190a0304f1`.
-- HEAD verificado: pendente de commit.
-- PRs: nenhum aberto ainda.
+- HEAD verificado na validação: `83dfbcfcc2e713f38eff04064aa0fdd6f482ad13` (`feat(lily): show survey points reward animation`).
+- PRs: nenhum aberto ainda; próximo passo abrir PR draft para `cooklily/canonical`.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
