@@ -31,6 +31,12 @@ type AdminFulfillmentPayload = {
   zones: Zone[];
 };
 
+function MultiValueInput({ label, name, placeholder }: { label: string; name: string; placeholder: string }) {
+  const [values, setValues] = useState<string[]>([]);
+  const [draft, setDraft] = useState("");
+  return <div className="admin-span survey-list-editor"><span className="survey-field-title">{label}</span><div className="survey-item-chips">{values.map((value) => <span className="survey-item-chip" key={value}>{value}<button type="button" aria-label={`Remover ${value}`} onClick={() => setValues((current) => current.filter((item) => item !== value))}>×</button><input type="hidden" name={name} value={value} /></span>)}</div><div className="survey-item-add"><input value={draft} maxLength={120} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} /><button type="button" className="button ghost" disabled={!draft.trim()} onClick={(event) => { event.preventDefault(); const value = draft.trim(); if (!value || values.includes(value) || values.length >= 120) return; setValues((current) => [...current, value]); setDraft(""); }}>Adicionar</button></div></div>;
+}
+
 const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 function moneyInput(cents: number) {
@@ -60,6 +66,7 @@ export function AdminFulfillmentPage() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [loading, setLoading] = useState(true);
+  const [zoneValuesReset, setZoneValuesReset] = useState(0);
 
   async function refresh() {
     const current = await getLilySession();
@@ -117,7 +124,8 @@ export function AdminFulfillmentPage() {
 
   async function createZone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setError("");
     try {
       await lilyAdminJson("delivery-zones", "POST", csrfToken, {
@@ -125,11 +133,12 @@ export function AdminFulfillmentPage() {
         status: "active",
         feeCents: parseMoney(String(form.get("fee") || "0")),
         minimumOrderCents: parseMoney(String(form.get("minimum") || "0")),
-        neighborhoods: String(form.get("neighborhoods") || "").split(",").map((value) => value.trim()).filter(Boolean),
-        postalCodePrefixes: String(form.get("postalPrefixes") || "").split(",").map((value) => value.trim()).filter(Boolean),
+        neighborhoods: form.getAll("neighborhoods").map(String),
+        postalCodePrefixes: form.getAll("postalPrefixes").map(String),
         sortOrder: 100
       });
-      event.currentTarget.reset();
+      formElement.reset();
+      setZoneValuesReset((value) => value + 1);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar região.");
@@ -205,8 +214,8 @@ export function AdminFulfillmentPage() {
         <label>Nome da região<input name="name" required /></label>
         <label>Taxa<input name="fee" defaultValue="0,00" required /></label>
         <label>Pedido mínimo<input name="minimum" defaultValue="0,00" /></label>
-        <label className="admin-span">Bairros, separados por vírgula<input name="neighborhoods" /></label>
-        <label className="admin-span">Prefixos de CEP, separados por vírgula<input name="postalPrefixes" placeholder="79002, 79003" /></label>
+        <MultiValueInput key={`neighborhoods-${zoneValuesReset}`} label="Bairros atendidos" name="neighborhoods" placeholder="Digite um bairro" />
+        <MultiValueInput key={`postal-${zoneValuesReset}`} label="Prefixos de CEP atendidos" name="postalPrefixes" placeholder="Ex.: 79002" />
         <button className="button primary" type="submit">Criar região</button>
       </form>
     </section>

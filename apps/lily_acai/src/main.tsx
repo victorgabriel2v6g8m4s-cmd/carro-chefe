@@ -28,6 +28,7 @@ import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAna
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { formatBrazilianPhone } from "./features/account/phone-format";
+import { surveyJson } from "./features/surveys/api";
 const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
 const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
 const DashboardPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.DashboardPage })));
@@ -121,6 +122,7 @@ function Shell({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const menuRef = useRef<HTMLElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -131,6 +133,22 @@ function Shell({ children }: { children: ReactNode }) {
     window.addEventListener("cooklily:profile-updated", onProfileUpdated);
     return () => window.removeEventListener("cooklily:profile-updated", onProfileUpdated);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function refreshNotifications() {
+      if (!user) { setUnreadNotifications(0); return; }
+      try {
+        const result = await surveyJson<{ unreadCount: number }>("notifications?limit=1");
+        if (active) setUnreadNotifications(result.unreadCount);
+      } catch { if (active) setUnreadNotifications(0); }
+    }
+    void refreshNotifications();
+    const onFocus = () => void refreshNotifications();
+    window.addEventListener("focus", onFocus);
+    const timer = window.setInterval(() => void refreshNotifications(), 60_000);
+    return () => { active = false; window.removeEventListener("focus", onFocus); window.clearInterval(timer); };
+  }, [user]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -186,7 +204,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="header-actions">
-          <Link className="header-icon notifications-icon" to="/notificacoes" aria-label="Notificações"><BellIcon /></Link>
+          <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><BellIcon />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
           {!user && <div className="auth-actions-desktop">
             <Link to="/entrar">Entrar</Link>
             <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
@@ -241,10 +259,10 @@ function Shell({ children }: { children: ReactNode }) {
     <main id="lily-main-content" tabIndex={-1}>{children}</main>
 
     <nav className="mobile-footer-nav" aria-label="Navegação principal mobile">
-      <NavLink to="/cardapio"><span aria-hidden="true">▦</span><small>Cardápio</small></NavLink>
-      <NavLink to="/ranking"><span aria-hidden="true">♛</span><small>Ranking</small></NavLink>
-      <NavLink to="/reels"><span aria-hidden="true">▶</span><small>Reels</small></NavLink>
+      <NavLink to="/" end><span aria-hidden="true">⌂</span><small>Início</small></NavLink>
       <NavLink to="/dashboard"><span aria-hidden="true">◷</span><small>Dashboard</small></NavLink>
+      <NavLink className="footer-reels-link" to="/reels"><span aria-hidden="true">▶</span><small>Reels</small></NavLink>
+      <NavLink to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}><span className="footer-cart-icon"><CartIcon />{cart.itemCount > 0 && <i>{cart.itemCount > 9 ? "9+" : cart.itemCount}</i>}</span><small>Carrinho</small></NavLink>
       <NavLink to="/perfil"><span aria-hidden="true">♙</span><small>Perfil</small></NavLink>
     </nav>
 

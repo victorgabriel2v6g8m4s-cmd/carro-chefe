@@ -5,6 +5,7 @@ export type SurveyQuestion = {
   options: string[]; rows: string[]; columns: string[];
   scale?: { min: number; max: number; minLabel?: string; maxLabel?: string };
   media?: { mimeTypes: string[]; maxBytes: number };
+  cardMedia?: { url: string; type: "image" | "video"; altText: string };
   textAfterChoice?: boolean; positiveLabel?: string; negativeLabel?: string;
   style: { fontSize: "sm" | "md" | "lg" | "xl"; bold: boolean; italic: boolean; markdown: boolean; html?: string };
 };
@@ -13,6 +14,13 @@ export type SurveyDefinition = {
   title: string; subtitle?: string | null; description?: string | null; questions: SurveyQuestion[];
   prerequisites: string[]; unlocksMissions: string[]; pointsPerForm: number; pointsPerAnswer: number;
   showPoints: boolean; allowNavigation: boolean; mediaMimeTypes: string[]; mediaMaxBytes: number;
+  estimatedMinutes: number;
+};
+
+export type CustomerNotification = {
+  id: string; type: string; title: string; body: string;
+  metadata: { surveyId?: string; estimatedMinutes?: number; questionCount?: number; points?: number | null };
+  readAt: string | null; createdAt: string;
 };
 
 export async function surveyJson<T>(path: string, init?: RequestInit): Promise<T> {

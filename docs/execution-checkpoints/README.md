@@ -15,6 +15,16 @@ Ao retomar uma execução:
 
 A última mensagem do chat nunca substitui essa verificação.
 
+## Publicação emergencial de um checkpoint CookLily
+
+O script envia somente o arquivo solicitado para `cooklily/canonical`, em um worktree temporário isolado. Exemplo para esta entrega:
+
+```powershell
+pwsh -File tools/recovery/push-cooklily-checkpoint.ps1 -Checkpoint docs/execution-checkpoints/cooklily-survey-admin-ux-2026-10-25.md
+```
+
+O caminho precisa estar dentro de `docs/execution-checkpoints/`; o script confere que o commit contém exclusivamente esse arquivo e rebaseia se a canonical avançar durante a tentativa.
+
 ## Quando atualizar
 
 Atualize após cada marco durável:

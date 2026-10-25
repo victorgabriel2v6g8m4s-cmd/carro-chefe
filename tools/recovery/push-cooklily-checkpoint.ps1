@@ -1,6 +1,11 @@
+param(
+  [string]$Checkpoint = 'docs/execution-checkpoints/cooklily-surveys-and-canonical-integration.md'
+)
+
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$checkpointRelative = 'docs/execution-checkpoints/cooklily-surveys-and-canonical-integration.md'
+$checkpointRelative = $Checkpoint.Replace('\', '/')
+if (-not $checkpointRelative.StartsWith('docs/execution-checkpoints/', [System.StringComparison]::Ordinal) -or $checkpointRelative.Contains('..')) { throw 'Informe apenas um arquivo dentro de docs/execution-checkpoints/.' }
 $sourceCheckpoint = Join-Path $repoRoot $checkpointRelative
 if (-not (Test-Path -LiteralPath $sourceCheckpoint -PathType Leaf)) { throw "Checkpoint ausente: $sourceCheckpoint" }
 $remoteName = 'origin'
