@@ -2,12 +2,12 @@
 
 - Tarefa: confirmar pontuação no saldo do cliente e exibir recompensa animada após responder.
 - Responsável: AG-DEV.
-- Estado: `validated`.
-- Branch: `codex/lily-survey-reward-feedback`.
+- Estado: `merged`.
+- Branch de implementação: `codex/lily-survey-reward-feedback` (integrada); branch do fechamento deste checkpoint: `codex/close-lily-survey-reward-checkpoint`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `49aadc431362f3ee691515cf8fc73e190a0304f1`.
-- HEAD verificado na validação: `83dfbcfcc2e713f38eff04064aa0fdd6f482ad13` (`feat(lily): show survey points reward animation`).
-- PRs: nenhum aberto ainda; próximo passo abrir PR draft para `cooklily/canonical`.
+- HEAD verificado: `da401dc977a5db626773319adb217059592cb43f` (`CookLily: feedback visual e crédito de pontos em pesquisas (#185)`).
+- PRs: [#185](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/185), integrado por squash; CI 7/7 aprovado.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
@@ -33,6 +33,7 @@
 - `npm test`: PASS, 57 arquivos; 310 aprovados, 3 ignorados.
 - `npm run build`: PASS; budget CookLily aprovado. Aviso do Vite de chunk acima de 500 kB permanece já existente.
 - Build e testes usam `.runtime/lily-lifecycle-test.db` apenas como banco temporário já existente.
+- PR #185: 7/7 checks aprovados (Node 20, Node 24, Workbook Snapshot, Excel Recipe Ubuntu e Windows, Windows Supervisor, Tool Health Linux).
 
 ## Migrations
 
@@ -44,11 +45,10 @@
 
 ## Homologação/dependências externas
 
-- Aguardar CI do PR.
-- Após merge e deploy pelo proprietário, concluir uma pesquisa pontuada e conferir a barra, o evento e o saldo no perfil.
+- A pesquisa específica e seus valores não puderam ser inspecionados no banco da VPS.
+- Após deploy pelo proprietário, concluir uma pesquisa pontuada e conferir a barra, o evento e o saldo no perfil.
 
 ## Próxima ação exata
 
-1. Commitar os três arquivos de código e este checkpoint.
-2. Abrir PR draft para `cooklily/canonical`; acompanhar checks e integrar quando todos passarem.
-3. Proprietário executar `sudo cc deploy canonical` e homologar no site.
+1. Integrar este fechamento documental do checkpoint após CI.
+2. Proprietário executar `sudo cc deploy canonical` e homologar uma pesquisa configurada com pontos acima de zero.
