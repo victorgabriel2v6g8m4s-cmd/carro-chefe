@@ -12,7 +12,6 @@ import {
 } from "./api";
 import { useCart } from "./features/cart/CartContext";
 import { trackLilyAnalytics } from "./analytics";
-import { AllergenNotice } from "./features/allergens/AllergenNotice";
 import { groupCatalogProductsByCategory } from "./catalog-category-navigation";
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { PriceDisplay } from "./features/pricing/PriceDisplay";
@@ -230,7 +229,6 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
             </div>
           </fieldset>}
 
-          {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
           {busy && <p className="config-status" role="status">Atualizando preço e validação...</p>}
           {addonMinimumUnmet && <p className="config-status" role="status">Selecione pelo menos {product.minimumAddonUnits} adicional(is) para continuar</p>}
@@ -536,7 +534,6 @@ function ComboConfigurator({ combo, onClose }: { combo: CatalogCombo; onClose: (
             <small>Categoria, tamanho, disponibilidade, adicionais e preço são validados automaticamente no servidor.</small>
           </>}
 
-          {quote && <AllergenNotice summary={quote.allergens} />}
           {error && <p className="error" role="alert">{error}</p>}
           {unmetAddonMinimums.length > 0 && <p className="config-status" role="status">
             Selecione pelo menos {unmetAddonMinimums[0]} adicional(is) para continuar em cada item indicado.

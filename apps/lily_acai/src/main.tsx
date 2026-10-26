@@ -45,6 +45,10 @@ function CartIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20 8H7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>;
 }
 
+function CatalogIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+
 function MenuIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
 }
@@ -264,7 +268,7 @@ function Shell({ children }: { children: ReactNode }) {
       <NavLink to="/dashboard"><span aria-hidden="true">◷</span><small>Dashboard</small></NavLink>
       <NavLink className="footer-reels-link" to="/reels"><span aria-hidden="true">▶</span><small>Reels</small></NavLink>
       <NavLink to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}><span className="footer-cart-icon"><CartIcon />{cart.itemCount > 0 && <i>{cart.itemCount > 9 ? "9+" : cart.itemCount}</i>}</span><small>Carrinho</small></NavLink>
-      <NavLink to="/perfil"><span aria-hidden="true">♙</span><small>Perfil</small></NavLink>
+      <NavLink to="/cardapio"><span className="footer-catalog-icon"><CatalogIcon /></span><small>Cardápio</small></NavLink>
     </nav>
 
     <footer>

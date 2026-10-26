@@ -4,7 +4,6 @@ import { getLilySession, parseResponse, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { trackLilyAnalytics } from "../../analytics";
 import { useCart } from "../cart/CartContext";
-import { AllergenNotice } from "../allergens/AllergenNotice";
 import { storeGuestOrderToken } from "../orders/guest-token";
 import { PriceDisplay } from "../pricing/PriceDisplay";
 import {
@@ -343,9 +342,6 @@ export function CheckoutPage() {
         {cart.items.map((item, index) => <div className="checkout-line checkout-line-item" key={item.id}>
           <span>{item.quantity}× {item.productName}{item.kind === "combo" || item.variantName === "Preço fixo" ? "" : ` · ${item.variantName}`}</span>
           <PriceDisplay currentPriceCents={(quote?.items[index]?.totalPriceCents ?? item.unitPriceCents) * item.quantity} compareAtPriceCents={quote?.items[index]?.kind === "product" && quote.items[index].compareAtPriceCents != null ? quote.items[index].compareAtPriceCents * item.quantity : null} density="compact" />
-          <div className="checkout-line-allergens">
-            <AllergenNotice summary={quote?.items[index]?.allergens ?? item.allergens} compact />
-          </div>
         </div>)}
         {quote ? <>
           <div className="checkout-line"><span>Subtotal validado</span><strong>{money(quote.subtotalCents)}</strong></div>
