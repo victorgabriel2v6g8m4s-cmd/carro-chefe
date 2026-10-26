@@ -17,7 +17,17 @@ export function QuestionInput({ question, value, onChange, surveyId, disabled = 
   if (question.type === "choice_text") { const current = (value ?? {}) as { choice?: string; text?: string }; return <div className="survey-answer-stack"><select disabled={disabled} value={current.choice ?? ""} onChange={(event) => onChange({ ...current, choice: event.target.value })}><option value="">Selecione</option>{options.map((option, index) => <option key={surveyOptionValue(option)} value={surveyOptionValue(option)}>{surveyOptionLabel(option, index)}</option>)}</select>{question.textAfterChoice && <textarea disabled={disabled} rows={3} value={current.text ?? ""} placeholder="Acrescente um comentário" onChange={(event) => onChange({ ...current, text: event.target.value })} />}</div>; }
   if (question.type === "binary_swipe") return <BinarySwipe question={question} value={value} onChange={onChange} disabled={disabled} />;
   if (["multiple_choice_grid", "checkbox_grid"].includes(question.type)) return <GridAnswer question={question} value={value} onChange={onChange} disabled={disabled} />;
-  if (question.type === "linear_scale") return <div className="survey-scale">{Array.from({ length: (question.scale?.max ?? 5) - (question.scale?.min ?? 1) + 1 }, (_, index) => (question.scale?.min ?? 1) + index).map((number) => <label key={number}><input disabled={disabled} type="radio" name={question.id} checked={Number(value) === number} onChange={() => onChange(number)} />{number}</label>)}</div>;
+  if (question.type === "linear_scale") {
+    const min = question.scale?.min ?? 1;
+    const max = question.scale?.max ?? 5;
+    const hasValue = typeof value === "number" && Number.isFinite(value);
+    const sliderValue = hasValue ? Number(value) : Math.round((min + max) / 2);
+    return <div className="survey-scale-slider">
+      <output className="survey-scale-value" aria-live="polite">{hasValue ? sliderValue : "Deslize para escolher"}</output>
+      <input disabled={disabled} type="range" min={min} max={max} step="1" value={sliderValue} aria-label={question.title} aria-valuetext={hasValue ? String(sliderValue) : "Nenhum valor selecionado"} onChange={(event) => onChange(Number(event.target.value))} />
+      <div className="survey-scale-endpoints"><span>{question.scale?.minLabel || min}</span><span>{question.scale?.maxLabel || max}</span></div>
+    </div>;
+  }
   if (question.type === "free_text" && question.media) { const response = (value && typeof value === "object" ? value : {}) as { text?: string; upload?: unknown }; return <div className="survey-answer-stack"><textarea disabled={disabled} rows={4} maxLength={10000} value={response.text ?? ""} onChange={(event) => onChange({ ...response, text: event.target.value })} /><SurveyMediaAnswer question={question} value={response.upload} onChange={(upload) => onChange({ ...response, upload })} surveyId={surveyId} disabled={disabled} /></div>; }
   if (question.type === "media") return <SurveyMediaAnswer question={question} value={value} onChange={onChange} surveyId={surveyId} disabled={disabled} />;
   if (question.type === "free_text" || question.type === "paragraph") return <textarea disabled={disabled} rows={question.type === "paragraph" ? 6 : 3} maxLength={10000} value={String(value ?? "")} onChange={(event) => onChange(event.target.value)} />;

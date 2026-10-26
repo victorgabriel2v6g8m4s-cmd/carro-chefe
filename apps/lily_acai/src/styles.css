@@ -215,6 +215,11 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .survey-rich-option-media input[type="file"] { width: 100%; min-width: 0; }
 .survey-rich-option-preview { display: grid; place-items: center; min-height: 100px; max-height: 260px; overflow: hidden; border-radius: 12px; background: var(--cl-color-surface-strong); }
 .survey-rich-option-preview img,.survey-rich-option-preview video { display: block; width: 100%; max-height: 260px; object-fit: contain; }
+.survey-scale-slider { display: grid; gap: 12px; width: min(100%, 560px); padding: 8px 2px; }
+.survey-scale-value { justify-self: center; min-width: 48px; padding: 5px 13px; border-radius: 999px; background: var(--cl-color-surface-strong); color: var(--cl-color-primary); font-size: 1.1rem; font-weight: 850; text-align: center; }
+.survey-scale-slider input[type="range"] { width: 100%; min-height: 32px; margin: 0; padding: 0; accent-color: var(--cl-color-primary); cursor: pointer; touch-action: pan-y; }
+.survey-scale-slider input[type="range"]:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; border-radius: 999px; }
+.survey-scale-endpoints { display: flex; justify-content: space-between; gap: 12px; color: var(--cl-color-text-muted); font-size: .9rem; font-weight: 750; }
 .survey-option-card { display: flex; align-items: flex-start; gap: 12px; min-width: 0; padding: 12px; border: 1px solid rgb(130 0 35 / 14%); border-radius: 16px; background: white; }
 .survey-option-card > input { flex: 0 0 auto; margin-top: 4px; }
 .survey-option-content { display: grid; gap: 8px; min-width: 0; width: 100%; }
