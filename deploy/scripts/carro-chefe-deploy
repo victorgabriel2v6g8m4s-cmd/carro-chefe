@@ -184,6 +184,7 @@ required_nginx_patterns=(
   'location ^~ /api/v1/lily/customer/'
   'location = /api/v1/lily/surveys'
   'location ^~ /api/v1/lily/surveys/'
+  'location ^~ /api/v1/lily/survey-option-media/'
   'location = /api/v1/lily/notifications'
   'location ^~ /api/v1/lily/notifications/'
   'location ^~ /api/v1/lily/courier/'

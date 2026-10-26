@@ -41,11 +41,13 @@ test('survey and notification Nginx routes are inserted before the API deny rule
     const content = readFileSync(config, 'utf8');
     const surveyExactAt = content.indexOf('location = /api/v1/lily/surveys');
     const surveyPrefixAt = content.indexOf('location ^~ /api/v1/lily/surveys/');
+    const mediaPrefixAt = content.indexOf('location ^~ /api/v1/lily/survey-option-media/');
     const exactAt = content.indexOf('location = /api/v1/lily/notifications');
     const prefixAt = content.indexOf('location ^~ /api/v1/lily/notifications/');
     const denyAt = content.indexOf('location ^~ /api/ { return 404; }');
-    assert.ok(surveyExactAt >= 0 && surveyPrefixAt > surveyExactAt && exactAt > surveyPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
+    assert.ok(surveyExactAt >= 0 && surveyPrefixAt > surveyExactAt && mediaPrefixAt > surveyPrefixAt && exactAt > mediaPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
     assert.equal((content.match(/location = \/api\/v1\/lily\/surveys\b/g) ?? []).length, 1);
+    assert.equal((content.match(/location \^~ \/api\/v1\/lily\/survey-option-media\//g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
     assert.equal(runPython(python, [config]).status, 0, 'second application should be idempotent');
 
@@ -99,11 +101,13 @@ test('deployment applies the notification route helper before enforcing the Ngin
   assert.ok(source.indexOf('apply_lily_survey_api_nginx_routes') < source.indexOf("PHASE=\"nginx-precheck\""));
   assert.match(source, /location = \/api\/v1\/lily\/surveys/);
   assert.match(source, /location \^~ \/api\/v1\/lily\/surveys\//);
+  assert.match(source, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
   assert.match(source, /location = \/api\/v1\/lily\/notifications/);
   assert.match(source, /location \^~ \/api\/v1\/lily\/notifications\//);
   const template = readFileSync(path.join(root, 'deploy/nginx/carrochefe.com.conf.example'), 'utf8');
   assert.match(template, /location = \/api\/v1\/lily\/surveys/);
   assert.match(template, /location \^~ \/api\/v1\/lily\/surveys\//);
+  assert.match(template, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
 });
 
 test('Lily survey analytics migration applies on a fresh SQLite schema', () => {
