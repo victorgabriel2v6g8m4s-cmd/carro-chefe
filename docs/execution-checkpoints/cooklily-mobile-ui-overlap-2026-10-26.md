@@ -1,12 +1,12 @@
 # Ajustes mobile de UI/UX CookLily
 
-- status: candidate
+- status: merged
 - owner: AG-DEV
 - branch: `codex/cooklily-mobile-ux-fixes`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `e070c3fc5dcf70787479c9445910421f96af689d`
 - head_sha_verified: `b3040d0020429e59d7df387448556976363a0e25`
-- pull_requests: [#196](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/196), draft, base `cooklily/canonical`
+- pull_requests: [#196](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/196), merged by squash
 - last_verified_at: 2026-10-26
 - interruption_state: none
 
@@ -26,7 +26,7 @@ Corrigir contraste do preço selecionado, sobreposição de ações pelo footer 
 
 ## Em andamento
 
-- Aguardar CI no PR e integrar por squash após todos os gates passarem.
+- Implementação integrada na canonical; aguardar deploy e homologação no site.
 
 ## Gates e testes
 
@@ -36,6 +36,7 @@ Corrigir contraste do preço selecionado, sobreposição de ações pelo footer 
 - `npm run build`: passou para Gestão, Site, QR, CookLily e API.
 - Playwright com dados mockados: iPhone 15 (393×659) confirmou consentimento separado do footer (9 px), navegação oculta no modal, preço `R$ 22,00` branco, ações pós-adicionar com limites inferiores 604/650 dentro da viewport de 659 px e zero avisos de alergênicos no modal. Em 1440×900, footer mobile fica oculto e ações permanecem no viewport.
 - `npm test` local: falhou em 78 testes de API porque o `.runtime/lily-acai.db` existente não tem migrations já presentes na canonical (`couponDiscountCents` e tabelas métricas de pesquisas ausentes). A tentativa de preparar um SQLite temporário com Prisma falhou no schema engine no Windows. Os testes de CI serão a validação da suíte completa; não alteramos os bancos existentes.
+- CI run 40387870680: todos os jobs passaram nos runtimes Node 20 e Node 24, incluindo migrations, suíte completa, checks e builds.
 - `git diff --check`: passou.
 
 ## Migrations
@@ -48,8 +49,8 @@ Corrigir contraste do preço selecionado, sobreposição de ações pelo footer 
 
 ## Homologação/dependências externas
 
-- PR #196 aberto como draft; CI pendente. Homologação na VPS depende de deploy posterior pelo proprietário. O servidor local de frontend não tinha a API em `127.0.0.1:4173`; o Playwright usou respostas de catálogo/configuração mockadas para validar a geometria da UI.
+- PR #196 integrado na canonical em `57bdf2b04312a9d00b8d3560b054eb450d0f683b`. Não há migration nesta entrega. O servidor local de frontend não tinha a API em `127.0.0.1:4173`; o Playwright usou respostas de catálogo/configuração mockadas para validar a geometria da UI.
 
 ## Próxima ação exata
 
-- Commit `b3040d0020429e59d7df387448556976363a0e25` publicado e PR #196 aberto. Próxima ação exata: aguardar CI, corrigir falhas se aparecerem, integrar por squash após gates verdes conforme autorização prévia e atualizar este checkpoint com o SHA integrado.
+- Próxima ação exata: fazer o deploy da `cooklily/canonical` e validar no site, em celular e desktop, o modal de produto, as ações após adicionar ao carrinho, o consentimento de analytics e o novo atalho Cardápio.
