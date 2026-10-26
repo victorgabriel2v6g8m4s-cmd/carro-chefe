@@ -1,12 +1,14 @@
 # Revisão da jornada VIP CookLily
 
-- status: PR aberto; CI remoto pendente
+- status: merged; aguardando deploy e homologação real
 - owner: AG-DEV
-- branch: `codex/cooklily-vip-ux`
+- implementation_branch: `codex/cooklily-vip-ux`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ca26efdbec22d1b67ae5a24f90cdbc79df16a18f`
-- head_sha_verified: `65a2075771ac60c84a9e19694e614dba04cc6f71` (commit da implementação; checkpoint final será um commit subsequente)
-- pull_requests: [PR #199](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/199) (draft; aguardando checks)
+- implementation_head_sha: `9371a66a408cbad41d36543713c10331b98b3413`
+- pull_requests: [PR #199](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/199) (merged)
+- merge_commit_sha: `80bdec8c3b3d182ea1d913738b49f7eb8671323f`
+- ci_run: `40409517779` (#798), todos os 7 jobs concluíram com sucesso
 - last_verified_at: 2026-10-26
 - interruption_state: none
 
@@ -35,14 +37,15 @@ Revisar a navegação e o fluxo de clientes VIP em mobile e desktop: abrir termo
 - `npm run build`: PASS; bundle CookLily: JS 635.73 KiB raw / 168.53 KiB gzip; combinado gzip 193.62 KiB, dentro do budget. Limite raw elevado em 2 KiB para 652.000 bytes após adicionar o chunk de termos sob demanda. Vite mantém aviso de chunk principal acima de 500 KiB.
 - `npm run policy:check`: PASS.
 - `git diff --check`: PASS.
+- GitHub Actions #798 (`40409517779`): os 7 jobs passaram, incluindo Quality Node 20 e 24.
+- Merge squash para `cooklily/canonical`: `80bdec8c3b3d182ea1d913738b49f7eb8671323f`.
 
 ## Limites
 
-- API, banco e sessão foram simulados na navegação; testes de integração da API existente não foram alterados.
-- Deploy e homologação com conta real na VPS permanecem pendentes.
+- API, banco e sessão foram simulados na navegação; testes de integração da API existente passaram, mas a jornada ainda precisa ser homologada com uma conta real após deploy.
+- Deploy na VPS não foi executado nesta tarefa.
 - O chunk principal ainda gera aviso genérico de 500 KiB; a página de termos agora é separada e carregada sob demanda.
 
 ## Próxima ação exata
 
-Acompanhar os checks do PR #199 no SHA mais recente. Se passarem, marcar ready e integrar por squash; se falharem, investigar, corrigir e repetir gates. Registrar merge SHA no checkpoint. Não executar deploy nesta tarefa.
-
+Após deploy na VPS, homologar com conta de teste: entrar, validar convite/código, ler termos, consentir, inscrever-se, confirmar selo/coroa e cancelar; conferir logs/requisições da jornada e registrar o resultado. Não convidar participantes VIP reais antes da homologação e da validação final dos termos de privacidade.
