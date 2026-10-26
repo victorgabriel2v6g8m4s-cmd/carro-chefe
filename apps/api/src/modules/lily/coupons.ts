@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
 import { lilyCouponRecurrences, lilyCouponTypes } from "./coupon-calculation";
+import { getOptionalLilySession } from "./auth";
 
 const idSchema = z.string().trim().min(1).max(80);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -88,14 +89,17 @@ function scopeCreates(categoryIds: string[], productIds: string[]) {
 }
 
 export async function lilyCouponRoutes(app: FastifyInstance) {
-  app.get("/api/v1/lily/public/coupons", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async () => {
+  app.get("/api/v1/lily/public/coupons", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request) => {
     const now = new Date();
+    const context = await getOptionalLilySession(request);
+    const validWindow = { AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] };
     const coupons = await lilyPrisma.lilyCoupon.findMany({
-      where: { status: "active", AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] },
+      where: { status: "active", assignedUserId: null, ...validWindow },
       select: { code: true, title: true, description: true, type: true, value: true, color: true, minimumOrderCents: true, maxDiscountCents: true, startsAt: true, endsAt: true, maxUsesTotal: true, usesCount: true, image: { select: { id: true, status: true } } },
       orderBy: { updatedAt: "desc" }, take: 30
     });
-    const limited = coupons.filter((coupon) => coupon.maxUsesTotal == null || coupon.usesCount < coupon.maxUsesTotal);
+    const assigned = context ? await lilyPrisma.lilyCoupon.findMany({ where: { status: "active", assignedUserId: context.user.id, ...validWindow }, select: { code: true, title: true, description: true, type: true, value: true, color: true, minimumOrderCents: true, maxDiscountCents: true, startsAt: true, endsAt: true, maxUsesTotal: true, usesCount: true, image: { select: { id: true, status: true } } }, orderBy: { createdAt: "desc" } }) : [];
+    const limited = [...coupons, ...assigned].filter((coupon) => coupon.maxUsesTotal == null || coupon.usesCount < coupon.maxUsesTotal);
     return { coupons: limited.map((coupon) => ({
       code: coupon.code, title: coupon.title, description: coupon.description, type: coupon.type, value: coupon.value,
       color: coupon.color, minimumOrderCents: coupon.minimumOrderCents, maxDiscountCents: coupon.maxDiscountCents,

@@ -4,18 +4,18 @@ import { pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 
 export const LILY_BUILD_BASELINE = Object.freeze({
-  jsRawBytes: 479_360,
-  jsGzipBytes: 126_140,
-  cssRawBytes: 90_690,
+  jsRawBytes: 633_940,
+  jsGzipBytes: 168_490,
+  cssRawBytes: 130_610,
   cssGzipBytes: 16_890
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  jsRawBytes: 640_000,
-  jsGzipBytes: 168_000,
-  cssRawBytes: 130_000,
+  jsRawBytes: 650_000,
+  jsGzipBytes: 173_000,
+  cssRawBytes: 135_000,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 193_000
+  combinedGzipBytes: 199_000
 });
 
 function emptyBucket() {

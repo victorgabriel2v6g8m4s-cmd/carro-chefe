@@ -23,11 +23,13 @@ import {
 import { formatBrazilianPhone } from "./phone-format";
 import { openImageCropper } from "../../image-crop-editor";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { VipProfileSection } from "./VipProgram";
 
-function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
+function ProfileAvatar({ name, url, large = false, vip = false }: { name: string | null; url: string | null; large?: boolean; vip?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();
-  return <span className={large ? "profile-avatar large" : "profile-avatar"}>
+  return <span className={`${large ? "profile-avatar large" : "profile-avatar"}${vip ? " is-vip" : ""}`}>
     {url ? <img src={url} alt={name ? `Foto de perfil de ${name}` : "Foto de perfil"} /> : <span aria-hidden="true">{initial}</span>}
+    {vip && <span className="vip-avatar-crown" aria-label="Cliente VIP">♛</span>}
   </span>;
 }
 
@@ -327,7 +329,7 @@ export function ProfilePage() {
 
     <div className="profile-heading">
       <button ref={avatarTriggerRef} className="profile-avatar-trigger" type="button" aria-label="Ampliar foto de perfil" onClick={() => { setError(""); setMessage(""); setAvatarPreviewOpen(true); }}>
-        <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
+        <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large vip={profile.user.vipStatus === "active"} />
       </button>
       <input ref={avatarInputRef} className="profile-avatar-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher nova foto de perfil" onChange={handleAvatarFileChange} />
       <div className="profile-heading-copy">
@@ -347,6 +349,8 @@ export function ProfilePage() {
       <article><strong>{profile.loyalty.orderCount}</strong><span>pedidos pontuados</span></article>
       <article><strong>{profile.loyalty.rank ? `#${profile.loyalty.rank}` : "—"}</strong><span>posição pública</span></article>
     </div>
+
+    <VipProfileSection />
 
     <div className="profile-grid">
       <form ref={editFormRef} id="profile-edit-form" className="checkout-section profile-edit-form" onSubmit={submit}>

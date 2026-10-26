@@ -6,6 +6,7 @@ import { ApiError } from "../../lib/errors";
 import { lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
 import { requireLilyStaff } from "./admin-security";
 import { getOptionalLilySession, normalizeLilyPhone, requireLilyCsrf, requireLilySession } from "./auth";
+import { logLilyVipAnalytics, requireVipProductAccess } from "./vip";
 import { lilyAddressInputSchema, normalizeLilyAddress } from "./addresses";
 import {
   lilyComboConfigurationSchema,
@@ -71,9 +72,10 @@ const orderSchema = z.object({
 type QuoteItemInput = z.infer<typeof quoteItemSchema>;
 type OrderInput = z.infer<typeof orderSchema>;
 
-async function quoteItems(items: QuoteItemInput[]) {
+async function quoteItems(items: QuoteItemInput[], userId?: string | null) {
   return Promise.all(items.map(async (item) => {
     if (item.kind === "combo") {
+      await Promise.all(item.selections.map((selection) => requireVipProductAccess(selection.productId, userId)));
       const configuration = await quoteLilyComboConfiguration({
         comboId: item.comboId,
         selections: item.selections
@@ -85,6 +87,8 @@ async function quoteItems(items: QuoteItemInput[]) {
         lineTotalCents: configuration.totalPriceCents * item.quantity
       };
     }
+
+    await requireVipProductAccess(item.productId, userId);
 
     const configuration = await quoteLilyConfiguration({
       productId: item.productId,
@@ -102,10 +106,10 @@ async function quoteItems(items: QuoteItemInput[]) {
   }));
 }
 
-async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { allowClosed?: boolean } = {}) {
+async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { allowClosed?: boolean; userId?: string | null } = {}) {
   const address = input.address ? normalizeLilyAddress(input.address) : undefined;
   const fulfillment = await resolveLilyFulfillment(input.fulfillmentType, address, options);
-  const items = await quoteItems(input.items);
+  const items = await quoteItems(input.items, options.userId);
   const subtotalCents = items.reduce((sum, item) => sum + item.lineTotalCents, 0);
   if (subtotalCents < fulfillment.minimumOrderCents) {
     throw new ApiError(400, "Pedido abaixo do mínimo configurado.", {
@@ -124,7 +128,8 @@ async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { all
     subtotalCents,
     shippingCents: fulfillment.deliveryFeeCents,
     fulfillmentType: input.fulfillmentType,
-    phone: input.phone
+    phone: input.phone,
+    userId: options.userId
   });
   return {
     items,
@@ -381,7 +386,8 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 40, timeWindow: "1 minute" } }
   }, async (request) => {
     const isHomologation = await requireHomologationAccess(request);
-    const quote = await calculateQuote(quoteSchema.parse(request.body), { allowClosed: isHomologation });
+    const context = await getOptionalLilySession(request);
+    const quote = await calculateQuote(quoteSchema.parse(request.body), { allowClosed: isHomologation, userId: context?.user.id });
     const { couponRedemptionApplications: _internal, ...publicQuote } = quote;
     return publicQuote;
   });
@@ -429,7 +435,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
       couponCodes: input.couponCodes,
       phone: input.phone,
       items: input.items.map(withoutExpectations)
-    }, { allowClosed: isHomologation });
+    }, { allowClosed: isHomologation, userId: context?.user.id });
 
     for (let index = 0; index < input.items.length; index += 1) {
       const expected = input.items[index]!;
@@ -616,6 +622,10 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
         }
       }
       throw error;
+    }
+    if (context) {
+      const vip = await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } });
+      if (vip?.status === "active") await logLilyVipAnalytics(context.user.id, "vip_order_created", created.id);
     }
     return reply.code(201).send(serializeOrder(created, guestAccess?.token ?? null));
   });

@@ -179,6 +179,7 @@ export function AdminHome() {
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cupons`}>Cupons e ofertas</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/vip`}>Programa VIP</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>
@@ -257,6 +258,8 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
     isAvailable: product.isAvailable,
     featured: product.featured,
     weeklyHighlight: product.weeklyHighlight,
+    vipEarlyAccess: product.vipEarlyAccess ?? false,
+    vipTeaserDescription: product.vipTeaserDescription ?? "",
     sortOrder: product.sortOrder,
     coverMediaId: product.cover?.id ?? ""
   });
@@ -411,6 +414,8 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <label className="toggle"><input type="checkbox" checked={draft.isAvailable} onChange={(e) => setDraft({ ...draft, isAvailable: e.target.checked })} /> Disponível</label>
       <label className="toggle"><input type="checkbox" checked={draft.featured} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} /> Mais pedido · etiqueta na grade</label>
       <label className="toggle"><input type="checkbox" checked={draft.weeklyHighlight} onChange={(e) => setDraft({ ...draft, weeklyHighlight: e.target.checked })} /> Escolha da semana · banner exclusivo</label>
+      <label className="toggle"><input type="checkbox" checked={draft.vipEarlyAccess} onChange={(e) => setDraft({ ...draft, vipEarlyAccess: e.target.checked })} /> Lançamento antecipado VIP</label>
+      {draft.vipEarlyAccess && <label className="admin-span">Frase exibida para clientes comuns<textarea rows={2} maxLength={300} value={draft.vipTeaserDescription} placeholder="Um lançamento especial está sendo preparado para os membros VIP." onChange={(e) => setDraft({ ...draft, vipTeaserDescription: e.target.value })} /></label>}
       <div className="admin-span"><AllergenAdminFields catalog={data.allergenCatalog ?? []} value={allergens} onChange={setAllergens} /></div>
        <AdminAutosaveStatus {...productAutosave} />
     </div>

@@ -5,6 +5,8 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
+import { getOptionalLilySession } from "./auth";
+import { isLilyVip, requireVipProductAccess } from "./vip";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
 import { LILY_ALLERGEN_CATALOG, allergenApiData, allergenStorageData, lilyAllergenInputSchema, parseLilyAllergenJson } from "./allergens";
 import { isActiveWindow, lilyComboConfigurationSchema, lilyComboModeFromRules, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration, resolveLilyComboPresetSelections } from "./configuration";
@@ -47,6 +49,8 @@ const productCreateSchema = z.object({
   featured: z.boolean().default(false),
   weeklyHighlight: z.boolean().default(false),
   allowPlaceholder: z.boolean().default(true),
+  vipEarlyAccess: z.boolean().default(false),
+  vipTeaserDescription: z.string().trim().max(300).nullable().optional(),
   sortOrder: z.number().int().min(-10000).max(10000).default(0),
   preparationLeadMinutes: z.number().int().min(0).max(7 * 24 * 60).nullable().optional(),
   minimumAddonUnits: z.number().int().min(0).max(20).default(0),
@@ -244,6 +248,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
     configurationType: product.configurationType,
     minimumAddonUnits: product.minimumAddonUnits,
     maximumAddonUnits: product.maximumAddonUnits,
+    vipEarlyAccess: product.vipEarlyAccess,
+    vipTeaserDescription: product.vipTeaserDescription,
     status: product.status,
     isAvailable: product.isAvailable,
     isPurchasable,
@@ -343,8 +349,27 @@ function productMatchesQuery(product: ReturnType<typeof serializeProduct>, query
   return true;
 }
 
-async function publicCatalog(queryInput: unknown) {
+function forCatalogMember(product: ReturnType<typeof serializeProduct>, vip: boolean) {
+  if (!product.vipEarlyAccess || vip) return { ...product, vipLocked: false };
+  return {
+    ...product,
+    slug: "lancamento-vip",
+    displayName: "???",
+    descriptiveName: null,
+    description: product.vipTeaserDescription || "Um lançamento especial está sendo preparado para os membros VIP.",
+    cover: product.cover ? { ...product.cover, altText: "Lançamento VIP" } : null,
+    gallery: [],
+    tags: [],
+    allergens: { reviewStatus: "unreviewed", contains: [], mayContain: [] },
+    variants: [], flavors: [], addons: [], mixTiers: [], offers: [],
+    isAvailable: false, isPurchasable: false, soldOut: true, featured: false, weeklyHighlight: false,
+    configurationType: "fixed" as const, minimumAddonUnits: 0, maximumAddonUnits: 0, allowPlaceholder: false, vipLocked: true
+  };
+}
+
+async function publicCatalog(queryInput: unknown, userId?: string | null) {
   const query = catalogQuerySchema.parse(queryInput);
+  const vip = await isLilyVip(userId);
   const [categories, rawProducts, flavors, combos] = await Promise.all([
     lilyPrisma.lilyCategory.findMany({
       where: { status: "published" },
@@ -366,8 +391,9 @@ async function publicCatalog(queryInput: unknown) {
     })
   ]);
 
-  const allSerializedProducts = rawProducts.map(serializeProduct);
-  const serialized = allSerializedProducts.filter((product) => productMatchesQuery(product, query));
+  const sourceProducts = rawProducts.map(serializeProduct);
+  const allSerializedProducts = sourceProducts.map((product) => forCatalogMember(product, vip));
+  const serialized = sourceProducts.filter((product) => productMatchesQuery(product, query)).map((product) => forCatalogMember(product, vip));
   const products = serialized.slice(query.offset, query.offset + query.limit);
   const nextOffset = query.offset + products.length < serialized.length ? query.offset + products.length : null;
   const now = new Date();
@@ -456,8 +482,8 @@ async function publicCatalog(queryInput: unknown) {
       premium: flavor.premium
     })),
     combos: publicCombos,
-    weeklyProduct: allSerializedProducts.find((product) => product.weeklyHighlight) ?? null,
-    featuredProduct: allSerializedProducts.find((product) => product.featured) ?? null,
+    weeklyProduct: allSerializedProducts.find((product) => product.weeklyHighlight && !product.vipLocked) ?? null,
+    featuredProduct: allSerializedProducts.find((product) => product.featured && !product.vipLocked) ?? null,
     products,
     total: serialized.length,
     offset: query.offset,
@@ -488,10 +514,18 @@ async function projectedMarginForOffer(input: { variantId?: string | null; offer
 }
 
 export async function lilyCatalogRoutes(app: FastifyInstance) {
-  app.get("/api/v1/lily/public/catalog", async (request) => publicCatalog(request.query));
-  app.get("/api/v1/lily/public/catalog/search", async (request) => publicCatalog(request.query));
+  app.get("/api/v1/lily/public/catalog", async (request) => {
+    const context = await getOptionalLilySession(request);
+    return publicCatalog(request.query, context?.user.id);
+  });
+  app.get("/api/v1/lily/public/catalog/search", async (request) => {
+    const context = await getOptionalLilySession(request);
+    return publicCatalog(request.query, context?.user.id);
+  });
 
   app.get("/api/v1/lily/public/combos/:id/builder", async (request) => {
+    const context = await getOptionalLilySession(request);
+    const vip = await isLilyVip(context?.user.id);
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const combo = await lilyPrisma.lilyCombo.findUnique({ where: { id } });
     const now = new Date();
@@ -522,6 +556,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     });
 
     const options = rawProducts.map(serializeProduct).filter((product) => {
+      if (product.vipEarlyAccess && !vip) return false;
       const rootCategory = product.category.parent?.slug ?? product.category.slug;
       if (category && rootCategory !== category) return false;
       if (subtype === "simple" && !product.tags.includes("simples")) return false;
@@ -547,6 +582,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   });
 
   app.get("/api/v1/lily/public/products/:slug", async (request) => {
+    const context = await getOptionalLilySession(request);
     const { slug } = z.object({ slug: slugSchema }).parse(request.params);
     const product = await lilyPrisma.lilyProduct.findUnique({
       where: { slug },
@@ -555,7 +591,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     if (!product || product.status !== "published") {
       throw new ApiError(404, "Produto CookLily não encontrado.", { code: "LILY_PRODUCT_NOT_FOUND" });
     }
-    return serializeProduct(product);
+    return forCatalogMember(serializeProduct(product), await isLilyVip(context?.user.id));
   });
 
   app.get("/api/v1/lily/public/media/:id", async (request, reply) => {
@@ -577,6 +613,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 60, timeWindow: "1 minute" } }
   }, async (request) => {
     const input = lilyConfigurationSchema.parse(request.body);
+    const context = await getOptionalLilySession(request);
+    await requireVipProductAccess(input.productId, context?.user.id);
     return quoteLilyConfiguration(input);
   });
 
@@ -584,6 +622,8 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 40, timeWindow: "1 minute" } }
   }, async (request) => {
     const input = lilyComboConfigurationSchema.parse(request.body);
+    const context = await getOptionalLilySession(request);
+    await Promise.all(input.selections.map((selection) => requireVipProductAccess(selection.productId, context?.user.id)));
     return quoteLilyComboConfiguration(input);
   });
 

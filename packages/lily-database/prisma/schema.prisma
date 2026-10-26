@@ -25,6 +25,10 @@ model LilyUser {
   surveyResponses LilySurveyResponse[]
   surveyUploads   LilySurveyUpload[]
   notifications   LilyCustomerNotification[]
+  vipMembership  LilyVipMembership?
+  vipRedemptions LilyVipRedemption[]
+  assignedCoupons LilyCoupon[] @relation("LilyAssignedCoupon")
+  vipAnalytics LilyVipAnalyticsEvent[]
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -257,6 +261,8 @@ model LilyProduct {
   preparationLeadMinutes Int?
   minimumAddonUnits     Int                @default(0)
   maximumAddonUnits     Int                @default(4)
+  vipEarlyAccess        Boolean            @default(false)
+  vipTeaserDescription  String?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
   category               LilyCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -513,6 +519,8 @@ model LilyOperationalSettings {
   loyaltyOrderCentsPerPoint Int      @default(100)
   loyaltyCampaignBonusPoints Int     @default(10)
   loyaltyCouponBonusPoints Int       @default(10)
+  vipPointsThreshold        Int       @default(0)
+  vipAnalyticsRetentionDays Int       @default(180)
   paymentsEnabled           Boolean  @default(false)
   paymentProvider           String   @default("manual")
   manualPixEnabled          Boolean  @default(false)
@@ -616,15 +624,18 @@ model LilyCoupon {
   appliesToShipping  Boolean  @default(false)
   usesCount          Int      @default(0)
   createdBy          String?
+  assignedUserId     String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   image              LilyMediaAsset? @relation(fields: [imageMediaId], references: [id], onDelete: SetNull)
   categories         LilyCouponCategory[]
   products           LilyCouponProduct[]
   redemptions        LilyCouponRedemption[]
+  assignedUser       LilyUser? @relation("LilyAssignedCoupon", fields: [assignedUserId], references: [id], onDelete: Cascade)
 
   @@index([status, startsAt, endsAt])
   @@index([updatedAt])
+  @@index([assignedUserId, status])
 }
 
 model LilyCouponCategory {
@@ -822,6 +833,66 @@ model LilyLoyaltyEvent {
 
   @@index([userId, createdAt])
   @@index([type, createdAt])
+}
+
+model LilyVipCode {
+  id              String   @id @default(cuid())
+  codeHash        String   @unique
+  displaySuffix   String
+  kind            String
+  couponIdsJson   String   @default("[]")
+  status          String   @default("active")
+  startsAt        DateTime?
+  endsAt          DateTime?
+  maxRedemptions  Int?
+  redemptionCount Int      @default(0)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  redemptions     LilyVipRedemption[]
+
+  @@index([status, startsAt, endsAt])
+}
+
+model LilyVipRedemption {
+  id          String   @id @default(cuid())
+  userId      String
+  vipCodeId   String
+  createdAt   DateTime @default(now())
+  user        LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipCode     LilyVipCode @relation(fields: [vipCodeId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, vipCodeId])
+  @@index([userId, createdAt])
+}
+
+model LilyVipMembership {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  status         String   @default("invited")
+  source         String
+  consentVersion String?
+  consentedAt    DateTime?
+  enrolledAt     DateTime?
+  canceledAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, enrolledAt])
+}
+
+model LilyVipAnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  event     String
+  reference String?
+  metadataJson String @default("{}")
+  occurredAt DateTime @default(now())
+  user      LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([event, occurredAt])
 }
 
 model LilySurvey {
