@@ -12,7 +12,7 @@ const scopeSchema = {
   productIds: z.array(idSchema).max(300)
 };
 
-const couponSchema = z.object({
+const couponBaseSchema = z.object({
   code: z.string().trim().min(2).max(32).regex(/^[A-Za-z0-9][A-Za-z0-9_-]+$/).transform((value) => value.toUpperCase()),
   title: z.string().trim().min(2).max(100),
   description: z.string().trim().max(500).nullable().optional(),
@@ -32,7 +32,9 @@ const couponSchema = z.object({
   isAdditive: z.boolean().default(false),
   appliesToShipping: z.boolean().default(false),
   ...scopeSchema
-}).strict().superRefine((value, context) => {
+}).strict();
+
+const couponSchema = couponBaseSchema.superRefine((value, context) => {
   if (value.type === "percentage" && value.value > 10_000) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["value"], message: "O desconto percentual não pode exceder 100%." });
   }
@@ -50,7 +52,10 @@ const couponSchema = z.object({
   }
 });
 
-const couponPatchSchema = couponSchema.partial();
+const couponPatchSchema = couponBaseSchema.partial().strict().refine(
+  (value) => Object.keys(value).length > 0,
+  { message: "Informe ao menos um campo para atualizar o cupom." }
+);
 
 const couponInclude = {
   image: { select: { id: true, originalName: true, mime: true, status: true } },

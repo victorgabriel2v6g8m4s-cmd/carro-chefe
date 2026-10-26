@@ -43,7 +43,7 @@ Implementar cadastro/edição e uso de cupons, preço anterior promocional, apli
 - `npm run build:lily`: passou após os ajustes finais; budget dentro do limite medido.
 - `git diff --check`: passou.
 - Commit do candidato: `113383ecd1adf7bfe65893d7723af6d1be7b0c91`; branch publicada `codex/cooklily-coupons-publish`.
-- PR #195 aberto como draft; CI run 40379748922: job de Node 24 falhou no teste de sanidade do budget, pois 194000 B ultrapassava o teto matemático de 193090 B (1,35 × baseline combinada); Node 20 ainda estava em execução. O bundle medido anteriormente ficou em 185.82 KiB gzip combinado. Correção em andamento: reduzir o budget combinado para 193000 B, mantendo cerca de 7 KiB de folga sobre o bundle medido.
+- PR #195 aberto como draft; CI run 40379748922: job de Node 24 falhou no teste de sanidade do budget, pois 194000 B ultrapassava o teto matemático de 193090 B (1,35 × baseline combinada); Node 20 ainda estava em execução. O bundle medido anteriormente ficou em 185.82 KiB gzip combinado. Correção do budget aplicada no commit e1fdc2b; o teste isolado passou. O CI seguinte revelou erro de inicialização Zod: `.partial()` sobre schema refinado em `apps/api/src/modules/lily/coupons.ts`. Correção local em andamento, separando schema base do refinado para criação e edição.
 - Testes automatizados: não executados nesta tarefa.
 - Migration: schema validado; aplicação no SQLite de produção fica para o comando normal de deploy.
 - Central operacional: bootstrap em `http://127.0.0.1:4173/api/v1/bootstrap` não respondeu, então não foi possível registrar esta execução no runtime da Central.
@@ -59,4 +59,4 @@ O worktree já continha mudanças do pedido anterior sobre política de LilyCoin
 - Não há bloqueio de implementação.
 - A migration ainda precisa ser aplicada na VPS pelo fluxo aprovado.
 - Verificar margem de campanhas antes de ativá-las; regras de cancelamento/liberação de reserva devem ser decididas antes de cupons com estoque de resgates muito baixo.
-- Próxima ação exata: aguardar os checks do PR #195, corrigir falhas se aparecerem, marcar pronto para revisão e integrar por squash conforme autorização prévia do proprietário. Depois atualizar o checkpoint com o SHA integrado; a migration será aplicada pelo deploy canonical e a rota será homologada no site.
+- Próxima ação exata: validar a correção do schema Zod, atualizar este checkpoint com evidência, publicar a revisão no PR #195 e acompanhar Node 20/24 até CI verde; então integrar por squash conforme autorização prévia. Depois confirmar a migration no deploy canonical; a homologação real fica no site após o deploy.
