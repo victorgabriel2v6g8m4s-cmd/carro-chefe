@@ -2,12 +2,12 @@
 
 - Tarefa: substituir as opções numéricas da resposta de escala linear por um controle deslizante.
 - Responsável: AG-DEV.
-- Estado: `in_progress`.
-- Branch: `codex/lily-linear-scale-slider`.
+- Estado: `merged`.
+- Branch: `cooklily/canonical`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `b7e4453e73364b9d7e97436457f07eccf94ee713`.
-- HEAD verificado: `b7e4453e73364b9d7e97436457f07eccf94ee713`.
-- PRs: nenhum.
+- HEAD verificado: `4948d0f7fbae560f1a26c17bff9767ecc16f5559`.
+- PRs: [#193](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/193), merged.
 - Última verificação: 2026-10-26.
 - Estado de interrupção: não interrompido.
 
@@ -15,7 +15,7 @@
 
 1. `[done]` Trocar radios por slider nativo acessível, preservando intervalo, labels, valor numérico e validação.
 2. `[done]` `npm run check`, `npm run build`, 58 testes da interface e 2 testes dedicados do slider passaram.
-3. `[in_progress]` Abrir PR draft, aguardar CI e integrar na canonical.
+3. `[done]` PR #193 integrado com squash; CI passou em Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot.
 
 ## Gates e testes
 
@@ -37,4 +37,4 @@
 
 ## Próxima ação exata
 
-1. Acompanhar CI do PR e integrar após todos os gates aprovados.
+1. Após o próximo deploy, conferir o slider em perguntas de escalas diferentes no celular e no teclado.
