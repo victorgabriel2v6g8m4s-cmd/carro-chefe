@@ -15,6 +15,7 @@ import { trackLilyAnalytics } from "./analytics";
 import { AllergenNotice } from "./features/allergens/AllergenNotice";
 import { groupCatalogProductsByCategory } from "./catalog-category-navigation";
 import { LilyLoadingSpinner } from "./loading-spinner";
+import { PriceDisplay } from "./features/pricing/PriceDisplay";
 
 const brandPlaceholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -28,6 +29,13 @@ function minimumPrice(product: CatalogProduct) {
     ...product.mixTiers.map((tier) => tier.priceCents)
   ];
   return values.length ? Math.min(...values) : 0;
+}
+
+function minimumPriceDetails(product: CatalogProduct) {
+  const variants = product.variants.map((variant) => ({ current: variant.priceCents, compareAt: variant.compareAtPriceCents }));
+  const mixTiers = product.mixTiers.map((tier) => ({ current: tier.priceCents, compareAt: tier.compareAtPriceCents }));
+  const choices = [...variants, ...mixTiers].filter((item) => item.current > 0).sort((a, b) => a.current - b.current);
+  return choices[0] ?? { current: 0, compareAt: null };
 }
 
 function ProductImage({ product, onOpen }: { product: CatalogProduct; onOpen?: () => void }) {
@@ -184,7 +192,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
                 disabled={!variant.isAvailable}
                 onClick={() => { setSizeMl(variant.sizeMl); setAdded(false); }}
               >
-                {variant.name} · {money(variant.priceCents)}
+                <span>{variant.name}</span><PriceDisplay currentPriceCents={variant.priceCents} compareAtPriceCents={variant.compareAtPriceCents} density="compact" />
               </button>)}
             </div>
           </fieldset>}
@@ -233,7 +241,7 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
         <div className="product-modal-footer">
           <div className="modal-price">
             <small>{error ? "Configuração inválida" : busy ? "Calculando..." : quote ? "Total" : "Configure o item"}</small>
-            <strong>{quote ? money(quote.totalPriceCents) : "—"}</strong>
+            {quote ? <PriceDisplay currentPriceCents={quote.totalPriceCents} compareAtPriceCents={quote.compareAtPriceCents} /> : <strong>—</strong>}
           </div>
           {!added
             ? <button className="button primary" type="button" onClick={addToCart} disabled={!quote || busy || Boolean(error) || addonMinimumUnmet || product.soldOut}>
@@ -711,7 +719,7 @@ function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect:
 }
 
 function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () => void }) {
-  const price = minimumPrice(product);
+  const price = minimumPriceDetails(product);
   const bestOffer = product.offers[0];
   return <article data-lily-reveal className={`product-card ${product.soldOut ? "sold-out" : ""}`}>
     <div className="product-card-media">
@@ -728,7 +736,7 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
       <div className="product-price">
         {bestOffer
           ? <><small>Oferta</small><s>{money(bestOffer.regularPriceCents)}</s><strong>{money(bestOffer.offerPriceCents)}</strong></>
-          : price > 0 ? <><small>{product.variants.length > 1 ? "A partir de" : "Preço"}</small><strong>{money(price)}</strong></> : <strong>Em breve</strong>}
+          : price.current > 0 ? <><small>{product.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={price.current} compareAtPriceCents={price.compareAt} density="compact" /></> : <strong>Em breve</strong>}
       </div>
     </button>
   </article>;
@@ -736,10 +744,11 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
 
 function promotedPrice(product: CatalogProduct) {
   const offer = product.offers[0];
+  const minimum = minimumPriceDetails(product);
   return {
-    current: offer?.offerPriceCents ?? minimumPrice(product),
-    regular: offer?.regularPriceCents ?? null,
-    savings: offer?.savingsCents ?? null
+    current: offer?.offerPriceCents ?? minimum.current,
+    regular: offer?.regularPriceCents ?? (minimum.compareAt != null && minimum.compareAt > minimum.current ? minimum.compareAt : null),
+    savings: offer?.savingsCents ?? (minimum.compareAt != null && minimum.compareAt > minimum.current ? minimum.compareAt - minimum.current : null)
   };
 }
 
@@ -771,8 +780,7 @@ export function WeeklyProductBanner({
         {product.descriptiveName && <span>{product.descriptiveName}</span>}
       </div>
       <div className="weekly-product-price">
-        {price.regular != null && <s>{money(price.regular)}</s>}
-        <strong>{price.current > 0 ? money(price.current) : "Em breve"}</strong>
+        {price.current > 0 ? <PriceDisplay currentPriceCents={price.current} compareAtPriceCents={price.regular} /> : <strong>Em breve</strong>}
         {price.savings != null && price.savings > 0 && <small>economize {money(price.savings)}</small>}
       </div>
       {product.soldOut ? <span className="weekly-product-status">Esgotado no momento</span> : cta}

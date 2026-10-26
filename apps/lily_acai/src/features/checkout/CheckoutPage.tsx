@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getLilySession, type AuthPayload } from "../../api";
+import { getLilySession, parseResponse, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { trackLilyAnalytics } from "../../analytics";
 import { useCart } from "../cart/CartContext";
 import { AllergenNotice } from "../allergens/AllergenNotice";
 import { storeGuestOrderToken } from "../orders/guest-token";
+import { PriceDisplay } from "../pricing/PriceDisplay";
 import {
   createOrder,
   createSavedAddress,
@@ -32,6 +33,8 @@ const emptyAddress: LilyAddressInput = {
   reference: ""
 };
 
+type PublicCoupon = { code: string; title: string; description: string | null; type: string; value: number; color: string; minimumOrderCents: number; maxDiscountCents: number | null; imageUrl: string | null };
+
 export function CheckoutPage() {
   const navigate = useNavigate();
   const cart = useCart();
@@ -47,6 +50,9 @@ export function CheckoutPage() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [homologation, setHomologation] = useState(false);
   const [quote, setQuote] = useState<OrderQuote | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponCodes, setCouponCodes] = useState<string[]>([]);
+  const [availableCoupons, setAvailableCoupons] = useState<PublicCoupon[]>([]);
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -72,6 +78,12 @@ export function CheckoutPage() {
         setSavedAddresses([]);
       }
     }).catch(() => setSession(null));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/v1/lily/public/coupons", { credentials: "same-origin" })
+      .then((response) => parseResponse<{ coupons: PublicCoupon[] }>(response))
+      .then((result) => setAvailableCoupons(result.coupons)).catch(() => setAvailableCoupons([]));
   }, []);
 
   const canHomologate = Boolean(
@@ -107,6 +119,8 @@ export function CheckoutPage() {
         fulfillmentType,
         address: deliveryAddress(),
         items: cart.items,
+        couponCodes,
+        phone,
         homologation
       });
       setQuote(result);
@@ -130,6 +144,8 @@ export function CheckoutPage() {
         fulfillmentType,
         address: deliveryAddress(),
         items: cart.items,
+        couponCodes,
+        phone,
         homologation
       });
       setQuote(freshQuote);
@@ -142,6 +158,7 @@ export function CheckoutPage() {
         customerNote,
         whatsappUpdatesOptIn,
         items: cart.items,
+        couponCodes,
         quote: freshQuote,
         attribution: attributionForApi(readStoredCookLilyAttribution()),
         session,
@@ -178,6 +195,27 @@ export function CheckoutPage() {
     setSelectedAddressId(id);
     const found = savedAddresses.find((item) => item.id === id);
     if (found) setAddress(found);
+  }
+
+  async function applyCoupon() {
+    const code = couponInput.trim().toUpperCase();
+    if (!code || couponCodes.includes(code)) return;
+    if (couponCodes.length >= 5) { setError("Você pode usar até cinco códigos de cupom por pedido."); return; }
+    setBusy(true); setError("");
+    try {
+      const nextCodes = [...couponCodes, code];
+      const nextQuote = await quoteOrder({ fulfillmentType, address: deliveryAddress(), items: cart.items, couponCodes: nextCodes, phone, homologation });
+      setCouponCodes(nextCodes); setCouponInput(""); setQuote(nextQuote); setIdempotencyKey(null);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Cupom não disponível."); }
+    finally { setBusy(false); }
+  }
+
+  async function removeCoupon(code: string) {
+    const nextCodes = couponCodes.filter((item) => item !== code);
+    setCouponCodes(nextCodes); setIdempotencyKey(null); setBusy(true); setError("");
+    try { setQuote(await quoteOrder({ fulfillmentType, address: deliveryAddress(), items: cart.items, couponCodes: nextCodes, phone, homologation })); }
+    catch (cause) { setQuote(null); setError(cause instanceof Error ? cause.message : "Não foi possível recalcular o pedido."); }
+    finally { setBusy(false); }
   }
 
   if (!cart.items.length) {
@@ -288,6 +326,15 @@ export function CheckoutPage() {
             placeholder="Informação operacional para este pedido." />
         </fieldset>
 
+        <fieldset className="checkout-section coupon-checkout">
+          <legend>Tem um cupom?</legend>
+          {availableCoupons.length > 0 && <div className="checkout-coupon-grid" aria-label="Cupons disponíveis">{availableCoupons.map((coupon) => <button className="checkout-coupon-card" type="button" key={coupon.code} onClick={() => { setCouponInput(coupon.code); }} style={{ "--coupon-color": coupon.color } as React.CSSProperties}>
+            <span className="checkout-coupon-art">{coupon.imageUrl ? <img src={coupon.imageUrl} alt="" /> : coupon.code.slice(0, 2)}</span><span><strong>{coupon.title}</strong><small>{coupon.type === "percentage" ? `${coupon.value / 100}% de desconto` : coupon.type === "fixed" ? `R$ ${(coupon.value / 100).toFixed(2)} de desconto` : "Frete grátis"}</small></span>
+          </button>)}</div>}
+          <div className="coupon-entry"><input value={couponInput} maxLength={32} aria-label="Código do cupom" placeholder="Digite o código" onChange={(event) => setCouponInput(event.target.value.toUpperCase())} /><button className="button ghost" type="button" disabled={busy || !couponInput.trim()} onClick={() => void applyCoupon()}>Aplicar</button></div>
+          {couponCodes.map((code) => <button className="coupon-chip" type="button" key={code} onClick={() => void removeCoupon(code)} aria-label={`Remover cupom ${code}`}>{code} ×</button>)}
+        </fieldset>
+
         {error && <p className="error" role="alert">{error}</p>}
       </div>
 
@@ -295,7 +342,7 @@ export function CheckoutPage() {
         <h2>Resumo</h2>
         {cart.items.map((item, index) => <div className="checkout-line checkout-line-item" key={item.id}>
           <span>{item.quantity}× {item.productName}{item.kind === "combo" || item.variantName === "Preço fixo" ? "" : ` · ${item.variantName}`}</span>
-          <strong>{money(item.unitPriceCents * item.quantity)}</strong>
+          <PriceDisplay currentPriceCents={(quote?.items[index]?.totalPriceCents ?? item.unitPriceCents) * item.quantity} compareAtPriceCents={quote?.items[index]?.kind === "product" && quote.items[index].compareAtPriceCents != null ? quote.items[index].compareAtPriceCents * item.quantity : null} density="compact" />
           <div className="checkout-line-allergens">
             <AllergenNotice summary={quote?.items[index]?.allergens ?? item.allergens} compact />
           </div>
@@ -303,7 +350,9 @@ export function CheckoutPage() {
         {quote ? <>
           <div className="checkout-line"><span>Subtotal validado</span><strong>{money(quote.subtotalCents)}</strong></div>
           <div className="checkout-line"><span>Entrega</span><strong>{money(quote.deliveryFeeCents)}</strong></div>
-          <div className="checkout-total"><span>Total</span><strong>{money(quote.grandTotalCents)}</strong></div>
+          {quote.couponDiscountCents > 0 && <div className="checkout-line state-live"><span>Desconto de cupom</span><strong>− {money(quote.couponDiscountCents)}</strong></div>}
+          <div className="checkout-total"><span>Total</span><PriceDisplay currentPriceCents={quote.grandTotalCents} compareAtPriceCents={quote.couponDiscountCents > 0 ? quote.subtotalCents + quote.deliveryFeeCents : null} /></div>
+          {quote.couponApplications.map((application) => <small key={application.code}>{application.applied ? `Cupom ${application.code} aplicado: ${money(application.discountCents)}.` : `${application.code}: ${application.message}`}</small>)}
         </> : <p className="price-warning">O valor atual do carrinho é apenas referência. Calcule para validar o total vigente.</p>}
         <button className="button ghost" type="button"
           disabled={busy || (!homologation && !settings?.ordersEnabled)}

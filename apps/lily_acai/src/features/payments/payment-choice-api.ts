@@ -31,6 +31,8 @@ export type LilyPaymentOption = {
   requiresPayerEmail: boolean;
   fallbackMayUsePayerEmail: boolean;
   discountLabel: string | null;
+  originalAmountCents: number;
+  couponDiscountCents: number;
   pricing: LilyPaymentPricing;
 };
 
@@ -56,6 +58,8 @@ export type LilyChoicePayment = {
     baseAmountCents: number;
     eligibleAmountCents: number;
     deliveryFeeCents: number;
+    couponDiscountCents: number;
+    couponShippingDiscountCents: number;
     discountCents: number;
     amountCents: number;
     rule: LilyPaymentMethodRule | null;

@@ -33,6 +33,7 @@ type ProductQuoteItem = {
   configurationHash: string;
   product: { id: string; slug: string; name: string };
   variant: { id: string; name: string };
+  compareAtPriceCents: number | null;
   sizeMl: number;
   flavors: Array<{ id: string; name: string }>;
   addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
@@ -78,6 +79,10 @@ export type OrderQuote = {
   deliveryFeeCents: number;
   discountTotalCents: number;
   grandTotalCents: number;
+  couponDiscountCents: number;
+  couponProductDiscountCents: number;
+  couponShippingDiscountCents: number;
+  couponApplications: Array<{ code: string; title: string; applied: boolean; discountCents: number; message: string | null }>;
   address: LilyAddressInput | null;
 };
 
@@ -218,6 +223,8 @@ export async function quoteOrder(input: {
   fulfillmentType: "pickup" | "delivery";
   address?: LilyAddressInput;
   items: CartItem[];
+  couponCodes?: string[];
+  phone?: string;
   homologation?: boolean;
 }) {
   const response = await fetch("/api/v1/lily/orders/quote", {
@@ -230,6 +237,8 @@ export async function quoteOrder(input: {
     body: JSON.stringify({
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
+      ...(input.couponCodes ? { couponCodes: input.couponCodes } : {}),
+      ...(input.phone ? { phone: input.phone } : {}),
       items: input.items.map(cartItemPayload)
     })
   });
@@ -243,6 +252,7 @@ export async function createOrder(input: {
   customerNote?: string;
   whatsappUpdatesOptIn?: boolean;
   items: CartItem[];
+  couponCodes?: string[];
   quote: OrderQuote;
   attribution?: Record<string, string>;
   session?: AuthPayload | null;
@@ -266,6 +276,7 @@ export async function createOrder(input: {
       ...(input.address ? { address: input.address } : {}),
       customerNote: input.customerNote || null,
       whatsappUpdatesOptIn: Boolean(input.whatsappUpdatesOptIn),
+      couponCodes: input.couponCodes ?? [],
       items: input.items.map((item, index) => ({
         ...cartItemPayload(item),
         configurationHash: input.quote.items[index]!.configurationHash,

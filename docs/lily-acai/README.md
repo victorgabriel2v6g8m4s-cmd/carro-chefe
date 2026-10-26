@@ -81,6 +81,7 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`, `entregas/ENTREGA_07_PAG
 - produtos/CARDAPIO_INICIAL_DEFINITIVO.md;
 - ROADMAP_COOKLILY.md;
 - UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md — especificação detalhada da nova UI Reels, Dashboard, ranking, pontos, missões e configuração; planejamento ainda não implementado.
+- CUPONS_E_PRECOS_PROMOCIONAIS.md — configuração de cupons, limites, combinação de descontos, autosave de catálogo e regra de preço promocional.
 - entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md;
 - marca/KIT_DE_MARCA.md;
 - marca/ATIVOS.md;

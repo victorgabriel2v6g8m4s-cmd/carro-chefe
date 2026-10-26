@@ -290,7 +290,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
         id: tier.id,
         flavorCount: tier.flavorCount,
         sizeMl: tier.sizeMl,
-        priceCents: tier.priceCents
+        priceCents: tier.priceCents,
+        compareAtPriceCents: tier.compareAtPriceCents
       })),
     offers
   };
@@ -786,9 +787,11 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         flavorCount: z.number().int().min(1).max(3),
         sizeMl: sizeSchema,
         priceCents: moneySchema,
+        compareAtPriceCents: moneySchema.nullable().optional(),
         status: statusSchema.default("published")
       }).strict()).max(12)
     }).parse(request.body);
+    if (body.tiers.some((tier) => tier.compareAtPriceCents != null && tier.compareAtPriceCents <= tier.priceCents)) throw new ApiError(400, "O preço antigo de cada LilyMix deve ser maior que o preço atual.");
     await lilyPrisma.$transaction([
       lilyPrisma.lilyMixPriceTier.deleteMany({ where: { productId: id } }),
       lilyPrisma.lilyMixPriceTier.createMany({
@@ -802,6 +805,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/variants", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = variantCreateSchema.parse(request.body);
+    if (input.compareAtPriceCents != null && input.compareAtPriceCents <= input.priceCents) throw new ApiError(400, "O preço antigo deve ser maior que o preço atual.");
     assertMarginForPublish(input.status, input.projectedMarginBps);
     const created = await lilyPrisma.lilyProductVariant.create({ data: input });
     await auditLilyAdmin(context.user.id, "create", "variant", created.id, input);
@@ -815,6 +819,9 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     const input = patchFromRequest(parsed, request.body);
     const current = await lilyPrisma.lilyProductVariant.findUnique({ where: { id } });
     if (!current) throw new ApiError(404, "Variante não encontrada.");
+    const finalPrice = input.priceCents ?? current.priceCents;
+    const finalCompareAt = input.compareAtPriceCents === undefined ? current.compareAtPriceCents : input.compareAtPriceCents;
+    if (finalCompareAt != null && finalCompareAt <= finalPrice) throw new ApiError(400, "O preço antigo deve ser maior que o preço atual.");
     assertMarginForPublish(input.status ?? current.status, input.projectedMarginBps ?? current.projectedMarginBps);
     const updated = await lilyPrisma.lilyProductVariant.update({ where: { id }, data: patchObject(input) });
     await auditLilyAdmin(context.user.id, "update", "variant", id, input);
