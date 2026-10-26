@@ -38,7 +38,7 @@ const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then(
 const SurveyRespondPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyRespondPage })));
 const AdminCouponsPage = lazy(() => import("./features/admin/AdminCouponsPage").then((module) => ({ default: module.AdminCouponsPage })));
 const AdminVipPage = lazy(() => import("./features/admin/AdminVipPage").then((module) => ({ default: module.AdminVipPage })));
-const VipTermsPage = lazy(() => import("./features/account/VipProgram").then((module) => ({ default: module.VipTermsPage })));
+const VipTermsPage = lazy(() => import("./features/account/VipTermsPage").then((module) => ({ default: module.VipTermsPage })));
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
