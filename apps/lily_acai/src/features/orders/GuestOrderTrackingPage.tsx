@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
 import { readGuestOrderToken } from "./guest-token";
-import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { customerOrderStatus } from "./status";
 
@@ -177,7 +176,6 @@ export function GuestOrderTrackingPage() {
             {item.variantName !== "Preço fixo" && <small>{item.variantName}</small>}
             {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
             {item.addons.length > 0 && <small>{item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
-            <AllergenNotice summary={item.allergens} compact />
           </div>
           <strong>{money(item.lineTotalCents)}</strong>
         </article>)}

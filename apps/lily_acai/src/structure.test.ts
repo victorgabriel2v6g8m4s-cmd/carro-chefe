@@ -21,6 +21,7 @@ const accountOrdersSource = readFileSync(resolve(sourceDirectory, "features/acco
 const cartSource = readFileSync(resolve(sourceDirectory, "features/cart/CartPage.tsx"), "utf8");
 const cartContextSource = readFileSync(resolve(sourceDirectory, "features/cart/CartContext.tsx"), "utf8");
 const checkoutSource = readFileSync(resolve(sourceDirectory, "features/checkout/CheckoutPage.tsx"), "utf8");
+const guestTrackingSource = readFileSync(resolve(sourceDirectory, "features/orders/GuestOrderTrackingPage.tsx"), "utf8");
 const spinnerSource = readFileSync(resolve(sourceDirectory, "loading-spinner.tsx"), "utf8");
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
@@ -210,12 +211,13 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(accountOrdersSource).toContain("deliveryEvents");
   });
 
-  it("mantém alergênicos recolhidos no cliente e expandidos na produção", () => {
-    expect(catalogSource).toContain("AllergenNotice");
-    expect(cartSource).toContain("AllergenNotice");
+  it("omite temporariamente alergênicos da experiência do cliente e os mantém na produção", () => {
+    expect(catalogSource).not.toContain("AllergenNotice");
+    expect(cartSource).not.toContain("AllergenNotice");
     expect(cartContextSource).toContain("item salvo antes da revisão de alergênicos");
-    expect(checkoutSource).toContain("AllergenNotice");
-    expect(accountOrdersSource).toContain("AllergenNotice");
+    expect(checkoutSource).not.toContain("AllergenNotice");
+    expect(accountOrdersSource).not.toContain("AllergenNotice");
+    expect(guestTrackingSource).not.toContain("AllergenNotice");
     expect(kitchenSource).toContain('collapsible={false}');
     expect(printSource).toContain('collapsible={false}');
     expect(allergenSource).toContain('const collapsible = props.collapsible ?? true');

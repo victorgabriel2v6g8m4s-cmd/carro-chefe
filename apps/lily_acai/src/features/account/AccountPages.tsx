@@ -10,7 +10,6 @@ import {
   type LilyAddressInput,
   type LilyOrder
 } from "../orders/api";
-import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { customerOrderStatus } from "../orders/status";
 
@@ -253,7 +252,6 @@ export function OrderDetailPage() {
         {item.flavors.length > 0 && <small>{item.flavors.map((flavor) => flavor.name).join(" + ")}</small>}
         {item.kind === "combo" && Array.isArray(item.configuration.selections) && <small>Itens: {(item.configuration.selections as Array<{ product?: { name?: string } }>).map((selection) => selection.product?.name).filter(Boolean).join(" + ")}</small>}
         {item.addons.length > 0 && <small>{item.addons.map((addon) => `${addon.name} ×${addon.quantity}`).join(", ")}</small>}
-        <AllergenNotice summary={item.allergens} compact />
       </article>)}
       <div className="checkout-total"><span>Total</span><strong>{money(order.grandTotalCents)}</strong></div>
     </div>
