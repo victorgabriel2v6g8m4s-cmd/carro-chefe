@@ -1,12 +1,12 @@
 # Revisão da jornada VIP CookLily
 
-- status: candidate
+- status: PR aberto; CI remoto pendente
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-ux`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ca26efdbec22d1b67ae5a24f90cdbc79df16a18f`
-- head_sha_verified: `e1f7f2a03d61d6356bcee304c2a32f50bb82b83d` (HEAD antes do commit de implementação)
-- pull_requests: pending
+- head_sha_verified: `65a2075771ac60c84a9e19694e614dba04cc6f71` (commit da implementação; checkpoint final será um commit subsequente)
+- pull_requests: [PR #199](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/199) (draft; aguardando checks)
 - last_verified_at: 2026-10-26
 - interruption_state: none
 
@@ -44,4 +44,5 @@ Revisar a navegação e o fluxo de clientes VIP em mobile e desktop: abrir termo
 
 ## Próxima ação exata
 
-Criar o commit da implementação, abrir PR contra `cooklily/canonical`, acompanhar os gates remotos e corrigir qualquer falha antes de integrar. Depois registrar o SHA do commit/merge. Não executar deploy nesta tarefa.
+Acompanhar os checks do PR #199 no SHA mais recente. Se passarem, marcar ready e integrar por squash; se falharem, investigar, corrigir e repetir gates. Registrar merge SHA no checkpoint. Não executar deploy nesta tarefa.
+
