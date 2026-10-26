@@ -36,6 +36,7 @@ const NotificationsPage = lazy(() => import("./features/surveys/SurveyPages").th
 const ReelsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.ReelsPage })));
 const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyListPage })));
 const SurveyRespondPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyRespondPage })));
+const AdminCouponsPage = lazy(() => import("./features/admin/AdminCouponsPage").then((module) => ({ default: module.AdminCouponsPage })));
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -542,6 +543,7 @@ function App() {
     <Route path="/pesquisas/:id" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisa" />}><Shell><SurveyRespondPage /></Shell></Suspense>} />
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
+    <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><Shell><AdminCouponsPage /></Shell></Suspense>} />
     <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><AdminSurveysPage /></Shell></Suspense>} />
     <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><Shell><AdminSurveyResponsesPage /></Shell></Suspense>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />

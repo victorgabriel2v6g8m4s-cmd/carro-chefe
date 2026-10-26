@@ -31,7 +31,7 @@ describe("CookLily — pagamento e UX administrativa", () => {
     expect(admin).toContain("Adicionar variação");
     expect(admin).toContain("Tornar padrão");
     expect(catalog).toContain("product.variants.length > 1");
-    expect(catalog).toContain("{variant.name} · {money(variant.priceCents)}");
+    expect(catalog).toContain("<span>{variant.name}</span><PriceDisplay currentPriceCents={variant.priceCents} compareAtPriceCents={variant.compareAtPriceCents}");
   });
 
   it("não mantém o HTML da SPA em cache e responde ao favicon sem erro de tipo", () => {

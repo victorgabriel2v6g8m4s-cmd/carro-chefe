@@ -238,6 +238,8 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
         status: access.order.status,
         baseAmountCents: access.order.grandTotalCents,
         deliveryFeeCents: access.order.deliveryFeeCents,
+        couponDiscountCents: access.order.couponDiscountCents,
+        couponShippingDiscountCents: access.order.couponShippingDiscountCents,
         currency: "BRL"
       },
       publicKey: mercadoPagoConfiguration().publicKey,

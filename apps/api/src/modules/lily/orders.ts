@@ -17,6 +17,7 @@ import { resolveLilyFulfillment } from "./fulfillment";
 import { lilyLogisticsCodeConfiguration, lilyOrderSecurityCode } from "./logistics-codes";
 import { serializeLilyRouteEstimate } from "./routing";
 import { LILY_WHATSAPP_CONSENT_VERSION } from "./whatsapp";
+import { calculateLilyCouponQuote, couponCodeListSchema, reserveLilyCouponRedemptions } from "./coupon-calculation";
 
 const quantitySchema = z.number().int().min(1).max(20);
 const noteSchema = z.string().trim().max(300).nullable().optional();
@@ -51,6 +52,8 @@ const orderItemSchema = z.union([productOrderItemSchema, comboOrderItemSchema]);
 const quoteSchema = z.object({
   fulfillmentType: z.enum(["pickup", "delivery"]),
   address: lilyAddressInputSchema.optional(),
+  couponCodes: couponCodeListSchema,
+  phone: z.string().trim().min(8).max(40).optional(),
   items: z.array(quoteItemSchema).min(1).max(30)
 }).strict();
 
@@ -60,6 +63,7 @@ const orderSchema = z.object({
   address: lilyAddressInputSchema.optional(),
   customerNote: z.string().trim().max(500).nullable().optional(),
   whatsappUpdatesOptIn: z.boolean().default(false),
+  couponCodes: couponCodeListSchema,
   items: z.array(orderItemSchema).min(1).max(30),
   attribution: lilyAttributionInputSchema.optional()
 }).strict();
@@ -110,13 +114,30 @@ async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { all
       subtotalCents
     });
   }
+  const coupons = await calculateLilyCouponQuote({
+    codes: input.couponCodes,
+    items: items.map((item) => ({
+      kind: item.kind,
+      lineTotalCents: item.lineTotalCents,
+      ...(item.kind === "product" ? { product: { id: item.product.id } } : { selections: item.selections.map((selection) => ({ product: { id: selection.product.id }, totalPriceCents: selection.totalPriceCents })) })
+    })),
+    subtotalCents,
+    shippingCents: fulfillment.deliveryFeeCents,
+    fulfillmentType: input.fulfillmentType,
+    phone: input.phone
+  });
   return {
     items,
     fulfillment,
     subtotalCents,
     deliveryFeeCents: fulfillment.deliveryFeeCents,
-    discountTotalCents: 0,
-    grandTotalCents: subtotalCents + fulfillment.deliveryFeeCents,
+    discountTotalCents: coupons.discountCents,
+    couponDiscountCents: coupons.discountCents,
+    couponProductDiscountCents: coupons.productDiscountCents,
+    couponShippingDiscountCents: coupons.shippingDiscountCents,
+    couponApplications: coupons.notices,
+    couponRedemptionApplications: coupons.applications,
+    grandTotalCents: subtotalCents + fulfillment.deliveryFeeCents - coupons.discountCents,
     address: address ?? null
   };
 }
@@ -135,6 +156,7 @@ function fingerprint(input: {
     address: input.address,
     customerNote: input.order.customerNote?.trim() || null,
     whatsappUpdatesOptIn: input.order.whatsappUpdatesOptIn,
+    couponCodes: input.order.couponCodes,
     items: input.order.items,
     attribution: normalizeLilyAttribution(input.order.attribution ?? {}),
     isHomologation: input.isHomologation
@@ -183,6 +205,10 @@ function serializeOrder(
     subtotalCents: order.subtotalCents,
     deliveryFeeCents: order.deliveryFeeCents,
     discountTotalCents: order.discountTotalCents,
+    couponDiscountCents: order.couponDiscountCents,
+    couponProductDiscountCents: order.couponProductDiscountCents,
+    couponShippingDiscountCents: order.couponShippingDiscountCents,
+    coupons: JSON.parse(order.couponsSnapshotJson),
     grandTotalCents: order.grandTotalCents,
     address: order.addressSnapshotJson ? JSON.parse(order.addressSnapshotJson) : null,
     customerNote: order.customerNote,
@@ -355,7 +381,9 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 40, timeWindow: "1 minute" } }
   }, async (request) => {
     const isHomologation = await requireHomologationAccess(request);
-    return calculateQuote(quoteSchema.parse(request.body), { allowClosed: isHomologation });
+    const quote = await calculateQuote(quoteSchema.parse(request.body), { allowClosed: isHomologation });
+    const { couponRedemptionApplications: _internal, ...publicQuote } = quote;
+    return publicQuote;
   });
 
   app.post("/api/v1/lily/orders", {
@@ -398,6 +426,8 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     const quote = await calculateQuote({
       fulfillmentType: input.fulfillmentType,
       address: input.address,
+      couponCodes: input.couponCodes,
+      phone: input.phone,
       items: input.items.map(withoutExpectations)
     }, { allowClosed: isHomologation });
 
@@ -423,7 +453,8 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
     const guestAccess = context ? null : createGuestAccessToken();
     let created;
     try {
-      created = await lilyPrisma.lilyOrder.create({
+      created = await lilyPrisma.$transaction(async (tx) => {
+        const order = await tx.lilyOrder.create({
         data: {
           orderNumber: orderNumber(),
           idempotencyKey,
@@ -439,7 +470,11 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
           isHomologation,
           subtotalCents: quote.subtotalCents,
           deliveryFeeCents: quote.deliveryFeeCents,
-          discountTotalCents: 0,
+          discountTotalCents: quote.discountTotalCents,
+          couponDiscountCents: quote.couponDiscountCents,
+          couponProductDiscountCents: quote.couponProductDiscountCents,
+          couponShippingDiscountCents: quote.couponShippingDiscountCents,
+          couponsSnapshotJson: JSON.stringify(quote.couponRedemptionApplications),
           grandTotalCents: quote.grandTotalCents,
           addressSnapshotJson: quote.address ? JSON.stringify(quote.address) : null,
           customerNote: input.customerNote?.trim() || null,
@@ -555,7 +590,15 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
             : {})
         },
         include: orderInclude
-      });
+        });
+        await reserveLilyCouponRedemptions({
+          tx,
+          applications: quote.couponRedemptionApplications,
+          orderId: order.id,
+          phoneNormalized
+        });
+        return order;
+      }, { isolationLevel: "Serializable" });
     } catch (error) {
       if ((error as { code?: string }).code === "P2002") {
         const raced = await lilyPrisma.lilyOrder.findUnique({ where: { idempotencyKey }, include: orderInclude });

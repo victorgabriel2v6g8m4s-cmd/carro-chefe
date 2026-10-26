@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { COOKLILY_ATTRIBUTION_PARAMS, lilyAttributionInputSchema, normalizeLilyAttribution } from "./attribution";
 import { lilyCatalogRoutes } from "./catalog";
+import { lilyCouponRoutes } from "./coupons";
 import { lilyAddressRoutes } from "./addresses";
 import { getLilyOperationalSettings, lilyFulfillmentRoutes } from "./fulfillment";
 import { lilyOrderRoutes } from "./orders";
@@ -326,6 +327,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   });
 
   await app.register(lilyCatalogRoutes);
+  await app.register(lilyCouponRoutes);
   await app.register(lilyFulfillmentRoutes);
   await app.register(lilyAddressRoutes);
   await app.register(lilyOrderRoutes);

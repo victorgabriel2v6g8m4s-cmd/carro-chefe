@@ -76,6 +76,9 @@ export function lilyPaymentDiscountLabel(rule: LilyPaymentMethodSetting) {
 export async function buildLilyPaymentMethodOptions(order: {
   grandTotalCents: number;
   deliveryFeeCents: number;
+  couponShippingDiscountCents?: number;
+  subtotalCents?: number;
+  couponDiscountCents?: number;
 }) {
   const settings = await getLilyOperationalSettings();
   const rules = await getLilyPaymentMethodSettings();
@@ -84,7 +87,7 @@ export async function buildLilyPaymentMethodOptions(order: {
     const quote = calculateLilyPaymentQuote({
       method: rule.method,
       grandTotalCents: order.grandTotalCents,
-      deliveryFeeCents: order.deliveryFeeCents,
+      deliveryFeeCents: Math.max(0, order.deliveryFeeCents - (order.couponShippingDiscountCents ?? 0)),
       setting: rule
     });
     return {
@@ -96,6 +99,8 @@ export async function buildLilyPaymentMethodOptions(order: {
       requiresPayerEmail: rule.method !== "pix" || availability.providers.includes("mercado_pago"),
       fallbackMayUsePayerEmail: rule.method === "pix" && availability.providers.includes("mercado_pago"),
       discountLabel: lilyPaymentDiscountLabel(rule),
+      originalAmountCents: (order.subtotalCents ?? order.grandTotalCents) + order.deliveryFeeCents,
+      couponDiscountCents: order.couponDiscountCents ?? 0,
       pricing: quote
     };
   });

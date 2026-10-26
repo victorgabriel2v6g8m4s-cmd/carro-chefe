@@ -209,6 +209,7 @@ model LilyCategory {
   parent       LilyCategory?  @relation("LilyCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
   children     LilyCategory[] @relation("LilyCategoryTree")
   products     LilyProduct[]
+  couponScopes LilyCouponCategory[]
 
   @@index([parentId])
   @@index([status, sortOrder])
@@ -229,6 +230,7 @@ model LilyMediaAsset {
   createdAt    DateTime           @default(now())
   coverFor     LilyProduct[]      @relation("LilyProductCover")
   productLinks LilyProductMedia[]
+  couponArts   LilyCoupon[]
 
   @@index([status, createdAt])
 }
@@ -266,6 +268,7 @@ model LilyProduct {
   mixTiers               LilyMixPriceTier[]
   comboItems             LilyComboItem[]
   offers                 LilyOffer[]
+  couponScopes           LilyCouponProduct[]
 
   @@index([categoryId, status, sortOrder])
   @@index([status, isAvailable, featured])
@@ -391,6 +394,7 @@ model LilyMixPriceTier {
   flavorCount Int
   sizeMl      Int
   priceCents  Int
+  compareAtPriceCents Int?
   status      String      @default("published")
   product     LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -554,6 +558,10 @@ model LilyOrder {
   subtotalCents       Int
   deliveryFeeCents    Int
   discountTotalCents  Int                    @default(0)
+  couponDiscountCents Int                    @default(0)
+  couponProductDiscountCents Int             @default(0)
+  couponShippingDiscountCents Int            @default(0)
+  couponsSnapshotJson String                 @default("[]")
   grandTotalCents     Int
   addressSnapshotJson String?
   customerNote        String?
@@ -576,6 +584,7 @@ model LilyOrder {
   routeEstimate       LilyDeliveryRouteEstimate?
   whatsappNotifications LilyWhatsAppNotification[]
   payments            LilyPayment[]
+  couponRedemptions   LilyCouponRedemption[]
 
   @@index([userId, createdAt])
   @@index([phoneNormalized, createdAt])
@@ -583,6 +592,76 @@ model LilyOrder {
   @@index([operationStatus, operationUpdatedAt])
   @@index([deliveryStatus, deliveryUpdatedAt])
   @@index([courierUserId, deliveryUpdatedAt])
+}
+
+model LilyCoupon {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  title              String
+  description        String?
+  type               String
+  value              Int      @default(0)
+  minimumOrderCents  Int      @default(0)
+  maxDiscountCents   Int?
+  color              String   @default("#78002E")
+  imageMediaId       String?
+  status             String   @default("draft")
+  startsAt           DateTime?
+  endsAt             DateTime?
+  recurrence         String   @default("none")
+  maxUsesTotal       Int?
+  maxUsesPerCustomer Int      @default(1)
+  allowCombination   Boolean  @default(false)
+  isAdditive         Boolean  @default(false)
+  appliesToShipping  Boolean  @default(false)
+  usesCount          Int      @default(0)
+  createdBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  image              LilyMediaAsset? @relation(fields: [imageMediaId], references: [id], onDelete: SetNull)
+  categories         LilyCouponCategory[]
+  products           LilyCouponProduct[]
+  redemptions        LilyCouponRedemption[]
+
+  @@index([status, startsAt, endsAt])
+  @@index([updatedAt])
+}
+
+model LilyCouponCategory {
+  couponId   String
+  categoryId String
+  coupon     LilyCoupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  category   LilyCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, categoryId])
+  @@index([categoryId])
+}
+
+model LilyCouponProduct {
+  couponId  String
+  productId String
+  coupon    LilyCoupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  product   LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, productId])
+  @@index([productId])
+}
+
+model LilyCouponRedemption {
+  id            String   @id @default(cuid())
+  couponId      String
+  orderId       String
+  discountCents Int
+  periodKey     String
+  codeSnapshot  String
+  titleSnapshot String
+  createdAt     DateTime @default(now())
+  coupon        LilyCoupon @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  order         LilyOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, orderId])
+  @@index([couponId, periodKey, createdAt])
+  @@index([orderId])
 }
 
 model LilyOrderItem {

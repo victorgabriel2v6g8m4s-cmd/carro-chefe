@@ -178,13 +178,15 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
   const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
   const mutation = isAdminMutation(rawUrl, method);
-  if (mutation && onCatalogAdminPage()) captureAdminSnapshot();
+  const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+  const autosave = headers.get("X-Lily-Autosave") === "1";
+  if (mutation && !autosave && onCatalogAdminPage()) captureAdminSnapshot();
 
   const response = await nativeFetch(input, init);
-  if (mutation) {
+  if (mutation && (!autosave || !response.ok)) {
     const pathname = new URL(rawUrl, window.location.origin).pathname;
     const copy = adminMutationMessage(pathname, method);
-    if (response.ok) showToast(copy.success, "success");
+    if (response.ok && !autosave) showToast(copy.success, "success");
     else showToast(`${copy.failure}: ${await responseError(response)}.`, "error");
   }
   return response;

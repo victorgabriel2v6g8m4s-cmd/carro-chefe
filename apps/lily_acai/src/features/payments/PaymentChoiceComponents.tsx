@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { LilyChoicePayment, LilyPaymentOption } from "./payment-choice-api";
 import { CookLilyPixQrCode } from "./CookLilyPixQrCode";
+import { PriceDisplay } from "../pricing/PriceDisplay";
 
 export function paymentMoney(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -28,11 +29,11 @@ export function paymentMethodHint(option: LilyPaymentOption) {
 export function PaymentPriceSummary({ option }: { option: LilyPaymentOption }) {
   const price = option.pricing;
   return <div className="payment-price-summary" aria-live="polite">
-    {price.discountCents > 0 && <>
-      <span>Valor do pedido <strong>{paymentMoney(price.baseAmountCents)}</strong></span>
-      <span className="state-live">Desconto desta forma de pagamento <strong>- {paymentMoney(price.discountCents)}</strong></span>
+    {(price.discountCents > 0 || option.couponDiscountCents > 0) && <>
+      {option.couponDiscountCents > 0 && <span className="state-live">Desconto do cupom <strong>− {paymentMoney(option.couponDiscountCents)}</strong></span>}
+      {price.discountCents > 0 && <span className="state-live">Desconto desta forma de pagamento <strong>− {paymentMoney(price.discountCents)}</strong></span>}
     </>}
-    <span>Total a pagar <strong>{paymentMoney(price.amountCents)}</strong></span>
+    <span>Total a pagar <PriceDisplay currentPriceCents={price.amountCents} compareAtPriceCents={option.originalAmountCents > price.amountCents ? option.originalAmountCents : null} /></span>
     {price.deliveryFeeCents > 0 && price.discountCents > 0 && <small>O desconto não reduz a taxa de entrega.</small>}
   </div>;
 }

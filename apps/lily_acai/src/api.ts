@@ -99,7 +99,7 @@ export type CatalogProduct = {
   variants: CatalogVariant[];
   flavors: CatalogFlavor[];
   addons: CatalogAddon[];
-  mixTiers: Array<{ id: string; flavorCount: number; sizeMl: number; priceCents: number }>;
+  mixTiers: Array<{ id: string; flavorCount: number; sizeMl: number; priceCents: number; compareAtPriceCents: number | null }>;
   offers: Array<{
     id: string;
     name: string;
@@ -298,12 +298,13 @@ export async function configureLilyItem(input: {
   return parseResponse<{
     configurationHash: string;
     product: { id: string; slug: string; name: string };
-    variant: { id: string; name: string };
+    variant: { id: string; name: string; compareAtPriceCents: number | null };
     sizeMl: number;
     flavors: Array<{ id: string; name: string }>;
     addons: Array<{ addonId: string; name: string; quantity: number; unitPriceCents: number }>;
     allergens: LilyAllergenSummary;
     basePriceCents: number;
+    compareAtPriceCents: number | null;
     addonPriceCents: number;
     totalPriceCents: number;
   }>(response);
@@ -318,14 +319,16 @@ export async function lilyAdminJson<T>(
   path: string,
   method: "POST" | "PATCH" | "PUT",
   csrfToken: string,
-  body: unknown
+  body: unknown,
+  autosave = false
 ) {
   const response = await fetch(`/api/v1/lily/admin/${path.replace(/^\//, "")}`, {
     method,
     credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      "X-Lily-CSRF": csrfToken
+      "X-Lily-CSRF": csrfToken,
+      ...(autosave ? { "X-Lily-Autosave": "1" } : {})
     },
     body: JSON.stringify(body)
   });

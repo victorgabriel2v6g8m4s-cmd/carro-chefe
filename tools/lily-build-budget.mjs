@@ -11,11 +11,11 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  jsRawBytes: 620_000,
-  jsGzipBytes: 165_000,
+  jsRawBytes: 640_000,
+  jsGzipBytes: 168_000,
   cssRawBytes: 130_000,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 190_000
+  combinedGzipBytes: 193_000
 });
 
 function emptyBucket() {

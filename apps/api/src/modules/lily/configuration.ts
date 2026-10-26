@@ -71,6 +71,7 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   if (!variant || !variant.isAvailable) throw new ApiError(409, "Tamanho indisponível.", { code: "LILY_VARIANT_UNAVAILABLE" });
 
   let basePriceCents = variant.priceCents;
+  let compareAtBasePriceCents = variant.compareAtPriceCents;
   const publishedFlavors = product.flavorLinks.map((link) => link.flavor)
     .filter((flavor) => flavor.status === "published");
   const selectedFlavors = product.configurationType === "fixed"
@@ -88,6 +89,10 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     if (!tier) throw new ApiError(400, "Preço não configurado para esta combinação.", { code: "LILY_TIER_MISSING" });
     basePriceCents = tier.priceCents + selectedFlavors.reduce((sum, flavor) =>
       sum + (input.sizeMl === 300 ? flavor.priceModifier300 : flavor.priceModifier500), 0);
+    compareAtBasePriceCents = tier.compareAtPriceCents == null
+      ? null
+      : tier.compareAtPriceCents + selectedFlavors.reduce((sum, flavor) =>
+        sum + (input.sizeMl === 300 ? flavor.priceModifier300 : flavor.priceModifier500), 0);
   } else if (input.flavorIds.length > 0) {
     if (new Set(input.flavorIds).size !== input.flavorIds.length) {
       throw new ApiError(400, "Não repita o mesmo sabor na combinação.", { code: "LILY_DUPLICATE_FLAVOR" });
@@ -105,7 +110,10 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
     && (!offer.variantId || offer.variantId === variant.id)
     && offer.regularPriceCents === basePriceCents
   );
-  if (applicableOffer) basePriceCents = applicableOffer.offerPriceCents;
+  if (applicableOffer) {
+    compareAtBasePriceCents = applicableOffer.regularPriceCents;
+    basePriceCents = applicableOffer.offerPriceCents;
+  }
 
   const uniqueAddonIds = new Set(input.addons.map((item) => item.addonId));
   if (uniqueAddonIds.size !== input.addons.length || uniqueAddonIds.size > 10) {
@@ -174,12 +182,13 @@ export async function quoteLilyConfiguration(input: LilyConfigurationInput) {
   return {
     configurationHash,
     product: { id: product.id, slug: product.slug, name: product.displayName },
-    variant: { id: variant.id, name: variant.name },
+    variant: { id: variant.id, name: variant.name, compareAtPriceCents: variant.compareAtPriceCents },
     sizeMl: input.sizeMl,
     flavors: selectedFlavors.map((flavor) => ({ id: flavor.id, name: flavor.name })),
     addons: addonDetails,
     allergens,
     basePriceCents,
+    compareAtPriceCents: compareAtBasePriceCents == null ? null : compareAtBasePriceCents + addonPriceCents,
     addonPriceCents,
     totalPriceCents
   };

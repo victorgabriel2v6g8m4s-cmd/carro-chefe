@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { getLilyAdminCatalog, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
 import { LilyLoadingSpinner } from "./loading-spinner";
+import { AdminAutosaveStatus, useAdminAutosave } from "./features/admin/useAdminAutosave";
 
 function moneyInput(cents: number | null | undefined) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -29,6 +30,23 @@ function normalizeAdminAllergens(input: any): AdminAllergenValue {
 
 function selectedValues(target: HTMLSelectElement) {
   return Array.from(target.selectedOptions).map((option) => option.value);
+}
+
+const adminAutosaveTimers = new WeakMap<HTMLFormElement, number>();
+function queueAdminFormSave(form: HTMLFormElement) {
+  const prior = adminAutosaveTimers.get(form);
+  if (prior) window.clearTimeout(prior);
+  const status = form.querySelector<HTMLElement>("[data-autosave-status]");
+  if (status) status.textContent = "Alteração pendente…";
+  adminAutosaveTimers.set(form, window.setTimeout(() => {
+    if (status) status.textContent = "Salvando automaticamente…";
+    form.requestSubmit();
+  }, 650));
+}
+
+function setFormAutosaveStatus(form: HTMLFormElement, text: string, state: "saved" | "saving" | "error") {
+  const status = form.querySelector<HTMLElement>("[data-autosave-status]");
+  if (status) { status.textContent = text; status.dataset.state = state; }
 }
 
 function allergenPayload(value: AdminAllergenValue) {
@@ -86,26 +104,11 @@ function ComponentAllergenEditor(props: {
   item: any;
   catalog: Array<{ code: string; label: string }>;
   csrf: string;
-  refresh: () => Promise<void>;
-  setError: (value: string) => void;
 }) {
   const [value, setValue] = useState<AdminAllergenValue>(() => normalizeAdminAllergens(props.item.allergens));
-  const [busy, setBusy] = useState(false);
-
-  async function save() {
-    setBusy(true);
-    props.setError("");
-    try {
-      await lilyAdminJson(`${props.endpoint}/${props.item.id}`, "PATCH", props.csrf, {
-        allergens: allergenPayload(value)
-      });
-      await props.refresh();
-    } catch (cause) {
-      props.setError(cause instanceof Error ? cause.message : "Falha ao salvar alergênicos.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const autosave = useAdminAutosave(value, async (next) => {
+    await lilyAdminJson(`${props.endpoint}/${props.item.id}`, "PATCH", props.csrf, { allergens: allergenPayload(next) }, true);
+  });
 
   return <details className="admin-allergen-component">
     <summary>
@@ -115,9 +118,7 @@ function ComponentAllergenEditor(props: {
       </span>
     </summary>
     <AllergenAdminFields catalog={props.catalog} value={value} onChange={setValue} />
-    <button className="button ghost" type="button" disabled={busy} onClick={() => void save()}>
-      {busy ? "Salvando..." : "Salvar alergênicos"}
-    </button>
+    <AdminAutosaveStatus {...autosave} />
   </details>;
 }
 
@@ -128,7 +129,6 @@ function useAdminData() {
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
-    setLoading(true);
     setError("");
     try {
       const current = await getLilySession();
@@ -136,8 +136,10 @@ function useAdminData() {
       setSession(current);
       setData(await getLilyAdminCatalog());
     } catch (cause) {
-      setSession(null);
-      setData(null);
+      if (!data) {
+        setSession(null);
+        setData(null);
+      }
       setError(cause instanceof Error ? cause.message : "Não foi possível abrir o painel.");
     } finally {
       setLoading(false);
@@ -176,6 +178,7 @@ export function AdminHome() {
     <div className="admin-actions">
       <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cupons`}>Cupons e ofertas</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>
@@ -190,6 +193,52 @@ export function AdminHome() {
       {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/equipe`}>Equipe</a>}
     </div>
   </section>}</AdminGate>;
+}
+
+function ProductVariantEditor({ variant, index, variants, csrf }: {
+  variant: any;
+  index: number;
+  variants: any[];
+  csrf: string;
+}) {
+  const [draft, setDraft] = useState({
+    name: variant.name,
+    price: moneyInput(variant.priceCents),
+    compareAtPrice: moneyInput(variant.compareAtPriceCents),
+    isAvailable: Boolean(variant.isAvailable),
+    status: variant.status,
+    isDefault: Number(variant.sortOrder) === 0 || index === 0
+  });
+  const autosave = useAdminAutosave(draft, async (next) => {
+    if (!next.name.trim() || parseMoney(next.price) <= 0) throw new Error("Informe o nome da opção e um preço maior que zero.");
+    const compareAtPriceCents = next.compareAtPrice.trim() ? parseMoney(next.compareAtPrice) : null;
+    if (compareAtPriceCents != null && compareAtPriceCents <= parseMoney(next.price)) {
+      throw new Error("O preço anterior precisa ser maior que o preço atual.");
+    }
+    if (next.isDefault) {
+      await Promise.all(variants.filter((item) => item.id !== variant.id).map((item, order) =>
+        lilyAdminJson(`variants/${item.id}`, "PATCH", csrf, { sortOrder: order + 10 }, true)
+      ));
+    }
+    await lilyAdminJson(`variants/${variant.id}`, "PATCH", csrf, {
+      name: next.name.trim(),
+      priceCents: parseMoney(next.price),
+      compareAtPriceCents,
+      isAvailable: next.isAvailable,
+      status: next.status,
+      sortOrder: next.isDefault ? 0 : Number(variant.sortOrder) === 0 ? index + 10 : variant.sortOrder
+    }, true);
+  });
+
+  return <div className="variant-row">
+    <label>Nome da opção<input value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} /></label>
+    <label>Preço atual<input value={draft.price} inputMode="decimal" onChange={(event) => setDraft((current) => ({ ...current, price: event.target.value }))} /></label>
+    <label>Preço antigo (opcional)<input value={draft.compareAtPrice} inputMode="decimal" placeholder="Ex.: 24,90" onChange={(event) => setDraft((current) => ({ ...current, compareAtPrice: event.target.value }))} /></label>
+    <label>Status<select value={draft.status} onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value }))}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select></label>
+    <label className="toggle"><input type="checkbox" checked={draft.isAvailable} onChange={(event) => setDraft((current) => ({ ...current, isAvailable: event.target.checked }))} /> Disponível</label>
+    <label className="toggle"><input type="checkbox" checked={draft.isDefault} onChange={(event) => setDraft((current) => ({ ...current, isDefault: event.target.checked }))} /> Definir como padrão</label>
+    <AdminAutosaveStatus {...autosave} />
+  </div>;
 }
 
 function ProductEditor({ product, data, csrf, refresh, setError }: {
@@ -213,6 +262,13 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
   });
   const [busy, setBusy] = useState(false);
   const [allergens, setAllergens] = useState<AdminAllergenValue>(() => normalizeAdminAllergens(product.rawAllergens));
+  const productAutosave = useAdminAutosave({
+    ...draft,
+    allergens: allergenPayload(allergens),
+    coverMediaId: draft.coverMediaId || null
+  }, async (next) => {
+    await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, next, true);
+  });
 
   useEffect(() => {
     setDraft((current) => ({
@@ -232,49 +288,9 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       individualLimit: item.individualLimit ?? data.addons.find((addon: any) => addon.id === item.addonId)?.individualLimit ?? 2
     }]))
   );
-  const [mixTiers, setMixTiers] = useState<Array<{ flavorCount: number; sizeMl: number; priceCents: number; status: string }>>(
-    (product.mixTiers ?? []).map((tier: any) => ({ flavorCount: tier.flavorCount, sizeMl: tier.sizeMl, priceCents: tier.priceCents, status: "published" }))
+  const [mixTiers, setMixTiers] = useState<Array<{ flavorCount: number; sizeMl: number; priceCents: number; compareAtPriceCents: number | null; status: string }>>(
+    (product.mixTiers ?? []).map((tier: any) => ({ flavorCount: tier.flavorCount, sizeMl: tier.sizeMl, priceCents: tier.priceCents, compareAtPriceCents: tier.compareAtPriceCents ?? null, status: "published" }))
   );
-
-  async function save() {
-    setBusy(true);
-    setError("");
-    try {
-      await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, {
-        ...draft,
-        allergens: allergenPayload(allergens),
-        coverMediaId: draft.coverMediaId || null
-      });
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Falha ao salvar produto.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function saveVariant(variant: any, nameField: HTMLInputElement, field: HTMLInputElement, available: HTMLInputElement, status: HTMLSelectElement, makeDefault: boolean) {
-    setError("");
-    try {
-      if (makeDefault) {
-        for (const [index, other] of product.rawVariants.entries()) {
-          if (other.id !== variant.id) {
-            await lilyAdminJson(`variants/${other.id}`, "PATCH", csrf, { sortOrder: index + 10 });
-          }
-        }
-      }
-      await lilyAdminJson(`variants/${variant.id}`, "PATCH", csrf, {
-        name: nameField.value.trim(),
-        priceCents: parseMoney(field.value),
-        isAvailable: available.checked,
-        status: status.value,
-        sortOrder: makeDefault ? 0 : variant.sortOrder
-      });
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Falha ao salvar variação.");
-    }
-  }
 
   async function createVariant(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -321,11 +337,9 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
   }
 
   async function saveRelations() {
-    setBusy(true);
     setError("");
-    try {
-      await lilyAdminJson(`products/${product.id}/flavors`, "PUT", csrf, { flavorIds });
-      await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, { minimumAddonUnits, maximumAddonUnits });
+      await lilyAdminJson(`products/${product.id}/flavors`, "PUT", csrf, { flavorIds }, true);
+      await lilyAdminJson(`products/${product.id}`, "PATCH", csrf, { minimumAddonUnits, maximumAddonUnits }, true);
       const nutellaFlavor = data.flavors.find((flavor: any) => flavor.slug === "nutella");
       const productHasNutella = Boolean(nutellaFlavor && flavorIds.includes(nutellaFlavor.id));
       await lilyAdminJson(`products/${product.id}/addons`, "PUT", csrf, {
@@ -339,21 +353,17 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
             priceOverride: addonOverrides[addonId]?.priceCents ?? existing?.priceOverride ?? null
           };
         })
-      });
+      }, true);
       if (product.configurationType === "lilymix") {
-        await lilyAdminJson(`products/${product.id}/mix-tiers`, "PUT", csrf, { tiers: mixTiers });
+        await lilyAdminJson(`products/${product.id}/mix-tiers`, "PUT", csrf, { tiers: mixTiers }, true);
       }
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Falha ao salvar regras do produto.");
-    } finally {
-      setBusy(false);
-    }
   }
+  const relationsAutosave = useAdminAutosave({ flavorIds, addonIds, minimumAddonUnits, maximumAddonUnits, addonOverrides, mixTiers }, saveRelations);
 
   async function createAddonForProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setBusy(true);
     setError("");
     try {
@@ -368,7 +378,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       });
       setAddonIds((current) => [...new Set([...current, created.id])]);
       setAddonOverrides((current) => ({ ...current, [created.id]: { priceCents: created.priceCents, individualLimit: created.individualLimit } }));
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar adicional para o produto.");
@@ -402,29 +412,11 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <label className="toggle"><input type="checkbox" checked={draft.featured} onChange={(e) => setDraft({ ...draft, featured: e.target.checked })} /> Mais pedido · etiqueta na grade</label>
       <label className="toggle"><input type="checkbox" checked={draft.weeklyHighlight} onChange={(e) => setDraft({ ...draft, weeklyHighlight: e.target.checked })} /> Escolha da semana · banner exclusivo</label>
       <div className="admin-span"><AllergenAdminFields catalog={data.allergenCatalog ?? []} value={allergens} onChange={setAllergens} /></div>
-      <button className="button primary" type="button" disabled={busy} onClick={save}>{busy ? "Salvando..." : "Salvar produto"}</button>
+       <AdminAutosaveStatus {...productAutosave} />
     </div>
     <div className="variant-admin">
       <h4>{product.rawVariants.length === 1 && product.rawVariants[0]?.name === "Preço fixo" ? "Preço fixo do produto" : "Variações e preços"}</h4>
-      {product.rawVariants.map((variant: any, index: number) => <form key={variant.id} className="variant-row" onSubmit={(event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        void saveVariant(
-          variant,
-          form.elements.namedItem("name") as HTMLInputElement,
-          form.elements.namedItem("price") as HTMLInputElement,
-          form.elements.namedItem("available") as HTMLInputElement,
-          form.elements.namedItem("status") as HTMLSelectElement,
-          (form.elements.namedItem("isDefault") as HTMLInputElement).checked
-        );
-      }}>
-        <label>Nome da opção<input name="name" required defaultValue={variant.name} /></label>
-        <label>Preço<input name="price" required defaultValue={moneyInput(variant.priceCents)} inputMode="decimal" /></label>
-        <label>Status<select name="status" defaultValue={variant.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select></label>
-        <label className="toggle"><input name="available" type="checkbox" defaultChecked={variant.isAvailable} /> Disponível</label>
-        <label className="toggle"><input name="isDefault" type="checkbox" defaultChecked={index === 0} /> Definir como padrão</label>
-        <button className="button ghost" type="submit">Salvar opção</button>
-      </form>)}
+      {product.rawVariants.map((variant: any, index: number) => <ProductVariantEditor key={variant.id} variant={variant} index={index} variants={product.rawVariants} csrf={csrf} />)}
       <form className="variant-row" onSubmit={createVariant}>
         <label>Nova opção<input name="name" required minLength={2} maxLength={80} placeholder="Ex.: Unidade, Caixa com 6, Fatia" /></label>
         <label>Preço<input name="price" required inputMode="decimal" placeholder="12,00" /></label>
@@ -478,17 +470,22 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       {product.configurationType === "lilymix" && <div className="admin-span">
         <h4>Preços LilyMix por número de sabores</h4>
         <div className="tier-grid">
-          {mixTiers.map((tier, index) => <label key={`${tier.sizeMl}-${tier.flavorCount}`}>
-            {tier.sizeMl} ml · {tier.flavorCount} sabor{tier.flavorCount > 1 ? "es" : ""}
-            <input value={moneyInput(tier.priceCents)} onChange={(event) => {
+          {mixTiers.map((tier, index) => <div key={`${tier.sizeMl}-${tier.flavorCount}`} className="tier-price-row">
+            <strong>{tier.sizeMl} ml · {tier.flavorCount} sabor{tier.flavorCount > 1 ? "es" : ""}</strong>
+            <label>Preço atual<input value={moneyInput(tier.priceCents)} onChange={(event) => {
               const next = [...mixTiers];
               next[index] = { ...tier, priceCents: parseMoney(event.target.value) };
               setMixTiers(next);
-            }} />
-          </label>)}
+            }} /></label>
+            <label>Preço antigo (opcional)<input value={moneyInput(tier.compareAtPriceCents)} onChange={(event) => {
+              const next = [...mixTiers];
+              next[index] = { ...tier, compareAtPriceCents: event.target.value.trim() ? parseMoney(event.target.value) : null };
+              setMixTiers(next);
+            }} /></label>
+          </div>)}
         </div>
       </div>}
-      <button className="button primary" type="button" disabled={busy} onClick={saveRelations}>Salvar sabores, adicionais e regras</button>
+      <AdminAutosaveStatus {...relationsAutosave} />
     </div>
   </details>;
 }
@@ -497,13 +494,14 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
   const [pricingMode, setPricingMode] = useState<"fixed" | "variants">("fixed");
   const [configurationType, setConfigurationType] = useState<"fixed" | "lilymix">("fixed");
   const [fixedPrice, setFixedPrice] = useState("15,00");
-  const [variants, setVariants] = useState<Array<{ name: string; price: string }>>([
-    { name: "Opção 1", price: "15,00" }
+  const [fixedCompareAtPrice, setFixedCompareAtPrice] = useState("");
+  const [variants, setVariants] = useState<Array<{ name: string; price: string; compareAtPrice: string }>>([
+    { name: "Opção 1", price: "15,00", compareAtPrice: "" }
   ]);
   const [defaultVariant, setDefaultVariant] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  function updateVariant(index: number, field: "name" | "price", value: string) {
+  function updateVariant(index: number, field: "name" | "price" | "compareAtPrice", value: string) {
     setVariants((current) => current.map((variant, i) => i === index ? { ...variant, [field]: value } : variant));
   }
 
@@ -514,14 +512,14 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
     setError("");
     setBusy(true);
     try {
-      let options: Array<{ name: string; price: string; sizeMl: number; sortOrder: number }>;
+      let options: Array<{ name: string; price: string; compareAtPrice: string; sizeMl: number; sortOrder: number }>;
       if (configurationType === "lilymix") {
         options = [
-          { name: "300 ml", price: String(form.get("price300") || "15,00"), sizeMl: 300, sortOrder: 10 },
-          { name: "500 ml", price: String(form.get("price500") || "22,00"), sizeMl: 500, sortOrder: 20 }
+          { name: "300 ml", price: String(form.get("price300") || "15,00"), compareAtPrice: String(form.get("compare300") || ""), sizeMl: 300, sortOrder: 10 },
+          { name: "500 ml", price: String(form.get("price500") || "22,00"), compareAtPrice: String(form.get("compare500") || ""), sizeMl: 500, sortOrder: 20 }
         ];
       } else if (pricingMode === "fixed") {
-        options = [{ name: "Preço fixo", price: fixedPrice, sizeMl: 1_000_000_000, sortOrder: 0 }];
+        options = [{ name: "Preço fixo", price: fixedPrice, compareAtPrice: fixedCompareAtPrice, sizeMl: 1_000_000_000, sortOrder: 0 }];
       } else {
         const valid = variants.map((variant) => ({ ...variant, name: variant.name.trim() }));
         if (!valid.length || valid.some((variant) => !variant.name)) {
@@ -535,6 +533,9 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
       }
       if (options.some((option) => !option.price.trim() || parseMoney(option.price) <= 0)) {
         throw new Error("Informe um preço maior que zero para cada opção.");
+      }
+      if (options.some((option) => option.compareAtPrice.trim() && parseMoney(option.compareAtPrice) <= parseMoney(option.price))) {
+        throw new Error("O preço antigo deve ser maior que o preço atual.");
       }
 
       const product = await lilyAdminJson<any>("products", "POST", csrf, {
@@ -559,16 +560,24 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
           sizeMl: option.sizeMl,
           name: option.name,
           priceCents: parseMoney(option.price),
+          compareAtPriceCents: option.compareAtPrice.trim() ? parseMoney(option.compareAtPrice) : null,
           status: "draft",
           isAvailable: false,
           sortOrder: option.sortOrder
         });
       }
+      if (configurationType === "lilymix") {
+        await lilyAdminJson(`products/${product.id}/mix-tiers`, "PUT", csrf, { tiers: options.flatMap((option) => [1, 2, 3].map((flavorCount) => ({
+          sizeMl: option.sizeMl, flavorCount, priceCents: parseMoney(option.price),
+          compareAtPriceCents: option.compareAtPrice.trim() ? parseMoney(option.compareAtPrice) : null, status: "published"
+        }))) });
+      }
       formElement.reset();
       setPricingMode("fixed");
       setConfigurationType("fixed");
       setFixedPrice("15,00");
-      setVariants([{ name: "Opção 1", price: "15,00" }]);
+      setFixedCompareAtPrice("");
+      setVariants([{ name: "Opção 1", price: "15,00", compareAtPrice: "" }]);
       setDefaultVariant(0);
       await refresh();
     } catch (cause) {
@@ -589,16 +598,19 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
       <label>Tags<input name="tags" placeholder="morango, novidade" /></label>
       {configurationType === "lilymix" ? <>
         <label>Preço 300 ml<input name="price300" inputMode="decimal" defaultValue="15,00" /></label>
+        <label>Preço antigo 300 ml<input name="compare300" inputMode="decimal" placeholder="Opcional" /></label>
         <label>Preço 500 ml<input name="price500" inputMode="decimal" defaultValue="22,00" /></label>
+        <label>Preço antigo 500 ml<input name="compare500" inputMode="decimal" placeholder="Opcional" /></label>
       </> : <div className="admin-span">
         <h4>Preço do produto</h4>
         <label className="toggle"><input type="radio" name="pricingMode" checked={pricingMode === "fixed"} onChange={() => setPricingMode("fixed")} /> Preço fixo (sem variações)</label>
         <label className="toggle"><input type="radio" name="pricingMode" checked={pricingMode === "variants"} onChange={() => setPricingMode("variants")} /> Criar variações personalizadas</label>
-        {pricingMode === "fixed" ? <label>Preço fixo<input value={fixedPrice} onChange={(event) => setFixedPrice(event.target.value)} inputMode="decimal" required /></label> : <>
+        {pricingMode === "fixed" ? <><label>Preço fixo<input value={fixedPrice} onChange={(event) => setFixedPrice(event.target.value)} inputMode="decimal" required /></label><label>Preço antigo (opcional)<input value={fixedCompareAtPrice} onChange={(event) => setFixedCompareAtPrice(event.target.value)} inputMode="decimal" /></label></> : <>
           <div className="variant-admin">
             {variants.map((variant, index) => <div className="variant-row" key={index}>
               <label>Nome da opção<input value={variant.name} maxLength={80} onChange={(event) => updateVariant(index, "name", event.target.value)} placeholder="Ex.: Fatia, Unidade, Caixa com 6" required /></label>
               <label>Preço<input value={variant.price} onChange={(event) => updateVariant(index, "price", event.target.value)} inputMode="decimal" required /></label>
+              <label>Preço antigo (opcional)<input value={variant.compareAtPrice} onChange={(event) => updateVariant(index, "compareAtPrice", event.target.value)} inputMode="decimal" /></label>
               <label className="toggle"><input type="radio" name="defaultVariant" checked={defaultVariant === index} onChange={() => setDefaultVariant(index)} /> Padrão</label>
               <button className="button ghost" type="button" disabled={variants.length <= 1} onClick={() => {
                 setVariants((current) => current.filter((_, i) => i !== index));
@@ -606,7 +618,7 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
               }}>Remover</button>
             </div>)}
           </div>
-          <button className="button ghost" type="button" onClick={() => setVariants((current) => [...current, { name: `Opção ${current.length + 1}`, price: "" }])}>+ Adicionar variação</button>
+          <button className="button ghost" type="button" onClick={() => setVariants((current) => [...current, { name: `Opção ${current.length + 1}`, price: "", compareAtPrice: "" }])}>+ Adicionar variação</button>
           <small>Você define o nome e o preço de cada opção e escolhe qual começa selecionada.</small>
         </>}
       </div>}
@@ -618,7 +630,8 @@ function CreateProduct({ data, csrf, refresh, setError }: any) {
 function CategoryEditor({ data, csrf, refresh, setError }: any) {
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await lilyAdminJson("categories", "POST", csrf, {
         parentId: String(form.get("parentId") || "") || null,
@@ -628,7 +641,7 @@ function CategoryEditor({ data, csrf, refresh, setError }: any) {
         sortOrder: 500,
         isComingSoon: false
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao criar categoria."); }
   }
@@ -636,24 +649,26 @@ function CategoryEditor({ data, csrf, refresh, setError }: any) {
   return <details className="admin-create">
     <summary>Categorias</summary>
     <div className="simple-admin-list">
-      {data.categories.map((category: any) => <form key={category.id} onSubmit={async (event) => {
+      {data.categories.map((category: any) => <form key={category.id} onChange={(event) => queueAdminFormSave(event.currentTarget)} onSubmit={async (event) => {
         event.preventDefault();
-        const form = new FormData(event.currentTarget);
+        const formElement = event.currentTarget;
+        setFormAutosaveStatus(formElement, "Salvando automaticamente…", "saving");
+        const form = new FormData(formElement);
         try {
           await lilyAdminJson(`categories/${category.id}`, "PATCH", csrf, {
             name: String(form.get("name")),
             status: String(form.get("status")),
             sortOrder: Number(form.get("sortOrder")),
             isComingSoon: form.get("coming") === "on"
-          });
-          await refresh();
-        } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao editar categoria."); }
+          }, true);
+          setFormAutosaveStatus(formElement, "Alterações salvas", "saved");
+        } catch (cause) { setFormAutosaveStatus(formElement, "Falha ao salvar. Edite novamente para tentar.", "error"); setError(cause instanceof Error ? cause.message : "Falha ao editar categoria."); }
       }}>
         <input name="name" defaultValue={category.name} />
         <select name="status" defaultValue={category.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select>
         <input name="sortOrder" type="number" defaultValue={category.sortOrder} />
         <label className="toggle"><input name="coming" type="checkbox" defaultChecked={category.isComingSoon} /> Em breve</label>
-        <button className="button ghost" type="submit">Salvar</button>
+        <small className="admin-autosave-status" data-autosave-status role="status">Alterações salvas</small>
       </form>)}
     </div>
     <form className="admin-form-grid compact" onSubmit={create}>
@@ -668,7 +683,8 @@ function CategoryEditor({ data, csrf, refresh, setError }: any) {
 function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
   async function createFlavor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await lilyAdminJson("flavors", "POST", csrf, {
         slug: String(form.get("slug")),
@@ -681,14 +697,15 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
         priceModifier300: parseMoney(String(form.get("modifier300") || "0")),
         priceModifier500: parseMoney(String(form.get("modifier500") || "0"))
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao criar sabor."); }
   }
 
   async function createAddon(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await lilyAdminJson("addons", "POST", csrf, {
         flavorId: String(form.get("flavorId") || "") || null,
@@ -700,7 +717,7 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
         individualLimit: 2,
         status: "published"
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao criar adicional."); }
   }
@@ -726,8 +743,6 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
           item={flavor}
           catalog={data.allergenCatalog ?? []}
           csrf={csrf}
-          refresh={refresh}
-          setError={setError}
         />)}
       </div>
       <div className="compatibility-matrix">
@@ -737,8 +752,7 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
             const checked = compatibility.has(`${a.id}:${b.id}`);
             return <label key={b.id}><input type="checkbox" checked={checked} onChange={async (event) => {
               try {
-                await lilyAdminJson("compatibilities", "PUT", csrf, { flavorAId: a.id, flavorBId: b.id, isCompatible: event.target.checked });
-                await refresh();
+                await lilyAdminJson("compatibilities", "PUT", csrf, { flavorAId: a.id, flavorBId: b.id, isCompatible: event.target.checked }, true);
               } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao mudar compatibilidade."); }
             }} /> {b.name}</label>;
           })}</div>
@@ -748,22 +762,24 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
     <details className="admin-create">
       <summary>Adicionais</summary>
       <div className="simple-admin-list">
-        {data.addons.map((addon: any) => <form key={addon.id} onSubmit={async (event) => {
+        {data.addons.map((addon: any) => <form key={addon.id} onChange={(event) => queueAdminFormSave(event.currentTarget)} onSubmit={async (event) => {
           event.preventDefault();
-          const form = new FormData(event.currentTarget);
+          const formElement = event.currentTarget;
+          setFormAutosaveStatus(formElement, "Salvando automaticamente…", "saving");
+          const form = new FormData(formElement);
           try {
             await lilyAdminJson(`addons/${addon.id}`, "PATCH", csrf, {
               name: String(form.get("name")),
               priceCents: parseMoney(String(form.get("price"))),
               status: String(form.get("status"))
-            });
-            await refresh();
-          } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao editar adicional."); }
+            }, true);
+            setFormAutosaveStatus(formElement, "Alterações salvas", "saved");
+          } catch (cause) { setFormAutosaveStatus(formElement, "Falha ao salvar. Edite novamente para tentar.", "error"); setError(cause instanceof Error ? cause.message : "Falha ao editar adicional."); }
         }}>
           <input name="name" defaultValue={addon.name} />
           <input name="price" defaultValue={moneyInput(addon.priceCents)} />
           <select name="status" defaultValue={addon.status}><option value="published">Publicado</option><option value="paused">Pausado</option><option value="draft">Rascunho</option></select>
-          <button className="button ghost" type="submit">Salvar</button>
+          <small className="admin-autosave-status" data-autosave-status role="status">Alterações salvas</small>
         </form>)}
       </div>
       <div className="admin-allergen-component-list">
@@ -774,8 +790,6 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
           item={addon}
           catalog={data.allergenCatalog ?? []}
           csrf={csrf}
-          refresh={refresh}
-          setError={setError}
         />)}
       </div>
       <form className="admin-form-grid compact" onSubmit={createAddon}>
@@ -793,7 +807,9 @@ function FlavorAddonEditor({ data, csrf, refresh, setError }: any) {
 function CommercialEditor({ data, csrf, refresh, setError }: any) {
   async function saveCombo(event: FormEvent<HTMLFormElement>, combo: any) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    setFormAutosaveStatus(formElement, "Salvando automaticamente…", "saving");
+    const form = new FormData(formElement);
     const mode = String(form.get("mode") || "preset");
     const quantity = Math.min(5, Math.max(1, Number(form.get("quantity") || 1)));
 
@@ -843,16 +859,18 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
         status: String(form.get("status")),
         featured: form.get("featured") === "on",
         rules
-      });
-      await refresh();
+      }, true);
+      setFormAutosaveStatus(formElement, "Alterações salvas", "saved");
     } catch (cause) {
+      setFormAutosaveStatus(formElement, "Falha ao salvar. Edite novamente para tentar.", "error");
       setError(cause instanceof Error ? cause.message : "Falha ao salvar combo.");
     }
   }
 
   async function createOffer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const productId = String(form.get("productId"));
     const variantId = String(form.get("variantId") || "") || null;
     try {
@@ -866,7 +884,7 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
         campaignId: String(form.get("campaignId") || "") || null,
         minProjectedMarginBps: 1000
       });
-      event.currentTarget.reset();
+      formElement.reset();
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar oferta.");
@@ -875,7 +893,9 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
 
   async function saveOffer(event: FormEvent<HTMLFormElement>, offer: any) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    setFormAutosaveStatus(formElement, "Salvando automaticamente…", "saving");
+    const form = new FormData(formElement);
     try {
       await lilyAdminJson(`offers/${offer.id}`, "PATCH", csrf, {
         name: String(form.get("name")),
@@ -883,9 +903,10 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
         offerPriceCents: parseMoney(String(form.get("offer"))),
         status: String(form.get("status")),
         campaignId: String(form.get("campaignId") || "") || null
-      });
-      await refresh();
+      }, true);
+      setFormAutosaveStatus(formElement, "Alterações salvas", "saved");
     } catch (cause) {
+      setFormAutosaveStatus(formElement, "Falha ao salvar. Edite novamente para tentar.", "error");
       setError(cause instanceof Error ? cause.message : "Falha ao salvar oferta.");
     }
   }
@@ -908,7 +929,7 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
               : (Array.isArray(combo.resolvedPresetSelections) ? combo.resolvedPresetSelections : []);
             const quantity = Math.min(5, Math.max(1, Number(rules.quantity || presetSelections.length || 1)));
             const mode = rules.mode === "builder" ? "builder" : "preset";
-            return <form className="combo-admin-card" key={combo.id} onSubmit={(event) => void saveCombo(event, combo)}>
+            return <form className="combo-admin-card" key={combo.id} onChange={(event) => queueAdminFormSave(event.currentTarget)} onSubmit={(event) => void saveCombo(event, combo)}>
               <div className="combo-admin-main">
                 <label>Nome<input name="name" defaultValue={combo.name} /></label>
                 <label>Descrição<input name="description" defaultValue={combo.description ?? ""} /></label>
@@ -982,7 +1003,7 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
 
               <div className="combo-admin-actions">
                 <small>Modo atual: <strong>{mode === "preset" ? "sabores selecionados" : "cliente monta"}</strong></small>
-                <button className="button primary" type="submit">Salvar combo</button>
+                <small className="admin-autosave-status" data-autosave-status role="status">Alterações salvas</small>
               </div>
             </form>;
           })}
@@ -992,13 +1013,13 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
       <section>
         <h4>Ofertas de produto</h4>
         {data.offers.length > 0 && <div className="simple-admin-list commercial-list offers-list">
-          {data.offers.map((offer: any) => <form key={offer.id} onSubmit={(event) => void saveOffer(event, offer)}>
+          {data.offers.map((offer: any) => <form key={offer.id} onChange={(event) => queueAdminFormSave(event.currentTarget)} onSubmit={(event) => void saveOffer(event, offer)}>
             <input name="name" defaultValue={offer.name} aria-label="Nome da oferta" />
             <input name="regular" defaultValue={moneyInput(offer.regularPriceCents)} aria-label="Preço regular" />
             <input name="offer" defaultValue={moneyInput(offer.offerPriceCents)} aria-label="Preço oferta" />
             <input name="campaignId" defaultValue={offer.campaignId ?? ""} placeholder="campanha" />
             <select name="status" defaultValue={offer.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select>
-            <button className="button ghost" type="submit">Salvar</button>
+            <small className="admin-autosave-status" data-autosave-status role="status">Alterações salvas</small>
           </form>)}
         </div>}
 
@@ -1045,12 +1066,13 @@ export function AdminMedia() {
   return <AdminGate>{({ data, session, error, refresh, setError }) => {
     async function upload(event: FormEvent<HTMLFormElement>) {
       event.preventDefault();
-      const input = event.currentTarget.elements.namedItem("file") as HTMLInputElement;
+    const formElement = event.currentTarget;
+    const input = formElement.elements.namedItem("file") as HTMLInputElement;
       const file = input.files?.[0];
       if (!file) return;
       try {
         await uploadLilyMedia(file, session!.csrfToken);
-        event.currentTarget.reset();
+        formElement.reset();
         await refresh();
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : "Falha no upload.");
