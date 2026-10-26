@@ -1,72 +1,63 @@
 # Programa VIP CookLily
 
-- status: in_progress
+- status: candidate (CI remoto parcialmente concluído; integração aguardando Node 20)
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-program`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `9c0e52275026c0384b38a65174e8ec2c78529b28`
-- head_sha_verified: working tree (uncommitted; base `9c0e52275026c0384b38a65174e8ec2c78529b28`)
-- pull_requests: none
+- head_sha_verified: `c97bcf11a248d16b44c1b56e434e0d35334deabe`
+- pull_requests: [PR #198](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/198) (draft)
 - last_verified_at: 2026-10-26
-- interruption_state: none
+- interruption_state: CI Node 20 ativo na etapa Tests; 6/7 jobs concluídos com sucesso
 
 ## Escopo
 
-Registrar e implementar convite/resgate VIP, associação e ativação após consentimento versionado, página de termos e cancelamento, acesso antecipado a produtos VIP, configuração administrativa de teaser e pontos para candidatura, e vouchers de cupons vinculados a códigos promocionais.
+Programa CookLily VIP: códigos de convite/vouchers individuais, consentimento versionado, inscrição e cancelamento, candidatura por pontos, acesso antecipado a produtos, painel, termos e analytics próprios minimizados.
 
 ## Decisões registradas
 
-- Códigos são normalizados e armazenados como hash; exibição do código administrativo fica limitada ao momento da criação.
-- Resgatar convite concede estado `invited`; somente consentir com os termos vigentes e clicar em inscrever ativa o VIP.
-- O aceite inclui analytics próprios e necessários ao programa, com escopo descrito nos termos. Não autoriza analytics de terceiros nem compartilhamento de respostas abertas sem nova finalidade/base legal.
-- Cancelar a inscrição encerra benefícios VIP e registra revogação do consentimento. Dados históricos ficam sujeitos à minimização e obrigações legais descritas nos termos.
-- VIP obtido por pontos segue o mesmo consentimento e fluxo de ativação; o limite é ajustável no painel.
-- Produtos restritos mantêm a imagem, título substituído por interrogações e frase teaser configurável para clientes comuns; usuários VIP veem os dados e podem comprar normalmente. API e cotação validam acesso no servidor.
-- Códigos de campanha podem conceder cupons existentes como direitos individuais; limites, validade e status do cupom continuam sob as regras do próprio cupom.
+- Códigos são normalizados e armazenados como hash; o código completo aparece apenas uma vez na criação.
+- Resgatar convite deixa a membership em `invited`; somente consentir com os termos vigentes e confirmar inscrição ativa o VIP.
+- Analytics necessários do piloto são próprios, minimizados e consentidos separadamente. Sem analytics de terceiros ou compartilhamento de respostas abertas.
+- Cancelamento encerra benefícios e remove imediatamente eventos experimentais da conta; expiração configurada remove eventos de membros ainda ativos.
+- VIP obtido por pontos usa o mesmo consentimento; limite configurável no painel.
+- Produto VIP exibe teaser e imagem desfocada para clientes comuns; usuários VIP veem produto normalmente. API, configuração, cotação e pedido validam autorização no servidor.
+- Código de campanha pode conceder cupons individuais vinculados à conta, respeitando escopos e regras do cupom de origem.
 
-## Estado verificado
+## Entregas
 
-- Canonical avançou para `9c0e52275026c0384b38a65174e8ec2c78529b28`; este trabalho parte dessa revisão.
-- `npm run policy:preflight -- --agent AG-DEV --scope apps/lily_acai,apps/api,packages/lily-database,docs/lily-acai` passou.
-- Central operacional em `127.0.0.1:4173` não respondeu ao bootstrap; execução não pôde ser registrada no runtime local.
+- Schema Prisma e migration `20261026180000_lily_vip_program`.
+- API com autorização, CSRF, MFA/staff, hashing, limites, idempotência, auditoria e vouchers account-bound.
+- Painel para configurar threshold/retention, gerar/pausar códigos e configurar lançamentos VIP por produto.
+- Perfil VIP com resgate, modal metálico/confete, consentimento, inscrição, vouchers, cancelamento e coroa.
+- Projeção de catálogo com teaser/selo VIP e acesso antecipado.
+- Política documentada em `docs/lily-acai/PROGRAMA_VIP.md`.
+- Ignora artefatos locais do Playwright via `.gitignore`.
+- Commit local/remoto: `c97bcf11a248d16b44c1b56e434e0d35334deabe`.
 
-## Concluído e persistido
+## Testes e gates
 
-- [x] Schema e migration VIP com códigos hash, resgates idempotentes, status da membership, eventos próprios e vouchers vinculados à conta.
-- [x] APIs autenticadas para painel, código/benefício, consentimento, inscrição/cancelamento, candidatura por pontos e eventos de lançamentos.
-- [x] Projeção do catálogo e cotação/pedido com autorização VIP no servidor; cupons pessoais restritos ao titular.
-- [x] UI do perfil/termos, convite dourado com confete, coroa, teaser e selo de produto VIP; painel de configuração e geração de códigos.
-- [x] Documentação de políticas, dados, retenção e critérios em `docs/lily-acai/PROGRAMA_VIP.md`.
-
-## Em andamento
-
-- Revisar todos os caminhos, excluir artefatos locais, criar commit e abrir PR draft contra a canonical.
-
-## Gates e testes
-
-- `npm run policy:preflight -- --agent AG-DEV --scope apps/lily_acai,apps/api,packages/lily-database,docs/lily-acai`: PASS.
-- `npm run check`: PASS (Prisma generate/validate e TypeScript).
-- `npm test`: PASS (61 arquivos, 327 aprovados, 3 ignorados).
-- `npm run test:lily-ui`: PASS (13 arquivos, 62 testes).
-- `npm run build`: PASS após atualizar a baseline ao bundle medido (633940 JS raw, 168490 JS gzip, 130610 CSS raw) e deixar folga pequena no budget (650000 JS raw, 173000 JS gzip, 135000 CSS raw e 199000 gzip combinado); há aviso Vite informativo para chunk principal >500 KiB.
+- Preflight AG-DEV para apps Lily/API/database/docs: PASS. Central Operacional local indisponível para registrar execução.
+- `npm test`: PASS local — 61 arquivos, 327 testes aprovados, 3 ignorados.
+- `npm run check`: PASS; Prisma generate/validate e TypeScript.
+- `npm run build`: PASS; budget atualizado à medição real e pequena folga. Warning do Vite para chunk principal >500 KiB continua.
+- `npm run test:lily-ui`: PASS — 13 arquivos, 62 testes.
 - `npm run policy:check`: PASS.
-- `git diff --check`: PASS após as últimas edições.
-- Revisão browser mobile Playwright com respostas de API mockadas: cartão VIP bloqueado revela `???`, blur e selo sem ação de compra; perfil VIP mostra coroa; sem erros de console após mocks.
+- `git diff --check`: PASS.
+- Playwright mobile com APIs mockadas: teaser bloqueado/coroa VIP verificados; zero erros de console após mocks.
+- GitHub Actions run `40401454947` (#794): Excel Recipe Windows/Linux, Workbook Snapshot, Tool Health Linux, Windows Supervisor e Quality Node 24 concluíram PASS. Quality Node 20 está ativo em `Tests`; seus gates anteriores passaram. Logs do job não estavam publicados ao consultar. Não marcar CI completo até estado terminal.
 
-## Migrations
+## Migration
 
-- Migration `20261026180000_lily_vip_program`; schema Prisma válido. Migration aplicada em banco SQLite descartável via SQL/better-sqlite3 após erro vazio do Prisma migrate engine no Windows. Conferir no CI em Linux e no procedimento da VPS antes do deploy.
+Schema validado e SQL aplicado em banco SQLite descartável por `better-sqlite3`, após erro vazio do Prisma migrate engine no Windows. CI Node 24 passou `Prepare database`; deploy/homologação VPS ainda pendentes.
 
-## Bloqueios/riscos
+## Riscos e limites
 
-- Runtime da Central Operacional `127.0.0.1:4173` não respondeu ao bootstrap; sem registro de execução nessa Central.
-- Build mostra chunk Vite principal CookLily acima do warning genérico de 500 KiB, embora o budget do projeto esteja verde.
-- A canonical ainda não foi publicada nem homologada na VPS.
-
-## Homologação/dependências externas
-
-- Após integração, depende do deploy operacional para validação de login, resgate, consentimento, compra VIP e ocultação de lançamentos.
+- A página de termos declara escopo e retenção, mas a aprovação jurídica/controlador de dados e prazo antes de participantes reais continuam necessários.
+- Bundle principal mostra warning genérico >500 KiB apesar do budget aprovado.
+- A UI foi inspecionada com mocks, sem acesso de homologação à VPS.
+- Não executar deploy; aguarda operação autorizada na VPS após merge.
 
 ## Próxima ação exata
 
-- Fazer commit da entrega, abrir PR draft contra `cooklily/canonical`, acompanhar CI, integrar por squash quando os checks passarem e atualizar o checkpoint com SHAs e IDs de PR/CI.
+Consultar o run `40401454947` até Quality Node 20 terminar. Se sucesso, atualizar este checkpoint, retirar draft se necessário e fazer merge squash do PR #198; verificar SHA da canonical. Se falhar, obter diagnóstico do job, corrigir, repetir gates e atualizar o PR. Depois atualizar checkpoint final com merge SHA/CI; deploy da VPS segue separado.
