@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-mobile-ux-fixes`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `e070c3fc5dcf70787479c9445910421f96af689d`
-- head_sha_verified: `e070c3fc5dcf70787479c9445910421f96af689d`
-- pull_requests: pending
+- head_sha_verified: `b3040d0020429e59d7df387448556976363a0e25`
+- pull_requests: [#196](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/196), draft, base `cooklily/canonical`
 - last_verified_at: 2026-10-26
 - interruption_state: none
 
@@ -26,7 +26,6 @@ Corrigir contraste do preço selecionado, sobreposição de ações pelo footer 
 
 ## Em andamento
 
-- Corrigir estilos dos preços e ações de modal, navegação inferior e avisos de alergênicos ao cliente.
 - Aguardar CI no PR e integrar por squash após todos os gates passarem.
 
 ## Gates e testes
@@ -49,8 +48,8 @@ Corrigir contraste do preço selecionado, sobreposição de ações pelo footer 
 
 ## Homologação/dependências externas
 
-- PR/CI pendentes; homologação na VPS depende de deploy posterior pelo proprietário. O servidor local de frontend não tinha a API em `127.0.0.1:4173`; o Playwright usou respostas de catálogo/configuração mockadas para validar a geometria da UI.
+- PR #196 aberto como draft; CI pendente. Homologação na VPS depende de deploy posterior pelo proprietário. O servidor local de frontend não tinha a API em `127.0.0.1:4173`; o Playwright usou respostas de catálogo/configuração mockadas para validar a geometria da UI.
 
 ## Próxima ação exata
 
-- Revisar o diff, commitar somente os arquivos desta tarefa, abrir PR para `cooklily/canonical`, aguardar CI, corrigir falhas e integrar por squash conforme autorização prévia; atualizar este checkpoint com o SHA integrado.
+- Commit `b3040d0020429e59d7df387448556976363a0e25` publicado e PR #196 aberto. Próxima ação exata: aguardar CI, corrigir falhas se aparecerem, integrar por squash após gates verdes conforme autorização prévia e atualizar este checkpoint com o SHA integrado.
