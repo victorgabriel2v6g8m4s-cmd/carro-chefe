@@ -23,6 +23,14 @@ describe("CookLily survey analytics", () => {
     expect(selectedSurveyOptions(text!, "resposta privada")).toEqual([]);
   });
 
+  it("reports readable labels for rich media options instead of internal answer identifiers", () => {
+    const question = surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "multiple_choice", title: "Q", options: [
+      { value: "image-only", media: { url: "https://cdn.example.test/a.jpg", type: "image", altText: "Açaí de morango" } },
+      { value: "text-image", text: "Uva", media: { url: "https://cdn.example.test/b.jpg", type: "image", altText: "Foto de uva" } }
+    ] }] }).questions[0]!;
+    expect(selectedSurveyOptions(question, ["image-only", "text-image"])).toEqual(["Açaí de morango", "Uva"]);
+  });
+
   it("merges monotonic per-question timings, ignores unknown questions, and caps duration", () => {
     expect(mergeQuestionTimes(definition, { choice: 500, removed: 99 }, { choice: 200, binary: 2 * 60 * 60 * 1000 + 1 })).toEqual({
       choice: 500,

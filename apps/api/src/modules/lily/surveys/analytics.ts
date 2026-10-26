@@ -1,4 +1,4 @@
-import type { SurveyDefinition } from "./contracts";
+import { surveyOptionLabel, surveyOptionValue, type SurveyDefinition } from "./contracts";
 
 type SurveyQuestion = SurveyDefinition["questions"][number];
 
@@ -33,9 +33,13 @@ export function selectedSurveyOptions(question: SurveyQuestion, answer: unknown)
     case "dropdown":
     case "multiple_choice":
     case "checkboxes":
-      return stringValues(answer).filter((value) => question.options.includes(value));
+      return stringValues(answer).flatMap((value) => {
+        const index = question.options.findIndex((option) => surveyOptionValue(option) === value);
+        return index >= 0 ? [surveyOptionLabel(question.options[index]!, index)] : [];
+      });
     case "choice_text":
-      return typeof record.choice === "string" && question.options.includes(record.choice) ? [record.choice] : [];
+      if (typeof record.choice !== "string") return [];
+      return question.options.flatMap((option, index) => surveyOptionValue(option) === record.choice ? [surveyOptionLabel(option, index)] : []);
     case "binary_swipe":
       return answer === "positive" ? [question.positiveLabel || "Positivo"] : answer === "negative" ? [question.negativeLabel || "Negativo"] : [];
     case "linear_scale":
