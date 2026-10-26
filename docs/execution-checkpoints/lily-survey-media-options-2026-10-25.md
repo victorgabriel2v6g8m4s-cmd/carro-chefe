@@ -2,12 +2,12 @@
 
 - Tarefa: permitir opções de seleção simples e múltipla compostas de texto, mídia ou ambos.
 - Responsável: AG-DEV.
-- Estado: `validated`.
+- Estado: `candidate`.
 - Branch: `codex/lily-survey-rich-options`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `e437aa2da0250ee37238840f4c51b291b49a8248`.
-- HEAD verificado: alterações locais sem commit, baseado em `e437aa2da0250ee37238840f4c51b291b49a8248`.
-- PRs: nenhum.
+- HEAD verificado: `b1d224b` (feature); atualização deste checkpoint pendente.
+- PRs: [#189](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/189), draft, base `cooklily/canonical`.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
@@ -25,7 +25,7 @@
 3. `[done]` Atualizar editor, prévia do cliente, resposta, regras condicionais e rótulos de analytics.
 4. `[done]` Testes direcionados: contratos/analytics 12/12; interface Lily 56/56.
 5. `[done]` `npm run check` e `npm run build` passaram; `git diff --check` sem erros.
-6. `[pending]` `npm test` executou suites anteriores com sucesso, mas o Vitest global não começou a coletar testes no ambiente; PR/CI remoto ainda pendentes.
+6. `[in_progress]` CI do PR #189 passou em Node 20/24, Linux/Windows Excel Recipe, Tool Health, Windows Supervisor e Workbook Snapshot; preparar squash merge após integrar este checkpoint.
 
 ## Gates e testes
 
@@ -34,7 +34,7 @@
 - `npm run build`: PASS; orçamento CookLily PASS. Vite sinaliza chunk acima de 500 kB, mantendo budget aprovado.
 - `npm run test:lily-ui -- --maxWorkers=1`: PASS, 11 arquivos/56 testes.
 - Vitest direcionado dos contratos e analytics: PASS, 2 arquivos/12 testes.
-- `npm test`: suítes legacy/tool-health/deploy-validation/lily-budget passaram; Vitest agregado ficou sem coletar resultados após ~20 s e foi interrompido. Ainda pendente investigar runner global/CI.
+- `npm test`: suítes legacy/tool-health/deploy-validation/lily-budget passaram; Vitest agregado ficou sem coletar resultados após ~20 s e foi interrompido. CI Node 20 passou a suíte completa.
 - `git diff --check`: PASS.
 
 ## Migrations
@@ -43,7 +43,7 @@
 
 ## Bloqueios/riscos
 
-- Teste de integração do endpoint de upload ainda não foi criado/executado; a validação de esquema e assinatura está coberta pela implementação e testes de contrato, e CI remoto deve validar o restante.
+- Teste dedicado de integração do endpoint de upload não foi criado; CI completo passou, e testes de contrato cobrem as formas de opções e validação. Upload precisa de homologação após deploy.
 
 ## Homologação/dependências externas
 
@@ -51,4 +51,4 @@
 
 ## Próxima ação exata
 
-1. Rever diff e commits locais, executar/verificar CI em PR draft; só então integrar em `cooklily/canonical`.
+1. Incluir checkpoint no PR #189, aguardar CI da atualização e integrar com squash em `cooklily/canonical`.
