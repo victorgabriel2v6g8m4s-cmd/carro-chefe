@@ -2,12 +2,12 @@
 
 - Tarefa: corrigir 404 das mídias de opção de pesquisa e exibir uma pergunta por tela.
 - Responsável: AG-DEV.
-- Estado: `in_progress`.
-- Branch: `codex/lily-survey-media-routing-stepper`.
+- Estado: `merged`.
+- Branch: `cooklily/canonical`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `ae3c728889cf56091fff012bba74baa40ebca03b`.
-- HEAD verificado: `ae3c728889cf56091fff012bba74baa40ebca03b`.
-- PRs: nenhum.
+- HEAD verificado: `019b8278b45388946a113f5c88c5881c6ea14697`.
+- PRs: [#191](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/191), merged.
 - Última verificação: 2026-10-26.
 - Estado de interrupção: não interrompido.
 
@@ -22,7 +22,7 @@
 1. `[done]` Incluir o prefixo de mídia no helper idempotente do Nginx, template e precheck de deploy.
 2. `[done]` Ajustar o formulário para uma pergunta por etapa, com voltar condicionado à configuração e consentimento no final.
 3. `[done]` Testes de deploy 5/5, UI Lily 56/56, testes condicionais 2/2, `npm run check`, `npm run build` e `git diff --check` passaram.
-4. `[in_progress]` PR draft, CI remoto e integração em `cooklily/canonical` pendentes.
+4. `[done]` PR #191 integrado com squash em `cooklily/canonical`; CI passou em Node 20/24, Linux/Windows Excel Recipe, Tool Health, Windows Supervisor e Workbook Snapshot.
 
 ## Migrations
 
@@ -44,4 +44,4 @@
 
 ## Próxima ação exata
 
-1. Abrir PR draft para `cooklily/canonical`, aguardar CI e integrar após aprovação dos gates.
+1. Usuário executa `sudo cc deploy canonical`; depois homologar imagem/vídeo no admin e cliente e percurso de pesquisa no celular.
