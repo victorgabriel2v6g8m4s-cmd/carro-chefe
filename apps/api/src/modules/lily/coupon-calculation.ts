@@ -115,6 +115,7 @@ export async function calculateLilyCouponQuote(input: {
   shippingCents: number;
   fulfillmentType: "pickup" | "delivery";
   phone?: string;
+  userId?: string | null;
   now?: Date;
 }): Promise<LilyCouponQuote> {
   if (input.codes.length === 0) return { discountCents: 0, productDiscountCents: 0, shippingDiscountCents: 0, applications: [], notices: [] };
@@ -140,6 +141,9 @@ export async function calculateLilyCouponQuote(input: {
     const coupon = byCode.get(code);
     if (!coupon || !couponIsWithinValidity(coupon, now)) {
       throw new ApiError(400, "Cupom inválido, pausado ou fora do prazo de validade.", { code: "LILY_COUPON_UNAVAILABLE" });
+    }
+    if (coupon.assignedUserId && coupon.assignedUserId !== input.userId) {
+      throw new ApiError(400, "Este cupom foi concedido a outra conta.", { code: "LILY_COUPON_ACCOUNT_RESTRICTED" });
     }
     if (coupon.maxUsesTotal != null && coupon.usesCount >= coupon.maxUsesTotal) {
       throw new ApiError(409, "Este cupom atingiu o limite total de utilizações.", { code: "LILY_COUPON_TOTAL_LIMIT" });

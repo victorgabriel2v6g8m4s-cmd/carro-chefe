@@ -6,6 +6,8 @@ import {
   getLilyCatalog,
   getLilyComboBuilder,
   getLilyProductBySlug,
+  getLilySession,
+  postLilyVipAction,
   type CatalogPayload,
   type CatalogProduct,
   type ComboBuilderPayload
@@ -40,7 +42,7 @@ function minimumPriceDetails(product: CatalogProduct) {
 function ProductImage({ product, onOpen }: { product: CatalogProduct; onOpen?: () => void }) {
   const src = product.cover?.url ?? brandPlaceholder;
   const alt = product.cover?.altText ?? `${product.displayName} — imagem temporária CookLily`;
-  return <button className="catalog-image-button" type="button" onClick={onOpen} aria-label={`Ampliar imagem de ${product.displayName}`}>
+  return <button className="catalog-image-button" type="button" onClick={onOpen} disabled={product.vipLocked} aria-label={product.vipLocked ? "Prévia visual de lançamento VIP" : `Ampliar imagem de ${product.displayName}`}>
     <img src={src} alt={alt} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = brandPlaceholder; }} />
     {!product.cover && <span className="placeholder-label">Foto em breve</span>}
   </button>;
@@ -718,20 +720,21 @@ function ComboCarousel({ combos, onSelect }: { combos: CatalogCombo[]; onSelect:
 function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () => void }) {
   const price = minimumPriceDetails(product);
   const bestOffer = product.offers[0];
-  return <article data-lily-reveal className={`product-card ${product.soldOut ? "sold-out" : ""}`}>
-    <div className="product-card-media">
-      <ProductImage product={product} onOpen={onOpen} />
+  return <article data-lily-reveal className={`product-card ${product.soldOut ? "sold-out" : ""} ${product.vipLocked ? "vip-locked-card" : ""}`}>
+    <div className={`product-card-media${product.vipLocked ? " vip-locked-media" : ""}`}>
+      <ProductImage product={product} onOpen={product.vipLocked ? undefined : onOpen} />
+      {product.vipEarlyAccess && <span className="vip-product-badge">VIP</span>}
       {bestOffer && <span className="offer-badge">{money(bestOffer.savingsCents)} OFF</span>}
       {product.featured && <span className="featured-badge">Mais pedido</span>}
-      {product.soldOut && <span className="soldout-badge">Esgotado</span>}
+      {product.soldOut && !product.vipLocked && <span className="soldout-badge">Esgotado</span>}
     </div>
-    <button className="product-card-body" type="button" onClick={onOpen}>
+    <button className="product-card-body" type="button" onClick={onOpen} disabled={product.vipLocked}>
       <span className="product-category">{product.category.parent?.name ?? product.category.name}</span>
       <h3>{product.displayName}</h3>
       {product.descriptiveName && <span className="product-descriptor">{product.descriptiveName}</span>}
       {product.description && <p>{product.description}</p>}
       <div className="product-price">
-        {bestOffer
+        {product.vipLocked ? <strong>Prévia exclusiva para membros VIP</strong> : bestOffer
           ? <><small>Oferta</small><s>{money(bestOffer.regularPriceCents)}</s><strong>{money(bestOffer.offerPriceCents)}</strong></>
           : price.current > 0 ? <><small>{product.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={price.current} compareAtPriceCents={price.compareAt} density="compact" /></> : <strong>Em breve</strong>}
       </div>
@@ -852,6 +855,9 @@ export function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState("");
 
   function openProduct(product: CatalogProduct) {
+    if (product.vipEarlyAccess && !product.vipLocked) {
+      void getLilySession().then((session) => postLilyVipAction("launch-view", session.csrfToken, { productId: product.id })).catch(() => undefined);
+    }
     const next = new URLSearchParams(searchParams);
     next.set("produto", product.slug);
     setSearchParams(next);

@@ -32,3 +32,4 @@ tmp/
 *.tmp
 *.temp
 *.log
+.playwright-cli/

@@ -21,6 +21,8 @@ function product(id: string, category: CatalogProduct["category"]): CatalogProdu
     featured: false,
     weeklyHighlight: false,
     allowPlaceholder: false,
+    vipEarlyAccess: false,
+    vipTeaserDescription: null,
     sortOrder: 0,
     category,
     cover: null,

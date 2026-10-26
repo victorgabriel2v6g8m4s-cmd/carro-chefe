@@ -87,6 +87,9 @@ export type CatalogProduct = {
   featured: boolean;
   weeklyHighlight: boolean;
   allowPlaceholder: boolean;
+  vipEarlyAccess: boolean;
+  vipTeaserDescription: string | null;
+  vipLocked?: boolean;
   sortOrder: number;
   category: {
     id: string;
@@ -418,14 +421,38 @@ export type LilyProfilePayload = {
     rankingOptIn: boolean;
     whatsappUpdatesOptIn: boolean;
     whatsappOffersOptIn: boolean;
+    vipStatus: "invited" | "active" | "canceled" | null;
   };
   loyalty: {
     points: number;
     orderCount: number;
     campaignCount: number;
     rank: number | null;
+    vipPointsThreshold: number;
   };
 };
+
+export type LilyVipPayload = {
+  membership: { status: string; source: string; consentVersion: string | null; consentedAt: string | null; enrolledAt: string | null } | null;
+  points: number;
+  pointsThreshold: number;
+  eligibleByPoints: boolean;
+  coupons: Array<{ code: string; title: string; type: string; value: number; endsAt: string | null; color: string }>;
+};
+
+export async function getLilyVip() {
+  const response = await fetch("/api/v1/lily/customer/vip", { credentials: "same-origin" });
+  return parseResponse<LilyVipPayload>(response);
+}
+
+export async function postLilyVipAction(action: "redeem" | "claim" | "consent" | "subscribe" | "cancel" | "launch-view", csrfToken: string, body: unknown = {}) {
+  const response = await fetch(`/api/v1/lily/customer/vip/${action}`, {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken },
+    body: JSON.stringify(body)
+  });
+  return parseResponse<Record<string, unknown>>(response);
+}
 
 export type LilyRankingRow = {
   rank: number;

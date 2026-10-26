@@ -19,6 +19,7 @@ import { lilyWhatsAppRoutes } from "./whatsapp";
 import { lilyPixReconciliationRoutes } from "./pix-reconciliation";
 import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
+import { lilyVipRoutes } from "./vip";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -342,4 +343,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyPixReconciliationRoutes);
   await app.register(lilyAnalyticsRoutes);
   await app.register(lilyObservabilityRoutes);
+  await app.register(lilyVipRoutes);
 }

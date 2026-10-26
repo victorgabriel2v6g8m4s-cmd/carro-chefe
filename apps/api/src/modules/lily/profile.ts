@@ -159,6 +159,10 @@ async function profilePayload(userId: string) {
   if (!user) throw new ApiError(404, "Perfil não encontrado.");
 
   const [own] = await loyaltyRows({ userIds: [userId] });
+  const [vipMembership, vipSettings] = await Promise.all([
+    lilyPrisma.lilyVipMembership.findUnique({ where: { userId } }),
+    getLilyOperationalSettings()
+  ]);
   const preferenceRecords = await lilyPrisma.lilyConsentRecord.findMany({
     where: { userId, purpose: { in: ["whatsapp_order_updates", "whatsapp_offers"] } },
     orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
@@ -183,13 +187,15 @@ async function profilePayload(userId: string) {
       avatarUrl: mediaUrl(user.avatarMediaId),
       rankingOptIn: user.rankingOptIn,
       whatsappUpdatesOptIn,
-      whatsappOffersOptIn
+      whatsappOffersOptIn,
+      vipStatus: vipMembership?.status ?? null
     },
     loyalty: {
       points: own?.points ?? 0,
       orderCount: own?.orderCount ?? 0,
       campaignCount: own?.campaignCount ?? 0,
-      rank: publicIndex >= 0 ? publicIndex + 1 : null
+      rank: publicIndex >= 0 ? publicIndex + 1 : null,
+      vipPointsThreshold: vipSettings.vipPointsThreshold
     }
   };
 }

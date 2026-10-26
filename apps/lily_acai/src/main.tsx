@@ -1,7 +1,7 @@
 import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -37,6 +37,8 @@ const ReelsPage = lazy(() => import("./features/surveys/SurveyPages").then((modu
 const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyListPage })));
 const SurveyRespondPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyRespondPage })));
 const AdminCouponsPage = lazy(() => import("./features/admin/AdminCouponsPage").then((module) => ({ default: module.AdminCouponsPage })));
+const AdminVipPage = lazy(() => import("./features/admin/AdminVipPage").then((module) => ({ default: module.AdminVipPage })));
+const VipTermsPage = lazy(() => import("./features/account/VipProgram").then((module) => ({ default: module.VipTermsPage })));
 import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
@@ -68,12 +70,22 @@ function formatPhoneInput(event: React.ChangeEvent<HTMLInputElement>) { event.cu
 
 function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
   const initial = user?.displayName?.trim()[0]?.toUpperCase();
-  return <span className="header-profile-bubble">
+  const [vip, setVip] = useState(false);
+  useEffect(() => {
+    let active = true;
+    if (!user) { setVip(false); return; }
+    const refreshVip = () => getLilyProfile().then((profile) => { if (active) setVip(profile.user.vipStatus === "active"); }).catch(() => { if (active) setVip(false); });
+    void refreshVip();
+    window.addEventListener("cooklily:profile-updated", refreshVip);
+    return () => { active = false; window.removeEventListener("cooklily:profile-updated", refreshVip); };
+  }, [user?.id]);
+  return <span className={`header-profile-bubble${vip ? " is-vip" : ""}`}>
     {user?.avatarUrl
       ? <img src={user.avatarUrl} alt="" />
       : initial
         ? <span aria-hidden="true">{initial}</span>
         : <PersonIcon />}
+    {vip && <span className="vip-avatar-crown" aria-label="Cliente VIP">♛</span>}
   </span>;
 }
 
@@ -92,7 +104,7 @@ function analyticsSurface(pathname: string): LilyAnalyticsSurface | null {
   if (pathname.startsWith("/pagamento/")) return "payment";
   if (pathname.startsWith("/ranking")) return "ranking";
   if (pathname.startsWith("/privacidade")) return "privacy";
-  if (pathname.startsWith("/perfil") || pathname.startsWith("/pedidos") || pathname.startsWith("/enderecos") || pathname.startsWith("/acompanhar/")) return "account";
+  if (pathname.startsWith("/perfil") || pathname.startsWith("/vip/") || pathname.startsWith("/pedidos") || pathname.startsWith("/enderecos") || pathname.startsWith("/acompanhar/")) return "account";
   return null;
 }
 
@@ -539,6 +551,7 @@ function App() {
     <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
     <Route path="/acompanhar/:id" element={<Shell><GuestOrderTrackingPage /></Shell>} />
     <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
+    <Route path="/vip/termos" element={<Shell><VipTermsPage /></Shell>} />
     <Route path="/ranking" element={<Shell><RankingPage /></Shell>} />
     <Route path="/reels" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando Reels" />}><Shell><ReelsPage /></Shell></Suspense>} />
     <Route path="/dashboard" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando dashboard" />}><Shell><DashboardPage /></Shell></Suspense>} />
@@ -548,6 +561,7 @@ function App() {
     <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
     <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><Shell><AdminCouponsPage /></Shell></Suspense>} />
+    <Route path="/painel/vip" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando programa VIP" />}><Shell><AdminVipPage /></Shell></Suspense>} />
     <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><AdminSurveysPage /></Shell></Suspense>} />
     <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><Shell><AdminSurveyResponsesPage /></Shell></Suspense>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
