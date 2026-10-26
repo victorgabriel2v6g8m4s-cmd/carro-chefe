@@ -6,6 +6,26 @@ export const SURVEY_QUESTION_TYPES = [
   "linear_scale", "multiple_choice_grid", "checkbox_grid", "date", "datetime"
 ] as const;
 
+export type SurveyOption = string | { value: string; text?: string; media?: { url: string; type: "image" | "video"; altText: string } };
+
+export function surveyOptionValue(option: SurveyOption) { return typeof option === "string" ? option : option.value; }
+export function surveyOptionLabel(option: SurveyOption, index: number) {
+  if (typeof option === "string") return option;
+  return option.text?.trim() || option.media?.altText?.trim() || `Opção visual ${index + 1}`;
+}
+
+const optionMediaSchema = z.object({
+  url: z.string().trim().min(1).max(2048).refine((value) => value.startsWith("https://") || /^\/api\/v1\/lily\/survey-option-media\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm)$/i.test(value), "Use HTTPS ou uma mídia enviada à CookLily."),
+  type: z.enum(["image", "video"]),
+  altText: z.string().trim().max(240).default("")
+}).strict();
+const optionSchema = z.union([
+  z.string().trim().min(1).max(180),
+  z.object({ value: z.string().trim().min(1).max(80), text: z.string().trim().max(180).optional(), media: optionMediaSchema.optional() }).strict().superRefine((option, context) => {
+    if (!option.text?.trim() && !option.media) context.addIssue({ code: "custom", message: "Cada opção precisa de texto, mídia ou ambos." });
+  })
+]);
+
 const questionSchema = z.object({
   id: z.string().trim().regex(/^[a-zA-Z0-9_-]{1,80}$/),
   type: z.enum(SURVEY_QUESTION_TYPES),
@@ -13,7 +33,7 @@ const questionSchema = z.object({
   description: z.string().max(4000).optional().default(""),
   required: z.boolean().default(false),
   visibility: z.object({ questionId: z.string().trim().min(1).max(80), operator: z.enum(["answered", "not_answered", "equals", "contains"]), value: z.string().max(180).optional() }).strict().optional(),
-  options: z.array(z.string().trim().min(1).max(180)).max(100).default([]),
+  options: z.array(optionSchema).max(100).default([]),
   rows: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
   columns: z.array(z.string().trim().min(1).max(180)).max(40).default([]),
   scale: z.object({ min: z.number().int().min(0).max(100), max: z.number().int().min(1).max(100), minLabel: z.string().max(80).optional(), maxLabel: z.string().max(80).optional() }).optional(),
@@ -27,10 +47,13 @@ const questionSchema = z.object({
   if (["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text"].includes(question.type) && question.options.length === 0) {
     context.addIssue({ code: "custom", path: ["options"], message: "Este tipo de pergunta exige opções." });
   }
+  if (question.options.some((option) => typeof option !== "string") && !["single_choice", "multiple_choice"].includes(question.type)) {
+    context.addIssue({ code: "custom", path: ["options"], message: "Opções com mídia estão disponíveis em escolha simples e múltipla." });
+  }
   if (["multiple_choice_grid", "checkbox_grid"].includes(question.type) && (!question.rows.length || !question.columns.length)) {
     context.addIssue({ code: "custom", path: ["rows"], message: "Grades exigem linhas e colunas." });
   }
-  if (new Set(question.options).size !== question.options.length || new Set(question.rows).size !== question.rows.length || new Set(question.columns).size !== question.columns.length) {
+  if (new Set(question.options.map(surveyOptionValue)).size !== question.options.length || new Set(question.rows).size !== question.rows.length || new Set(question.columns).size !== question.columns.length) {
     context.addIssue({ code: "custom", path: ["options"], message: "Opções, linhas e colunas não podem se repetir." });
   }
   if (question.cardMedia && question.type !== "binary_swipe") {
@@ -76,7 +99,7 @@ export const surveyDefinitionSchema = z.object({
       continue;
     }
     if (["equals", "contains"].includes(condition.operator)) {
-      const choices = parent.type === "binary_swipe" ? ["positive", "negative"] : parent.options;
+      const choices = parent.type === "binary_swipe" ? ["positive", "negative"] : parent.options.map(surveyOptionValue);
       const multiple = ["multiple_choice", "checkboxes"].includes(parent.type);
       if (!condition.value || !choices.includes(condition.value) || (condition.operator === "contains" && !multiple) || (condition.operator === "equals" && multiple)) {
         context.addIssue({ code: "custom", path: ["questions", index, "visibility"], message: "A condição precisa usar uma resposta válida da pergunta anterior." });
@@ -154,9 +177,10 @@ export function validateSurveyAnswers(definition: SurveyDefinition, answers: unk
     const value = values[question.id];
     if (question.required && !questionAnswerIsPresent(question, value)) return question.id;
     if (!questionAnswerIsPresent(question, value)) continue;
-    if (["single_choice", "dropdown", "binary_swipe"].includes(question.type) && (typeof value !== "string" || (question.type !== "binary_swipe" && !question.options.includes(value)))) return question.id;
-    if (["multiple_choice", "checkboxes"].includes(question.type) && (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !question.options.includes(item)))) return question.id;
-    if (question.type === "choice_text" && (!value || typeof value !== "object" || Array.isArray(value) || !question.options.includes(String((value as Record<string, unknown>).choice ?? "")) || (question.textAfterChoice !== true && answerIsPresent((value as Record<string, unknown>).text)))) return question.id;
+    const optionValues = question.options.map(surveyOptionValue);
+    if (["single_choice", "dropdown", "binary_swipe"].includes(question.type) && (typeof value !== "string" || (question.type !== "binary_swipe" && !optionValues.includes(value)))) return question.id;
+    if (["multiple_choice", "checkboxes"].includes(question.type) && (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !optionValues.includes(item)))) return question.id;
+    if (question.type === "choice_text" && (!value || typeof value !== "object" || Array.isArray(value) || !optionValues.includes(String((value as Record<string, unknown>).choice ?? "")) || (question.textAfterChoice !== true && answerIsPresent((value as Record<string, unknown>).text)))) return question.id;
     if (question.type === "binary_swipe" && value !== "positive" && value !== "negative") return question.id;
     if (["multiple_choice_grid", "checkbox_grid"].includes(question.type)) {
       if (!value || typeof value !== "object" || Array.isArray(value)) return question.id;

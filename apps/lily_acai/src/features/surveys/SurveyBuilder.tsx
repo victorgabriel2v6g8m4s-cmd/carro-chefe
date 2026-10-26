@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getLilySession, type AuthPayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { QuestionInput } from "./QuestionInput";
-import { surveyJson, type SurveyAnalytics, type SurveyDefinition, type SurveyQuestion, type SurveyVisibility } from "./api";
+import { surveyJson, surveyOptionLabel, surveyOptionValue, uploadSurveyOptionMedia, type SurveyAnalytics, type SurveyDefinition, type SurveyOption, type SurveyQuestion, type SurveyVisibility } from "./api";
 import { SurveyAnalyticsPanel } from "./SurveyAnalyticsPanel";
 
 type SurveyRow = { id: string; title: string; subtitle: string | null; description: string | null; estimatedMinutes: number; questionCount?: number; points: number | null; showPoints?: boolean; definition?: SurveyDefinition; status?: string; version?: number; createdAt: string; viewCount: number; responseCount: number };
@@ -33,8 +33,8 @@ function addGeneratedQuestionIds(definition: SurveyDefinition): SurveyDefinition
 function QuestionVisibilityRule({ question, previousQuestions, update }: { question: SurveyQuestion; previousQuestions: SurveyQuestion[]; update: (patch: Partial<SurveyQuestion>) => void }) {
   const condition = question.visibility;
   const parent = previousQuestions.find((item) => item.id === condition?.questionId);
-  const choiceValues = parent?.type === "binary_swipe" ? ["positive", "negative"] : parent?.options ?? [];
-  const choiceLabels = parent?.type === "binary_swipe" ? [parent.positiveLabel || "Positivo", parent.negativeLabel || "Negativo"] : choiceValues;
+  const choiceValues = parent?.type === "binary_swipe" ? ["positive", "negative"] : parent?.options.map(surveyOptionValue) ?? [];
+  const choiceLabels = parent?.type === "binary_swipe" ? [parent.positiveLabel || "Positivo", parent.negativeLabel || "Negativo"] : parent?.options.map((option, index) => surveyOptionLabel(option, index)) ?? [];
   const supportsChoice = Boolean(parent && ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text", "binary_swipe"].includes(parent.type));
   const isMultiple = Boolean(parent && ["multiple_choice", "checkboxes"].includes(parent.type));
   function updateCondition(next: SurveyVisibility | undefined) { update({ visibility: next }); }
@@ -42,11 +42,32 @@ function QuestionVisibilityRule({ question, previousQuestions, update }: { quest
     const source = previousQuestions.find((item) => item.id === questionId);
     if (!source) { updateCondition(undefined); return; }
     const isMultiple = ["multiple_choice", "checkboxes"].includes(source.type);
-    const values = source.type === "binary_swipe" ? ["positive", "negative"] : source.options;
+    const values = source.type === "binary_swipe" ? ["positive", "negative"] : source.options.map(surveyOptionValue);
     const sourceSupportsChoice = ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text", "binary_swipe"].includes(source.type);
     updateCondition(sourceSupportsChoice && values.length ? { questionId, operator: isMultiple ? "contains" : "equals", value: values[0] } : { questionId, operator: "answered" });
   }
   return <div className="survey-visibility-rule"><label>Exibição condicional<select value={condition?.questionId ?? ""} onChange={(event) => setQuestion(event.target.value)}><option value="">Sempre exibir</option>{previousQuestions.map((item) => <option key={item.id} value={item.id}>{item.title || `Pergunta ${previousQuestions.indexOf(item) + 1}`}</option>)}</select></label>{condition && parent && <><label>Mostrar quando<select value={condition.operator} onChange={(event) => updateCondition({ ...condition, operator: event.target.value as SurveyVisibility["operator"], value: event.target.value === "equals" || event.target.value === "contains" ? choiceValues[0] : undefined })}><option value="answered">a pergunta anterior for respondida</option><option value="not_answered">a pergunta anterior ficar sem resposta</option>{supportsChoice && !isMultiple && <option value="equals">a resposta for</option>}{isMultiple && <option value="contains">a seleção incluir</option>}</select></label>{["equals", "contains"].includes(condition.operator) && <label>Resposta que ativa esta pergunta<select required value={condition.value ?? ""} onChange={(event) => updateCondition({ ...condition, value: event.target.value })}>{choiceValues.map((value, index) => <option key={value} value={value}>{choiceLabels[index]}</option>)}</select></label>}<small>Esta pergunta só aparece quando a condição for atendida.</small></>}</div>;
+}
+
+function RichOptionEditor({ items, onChange }: { items: SurveyOption[]; onChange: (items: SurveyOption[]) => void }) {
+  const [busyOption, setBusyOption] = useState("");
+  const [error, setError] = useState("");
+  function update(index: number, next: SurveyOption) { onChange(items.map((item, itemIndex) => itemIndex === index ? next : item)); }
+  async function upload(index: number, file?: File) {
+    if (!file) return;
+    setBusyOption(String(index)); setError("");
+    try {
+      const media = await uploadSurveyOptionMedia(file);
+      const option = items[index];
+      const current = typeof option === "string" ? { value: option, text: option } : option;
+      update(index, { ...current, media: { url: media.url, type: media.type, altText: current.media?.altText ?? "" } });
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível anexar essa mídia."); }
+    finally { setBusyOption(""); }
+  }
+  return <div className="survey-rich-options"><span className="survey-field-title">Opções selecionáveis</span>{items.map((item, index) => {
+    const option = typeof item === "string" ? { value: item, text: item } : item;
+    return <fieldset className="survey-rich-option" key={option.value}><legend>Opção {index + 1}</legend><label>Texto da opção<input maxLength={180} value={option.text ?? ""} onChange={(event) => update(index, { ...option, text: event.target.value || undefined })} placeholder="Opcional quando houver mídia" /></label><label>Anexar imagem ou vídeo<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" disabled={busyOption === String(index)} onChange={(event) => { void upload(index, event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} /></label>{busyOption === String(index) && <small>Enviando mídia…</small>}{option.media && <div className="survey-rich-option-preview">{option.media.type === "video" ? <video src={option.media.url} controls playsInline /> : <img src={option.media.url} alt={option.media.altText || option.text || `Prévia da opção ${index + 1}`} />}<label>Texto alternativo da mídia<input maxLength={240} value={option.media.altText} onChange={(event) => update(index, { ...option, media: { ...option.media!, altText: event.target.value } })} /></label><button className="button ghost" type="button" onClick={() => update(index, { ...option, media: undefined })}>Remover mídia</button></div>}<p className="survey-reference">O cliente pode selecionar {option.text && option.media ? "o texto e a mídia" : option.media ? "a mídia" : "o texto"} desta opção.</p><div className="survey-question-actions"><button className="button ghost" type="button" disabled={items.length <= 1} onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}>Remover opção</button></div></fieldset>;
+  })}{error && <p className="error" role="alert">{error}</p>}<button className="button ghost" type="button" disabled={items.length >= 100} onClick={() => onChange([...items, { value: crypto.randomUUID() }])}>＋ Adicionar opção</button></div>;
 }
 
 function MultiSelect({ label, values, options, onChange }: { label: string; values: string[]; options: Array<{ id: string; label: string }>; onChange: (values: string[]) => void }) {
@@ -69,12 +90,14 @@ function ByteLimit({ value, onChange }: { value: number; onChange: (bytes: numbe
 function QuestionSettings({ question, update }: { question: SurveyQuestion; update: (patch: Partial<SurveyQuestion>) => void }) {
   const [mime, setMime] = useState(question.media?.mimeTypes ?? ["image/jpeg", "image/png", "image/webp"]);
   useEffect(() => { setMime(question.media?.mimeTypes ?? ["image/jpeg", "image/png", "image/webp"]); }, [question.id]);
-  const isChoice = ["single_choice", "multiple_choice", "checkboxes", "dropdown", "choice_text"].includes(question.type);
+  const isRichChoice = ["single_choice", "multiple_choice"].includes(question.type);
+  const isChoice = ["checkboxes", "dropdown", "choice_text"].includes(question.type);
   const hasTextMediaToggle = question.type === "free_text";
   const supportsMedia = question.type === "media" || hasTextMediaToggle;
   function setMimeTypes(values: string[]) { setMime(values); if (values.length && question.media) update({ media: { ...question.media, mimeTypes: values } }); else if (values.length && question.type === "media") update({ media: { mimeTypes: values, maxBytes: 5 * 1024 * 1024 } }); else if (question.media) update({ media: undefined }); }
   return <div className="survey-question-settings">
-    {isChoice && <ItemListEditor label="Opções de resposta" items={question.options} onChange={(options) => update({ options })} placeholder="Digite uma opção" />}
+    {isRichChoice && <RichOptionEditor items={question.options} onChange={(options) => update({ options })} />}
+    {isChoice && <ItemListEditor label="Opções de resposta" items={question.options.map((option, index) => surveyOptionLabel(option, index))} onChange={(options) => update({ options })} placeholder="Digite uma opção" />}
     {["multiple_choice_grid", "checkbox_grid"].includes(question.type) && <div className="survey-grid-builder"><ItemListEditor label="Linhas da grade" items={question.rows} onChange={(rows) => update({ rows })} placeholder="Nome da linha" /><ItemListEditor label="Colunas da grade" items={question.columns} onChange={(columns) => update({ columns })} placeholder="Nome da coluna" />{question.rows.length > 0 && question.columns.length > 0 && <div className="survey-grid-preview" role="img" aria-label={`Prévia da grade com ${question.rows.length} linhas e ${question.columns.length} colunas`}><div className="survey-grid-preview-head" style={{ gridTemplateColumns: `minmax(110px,1.4fr) repeat(${question.columns.length}, minmax(70px,1fr))` }}><span></span>{question.columns.map((column, index) => <span key={`${column}-${index}`}>{column}</span>)}</div>{question.rows.map((row, rowIndex) => <div className="survey-grid-preview-row" key={`${row}-${rowIndex}`} style={{ gridTemplateColumns: `minmax(110px,1.4fr) repeat(${question.columns.length}, minmax(70px,1fr))` }}><strong>{row}</strong>{question.columns.map((column, columnIndex) => <span key={`${column}-${columnIndex}`}>{question.type === "checkbox_grid" ? "□" : "○"}</span>)}</div>)}</div>}</div>}
     {question.type === "linear_scale" && <div className="survey-builder-settings"><label>Mínimo<input type="number" min="0" max="99" value={question.scale?.min ?? 1} onChange={(event) => update({ scale: { min: Number(event.target.value), max: question.scale?.max ?? 5 } })} /></label><label>Máximo<input type="number" min="1" max="100" value={question.scale?.max ?? 5} onChange={(event) => update({ scale: { min: question.scale?.min ?? 1, max: Number(event.target.value) } })} /></label></div>}
     {hasTextMediaToggle && <label className="check"><input type="checkbox" checked={Boolean(question.media)} onChange={(event) => update({ media: event.target.checked ? { mimeTypes: mime, maxBytes: 5 * 1024 * 1024 } : undefined })} /><span>Permitir anexar mídia a esta resposta</span></label>}
@@ -158,7 +181,7 @@ export function AdminSurveysPage() {
       return { ...old, questions: questions.map((question) => {
         const condition = question.visibility;
         if (!condition || condition.questionId !== changed.id || !["equals", "contains"].includes(condition.operator)) return question;
-        const values = changed.type === "binary_swipe" ? ["positive", "negative"] : changed.options;
+        const values = changed.type === "binary_swipe" ? ["positive", "negative"] : changed.options.map(surveyOptionValue);
         const multiple = ["multiple_choice", "checkboxes"].includes(changed.type);
         const valid = choiceTypes.includes(changed.type) && Boolean(condition.value && values.includes(condition.value)) && (condition.operator === "contains" ? multiple : !multiple);
         if (valid) return question;

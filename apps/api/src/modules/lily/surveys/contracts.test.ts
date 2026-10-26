@@ -34,6 +34,21 @@ describe("CookLily survey contracts", () => {
     expect(validateSurveyAnswers(definition, { choice: "A", swipe: "positive", scale: 8 })).toBe("scale");
   });
 
+  it("supports legacy and rich text/media choices while retaining stable answer values", () => {
+    const rich = surveyDefinitionSchema.parse({
+      title: "Sabores",
+      questions: [{ id: "flavor", type: "single_choice", title: "Escolha", options: [
+        "Morango", { value: "uva", text: "Uva", media: { url: "https://cdn.example.test/uva.jpg", type: "image", altText: "Açaí de uva" } },
+        { value: "manga", media: { url: "https://cdn.example.test/manga.mp4", type: "video", altText: "Açaí de manga" } }
+      ] }]
+    });
+    expect(validateSurveyAnswers(rich, { flavor: "uva" })).toBeNull();
+    expect(validateSurveyAnswers(rich, { flavor: "manga" })).toBeNull();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "multiple_choice", title: "Q", options: [{ value: "empty" }] }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "dropdown", title: "Q", options: [{ value: "media", media: { url: "https://cdn.example.test/a.jpg", type: "image" } }] }] })).toThrow();
+    expect(() => surveyDefinitionSchema.parse({ title: "T", questions: [{ id: "q", type: "single_choice", title: "Q", options: [{ value: "bad", media: { url: "http://example.test/a.jpg", type: "image" } }] }] })).toThrow();
+  });
+
   it("shows only matching conditional questions and validates required answers on the selected branch", () => {
     const branched = surveyDefinitionSchema.parse({
       title: "Preferências de doces",

@@ -16,6 +16,17 @@ const answersSchema = z.record(z.string(), z.unknown()).refine((answers) => Obje
 const questionTimesSchema = z.record(z.string().trim().min(1).max(80), z.number().int().min(0).max(MAX_QUESTION_TIME_MS)).refine((times) => Object.keys(times).length <= 100, "Máximo de 100 tempos por pergunta.");
 const submitSchema = z.object({ participationId: idSchema, answers: answersSchema, questionTimesMs: questionTimesSchema.default({}), consentToLinkAnswers: z.boolean() }).strict();
 const missionSchema = z.object({ title: z.string().trim().min(1).max(180), description: z.string().max(2000).optional().nullable(), points: z.number().int().min(0).max(100000), prerequisites: z.array(idSchema).max(100).default([]) }).strict();
+const SURVEY_OPTION_MEDIA = new Map([["image/jpeg", ".jpg"], ["image/png", ".png"], ["image/webp", ".webp"], ["video/mp4", ".mp4"], ["video/webm", ".webm"]]);
+const MAX_SURVEY_OPTION_MEDIA_BYTES = 10 * 1024 * 1024;
+
+function hasExpectedMediaSignature(mime: string, buffer: Buffer) {
+  if (mime === "image/jpeg") return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  if (mime === "image/png") return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mime === "image/webp") return buffer.length >= 12 && buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+  if (mime === "video/mp4") return buffer.length >= 12 && buffer.toString("ascii", 4, 8) === "ftyp";
+  if (mime === "video/webm") return buffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+  return false;
+}
 
 function definitionOf(row: { formJson: string; title: string; subtitle: string | null; description: string | null; prerequisitesJson: string; unlocksMissionsJson: string; pointsPerForm: number; pointsPerAnswer: number; showPoints: boolean; allowNavigation: boolean; mediaMimeTypesJson: string; mediaMaxBytes: number; estimatedMinutes: number }): SurveyDefinition {
   return surveyDefinitionSchema.parse({
@@ -65,6 +76,36 @@ function serializePublicSurvey(row: { id: string; title: string; subtitle: strin
 }
 
 export async function lilySurveyRoutes(app: FastifyInstance) {
+  app.post("/api/v1/lily/admin/survey-option-media", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
+    const context = await requireLilyStaff(request, true);
+    const part = await request.file();
+    if (!part) throw new ApiError(400, "Selecione uma imagem ou vídeo para a opção.");
+    const extension = SURVEY_OPTION_MEDIA.get(part.mimetype);
+    if (!extension) throw new ApiError(400, "Use uma imagem JPEG, PNG, WebP ou um vídeo MP4/WebM.");
+    const buffer = await part.toBuffer();
+    if (!buffer.length || buffer.length > MAX_SURVEY_OPTION_MEDIA_BYTES) throw new ApiError(400, "A mídia está vazia ou ultrapassa o limite de 10 MB.");
+    if (!hasExpectedMediaSignature(part.mimetype, buffer)) throw new ApiError(400, "O conteúdo do arquivo não corresponde ao tipo de mídia selecionado.");
+    const mediaId = crypto.randomUUID();
+    const root = path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "survey-options");
+    await fs.mkdir(root, { recursive: true });
+    await fs.writeFile(path.join(root, `${mediaId}${extension}`), buffer, { flag: "wx" });
+    await auditLilyAdmin(context.user.id, "upload", "survey_option_media", mediaId, { mime: part.mimetype, size: buffer.length });
+    return reply.code(201).send({ url: `/api/v1/lily/survey-option-media/${mediaId}${extension}`, type: part.mimetype.startsWith("video/") ? "video" : "image", mime: part.mimetype, size: buffer.length });
+  });
+
+  app.get("/api/v1/lily/survey-option-media/:mediaFile", async (request, reply) => {
+    await requireLilySession(request);
+    const mediaFile = z.string().regex(/^[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm)$/i).parse((request.params as { mediaFile: string }).mediaFile);
+    const extension = path.extname(mediaFile).toLowerCase();
+    const mime = [...SURVEY_OPTION_MEDIA.entries()].find(([, allowedExtension]) => allowedExtension === extension)?.[0];
+    if (!mime) throw new ApiError(404, "Mídia da opção não encontrada.");
+    const root = path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "survey-options");
+    let buffer: Buffer;
+    try { buffer = await fs.readFile(path.join(root, mediaFile)); }
+    catch { throw new ApiError(404, "Mídia da opção não encontrada."); }
+    return reply.type(mime).header("Cache-Control", "private, max-age=86400").header("X-Content-Type-Options", "nosniff").header("Content-Security-Policy", "default-src 'none'; sandbox").header("Content-Disposition", "inline").send(buffer);
+  });
+
   app.post("/api/v1/lily/surveys/:id/uploads", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
