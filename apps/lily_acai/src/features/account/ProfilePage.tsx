@@ -23,7 +23,7 @@ import {
 import { formatBrazilianPhone } from "./phone-format";
 import { openImageCropper } from "../../image-crop-editor";
 import { LilyLoadingSpinner } from "../../loading-spinner";
-import { VipProfileSection } from "./VipProgram";
+import { VipProfileSection } from "./VipProfileSection";
 
 function ProfileAvatar({ name, url, large = false, vip = false }: { name: string | null; url: string | null; large?: boolean; vip?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();

@@ -1,42 +1,47 @@
 # Revisão da jornada VIP CookLily
 
-- status: in_progress
+- status: candidate
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-ux`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ca26efdbec22d1b67ae5a24f90cdbc79df16a18f`
-- head_sha_verified: `ca26efdbec22d1b67ae5a24f90cdbc79df16a18f` (antes das alterações locais)
+- head_sha_verified: `e1f7f2a03d61d6356bcee304c2a32f50bb82b83d` (HEAD antes do commit de implementação)
 - pull_requests: pending
 - last_verified_at: 2026-10-26
 - interruption_state: none
 
 ## Objetivo e fluxo avaliado
 
-Revisar a navegação e o fluxo de clientes VIP em mobile: abrir termos, entrar, consentir, retornar ao convite, inscrever-se, fechar/reabrir diálogos e recuperar falhas de carregamento. A API de produção/VPS não foi usada; os fluxos interativos foram exercitados com respostas HTTP simuladas pelo Playwright.
+Revisar a navegação e o fluxo de clientes VIP em mobile e desktop: abrir termos, autenticar, consentir, retornar ao convite, inscrever-se, fechar/reabrir diálogos e recuperar falhas de carregamento. Os fluxos interativos foram exercitados no Playwright com respostas de API simuladas; nenhuma conta ou dado real foi usado.
 
-## Problemas encontrados e correções em andamento
+## Problemas corrigidos
 
-1. `vip-consented=1` permanecia na URL do perfil; após concluir a inscrição, uma atualização de estado podia reabrir o popup de convite. Criado helper para consumir o marcador uma vez e exibir a celebração apenas a quem ainda está convidado com consentimento vigente.
-2. Popup de convite não tinha botão visível de fechar, tratamento de Escape nem ciclo de foco. Adicionados controles acessíveis, foco inicial/contido, bloqueio de rolagem do fundo e retorno do foco.
-3. Termos dependiam de carregamento simultâneo de sessão e VIP e podiam ficar indefinidamente desabilitados para visitantes ou em falha de API. Separados estados de carregamento/erro e opções contextuais para login, nova tentativa ou retorno ao perfil.
+1. `vip-consented=1` permanecia na URL do perfil; após ativar a inscrição, atualizações podiam reabrir o popup. O marcador agora é consumido uma vez, com popup somente para convite pendente e consentimento válido.
+2. O convite não tinha controle de fechar nem comportamento de teclado acessível. Agora usa `<dialog>` nativo, Escape, ciclo de foco do navegador, bloqueio de rolagem de fundo, retorno do foco e botão de fechar.
+3. A tela de termos podia ficar sem saída visível se sessão/API falhasse. Agora informa carregamento, erro com nova tentativa e caminhos distintos para login, resgate/solicitação pelo perfil e cancelamento.
+4. A rota de termos era agrupada junto com a implementação do perfil. Componentes separados permitem carregamento sob demanda e removem o aviso de importação dinâmica ineficaz.
+5. Removido estado de `sessionStorage` de consentimento que não era consultado pelo fluxo e simplificada a animação para terminar em dois segundos.
 
-## Evidências já coletadas
+## Evidências
 
 - Preflight `npm run policy:preflight -- --agent AG-DEV --scope apps/lily_acai`: PASS.
-- Playwright mobile (360×732), jornada simulada de convite → consentimento → popup → Escape → inscrição: PASS; foco começa dentro do diálogo, a URL fica limpa, popup não reaparece após ativação e mensagem de sucesso aparece.
-- Playwright mobile anônimo: termos permanecem legíveis e há link de entrada com retorno para `/vip/termos`.
-- Modal mobile observado com 320×544 px, sem sobreposição da navegação fixa, rolagem de fundo bloqueada e Tab/Shift+Tab retidos no diálogo.
-- Screenshot de revisão local: `.playwright-cli/vip-dialog-mobile.png` e `.playwright-cli/vip-terms-mobile.png` (artefatos ignorados, não entram no Git).
+- Playwright mobile 360×732, fluxo convidado → termos → consentimento → popup → Escape → inscrição: PASS. O popup mediu 320×544 px, ficou acima do rodapé fixo, focou dentro do diálogo, bloqueou a rolagem de fundo, desapareceu ao fechar e não reapareceu após inscrição.
+- Playwright visitante anônimo: termos permanecem acessíveis e o link de entrada preserva retorno a `/vip/termos`.
+- Playwright desktop 1440 px: conteúdo sem overflow horizontal, navegação móvel oculta e CTA de consentimento visível para convite autenticado.
+- Capturas locais ignoradas pelo Git: `.playwright-cli/vip-dialog-mobile-final.png`, `.playwright-cli/vip-terms-mobile.png`.
 - `npm run test:lily-ui`: PASS — 14 arquivos, 65 testes.
+- `npm test`: PASS — 62 arquivos, 330 testes aprovados, 3 ignorados.
 - `npm run check`: PASS.
+- `npm run build`: PASS; bundle CookLily: JS 635.73 KiB raw / 168.53 KiB gzip; combinado gzip 193.62 KiB, dentro do budget. Limite raw elevado em 2 KiB para 652.000 bytes após adicionar o chunk de termos sob demanda. Vite mantém aviso de chunk principal acima de 500 KiB.
+- `npm run policy:check`: PASS.
+- `git diff --check`: PASS.
 
-## Pendências de validação
+## Limites
 
-- Rodar `npm test`, `npm run build`, `npm run policy:check` e `git diff --check` após revisão final.
-- Testar estados desktop e erro/retentativa da API no Playwright.
-- Atualizar este checkpoint após gates, commit, PR e CI.
-- Deploy e homologação com sessão/banco reais continuam separados.
+- API, banco e sessão foram simulados na navegação; testes de integração da API existente não foram alterados.
+- Deploy e homologação com conta real na VPS permanecem pendentes.
+- O chunk principal ainda gera aviso genérico de 500 KiB; a página de termos agora é separada e carregada sob demanda.
 
 ## Próxima ação exata
 
-Concluir os testes do fluxo mobile/desktop e rodar `npm test`, `npm run build`, `npm run policy:check` e `git diff --check`; corrigir regressões antes de abrir PR para `cooklily/canonical`.
+Criar o commit da implementação, abrir PR contra `cooklily/canonical`, acompanhar os gates remotos e corrigir qualquer falha antes de integrar. Depois registrar o SHA do commit/merge. Não executar deploy nesta tarefa.
