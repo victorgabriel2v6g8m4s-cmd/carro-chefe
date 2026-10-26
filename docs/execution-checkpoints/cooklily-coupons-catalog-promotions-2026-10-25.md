@@ -26,7 +26,7 @@ Implementar cadastro/edição e uso de cupons, preço anterior promocional, apli
 - [x] Descontos por método de pagamento calculados sobre mercadorias restantes após cupom, excluindo somente o frete ainda cobrado.
 - [x] Autosave com debounce em produtos, variantes, alergênicos, regras, categorias, adicionais, combos, ofertas e compatibilidade. Atualizações não fazem refetch integral nem snapshot/toast de sucesso por campo. Criação ainda atualiza seletores após concluir.
 - [x] Documento funcional e técnico em `docs/lily-acai/CUPONS_E_PRECOS_PROMOCIONAIS.md`.
-- [x] Budget CookLily ajustado de forma medida para suportar esta entrega: JS raw 640000 B, gzip 168000 B e JS+CSS gzip 194000 B. Build medido: JS 615.42 KiB raw / 162.00 KiB gzip; JS+CSS gzip 185.82 KiB.
+- [x] Budget CookLily ajustado de forma medida para suportar esta entrega: JS raw 640000 B, gzip 168000 B e JS+CSS gzip 193000 B. Build medido: JS 615.42 KiB raw / 162.00 KiB gzip; JS+CSS gzip 185.82 KiB.
 
 ## Decisões técnicas
 
@@ -43,7 +43,7 @@ Implementar cadastro/edição e uso de cupons, preço anterior promocional, apli
 - `npm run build:lily`: passou após os ajustes finais; budget dentro do limite medido.
 - `git diff --check`: passou.
 - Commit do candidato: `113383ecd1adf7bfe65893d7723af6d1be7b0c91`; branch publicada `codex/cooklily-coupons-publish`.
-- PR #195 aberto como draft; no momento da verificação, nenhum status de CI havia sido publicado ainda.
+- PR #195 aberto como draft; CI run 40379748922: job de Node 24 falhou no teste de sanidade do budget, pois 194000 B ultrapassava o teto matemático de 193090 B (1,35 × baseline combinada); Node 20 ainda estava em execução. O bundle medido anteriormente ficou em 185.82 KiB gzip combinado. Correção em andamento: reduzir o budget combinado para 193000 B, mantendo cerca de 7 KiB de folga sobre o bundle medido.
 - Testes automatizados: não executados nesta tarefa.
 - Migration: schema validado; aplicação no SQLite de produção fica para o comando normal de deploy.
 - Central operacional: bootstrap em `http://127.0.0.1:4173/api/v1/bootstrap` não respondeu, então não foi possível registrar esta execução no runtime da Central.

@@ -15,7 +15,7 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   jsGzipBytes: 168_000,
   cssRawBytes: 130_000,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 194_000
+  combinedGzipBytes: 193_000
 });
 
 function emptyBucket() {
