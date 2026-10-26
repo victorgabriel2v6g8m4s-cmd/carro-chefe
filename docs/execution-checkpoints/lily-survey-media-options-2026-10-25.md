@@ -2,12 +2,12 @@
 
 - Tarefa: permitir opções de seleção simples e múltipla compostas de texto, mídia ou ambos.
 - Responsável: AG-DEV.
-- Estado: `candidate`.
-- Branch: `codex/lily-survey-rich-options`.
+- Estado: `merged`.
+- Branch: `cooklily/canonical`.
 - Base branch: `cooklily/canonical`.
 - Base SHA verificado: `e437aa2da0250ee37238840f4c51b291b49a8248`.
-- HEAD verificado: `b1d224b` (feature); atualização deste checkpoint pendente.
-- PRs: [#189](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/189), draft, base `cooklily/canonical`.
+- HEAD verificado: `a7c6199088c7b8f6fd7992fef2e84d95b3b9a57d`.
+- PRs: [#189](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/189), merged.
 - Última verificação: 2026-10-25.
 - Estado de interrupção: não interrompido.
 
@@ -25,7 +25,7 @@
 3. `[done]` Atualizar editor, prévia do cliente, resposta, regras condicionais e rótulos de analytics.
 4. `[done]` Testes direcionados: contratos/analytics 12/12; interface Lily 56/56.
 5. `[done]` `npm run check` e `npm run build` passaram; `git diff --check` sem erros.
-6. `[in_progress]` CI do PR #189 passou em Node 20/24, Linux/Windows Excel Recipe, Tool Health, Windows Supervisor e Workbook Snapshot; preparar squash merge após integrar este checkpoint.
+6. `[done]` CI do PR #189 passou em Node 20/24, Linux/Windows Excel Recipe, Tool Health, Windows Supervisor e Workbook Snapshot; squash merge confirmado em `a7c6199088c7b8f6fd7992fef2e84d95b3b9a57d`.
 
 ## Gates e testes
 
@@ -51,4 +51,4 @@
 
 ## Próxima ação exata
 
-1. Incluir checkpoint no PR #189, aguardar CI da atualização e integrar com squash em `cooklily/canonical`.
+1. Após o deploy, homologar upload e exibição no cliente em celular.
