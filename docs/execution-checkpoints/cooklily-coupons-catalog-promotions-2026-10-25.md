@@ -1,12 +1,12 @@
 # Checkpoint — cupons e preços promocionais CookLily
 
-- status: in_progress (implementação pronta; integração e deploy pendentes)
+- status: candidate (PR draft aberto; CI, merge e deploy pendentes)
 - owner: AG-DEV
 - branch: `codex/cooklily-coupons-publish`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `067a7c2a39e8528bc6b4c29f29f58852be1b4f96`
-- head_sha_verified: `067a7c2a39e8528bc6b4c29f29f58852be1b4f96` (alterações locais ainda sem commit)
-- pull_requests: será criado contra `cooklily/canonical` após commit
+- head_sha_verified: `113383ecd1adf7bfe65893d7723af6d1be7b0c91`
+- pull_requests: [#195](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/195), draft, base `cooklily/canonical`
 - migration: `packages/lily-database/prisma/migrations/20261025220000_lily_coupons_promotional_pricing/migration.sql` (criada, não aplicada no banco de produção)
 - last_verified_at: 2026-10-25
 - interruption_state: none
@@ -42,6 +42,8 @@ Implementar cadastro/edição e uso de cupons, preço anterior promocional, apli
 - `npm run build`: passou após os ajustes finais; todas as aplicações e a compilação final da API concluíram com exit code 0.
 - `npm run build:lily`: passou após os ajustes finais; budget dentro do limite medido.
 - `git diff --check`: passou.
+- Commit do candidato: `113383ecd1adf7bfe65893d7723af6d1be7b0c91`; branch publicada `codex/cooklily-coupons-publish`.
+- PR #195 aberto como draft; no momento da verificação, nenhum status de CI havia sido publicado ainda.
 - Testes automatizados: não executados nesta tarefa.
 - Migration: schema validado; aplicação no SQLite de produção fica para o comando normal de deploy.
 - Central operacional: bootstrap em `http://127.0.0.1:4173/api/v1/bootstrap` não respondeu, então não foi possível registrar esta execução no runtime da Central.
@@ -57,4 +59,4 @@ O worktree já continha mudanças do pedido anterior sobre política de LilyCoin
 - Não há bloqueio de implementação.
 - A migration ainda precisa ser aplicada na VPS pelo fluxo aprovado.
 - Verificar margem de campanhas antes de ativá-las; regras de cancelamento/liberação de reserva devem ser decididas antes de cupons com estoque de resgates muito baixo.
-- Próxima ação exata: versionar apenas os arquivos de cupom, autosave e preço promocional desta entrega, abrir PR draft para `cooklily/canonical`, aguardar os gates, integrar por squash conforme autorização prévia do proprietário e então atualizar este checkpoint com o SHA integrado. A migration será aplicada pelo deploy canonical; depois homologar no site.
+- Próxima ação exata: aguardar os checks do PR #195, corrigir falhas se aparecerem, marcar pronto para revisão e integrar por squash conforme autorização prévia do proprietário. Depois atualizar o checkpoint com o SHA integrado; a migration será aplicada pelo deploy canonical e a rota será homologada no site.
