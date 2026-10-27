@@ -1,11 +1,11 @@
 # Resgate de código CookLily
 
-- status: candidate; local gates passed, PR not yet opened
+- status: candidate; implementation commit persisted, PR not yet opened
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-code-redemption`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0757056b9cf45384f1fc9a1320f58b9a16563e28`
-- head_sha_verified: alterações locais ainda não commitadas sobre `0757056b9cf45384f1fc9a1320f58b9a16563e28`
+- head_sha_verified: `ca5b813` (commit local verificado)
 - pull_requests: nenhum
 - last_verified_at: 2026-10-27
 - interruption_state: none
@@ -26,7 +26,8 @@ Reproduzir e corrigir rejeição de códigos VIP recém-gerados; deixar resgate 
 
 ## Em andamento
 
-- Criar commit, abrir PR e aguardar CI antes da integração.
+- Commit de implementação: `ca5b813` (`fix(lily): make VIP code redemption more reliable`).
+- Abrir PR contra `cooklily/canonical` e aguardar CI antes da integração.
 
 ## Gates e testes
 
