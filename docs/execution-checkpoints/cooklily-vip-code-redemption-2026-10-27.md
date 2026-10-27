@@ -1,12 +1,12 @@
 # Resgate de código CookLily
 
-- status: candidate; implementation commit persisted, PR not yet opened
+- status: candidate; PR open, CI pending
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-code-redemption`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0757056b9cf45384f1fc9a1320f58b9a16563e28`
-- head_sha_verified: `ca5b813` (commit local verificado)
-- pull_requests: nenhum
+- head_sha_verified: `6e1adc782a3ac0babcc94571e079a6beb59d8534`
+- pull_requests: [PR #201](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/201) (open)
 - last_verified_at: 2026-10-27
 - interruption_state: none
 
@@ -27,7 +27,8 @@ Reproduzir e corrigir rejeição de códigos VIP recém-gerados; deixar resgate 
 ## Em andamento
 
 - Commit de implementação: `ca5b813` (`fix(lily): make VIP code redemption more reliable`).
-- Abrir PR contra `cooklily/canonical` e aguardar CI antes da integração.
+- Commit do checkpoint: `6e1adc7`.
+- PR #201 aberto contra `cooklily/canonical`; aguardar todos os jobs antes da integração.
 
 ## Gates e testes
 
@@ -53,4 +54,4 @@ Reproduzir e corrigir rejeição de códigos VIP recém-gerados; deixar resgate 
 
 ## Próxima ação exata
 
-Commitar as alterações, abrir PR contra `cooklily/canonical`, acompanhar todos os jobs e corrigir falhas do CI; depois integrar e atualizar este checkpoint com o SHA da canonical.
+Consultar CI do PR #201, corrigir qualquer falha, integrar após todos os jobs aprovados e atualizar este checkpoint com o SHA da canonical.
