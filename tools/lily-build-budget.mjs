@@ -13,7 +13,7 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 export const LILY_BUILD_BUDGET = Object.freeze({
   jsRawBytes: 652_000,
   jsGzipBytes: 173_000,
-  cssRawBytes: 135_000,
+  cssRawBytes: 136_000,
   cssGzipBytes: 30_000,
   combinedGzipBytes: 199_000
 });

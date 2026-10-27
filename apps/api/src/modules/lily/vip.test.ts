@@ -50,6 +50,34 @@ afterEach(cleanup);
 afterAll(async () => { await cleanup(); await app.close(); });
 
 describe("programa VIP CookLily", () => {
+  it("resgata o código recém-gerado pelo painel mesmo após colar com espaços, caixa baixa e hífen tipográfico", async () => {
+    const account = await register();
+    await lilyPrisma.lilyUser.update({ where: { id: account.userId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });
+    await lilyPrisma.lilySession.updateMany({ where: { userId: account.userId }, data: { mfaVerifiedAt: new Date() } });
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/vip/codes",
+      headers: { cookie: account.cookie, "x-lily-csrf": account.csrf, origin },
+      payload: { kind: "vip", couponIds: [], startsAt: null, endsAt: null, maxRedemptions: null }
+    });
+    expect(created.statusCode).toBe(201);
+    const generatedCode = created.json().code as string;
+    codeSuffix = generatedCode.slice(-4);
+    await lilyPrisma.lilyUser.update({ where: { id: account.userId }, data: { role: "customer", mfaEnabled: false } });
+
+    const redeemed = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/customer/vip/redeem",
+      headers: { cookie: account.cookie, "x-lily-csrf": account.csrf, origin },
+      payload: { code: ` ${generatedCode.toLowerCase().replace("-", " – ")} ` }
+    });
+
+    expect(redeemed.statusCode).toBe(200);
+    expect(redeemed.json().kind).toBe("vip");
+    expect(redeemed.json().membership.status).toBe("invited");
+  });
+
   it("keeps an invite pending until versioned consent and explicit subscription", async () => {
     const account = await register();
     const code = `${invite}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;

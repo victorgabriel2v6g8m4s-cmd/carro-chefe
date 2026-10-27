@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getLilySession, getLilyVip, postLilyVipAction, type AuthPayload, type LilyVipPayload } from "../../api";
 import { resolveVipConsentNavigation, vipTermsVersion } from "./vip-consent-navigation";
@@ -32,10 +33,13 @@ export function VipProfileSection() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [redeemError, setRedeemError] = useState("");
+  const [redeemMessage, setRedeemMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [showInvite, setShowInvite] = useState(false);
+  const [redemptionTarget, setRedemptionTarget] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const closeInvite = useCallback(() => setShowInvite(false), []);
@@ -46,6 +50,7 @@ export function VipProfileSection() {
     setSession(current); setVip(state);
   }
   useEffect(() => { void refresh().catch((cause) => setLoadError(cause instanceof Error ? cause.message : "Não foi possível carregar o programa VIP.")).finally(() => setLoading(false)); }, []);
+  useEffect(() => { setRedemptionTarget(document.getElementById("profile-code-redemption")); }, []);
   useEffect(() => {
     if (!vip) return;
     const redirect = resolveVipConsentNavigation(location.pathname, location.search, vip.membership);
@@ -64,13 +69,13 @@ export function VipProfileSection() {
 
   async function redeem(event: FormEvent) {
     event.preventDefault(); if (!session || !code.trim()) return;
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setRedeemError(""); setRedeemMessage("");
     try {
       const result = await postLilyVipAction("redeem", session.csrfToken, { code: code.trim() });
       setCode(""); await refresh();
       if (result.kind === "vip") setShowInvite(true);
-      else setMessage("Os cupons foram creditados à sua conta e aparecerão no checkout.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Código não resgatado."); }
+      else setRedeemMessage("Código resgatado. O benefício estará disponível na sua conta.");
+    } catch (cause) { setRedeemError(cause instanceof Error ? cause.message : "Não foi possível resgatar o código."); }
     finally { setBusy(false); }
   }
 
@@ -89,23 +94,31 @@ export function VipProfileSection() {
     finally { setBusy(false); }
   }
 
-  if (loading) return <section className="checkout-section vip-profile-section" aria-busy="true"><span role="status">Carregando benefícios VIP…</span></section>;
-  if (!vip) return <section className="checkout-section vip-profile-section"><h2>Programa VIP</h2><p role="alert">{loadError || "Não foi possível carregar o programa VIP."}</p><button className="button ghost" type="button" onClick={() => { setLoading(true); void refresh().catch((cause) => setLoadError(cause instanceof Error ? cause.message : "Não foi possível carregar o programa VIP.")).finally(() => setLoading(false)); }}>Tentar novamente</button></section>;
-  const memberStatus = vip.membership?.status;
-  return <section className="checkout-section vip-profile-section">
-    <div><span className="eyebrow">Programa CookLily</span><h2>{memberStatus === "active" ? "Membro VIP" : "Acesso antecipado VIP"}</h2>
-      <p>{memberStatus === "active" ? "Veja lançamentos, cupons e ofertas especiais antes do público geral." : "Resgate um convite ou alcance a pontuação configurada para se candidatar."}</p></div>
-    {memberStatus !== "active" && <form className="vip-redeem-form" onSubmit={redeem}>
-      <label htmlFor="vip-code">Resgatar código ou cupom</label>
-      <div><input id="vip-code" value={code} maxLength={40} autoCapitalize="characters" placeholder="Digite seu código" onChange={(event) => setCode(event.target.value.toUpperCase())} /><button className="button primary" disabled={busy || !code.trim()}>{busy ? "Validando…" : "Resgatar"}</button></div>
-    </form>}
-    {memberStatus === "invited" && !vip.membership?.consentedAt && <Link className="button ghost" to="/vip/termos">Ler os termos e continuar inscrição</Link>}
-    {memberStatus === "invited" && vip.membership?.consentedAt && <button className="button primary" type="button" disabled={busy} onClick={() => void subscribe()}>Inscrever-me no VIP</button>}
-    {memberStatus === "active" && <button className="button ghost" type="button" disabled={busy} onClick={() => void cancel()}>Cancelar inscrição VIP</button>}
-    {vip.eligibleByPoints && memberStatus !== "active" && <button className="button gold" type="button" disabled={busy} onClick={() => void claim()}>Solicitar VIP com {vip.points.toLocaleString("pt-BR")} pontos</button>}
-    {vip.pointsThreshold > 0 && memberStatus !== "active" && <small>{vip.points.toLocaleString("pt-BR")} de {vip.pointsThreshold.toLocaleString("pt-BR")} pontos para poder solicitar.</small>}
-    {vip.coupons.length > 0 && <div className="vip-coupon-list"><strong>Cupons da sua conta</strong>{vip.coupons.map((coupon) => <article key={coupon.code} style={{ "--coupon-color": coupon.color } as React.CSSProperties}><span>{coupon.title}</span><code>{coupon.code}</code></article>)}</div>}
-    {error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}
-    {showInvite && <VipInviteDialog onClose={closeInvite} onSubscribe={() => void subscribe()} consented={Boolean(vip.membership?.consentedAt && vip.membership.consentVersion === vipTermsVersion)} busy={busy} />}
-  </section>;
+  const memberStatus = vip?.membership?.status;
+  return <>
+    <section className="checkout-section vip-profile-section" aria-busy={loading}>
+      {loading && <span role="status">Carregando benefícios…</span>}
+      {!loading && !vip && <><h2>Benefícios da conta</h2><p role="alert">{loadError || "Não foi possível carregar os benefícios."}</p><button className="button ghost" type="button" onClick={() => { setLoading(true); void refresh().catch((cause) => setLoadError(cause instanceof Error ? cause.message : "Não foi possível carregar os benefícios.")).finally(() => setLoading(false)); }}>Tentar novamente</button></>}
+      {vip && <>
+        <div><span className="eyebrow">CookLily · benefícios</span><h2>{memberStatus === "active" ? "Membro VIP" : "Acesso antecipado"}</h2>
+          <p>{memberStatus === "active" ? "Veja lançamentos, cupons e ofertas especiais antes do público geral." : "Acompanhe seus benefícios e pontos disponíveis."}</p></div>
+        {memberStatus === "invited" && !vip.membership?.consentedAt && <Link className="button ghost" to="/vip/termos">Ler os termos e continuar inscrição</Link>}
+        {memberStatus === "invited" && vip.membership?.consentedAt && <button className="button primary" type="button" disabled={busy} onClick={() => void subscribe()}>Inscrever-me no VIP</button>}
+        {memberStatus === "active" && <button className="button ghost" type="button" disabled={busy} onClick={() => void cancel()}>Cancelar inscrição VIP</button>}
+        {vip.eligibleByPoints && memberStatus !== "active" && <button className="button gold" type="button" disabled={busy} onClick={() => void claim()}>Solicitar acesso com {vip.points.toLocaleString("pt-BR")} pontos</button>}
+        {vip.pointsThreshold > 0 && memberStatus !== "active" && <small>{vip.points.toLocaleString("pt-BR")} de {vip.pointsThreshold.toLocaleString("pt-BR")} pontos para poder solicitar.</small>}
+        {vip.coupons.length > 0 && <div className="vip-coupon-list"><strong>Cupons da sua conta</strong>{vip.coupons.map((coupon) => <article key={coupon.code} style={{ "--coupon-color": coupon.color } as React.CSSProperties}><span>{coupon.title}</span><code>{coupon.code}</code></article>)}</div>}
+        {error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}
+        {showInvite && <VipInviteDialog onClose={closeInvite} onSubscribe={() => void subscribe()} consented={Boolean(vip.membership?.consentedAt && vip.membership.consentVersion === vipTermsVersion)} busy={busy} />}
+      </>}
+    </section>
+    {redemptionTarget && createPortal(<details className="vip-code-disclosure">
+      <summary>Resgate seu código</summary>
+      <form className="vip-redeem-form" onSubmit={redeem}>
+        <label htmlFor="account-redeem-code">Código</label>
+        <div><input id="account-redeem-code" value={code} maxLength={80} autoCapitalize="characters" autoComplete="off" placeholder="Digite seu código" onChange={(event) => setCode(event.target.value)} /><button className="button ghost" disabled={busy || !code.trim() || !session}>{busy ? "Validando…" : "Resgatar"}</button></div>
+        {redeemError && <p className="error" role="alert">{redeemError}</p>}{redeemMessage && <p className="success" role="status">{redeemMessage}</p>}
+      </form>
+    </details>, redemptionTarget)}
+  </>;
 }

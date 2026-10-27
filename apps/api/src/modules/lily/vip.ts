@@ -8,7 +8,8 @@ import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
 import { requireLilyCsrf, requireLilySession } from "./auth";
 
 export const LILY_VIP_TERMS_VERSION = "cooklily-vip-2026-10-v1";
-const codeSchema = z.string().trim().toUpperCase().min(6).max(40).regex(/^[A-Z0-9-]+$/);
+const normalizeVipCode = (value: string) => value.normalize("NFKC").replace(/[‐‑‒–—−]/g, "-").replace(/\s+/g, "").toUpperCase();
+const redeemCodeSchema = z.string().min(6).max(80).transform(normalizeVipCode).pipe(z.string().min(6).max(40).regex(/^[A-Z0-9-]+$/));
 const hashCode = (value: string) => crypto.createHash("sha256").update(value).digest("hex");
 
 export async function isLilyVip(userId: string | null | undefined) {
@@ -43,7 +44,10 @@ async function currentPoints(userId: string) {
 }
 
 function suffix(code: string) { return code.slice(-4); }
-function createInviteCode() { return `LILY-${crypto.randomBytes(9).toString("base64url").replace(/[-_]/g, "A").toUpperCase()}`; }
+function createInviteCode() {
+  const random = crypto.randomBytes(10).toString("hex").toUpperCase();
+  return `LILY-${random.slice(0, 10)}-${random.slice(10)}`;
+}
 function assignedCouponCode(base: string) { return `${base.slice(0, 18)}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`; }
 
 const adminCodeSchema = z.object({
@@ -127,20 +131,20 @@ export async function lilyVipRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/customer/vip/redeem", { config: { rateLimit: { max: 8, timeWindow: "1 minute" } } }, async (request) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
-    const { code: rawCode } = z.object({ code: codeSchema }).strict().parse(request.body);
-    const code = await lilyPrisma.lilyVipCode.findUnique({ where: { codeHash: hashCode(rawCode) } });
+    const { code } = z.object({ code: redeemCodeSchema }).strict().parse(request.body);
+    const storedCode = await lilyPrisma.lilyVipCode.findUnique({ where: { codeHash: hashCode(code) } });
     const now = new Date();
-    if (!code || code.status !== "active" || (code.startsAt && code.startsAt > now) || (code.endsAt && code.endsAt < now)) throw new ApiError(400, "Código inválido ou indisponível.", { code: "LILY_VIP_CODE_UNAVAILABLE" });
+    if (!storedCode || storedCode.status !== "active" || (storedCode.startsAt && storedCode.startsAt > now) || (storedCode.endsAt && storedCode.endsAt < now)) throw new ApiError(400, "Código inválido ou indisponível.", { code: "LILY_VIP_CODE_UNAVAILABLE" });
     const result = await lilyPrisma.$transaction(async (tx) => {
-      const claimed = await tx.lilyVipCode.updateMany({ where: { id: code.id, status: "active", ...(code.maxRedemptions == null ? {} : { redemptionCount: { lt: code.maxRedemptions } }) }, data: { redemptionCount: { increment: 1 } } });
+      const claimed = await tx.lilyVipCode.updateMany({ where: { id: storedCode.id, status: "active", ...(storedCode.maxRedemptions == null ? {} : { redemptionCount: { lt: storedCode.maxRedemptions } }) }, data: { redemptionCount: { increment: 1 } } });
       if (!claimed.count) throw new ApiError(409, "Este código já atingiu o limite de resgates.", { code: "LILY_VIP_CODE_EXHAUSTED" });
-      try { await tx.lilyVipRedemption.create({ data: { userId: context.user.id, vipCodeId: code.id } }); }
+      try { await tx.lilyVipRedemption.create({ data: { userId: context.user.id, vipCodeId: storedCode.id } }); }
       catch { throw new ApiError(409, "Este código já foi resgatado nesta conta.", { code: "LILY_VIP_ALREADY_REDEEMED" }); }
-      if (code.kind === "vip") {
+      if (storedCode.kind === "vip") {
         const existing = await tx.lilyVipMembership.findUnique({ where: { userId: context.user.id } });
         if (existing?.status !== "active") await tx.lilyVipMembership.upsert({ where: { userId: context.user.id }, create: { userId: context.user.id, source: "invite", status: "invited" }, update: { source: "invite", status: "invited", canceledAt: null } });
       } else {
-        const ids = JSON.parse(code.couponIdsJson) as string[];
+        const ids = JSON.parse(storedCode.couponIdsJson) as string[];
         for (const couponId of ids) {
           const source = await tx.lilyCoupon.findFirst({ where: { id: couponId, assignedUserId: null, status: "active", AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] } });
           if (!source) throw new ApiError(409, "Um cupom associado ao código deixou de estar disponível.", { code: "LILY_VIP_COUPON_CHANGED" });
@@ -158,7 +162,7 @@ export async function lilyVipRoutes(app: FastifyInstance) {
           } });
         }
       }
-      return { kind: code.kind };
+      return { kind: storedCode.kind };
     });
     return { redeemed: true, kind: result.kind, membership: await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id } }) };
   });
