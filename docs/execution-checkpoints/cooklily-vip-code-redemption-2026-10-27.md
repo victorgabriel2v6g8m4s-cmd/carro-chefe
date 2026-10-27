@@ -1,12 +1,14 @@
 # Resgate de código CookLily
 
-- status: candidate; PR open, CI pending
+- status: merged; aguardando deploy e homologação com a conta de teste
 - owner: AG-DEV
 - branch: `codex/cooklily-vip-code-redemption`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0757056b9cf45384f1fc9a1320f58b9a16563e28`
-- head_sha_verified: `6e1adc782a3ac0babcc94571e079a6beb59d8534`
-- pull_requests: [PR #201](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/201) (open)
+- head_sha_verified: `a5703442fc09e7911980386c320f49420c56511e`
+- pull_requests: [PR #201](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/201) (merged)
+- ci_run: `40583288770`; todos os 7 jobs passaram
+- merge_commit_sha: `a5703442fc09e7911980386c320f49420c56511e`
 - last_verified_at: 2026-10-27
 - interruption_state: none
 
@@ -24,11 +26,12 @@ Reproduzir e corrigir rejeição de códigos VIP recém-gerados; deixar resgate 
 - Incluído teste integrado que cria código via endpoint staff/MFA e resgata na mesma conta com caixa baixa, espaços e hífen tipográfico.
 - Preflight de `apps/lily_acai`, `apps/api/src/modules/lily` e `docs/execution-checkpoints`: PASS.
 
-## Em andamento
+## Entregue e integrado
 
 - Commit de implementação: `ca5b813` (`fix(lily): make VIP code redemption more reliable`).
-- Commit do checkpoint: `6e1adc7`.
-- PR #201 aberto contra `cooklily/canonical`; aguardar todos os jobs antes da integração.
+- Último commit da branch do PR: `dc1a929` (inclui estado do checkpoint antes do merge).
+- PR #201 squash-merged em `cooklily/canonical` após CI integralmente aprovado.
+- A canonical foi atualizada e verificada em `a5703442fc09e7911980386c320f49420c56511e`.
 
 ## Gates e testes
 
@@ -54,4 +57,4 @@ Reproduzir e corrigir rejeição de códigos VIP recém-gerados; deixar resgate 
 
 ## Próxima ação exata
 
-Consultar CI do PR #201, corrigir qualquer falha, integrar após todos os jobs aprovados e atualizar este checkpoint com o SHA da canonical.
+Após o deploy operado pelo usuário, homologar com o mesmo código já emitido e uma conta de teste. Se o registro antigo continuar inválido, consultar status/validade/limite pelo sufixo e preservar o código completo fora dos logs e do checkpoint.
