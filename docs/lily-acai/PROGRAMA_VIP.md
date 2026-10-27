@@ -50,6 +50,8 @@ O acesso aos benefícios depende da coleta própria indicada acima. A pessoa pod
 ## Segurança e integridade
 
 - Códigos são tratados como credenciais: armazenar hash, limitar tentativas e nunca registrar o código completo em logs.
+- Mostrar o código gerado uma única vez em formato legível, com caracteres sem ambiguidade; no resgate, normalizar caixa, espaços e variantes tipográficas de hífen antes da busca por hash, preservando a aceitação dos códigos já emitidos.
+- No perfil, manter o formulário de resgate recolhido no fim da página e com o rótulo neutro “Resgate seu código”, sem identificar o benefício antes do resgate.
 - Resgates são idempotentes por conta/código; limite global e validade devem ser aplicados em transação.
 - A ativação depende de sessão autenticada e proteção CSRF. Ações administrativas exigem papel staff/admin, MFA conforme política existente e auditoria.
 - Benefícios de cupons são vinculados à conta que resgatou o código e não podem ser transferidos.
@@ -75,7 +77,7 @@ O acesso aos benefícios depende da coleta própria indicada acima. A pessoa pod
 
 ## Fluxo técnico
 
-`ProfilePage` chama API autenticada de resgate → serviço VIP normaliza/hash o código e executa a concessão idempotente → registro pendente gera modal dourado → página de termos registra consentimento versionado → ação explícita ativa a membership. A configuração vem do painel staff e da tabela operacional dedicada; catálogo público aplica projeção por membership e endpoints de cotação revalidam o acesso. Cupons concedidos são direitos por conta verificados no servidor no orçamento e na criação do pedido.
+`ProfilePage` mantém o atalho de resgate recolhido no fim da página → API autenticada normaliza/hash o código e executa a concessão idempotente → registro pendente gera modal dourado → página de termos registra consentimento versionado → ação explícita ativa a membership. A configuração vem do painel staff e da tabela operacional dedicada; catálogo público aplica projeção por membership e endpoints de cotação revalidam o acesso. Cupons concedidos são direitos por conta verificados no servidor no orçamento e na criação do pedido.
 
 ## Critérios de aceite
 

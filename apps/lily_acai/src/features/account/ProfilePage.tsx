@@ -454,6 +454,7 @@ export function ProfilePage() {
       <Link to="/enderecos"><strong>Endereços</strong><span>Gerencie entrega</span></Link>
       <Link to="/ranking"><strong>Ranking CookLily</strong><span>Veja os clientes com mais pontos</span></Link>
     </div>
+    <div id="profile-code-redemption" />
     <div className="profile-logout-footer">
       <button className="profile-logout-link" type="button" onClick={handleLogout} disabled={logoutBusy}>
         {logoutBusy ? <LilyLoadingSpinner size="sm" label="Saindo da conta" /> : "Sair da conta"}
