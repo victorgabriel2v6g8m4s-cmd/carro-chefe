@@ -1,16 +1,18 @@
-# CookLily Reels — regressão de gesto encontrada em homologação
+# CookLily Reels — gestos e controles
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
-- branch: codex/reels-action-order
+- branch: cooklily/canonical
 - base_branch: cooklily/canonical
 - base_sha_verified: c2b0615f31fa4a341f56256d8de4ae4701b88366
-- head_sha_verified: c2b0615f31fa4a341f56256d8de4ae4701b88366 (button-order edit pending)
-- pull_requests: PR #230, #231 and #232 merged; PR #233 pending creation for the requested vertical action order
-- deployed_sha: c2b0615f31fa4a341f56256d8de4ae4701b88366
-- tests/gates: PR #232 deploy passed (359 tests, build budget 216.93/217 KiB, verified backups, readiness, external smoke). Previous live test showed mouse drag stayed in Reels but did not switch slides; PR #232 explicit mouse handlers are awaiting IAB retest. Button order change is in progress. Latest local gates for order: preflight PASS; Lily UI 72 tests PASS; check PASS; full isolated test and build are running.
-- migrations: none
-- blockers: none for code delivery. An initial unisolated `npm test` run used `.runtime/lily-acai.db` and failed because its schema lacks `loyaltyRoundingMode`; tests cleaned test data in that local runtime DB. A post-run SQLite backup is preserved at ignored path `.runtime/lily-acai-preserved-20261028-1442.db`; the untouched original state cannot be established from the repo. Subsequent tests used the isolated `.runtime/lily-acai-check.db`.
-- discovered_issue: production IAB drag `[250,150] -> [250,500]` first navigated from `/lilyacai/reels` to a product page. After PR #231 it remained in Reels but mouse dragging did not advance the active reel. PR #232 adds explicit mouse down/up handling, keeps touch scrolling native, and blocks the click generated after a drag; production retest remains pending. User then specified vertical action order: like, cart, comments, share, save; implemented in this branch.
+- head_sha_verified: df0ca1eea01d02b00d55275dcfbd8023444282b3
+- pull_requests: #230, #231, #232 e #233 merged; PR #233 reorganizou os controles na ordem solicitada
+- deployed_sha: df0ca1eea01d02b00d55275dcfbd8023444282b3
+- deployment_evidence: /srv/carro-chefe/data/deploy-logs/deploy-20261028-181745-df0ca1eea01d.evidence
+- tests/gates: PR #233 CI verde (7 checks). Deploy canônico concluído: testes completos passaram, build passou com orçamento CookLily em 216.95/217 KiB, tool health passou, backups dos bancos verificados, migrações sem pendências, readiness e smoke externo passaram.
+- browser_homologation: domínio real via navegador integrado do Codex, 2026-10-28. Captura confirmou vídeo em tela cheia e controles icon-only na sequência Curtir → Adicionar ao carrinho → Comentar → Compartilhar → Salvar. Tecla Down avançou de Morango para Morango Nutt; scroll/arraste vertical retornou ao produto anterior sem sair de /lilyacai/reels. Comentários abriram com estado vazio esperado. Não foi testado adicionar ao carrinho nesta homologação.
+- migrations: nenhuma
+- blockers: nenhum para esta entrega.
+- known_local_test_db_incident: uma execução local inicial de `npm test` usou `.runtime/lily-acai.db`, cujo schema antigo não contém `loyaltyRoundingMode`; falhou e a suíte removeu dados de teste dessa base runtime local. Um snapshot pós-execução foi preservado em `.runtime/lily-acai-preserved-20261028-1442.db`; o estado anterior original não pode ser estabelecido pelo repositório. As execuções posteriores usaram `.runtime/lily-acai-check.db` isolado. O banco da VPS foi separado e teve backup verificado durante o deploy.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: finish isolated tests/build, commit button order plus this checkpoint, open PR #233, pass CI, merge canonical, deploy, then verify desktop drag in both directions, keyboard navigation, visible action order, comments, and in-place cart in the Codex IAB. Update this checkpoint with actual evidence and final deploy SHA.
+- next_action: nenhuma para esta entrega; a implementação está integrada, publicada e homologada nos comportamentos listados.
