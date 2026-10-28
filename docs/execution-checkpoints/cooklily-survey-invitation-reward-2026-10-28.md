@@ -5,14 +5,14 @@
 - branch: codex/lily-survey-invitation-reward
 - base_branch: cooklily/canonical
 - base_sha_verified: b840497951b3fc207f087b84b5c87703a4fcd6e8
-- head_sha_verified: em andamento
+- head_sha_verified: a41706fbca2695d28e5b92eeab5f6e4f4011f9f4
 - pull_requests: nenhum
 - deployed_sha: b840497951b3fc207f087b84b5c87703a4fcd6e8 (entrega WhatsApp Cloud API; pesquisa ainda não implantada)
 - tests/gates: preflight AG-DEV para surveys/API/docs/tools PASS; teste direcionado `routes.test.ts` PASS (6/6); full `npm test` PASS (64 arquivos, 348 aprovados, 3 ignorados); `npm run check` PASS; `npm run build` PASS e build budget aprovado (660,31/660,70 KiB JS bruto; 136,38/136,50 KiB CSS bruto; 201,79/202,01 KiB JS+CSS gzip); `npm run policy:check` PASS; `git diff --check` PASS. Checkpoint/PR/CI/deploy e homologação no domínio para esta feature ainda pendentes
 - migrations: nenhuma prevista
 - blockers: nenhum acesso de agente pendente; chave local assinou desafio e sessão staff/admin foi aberta no navegador integrado do Codex. A homologação ainda não foi executada com conta cliente.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: executar check/test/build, inspecionar disponibilidade local da chave agente sem expor valores, integrar e implantar; depois autenticar no IAB apenas se a chave já estiver provisionada e concluir teste da pesquisa em conta de teste.
+- next_action: atualizar este checkpoint para o commit, publicar a branch, abrir PR contra `cooklily/canonical`, aguardar CI e integrar; implantar canonical e concluir a homologação de pesquisa no perfil de teste.
 
 ## Objetivo
 
