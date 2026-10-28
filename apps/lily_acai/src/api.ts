@@ -430,6 +430,7 @@ export type LilyProfilePayload = {
     orderCount: number;
     campaignCount: number;
     rank: number | null;
+    rankScope: "public" | "internal";
     vipPointsThreshold: number;
   };
 };

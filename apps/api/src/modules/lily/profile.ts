@@ -54,6 +54,7 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
   const users = await lilyPrisma.lilyUser.findMany({
     where: {
       status: "active",
+      ...(options.onlyOptedIn ? { role: "customer" } : {}),
       ...(options.onlyOptedIn ? { ...(options.includeTestAccounts ? { OR: [{ rankingOptIn: true }, { isTestAccount: true }] } : { rankingOptIn: true }) } : {}),
       ...(options.excludeTestAccounts ? { isTestAccount: false } : {}),
       ...(options.userIds ? { id: { in: options.userIds } } : {})
@@ -227,6 +228,7 @@ async function profilePayload(userId: string) {
       orderCount: own?.orderCount ?? 0,
       campaignCount: own?.campaignCount ?? 0,
       rank: userRank,
+      rankScope: internalRanking ? "internal" : "public",
       vipPointsThreshold: vipSettings.vipPointsThreshold
     }
   };
