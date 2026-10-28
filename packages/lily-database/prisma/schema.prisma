@@ -29,6 +29,8 @@ model LilyUser {
   vipRedemptions LilyVipRedemption[]
   assignedCoupons LilyCoupon[] @relation("LilyAssignedCoupon")
   vipAnalytics LilyVipAnalyticsEvent[]
+  referralInvites LilyReferralInvite[] @relation("LilyReferralOwner")
+  referredBy LilyReferralInvite? @relation("LilyReferralRecipient")
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -568,13 +570,15 @@ model LilyOperationalSettings {
   pickupInstructions   String?
   businessHoursJson    String   @default("[]")
   timezone                  String   @default("America/Campo_Grande")
-  instagramHandle           String   @default("acai._lily")
+  instagramHandle           String   @default("cook._lily")
   whatsappPhone             String   @default("+5567999289187")
+  socialLinksJson           String   @default("[]")
   publicAddressText         String?
   loyaltyOrderCentsPerPoint Int      @default(100)
   loyaltyCampaignBonusPoints Int     @default(10)
   loyaltyCouponBonusPoints Int       @default(10)
   vipPointsThreshold        Int       @default(0)
+  referralRewardPoints      Int       @default(0)
   vipAnalyticsRetentionDays Int       @default(180)
   paymentsEnabled           Boolean  @default(false)
   paymentProvider           String   @default("manual")
@@ -676,6 +680,7 @@ model LilyCoupon {
   maxUsesPerCustomer Int      @default(1)
   allowCombination   Boolean  @default(false)
   isAdditive         Boolean  @default(false)
+  vipOnly            Boolean  @default(false)
   appliesToShipping  Boolean  @default(false)
   usesCount          Int      @default(0)
   createdBy          String?
@@ -888,6 +893,20 @@ model LilyLoyaltyEvent {
 
   @@index([userId, createdAt])
   @@index([type, createdAt])
+}
+
+model LilyReferralInvite {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  referrerUserId String
+  referredUserId String?  @unique
+  creditedPoints Int      @default(0)
+  createdAt      DateTime @default(now())
+  creditedAt     DateTime?
+  referrer       LilyUser @relation("LilyReferralOwner", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referredUser   LilyUser? @relation("LilyReferralRecipient", fields: [referredUserId], references: [id], onDelete: SetNull)
+
+  @@index([referrerUserId, createdAt])
 }
 
 model LilyVipCode {

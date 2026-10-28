@@ -24,7 +24,7 @@ export type SurveyDefinition = {
 
 export type CustomerNotification = {
   id: string; type: string; title: string; body: string;
-  metadata: { surveyId?: string; estimatedMinutes?: number; questionCount?: number; points?: number | null };
+  metadata: { surveyId?: string; estimatedMinutes?: number; questionCount?: number; points?: number | null; couponCode?: string; href?: string };
   readAt: string | null; createdAt: string;
 };
 

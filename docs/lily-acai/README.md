@@ -24,7 +24,7 @@ A apresentação pública permanece **CookLily × Carro Chefe — parceria tempo
 
 ## Canais confirmados
 
-- Instagram: @acai._lily;
+- Instagram: @cook._lily;
 - WhatsApp: +55 67 99928-9187.
 
 ## Cardápio inicial

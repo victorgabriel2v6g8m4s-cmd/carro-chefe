@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createAgentBrowserRelay } from "./lily-agent-browser-relay.mjs";
 
 const args = process.argv.slice(2);
 const action = args.shift();
@@ -75,14 +76,13 @@ function openBrowser(url) {
   if (process.platform === "win32" && process.env.COOKLILY_AGENT_BROWSER === "edge") {
     const edgePath = path.join(process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)", "Microsoft", "Edge", "Application", "msedge.exe");
     if (!existsSync(edgePath)) throw new Error("Microsoft Edge não foi encontrado no caminho padrão.");
-    const launcher = spawn("powershell.exe", ["-NoProfile", "-Command", "Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH -ArgumentList $env:COOKLILY_AGENT_HANDOFF_URL"], {
-      detached: true,
+    const launcher = spawnSync("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference='Stop'; Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH -ArgumentList @($env:COOKLILY_AGENT_HANDOFF_URL)"], {
       stdio: "ignore",
       windowsHide: true,
+      timeout: 10_000,
       env: { ...process.env, COOKLILY_AGENT_EDGE_PATH: edgePath, COOKLILY_AGENT_HANDOFF_URL: url }
     });
-    launcher.on("error", () => {});
-    launcher.unref();
+    if (launcher.error || launcher.status !== 0) throw new Error("Não foi possível iniciar o Microsoft Edge.");
     return;
   }
   const command = process.platform === "win32" ? "rundll32.exe" : process.platform === "darwin" ? "open" : "xdg-open";
@@ -108,8 +108,16 @@ try {
     throw new Error("O servidor não emitiu o ticket de navegador esperado.");
   }
   const loginUrl = `${apiOrigin}/lilyacai/agent-auth.html#ticket=${encodeURIComponent(verified.ticket)}`;
-  openBrowser(loginUrl);
-  console.log("Handoff aberto no navegador padrão. Conclua a autenticação em até 60 segundos; o ticket não foi exibido nem salvo.");
+  if (process.env.COOKLILY_AGENT_BROWSER === "codex") {
+    const relay = await createAgentBrowserRelay(loginUrl);
+    console.log(`Abra esta aba temporária no navegador integrado do Codex: ${relay.browserUrl}`);
+    const wasConsumed = await relay.consumed;
+    if (!wasConsumed) throw new Error("O handoff expirou antes de ser aberto no navegador integrado.");
+    console.log("Handoff consumido pelo navegador integrado; o ticket não foi exibido nem salvo.");
+  } else {
+    openBrowser(loginUrl);
+    console.log("Handoff aberto no navegador. Conclua a autenticação em até 60 segundos; o ticket não foi exibido nem salvo.");
+  }
 } catch (error) {
   fail(error instanceof Error ? error.message : "Falha na autenticação do agente.");
 }

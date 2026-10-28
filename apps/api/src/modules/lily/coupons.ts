@@ -24,6 +24,7 @@ const couponBaseSchema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   imageMediaId: idSchema.nullable().default(null),
   status: z.enum(["draft", "active", "paused", "disabled"]),
+  vipOnly: z.boolean().default(false),
   startsAt: z.coerce.date().nullable().default(null),
   endsAt: z.coerce.date().nullable().default(null),
   recurrence: z.enum(lilyCouponRecurrences).default("none"),
@@ -88,18 +89,48 @@ function scopeCreates(categoryIds: string[], productIds: string[]) {
   };
 }
 
+async function notifyCouponAudience(coupon: { id: string; code: string; title: string; value: number; type: string; vipOnly: boolean; startsAt: Date | null }) {
+  if (coupon.startsAt && coupon.startsAt > new Date()) return;
+  const users = await lilyPrisma.lilyUser.findMany({
+    where: {
+      status: "active",
+      role: "customer",
+      ...(coupon.vipOnly ? { vipMembership: { is: { status: "active" } } } : {})
+    },
+    select: { id: true }
+  });
+  if (!users.length) return;
+  const sourceKey = `coupon:${coupon.id}:published`;
+  const existing = await lilyPrisma.lilyCustomerNotification.findMany({ where: { sourceKey }, select: { userId: true } });
+  const notified = new Set(existing.map(({ userId }) => userId));
+  const benefit = coupon.type === "percentage" ? `${coupon.value / 100}% de desconto` : coupon.type === "fixed" ? `${(coupon.value / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} de desconto` : "frete grátis";
+  const data = users.filter(({ id }) => !notified.has(id)).map(({ id }) => ({
+      userId: id,
+      sourceKey,
+      type: "coupon_available",
+      title: "Um novo cupom está disponível para você",
+      body: `${coupon.title}: ${benefit}. Confira as condições no seu perfil.`,
+      metadataJson: JSON.stringify({ couponCode: coupon.code, href: "/lilyacai/perfil" })
+    }));
+  for (let offset = 0; offset < data.length; offset += 80) {
+    await lilyPrisma.lilyCustomerNotification.createMany({ data: data.slice(offset, offset + 80) });
+  }
+}
+
 export async function lilyCouponRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/public/coupons", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (request) => {
     const now = new Date();
     const context = await getOptionalLilySession(request);
     const validWindow = { AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] };
     const coupons = await lilyPrisma.lilyCoupon.findMany({
-      where: { status: "active", assignedUserId: null, ...validWindow },
+      where: { status: "active", assignedUserId: null, vipOnly: false, ...validWindow },
       select: { code: true, title: true, description: true, type: true, value: true, color: true, minimumOrderCents: true, maxDiscountCents: true, startsAt: true, endsAt: true, maxUsesTotal: true, usesCount: true, image: { select: { id: true, status: true } } },
       orderBy: { updatedAt: "desc" }, take: 30
     });
+    const membership = context ? await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } }) : null;
     const assigned = context ? await lilyPrisma.lilyCoupon.findMany({ where: { status: "active", assignedUserId: context.user.id, ...validWindow }, select: { code: true, title: true, description: true, type: true, value: true, color: true, minimumOrderCents: true, maxDiscountCents: true, startsAt: true, endsAt: true, maxUsesTotal: true, usesCount: true, image: { select: { id: true, status: true } } }, orderBy: { createdAt: "desc" } }) : [];
-    const limited = [...coupons, ...assigned].filter((coupon) => coupon.maxUsesTotal == null || coupon.usesCount < coupon.maxUsesTotal);
+    const vip = context && membership?.status === "active" ? await lilyPrisma.lilyCoupon.findMany({ where: { status: "active", assignedUserId: null, vipOnly: true, ...validWindow }, select: { code: true, title: true, description: true, type: true, value: true, color: true, minimumOrderCents: true, maxDiscountCents: true, startsAt: true, endsAt: true, maxUsesTotal: true, usesCount: true, image: { select: { id: true, status: true } } }, orderBy: { updatedAt: "desc" } }) : [];
+    const limited = [...coupons, ...assigned, ...(vip ?? [])].filter((coupon) => coupon.maxUsesTotal == null || coupon.usesCount < coupon.maxUsesTotal);
     return { coupons: limited.map((coupon) => ({
       code: coupon.code, title: coupon.title, description: coupon.description, type: coupon.type, value: coupon.value,
       color: coupon.color, minimumOrderCents: coupon.minimumOrderCents, maxDiscountCents: coupon.maxDiscountCents,
@@ -128,6 +159,7 @@ export async function lilyCouponRoutes(app: FastifyInstance) {
       if (!image || !image.mime.startsWith("image/")) throw new ApiError(400, "Selecione uma arte de cupom válida.", { code: "LILY_COUPON_IMAGE_INVALID" });
     }
     const created = await lilyPrisma.lilyCoupon.create({ data: { ...data, createdBy: context.user.id, ...scopeCreates(categoryIds, productIds) }, include: couponInclude });
+    if (created.status === "active") await notifyCouponAudience(created);
     await auditLilyAdmin(context.user.id, "create", "coupon", created.id, { code: created.code, status: created.status });
     return reply.code(201).send(serializeCoupon(created));
   });
@@ -172,6 +204,7 @@ export async function lilyCouponRoutes(app: FastifyInstance) {
         include: couponInclude
       });
     });
+    if (current.status !== "active" && updated.status === "active") await notifyCouponAudience(updated);
     await auditLilyAdmin(context.user.id, "update", "coupon", id, { fields: Object.keys(parsed), status: updated.status });
     return serializeCoupon(updated);
   });

@@ -129,7 +129,8 @@ async function calculateQuote(input: z.infer<typeof quoteSchema>, options: { all
     shippingCents: fulfillment.deliveryFeeCents,
     fulfillmentType: input.fulfillmentType,
     phone: input.phone,
-    userId: options.userId
+    userId: options.userId,
+    isVip: options.userId ? (await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: options.userId }, select: { status: true } }))?.status === "active" : false
   });
   return {
     items,

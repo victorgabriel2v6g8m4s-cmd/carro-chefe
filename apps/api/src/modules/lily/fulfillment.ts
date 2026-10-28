@@ -3,6 +3,7 @@ import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
+import { parseSocialLinks, socialLinksSchema } from "./social-links";
 
 const SETTINGS_ID = "default";
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -34,12 +35,14 @@ const settingsPatchSchema = z.object({
 }).strict();
 
 const storeSettingsPatchSchema = z.object({
-  instagramHandle: z.string().trim().min(1).max(30).regex(/^@?[A-Za-z0-9._]+$/).optional(),
-  whatsappPhone: z.string().trim().min(8).max(24).regex(/^\+?[0-9 ()-]+$/).optional(),
+  instagramHandle: z.string().trim().max(30).regex(/^@?[A-Za-z0-9._]*$/).optional(),
+  whatsappPhone: z.string().trim().max(24).regex(/^\+?[0-9 ()-]*$/).optional(),
+  socialLinks: socialLinksSchema.optional(),
   publicAddressText: z.string().trim().max(500).nullable().optional(),
   loyaltyOrderCentsPerPoint: z.number().int().min(1).max(100000).optional(),
   loyaltyCampaignBonusPoints: z.number().int().min(0).max(100000).optional(),
-  loyaltyCouponBonusPoints: z.number().int().min(0).max(100000).optional()
+  loyaltyCouponBonusPoints: z.number().int().min(0).max(100000).optional(),
+  referralRewardPoints: z.number().int().min(0).max(100000).optional()
 }).strict().refine((value) => Object.keys(value).length > 0, {
   message: "Informe pelo menos uma configuração da loja."
 });
@@ -154,10 +157,12 @@ function serializeStoreSettings(settings: Awaited<ReturnType<typeof getLilyOpera
   return {
     instagramHandle: settings.instagramHandle,
     whatsappPhone: settings.whatsappPhone,
+    socialLinks: parseSocialLinks(settings.socialLinksJson),
     publicAddressText: settings.publicAddressText,
     loyaltyOrderCentsPerPoint: settings.loyaltyOrderCentsPerPoint,
     loyaltyCampaignBonusPoints: settings.loyaltyCampaignBonusPoints,
-    loyaltyCouponBonusPoints: settings.loyaltyCouponBonusPoints
+    loyaltyCouponBonusPoints: settings.loyaltyCouponBonusPoints,
+    referralRewardPoints: settings.referralRewardPoints
   };
 }
 
@@ -348,15 +353,19 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/store-settings", async (request) => {
     const context = await requireLilyStaff(request, true);
     const input = storeSettingsPatchSchema.parse(request.body);
+    const configuredInstagram = input.socialLinks?.find((link) => link.platform === "instagram");
+    const configuredWhatsapp = input.socialLinks?.find((link) => link.platform === "whatsapp");
     const updated = await lilyPrisma.lilyOperationalSettings.update({
       where: { id: SETTINGS_ID },
       data: {
-        ...(input.instagramHandle === undefined ? {} : { instagramHandle: input.instagramHandle.replace(/^@+/, "") }),
-        ...(input.whatsappPhone === undefined ? {} : { whatsappPhone: input.whatsappPhone.trim() }),
+        ...(input.instagramHandle === undefined && configuredInstagram === undefined ? {} : { instagramHandle: (configuredInstagram?.identifier || input.instagramHandle || "").replace(/^@+/, "") }),
+        ...(input.whatsappPhone === undefined && configuredWhatsapp === undefined ? {} : { whatsappPhone: configuredWhatsapp?.identifier || input.whatsappPhone || "" }),
+        ...(input.socialLinks === undefined ? {} : { socialLinksJson: JSON.stringify(input.socialLinks) }),
         ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
         ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
         ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
-        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints })
+        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints }),
+        ...(input.referralRewardPoints === undefined ? {} : { referralRewardPoints: input.referralRewardPoints })
       }
     });
     await auditLilyAdmin(context.user.id, "update", "store-settings", SETTINGS_ID, input);
