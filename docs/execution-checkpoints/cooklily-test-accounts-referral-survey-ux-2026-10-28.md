@@ -5,14 +5,14 @@
 - branch: codex/cooklily-test-accounts-referral-survey-ux
 - base_branch: cooklily/canonical
 - base_sha_verified: b7232966ca560e31266b38d694006e0204e9ca0d
-- head_sha_verified: b7232966ca560e31266b38d694006e0204e9ca0d
+- head_sha_verified: b06edf30879dca8c29d92ab794b6622dcd92b0c8
 - pull_requests: none
 - deploy_sha: 2d4f5a603632f9969d599447d1ee318845fd1fb2 (existing production release)
-- tests/gates: policy preflight PASS; focused API 28/28 PASS; full suite 64 files, 345 passed/3 skipped PASS; check PASS; build PASS after +1.5 KiB JS budget adjustment
-- migrations: schema and `20261028180000_lily_test_accounts_survey_tokens` added; all Lily migrations applied to disposable SQLite and exercised by API suite
+- tests/gates: policy preflight PASS; `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` PASS (CookLily bundle budgets PASS after +1.5 KiB JS allowance); `git diff --check` PASS
+- migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
 - blockers: none
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: document share-link criteria, commit/push branch, open PR against `cooklily/canonical`, pass CI/CodeQL, merge, deploy authorized VPS release, set production referral reward to 2,000, and run live desktop/mobile journeys with screenshots.
+- next_action: push `b06edf30879dca8c29d92ab794b6622dcd92b0c8`, open PR against `cooklily/canonical`, pass CI/CodeQL, merge, deploy authorized VPS release, set production referral reward to 2,000, and run live desktop/mobile journeys with screenshots.
 
 ## Objetivo
 
@@ -21,14 +21,14 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 ## Roteiro e checkpoints
 
 1. [x] Encontrar a direção original de UX: pesquisa exige conta; a publicação/notificação deve destacar pontos e tempo estimado. A nova solicitação especifica exibir os benefícios da pesquisa no portão de login/cadastro.
-2. [ ] Revisar implementação atual de referral, coupon redemption, survey completion/points, test-account permissions, leaderboard e migrations.
-3. [x] Critérios: links públicos nunca carregam IDs de banco, telefone, nome ou credenciais; convite/referral usa token aleatório ≥128 bits, uso único e pode ser revogado/limitado; pesquisa usa token opaco separado do ID interno, metadados públicos mínimos e permite pausar/cancelar; produto usa slug público estável; query strings de atribuição não são encaminhadas a analytics.
-4. [ ] Implementar/ajustar reward de indicação de 2.000 pontos, idempotência, elegibilidade e atribuição; testar sem duplicidade.
-5. [ ] Implementar flag/capability de conta de teste atribuível só por admin; excluí-la do ranking público/interações de clientes; incluí-la no ranking em contexto admin/teste com posição densa e empates sem lacunas.
-6. [ ] Implementar UX da pesquisa para anônimos conforme requisito encontrado (mostrar resumo, pontos/recompensa e CTA login/cadastro mantendo destino/atribuição) com API pública minimizada.
-7. [ ] Rodar suites, check/build, migration em DB descartável, revisão de segurança e testes de ranking/conta/indicação/survey.
+2. [x] Revisar implementação atual de referral, coupon redemption, survey completion/points, test-account permissions, leaderboard e migrations.
+3. [x] Critérios definidos: links públicos sem IDs de banco, telefone, nome ou credenciais; referral token aleatório de 256 bits, uso único, cadastro elegível e sem autorreferência; pesquisa com token opaco separado do ID interno, prévia mínima e indisponibilidade ao pausar/cancelar; produto usa slug público estável; query strings de atribuição não são encaminhadas a analytics. Revogação/expiração manual de convites foi explicitamente registrada como fora do modelo atual.
+4. [x] Recompensa de indicação configurável e idempotente implementada; teste API com 2.000 pontos, uso único e rejeição de reutilização PASS. Aplicar 2.000 à configuração operacional de produção permanece pendente do painel após deploy.
+5. [x] Flag de conta de teste alterável por admin em cliente, role promotion remove a flag; ranking público oculta e ranking interno inclui teste com posições densas. Testes API PASS.
+6. [x] Link da pesquisa mostra preview público com resumo/pontos/duração, CTA login/cadastro e destino preservado; lista/start aceitam token público; API não expõe ID/perguntas na prévia. Testes API PASS.
+7. [x] `npm test` (64 arquivos, 346 pass/3 skip), `npm run check`, `npm run build`, migration em banco SQLite descartável e `git diff --check` PASS.
 8. [ ] Deploy autorizado em VPS, testar domínio real em desktop/mobile e registrar capturas, falhas, correções e retestes.
-9. [ ] Criar conta(s) descartável(is), resgatar cupom VIP e público, responder pesquisa, revisar créditos/notificações/ranking; a autorização permanente do proprietário permite aceitar os termos somente para a conta de testes.
+9. [ ] Em produção, marcar a conta de teste existente, criar contas descartáveis autorizadas, resgatar cupom VIP e público, responder pesquisa, revisar créditos/notificações/ranking; autorização permanente permite aceite de termos somente para contas designadas de teste.
 10. [ ] Publicar checkpoint atualizado na canonical após gates verdes.
 
 ## Próximas entregas adicionadas ao roadmap
