@@ -22,7 +22,7 @@
     "check": "npm run db:generate && npm run db:validate && tsc --noEmit -p tsconfig.json",
     "test": "npm run test:legacy && npm run test:tool-health && vitest run --config vitest.config.ts",
     "test:legacy": "npm --prefix planejamento test",
-    "test:tool-health": "node --test tools/tool-health/*.test.mjs",
+    "test:tool-health": "node --test tools/tool-health/*.test.mjs tools/agent-policy/*.test.mjs",
     "test:watch": "vitest",
     "tools:status": "node tools/tool-health/cli.mjs",
     "tools:status:dry": "node tools/tool-health/cli.mjs --dry-run",
