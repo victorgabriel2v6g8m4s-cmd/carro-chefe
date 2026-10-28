@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
+
+usage() {
+  cat <<'EOF'
+Uso:
+  sudo lily-agent-key register <telefone-admin> <chave-publica-ed25519> [nome]
+  sudo lily-agent-key revoke <telefone-admin>
+  sudo lily-agent-key status <telefone-admin>
+
+O cadastro exige uma conta CookLily existente, ativa e com papel admin.
+Somente a chave pública é armazenada; a chave privada permanece no computador do agente.
+O cadastro bloqueia o login por senha dessa conta e revoga sessões/tickets anteriores.
+EOF
+}
+
+die() { echo "ERRO: $*" >&2; exit 1; }
+[[ ${EUID} -eq 0 ]] || die "execute como root/sudo"
+[[ $# -ge 2 && $# -le 4 ]] || { usage; exit 64; }
+command -v sqlite3 >/dev/null 2>&1 || die "sqlite3 não está instalado"
+[[ -f "${ENV_FILE}" ]] || die "arquivo de ambiente não encontrado: ${ENV_FILE}"
+
+ACTION="$1"
+RAW_PHONE="$2"
+digits="$(printf '%s' "${RAW_PHONE}" | tr -cd '0-9')"
+if [[ "${digits}" == 55* && ( ${#digits} -eq 12 || ${#digits} -eq 13 ) ]]; then digits="${digits:2}"; fi
+[[ ${#digits} -eq 10 || ${#digits} -eq 11 ]] || die "telefone brasileiro inválido"
+[[ "${digits:0:1}" != "0" ]] || die "DDD inválido"
+subscriber="${digits:2}"
+[[ "${subscriber:0:1}" != "0" ]] || die "número inválido"
+if [[ ${#digits} -eq 11 && "${subscriber:0:1}" != "9" ]]; then die "celular de 11 dígitos deve começar com 9 após o DDD"; fi
+PHONE="+55${digits}"
+
+set -a
+# shellcheck disable=SC1090
+. "${ENV_FILE}"
+set +a
+: "${LILY_DATABASE_URL:?LILY_DATABASE_URL ausente no ambiente}"
+[[ "${LILY_DATABASE_URL}" == file:* ]] || die "LILY_DATABASE_URL deve apontar para SQLite local"
+DB="${LILY_DATABASE_URL#file:}"
+[[ -f "${DB}" ]] || die "banco Lily não encontrado: ${DB}"
+
+USER_ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, role, status FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
+[[ -n "${USER_ROW}" ]] || die "nenhuma conta CookLily encontrada"
+[[ "$(printf '%s\n' "${USER_ROW}" | wc -l)" -eq 1 ]] || die "mais de uma conta encontrada; operação abortada"
+IFS='|' read -r USER_ID USER_ROLE USER_STATUS <<< "${USER_ROW}"
+[[ "${USER_ROLE}" == "admin" ]] || die "a conta precisa ter papel admin"
+[[ "${USER_STATUS}" == "active" ]] || die "a conta precisa estar ativa"
+
+sql_quote() { local value="$1"; value="${value//\'/\'\'}"; printf "'%s'" "${value}"; }
+SQL_USER_ID="$(sql_quote "${USER_ID}")"
+
+case "${ACTION}" in
+  register)
+    [[ $# -ge 3 && $# -le 4 ]] || { usage; exit 64; }
+    RAW_KEY="$3"
+    LABEL="${4:-Agente CookLily}"
+    [[ ${#LABEL} -le 64 && "${LABEL}" != *$'\n'* && "${LABEL}" != *$'\r'* ]] || die "nome inválido (máximo 64 caracteres)"
+    read -r KEY_TYPE KEY_BLOB _ <<< "${RAW_KEY}"
+    [[ "${KEY_TYPE}" == "ssh-ed25519" && "${KEY_BLOB:-}" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] || die "forneça uma chave pública ssh-ed25519"
+    TMP_DIR="$(mktemp -d)"
+    trap 'rm -rf -- "${TMP_DIR}"' EXIT
+    printf '%s %s\n' "${KEY_TYPE}" "${KEY_BLOB}" > "${TMP_DIR}/agent.pub"
+    chmod 0600 "${TMP_DIR}/agent.pub"
+    KEY_INFO="$(ssh-keygen -lf "${TMP_DIR}/agent.pub" 2>/dev/null)" || die "chave pública inválida"
+    FINGERPRINT="$(awk '{print $2}' <<< "${KEY_INFO}")"
+    [[ "${FINGERPRINT}" == SHA256:* ]] || die "não foi possível validar o fingerprint da chave"
+    PUBKEY_SQL="$(sql_quote "${KEY_TYPE} ${KEY_BLOB}")"
+    LABEL_SQL="$(sql_quote "${LABEL}")"
+    FINGERPRINT_SQL="$(sql_quote "${FINGERPRINT}")"
+    sqlite3 "${DB}" <<SQL
+.bail on
+PRAGMA foreign_keys = ON;
+BEGIN IMMEDIATE;
+INSERT INTO LilyAgentKey (id, userId, label, publicKey, fingerprint, status, createdAt, updatedAt, revokedAt, lastUsedAt)
+VALUES ('agent_' || lower(hex(randomblob(12))), ${SQL_USER_ID}, ${LABEL_SQL}, ${PUBKEY_SQL}, ${FINGERPRINT_SQL}, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL)
+ON CONFLICT(userId) DO UPDATE SET
+  label=excluded.label,
+  publicKey=excluded.publicKey,
+  fingerprint=excluded.fingerprint,
+  status='active',
+  updatedAt=CURRENT_TIMESTAMP,
+  revokedAt=NULL,
+  lastUsedAt=NULL;
+UPDATE LilySession SET revokedAt=CURRENT_TIMESTAMP WHERE userId=${SQL_USER_ID} AND revokedAt IS NULL;
+DELETE FROM LilyAgentAuthChallenge WHERE agentKeyId=(SELECT id FROM LilyAgentKey WHERE userId=${SQL_USER_ID});
+DELETE FROM LilyAgentAuthHandoff WHERE agentKeyId=(SELECT id FROM LilyAgentKey WHERE userId=${SQL_USER_ID});
+UPDATE LilyUser SET agentIdentity=1, updatedAt=CURRENT_TIMESTAMP WHERE id=${SQL_USER_ID};
+INSERT INTO LilyAdminAudit (id, actorUserId, actorType, agentKeyId, agentKeyFingerprint, action, entityType, entityId, payloadJson, createdAt)
+SELECT lower(hex(randomblob(16))), 'ops:cli', 'operator', id, ${FINGERPRINT_SQL}, 'security.agent_key.registered', 'LilyUser', ${SQL_USER_ID},
+  json_object('source','lily-agent-key','label',${LABEL_SQL},'fingerprint',${FINGERPRINT_SQL}), CURRENT_TIMESTAMP
+FROM LilyAgentKey WHERE userId=${SQL_USER_ID};
+COMMIT;
+SQL
+    printf 'Cadastro concluído.\npapel=admin\nstatus=active\nfingerprint=%s\n' "${FINGERPRINT}"
+    echo "Agora a conta autentica por chave; o login por senha foi bloqueado e as sessões/tickets anteriores foram encerrados."
+    ;;
+  revoke)
+    [[ $# -eq 2 ]] || { usage; exit 64; }
+    KEY_ID="$(sqlite3 "${DB}" "SELECT id FROM LilyAgentKey WHERE userId=${SQL_USER_ID} AND status='active' LIMIT 1;")"
+    [[ -n "${KEY_ID}" ]] || die "não há chave ativa para esta conta"
+    SQL_KEY_ID="$(sql_quote "${KEY_ID}")"
+    sqlite3 "${DB}" <<SQL
+.bail on
+PRAGMA foreign_keys = ON;
+BEGIN IMMEDIATE;
+UPDATE LilyAgentKey SET status='revoked', revokedAt=CURRENT_TIMESTAMP, updatedAt=CURRENT_TIMESTAMP WHERE id=${SQL_KEY_ID};
+UPDATE LilySession SET revokedAt=CURRENT_TIMESTAMP WHERE agentKeyId=${SQL_KEY_ID} AND revokedAt IS NULL;
+DELETE FROM LilyAgentAuthChallenge WHERE agentKeyId=${SQL_KEY_ID};
+DELETE FROM LilyAgentAuthHandoff WHERE agentKeyId=${SQL_KEY_ID};
+INSERT INTO LilyAdminAudit (id, actorUserId, actorType, agentKeyId, agentKeyFingerprint, action, entityType, entityId, payloadJson, createdAt)
+SELECT lower(hex(randomblob(16))), 'ops:cli', 'operator', id, fingerprint, 'security.agent_key.revoked', 'LilyUser', ${SQL_USER_ID},
+  json_object('source','lily-agent-key','fingerprint',fingerprint), CURRENT_TIMESTAMP
+FROM LilyAgentKey WHERE id=${SQL_KEY_ID};
+COMMIT;
+SQL
+    echo "Chave revogada; sessões e tickets do agente encerrados."
+    ;;
+  status)
+    [[ $# -eq 2 ]] || { usage; exit 64; }
+    sqlite3 -header -column "${DB}" "SELECT u.role, u.status AS account_status, CASE WHEN u.agentIdentity=1 THEN 'agent' ELSE 'human' END AS identity, k.status AS key_status, k.fingerprint, k.lastUsedAt FROM LilyUser u LEFT JOIN LilyAgentKey k ON k.userId=u.id WHERE u.id=${SQL_USER_ID};"
+    ;;
+  *) usage; exit 64 ;;
+esac

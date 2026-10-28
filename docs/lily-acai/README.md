@@ -88,6 +88,7 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`, `entregas/ENTREGA_07_PAG
 - TRACKING_COMPATIBILIDADE.md;
 - DEPLOY_VPS.md;
 - DEPLOY_INCREMENTAL_CLI.md;
+- AUTENTICACAO_AGENTE_ADMIN.md — login administrativo CookLily por chave OpenSSH, ticket de uso único, sessão curta, auditoria e revogação;
 - DECISOES_PENDENCIAS.md;
 - PENDENCIAS_UX_SEGURANCA_2026-09-27.md;
 - CONSOLIDACAO_CANONICA_2026-09-27.md;

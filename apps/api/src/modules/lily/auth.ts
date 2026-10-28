@@ -23,6 +23,7 @@ export type LilySessionContext = {
     csrfTokenHash: string;
     expiresAt: Date;
     mfaVerifiedAt: Date | null;
+    agentKeyId: string | null;
   };
   user: {
     id: string;
@@ -34,6 +35,7 @@ export type LilySessionContext = {
     rankingOptIn: boolean;
     staffPasswordUpgradeRequired: boolean;
     mfaEnabled: boolean;
+    agentIdentity: boolean;
   };
 };
 
@@ -126,15 +128,20 @@ export function clearLilySessionCookie(request: FastifyRequest, reply: FastifyRe
   reply.header("Set-Cookie", sessionCookie("", 0, requestUsesHttps(request)));
 }
 
-export async function createLilySession(userId: string, request: FastifyRequest, reply: FastifyReply) {
+export async function createLilySession(
+  userId: string,
+  request: FastifyRequest,
+  reply: FastifyReply,
+  options: { agentKeyId?: string; ttlMs?: number } = {}
+) {
   const user = await lilyPrisma.lilyUser.findUnique({
     where: { id: userId },
     select: { role: true }
   });
   if (!user) throw new ApiError(401, "Usuário Lily não encontrado.", { code: "LILY_USER_NOT_FOUND" });
-  const ttlMs = ["staff", "courier", "admin"].includes(user.role)
+  const ttlMs = options.ttlMs ?? (["staff", "courier", "admin"].includes(user.role)
     ? STAFF_SESSION_TTL_MS
-    : CUSTOMER_SESSION_TTL_MS;
+    : CUSTOMER_SESSION_TTL_MS);
   const token = crypto.randomBytes(32).toString("base64url");
   const csrfToken = csrfTokenForSessionToken(token);
   const expiresAt = new Date(Date.now() + ttlMs);
@@ -143,7 +150,8 @@ export async function createLilySession(userId: string, request: FastifyRequest,
       userId,
       tokenHash: hashToken(token),
       csrfTokenHash: hashToken(csrfToken),
-      expiresAt
+      expiresAt,
+      ...(options.agentKeyId ? { agentKeyId: options.agentKeyId, mfaVerifiedAt: new Date() } : {})
     }
   });
   reply.header("Set-Cookie", sessionCookie(token, Math.floor(ttlMs / 1000), requestUsesHttps(request)));
@@ -154,9 +162,11 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
   const now = new Date();
   const record = await lilyPrisma.lilySession.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { user: true }
+    include: { user: true, agentKey: true }
   });
   if (!record || record.revokedAt || record.expiresAt <= now || record.user.status !== "active") return null;
+  if (record.agentKeyId && (!record.agentKey || record.agentKey.status !== "active" || record.agentKey.revokedAt
+    || record.agentKey.userId !== record.userId || !record.user.agentIdentity)) return null;
   await lilyPrisma.lilySession.update({
     where: { id: record.id },
     data: { lastSeenAt: now }
@@ -166,7 +176,8 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
       id: record.id,
       csrfTokenHash: record.csrfTokenHash,
       expiresAt: record.expiresAt,
-      mfaVerifiedAt: record.mfaVerifiedAt
+      mfaVerifiedAt: record.mfaVerifiedAt,
+      agentKeyId: record.agentKeyId
     },
     user: {
       id: record.user.id,
@@ -177,7 +188,8 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
       avatarMediaId: record.user.avatarMediaId,
       rankingOptIn: record.user.rankingOptIn,
       staffPasswordUpgradeRequired: record.user.staffPasswordUpgradeRequired,
-      mfaEnabled: record.user.mfaEnabled
+      mfaEnabled: record.user.mfaEnabled,
+      agentIdentity: record.user.agentIdentity
     }
   };
 }
@@ -233,7 +245,7 @@ export function requireLilyCsrf(request: FastifyRequest, context: LilySessionCon
   }
 }
 
-export function publicLilyUser(user: LilySessionContext["user"]) {
+export function publicLilyUser(user: LilySessionContext["user"], agentSession = false) {
   return {
     id: user.id,
     phone: user.phoneNormalized,
@@ -241,8 +253,8 @@ export function publicLilyUser(user: LilySessionContext["user"]) {
     role: user.role,
     avatarUrl: user.avatarMediaId ? `/api/v1/lily/public/media/${encodeURIComponent(user.avatarMediaId)}` : null,
     rankingOptIn: user.rankingOptIn,
-    staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
-    mfaEnabled: user.mfaEnabled
+    staffPasswordUpgradeRequired: agentSession ? false : user.staffPasswordUpgradeRequired,
+    mfaEnabled: agentSession || user.mfaEnabled
   };
 }
 

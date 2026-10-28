@@ -93,3 +93,7 @@ Migration `20260927160000_lily_staff_mfa`.
 `LilyUser` registra estado de enrollment, segredo cifrado e hashes de recovery codes. `LilySession.mfaVerifiedAt` diferencia sessão autenticada por senha de sessão privilegiada com segundo fator confirmado.
 
 O banco nunca persiste segredo TOTP em texto puro nem recovery code bruto. A chave de cifra pertence ao ambiente de produção e não ao banco/Git.
+
+## Identidade administrativa de agente
+
+Migration `20261028120000_lily_agent_admin_auth` adiciona uma chave pública Ed25519 por conta CookLily dedicada ao agente, desafios temporários, handoffs persistidos somente por hash e a associação da sessão com a chave usada. A identidade vinculada não aceita login por senha; a chave privada permanece no computador local/ssh-agent. `LilyAdminAudit.actorType`, `agentKeyId` e `agentKeyFingerprint` identificam as ações do agente. Revogar a chave invalida todas as sessões associadas sem apagar a trilha de auditoria.

@@ -419,6 +419,10 @@ if [[ -f "${APP_DIR}/deploy/scripts/lily-promote-user" ]]; then
   install -m 0755 "${APP_DIR}/deploy/scripts/lily-promote-user" /usr/local/sbin/lily-promote-user
   echo "operator_tool=/usr/local/sbin/lily-promote-user"
 fi
+if [[ -f "${APP_DIR}/deploy/scripts/lily-agent-key" ]]; then
+  install -m 0755 "${APP_DIR}/deploy/scripts/lily-agent-key" /usr/local/sbin/lily-agent-key
+  echo "operator_tool=/usr/local/sbin/lily-agent-key"
+fi
 if [[ -f "${APP_DIR}/deploy/scripts/verify-sqlite-backup" ]]; then
   install -m 0755 "${APP_DIR}/deploy/scripts/verify-sqlite-backup" /usr/local/sbin/carro-chefe-verify-backup
   echo "operator_tool=/usr/local/sbin/carro-chefe-verify-backup"

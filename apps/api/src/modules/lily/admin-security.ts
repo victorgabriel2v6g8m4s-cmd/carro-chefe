@@ -14,6 +14,10 @@ async function requirePrivilegedRole(
   if (!allowedRoles.includes(context.user.role)) {
     throw new ApiError(403, roleError.message, { code: roleError.code });
   }
+  if (context.session.agentKeyId && context.user.agentIdentity) {
+    if (requireCsrf) requireLilyCsrf(request, context);
+    return context;
+  }
   if (context.user.staffPasswordUpgradeRequired) {
     throw new ApiError(403, "Atualize sua senha antes de acessar funções operacionais.", {
       code: "LILY_STAFF_PASSWORD_UPGRADE_REQUIRED"
@@ -58,9 +62,16 @@ export async function auditLilyAdmin(
   entityId?: string | null,
   payload?: unknown
 ) {
+  const identity = await lilyPrisma.lilyAgentKey.findUnique({
+    where: { userId: actorUserId },
+    select: { id: true, fingerprint: true }
+  });
   await lilyPrisma.lilyAdminAudit.create({
     data: {
       actorUserId,
+      actorType: identity ? "agent" : "human",
+      agentKeyId: identity?.id ?? null,
+      agentKeyFingerprint: identity?.fingerprint ?? null,
       action,
       entityType,
       entityId: entityId ?? null,

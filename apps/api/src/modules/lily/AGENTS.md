@@ -18,6 +18,7 @@ Módulo de backend exclusivo da operação temporária CookLily. Herda as regras
 - Mutações autenticadas exigem proteção CSRF compatível com a estratégia de sessão.
 - Login, criação de pedido, criação de pagamento e webhooks recebem rate limit específico.
 - Sessões usam token aleatório armazenado no cliente apenas em cookie `HttpOnly`, `Secure`, `SameSite=Lax`; persistir somente hash do token.
+- Identidade de agente administrativo usa chave OpenSSH Ed25519 exclusiva, desafio/ticket de uso único, sessão curta revalidada contra a chave ativa, CSRF em mutações e auditoria `actorType=agent`; a conta vinculada não aceita login por senha.
 - Senhas usam KDF forte e nunca são logadas.
 - Webhooks e operações repetíveis são idempotentes.
 - Logs devem redigir PII e segredos.

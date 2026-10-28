@@ -37,6 +37,8 @@ model LilyUser {
   mfaSecretEncrypted          String?
   mfaRecoveryCodesJson        String   @default("[]")
   mfaEnrolledAt               DateTime?
+  agentIdentity               Boolean  @default(false)
+  agentKey                    LilyAgentKey?
 
   @@index([status, createdAt])
 }
@@ -161,12 +163,15 @@ model LilySession {
   expiresAt     DateTime
   revokedAt     DateTime?
   mfaVerifiedAt DateTime?
+  agentKeyId    String?
   lastSeenAt    DateTime  @default(now())
   createdAt     DateTime  @default(now())
   user          LilyUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentKey      LilyAgentKey? @relation(fields: [agentKeyId], references: [id], onDelete: SetNull)
 
   @@index([userId, expiresAt])
   @@index([expiresAt, revokedAt])
+  @@index([agentKeyId])
 }
 
 model LilyConsentRecord {
@@ -470,14 +475,64 @@ model LilyOffer {
 model LilyAdminAudit {
   id          String   @id @default(cuid())
   actorUserId String
+  actorType   String   @default("human")
+  agentKeyId  String?
+  agentKeyFingerprint String?
   action      String
   entityType  String
   entityId    String?
   payloadJson String?
   createdAt   DateTime @default(now())
+  agentKey    LilyAgentKey? @relation(fields: [agentKeyId], references: [id], onDelete: SetNull)
 
   @@index([actorUserId, createdAt])
   @@index([entityType, entityId, createdAt])
+  @@index([agentKeyId, createdAt])
+}
+
+model LilyAgentKey {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  label          String
+  publicKey      String
+  fingerprint    String   @unique
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  revokedAt      DateTime?
+  lastUsedAt     DateTime?
+  user           LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions       LilySession[]
+  challenges     LilyAgentAuthChallenge[]
+  handoffs       LilyAgentAuthHandoff[]
+  auditEntries   LilyAdminAudit[]
+
+  @@index([status, updatedAt])
+}
+
+model LilyAgentAuthChallenge {
+  id          String   @id @default(cuid())
+  agentKeyId  String
+  challenge   String
+  attempts    Int      @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
+  agentKey    LilyAgentKey @relation(fields: [agentKeyId], references: [id], onDelete: Cascade)
+
+  @@index([agentKeyId, expiresAt, consumedAt])
+}
+
+model LilyAgentAuthHandoff {
+  id          String   @id @default(cuid())
+  agentKeyId  String
+  ticketHash  String   @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
+  agentKey    LilyAgentKey @relation(fields: [agentKeyId], references: [id], onDelete: Cascade)
+
+  @@index([agentKeyId, expiresAt, consumedAt])
 }
 
 

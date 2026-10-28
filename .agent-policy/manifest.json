@@ -46,7 +46,7 @@
     {
       "path": "apps/api/src/modules/lily/AGENTS.md",
       "kind": "agents",
-      "sha256": "6702e12671ffe0d40857ca703106f59700beb282a5ae561f2f857e87a2ef275e"
+      "sha256": "8f68dedffad0341cfc93a8d76bd17ff07d8cf62d115eb36fb89b2959c0d53c96"
     },
     {
       "path": "apps/api/src/workers/AGENTS.md",
@@ -61,7 +61,7 @@
     {
       "path": "apps/lily_acai/AGENTS.md",
       "kind": "agents",
-      "sha256": "0391b330c8daff1cc699add79984e581f622a5bff6bfa4e56156db31c3adc252"
+      "sha256": "509e9b323c3666df582d9e956848fe44b7fd9a20442ec605f89a1bf66a82e901"
     },
     {
       "path": "apps/qr_manipulator/AGENTS.md",
@@ -111,7 +111,7 @@
     {
       "path": "packages/lily-database/AGENTS.md",
       "kind": "agents",
-      "sha256": "5295e4da245817a764ca6245f5ffc84bf1db5e72c45c48b26b27dede30b47d22"
+      "sha256": "6f1dbc7047220a6033c1fd43b2cc1938c1e88c7f10e7a948b2c5b428ba292805"
     },
     {
       "path": "packages/ui/AGENTS.md",
@@ -131,7 +131,7 @@
     {
       "path": "tools/AGENTS.md",
       "kind": "agents",
-      "sha256": "b4bd51a7b47dcf456eb5f6cba6fde8ca95b15beeaee4da7aae31728a9620e97d"
+      "sha256": "634f0cbc349529552ee780d2647a1115c1e06d08935dd3338a003cce8ddfa649"
     },
     {
       "path": "tools/agent-policy/AGENTS.md",
@@ -714,5 +714,5 @@
       ]
     }
   },
-  "manifestHash": "10f90a07329472f6b8a451d6e7b825fbfb264eb78450a3e9f87bf3a489aa7dec"
+  "manifestHash": "409491d7778fa8b22c17f1490398aa676fefbb3f4228467a42bc566317975596"
 }
