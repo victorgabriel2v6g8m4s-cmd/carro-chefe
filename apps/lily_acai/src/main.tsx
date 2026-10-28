@@ -17,6 +17,7 @@ import { AdminPaymentMethodsPage } from "./features/admin/AdminPaymentMethodsPag
 import { AdminTeamPage } from "./features/admin/AdminTeamPage";
 import { AdminStoreSettingsPage } from "./features/admin/AdminStoreSettingsPage";
 import { AdminObservabilityPage } from "./features/admin/AdminObservabilityPage";
+const AdminWhatsAppPage = lazy(() => import("./features/admin/AdminWhatsAppPage").then((module) => ({ default: module.AdminWhatsAppPage })));
 import { AdminAnalyticsPage } from "./features/analytics/AdminAnalyticsPage";
 import { KitchenPage } from "./features/operations/KitchenPage";
 import { KitchenPrintPage } from "./features/operations/KitchenPrintPage";
@@ -585,6 +586,7 @@ function App() {
     <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
     <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
     <Route path="/painel/saude" element={<Shell><AdminObservabilityPage /></Shell>} />
+    <Route path="/painel/whatsapp" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando operação WhatsApp" />}><Shell><AdminWhatsAppPage /></Shell></Suspense>} />
     <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
     <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
     <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />

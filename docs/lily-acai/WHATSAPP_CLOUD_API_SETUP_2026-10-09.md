@@ -1,6 +1,6 @@
 # CookLily — base de integração com WhatsApp Cloud API
 
-**Estado desta entrega:** código e endpoints integrados à branch `cooklily/canonical`; ainda aguarda validação de migration/testes, configuração de segredos no servidor, deploy e validação no Meta Developers. Nenhum token, App Secret ou Verify Token real deve ser versionado.
+**Estado desta integração:** backend, webhook, fila de saída e painel administrativo estão implementados. A ativação de produção ainda depende de ativos e credenciais da Meta no servidor protegido e da validação do callback/template no Meta Developers. Nenhum token, App Secret ou Verify Token real deve ser versionado.
 
 ## Objetivo e escopo
 
@@ -11,7 +11,8 @@ A CookLily já possui uma fila de notificações transacionais de pedidos e um w
 - verificação GET de webhook exigida pelo Meta Developers;
 - recepção POST com validação criptográfica do cabeçalho `X-Hub-Signature-256`;
 - registro idempotente e minimizado dos eventos recebidos;
-- testes unitários de verificação de assinatura e token.
+- testes unitários de verificação de assinatura e token;
+- operação da conexão, fila e templates em `/lilyacai/painel/whatsapp`.
 
 Não inclui configuração de credenciais reais, criação/aprovação de templates dentro da Meta, envio de mensagens livres, respostas automáticas a conversas recebidas, nem deploy. A API não persiste o texto de mensagens recebidas nem números de telefone dos eventos webhook.
 
@@ -28,6 +29,9 @@ Use o domínio público HTTPS já apontado para a API. Não informe um domínio 
 | PATCH | `/api/v1/lily/admin/whatsapp/templates/:id` | Atualiza ou arquiva logicamente mensagem; requer admin, MFA verificado e CSRF |
 | GET | `/api/v1/lily/admin/whatsapp/settings` | Estado da configuração da API e da fila |
 | GET | `/api/v1/lily/admin/whatsapp/notifications` | Consulta a fila transacional existente |
+| POST | `/api/v1/lily/admin/whatsapp/retry` | Reenfileira itens failed/dead; exige admin, MFA e CSRF |
+
+O painel é acessível a staff/admin para consulta. Criar/editar/ativar/arquivar templates e reenfileirar notificações exige admin, MFA verificado e CSRF, conforme as regras server-side. Ele mostra apenas se cada segredo está configurado, nunca seu conteúdo. Erros detalhados do provider, conteúdo de mensagens e telefones não são exibidos no painel.
 
 URL para colar no Meta Developers, substituindo pelo host real de produção:
 
@@ -127,4 +131,4 @@ Teste local antes de apontar a Meta para produção:
 4. Confirme GET válido (200 + challenge), Verify Token incorreto (403), App Secret ausente (503), assinatura ausente/inválida (401) e POST assinado (200).
 5. Só então configure o callback no Meta Developers e faça o teste de envio com número autorizado.
 
-**Limite desta entrega:** a documentação e os endpoints estão versionados em `cooklily/canonical`, mas não estão ativos publicamente até o banco ser migrado, a aplicação ser implantada/reiniciada e os segredos reais serem configurados no servidor. Nenhuma credencial real foi fornecida ou configurada aqui.
+**Limite de ativação:** o painel e endpoints só ficam disponíveis no site após migração/deploy. Mesmo após o deploy, envio real permanece desativado se o painel indicar configuração incompleta. Para ativar a produção ainda é necessário provisionar WABA/número, token, Phone Number ID, versão Graph, App Secret, Verify Token e template aprovado no idioma/ordem de variáveis corretos, configurar o callback e verificar o handshake/eventos no Meta Developers. Nenhuma credencial real foi fornecida ou configurada nesta entrega; não declarar o envio real homologado antes desses passos.

@@ -31,9 +31,9 @@ test("avalia build dentro e fora do budget", () => {
   assert.deepEqual(evaluateLilyBuildBudget(within), []);
 
   const over = {
-    js: { files: 1, rawBytes: 700_000, gzipBytes: 180_000 },
+    js: { files: 1, rawBytes: 700_000, gzipBytes: 190_000 },
     css: { files: 1, rawBytes: 140_000, gzipBytes: 35_000 },
-    combinedGzipBytes: 215_000
+    combinedGzipBytes: 225_000
   };
   const labels = evaluateLilyBuildBudget(over).map((item) => item.label);
   assert.deepEqual(labels, [

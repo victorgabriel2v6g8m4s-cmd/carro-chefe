@@ -101,6 +101,12 @@ export function lilyWhatsAppConfiguration() {
   };
 }
 
+export function assertWhatsAppTemplateCanActivate(status: string, metaTemplateName: string | null | undefined) {
+  if (status === "active" && !metaTemplateName) {
+    throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
+  }
+}
+
 export async function enqueueLilyWhatsAppStage(
   db: DbClient,
   input: {
@@ -540,9 +546,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
     const context = await requireLilyAdmin(request, true);
     const input = templateInputSchema.parse(request.body);
-    if (input.status === "active" && !input.metaTemplateName) {
-      throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
-    }
+    assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName);
     const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
       data: {
         key: input.key,
@@ -580,9 +584,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     if (!current) throw new ApiError(404, "Template WhatsApp não encontrado.", { code: "WHATSAPP_TEMPLATE_NOT_FOUND" });
     const nextMetaName = input.metaTemplateName === undefined ? current.metaTemplateName : input.metaTemplateName;
     const nextStatus = input.status ?? current.status;
-    if (nextStatus === "active" && !nextMetaName) {
-      throw new Error("Para ativar uma mensagem, informe o nome do template aprovado na Meta.");
-    }
+    assertWhatsAppTemplateCanActivate(nextStatus, nextMetaName);
     const updated = await lilyPrisma.lilyWhatsAppMessageTemplate.update({
       where: { id },
       data: {

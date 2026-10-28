@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import {
   enqueueLilyWhatsAppStage,
+  assertWhatsAppTemplateCanActivate,
   lilyWhatsAppConfiguration,
   processLilyWhatsAppQueue
 } from "./whatsapp";
@@ -79,6 +80,15 @@ afterEach(async () => {
 });
 
 describe("CookLily Entrega 11H WhatsApp", () => {
+  it("retorna erro de validação claro ao ativar template sem nome aprovado na Meta", () => {
+    expect(() => assertWhatsAppTemplateCanActivate("active", null)).toThrowError(expect.objectContaining({
+      statusCode: 400,
+      details: { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" }
+    }));
+    expect(() => assertWhatsAppTemplateCanActivate("draft", null)).not.toThrow();
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_pedido_pronto")).not.toThrow();
+  });
+
   it("fica fail-closed enquanto Meta Cloud API não estiver completamente configurada", () => {
     delete process.env.COOKLILY_WHATSAPP_PROVIDER;
     delete process.env.COOKLILY_WHATSAPP_ACCESS_TOKEN;
