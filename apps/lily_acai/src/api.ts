@@ -97,8 +97,8 @@ export type CatalogProduct = {
     name: string;
     parent: { id: string; slug: string; name: string } | null;
   };
-  cover: { id: string; url: string; altText: string } | null;
-  gallery: Array<{ id: string; url: string; altText: string }>;
+  cover: { id: string; url: string; altText: string; mime: string } | null;
+  gallery: Array<{ id: string; url: string; altText: string; mime: string }>;
   variants: CatalogVariant[];
   flavors: CatalogFlavor[];
   addons: CatalogAddon[];
@@ -349,7 +349,29 @@ export async function uploadLilyMedia(file: File, csrfToken: string) {
     headers: { "X-Lily-CSRF": csrfToken },
     body: data
   });
-  return parseResponse<{ id: string; url: string; originalName: string; altText: string }>(response);
+  return parseResponse<{ id: string; url: string; originalName: string; altText: string; mime: string; size: number }>(response);
+}
+
+export type LilyReelSocial = { productId: string; likeCount: number; liked: boolean; saved: boolean; comments: Array<{ id: string; name: string; body: string; createdAt: string }> };
+
+export async function getLilyReelSocial(productId: string) {
+  const response = await fetch(`/api/v1/lily/public/reels/${encodeURIComponent(productId)}/social`, { credentials: "same-origin" });
+  return parseResponse<LilyReelSocial>(response);
+}
+
+export async function setLilyReelAction(productId: string, action: "like" | "save", enabled: boolean, csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/reels/action", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: JSON.stringify({ productId, action, enabled }) });
+  return parseResponse<{ enabled: boolean }>(response);
+}
+
+export async function postLilyReelComment(productId: string, body: string, csrfToken: string) {
+  const response = await fetch("/api/v1/lily/customer/reels/comments", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: JSON.stringify({ productId, body }) });
+  return parseResponse<{ id: string; name: string; body: string; createdAt: string }>(response);
+}
+
+export async function getLilyProfileReels(kind: "liked" | "saved") {
+  const response = await fetch(`/api/v1/lily/customer/reels/${kind}`, { credentials: "same-origin" });
+  return parseResponse<{ reels: Array<{ id: string; slug: string; title: string; category: string; coverUrl: string | null; altText: string }> }>(response);
 }
 
 

@@ -13,6 +13,8 @@ export function ReelsPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const horizontalKeys = useRef<((direction: 1 | -1) => void) | null>(null);
+  const requestedProduct = useRef(new URLSearchParams(window.location.search).get("produto"));
+  const initialPositionPending = useRef(false);
   const sequenceLabel = sequence === "related" ? "Relacionados" : sequence === "catalog" ? "Catálogo" : "Aleatória";
   const items = useMemo(() => Array.from({ length: cycles }, (_, cycle) => products.map((product) => ({ product, key: `${cycle}:${product.id}` }))).flat(), [cycles, products]);
   const setFeedRef = useCallback((node: HTMLDivElement | null) => setFeed(node), []);
@@ -20,7 +22,12 @@ export function ReelsPage() {
 
   useEffect(() => {
     let alive = true;
-    void loadReelsCatalog().then((rows) => { if (alive) setProducts(rows); }).catch((cause) => { if (alive) setError(cause instanceof Error ? cause.message : "Não foi possível abrir os Reels."); });
+    void loadReelsCatalog().then((rows) => {
+      if (!alive) return;
+      const selectedIndex = rows.findIndex((row) => row.slug === requestedProduct.current);
+      if (selectedIndex >= 0) { setActiveIndex(selectedIndex); initialPositionPending.current = true; }
+      setProducts(rows);
+    }).catch((cause) => { if (alive) setError(cause instanceof Error ? cause.message : "Não foi possível abrir os Reels."); });
     return () => { alive = false; };
   }, []);
 
@@ -34,6 +41,12 @@ export function ReelsPage() {
     slides.forEach((slide) => observer.observe(slide));
     return () => observer.disconnect();
   }, [feed, items.length]);
+
+  useEffect(() => {
+    if (!feed || !initialPositionPending.current) return;
+    feed.querySelector<HTMLElement>(`[data-reel-index="${activeIndex}"]`)?.scrollIntoView({ behavior: "instant", block: "start" });
+    initialPositionPending.current = false;
+  }, [activeIndex, feed, items.length]);
 
   useEffect(() => {
     if (!feed || !items.length) return;
