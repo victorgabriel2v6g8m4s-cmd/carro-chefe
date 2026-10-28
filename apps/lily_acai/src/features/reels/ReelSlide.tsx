@@ -108,8 +108,14 @@ export function ReelSlide({ product, index, sequence, sequenceLabel, active, tot
       const targetIndex = Math.max(0, Math.min(total - 1, index + (dy < 0 ? 1 : -1)));
       feed.querySelector<HTMLElement>(`[data-reel-index="${targetIndex}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-    suppressClick.current = start.moved;
-    window.setTimeout(() => { suppressClick.current = false; }, 0);
+    suppressClick.current = start.moved || Math.abs(dx) > 6 || Math.abs(dy) > 6;
+  }
+
+  function suppressDragClick(event: ReactMouseEvent<HTMLElement>) {
+    if (!suppressClick.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick.current = false;
   }
 
   function togglePlaybackFromMedia(event: ReactMouseEvent<HTMLElement>) {
@@ -160,8 +166,8 @@ export function ReelSlide({ product, index, sequence, sequenceLabel, active, tot
     <span>{product.displayName}</span>
   </article>;
 
-  return <article className={`reels-stage${product.vipLocked ? " is-vip-locked" : ""}`} data-reel-index={index} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onClick={togglePlaybackFromMedia} style={{ transform: `translateX(${dragX}px) scale(${1 - Math.min(0.06, Math.abs(dragX) / 1800)})` }} aria-label="Reels de produtos: deslize para cima ou para baixo para mudar de produto">
-    {activeMedia ? isVideo ? <video ref={videoRef} key={activeMedia.id} src={activeMedia.url} poster={product.cover?.url} muted={muted} loop playsInline aria-label={activeMedia.altText || product.displayName} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)} /> : <img key={activeMedia.id} src={activeMedia.url} alt={activeMedia.altText || product.displayName} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = placeholder; }} /> : <img src={placeholder} alt="" />}
+  return <article className={`reels-stage${product.vipLocked ? " is-vip-locked" : ""}`} data-reel-index={index} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onDragStart={(event) => event.preventDefault()} onClickCapture={suppressDragClick} onClick={togglePlaybackFromMedia} style={{ transform: `translateX(${dragX}px) scale(${1 - Math.min(0.06, Math.abs(dragX) / 1800)})` }} aria-label="Reels de produtos: deslize para cima ou para baixo para mudar de produto">
+    {activeMedia ? isVideo ? <video draggable={false} ref={videoRef} key={activeMedia.id} src={activeMedia.url} poster={product.cover?.url} muted={muted} loop playsInline aria-label={activeMedia.altText || product.displayName} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)} /> : <img draggable={false} key={activeMedia.id} src={activeMedia.url} alt={activeMedia.altText || product.displayName} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = placeholder; }} /> : <img draggable={false} src={placeholder} alt="" />}
     {product.vipEarlyAccess && <span className="reels-vip-tag">✦ VIP</span>}
     <header className="reels-top-controls"><button className="reels-icon-button" type="button" onClick={onExit} aria-label="Sair dos Reels"><ArrowLeft /></button><h2 className="sr-only">{product.displayName}</h2><div className="reels-media-dots" role="progressbar" aria-label="Mídia do produto" aria-valuemin={1} aria-valuemax={media.length} aria-valuenow={mediaIndex + 1}>{media.map((item, itemIndex) => <span key={item.id} className={itemIndex === mediaIndex ? "is-current" : undefined} />)}</div><button className="reels-icon-button" type="button" onClick={onCycleSequence} aria-label={`Mudar sequência. Atual: ${sequenceLabel}`} title={`Sequência: ${sequenceLabel}`}>{sequence === "catalog" ? <ListOrdered /> : <Shuffle />}</button><button className="reels-icon-button reels-sound-button" type="button" onClick={() => setMuted((value) => !value)} aria-label={muted ? "Ativar som" : "Silenciar"} title={muted ? "Ativar som" : "Silenciar"}>{muted ? <VolumeX /> : <Volume2 />}</button></header>
     {!product.vipLocked && <aside className="reels-actions" aria-label="Ações do produto"><button type="button" onClick={toggleLiked} aria-label={liked.includes(product.id) ? "Descurtir produto" : "Curtir produto"} aria-pressed={liked.includes(product.id)}><Heart fill={liked.includes(product.id) ? "currentColor" : "none"} /></button><button type="button" onClick={toggleSaved} aria-label={saved.includes(product.id) ? "Remover dos salvos" : "Salvar produto"} aria-pressed={saved.includes(product.id)}><Bookmark fill={saved.includes(product.id) ? "currentColor" : "none"} /></button><button type="button" onClick={share} aria-label="Compartilhar produto"><Share2 /></button><button type="button" onClick={() => setCommentsOpen(true)} aria-label="Abrir comentários"><MessageCircle /></button><button className={cartFeedback ? "is-added" : undefined} type="button" onClick={() => void addToCart()} aria-label={needsCustomization ? "Escolher opções e adicionar ao carrinho" : "Adicionar ao carrinho"}><ShoppingCart /></button></aside>}
