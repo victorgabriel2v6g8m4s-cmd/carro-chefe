@@ -1,13 +1,13 @@
 # Validade e resgate do convite VIP CookLily
 
-- status: execução ampliada; correção VIP local validada; autenticação de agente implementada localmente e em verificação; PR #204 ainda contém somente o HEAD previamente validado até o próximo commit/push; homologação de produção parcial
+- status: correção VIP e autenticação por chave implantadas; fluxo VIP real concluído com conta de teste; PR #205 corrige Origin ausente e permite handoff isolado no Edge; CI do último HEAD pendente
 - owner: AG-DEV
-- branch: `codex/vip-expiry-guard`
+- branch: `codex/agent-auth-origin-vip-flow`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `5a5cccd4a8e307ed5fcb2ab2396a41b8130e9388`
-- head_sha_verified: `0e28aebfdd0213c0528d60fa8e3204659a1e6e5d` (último commit/PR confirmado; alterações subsequentes estão no working tree e ainda não têm SHA)
-- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) (rascunho)
-- ci_run: #810 / run ID `40629075558`, Node 20 e 24 e demais jobs verificados como success para `0e28aebfdd0213c0528d60fa8e3204659a1e6e5d`
+- base_sha_verified: `59e45f8c616d2b95be7c01760dd1fe4e366b776e`
+- head_sha_verified: `8e63014fd81ad2e9277fd2bd9f45df1912341748`
+- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) (merged), [PR #205](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/205) (open; CI pendente)
+- ci_run: #811 / run ID `40632536335`, todos os sete jobs success para o HEAD que virou o merge `59e45f8...`; CI do PR #205 deve ser consultado para o HEAD `8e63014...`
 - last_verified_at: 2026-10-28
 - interruption_state: none
 
@@ -66,15 +66,20 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 - `agent-auth.test.ts` + `deploy-scripts.test.ts`: PASS — 12 testes, 3 ignorados no Windows.
 - A validação local `bash -n` acionou `C:\Windows\System32\bash.exe` (stub/WSL) e foi interrompida; sintaxe Bash permanece gate do CI Linux.
 - `git diff --check`: PASS; avisos apenas de conversão automática LF/CRLF do Git no Windows.
+- Merge PR #204: `59e45f8c616d2b95be7c01760dd1fe4e366b776e`. Deploy `sudo cc deploy canonical` em 2026-10-28 terminou com release SHA idêntico, migration `20261028120000_lily_agent_admin_auth`, testes 63/337, budget e checks externos verdes; evidência operacional em `/srv/carro-chefe/data/deploy-logs/deploy-20261028-043403-59e45f8c616d.evidence`.
+- Fingerprint da chave agente provisionada na VPS: `SHA256:uI4S77+pEUl1/bza+GyE+giCANgi444HDzGef0Cz0+A`; status verificado `role=admin`, `account_status=active`, `identity=agent`, `key_status=active`. Não registrar chave privada nem senha neste checkpoint.
+- Falha de homologação inicial: CLI enviada sem `Origin` e a API respondeu HTTP 403 pela proteção global de origem. Corrigido localmente com `Origin: https://carrochefe.com`; teste direcionado após fix PASS. PR #205 adiciona Origin e opção Windows para abrir handoff no Edge, evitando substituir a sessão de teste aberta no Chrome.
+- Homologação real concluída: CLI corrigida completou desafio/assinatura/handoff no domínio; painel carregou como `Chat GPT Codex Agent`; gestão VIP mostrou três convites antigos expirados; agente emitiu convite ilimitado de teste sem validade, cliente resgatou em `perfil`, popup dourado apareceu, consentimento `cooklily-vip-2026-10-v1` foi registrado com autorização anterior do proprietário, e a inscrição mudou para `active` com `enrolledAt` persistido e coroa no avatar.
+- Capturas sanitizadas fora do repositório: `C:\Users\valdi\.codex\visualizations\2026\10\28\agent-admin-panel.png`, `...\vip-terms-page.png`, `...\vip-active-membership.png`, `...\vip-crown.png`. A captura integral do perfil usada durante a depuração contém dados identificadores do cliente de teste; não anexar nem versionar.
+- O convite usado foi emitido especificamente para homologação e resgatado; seu texto não foi persistido em docs/logs. O banco armazena somente hash.
 
 ## Integração, deploy e homologação
 
-- PR #204 aberta em rascunho; run #810 está verde no HEAD anterior (`0e28aeb...`). A PR será atualizada para incluir a autenticação de agente e revalidada antes de integrar.
-- Deploy VPS: pending; executar `sudo cc deploy canonical` depois da integração aprovada e gates verdes.
-- Pós-deploy: conferir SHA, serviço, Nginx e health checks; abrir novamente o domínio e repetir jornada desktop/mobile.
-- Conta de teste: sessão autenticada no navegador. Ela não tem permissão staff/admin; código completo não é recuperável do hash. Necessário que staff reative um convite vencido sem prazo ou emita um novo; o código pode ser preenchido no perfil de teste sem ser compartilhado no chat. Proprietário autorizou consentimento dos termos nesta conta; submeter somente quando o convite pendente habilitar o fluxo.
+- PR #204 merged e deploy live em `59e45f8...`; PR #205 aguarda CI. A CLI com Origin foi exercida contra a produção e completou o fluxo; correção do CLI aguarda merge/deploy para ficar versionada/disponível na canonical.
+- Conta de teste agora está inscrita no VIP (`active`) com consentimento gravado; não cancelar ou alterar sem pedido do proprietário.
+- Pendência de política: os termos VIP publicados dizem que o prazo exato de retenção ainda precisa ser definido antes da entrada de participantes em produção; não anunciar/coletar participantes reais antes dessa decisão.
 
 ## Próxima ação exata
 
-Executar `npm run check`, suíte completa e `npm run build`, corrigir achados, atualizar PR #204 e esperar CI completo. Revisar e integrar quando os gates estiverem verdes. Depois executar deploy autorizado, gerar/carregar a chave exclusiva no ssh-agent, provisionar só a chave pública para a conta admin dedicada e homologar o painel no domínio real com capturas sem ticket/segredos. Resgatar o convite VIP quando o proprietário enviar o código, concluir consentimento já autorizado, validar inscrição/coroa/acesso VIP com capturas. O usuário pediu a atualização do Instagram somente depois de fechar a tarefa VIP.
+Consultar CI do PR #205 para `8e63014...`; se verde, revisar e fazer merge squash autorizado, depois rodar `sudo cc deploy canonical` e confirmar SHA/health. A homologação VIP real já passou; conferir que o code fix publicado permite reautenticação futura pela CLI. Em seguida, cumprir a solicitação pendente de substituir `@acai._lily` por `cook._lily` em todas as referências do site, com PR/CI/deploy e teste real separado. Registrar capturas finais e atualizar este checkpoint após cada marco.
 

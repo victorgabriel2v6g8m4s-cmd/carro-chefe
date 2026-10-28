@@ -196,6 +196,8 @@ describe("scripts operacionais CookLily", () => {
     const implementation = readFileSync(script, "utf8");
     expect(implementation).toContain('"-Y", "sign"');
     expect(implementation).toContain('"-U"');
+    expect(implementation).toContain('Origin: apiOrigin');
+    expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "edge"');
     expect(implementation).not.toContain("console.log(loginUrl)");
   });
 });
