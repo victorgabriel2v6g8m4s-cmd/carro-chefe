@@ -7,6 +7,7 @@ const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(resolve(sourceDirectory, "styles.css"), "utf8").replace(/\r\n/g, "\n");
 const html = readFileSync(resolve(sourceDirectory, "../index.html"), "utf8");
 const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
+const reelsSource = ["features/reels/ReelsPage.tsx", "features/reels/ReelSlide.tsx"].map((path) => readFileSync(resolve(sourceDirectory, path), "utf8")).join("\n");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
 const paymentSource = [
@@ -30,6 +31,31 @@ const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-int
 const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
+  it("usa Lucide na navegação, mantém ordem do header e substitui o carrinho do rodapé por Ranking", () => {
+    expect(mainSource).toContain('from "lucide-react"');
+    expect(mainSource).toContain('NavLink to="/ranking"><Trophy');
+    expect(mainSource).not.toContain('NavLink to="/carrinho" aria-label={`Carrinho');
+    expect(css).toContain(".header-actions .notifications-icon { order: 1; }");
+    expect(css).toContain(".header-actions .profile-icon { order: 2; }");
+    expect(css).toContain(".header-actions .cart-icon { order: 3; }");
+    expect(css).toContain(".header-actions .menu-icon { order: 4; }");
+  });
+
+  it("mantém uma só affordance para cada navegação do Reel e os controles em ícones Lucide", () => {
+    expect(reelsSource).toContain('from "lucide-react"');
+    expect(reelsSource).not.toContain("reels-nav");
+    expect(reelsSource).toContain('className="reels-media-dots" role="progressbar"');
+    expect(reelsSource).toContain('aria-label={muted ? "Ativar som" : "Silenciar"}');
+    expect(reelsSource).toContain('event.key === "ArrowDown"');
+    expect(reelsSource).toContain('event.key === "ArrowUp"');
+    expect(reelsSource).toContain('onClick={() => setCommentsOpen(true)}');
+    expect(reelsSource).toContain('className="reels-timeline"');
+    expect(reelsSource).toContain('className="reels-feed"');
+    expect(reelsSource).toContain('setCycles((current) => current + 1)');
+    expect(reelsSource).toContain('className="reels-more-button"');
+    expect(reelsSource).not.toContain("Personalizar e pedir");
+  });
+
   it("mantém idioma e viewport declarados no documento", () => {
     expect(html).toContain('<html lang="pt-BR">');
     expect(html).toContain('name="viewport" content="width=device-width, initial-scale=1.0"');

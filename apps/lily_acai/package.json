@@ -1,5 +1,8 @@
 {
   "name": "@lily-acai/site",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "lucide-react": "^1.63.0"
+  }
 }

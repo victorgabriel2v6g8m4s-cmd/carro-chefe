@@ -9,10 +9,11 @@ function source(relative: string) {
 }
 
 describe("CookLily — ajustes mobile de UI", () => {
-  it("usa o espaço do perfil no footer para acessar o cardápio", () => {
+  it("usa o slot do carrinho no footer para acessar o Ranking", () => {
     const app = source("apps/lily_acai/src/main.tsx");
-    expect(app).toContain('to="/cardapio"><span className="footer-catalog-icon"><CatalogIcon /></span><small>Cardápio</small></NavLink>');
-    expect(app).not.toContain('<NavLink to="/perfil"><span aria-hidden="true">♙</span><small>Perfil</small></NavLink>');
+    expect(app).toContain('NavLink to="/ranking"><Trophy size={22}');
+    expect(app).toContain('NavLink to="/cardapio"><BookOpen size={22}');
+    expect(app).not.toContain('NavLink to="/carrinho" aria-label={`Carrinho');
   });
 
   it("mantém ações de modal acima da navegação e separa o preço selecionado", () => {
