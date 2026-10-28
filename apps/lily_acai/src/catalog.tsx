@@ -173,7 +173,9 @@ function ProductConfigurator({ product, onClose }: { product: CatalogProduct; on
     <section className="product-modal" role="dialog" aria-modal="true" aria-label={product.displayName}>
       <button className="modal-close" type="button" onClick={onClose} aria-label="Fechar">×</button>
       <div className="product-modal-media">
-        <ProductImage product={product} onOpen={() => setFullscreen(true)} />
+        <div className={product.vipLocked ? "vip-locked-media" : undefined}>
+          <ProductImage product={product} onOpen={() => setFullscreen(true)} />
+        </div>
       </div>
       <div className="product-modal-panel">
         <div className="product-modal-content">
