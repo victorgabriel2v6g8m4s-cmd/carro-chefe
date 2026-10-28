@@ -5,8 +5,8 @@
 - branch: codex/reels-social-media-levels-parity
 - base_branch: cooklily/canonical
 - base_sha_verified: cf8a25b (checkpoint de Reels integrado após release df0ca1e)
-- head_sha_verified: cf8a25b (mudanças atuais ainda sem commit; gates finais executados)
-- pull_requests: nenhum para esta execução
+- head_sha_verified: 3f205e4884dab65ef3aef81ab61e18acc8e0915a
+- pull_requests: PR #235 aberto — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/235, head commit `3f205e4884dab65ef3aef81ab61e18acc8e0915a`; CI em execução
 - deployed_sha: df0ca1eea01d02b00d55275dcfbd8023444282b3
 - tests/gates: preflight AG-DEV --scope lily-reels-social-media passou. `npm run check` passou. Primeira execução de `npm test` no SQLite local antigo falhou em 103 testes por incompatibilidade de schema no banco runtime; o banco não foi alterado. Execução completa em `.runtime/cooklily-reels-test.db` com as 32 migrations: 68 arquivos, 357 passaram, 3 skipped. Teste focal social passou. `npm run build` passou (JS raw 703.41/704 KiB; JS gzip 191.15/195 KiB; combinado gzip 219.17/224 KiB; build_budget=ok; aviso Vite existente de chunk >500 kB). `npm run policy:check` e `git diff --check` passaram.
 - migrations: `20261028210000_lily_reel_social` adicionada; aplicada ao DB de testes temporário `.runtime/cooklily-reels-test.db` junto às demais migrations. Nenhuma migration aplicada à produção ainda.
@@ -15,4 +15,4 @@
 - requested_scope: validar/implementar timeline; curtidas/salvos/comentários persistentes e visíveis no Perfil; upload de várias mídias e carrossel por produto no admin; compartilhar URL do Reel e mídia atualmente selecionada; fullscreen sem margem/background; testes responsivos e desktop/mobile; confirmar painel de níveis já planejado; retomar integração CookLily WhatsApp após perfil completo e gates.
 - policy: comentários vinculados à conta, exibidos publicamente sob identificador genérico `Cliente CookLily` (sem expor nome/telefone); 500 caracteres e até cinco comentários por minuto; staff/admin pode ocultar com auditoria. Curtidas e salvos são privados e requerem login/CSRF. Recursos respeitam bloqueio VIP/publicação do produto.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: corrigir/confirmar conta registrada na Meta e resolver prerequisitos de envio (app publicado, método de pagamento e template aprovado quando aplicável); então tentar um envio de teste somente após confirmar se o número destinatário está apto. Em paralelo, abrir PR para `cooklily/canonical`, revisar CI, integrar e deployar; homologar Reels/níveis no Codex IAB em desktop e mobile e registrar capturas.
+- next_action: aguardar checks do PR #235; integrar após CI verde; deploy e homologação de Reels/níveis pelo Codex IAB em desktop e mobile, com capturas. Separadamente, reconciliar o erro de registro WhatsApp e os prerequisitos externos Meta antes de repetir o envio de teste.
