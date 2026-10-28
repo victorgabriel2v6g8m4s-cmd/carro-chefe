@@ -141,6 +141,25 @@ describe.sequential("CookLily survey lifecycle", () => {
     expect(started.json().survey.title).toBe("Pesquisa de teste público");
   });
 
+  it("returns a configured VIP points target at survey start and hides it for active VIP members", async () => {
+    const staff = await register("staff", "67911114461");
+    const customer = await register("customer", "67911114462");
+    const created = await app.inject({ method: "POST", url: "/api/v1/lily/admin/surveys", headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: definition("Pesquisa com marco") });
+    const survey = created.json().survey as { id: string; publicToken: string; version: number };
+    await app.inject({ method: "POST", url: `/api/v1/lily/admin/surveys/${survey.id}/publish`, headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: {} });
+    await lilyPrisma.lilyOperationalSettings.upsert({ where: { id: "default" }, create: { id: "default", vipPointsThreshold: 80 }, update: { vipPointsThreshold: 80 } });
+    await lilyPrisma.lilyLoyaltyEvent.create({ data: { userId: customer.userId, type: "survey_reward", points: 20, sourceKey: `survey-target-${customer.userId}` } });
+
+    const started = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${survey.publicToken}/start`, headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf }, payload: {} });
+    expect(started.statusCode).toBe(200);
+    expect(started.json().progressTarget).toEqual({ label: "Acesso VIP por pontos", remaining: 60, currentPoints: 20, targetPoints: 80, progressPercent: 25 });
+
+    await lilyPrisma.lilyVipMembership.create({ data: { userId: customer.userId, status: "active", source: "test" } });
+    const activeVipStart = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${survey.publicToken}/start`, headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf }, payload: { viewId: "00000000-0000-4000-8000-000000000001" } });
+    expect(activeVipStart.statusCode).toBe(200);
+    expect(activeVipStart.json().progressTarget).toBeNull();
+  });
+
   it("requires pause before edit, lets existing responses finish, and resumes with a new version", async () => {
     const staff = await register("staff", "67911112221");
     const customer = await register("customer", "67911112222");

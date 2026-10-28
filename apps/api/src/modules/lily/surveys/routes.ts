@@ -7,6 +7,7 @@ import { promises as fs } from "node:fs";
 import { ApiError, parseJson } from "../../../lib/errors";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "../admin-security";
 import { requireLilyCsrf, requireLilySession } from "../auth";
+import { getLilyOperationalSettings } from "../fulfillment";
 import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, visibleSurveyQuestions, type SurveyDefinition } from "./contracts";
 import { MAX_QUESTION_TIME_MS, mergeQuestionTimes, questionMetricKey, questionAnswered, selectedSurveyOptions } from "./analytics";
 
@@ -81,6 +82,23 @@ function serializePublicSurvey(row: { id: string; title: string; subtitle: strin
 
 function serializeSurveyPreview(row: { title: string; subtitle: string | null; description: string | null; showPoints: boolean; pointsPerForm: number; pointsPerAnswer: number; estimatedMinutes: number }, questionCount: number) {
   return { title: row.title, subtitle: row.subtitle, description: row.description, estimatedMinutes: row.estimatedMinutes, questionCount, points: row.showPoints ? row.pointsPerForm + row.pointsPerAnswer * questionCount : null, showPoints: row.showPoints };
+}
+
+async function surveyProgressTarget(userId: string, points: number) {
+  const [settings, membership] = await Promise.all([
+    getLilyOperationalSettings(),
+    lilyPrisma.lilyVipMembership.findUnique({ where: { userId }, select: { status: true } })
+  ]);
+  const targetPoints = settings.vipPointsThreshold;
+  if (targetPoints <= 0 || membership?.status === "active" || membership?.status === "invited") return null;
+  const currentPoints = Math.min(points, targetPoints);
+  return {
+    label: "Acesso VIP por pontos",
+    remaining: Math.max(0, targetPoints - points),
+    currentPoints,
+    targetPoints,
+    progressPercent: Math.min(100, Math.floor(currentPoints / targetPoints * 100))
+  };
 }
 
 export async function lilySurveyRoutes(app: FastifyInstance) {
@@ -179,7 +197,9 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const participation = existing ?? await lilyPrisma.lilySurveyParticipation.create({ data: { userId: context.user.id, surveyId: survey.id, surveyVersion: survey.version } });
     const viewId = requestedViewId ?? crypto.randomUUID();
     await lilyPrisma.lilySurveyView.upsert({ where: { surveyId_viewId: { surveyId: survey.id, viewId } }, update: {}, create: { id: crypto.randomUUID(), surveyId: survey.id, viewId } });
-    return { participationId: participation.id, currentPoints: await currentPoints(context.user.id), survey: serializePublicSurvey(survey, definition), questionTimesMs: parseJson<Record<string, number>>(participation.questionTimesJson, {}), progressTarget: null };
+    const points = await currentPoints(context.user.id);
+    const progressTarget = await surveyProgressTarget(context.user.id, points);
+    return { participationId: participation.id, currentPoints: points, survey: serializePublicSurvey(survey, definition), questionTimesMs: parseJson<Record<string, number>>(participation.questionTimesJson, {}), progressTarget };
   });
 
   app.get("/api/v1/lily/notifications", async (request) => {

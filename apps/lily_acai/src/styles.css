@@ -96,6 +96,9 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .survey-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .survey-card h2 { font-size: clamp(24px,4vw,36px); }
 .survey-state { margin: 60px auto; max-width: 720px; }
+.survey-auth-gate { display: grid; gap: 12px; }
+.survey-gate-reward { position: relative; overflow: hidden; border-radius: 999px; color: #174d32; background: #e3f5e8; box-shadow: inset 0 0 0 1px #b8dfc4; }
+.survey-gate-reward::after { content: ""; position: absolute; inset: -40% auto -40% -45%; width: 35%; transform: skewX(-20deg); background: linear-gradient(90deg,transparent,rgb(255 255 255 / 65%),transparent); animation: survey-reward-shimmer 3.8s ease-in-out infinite; pointer-events: none; }
 .survey-progress { height: 12px; border-radius: 99px; overflow: hidden; background: #f3dce3; }
 .survey-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--cl-color-primary),#ed7895); transition: width .35s ease; }
 .survey-progress-copy { margin: 7px 0 24px; font-size: 13px; }
@@ -123,6 +126,16 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .survey-consent label { align-items: flex-start; }
 .survey-actions { margin-top: 10px; }
 .survey-reward { margin: 44px auto 80px; max-width: 760px; text-align: center; overflow: hidden; position: relative; animation: survey-arrive .65s cubic-bezier(.2,.85,.25,1) both; }
+.survey-reward-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.survey-reward-confetti i { position: absolute; top: -18px; width: 8px; height: 13px; border-radius: 2px; background: hsl(var(--confetti-hue) 78% 58%); animation: survey-confetti-fall 1.85s cubic-bezier(.2,.65,.35,1) both; }
+.survey-next-level { display: grid; gap: 3px; margin-top: 10px; padding-top: 12px; border-top: 1px solid rgb(130 0 35 / 12%); }
+.survey-next-level span,.survey-next-level small { color: var(--cl-color-text-muted); font-size: .85rem; }
+.survey-target-meter { height: 9px; overflow: hidden; border-radius: 99px; background: rgb(130 0 35 / 11%); }
+.survey-target-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#43a979,#93d9a6); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.survey-leave-backdrop { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(40 4 24 / 58%); }
+.survey-leave-dialog { width: min(100%,520px); padding: clamp(22px,5vw,36px); border: 1px solid rgb(130 0 35 / 16%); border-radius: 24px; background: #fffafd; box-shadow: 0 24px 80px rgb(29 2 17 / 28%); }
+.survey-leave-dialog h2 { margin: 8px 0; font-size: clamp(30px,7vw,42px); }
+.survey-leave-dialog p { line-height: 1.55; }
 .reward-glow { margin: auto; width: 84px; height: 84px; display: grid; place-items: center; border-radius: 50%; color: #9d5b00; background: radial-gradient(circle,#fff3b5,#ffd9e2); font-size: 40px; animation: survey-glow 2s ease-in-out infinite alternate; }
 .reward-points { margin: 22px auto; padding: 22px; max-width: 320px; display: grid; gap: 5px; border-radius: 20px; color: var(--cl-color-secondary); background: linear-gradient(145deg,#fff2c5,#fde1e8); }
 .reward-points strong { font-size: 52px; color: var(--cl-color-primary); }
@@ -257,6 +270,8 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 @keyframes survey-arrive { from { opacity: 0; transform: translateY(24px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes survey-glow { from { transform: scale(.96); box-shadow: 0 0 0 0 rgb(238 170 57 / 5%); } to { transform: scale(1.04); box-shadow: 0 0 35px 8px rgb(238 170 57 / 22%); } }
 @keyframes reward-fill { to { transform: scaleX(1); } }
+@keyframes survey-reward-shimmer { 0%,72%,100% { left: -45%; } 88% { left: 120%; } }
+@keyframes survey-confetti-fall { to { transform: translate(var(--confetti-drift), 430px) rotate(620deg); opacity: 0; } }
 @media (max-width:760px) {
   .lily-shell { padding-bottom: calc(var(--mobile-footer-nav-height) + env(safe-area-inset-bottom)); }
   .mobile-footer-nav { position: fixed; inset: auto 0 0; z-index: 80; display: grid; grid-template-columns: repeat(5,1fr); gap: 2px; padding: 7px 5px calc(7px + env(safe-area-inset-bottom)); border-top: 1px solid rgb(130 0 35 / 14%); background: rgb(255 250 252 / 96%); backdrop-filter: blur(16px); }
@@ -276,7 +291,7 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .survey-card .button,.survey-actions .button { width: 100%; }
   .survey-actions { width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .survey-progress span,.survey-reward,.reward-glow,.reward-meter span { animation: none; transition: none; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .survey-progress span,.survey-reward,.reward-glow,.reward-meter span,.survey-gate-reward::after,.survey-reward-confetti i { animation: none; transition: none; transform: none; } .survey-reward-confetti { display: none; } }
 @media (max-width:760px) {
   .topbar { min-height: 68px; }
   .brand-copy small { display: none; }

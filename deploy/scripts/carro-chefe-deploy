@@ -188,6 +188,8 @@ required_nginx_patterns=(
   'location = /api/v1/lily/notifications'
   'location ^~ /api/v1/lily/notifications/'
   'location ^~ /api/v1/lily/courier/'
+  'location = /api/v1/integrations/cooklily/whatsapp/webhook'
+  'location = /api/v1/integrations/carro-chefe/whatsapp/webhook'
   'location ^~ /api/ { return 404; }'
 )
 for pattern in "${required_nginx_patterns[@]}"; do
