@@ -17,6 +17,7 @@ import {
 import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
 import { lilyPixAutoReconciliationConfiguration } from "./pix-reconciliation";
 import { enqueueLilyWhatsAppStage } from "./whatsapp";
+import { awardReachedLevelCoins, progressPointsForUser } from "./loyalty/service";
 
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -331,10 +332,15 @@ async function applyRemotePaymentState(
 
     if ((nextStatus === "approved" || nextStatus === "partially_refunded")
       && current.order.status === "awaiting_payment") {
+      const priorPoints = current.order.userId ? await progressPointsForUser(current.order.userId, tx) : 0;
       await tx.lilyOrder.update({
         where: { id: current.orderId },
         data: { status: "paid", paidAt: current.order.paidAt ?? now }
       });
+      if (current.order.userId) {
+        const nextPoints = await progressPointsForUser(current.order.userId, tx);
+        await awardReachedLevelCoins(current.order.userId, priorPoints, nextPoints, tx);
+      }
       await tx.lilyOrderStatusEvent.create({
         data: {
           orderId: current.orderId,
@@ -618,6 +624,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
           }
         });
       } else if (exactApproval && access.order.status === "awaiting_payment") {
+        const priorPoints = access.order.userId ? await progressPointsForUser(access.order.userId, tx) : 0;
         await tx.lilyPaymentEvent.create({
           data: {
             paymentId: row.id,
@@ -631,6 +638,10 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
           where: { id: access.order.id },
           data: { status: "paid", paidAt: now }
         });
+        if (access.order.userId) {
+          const nextPoints = await progressPointsForUser(access.order.userId, tx);
+          await awardReachedLevelCoins(access.order.userId, priorPoints, nextPoints, tx);
+        }
         await tx.lilyOrderStatusEvent.create({
           data: {
             orderId: access.order.id,

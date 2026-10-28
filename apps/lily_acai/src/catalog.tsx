@@ -856,6 +856,12 @@ export function CatalogPage() {
   const restoredCategoryRef = useRef(false);
   const [activeCategory, setActiveCategory] = useState("");
 
+  useEffect(() => {
+    if (!productSlug || selected || !products.length) return;
+    const match = products.find((product) => product.slug === productSlug);
+    if (match) setSelected(match);
+  }, [productSlug, selected, products]);
+
   function openProduct(product: CatalogProduct) {
     if (product.vipEarlyAccess && !product.vipLocked) {
       void getLilySession().then((session) => postLilyVipAction("launch-view", session.csrfToken, { productId: product.id })).catch(() => undefined);

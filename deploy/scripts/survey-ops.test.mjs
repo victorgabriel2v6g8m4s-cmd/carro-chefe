@@ -162,3 +162,22 @@ test('CookLily social links, VIP coupons and referral migration applies on a fre
     database.close();
   }
 });
+
+test('CookLily levels and LilyCoins migration applies on a fresh SQLite schema', () => {
+  const migration = readFileSync(path.join(root, 'packages/lily-database/prisma/migrations/20261028200000_lily_levels_coins/migration.sql'), 'utf8');
+  const database = new Database(':memory:');
+  try {
+    database.exec(`CREATE TABLE "LilyOperationalSettings" ("id" TEXT PRIMARY KEY);
+      CREATE TABLE "LilyMission" ("id" TEXT PRIMARY KEY);
+      CREATE TABLE "LilyUser" ("id" TEXT PRIMARY KEY);`);
+    database.exec(migration);
+    assert.ok(database.prepare('PRAGMA table_info("LilyOperationalSettings")').all().some((column) => column.name === 'loyaltyRoundingMode'));
+    assert.ok(database.prepare('PRAGMA table_info("LilyMission")').all().some((column) => column.name === 'lilyCoins'));
+    for (const table of ['LilyLevel', 'LilyCoinEvent', 'LilyReward', 'LilyRewardRedemption']) {
+      assert.ok(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table));
+    }
+    assert.ok(database.prepare('PRAGMA index_list("LilyCoinEvent")').all().some((index) => index.name === 'LilyCoinEvent_sourceKey_key'));
+  } finally {
+    database.close();
+  }
+});

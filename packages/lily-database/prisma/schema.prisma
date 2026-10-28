@@ -21,6 +21,8 @@ model LilyUser {
   addresses       LilyAddress[]
   orders          LilyOrder[]
   loyaltyEvents   LilyLoyaltyEvent[]
+  lilyCoinEvents  LilyCoinEvent[]
+  rewardRedemptions LilyRewardRedemption[]
   surveyParticipations LilySurveyParticipation[]
   surveyResponses LilySurveyResponse[]
   surveyUploads   LilySurveyUpload[]
@@ -581,6 +583,7 @@ model LilyOperationalSettings {
   vipPointsThreshold        Int       @default(0)
   referralRewardPoints      Int       @default(0)
   vipAnalyticsRetentionDays Int       @default(180)
+  loyaltyRoundingMode String @default("floor")
   paymentsEnabled           Boolean  @default(false)
   paymentProvider           String   @default("manual")
   manualPixEnabled          Boolean  @default(false)
@@ -896,6 +899,64 @@ model LilyLoyaltyEvent {
   @@index([type, createdAt])
 }
 
+model LilyLevel {
+  id             String   @id @default(cuid())
+  name           String
+  sortOrder      Int      @unique
+  requiredPoints Int
+  lilyCoins      Int      @default(0)
+  benefitsJson   String   @default("[]")
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([active, sortOrder])
+}
+
+model LilyCoinEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  kind      String
+  sourceKey String   @unique
+  metadataJson String @default("{}")
+  createdAt DateTime @default(now())
+  user      LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model LilyReward {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  type           String
+  lilyCoinCost   Int
+  couponId       String?
+  productId      String?
+  active         Boolean  @default(false)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  maxRedemptions Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  redemptions    LilyRewardRedemption[]
+
+  @@index([active, startsAt, endsAt])
+}
+
+model LilyRewardRedemption {
+  id            String   @id @default(cuid())
+  rewardId      String
+  userId        String
+  coinEventId   String   @unique
+  createdAt     DateTime @default(now())
+  reward        LilyReward @relation(fields: [rewardId], references: [id], onDelete: Restrict)
+  user          LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
 model LilyReferralInvite {
   id             String   @id @default(cuid())
   code           String   @unique
@@ -1084,6 +1145,7 @@ model LilyMission {
   description      String?
   status           String   @default("draft")
   points           Int      @default(0)
+  lilyCoins         Int      @default(0)
   prerequisiteJson String   @default("[]")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

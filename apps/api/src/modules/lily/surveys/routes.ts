@@ -10,13 +10,14 @@ import { requireLilyCsrf, requireLilySession } from "../auth";
 import { getLilyOperationalSettings } from "../fulfillment";
 import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, visibleSurveyQuestions, type SurveyDefinition } from "./contracts";
 import { MAX_QUESTION_TIME_MS, mergeQuestionTimes, questionMetricKey, questionAnswered, selectedSurveyOptions } from "./analytics";
+import { awardReachedLevelCoins, progressPointsForUser } from "../loyalty/service";
 
 const idSchema = z.string().trim().min(1).max(80);
 const pageSchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), offset: z.coerce.number().int().min(0).default(0) });
 const answersSchema = z.record(z.string(), z.unknown()).refine((answers) => Object.keys(answers).length <= 100, "Máximo de 100 respostas.");
 const questionTimesSchema = z.record(z.string().trim().min(1).max(80), z.number().int().min(0).max(MAX_QUESTION_TIME_MS)).refine((times) => Object.keys(times).length <= 100, "Máximo de 100 tempos por pergunta.");
 const submitSchema = z.object({ participationId: idSchema, answers: answersSchema, questionTimesMs: questionTimesSchema.default({}), consentToLinkAnswers: z.boolean() }).strict();
-const missionSchema = z.object({ title: z.string().trim().min(1).max(180), description: z.string().max(2000).optional().nullable(), points: z.number().int().min(0).max(100000), prerequisites: z.array(idSchema).max(100).default([]) }).strict();
+const missionSchema = z.object({ title: z.string().trim().min(1).max(180), description: z.string().max(2000).optional().nullable(), points: z.number().int().min(0).max(100000), lilyCoins: z.number().int().min(0).max(1000000).default(0), prerequisites: z.array(idSchema).max(100).default([]) }).strict();
 const SURVEY_OPTION_MEDIA = new Map([["image/jpeg", ".jpg"], ["image/png", ".png"], ["image/webp", ".webp"], ["video/mp4", ".mp4"], ["video/webm", ".webm"]]);
 const MAX_SURVEY_OPTION_MEDIA_BYTES = 10 * 1024 * 1024;
 
@@ -298,11 +299,13 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
           });
         }
       }
+      const priorPoints = awarded > 0 ? await progressPointsForUser(context.user.id, tx) : 0;
       if (awarded > 0) {
         await tx.lilyLoyaltyEvent.upsert({ where: { sourceKey }, update: {}, create: { userId: context.user.id, type: "survey_reward", points: awarded, sourceKey, metadataJson: JSON.stringify({ surveyId: survey.id, version: survey.version }) } });
       }
+      if (awarded > 0) await awardReachedLevelCoins(context.user.id, priorPoints, priorPoints + awarded, tx);
     });
-    const unlockedMissions = await lilyPrisma.lilyMission.findMany({ where: { id: { in: definition.unlocksMissions }, status: "published" }, select: { id: true, title: true, description: true, points: true } });
+    const unlockedMissions = await lilyPrisma.lilyMission.findMany({ where: { id: { in: definition.unlocksMissions }, status: "published" }, select: { id: true, title: true, description: true, points: true, lilyCoins: true } });
     return { completed: true, pointsAwarded: awarded, currentPoints: await currentPoints(context.user.id), unlockedMissions };
   });
 
@@ -451,8 +454,8 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/missions", async (request) => {
     const context = await requireLilyAdmin(request, true);
     const input = missionSchema.parse(request.body);
-    const mission = await lilyPrisma.lilyMission.create({ data: { id: crypto.randomUUID(), title: input.title, description: input.description, points: input.points, prerequisiteJson: JSON.stringify(input.prerequisites), status: "published" } });
-    await auditLilyAdmin(context.user.id, "create", "mission", mission.id, { points: mission.points });
+    const mission = await lilyPrisma.lilyMission.create({ data: { id: crypto.randomUUID(), title: input.title, description: input.description, points: input.points, lilyCoins: input.lilyCoins, prerequisiteJson: JSON.stringify(input.prerequisites), status: "published" } });
+    await auditLilyAdmin(context.user.id, "create", "mission", mission.id, { points: mission.points, lilyCoins: mission.lilyCoins });
     return { mission };
   });
 
@@ -468,9 +471,17 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/missions", async (request) => {
     const context = await requireLilySession(request);
     const completed = await completedSurveyIds(context.user.id);
-    const rows = await lilyPrisma.lilyMission.findMany({ where: { status: "published" }, orderBy: { createdAt: "desc" }, take: 100 });
+    const [rows, pointClaims, coinClaims] = await Promise.all([
+      lilyPrisma.lilyMission.findMany({ where: { status: "published" }, orderBy: { createdAt: "desc" }, take: 100 }),
+      lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: context.user.id, sourceKey: { startsWith: "mission:" } }, select: { sourceKey: true } }),
+      lilyPrisma.lilyCoinEvent.findMany({ where: { userId: context.user.id, kind: "mission" }, select: { sourceKey: true } })
+    ]);
     const surveys = completed.size ? await lilyPrisma.lilySurvey.findMany({ where: { id: { in: [...completed] } }, select: { unlocksMissionsJson: true } }) : [];
     const unlockedBySurvey = new Set(surveys.flatMap((survey) => parseJson<string[]>(survey.unlocksMissionsJson, [])));
-    return { missions: rows.filter((mission) => unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id))).map(({ id, title, description, points }) => ({ id, title, description, points })) };
+    const claimed = new Set([...pointClaims, ...coinClaims].flatMap(({ sourceKey }) => {
+      const match = sourceKey?.match(/^mission:([^:]+):user:/);
+      return match ? [match[1]] : [];
+    }));
+    return { missions: rows.filter((mission) => unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id))).map(({ id, title, description, points, lilyCoins }) => ({ id, title, description, points, lilyCoins, claimed: claimed.has(id) })) };
   });
 }

@@ -34,6 +34,7 @@ export type LilyAnalyticsSurface =
   | "landing"
   | "catalog"
   | "product"
+  | "reels"
   | "combo"
   | "cart"
   | "checkout"
