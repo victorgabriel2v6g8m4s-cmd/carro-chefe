@@ -198,6 +198,8 @@ describe("scripts operacionais CookLily", () => {
     expect(implementation).toContain('"-U"');
     expect(implementation).toContain('Origin: apiOrigin');
     expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "edge"');
+    expect(implementation).toContain('Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH');
+    expect(implementation).toContain('launcher.unref()');
     expect(implementation).not.toContain("console.log(loginUrl)");
   });
 });
