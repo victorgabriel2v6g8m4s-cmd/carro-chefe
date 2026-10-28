@@ -22,8 +22,8 @@ Use o domínio público HTTPS já apontado para a API. Não informe um domínio 
 
 | Método | Caminho | Uso |
 |---|---|---|
-| GET | `/api/v1/integrations/whatsapp/webhook` | Verificação do webhook pelo Meta Developers; responde o `hub.challenge` em texto puro |
-| POST | `/api/v1/integrations/whatsapp/webhook` | Recebe notificações WhatsApp e valida `X-Hub-Signature-256` |
+| GET | `/api/v1/integrations/cooklily/whatsapp/webhook` | Verificação do webhook CookLily pelo Meta Developers; responde o `hub.challenge` em texto puro |
+| POST | `/api/v1/integrations/cooklily/whatsapp/webhook` | Recebe eventos WhatsApp da CookLily e valida `X-Hub-Signature-256` |
 | GET | `/api/v1/lily/admin/whatsapp/templates` | Lista mensagens padrão; requer sessão de equipe CookLily |
 | POST | `/api/v1/lily/admin/whatsapp/templates` | Cadastra mensagem; requer admin, MFA verificado e CSRF |
 | PATCH | `/api/v1/lily/admin/whatsapp/templates/:id` | Atualiza ou arquiva logicamente mensagem; requer admin, MFA verificado e CSRF |
@@ -36,7 +36,10 @@ O painel é acessível a staff/admin para consulta. Criar/editar/ativar/arquivar
 URL para colar no Meta Developers, substituindo pelo host real de produção:
 
 ```text
-https://SEU_DOMINIO_PUBLICO/api/v1/integrations/whatsapp/webhook
+https://SEU_DOMINIO_PUBLICO/api/v1/integrations/cooklily/whatsapp/webhook
+```
+
+O Carro Chefe usa callback independente: `https://SEU_DOMINIO_PUBLICO/api/v1/integrations/carro-chefe/whatsapp/webhook`. Configure cada URL somente no app/WABA e número de WhatsApp pertencentes à respectiva operação. Cada operação usa Verify Token e App Secret próprios (`COOKLILY_WHATSAPP_*` e `CARRO_CHEFE_WHATSAPP_*`); não reutilize credenciais entre elas.
 ```
 
 O host precisa usar HTTPS válido e o proxy reverso precisa encaminhar `/api/v1/` para o serviço da API. A rota pública está em `/api/v1/integrations/...` porque o middleware de segurança já isenta essa família de webhooks de origem/browser; a autenticação é feita pela verificação Meta, não por cookie de sessão.

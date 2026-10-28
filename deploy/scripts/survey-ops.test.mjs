@@ -30,7 +30,7 @@ test('Nginx helper and diagnostic script have valid Bash syntax', () => {
   }
 });
 
-test('survey and notification Nginx routes are inserted before the API deny rule', () => {
+test('WhatsApp, survey and notification Nginx routes are inserted before the API deny rule', () => {
   const python = pythonBlock(helperSource, /python3 - "\$\{CONF\}" <<'PY'\r?\n([\s\S]*?)\r?\nPY/);
   const directory = mkdtempSync(path.join(os.tmpdir(), 'lily-nginx-helper-'));
   try {
@@ -39,13 +39,17 @@ test('survey and notification Nginx routes are inserted before the API deny rule
     const first = runPython(python, [config]);
     assert.equal(first.status, 0, first.stderr);
     const content = readFileSync(config, 'utf8');
+    const cooklilyWebhookAt = content.indexOf('location = /api/v1/integrations/cooklily/whatsapp/webhook');
+    const carroChefeWebhookAt = content.indexOf('location = /api/v1/integrations/carro-chefe/whatsapp/webhook');
     const surveyExactAt = content.indexOf('location = /api/v1/lily/surveys');
     const surveyPrefixAt = content.indexOf('location ^~ /api/v1/lily/surveys/');
     const mediaPrefixAt = content.indexOf('location ^~ /api/v1/lily/survey-option-media/');
     const exactAt = content.indexOf('location = /api/v1/lily/notifications');
     const prefixAt = content.indexOf('location ^~ /api/v1/lily/notifications/');
     const denyAt = content.indexOf('location ^~ /api/ { return 404; }');
-    assert.ok(surveyExactAt >= 0 && surveyPrefixAt > surveyExactAt && mediaPrefixAt > surveyPrefixAt && exactAt > mediaPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
+    assert.ok(cooklilyWebhookAt >= 0 && carroChefeWebhookAt > cooklilyWebhookAt && surveyExactAt > carroChefeWebhookAt && surveyPrefixAt > surveyExactAt && mediaPrefixAt > surveyPrefixAt && exactAt > mediaPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
+    assert.equal((content.match(/location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/g) ?? []).length, 1);
+    assert.equal((content.match(/location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/surveys\b/g) ?? []).length, 1);
     assert.equal((content.match(/location \^~ \/api\/v1\/lily\/survey-option-media\//g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
@@ -104,10 +108,14 @@ test('deployment applies the notification route helper before enforcing the Ngin
   assert.match(source, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
   assert.match(source, /location = \/api\/v1\/lily\/notifications/);
   assert.match(source, /location \^~ \/api\/v1\/lily\/notifications\//);
+  assert.match(source, /location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/);
+  assert.match(source, /location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/);
   const template = readFileSync(path.join(root, 'deploy/nginx/carrochefe.com.conf.example'), 'utf8');
   assert.match(template, /location = \/api\/v1\/lily\/surveys/);
   assert.match(template, /location \^~ \/api\/v1\/lily\/surveys\//);
   assert.match(template, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
+  assert.match(template, /location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/);
+  assert.match(template, /location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/);
 });
 
 test('Lily survey analytics migration applies on a fresh SQLite schema', () => {

@@ -34,6 +34,16 @@ def proxy_route(location):
 
 groups = [
     (
+        "webhook WhatsApp Meta",
+        "    # Callbacks Meta WhatsApp independentes: verify token e App Secret próprios por operação.\n" +
+        proxy_route("location = /api/v1/integrations/cooklily/whatsapp/webhook") + "\n\n" +
+        proxy_route("location = /api/v1/integrations/carro-chefe/whatsapp/webhook"),
+        (
+            "location = /api/v1/integrations/cooklily/whatsapp/webhook",
+            "location = /api/v1/integrations/carro-chefe/whatsapp/webhook",
+        ),
+    ),
+    (
         "pesquisa",
         "    # CookLily: lista, início, progresso, envio de respostas e anexos de pesquisa. Sessão e CSRF são validados no Fastify.\n" +
         proxy_route("location = /api/v1/lily/surveys") + "\n\n" +
@@ -65,7 +75,7 @@ for name, block, routes in groups:
         missing_blocks.append(block)
 
 if not missing_blocks:
-    print("Rotas Lily de pesquisas e notificações já estão presentes; nenhuma alteração necessária.")
+    print("Rotas públicas permitidas já estão presentes; nenhuma alteração necessária.")
     raise SystemExit(0)
 if marker not in text:
     print("Bloqueio genérico /api/ não encontrado no formato esperado; abortando.", file=sys.stderr)
@@ -73,7 +83,7 @@ if marker not in text:
 
 text = text.replace(marker, "\n\n".join(missing_blocks) + "\n\n" + marker, 1)
 path.write_text(text, encoding="utf-8")
-print("Rotas ausentes de pesquisas/notificações CookLily inseridas antes do bloqueio genérico de API.")
+print("Rotas ausentes de webhooks Meta, pesquisas ou notificações CookLily inseridas antes do bloqueio genérico de API.")
 PY
 
 if ! nginx -t; then
