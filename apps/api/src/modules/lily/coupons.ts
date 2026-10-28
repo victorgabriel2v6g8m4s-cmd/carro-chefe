@@ -170,7 +170,9 @@ export async function lilyCouponRoutes(app: FastifyInstance) {
     const current = await lilyPrisma.lilyCoupon.findUnique({ where: { id }, include: { categories: true, products: true } });
     if (!current) throw new ApiError(404, "Cupom não encontrado.", { code: "LILY_COUPON_NOT_FOUND" });
     const parsed = couponPatchSchema.parse(request.body);
-    const { categoryIds, productIds, ...patch } = parsed;
+    const suppliedFields = new Set(Object.keys(request.body as Record<string, unknown>));
+    const supplied = Object.fromEntries(Object.entries(parsed).filter(([key]) => suppliedFields.has(key))) as z.infer<typeof couponPatchSchema>;
+    const { categoryIds, productIds, ...patch } = supplied;
     const finalValues = {
       type: patch.type ?? current.type,
       value: patch.value ?? current.value,
