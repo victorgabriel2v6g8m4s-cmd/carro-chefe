@@ -36,7 +36,7 @@ async function register(phone: string, displayName?: string) {
   return { cookie, csrf: me.json().csrfToken, user: me.json().user };
 }
 
-const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003", "+5567999970004", "+5567999970005", "+5567999970011", "+5567999970012", "+5567999970013", "+5567999970014"];
+const testPhones = ["+5567999970001", "+5567999970002", "+5567999970003", "+5567999970004", "+5567999970005", "+5567999970011", "+5567999970012", "+5567999970013", "+5567999970014", "+5567999970015"];
 
 async function cleanup() {
   const users = await lilyPrisma.lilyUser.findMany({ where: { phoneNormalized: { in: testPhones } }, select: { id: true } });
@@ -268,22 +268,30 @@ describe("CookLily perfil e fidelidade", () => {
     const publicB = await register("67999970012", "Ranking Comum B");
     const tester = await register("67999970013", "Conta de Homologação");
     const publicC = await register("67999970014", "Ranking Comum C");
+    const admin = await register("67999970015", "Admin CookLily");
     await lilyPrisma.lilyUser.update({ where: { id: tester.user.id }, data: { isTestAccount: true, rankingOptIn: false } });
-    for (const [userId, points] of [[publicA.user.id, 500], [publicB.user.id, 500], [tester.user.id, 400], [publicC.user.id, 300]] as const) {
+    await lilyPrisma.lilyUser.update({ where: { id: admin.user.id }, data: { role: "admin" } });
+    for (const [userId, points] of [[publicA.user.id, 500], [publicB.user.id, 500], [tester.user.id, 400], [publicC.user.id, 300], [admin.user.id, 900]] as const) {
       await lilyPrisma.lilyLoyaltyEvent.create({ data: { userId, type: "survey_reward", points, sourceKey: `dense-rank:${userId}`, metadataJson: "{}" } });
     }
     const publicRanking = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/ranking?limit=50" });
     expect(publicRanking.statusCode).toBe(200);
     const publicRows = publicRanking.json().ranking as Array<{ displayName: string; rank: number }>;
     expect(publicRows.some((row) => row.displayName === "Conta de Homologação")).toBe(false);
+    expect(publicRows.some((row) => row.displayName === "Admin CookLily")).toBe(false);
     expect(publicRows.find((row) => row.displayName === "Ranking Comum C")?.rank).toBe(2);
 
     const privateRanking = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/ranking?limit=50", headers: { cookie: tester.cookie } });
     const privateRows = privateRanking.json().ranking as Array<{ displayName: string; rank: number }>;
     expect(privateRows.some((row) => row.displayName === "Conta de Homologação")).toBe(true);
+    expect(privateRows.some((row) => row.displayName === "Admin CookLily")).toBe(false);
     expect(privateRows.filter((row) => row.rank === 1)).toHaveLength(2);
     expect(privateRows.find((row) => row.displayName === "Conta de Homologação")?.rank).toBe(2);
     expect(privateRows.find((row) => row.displayName === "Ranking Comum C")?.rank).toBe(3);
+    const testerProfile = await app.inject({ method: "GET", url: "/api/v1/lily/customer/profile", headers: { cookie: tester.cookie } });
+    expect(testerProfile.json().loyalty.rankScope).toBe("internal");
+    const publicProfile = await app.inject({ method: "GET", url: "/api/v1/lily/customer/profile", headers: { cookie: publicA.cookie } });
+    expect(publicProfile.json().loyalty.rankScope).toBe("public");
   });
 
   it("lista somente as próprias sessões e permite encerrar as outras explicitamente", async () => {

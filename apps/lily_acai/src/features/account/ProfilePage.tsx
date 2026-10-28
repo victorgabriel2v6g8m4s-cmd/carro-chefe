@@ -347,7 +347,7 @@ export function ProfilePage() {
     <div className="profile-stats">
       <article><strong>{profile.loyalty.points}</strong><span>pontos</span></article>
       <article><strong>{profile.loyalty.orderCount}</strong><span>pedidos pontuados</span></article>
-      <article><strong>{profile.loyalty.rank ? `#${profile.loyalty.rank}` : "—"}</strong><span>posição pública</span></article>
+      <article><strong>{profile.loyalty.rank ? `#${profile.loyalty.rank}` : "—"}</strong><span>{profile.loyalty.rankScope === "internal" ? "posição interna" : "posição pública"}</span></article>
     </div>
 
     <VipProfileSection />
