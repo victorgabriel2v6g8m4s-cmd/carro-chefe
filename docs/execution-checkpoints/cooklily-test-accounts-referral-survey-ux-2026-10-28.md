@@ -1,18 +1,18 @@
 # CookLily: contas de teste, indicação e entrada em pesquisas
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
-- branch: codex/cooklily-ranking-staff-exclusion
+- branch: codex/cooklily-ranking-staff-exclusion (merged)
 - base_branch: cooklily/canonical
 - base_sha_verified: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
-- head_sha_verified: 564ac07d0df70e34d8d879a8a0a1c361ee765a2f
-- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; #213 open draft — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/213
-- deploy_sha: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
-- tests/gates: focused profile API tests PASS (9/9); full `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` and CookLily bundle budget PASS; `git diff --check` PASS. All tests used a disposable Lily DB with 30 migrations.
+- head_sha_verified: 1cb9741c1a97e97700eeacccfa6143a90145864e
+- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; #213 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/213; #214 checkpoint/rule update in progress
+- deploy_sha: 1cb9741c1a97e97700eeacccfa6143a90145864e
+- tests/gates: focused profile API tests PASS (9/9); full `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` and CookLily bundle budget PASS; PR #213 CI PASS. VPS deploy reran 64 files/349 tests, check, builds, bundle budget, tool health, DB backup verification, migrations, local readiness and external HTTPS smoke — all PASS. Real-domain IAB checks confirmed anonymous ranking hides staff/test accounts, internal test ranking includes test account with dense ties, and profile says "posição interna". All tests used disposable Lily DB with 30 migrations.
 - migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
-- blockers: PR #213 CI, deployment, and live recheck pending
+- blockers: none for implementation or live-domain acceptance; PR #214 still needs its final CI and squash merge to persist the checkpoint and agent browser rule. Captured browser screenshots are visible in the Codex execution transcript, but were not exported as local image files by the browser tool.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: await PR #213 CI; mark ready, merge, deploy canonical, and repeat public/internal ranking checks on carrochefe.com.
+- next_action: merge the updated checkpoint and Codex in-app-browser rule through PR #214 after CI; no redeploy is required for the docs-only follow-up.
 
 ## Objetivo
 
@@ -29,8 +29,9 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 7. [x] `npm test` (64 arquivos, 346 pass/3 skip), `npm run check`, `npm run build`, migration em banco SQLite descartável e `git diff --check` PASS.
 8. [x] PR #211 foi integrado e implantado em `bf9fab69085b38d8f9e375bb7519ede7823bc0c6`; migration, 349 testes de deploy, build, readiness e HTTPS smoke passaram.
 9. [x] Homologação ao vivo: indicador de conta teste, recompensa de indicação 2.000, link de indicação reconhecido, gate de pesquisa desktop/mobile, resgate de benefício VIP e notificações de cupom. A conta teste já havia respondido a pesquisa; nova resposta e novo cadastro não foram submetidos para evitar publicar dados de teste no ambiente real.
-10. [ ] Corrigir a exposição do admin no ranking e o rótulo do ranking interno; fazer novo deploy e revalidar na canonical.
-11. [ ] Fechar este checkpoint e publicar o relatório de execução com as capturas após a validação final.
+10. [x] PR #213 squash-merged em `1cb9741c1a97e97700eeacccfa6143a90145864e`; CI verde, incluindo Node 20/24, tool health, Excel, Windows Supervisor e Workbook Snapshot.
+11. [x] Implantar o SHA em canonical e validar ranking público, visão da conta teste e escopo do rótulo do perfil no domínio real.
+12. [x] Fechar este checkpoint e publicar o relatório de execução; capturas do ranking anônimo, ranking interno e perfil foram feitas pelo navegador integrado do Codex e exibidas durante a execução.
 
 ## Próximas entregas adicionadas ao roadmap
 
@@ -51,5 +52,8 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 - PR #211 foi squash-merged em `bf9fab69085b38d8f9e375bb7519ede7823bc0c6`. Deploy `sudo cc deploy canonical` concluiu com backup dos dois bancos, migration `20261028180000_lily_test_accounts_survey_tokens`, 64 arquivos/349 testes, `npm run check`, build, readiness local e smoke HTTPS verdes. Evidência no VPS: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-122138-bf9fab69085b.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-122138-bf9fab69085b.log`.
 - Capturas: `C:\Users\valdi\Pictures\CookLily-2026-10-28\survey-gate-desktop.png`, `survey-gate-mobile.png`, `referral-signup-gate.png`, `public-ranking-anonymous.png`, `test-account-ranking.png`, `test-account-profile.png`, `coupon-redeemed-test-account.png` e `test-account-notifications.png`.
 - Achado ao vivo: o ranking anônimo omitia a conta `Conta de Testes`, mas mostrava `Chat GPT Codex Agent`, uma conta administrativa. Também o perfil da conta teste chamava sua posição relativa interna de “posição pública”.
-- Correção implementada em `564ac07d0df70e34d8d879a8a0a1c361ee765a2f`: filtrar rankings para `role=customer`, mesmo na visão admin/teste, e retornar `rankScope` para o perfil diferenciar posição pública da interna. Cobertura dedicada passou 9/9; suíte completa passou 346/346 (3 skipped), check e build passaram usando banco descartável.
+- Correção implementada em PR #213 (`1cb9741c1a97e97700eeacccfa6143a90145864e`): filtrar rankings para `role=customer`, mesmo na visão admin/teste, e retornar `rankScope` para o perfil diferenciar posição pública da interna. Cobertura dedicada passou 9/9; suíte completa passou 346/346 (3 skipped), check e build passaram usando banco descartável. CI verde.
 - Limitação homologada: o link da pesquisa foi testado até a autenticação; a conta teste já havia respondido, portanto a aplicação corretamente bloqueou segunda resposta. Créditos de pesquisa, gate público/token, filtro VIP e atribuição têm cobertura API, sem uma nova submissão pública ao vivo.
+- Deploy do PR #213 concluído por `sudo cc deploy canonical` em `2026-10-28 12:59` local, release SHA `1cb9741c1a97e97700eeacccfa6143a90145864e`, sem migrations pendentes. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-125359-1cb9741c1a97.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-125359-1cb9741c1a97.log`.
+- Homologação visual feita no navegador integrado do Codex em `https://carrochefe.com/lilyacai/ranking` e `/perfil`: sessão da conta teste exibiu Conta de Testes em #1 e clientes empatados em #2; perfil mostrou "posição interna". Após sair da conta, ranking público listou somente `teste` e `teste2` empatados em #1, sem a conta de teste nem a conta administrativa. Capturas foram mostradas no transcript do Codex.
+- Preferência operacional adicionada ao `AGENTS.md`: quando o proprietário indicar o navegador integrado do Codex, não tocar em Chrome/Edge externos e registrar um bloqueio se o navegador do Codex não estiver disponível.
