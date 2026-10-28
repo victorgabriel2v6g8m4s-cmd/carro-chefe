@@ -5,7 +5,7 @@
 - branch: codex/lily-whatsapp-cloud-api-admin
 - base_branch: cooklily/canonical
 - base_sha_verified: 0696105f160e520dfc8af1e26d9280ea995f6588
-- head_sha_verified: working tree candidate based on 0696105f160e520dfc8af1e26d9280ea995f6588 (commit pending)
+- head_sha_verified: d1f85547b2e14a36a39558ca60c3f5eae744cc84
 - pull_requests: none
 - deploy_sha: 1cb9741c1a97e97700eeacccfa6143a90145864e
 - tests/gates: policy preflight passed for API Lily, Lily admin UI and docs; `npm test` passed (64 files, 347 passed, 3 skipped); `npm run check` passed; `npm run build` passed; Lily budget tests passed; `git diff --check` passed. PR/CI/deploy/real-domain verification pending.
@@ -68,4 +68,4 @@ Nenhum desses segredos será pedido para commit, incluído em URL, impresso em l
 
 ## Próxima ação exata
 
-Revisar o diff completo e executar os preflights restantes (`tools` e checkpoint); então criar commit e PR para `cooklily/canonical`, acompanhar CI/CodeQL e integrar somente com gates aprovados.
+Publicar a branch `codex/lily-whatsapp-cloud-api-admin` e abrir PR para `cooklily/canonical`; acompanhar CI/CodeQL antes do merge.
