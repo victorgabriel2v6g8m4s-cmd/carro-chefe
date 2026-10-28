@@ -5,6 +5,7 @@ import {
   confirmLilyMfaSetup,
   getLilyMfaStatus,
   getLilyProfile,
+  getLilyProfileReels,
   getLilyRanking,
   getLilySession,
   getLilySessions,
@@ -56,6 +57,8 @@ export function ProfilePage() {
   const [mfaSetup, setMfaSetup] = useState<{ secret: string; otpauthUri: string } | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [sessions, setSessions] = useState<LilySessionRow[]>([]);
+  const [savedReels, setSavedReels] = useState<Array<{ id: string; slug: string; title: string; category: string; coverUrl: string | null; altText: string }>>([]);
+  const [likedReels, setLikedReels] = useState<typeof savedReels>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
@@ -87,6 +90,9 @@ export function ProfilePage() {
     const [nextProfile, sessionPayload] = await Promise.all([getLilyProfile(), getLilySessions()]);
     setProfile(nextProfile);
     setSessions(sessionPayload.sessions);
+    const [liked, saved] = await Promise.all([getLilyProfileReels("liked").catch(() => ({ reels: [] })), getLilyProfileReels("saved").catch(() => ({ reels: [] }))]);
+    setLikedReels(liked.reels);
+    setSavedReels(saved.reels);
     if (["staff", "courier", "admin"].includes(current.user.role)) {
       setMfaStatus(await getLilyMfaStatus());
     } else {
@@ -351,6 +357,10 @@ export function ProfilePage() {
     </div>
 
     <VipProfileSection />
+
+    {(likedReels.length > 0 || savedReels.length > 0) && <section className="profile-reels-collections">
+      {[{ title: "Reels curtidos", reels: likedReels }, { title: "Reels salvos", reels: savedReels }].filter((group) => group.reels.length > 0).map((group) => <div className="checkout-section" key={group.title}><h2>{group.title}</h2><div className="profile-reels-grid">{group.reels.map((reel) => <Link to={`/reels?produto=${encodeURIComponent(reel.slug)}`} key={reel.id} aria-label={`Abrir Reel ${reel.title}`}>{reel.coverUrl && <img src={reel.coverUrl} alt={reel.altText || reel.title} />}<strong>{reel.title}</strong><small>{reel.category}</small></Link>)}</div></div>)}
+    </section>}
 
     <div className="profile-grid">
       <form ref={editFormRef} id="profile-edit-form" className="checkout-section profile-edit-form" onSubmit={submit}>

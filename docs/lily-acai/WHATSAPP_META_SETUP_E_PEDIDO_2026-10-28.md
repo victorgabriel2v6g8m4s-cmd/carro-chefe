@@ -1,7 +1,7 @@
 # CookLily — configuração da Meta e roteiro do template de pedidos
 
 - Data: 2026-10-28
-- Estado: orientação para configuração pelo proprietário; template ainda não criado/submetido na Meta.
+- Estado: callback e assinatura de eventos CookLily configurados em 2026-10-28; app ainda em desenvolvimento, template não cadastrado, cobrança pendente.
 - Escopo: WhatsApp CookLily. A operação Carro Chefe usa credenciais e callback independentes.
 
 ## Antes de começar
@@ -67,6 +67,17 @@ Próximos incrementos planejados, fora desta configuração inicial:
 5. Indicadores agregados para operação e qualidade, sem usar conversas para analytics/model training sem finalidade, consentimento e retenção documentados.
 
 ## Referências oficiais
+
+## Estado confirmado da configuração — 2026-10-28
+
+- Perfil comercial CookLily marcado completo pelo MCP; app `CookLily` conectado.
+- Número CookLily `+55 67 9928-9187` consta registrado/linked. Não reutilizar esse número na configuração Carro Chefe.
+- Callback configurado: `https://carrochefe.com/api/v1/integrations/cooklily/whatsapp/webhook`.
+- O endpoint respondeu `200` ao handshake GET da Meta e devolveu o challenge esperado. Segredo verificado permanece apenas na VPS e nunca é registrado neste documento.
+- Campos adicionados: `account_update`, `message_statuses`, `message_template_status_update`, `messages`, `phone_number_name_update`.
+- A assinatura da conta CookLily ao app foi ativada após confirmação do proprietário. Estes passos, isoladamente, não confirmam entrega real enquanto o app permanece em modo de desenvolvimento.
+- Pendências Meta: publicar o app (aguardar decisão do proprietário), adicionar método de pagamento para mensagens cobradas e criar/submeter os templates Utility. A lista de templates cadastrados retornou vazia.
+- Nenhum envio de teste foi feito nesta etapa. Para um teste de saída será necessário escolher um template aprovado e um destinatário de teste autorizado; mensagens a clientes reais continuam dependendo de consentimento e autorização.
 
 - [Meta — Webhooks da WhatsApp Business Platform](https://www.postman.com/meta/whatsapp-business-platform/folder/lboq68h/webhooks)
 - [Meta — Override Callback URL por WABA](https://www.postman.com/meta/whatsapp-business-platform/request/13382743-1293399e-36eb-47a3-8b15-4a0fe8f2a9c4)

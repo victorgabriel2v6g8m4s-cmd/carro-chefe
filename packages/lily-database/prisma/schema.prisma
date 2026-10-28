@@ -33,6 +33,9 @@ model LilyUser {
   vipAnalytics LilyVipAnalyticsEvent[]
   referralInvites LilyReferralInvite[] @relation("LilyReferralOwner")
   referredBy LilyReferralInvite? @relation("LilyReferralRecipient")
+  reelLikes       LilyReelLike[]
+  reelSaves       LilyReelSave[]
+  reelComments    LilyReelComment[]
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -281,6 +284,9 @@ model LilyProduct {
   flavorLinks            LilyProductFlavor[]
   addonLinks             LilyProductAddon[]
   mediaLinks             LilyProductMedia[]
+  reelLikes              LilyReelLike[]
+  reelSaves              LilyReelSave[]
+  reelComments           LilyReelComment[]
   mixTiers               LilyMixPriceTier[]
   comboItems             LilyComboItem[]
   offers                 LilyOffer[]
@@ -402,6 +408,42 @@ model LilyProductMedia {
 
   @@id([productId, mediaId])
   @@index([mediaId, sortOrder])
+}
+
+model LilyReelLike {
+  userId    String
+  productId String
+  createdAt DateTime   @default(now())
+  user      LilyUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([productId, createdAt])
+}
+
+model LilyReelSave {
+  userId    String
+  productId String
+  createdAt DateTime   @default(now())
+  user      LilyUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([userId, createdAt])
+}
+
+model LilyReelComment {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  body      String
+  status    String   @default("published")
+  createdAt DateTime @default(now())
+  user      LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   LilyProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, status, createdAt])
+  @@index([userId, createdAt])
 }
 
 model LilyMixPriceTier {

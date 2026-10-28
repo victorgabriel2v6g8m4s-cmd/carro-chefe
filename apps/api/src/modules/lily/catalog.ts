@@ -184,6 +184,15 @@ function mediaUrl(id: string) {
   return `/api/v1/lily/public/media/${encodeURIComponent(id)}`;
 }
 
+function matchesMediaSignature(mime: string, buffer: Buffer) {
+  if (mime === "image/jpeg") return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  if (mime === "image/png") return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mime === "image/webp") return buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+  if (mime === "video/mp4") return buffer.toString("ascii", 4, 8) === "ftyp";
+  if (mime === "video/webm") return buffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
+  return false;
+}
+
 function assertMarginForPublish(status: string, projectedMarginBps: number | null | undefined) {
   if (status === "published" && projectedMarginBps != null && projectedMarginBps < marginFloorBps) {
     throw new ApiError(400, "Margem projetada abaixo do piso CookLily de 10%.", { code: "LILY_MARGIN_FLOOR" });
@@ -231,11 +240,11 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
       endsAt: offer.endsAt
     }));
   const cover = product.coverMedia && product.coverMedia.status === "active"
-    ? { id: product.coverMedia.id, url: mediaUrl(product.coverMedia.id), altText: product.coverMedia.altText }
+    ? { id: product.coverMedia.id, url: mediaUrl(product.coverMedia.id), altText: product.coverMedia.altText, mime: product.coverMedia.mime }
     : null;
   const gallery = product.mediaLinks
     .filter((link) => link.media.status === "active")
-    .map((link) => ({ id: link.media.id, url: mediaUrl(link.media.id), altText: link.media.altText }));
+    .map((link) => ({ id: link.media.id, url: mediaUrl(link.media.id), altText: link.media.altText, mime: link.media.mime }));
   const isPurchasable = product.isAvailable && variants.some((variant) => variant.isAvailable);
   return {
     id: product.id,
@@ -798,6 +807,25 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
     return { ok: true };
   });
 
+  app.put("/api/v1/lily/admin/products/:id/media", async (request) => {
+    const context = await requireLilyStaff(request, true);
+    const { id } = z.object({ id: idSchema }).parse(request.params);
+    const { mediaIds } = z.object({ mediaIds: z.array(idSchema).max(12) }).strict().parse(request.body);
+    const uniqueIds = [...new Set(mediaIds)];
+    const assets = uniqueIds.length ? await lilyPrisma.lilyMediaAsset.findMany({
+      where: { id: { in: uniqueIds }, status: "active" },
+      select: { id: true }
+    }) : [];
+    if (assets.length !== uniqueIds.length) throw new ApiError(400, "Uma ou mais mídias estão indisponíveis.");
+    await lilyPrisma.lilyProduct.findUniqueOrThrow({ where: { id }, select: { id: true } });
+    await lilyPrisma.$transaction([
+      lilyPrisma.lilyProductMedia.deleteMany({ where: { productId: id } }),
+      ...(uniqueIds.length ? [lilyPrisma.lilyProductMedia.createMany({ data: uniqueIds.map((mediaId, sortOrder) => ({ productId: id, mediaId, sortOrder })) })] : [])
+    ]);
+    await auditLilyAdmin(context.user.id, "replace-media", "product", id, { mediaIds: uniqueIds });
+    return { ok: true, mediaIds: uniqueIds };
+  });
+
   app.put("/api/v1/lily/admin/products/:id/addons", async (request) => {
     const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: idSchema }).parse(request.params);
@@ -1040,17 +1068,19 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
 
   app.post("/api/v1/lily/admin/media", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
-    const part = await request.file();
-    if (!part) throw new ApiError(400, "Envie uma imagem.");
+    const part = await request.file({ limits: { fileSize: 50 * 1024 * 1024, files: 1, fields: 8 } });
+    if (!part) throw new ApiError(400, "Envie uma imagem ou vídeo.");
     const extensionByMime: Record<string, string> = {
       "image/jpeg": ".jpg",
       "image/png": ".png",
-      "image/webp": ".webp"
+      "image/webp": ".webp",
+      "video/mp4": ".mp4",
+      "video/webm": ".webm"
     };
     const extension = extensionByMime[part.mimetype];
-    if (!extension) throw new ApiError(400, "Formato não permitido. Use JPEG, PNG ou WebP.");
+    if (!extension) throw new ApiError(400, "Formato não permitido. Use JPEG, PNG, WebP, MP4 ou WebM.");
     const buffer = await part.toBuffer();
-    if (!buffer.length || buffer.length > 10 * 1024 * 1024) throw new ApiError(400, "Imagem vazia ou acima de 10 MB.");
+    if (!buffer.length || buffer.length > 50 * 1024 * 1024 || !matchesMediaSignature(part.mimetype, buffer)) throw new ApiError(400, "Arquivo vazio, incompatível com o formato declarado ou acima de 50 MB.");
     const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
     const storageName = `${crypto.randomUUID()}${extension}`;
     await fs.mkdir(uploadRoot(), { recursive: true });

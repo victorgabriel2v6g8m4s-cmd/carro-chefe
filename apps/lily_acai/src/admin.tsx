@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 import { getLilyAdminCatalog, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { AdminAutosaveStatus, useAdminAutosave } from "./features/admin/useAdminAutosave";
+import { ProductMediaEditor } from "./features/admin/ProductMediaEditor";
 
 function moneyInput(cents: number | null | undefined) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -427,6 +428,7 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <div className="admin-span"><AllergenAdminFields catalog={data.allergenCatalog ?? []} value={allergens} onChange={setAllergens} /></div>
        <AdminAutosaveStatus {...productAutosave} />
     </div>
+    <ProductMediaEditor productId={product.id} initialMedia={product.gallery ?? []} assets={data.media.filter((media: any) => media.status === "active").map((media: any) => ({ ...media, url: media.url ?? `/api/v1/lily/public/media/${media.id}` }))} csrf={csrf} onError={setError} />
     <div className="variant-admin">
       <h4>{product.rawVariants.length === 1 && product.rawVariants[0]?.name === "Preço fixo" ? "Preço fixo do produto" : "Variações e preços"}</h4>
       {product.rawVariants.map((variant: any, index: number) => <ProductVariantEditor key={variant.id} variant={variant} index={index} variants={product.rawVariants} csrf={csrf} />)}
@@ -1092,12 +1094,12 @@ export function AdminMedia() {
       }
     }
     return <section className="admin-page">
-      <div className="admin-heading"><div><span className="eyebrow">Mídia CookLily</span><h1>Fotos do catálogo</h1><p>JPEG, PNG ou WebP. Até 10 MB.</p></div><a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Voltar ao cardápio</a></div>
+      <div className="admin-heading"><div><span className="eyebrow">Mídia CookLily</span><h1>Fotos e vídeos do catálogo</h1><p>JPEG, PNG, WebP, MP4 ou WebM. Até 50 MB por arquivo.</p></div><a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Voltar ao cardápio</a></div>
       {error && <p className="error" role="alert">{error}</p>}
-      <form className="media-upload" onSubmit={upload}><input name="file" type="file" accept="image/jpeg,image/png,image/webp" required /><button className="button primary" type="submit">Enviar imagem</button></form>
+      <form className="media-upload" onSubmit={upload}><input name="file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" required /><button className="button primary" type="submit">Enviar mídia</button></form>
       <div className="media-grid">
         {data!.media.map((media: any) => <article key={media.id}>
-          <img src={`/api/v1/lily/public/media/${media.id}`} alt={media.altText} />
+          {String(media.mime).startsWith("video/") ? <video src={`/api/v1/lily/public/media/${media.id}`} muted controls preload="metadata" aria-label={media.altText} /> : <img src={`/api/v1/lily/public/media/${media.id}`} alt={media.altText} />}
           <strong>{media.originalName}</strong><small>{Math.round(media.size / 1024)} KB · {media.mime}</small>
         </article>)}
       </div>
