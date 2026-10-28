@@ -1,6 +1,6 @@
 # CookLily: canais sociais, cupons VIP e convites compartilháveis
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: `codex/cooklily-final-homologation`
 - base_branch: `cooklily/canonical`
@@ -8,7 +8,7 @@
 - head_sha_verified: `2d4f5a603632f9969d599447d1ee318845fd1fb2`
 - pull_requests: #207, #208 e #209 integrados em `cooklily/canonical`
 - ci_run: PR #209 CI `40678342102` verde em 7 checks; CodeQL `40678346560` verde
-- last_verified_at: 2026-10-28 08:22 America/Sao_Paulo
+- last_verified_at: 2026-10-28 11:40 America/Sao_Paulo
 - interruption_state: none
 
 ## Escopo desta entrega
@@ -141,3 +141,20 @@ Reautenticar no navegador Codex, abrir `/lilyacai/painel/cupons`, ativar o cupom
 - Reteste da correção do atalho Pausar após deploy ainda pendente. Itens/cupones de teste encontram-se pausados; não há pedido ou resposta de pesquisa de teste enviados.
 - Deploy `sudo cc deploy canonical` concluído em 2026-10-28 11:18 UTC (08:18 local); SHA `2d4f5a603632f9969d599447d1ee318845fd1fb2`. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.log`.
 - Deploy validation incremental: migrations de preflight aplicadas e schemas válidos; produção sem migration pendente; backups dos bancos core e Lily verificados; check, suite 346/346, build/budget e Tool Health passaram; Nginx config válida; readiness OK na tentativa 6; smoke HTTPS externo OK na tentativa 1. Deploy reportou `DEPLOY CONCLUÍDO`.
+
+## Homologação final do cupom rápido (2026-10-28)
+
+- Após o deploy de `2d4f5a603632f9969d599447d1ee318845fd1fb2`, o painel real `/lilyacai/painel/cupons` foi validado com a conta de agente autenticada.
+- O atalho `Ativar` do `HOMO-VIP-OCT28` alterou o estado para `active` e exibiu `Alteração salva com sucesso.`; em seguida, o atalho `Pausar` retornou o estado para `paused`, também com confirmação de sucesso. A leitura visual confirma os estados e que o cupom de teste terminou pausado.
+- O cupom permaneceu listado como `Frete grátis`, sem resgates, e continuou identificado como VIP no registro operacional anterior (`vipOnly=true`, `appliesToShipping=true`). Não houve compra nem resgate. A ativação não duplicou a notificação para usuários anteriormente notificados; possíveis novos elegíveis seguem a regra normal de audiência.
+- Imagem da tela final do painel capturada nesta execução; a confirmação também está registrada no estado acessível como `Alteração salva com sucesso.`
+- Testes dos links foram feitos sem submeter respostas de pesquisa, cadastro, pedidos ou pagamentos. Os produtos de homologação e cupons temporários permanecem pausados; a recompensa por indicação continua desligada/zerada.
+- Deploy de aplicação concluído em `2d4f5a603632f9969d599447d1ee318845fd1fb2`; fluxo de deploy e smoke real documentados acima. Não há mudança de código pós-deploy nesta homologação.
+
+### Estado final
+
+`completed` — PR #209 corrigiu o PATCH parcial, CI e CodeQL passaram, correção implantada na canonical e fluxo de ativar/pausar verificado no domínio real. Links de convite, pesquisa e produto verificados; produto VIP foi comparado para público anônimo e VIP. Dados de teste não ficaram disponíveis para pedidos.
+
+### Próxima ação exata
+
+Nenhuma ação técnica pendente para esta entrega. O proprietário pode revisar as capturas e, quando desejar, compartilhar o link de convite VIP. Homologação prática no domínio real permanece sujeita à revisão visual do proprietário.
