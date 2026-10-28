@@ -36,7 +36,7 @@ function checkedOrigin(value, allowLocalhost) {
 async function api(route, body) {
   const response = await fetch(`${apiOrigin}/api/v1/lily/auth/agent/${route}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: apiOrigin },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(10_000)
   });
