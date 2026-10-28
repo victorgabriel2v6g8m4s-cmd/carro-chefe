@@ -60,6 +60,7 @@ async function cleanup() {
   await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom de teste VIP" } });
   await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom VIP-only para teste" } });
   await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom VIP de homologação" } });
+  await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom frete grátis pausa rápida" } });
   await lilyPrisma.lilyOperationalSettings.updateMany({ data: { vipPointsThreshold: 0, referralRewardPoints: 0 } });
   codeSuffix = "";
 }
@@ -68,6 +69,23 @@ afterEach(cleanup);
 afterAll(async () => { await cleanup(); await app.close(); });
 
 describe("programa VIP CookLily", () => {
+  it("pausa cupom de frete grátis via atualização parcial sem alterar flags omitidas", async () => {
+    const admin = await register();
+    await lilyPrisma.lilyUser.update({ where: { id: admin.userId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });
+    await lilyPrisma.lilySession.updateMany({ where: { userId: admin.userId }, data: { mfaVerifiedAt: new Date() } });
+    const coupon = await lilyPrisma.lilyCoupon.create({ data: {
+      code: `VIP-PAUSE-${crypto.randomUUID().slice(0, 6).toUpperCase()}`,
+      title: "Cupom frete grátis pausa rápida", type: "free_shipping", value: 0, color: "#820023",
+      status: "active", vipOnly: true, appliesToShipping: true
+    } });
+    const response = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/coupons/${coupon.id}`,
+      headers: { cookie: admin.cookie, "x-lily-csrf": admin.csrf, origin }, payload: { status: "paused" }
+    });
+    expect(response.statusCode, JSON.stringify(response.json())).toBe(200);
+    expect(response.json()).toMatchObject({ status: "paused", type: "free_shipping", value: 0, vipOnly: true, appliesToShipping: true });
+  });
+
   it("recompensa uma indicação apenas após novo cadastro e preserva o convite no link", async () => {
     const owner = await register();
     await lilyPrisma.lilyOperationalSettings.upsert({ where: { id: "default" }, create: { id: "default", referralRewardPoints: 25 }, update: { referralRewardPoints: 25 } });
