@@ -2,17 +2,17 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-test-accounts-referral-survey-ux
+- branch: codex/cooklily-ranking-staff-exclusion
 - base_branch: cooklily/canonical
-- base_sha_verified: b7232966ca560e31266b38d694006e0204e9ca0d
-- head_sha_verified: b06edf30879dca8c29d92ab794b6622dcd92b0c8
-- pull_requests: #211 open draft — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211
-- deploy_sha: 2d4f5a603632f9969d599447d1ee318845fd1fb2 (existing production release)
-- tests/gates: policy preflight PASS; `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` PASS (CookLily bundle budgets PASS after +1.5 KiB JS allowance); `git diff --check` PASS
+- base_sha_verified: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
+- head_sha_verified: 564ac07d0df70e34d8d879a8a0a1c361ee765a2f
+- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; ranking correction PR to be opened
+- deploy_sha: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
+- tests/gates: focused profile API tests PASS (9/9); full `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` and CookLily bundle budget PASS; `git diff --check` PASS. All tests used a disposable Lily DB with 30 migrations.
 - migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
-- blockers: none
+- blockers: ranking correction awaits CI, deployment, and live recheck
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: finish CI/CodeQL for PR #211, mark ready and merge by squash, deploy authorized VPS release, set production referral reward to 2,000, and run live desktop/mobile journeys with screenshots.
+- next_action: publish this checkpoint and open the PR for staff exclusion and accurate internal-rank label; await green CI, merge, deploy canonical, and repeat public/internal ranking checks on carrochefe.com.
 
 ## Objetivo
 
@@ -23,13 +23,14 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 1. [x] Encontrar a direção original de UX: pesquisa exige conta; a publicação/notificação deve destacar pontos e tempo estimado. A nova solicitação especifica exibir os benefícios da pesquisa no portão de login/cadastro.
 2. [x] Revisar implementação atual de referral, coupon redemption, survey completion/points, test-account permissions, leaderboard e migrations.
 3. [x] Critérios definidos: links públicos sem IDs de banco, telefone, nome ou credenciais; referral token aleatório de 256 bits, uso único, cadastro elegível e sem autorreferência; pesquisa com token opaco separado do ID interno, prévia mínima e indisponibilidade ao pausar/cancelar; produto usa slug público estável; query strings de atribuição não são encaminhadas a analytics. Revogação/expiração manual de convites foi explicitamente registrada como fora do modelo atual.
-4. [x] Recompensa de indicação configurável e idempotente implementada; teste API com 2.000 pontos, uso único e rejeição de reutilização PASS. Aplicar 2.000 à configuração operacional de produção permanece pendente do painel após deploy.
+4. [x] Recompensa de indicação configurável e idempotente implementada; produção configurada para 2.000 pontos e confirmada no perfil da conta teste.
 5. [x] Flag de conta de teste alterável por admin em cliente, role promotion remove a flag; ranking público oculta e ranking interno inclui teste com posições densas. Testes API PASS.
 6. [x] Link da pesquisa mostra preview público com resumo/pontos/duração, CTA login/cadastro e destino preservado; lista/start aceitam token público; API não expõe ID/perguntas na prévia. Testes API PASS.
 7. [x] `npm test` (64 arquivos, 346 pass/3 skip), `npm run check`, `npm run build`, migration em banco SQLite descartável e `git diff --check` PASS.
-8. [ ] Deploy autorizado em VPS, testar domínio real em desktop/mobile e registrar capturas, falhas, correções e retestes.
-9. [ ] Em produção, marcar a conta de teste existente, criar contas descartáveis autorizadas, resgatar cupom VIP e público, responder pesquisa, revisar créditos/notificações/ranking; autorização permanente permite aceite de termos somente para contas designadas de teste.
-10. [ ] Publicar checkpoint atualizado na canonical após gates verdes.
+8. [x] PR #211 foi integrado e implantado em `bf9fab69085b38d8f9e375bb7519ede7823bc0c6`; migration, 349 testes de deploy, build, readiness e HTTPS smoke passaram.
+9. [x] Homologação ao vivo: indicador de conta teste, recompensa de indicação 2.000, link de indicação reconhecido, gate de pesquisa desktop/mobile, resgate de benefício VIP e notificações de cupom. A conta teste já havia respondido a pesquisa; nova resposta e novo cadastro não foram submetidos para evitar publicar dados de teste no ambiente real.
+10. [ ] Corrigir a exposição do admin no ranking e o rótulo do ranking interno; fazer novo deploy e revalidar na canonical.
+11. [ ] Fechar este checkpoint e publicar o relatório de execução com as capturas após a validação final.
 
 ## Próximas entregas adicionadas ao roadmap
 
@@ -44,3 +45,11 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 - Links de pesquisa usam token público opaco, prévia anônima limitada a título/subtítulo/descrição/duração/contagem/pontos, e login/cadastro preserva o destino. ID interno e conteúdo de respostas não são expostos pela prévia.
 - Critérios definidos nesta entrega: produto usa slug público; pesquisa usa token aleatório separado do ID e só compartilha resumo mínimo, ficando indisponível ao pausar/cancelar; indicação usa token aleatório, vale para um novo cadastro elegível, não aceita autorreferência, conta inativa/equipe ou reutilização, e atribuição não inclui PII. Recompensa e autenticação do convite persistem server-side; parâmetros de atribuição não devem seguir para analytics.
 - Regras de expiração/revogação manual dos convites e expiração das pesquisas não existem no modelo atual; ficam fora dos critérios operacionais desta entrega, salvo o desligamento pela pausa/cancelamento da pesquisa.
+
+## Homologação de produção e correção complementar
+
+- PR #211 foi squash-merged em `bf9fab69085b38d8f9e375bb7519ede7823bc0c6`. Deploy `sudo cc deploy canonical` concluiu com backup dos dois bancos, migration `20261028180000_lily_test_accounts_survey_tokens`, 64 arquivos/349 testes, `npm run check`, build, readiness local e smoke HTTPS verdes. Evidência no VPS: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-122138-bf9fab69085b.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-122138-bf9fab69085b.log`.
+- Capturas: `C:\Users\valdi\Pictures\CookLily-2026-10-28\survey-gate-desktop.png`, `survey-gate-mobile.png`, `referral-signup-gate.png`, `public-ranking-anonymous.png`, `test-account-ranking.png`, `test-account-profile.png`, `coupon-redeemed-test-account.png` e `test-account-notifications.png`.
+- Achado ao vivo: o ranking anônimo omitia a conta `Conta de Testes`, mas mostrava `Chat GPT Codex Agent`, uma conta administrativa. Também o perfil da conta teste chamava sua posição relativa interna de “posição pública”.
+- Correção implementada em `564ac07d0df70e34d8d879a8a0a1c361ee765a2f`: filtrar rankings para `role=customer`, mesmo na visão admin/teste, e retornar `rankScope` para o perfil diferenciar posição pública da interna. Cobertura dedicada passou 9/9; suíte completa passou 346/346 (3 skipped), check e build passaram usando banco descartável.
+- Limitação homologada: o link da pesquisa foi testado até a autenticação; a conta teste já havia respondido, portanto a aplicação corretamente bloqueou segunda resposta. Créditos de pesquisa, gate público/token, filtro VIP e atribuição têm cobertura API, sem uma nova submissão pública ao vivo.
