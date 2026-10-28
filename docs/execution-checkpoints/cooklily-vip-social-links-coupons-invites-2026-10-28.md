@@ -102,3 +102,18 @@ Preparar commit e PR para `cooklily/canonical`; acompanhar CI/CodeQL e integrar 
 - `npm run policy:preflight -- --agent AG-DEV --scope tools,apps/api,apps/lily_acai,packages/lily-database,docs`: passou (policyVersion `2026.09.19.1`). `git diff --check`: passou.
 - Pendente revisar artefatos, criar PR, obter CI/CodeQL, merge, deploy, screenshots e homologação real. Nenhum conteúdo ou configuração de produção foi alterado ainda.
 - Tentativa de `prisma migrate deploy` em um SQLite vazio falhou com erro do schema engine sem detalhes; o fluxo oficial local de bootstrap de testes funcionou. Investigar apenas se CI também indicar falha.
+
+## Continuação após merge e homologação (2026-10-28)
+
+- PR #207 integrado em `cooklily/canonical`, commit de merge `a6ddc4f5c1f73857d31be8c42dd994ad91227f46`; CI e CodeQL passaram.
+- Deploy da canonical concluído via `sudo cc deploy canonical`; migrations, backup, 345 testes, build, health e smoke HTTPS passaram. Evidência de deploy no host: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-103102-a6ddc4f5c1f7.evidence`.
+- Browser integrado do Codex: painel de configurações em produção exibiu Instagram `cook._lily` e WhatsApp, demais redes opcionais; footer público apresentou os links configurados e navegação móvel. Capturas de browser constam no histórico desta execução.
+- Imagens de homologação enviadas à biblioteca de mídia. Dois produtos de teste foram criados; produto VIP publicado com o teaser "Novidade de homologação VIP: em breve uma surpresa especial." e o produto comum criado como rascunho para homologação. Não iniciar pedido nem pagamento.
+- Conta não VIP no domínio real abriu o lançamento VIP: título mascarado como `???`, teaser e selo VIP corretos; porém imagem abriu sem blur na modal de produto. Encontrada causa: estilo de blur residia em CSS importado só nas páginas do programa VIP, fora do bundle global do catálogo; modal também não aplicava a classe de mídia VIP. Correção em andamento em branch `codex/vip-teaser-blur-fix`: classe adicionada na mídia da modal e regra movida para o CSS global.
+- O mesmo preview exibiu estado de item esgotado; investigação pendente para confirmar disponibilidade da variação e ativar corretamente os dois produtos de teste.
+- Ainda pendentes os testes pós-correção dos caminhos VIP/não-VIP, cupons e notificações, links de convite/pesquisa/produto e limpeza/pausa dos dados temporários. A execução não está concluída.
+- Estado real no momento deste checkpoint: base canônica deployed em `a6ddc4f5c1f73857d31be8c42dd994ad91227f46`; branch corretiva local `codex/vip-teaser-blur-fix`; alterações corretivas ainda sem commit/PR. Suíte completa em execução após `npm run check` aprovado.
+
+### Próxima ação exata
+
+Concluir a suíte; rodar build e `git diff --check`; abrir PR corretiva para a classe/estilo de blur, obter CI e CodeQL, integrar via squash e fazer deploy autorizado. Em seguida recarregar o produto VIP em sessão não VIP e VIP, confirmar blur/título/CTA, corrigir disponibilidade dos itens de teste, concluir verificações restantes, pausar todos os dados temporários e substituir o status deste documento somente por fatos confirmados.
