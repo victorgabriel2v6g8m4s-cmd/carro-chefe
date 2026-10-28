@@ -6,7 +6,7 @@
 - Base branch: `cooklily/canonical`.
 - Base SHA: `9f962d34895a228ac0114b89af0ccf84c9f8b33f`.
 - HEAD verificado: `9f962d34895a228ac0114b89af0ccf84c9f8b33f` (mudanças locais ainda sem commit).
-- PRs: nenhum aberto.
+- PR: [#236 — Mitigate and instrument intermittent TLS handshake failures](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/236), aberto como draft; CI inicial `queued` (run `40790830012`).
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
 - Última verificação: 28/10/2026 23:49 UTC.
 
@@ -57,4 +57,4 @@
 
 O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; ainda não há prova de que a conexão dos clientes afetados tenha exatamente o mesmo problema. Não afirmar causa raiz nem resolução garantida até surgir uma falha real no log dedicado ou confirmação dos usuários.
 
-Próxima ação exata: revisar o diff staged, commitar e abrir PR contra `cooklily/canonical`; validar CI, integrar e fazer deploy. Manter a captura até `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt` concluir após 00:48:21 UTC; depois ler o TXT e separar tráfego sintético de falhas de clientes. Se surgir falha real, cruzar razão TLS/tempo com o caminho de rede observado e ajustar somente com evidência.
+Próxima ação exata: aguardar CI do PR #236, marcar ready, integrar e fazer deploy em `cooklily/canonical`. Manter a captura até `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt` concluir após 00:48:21 UTC; depois ler o TXT e separar tráfego sintético de falhas de clientes. Se surgir falha real, cruzar razão TLS/tempo com o caminho de rede observado e ajustar somente com evidência.
