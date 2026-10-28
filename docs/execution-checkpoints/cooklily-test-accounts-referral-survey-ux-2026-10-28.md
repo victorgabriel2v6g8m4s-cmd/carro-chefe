@@ -6,13 +6,13 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
 - head_sha_verified: 564ac07d0df70e34d8d879a8a0a1c361ee765a2f
-- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; ranking correction PR to be opened
+- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; #213 open draft — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/213
 - deploy_sha: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
 - tests/gates: focused profile API tests PASS (9/9); full `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` and CookLily bundle budget PASS; `git diff --check` PASS. All tests used a disposable Lily DB with 30 migrations.
 - migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
-- blockers: ranking correction awaits CI, deployment, and live recheck
+- blockers: PR #213 CI, deployment, and live recheck pending
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: publish this checkpoint and open the PR for staff exclusion and accurate internal-rank label; await green CI, merge, deploy canonical, and repeat public/internal ranking checks on carrochefe.com.
+- next_action: await PR #213 CI; mark ready, merge, deploy canonical, and repeat public/internal ranking checks on carrochefe.com.
 
 ## Objetivo
 
