@@ -55,6 +55,15 @@ describe("programa VIP CookLily", () => {
     await lilyPrisma.lilyUser.update({ where: { id: account.userId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });
     await lilyPrisma.lilySession.updateMany({ where: { userId: account.userId }, data: { mfaVerifiedAt: new Date() } });
 
+    const expiredCreate = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/vip/codes",
+      headers: { cookie: account.cookie, "x-lily-csrf": account.csrf, origin },
+      payload: { kind: "vip", couponIds: [], startsAt: null, endsAt: new Date(Date.now() - 60_000).toISOString(), maxRedemptions: null }
+    });
+    expect(expiredCreate.statusCode).toBe(400);
+    expect(expiredCreate.json().details.code).toBe("LILY_VIP_CODE_EXPIRY_PAST");
+
     const created = await app.inject({
       method: "POST",
       url: "/api/v1/lily/admin/vip/codes",
@@ -64,6 +73,16 @@ describe("programa VIP CookLily", () => {
     expect(created.statusCode).toBe(201);
     const generatedCode = created.json().code as string;
     codeSuffix = generatedCode.slice(-4);
+
+    await lilyPrisma.lilyVipCode.updateMany({ where: { displaySuffix: codeSuffix }, data: { endsAt: new Date(Date.now() - 60_000) } });
+    const renewed = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/lily/admin/vip/codes/${created.json().invite.id as string}`,
+      headers: { cookie: account.cookie, "x-lily-csrf": account.csrf, origin },
+      payload: { status: "active", endsAt: null }
+    });
+    expect(renewed.statusCode).toBe(200);
+    expect(renewed.json().endsAt).toBeNull();
     await lilyPrisma.lilyUser.update({ where: { id: account.userId }, data: { role: "customer", mfaEnabled: false } });
 
     const redeemed = await app.inject({

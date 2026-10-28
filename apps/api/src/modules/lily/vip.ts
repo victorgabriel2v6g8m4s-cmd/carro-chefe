@@ -63,7 +63,10 @@ const adminCodeSchema = z.object({
 });
 
 const settingsSchema = z.object({ pointsThreshold: z.number().int().min(0).max(1000000).optional(), analyticsRetentionDays: z.number().int().min(30).max(3650).optional() }).strict().refine((value) => Object.keys(value).length > 0);
-const statusSchema = z.object({ status: z.enum(["active", "paused", "disabled"]) }).strict();
+const statusSchema = z.object({
+  status: z.enum(["active", "paused", "disabled"]),
+  endsAt: z.coerce.date().nullable().optional()
+}).strict();
 
 export async function lilyVipRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/admin/vip", async (request) => {
@@ -92,6 +95,7 @@ export async function lilyVipRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/vip/codes", async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const input = adminCodeSchema.parse(request.body);
+    if (input.endsAt && input.endsAt <= new Date()) throw new ApiError(400, "A validade do código precisa terminar no futuro.", { code: "LILY_VIP_CODE_EXPIRY_PAST" });
     if (input.couponIds.length) {
       const found = await lilyPrisma.lilyCoupon.findMany({ where: { id: { in: input.couponIds }, assignedUserId: null } });
       if (found.length !== new Set(input.couponIds).size) throw new ApiError(400, "Um ou mais cupons não estão disponíveis para associação.", { code: "LILY_VIP_COUPON_INVALID" });
@@ -110,9 +114,10 @@ export async function lilyVipRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/vip/codes/:id", async (request) => {
     const context = await requireLilyStaff(request, true);
     const { id } = z.object({ id: z.string().min(1).max(80) }).parse(request.params);
-    const { status } = statusSchema.parse(request.body);
-    const updated = await lilyPrisma.lilyVipCode.update({ where: { id }, data: { status } });
-    await auditLilyAdmin(context.user.id, "update", "vip-code", id, { status });
+    const { status, endsAt } = statusSchema.parse(request.body);
+    if (endsAt && endsAt <= new Date()) throw new ApiError(400, "A validade do código precisa terminar no futuro.", { code: "LILY_VIP_CODE_EXPIRY_PAST" });
+    const updated = await lilyPrisma.lilyVipCode.update({ where: { id }, data: { status, ...(endsAt === undefined ? {} : { endsAt }) } });
+    await auditLilyAdmin(context.user.id, "update", "vip-code", id, { status, ...(endsAt === undefined ? {} : { endsAt }) });
     const { codeHash: _hash, ...safe } = updated;
     return safe;
   });
