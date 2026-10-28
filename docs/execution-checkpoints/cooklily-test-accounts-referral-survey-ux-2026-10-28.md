@@ -6,13 +6,13 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: b7232966ca560e31266b38d694006e0204e9ca0d
 - head_sha_verified: b06edf30879dca8c29d92ab794b6622dcd92b0c8
-- pull_requests: none
+- pull_requests: #211 open draft — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211
 - deploy_sha: 2d4f5a603632f9969d599447d1ee318845fd1fb2 (existing production release)
 - tests/gates: policy preflight PASS; `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` PASS (CookLily bundle budgets PASS after +1.5 KiB JS allowance); `git diff --check` PASS
 - migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
 - blockers: none
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: push `b06edf30879dca8c29d92ab794b6622dcd92b0c8`, open PR against `cooklily/canonical`, pass CI/CodeQL, merge, deploy authorized VPS release, set production referral reward to 2,000, and run live desktop/mobile journeys with screenshots.
+- next_action: finish CI/CodeQL for PR #211, mark ready and merge by squash, deploy authorized VPS release, set production referral reward to 2,000, and run live desktop/mobile journeys with screenshots.
 
 ## Objetivo
 
