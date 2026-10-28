@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-instagram-handle`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `accf9423d5f9237f6a8bc9aaaa8b0a7c0f6f4749`
-- head_sha_verified: a registrar após commit desta correção de abertura do Edge
-- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) e [PR #205](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/205), ambos merged
+- head_sha_verified: `ea41dbb808c3ccde12a1e5d82b0e9390c53f8dad`
+- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) e [PR #205](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/205), ambos merged; PR do launcher pendente de abertura
 - ci_run: PR #205 run #815 / ID `40634250428`, success; deploy #`20261028-045102` concluído no release `accf9423d5f9237f6a8bc9aaaa8b0a7c0f6f4749`
 - last_verified_at: 2026-10-28
 - interruption_state: none
@@ -62,6 +62,7 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 - CLI local `tools/lily-agent-auth.mjs login`: assina via `ssh-agent`, não imprime nem salva ticket e abre a página de handoff. A página remove o fragmento da URL antes de trocar o ticket por sessão.
 - Preflight AG-DEV executado após atualização das instruções regionais para API Lily, banco, tools, frontend, scripts de deploy e docs: todos exit 0. `npm run policy:build` gerou manifesto `sha256:8a48a5329c3bd25e806dd7cccb39fa4edfb988287c279ddc166c37d4c7325d74`.
 - `npm run check`: PASS após a implementação inicial (corrigido o tipo de conta criada); repetir depois do último ajuste.
+- Correção do launcher Edge commit `ea41dbb`; `npm run check`: PASS; `npm run build`: PASS com build budget verde; `npm test`: 63 arquivos, 334 aprovados, 3 ignorados; teste direcionado CLI/deploy: 11 aprovados, 3 ignorados; policy check, preflight e diff-check PASS.
 - Teste direcionado `agent-auth.test.ts`: PASS — assinatura OpenSSH, senha recusada para conta de agente, chave desconhecida/assinatura inválida, desafio/ticket expirados, replay, sessão de admin, CSRF obrigatório, auditoria com fingerprint e revogação imediata. Repetir depois do último ajuste.
 - `agent-auth.test.ts` + `deploy-scripts.test.ts`: PASS — 12 testes, 3 ignorados no Windows.
 - A validação local `bash -n` acionou `C:\Windows\System32\bash.exe` (stub/WSL) e foi interrompida; sintaxe Bash permanece gate do CI Linux.
@@ -82,5 +83,5 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 
 ## Próxima ação exata
 
-Concluir `npm run check`, `npm test`, `npm run build`, preflight e diff-check sem concorrência de geração Prisma; commitar a correção de launcher, abrir PR contra `cooklily/canonical`, aguardar CI, fazer squash autorizado, deploy e autenticar novamente abrindo o handoff no Edge. A homologação VIP da conta de teste permanece `active`. Depois, cumprir a solicitação pendente de substituir `@acai._lily` por `cook._lily` nos canais públicos do site com PR/CI/deploy e teste real separado.
+Abrir PR do commit `ea41dbb` contra `cooklily/canonical`, aguardar CI, fazer squash autorizado, deploy e autenticar novamente abrindo o handoff no Edge. A homologação VIP da conta de teste permanece `active`. Depois, cumprir a solicitação pendente de substituir `@acai._lily` por `cook._lily` nos canais públicos do site com PR/CI/deploy e teste real separado.
 
