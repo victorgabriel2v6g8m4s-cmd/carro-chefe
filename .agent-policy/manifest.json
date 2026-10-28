@@ -1,136 +1,136 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026.08.20.1",
+  "policyVersion": "2026.10.28.1",
   "runtimeBudgetChars": 6500,
   "sources": [
     {
       "path": ".agent-policy/AGENTS.md",
       "kind": "agents",
-      "sha256": "ae3ef9678d685123f74b43454cf83d613672100fc4a8d0f232b2a13ae1c2d81a"
+      "sha256": "ea6fa0cea24989e73fe60ed3e401351eb3fbc2d6481cb87249649826f938ae6a"
     },
     {
       "path": ".agent-policy/capsules.json",
       "kind": "capsules",
-      "sha256": "cfeea2ca7f010b2dd7e9d06b0e428c20fd027140a9e0766b3144479c90ceef8d"
+      "sha256": "5e077872268ee8933ad3b18dc76db6a91057d687a870e08408fa575538f01aad"
     },
     {
       "path": ".codex/AGENTS.md",
       "kind": "agents",
-      "sha256": "cfecc5535a67803623a36e63159de7bbd465f4795e129f4918c4b10c02dadaaa"
+      "sha256": "4e0c3232dad5d891db38427077d17847e84a18d5a7000bf6121db6690ddae537"
     },
     {
       "path": ".github/AGENTS.md",
       "kind": "agents",
-      "sha256": "c255dbb7610eaa6f18817c418d7f5647a8d60f02340edb1c7666a54b000a36c6"
+      "sha256": "6774f033d94b2e87b3039014abea95e66d382d9987a76995d2cefbc8a2478429"
     },
     {
       "path": "AGENTS.md",
       "kind": "agents",
-      "sha256": "4529b46ecdfd0e8962e4d2eaee87002d1565a7a05e1cc01e728179ad81607793"
+      "sha256": "c7a9ab60871cbc3113b4d25842b0a89dac0a4287945b78986f0e2629178af646"
     },
     {
       "path": "REGRAS.md",
       "kind": "rules",
-      "sha256": "06b8958712b92d8d9ab9c607de9a283b07c2fadefb90b28d36ee1a20eefa350e"
+      "sha256": "9c2ea852eb8bc17e65baa3caf82145900e7254481abf408e423b49a4ff5738d8"
     },
     {
       "path": "apps/AGENTS.md",
       "kind": "agents",
-      "sha256": "10c355b7e6460264267725bf557d9ba7bba6eef920752a4481e40c7d9643a31f"
+      "sha256": "129a407b1b55475fc94365fcbac52585d5482c3e2cb2cf296ba0da1a217c53e0"
     },
     {
       "path": "apps/api/AGENTS.md",
       "kind": "agents",
-      "sha256": "1191107b5ee8e492797748738ce2922904285e504c2f25f79f3a60851d008a0c"
+      "sha256": "dcb84421501ebce3e692b5a5f682f605ad68c706ed141bdd50fdc4d2c649106d"
     },
     {
       "path": "apps/api/src/workers/AGENTS.md",
       "kind": "agents",
-      "sha256": "0ad14f1ca3ba9fcec04ccec1a343fa27b0b266e0cf608c2c31342a35f9b0de59"
+      "sha256": "9ef07fdc4618ca9a9d546fbb241f87bff3f1b92d4c41cc2d3dbe85b2222c8611"
     },
     {
       "path": "apps/gestao/AGENTS.md",
       "kind": "agents",
-      "sha256": "a92e2e7676a937eef07ea8ebad1307a6b1584da16b17f8369b35d82be5e170ae"
+      "sha256": "e5412e88b7082334b20b9a5ee04dca9b28bac28283358499fba1a5e9c8aad7de"
     },
     {
       "path": "apps/qr_manipulator/AGENTS.md",
       "kind": "agents",
-      "sha256": "e9bbc0feea24867af3e4c5a378488e7acda260b08fb987d4984e42eb4068b9a6"
+      "sha256": "3021cab0922b842bfd5c390ffdad7d335bd70eed150acb35b462a2da2d1158ad"
     },
     {
       "path": "apps/site/AGENTS.md",
       "kind": "agents",
-      "sha256": "ff66807ece10bb827e7b9cbb56074d673812b5fabcd87b7c0e89bf55246c218c"
+      "sha256": "12a35c1e80ef85d8df4c17457eeaf54c8b896f35990c7f145c8d5019e2b170f9"
     },
     {
       "path": "cardápio/AGENTS.md",
       "kind": "agents",
-      "sha256": "adecb1aae4a13cd015a30a422adfe58c96dce85167afd21dee84f9e4cd53b7c6"
+      "sha256": "b0a47a88e45750eeb89c0fbf30493ee852ab2277ae683ba78d8e6c345668fe18"
     },
     {
       "path": "docs/AGENTS.md",
       "kind": "agents",
-      "sha256": "fe56fd1ae730461b9a88ab7f303f677e7c9f0580642a81e60bef512748253a50"
+      "sha256": "5d2c800b17ba7bcfde70fd9d99724966ee8a1796aaff9413ecd283364bf50dda"
     },
     {
       "path": "logos/AGENTS.md",
       "kind": "agents",
-      "sha256": "d19d5c97d5d6899a57be011270647cefce9bbaf6dd90082ad0eec6d27508a34f"
+      "sha256": "da57e71d3974394c2ec20e4ee9927b253225f98e03b88ca5d7b5381694c95510"
     },
     {
       "path": "mídias/AGENTS.md",
       "kind": "agents",
-      "sha256": "3c406587f8c02519584bd4a8fdd35eb15dc48843eb15162824ddbe27999cebbb"
+      "sha256": "b27b1a1f7eda1581feea46d93a3bcdc3ffa315fc0c11a45b8d1f7a3cd5cf68d6"
     },
     {
       "path": "packages/AGENTS.md",
       "kind": "agents",
-      "sha256": "a06ba8f4b4552678c048782dd2e538404b6f782db82abc787d6bbd4d69c2588c"
+      "sha256": "e405035fc3a9adef7e266a387eb894f26fbc78c4ca480e604da87af5b1edfd2c"
     },
     {
       "path": "packages/contracts/AGENTS.md",
       "kind": "agents",
-      "sha256": "76a3a9dab0d8ced8f3b8c8e9e186a0913b717910f992e96df438f469717594cd"
+      "sha256": "8833f169b45f4934f4c1cf9670d6ed078da2cace4560df57c8021d0a31c6f0ca"
     },
     {
       "path": "packages/database/AGENTS.md",
       "kind": "agents",
-      "sha256": "e3e57d99034ba71e51ad1170419feedff4c6fa628b9bd82f7709f8101543cd79"
+      "sha256": "89283e6a4a8475a7828c56f2dcc9afcc3515e6541228c91514dbbc5b51d21839"
     },
     {
       "path": "packages/ui/AGENTS.md",
       "kind": "agents",
-      "sha256": "6e2ae5058be7528574ba6ee6951b3d4172b11eb6dfcade9dbcdcf0d78fd3b1c5"
+      "sha256": "4aa7bc366a31d7ee22d3d042e454dc305c5f8abc94ca4fa92ee6454606bc1f17"
     },
     {
       "path": "planejamento/AGENTS.md",
       "kind": "agents",
-      "sha256": "4a9cea04f8d7b96a4d82de703d39592697701729aac08a6610e0e757c27bc1c5"
+      "sha256": "f1d1ff54ff0507d1c9d4e5567bcdbbf4cc05369e1405ad54339bb2ad1f9c4d66"
     },
     {
       "path": "site/AGENTS.md",
       "kind": "agents",
-      "sha256": "7ca90e4e89104b5b33bff077dc829d448024c447a1c1138dc3d436d6e9e6779d"
+      "sha256": "ff85903f963f72ebee544a625153c85d9d7d37c23a6ebf836f3142bd7b792186"
     },
     {
       "path": "tools/AGENTS.md",
       "kind": "agents",
-      "sha256": "b4bd51a7b47dcf456eb5f6cba6fde8ca95b15beeaee4da7aae31728a9620e97d"
+      "sha256": "6465941397cb31eea74d53ed7e5a3915ae8db68b4fa8be310e304a7ac20cf67a"
     },
     {
       "path": "tools/agent-policy/AGENTS.md",
       "kind": "agents",
-      "sha256": "8b2938963b60e58faf45932539fa76cff53c82a916329d45868acce0c2495688"
+      "sha256": "933f9d3ec31e5deb6d66137c8b0162b132bf2788559c849dd0ed1ce39b69d5fa"
     }
   ],
   "capsules": {
-    "global.authority": "REGRAS.md e a cadeia AGENTS.md raiz→região são obrigatórios. Esta cápsula é um índice compacto, não substitui as fontes: antes de alterar um caminho, leia a cadeia indicada e execute o preflight para esse caminho. Regra local pode restringir, nunca enfraquecer segurança, integridade ou qualidade.",
+    "global.authority": "REGRAS.md e a cadeia AGENTS.md raiz→região são obrigatórios. Esta cápsula é um índice compacto, não substitui as fontes: antes de alterar um caminho, leia a cadeia indicada. O preflight só é obrigatório quando não houver execução válida do agente/escopo nos últimos 6 dias, isto é, quando tiver transcorrido mais de 6 dias desde a última execução válida; dentro dessa janela, não repita o preflight. Regra local pode restringir, nunca enfraquecer segurança, integridade ou qualidade.",
     "global.architecture": "Mapeie owner e fluxo ponta a ponta antes de mudar. Preserve contratos, fonte única da verdade e dependência direcional. Prefira módulos pequenos, uma responsabilidade central, funções puras e reutilização real; evite god files, duplicação, any, magic values e abstração artificial.",
     "global.security": "Trate entradas externas como não confiáveis; valide na fronteira, sanitize quando necessário e negue por padrão. Não exponha segredos ou dados pessoais em código, prompt, resposta ou logs. Operações críticas exigem autorização server-side, menor privilégio, idempotência/auditoria conforme risco e erros controlados.",
     "global.delivery": "A entrega precisa de testes proporcionais, lint/typecheck/build aplicáveis, evidência, observabilidade e documentação/AGENTS atualizados quando a arquitetura mudar. Não esconda falhas. Não publique, compre, faça deploy ou altere serviço externo sem autorização explícita.",
     "global.context": "Use o contexto já fornecido e buscas dirigidas; não faça inventário amplo nem despeje documentos, banco, terminal ou logs no prompt. Consulte fatos por caminho e relate somente novidades, evidências, riscos e próximo passo.",
-    "role.development": "Você é AG-DEV, único agente autorizado a implementar ou alterar código. Faça mudanças pequenas e testáveis, preserve contratos do ERP, rode o preflight do escopo antes de editar e execute npm run check, npm test e npm run build antes de concluir código.",
+    "role.development": "Você é AG-DEV, único agente autorizado a implementar ou alterar código. Faça mudanças pequenas e testáveis, preserve contratos do ERP e verifique a data da última execução válida do preflight para o agente/escopo antes de editar. Execute o preflight somente se tiver transcorrido mais de 6 dias desde essa execução; dentro dos 6 dias, não repita. Execute npm run check, npm test e npm run build antes de concluir código.",
     "role.business": "Você é agente de negócio. Não programe, não edite código/configuração e não use terminal para simular implementação. Produza análise, requisitos, evidências ou artefatos no workspace permitido e faça handoff ao AG-DEV quando software for necessário.",
     "region.root": "Carro Chefe usa PT-BR, IDs estáveis e dados oficiais. Não invente preços, custos, datas, fornecedores ou métricas. Pedidos, pagamentos, estoque, fiscal e financeiro pertencem ao ERP; o site não duplica checkout nem armazena cartão.",
     "region.apps": "Aplicações são orquestradores finos por domínio. UI, estado, API, validação, persistência, segurança, performance e observabilidade devem permanecer em módulos próprios e com contratos explícitos.",
@@ -144,7 +144,7 @@
     "region.ui": "Componentes compartilhados são visuais, acessíveis, responsivos e orientados por tokens/variantes sem conhecimento de API, Prisma ou regra de negócio.",
     "region.tools": "Ferramentas internas devem ser determinísticas, não interativas em CI, validar caminhos/entrada e falhar de modo seguro. Não imprimem segredos e não executam ação externa/destrutiva implicitamente.",
     "region.github": "Workflows usam permissões mínimas, dependências pinadas, cache seguro e falham diante de política desatualizada, segredo rastreado ou quality gate quebrado.",
-    "region.codex": "Perfis Codex são estreitos e sempre fazem preflight, leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
+    "region.codex": "Perfis Codex são estreitos e só fazem preflight quando a última execução válida do agente/escopo tiver mais de 6 dias; dentro da janela de 6 dias, não repetem o preflight por nova tarefa, sessão ou alteração. Eles leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
     "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos."
   },
   "agentCapsules": {
@@ -626,5 +626,5 @@
       ]
     }
   },
-  "manifestHash": "d263ccd7953dcbe410c7ed9e135246ee6abe8cbe24f825c874545a1c49794e4c"
+  "manifestHash": "05ca740b162858f0837ce8de459b817878777ec84f8f3a90b8da39d572f4118b"
 }
