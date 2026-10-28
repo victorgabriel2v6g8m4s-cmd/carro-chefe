@@ -36,7 +36,7 @@ export function ReelSlide({ product, index, sequence, sequenceLabel, active, tot
   const [saved, setSaved] = useState<string[]>(() => readIds("cooklily:saved-reels"));
   const [liked, setLiked] = useState<string[]>(() => readIds("cooklily:liked-reels"));
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const pointerStart = useRef<{ x: number; y: number; scrollTop: number; moved: boolean; pointerType: string } | null>(null);
+  const pointerStart = useRef<{ x: number; y: number; moved: boolean; pointerType: string } | null>(null);
   const suppressClick = useRef(false);
   const holdTimer = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -78,8 +78,7 @@ export function ReelSlide({ product, index, sequence, sequenceLabel, active, tot
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
     if ((event.target as HTMLElement).closest("button, a, input, textarea, .reels-comments-sheet")) return;
     suppressClick.current = false;
-    const scrollTop = feed?.scrollTop ?? 0;
-    pointerStart.current = { x: event.clientX, y: event.clientY, scrollTop, moved: false, pointerType: event.pointerType };
+    pointerStart.current = { x: event.clientX, y: event.clientY, moved: false, pointerType: event.pointerType };
     if (event.pointerType === "mouse") event.currentTarget.setPointerCapture(event.pointerId);
     if (isVideo && event.clientY < event.currentTarget.getBoundingClientRect().top + 120) holdTimer.current = window.setTimeout(() => setSpeed(true), 350);
   }
@@ -90,7 +89,6 @@ export function ReelSlide({ product, index, sequence, sequenceLabel, active, tot
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     if (Math.abs(dx) > 6 || Math.abs(dy) > 6) start.moved = true;
-    if (start.pointerType === "mouse" && Math.abs(dy) > Math.abs(dx) && feed) feed.scrollTop = start.scrollTop - dy;
     if (Math.abs(dx) > Math.abs(dy)) setDragX(Math.max(-42, Math.min(42, dx * 0.16)));
     if (Math.abs(dy) > 12 && holdTimer.current !== null) { window.clearTimeout(holdTimer.current); holdTimer.current = null; setSpeed(false); }
   }
