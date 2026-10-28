@@ -171,6 +171,7 @@ export type LilyPublicConfig = {
   consentVersions: Record<string, string>;
   brand: { name: string; wordmark: string };
   social: {
+    links: Array<{ platform: "instagram" | "facebook" | "whatsapp" | "tiktok" | "google"; label: string; identifier: string; url: string }>;
     instagramHandle: string;
     instagramUrl: string | null;
     whatsappPhone: string;
@@ -194,6 +195,7 @@ export async function registerLily(input: {
   phone: string;
   password: string;
   displayName?: string;
+  referralCode?: string;
   termsAccepted: true;
   termsVersion: string;
   privacyPolicyVersion: string;

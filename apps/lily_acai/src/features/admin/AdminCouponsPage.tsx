@@ -8,6 +8,7 @@ const empty = {
   code: "", title: "", description: "", type: "percentage", value: "10", minimumOrder: "0", maxDiscount: "",
   color: "#820023", status: "draft", startsAt: "", endsAt: "", recurrence: "none", maxUsesTotal: "",
   maxUsesPerCustomer: "1", allowCombination: false, isAdditive: false, appliesToShipping: false,
+  vipOnly: false,
   categoryIds: [] as string[], productIds: [] as string[], imageMediaId: ""
 };
 
@@ -49,6 +50,7 @@ export function AdminCouponsPage() {
       maxUsesTotal: coupon.maxUsesTotal == null ? "" : String(coupon.maxUsesTotal),
       maxUsesPerCustomer: String(coupon.maxUsesPerCustomer), allowCombination: coupon.allowCombination,
       isAdditive: coupon.isAdditive, appliesToShipping: coupon.appliesToShipping,
+      vipOnly: coupon.vipOnly ?? false,
       categoryIds: coupon.categoryIds, productIds: coupon.productIds, imageMediaId: coupon.imageMediaId ?? ""
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -79,6 +81,7 @@ export function AdminCouponsPage() {
       maxUsesTotal: draft.maxUsesTotal ? Number(draft.maxUsesTotal) : null,
       maxUsesPerCustomer: Number(draft.maxUsesPerCustomer), allowCombination: draft.allowCombination,
       isAdditive: draft.isAdditive, appliesToShipping: draft.appliesToShipping,
+      vipOnly: draft.vipOnly,
       categoryIds: draft.categoryIds, productIds: draft.productIds
     };
     try {
@@ -121,6 +124,7 @@ export function AdminCouponsPage() {
       <label>Usos totais (vazio = ilimitado)<input type="number" min="1" value={draft.maxUsesTotal} onChange={(e) => setDraft({ ...draft, maxUsesTotal: e.target.value })} /></label>
       <label>Usos por cliente/período<input type="number" min="1" value={draft.maxUsesPerCustomer} onChange={(e) => setDraft({ ...draft, maxUsesPerCustomer: e.target.value })} required /></label>
       <label>Status<select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })}><option value="draft">Rascunho</option><option value="active">Ativo</option><option value="paused">Pausado</option><option value="disabled">Desativado</option></select></label>
+      <label className="toggle"><input type="checkbox" checked={draft.vipOnly} onChange={(e) => setDraft({ ...draft, vipOnly: e.target.checked })} />Exclusivo para clientes VIP</label>
       <label>Cor do cupom<input type="color" value={draft.color} onChange={(e) => setDraft({ ...draft, color: e.target.value })} /></label>
       <label>Arte quadrada<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadArt(file); }} /></label>
       <label>Arte enviada<select value={draft.imageMediaId} onChange={(e) => setDraft({ ...draft, imageMediaId: e.target.value })}><option value="">Sem arte</option>{media.map((item) => <option key={item.id} value={item.id}>{item.originalName}</option>)}</select></label>

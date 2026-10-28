@@ -131,3 +131,26 @@ test('Lily survey analytics migration applies on a fresh SQLite schema', () => {
     database.close();
   }
 });
+
+test('CookLily social links, VIP coupons and referral migration applies on a fresh SQLite schema', () => {
+  const migration = readFileSync(path.join(root, 'packages/lily-database/prisma/migrations/20261028170000_lily_social_links_vip_coupons/migration.sql'), 'utf8');
+  const database = new Database(':memory:');
+  try {
+    database.exec(`CREATE TABLE "LilyOperationalSettings" ("id" TEXT PRIMARY KEY, "instagramHandle" TEXT NOT NULL, "whatsappPhone" TEXT NOT NULL);
+      INSERT INTO "LilyOperationalSettings" ("id", "instagramHandle", "whatsappPhone") VALUES ('default', 'acai._lily', '+5567999289187');
+      CREATE TABLE "LilyCoupon" ("id" TEXT PRIMARY KEY, "status" TEXT NOT NULL DEFAULT 'draft');
+      CREATE TABLE "LilyUser" ("id" TEXT PRIMARY KEY);`);
+    try { database.exec(migration); }
+    catch (error) { throw new Error(`Migration CookLily inválida: ${error.message}`); }
+    const settings = database.prepare('SELECT "instagramHandle", "socialLinksJson", "referralRewardPoints" FROM "LilyOperationalSettings" WHERE "id" = ?').get('default');
+    assert.equal(settings.instagramHandle, 'cook._lily');
+    assert.equal(settings.referralRewardPoints, 0);
+    const links = JSON.parse(settings.socialLinksJson);
+    assert.equal(links[0].url, 'https://instagram.com/cook._lily');
+    assert.equal(links[1].url, 'https://wa.me/5567999289187');
+    assert.equal(database.prepare('PRAGMA table_info("LilyCoupon")').all().find((column) => column.name === 'vipOnly').dflt_value, 'false');
+    assert.ok(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'LilyReferralInvite'").get());
+  } finally {
+    database.close();
+  }
+});

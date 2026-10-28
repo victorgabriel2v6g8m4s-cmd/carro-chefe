@@ -23,6 +23,7 @@ export type LilyAnalyticsEvent =
   | "payment_confirmed"
   | "instagram_click"
   | "whatsapp_click"
+  | "social_click"
   | "privacy_open"
   | "lead_submit"
   | "lead_success"
@@ -50,6 +51,7 @@ export type LilyAnalyticsMetadata = {
   itemCount?: number;
   fulfillmentType?: "pickup" | "delivery";
   paymentMethod?: "pix" | "manual_pix" | "credit_card" | "debit_card";
+  platform?: string;
 };
 
 type QueuedEvent = {

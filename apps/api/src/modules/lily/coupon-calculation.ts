@@ -116,6 +116,7 @@ export async function calculateLilyCouponQuote(input: {
   fulfillmentType: "pickup" | "delivery";
   phone?: string;
   userId?: string | null;
+  isVip?: boolean;
   now?: Date;
 }): Promise<LilyCouponQuote> {
   if (input.codes.length === 0) return { discountCents: 0, productDiscountCents: 0, shippingDiscountCents: 0, applications: [], notices: [] };
@@ -144,6 +145,9 @@ export async function calculateLilyCouponQuote(input: {
     }
     if (coupon.assignedUserId && coupon.assignedUserId !== input.userId) {
       throw new ApiError(400, "Este cupom foi concedido a outra conta.", { code: "LILY_COUPON_ACCOUNT_RESTRICTED" });
+    }
+    if (coupon.vipOnly && !input.isVip) {
+      throw new ApiError(403, "Este cupom está disponível somente para membros VIP.", { code: "LILY_COUPON_VIP_ONLY" });
     }
     if (coupon.maxUsesTotal != null && coupon.usesCount >= coupon.maxUsesTotal) {
       throw new ApiError(409, "Este cupom atingiu o limite total de utilizações.", { code: "LILY_COUPON_TOTAL_LIMIT" });

@@ -1,7 +1,7 @@
 import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -197,8 +197,14 @@ function Shell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
-  const instagramUrl = config?.social.instagramUrl ?? null;
-  const whatsappUrl = config?.social.whatsappUrl ?? null;
+  const socialLinks = config?.social.links ?? [];
+  const instagramLink = socialLinks.find((link) => link.platform === "instagram");
+  const whatsappLink = socialLinks.find((link) => link.platform === "whatsapp");
+  const instagramUrl = instagramLink?.url ?? null;
+  const whatsappUrl = whatsappLink?.url ?? null;
+  const socialName: Record<string, string> = { instagram: "Instagram", facebook: "Facebook", whatsapp: "WhatsApp", tiktok: "TikTok", google: "Google" };
+  const socialLabel = (link: typeof socialLinks[number]) => link.label || `${socialName[link.platform]}${link.identifier ? ` · ${link.platform === "whatsapp" ? link.identifier : `@${link.identifier.replace(/^@+/, "")}`}` : ""}`;
+  const trackSocial = (platform: string) => trackLilyAnalytics("social_click", { platform });
   const isStaff = user ? ["staff", "admin"].includes(user.role) : false;
   const isCourier = user ? ["courier", "admin"].includes(user.role) : false;
   const closeMenu = () => setMenuOpen(false);
@@ -215,7 +221,7 @@ function Shell({ children }: { children: ReactNode }) {
         <nav className="desktop-nav" aria-label="Navegação principal">
           <NavLink to="/cardapio">Cardápio</NavLink>
           <NavLink to="/ranking">Ranking</NavLink>
-          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>Instagram</a>}
+          {instagramLink && <a href={instagramUrl!} target="_blank" rel="noreferrer" onClick={() => trackSocial("instagram")}>Instagram</a>}
           {isStaff && <NavLink to="/painel">Painel</NavLink>}
           {isCourier && <NavLink to="/entregas">Entregas</NavLink>}
         </nav>
@@ -266,8 +272,7 @@ function Shell({ children }: { children: ReactNode }) {
             <Link className="mobile-menu-primary" to="/cadastro" onClick={closeMenu}>Criar conta</Link>
           </>}
           <div className="mobile-menu-secondary">
-            {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("instagram_click"); closeMenu(); }}>Instagram @{config?.social.instagramHandle}</a>}
-            {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => { trackLilyAnalytics("whatsapp_click"); closeMenu(); }}>WhatsApp</a>}
+            {socialLinks.map((link) => <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" onClick={() => { trackSocial(link.platform); closeMenu(); }}>{socialLabel(link)}</a>)}
           </div>
         </nav>
       </>}
@@ -290,8 +295,7 @@ function Shell({ children }: { children: ReactNode }) {
         {config?.store.address && <small>{config.store.address}</small>}
       </div>
       <div className="footer-links">
-        {instagramUrl && <a href={instagramUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("instagram_click")}>@{config?.social.instagramHandle}</a>}
-        {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click")}>WhatsApp</a>}
+        {socialLinks.map((link) => <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" onClick={() => trackSocial(link.platform)}>{socialLabel(link)}</a>)}
         <Link to="/ranking">Ranking</Link>
         <Link to="/privacidade" onClick={() => trackLilyAnalytics("privacy_open", { surface: "privacy" })}>Privacidade</Link>
         <LilyAnalyticsPreferencesButton />
@@ -363,7 +367,7 @@ function Landing() {
   }
 
   const trackingText = encodeURIComponent("Olá! Vim pelo site da CookLily e gostaria de acompanhar meu pedido.");
-  const trackingWhatsapp = config?.social.whatsappUrl ?? null;
+  const trackingWhatsapp = config?.social.links.find((link) => link.platform === "whatsapp")?.url ?? null;
   return <Shell>
     <WeeklyProductBanner product={weeklyProduct} />
 
@@ -417,6 +421,8 @@ function Cardapio() {
 
 function Cadastro() {
   const navigate = useNavigate();
+  const vipInviteCode = new URLSearchParams(window.location.search).get("vipInvite")?.trim() ?? "";
+  const referralCode = new URLSearchParams(window.location.search).get("referral")?.trim() ?? "";
   const [config, setConfig] = useState<{ termsVersion: string; privacyPolicyVersion: string } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -437,10 +443,11 @@ function Cadastro() {
     }
     try {
       const analyticsOptional = form.get("analyticsOptional") === "on";
-      await registerLily({
+      const registered = await registerLily({
         phone: String(form.get("phone") ?? ""),
         password,
         displayName: String(form.get("displayName") ?? "") || undefined,
+        referralCode: referralCode || undefined,
         termsAccepted: true,
         termsVersion: config.termsVersion,
         privacyPolicyVersion: config.privacyPolicyVersion,
@@ -452,7 +459,11 @@ function Cadastro() {
       });
       if (analyticsOptional) grantLilyAnalytics();
       else denyLilyAnalytics();
-      navigate("/cardapio");
+      if (vipInviteCode) {
+        try { await postLilyVipAction("redeem", registered.csrfToken, { code: vipInviteCode }); }
+        catch { navigate("/perfil?invite-redeem-error=1"); return; }
+      }
+      navigate(vipInviteCode ? "/perfil?vip-invite=1" : "/cardapio");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar conta.");
     } finally {
@@ -461,7 +472,7 @@ function Cadastro() {
   }
 
   return <Shell><section className="form-page">
-    <div className="form-copy"><span className="eyebrow">Conta CookLily</span><h1>Crie sua conta.</h1><p>Crie sua conta para ter uma experiência mais rápida. Preferências opcionais não impedem o uso da loja.</p></div>
+    <div className="form-copy"><span className="eyebrow">Conta CookLily</span><h1>{vipInviteCode || referralCode ? "Você chegou por um convite." : "Crie sua conta."}</h1><p>{vipInviteCode ? "Seu convite CookLily será vinculado à conta após o cadastro. Os termos VIP continuam dependendo do seu consentimento." : referralCode ? "Seu convite foi reconhecido. Ao criar a conta, quem compartilhou o link recebe os pontos configurados." : "Crie sua conta para ter uma experiência mais rápida. Preferências opcionais não impedem o uso da loja."}</p></div>
     <form className="auth-card" onSubmit={submit}>
       <label>Nome <span>opcional</span><input name="displayName" autoComplete="name" maxLength={80} /></label>
       <label>WhatsApp<input name="phone" inputMode="tel" autoComplete="tel" onChange={formatPhoneInput} required /></label>

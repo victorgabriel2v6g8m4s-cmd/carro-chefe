@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { createAgentBrowserRelay } from "../../../../../tools/lily-agent-browser-relay.mjs";
 
 const root = path.resolve(process.cwd());
 
@@ -198,8 +199,37 @@ describe("scripts operacionais CookLily", () => {
     expect(implementation).toContain('"-U"');
     expect(implementation).toContain('Origin: apiOrigin');
     expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "edge"');
+    expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "codex"');
     expect(implementation).toContain('Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH');
-    expect(implementation).toContain('launcher.unref()');
+    expect(implementation).toContain('spawnSync("powershell.exe"');
+    expect(implementation).toContain("createAgentBrowserRelay(loginUrl)");
     expect(implementation).not.toContain("console.log(loginUrl)");
+  });
+
+  it("entrega ticket uma única vez por relay local sem mostrá-lo na página intermediária", async () => {
+    const ticket = "A".repeat(48);
+    const relay = await createAgentBrowserRelay(`https://carrochefe.com/lilyacai/agent-auth.html#ticket=${ticket}`);
+    try {
+      const page = await fetch(relay.browserUrl);
+      const html = await page.text();
+      expect(page.headers.get("cache-control")).toBe("no-store");
+      expect(html).not.toContain(ticket);
+
+      const base = new URL(relay.browserUrl);
+      const consumedUrl = new URL(`${base.pathname}/consume`, base.origin);
+      const first = await fetch(consumedUrl);
+      expect(first.status).toBe(200);
+      expect(await first.json()).toEqual({ url: `https://carrochefe.com/lilyacai/agent-auth.html#ticket=${ticket}` });
+      await expect(relay.consumed).resolves.toBe(true);
+
+      const replay = await fetch(consumedUrl);
+      expect(replay.status).toBe(410);
+    } finally {
+      relay.close();
+    }
+  });
+
+  it("recusa URLs que não sejam o handoff oficial CookLily", async () => {
+    await expect(createAgentBrowserRelay("https://example.com/#ticket=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")).rejects.toThrow("URL de handoff CookLily inválida");
   });
 });

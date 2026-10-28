@@ -9,8 +9,12 @@ import { calculateLilyCouponQuote } from "./coupon-calculation";
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
 const phone = "+5567999964510";
+const referredPhone = "+5567999964511";
+const vipRecipientPhone = "+5567999964512";
 const invite = `LILY-TEST-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 let codeSuffix = "";
+let requestIp = 30;
+function nextTestIp() { requestIp += 1; return `127.0.0.${requestIp}`; }
 
 function cookieFrom(response: { headers: Record<string, unknown> }) {
   const value = response.headers["set-cookie"];
@@ -19,7 +23,7 @@ function cookieFrom(response: { headers: Record<string, unknown> }) {
 }
 
 async function register() {
-  const response = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", headers: { origin }, payload: {
+  const response = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", remoteAddress: nextTestIp(), headers: { origin }, payload: {
     phone, password: "senha-cooklily-vip-test-2026", displayName: "Cliente VIP",
     termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION,
     consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
@@ -31,6 +35,18 @@ async function register() {
 }
 
 async function cleanup() {
+  const vipRecipient = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized: vipRecipientPhone }, select: { id: true } });
+  if (vipRecipient) {
+    await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: vipRecipient.id } });
+    await lilyPrisma.lilySession.deleteMany({ where: { userId: vipRecipient.id } });
+    await lilyPrisma.lilyUser.delete({ where: { id: vipRecipient.id } });
+  }
+  const referredUser = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized: referredPhone }, select: { id: true } });
+  if (referredUser) {
+    await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: referredUser.id } });
+    await lilyPrisma.lilySession.deleteMany({ where: { userId: referredUser.id } });
+    await lilyPrisma.lilyUser.delete({ where: { id: referredUser.id } });
+  }
   const user = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized: phone }, select: { id: true } });
   if (user) {
     await lilyPrisma.lilyVipAnalyticsEvent.deleteMany({ where: { userId: user.id } });
@@ -42,7 +58,9 @@ async function cleanup() {
   }
   if (codeSuffix) await lilyPrisma.lilyVipCode.deleteMany({ where: { displaySuffix: codeSuffix } });
   await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom de teste VIP" } });
-  await lilyPrisma.lilyOperationalSettings.updateMany({ data: { vipPointsThreshold: 0 } });
+  await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom VIP-only para teste" } });
+  await lilyPrisma.lilyCoupon.deleteMany({ where: { title: "Cupom VIP de homologação" } });
+  await lilyPrisma.lilyOperationalSettings.updateMany({ data: { vipPointsThreshold: 0, referralRewardPoints: 0 } });
   codeSuffix = "";
 }
 
@@ -50,6 +68,73 @@ afterEach(cleanup);
 afterAll(async () => { await cleanup(); await app.close(); });
 
 describe("programa VIP CookLily", () => {
+  it("recompensa uma indicação apenas após novo cadastro e preserva o convite no link", async () => {
+    const owner = await register();
+    await lilyPrisma.lilyOperationalSettings.upsert({ where: { id: "default" }, create: { id: "default", referralRewardPoints: 25 }, update: { referralRewardPoints: 25 } });
+    const share = await app.inject({ method: "GET", url: "/api/v1/lily/customer/referral-link", headers: { cookie: owner.cookie } });
+    expect(share.statusCode, JSON.stringify(share.json())).toBe(200);
+    expect(share.json().enabled).toBe(true);
+    const code = new URL(`https://carrochefe.com${share.json().url}`).searchParams.get("referral");
+    expect(code).toBeTruthy();
+    const registration = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", remoteAddress: nextTestIp(), headers: { origin }, payload: {
+      phone: referredPhone, password: "senha-cooklily-referral-test-2026", displayName: "Pessoa convidada",
+      referralCode: code,
+      termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+    } });
+    expect(registration.statusCode).toBe(201);
+    const invite = await lilyPrisma.lilyReferralInvite.findUniqueOrThrow({ where: { code: code! } });
+    expect(invite.referredUserId).toBe(registration.json().user.id);
+    expect(invite.creditedPoints).toBe(25);
+    expect(await lilyPrisma.lilyLoyaltyEvent.count({ where: { sourceKey: `referral:${invite.id}`, userId: owner.userId } })).toBe(1);
+  });
+
+  it("oculta cupons VIP de clientes padrão e rejeita o código no servidor", async () => {
+    const account = await register();
+    const coupon = await lilyPrisma.lilyCoupon.create({ data: {
+      code: `VIPONLY-${crypto.randomUUID().slice(0, 6).toUpperCase()}`,
+      title: "Cupom VIP-only para teste", type: "free_shipping", value: 0, color: "#820023",
+      status: "active", appliesToShipping: true, vipOnly: true
+    } });
+    const listing = await app.inject({ method: "GET", url: "/api/v1/lily/public/coupons", headers: { cookie: account.cookie } });
+    expect(listing.statusCode).toBe(200);
+    expect(listing.json().coupons.some((item: { code: string }) => item.code === coupon.code)).toBe(false);
+    await expect(calculateLilyCouponQuote({
+      codes: [coupon.code], items: [], subtotalCents: 0, shippingCents: 500,
+      fulfillmentType: "delivery", userId: account.userId, isVip: false
+    })).rejects.toMatchObject({ details: { code: "LILY_COUPON_VIP_ONLY" } });
+  });
+
+  it("publica notificação de cupom VIP só para membro VIP e mantém o cupom fora da conta padrão", async () => {
+    const admin = await register();
+    await lilyPrisma.lilyUser.update({ where: { id: admin.userId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });
+    await lilyPrisma.lilySession.updateMany({ where: { userId: admin.userId }, data: { mfaVerifiedAt: new Date() } });
+    const recipientResult = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", remoteAddress: nextTestIp(), headers: { origin }, payload: {
+      phone: vipRecipientPhone, password: "senha-cooklily-vip-destino-2026", displayName: "Cliente de teste",
+      termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+    } });
+    const recipientId = recipientResult.json().user.id as string;
+    await lilyPrisma.lilyVipMembership.create({ data: { userId: recipientId, source: "invite", status: "active", enrolledAt: new Date() } });
+    const payload = {
+      code: `VIPTEST-${crypto.randomUUID().slice(0, 8).toUpperCase()}`, title: "Cupom VIP de homologação",
+      type: "free_shipping", value: 0, color: "#820023", status: "active", vipOnly: true,
+      appliesToShipping: true, categoryIds: [], productIds: []
+    };
+    const created = await app.inject({ method: "POST", url: "/api/v1/lily/admin/coupons", headers: { cookie: admin.cookie, "x-lily-csrf": admin.csrf, origin }, payload });
+    expect(created.statusCode).toBe(201);
+    const sourceKey = `coupon:${created.json().id}:published`;
+    expect(await lilyPrisma.lilyCustomerNotification.count({ where: { userId: recipientId, sourceKey } })).toBe(1);
+    expect(await lilyPrisma.lilyCustomerNotification.count({ where: { userId: admin.userId, sourceKey } })).toBe(0);
+    const vipCookie = cookieFrom(recipientResult);
+    const vipListing = await app.inject({ method: "GET", url: "/api/v1/lily/public/coupons", headers: { cookie: vipCookie } });
+    expect(vipListing.json().coupons.some((coupon: { code: string }) => coupon.code === payload.code)).toBe(true);
+    const vipQuote = await calculateLilyCouponQuote({ codes: [payload.code], items: [], subtotalCents: 0, shippingCents: 500, fulfillmentType: "delivery", userId: recipientId, isVip: true });
+    expect(vipQuote.shippingDiscountCents).toBe(500);
+    const standard = await app.inject({ method: "GET", url: "/api/v1/lily/public/coupons", headers: { cookie: admin.cookie } });
+    expect(standard.json().coupons.some((coupon: { code: string }) => coupon.code === payload.code)).toBe(false);
+  });
+
   it("resgata o código recém-gerado pelo painel mesmo após colar com espaços, caixa baixa e hífen tipográfico", async () => {
     const account = await register();
     await lilyPrisma.lilyUser.update({ where: { id: account.userId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });

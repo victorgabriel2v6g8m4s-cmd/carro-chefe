@@ -396,6 +396,12 @@ function ProductEditor({ product, data, csrf, refresh, setError }: {
       <span className={product.isPurchasable ? "state-live" : "state-off"}>{product.isPurchasable ? "Disponível" : "Esgotado/pausado"}</span>
     </summary>
     <div className="admin-product-grid">
+      <div className="admin-span">
+        <strong>Prévia pública do produto</strong>
+        <label>Link para compartilhar<input readOnly value={`${window.location.origin}${import.meta.env.BASE_URL}cardapio?produto=${encodeURIComponent(product.slug)}`} onFocus={(event) => event.currentTarget.select()} /></label>
+        <a className="button ghost" href={`${import.meta.env.BASE_URL}cardapio?produto=${encodeURIComponent(product.slug)}`} target="_blank" rel="noreferrer">Abrir prévia</a>
+        <button className="button ghost" type="button" onClick={() => void navigator.clipboard.writeText(`${window.location.origin}${import.meta.env.BASE_URL}cardapio?produto=${encodeURIComponent(product.slug)}`)}>Copiar link</button>
+      </div>
       <label>Nome<input value={draft.displayName} onChange={(e) => setDraft({ ...draft, displayName: e.target.value })} /></label>
       <label>Nome descritivo<input value={draft.descriptiveName} onChange={(e) => setDraft({ ...draft, descriptiveName: e.target.value })} /></label>
       <label>Categoria<select value={draft.categoryId} onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}>

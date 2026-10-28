@@ -33,6 +33,7 @@ export function VipProfileSection() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [referral, setReferral] = useState<{ enabled: boolean; points: number; url: string | null }>({ enabled: false, points: 0, url: null });
   const [redeemError, setRedeemError] = useState("");
   const [redeemMessage, setRedeemMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,11 +49,27 @@ export function VipProfileSection() {
     setLoadError("");
     const [current, state] = await Promise.all([getLilySession(), getLilyVip()]);
     setSession(current); setVip(state);
+    try {
+      const referralResponse = await fetch("/api/v1/lily/customer/referral-link", { credentials: "same-origin" });
+      if (referralResponse.ok) setReferral(await referralResponse.json());
+    } catch { setReferral({ enabled: false, points: 0, url: null }); }
   }
   useEffect(() => { void refresh().catch((cause) => setLoadError(cause instanceof Error ? cause.message : "Não foi possível carregar o programa VIP.")).finally(() => setLoading(false)); }, []);
   useEffect(() => { setRedemptionTarget(document.getElementById("profile-code-redemption")); }, []);
   useEffect(() => {
+    if (new URLSearchParams(location.search).has("invite-redeem-error")) {
+      setRedeemError("Sua conta foi criada, mas o convite não pôde ser resgatado automaticamente. Use o campo Resgate seu código abaixo para tentar novamente.");
+    }
+  }, [location.search]);
+  useEffect(() => {
     if (!vip) return;
+    const inviteParams = new URLSearchParams(location.search);
+    if (inviteParams.get("vip-invite") === "1" && vip.membership?.status === "invited") {
+      setShowInvite(true);
+      inviteParams.delete("vip-invite");
+      navigate({ pathname: location.pathname, search: inviteParams.size ? `?${inviteParams}` : "" }, { replace: true });
+      return;
+    }
     const redirect = resolveVipConsentNavigation(location.pathname, location.search, vip.membership);
     if (!redirect) return;
     if (redirect.shouldShowInvite) setShowInvite(true);
@@ -108,6 +125,7 @@ export function VipProfileSection() {
         {vip.eligibleByPoints && memberStatus !== "active" && <button className="button gold" type="button" disabled={busy} onClick={() => void claim()}>Solicitar acesso com {vip.points.toLocaleString("pt-BR")} pontos</button>}
         {vip.pointsThreshold > 0 && memberStatus !== "active" && <small>{vip.points.toLocaleString("pt-BR")} de {vip.pointsThreshold.toLocaleString("pt-BR")} pontos para poder solicitar.</small>}
         {vip.coupons.length > 0 && <div className="vip-coupon-list"><strong>Cupons da sua conta</strong>{vip.coupons.map((coupon) => <article key={coupon.code} style={{ "--coupon-color": coupon.color } as React.CSSProperties}><span>{coupon.title}</span><code>{coupon.code}</code></article>)}</div>}
+        {referral.enabled && referral.url && <div className="checkout-section"><h3>Convide alguém para a CookLily</h3><p>Quando alguém criar uma conta pelo seu link, você ganha {referral.points.toLocaleString("pt-BR")} pontos.</p><label>Seu link de convite<input readOnly value={`${window.location.origin}${referral.url}`} onFocus={(event) => event.currentTarget.select()} /></label><button className="button ghost" type="button" onClick={() => void navigator.clipboard.writeText(`${window.location.origin}${referral.url}`)}>Copiar link</button></div>}
         {error && <p className="error" role="alert">{error}</p>}{message && <p className="success" role="status">{message}</p>}
         {showInvite && <VipInviteDialog onClose={closeInvite} onSubscribe={() => void subscribe()} consented={Boolean(vip.membership?.consentedAt && vip.membership.consentVersion === vipTermsVersion)} busy={busy} />}
       </>}

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
@@ -21,6 +22,7 @@ import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
 import { lilyVipRoutes } from "./vip";
 import { lilyAgentAuthRoutes } from "./agent-auth";
+import { parseSocialLinks } from "./social-links";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -48,6 +50,7 @@ const registerSchema = z.object({
   phone,
   password,
   displayName: optionalName,
+  referralCode: z.string().trim().min(16).max(40).optional(),
   termsAccepted: z.literal(true),
   termsVersion: z.literal(LILY_TERMS_VERSION),
   privacyPolicyVersion: z.literal(LILY_PRIVACY_VERSION),
@@ -140,6 +143,7 @@ export async function lilyRoutes(app: FastifyInstance) {
         wordmark: "cookLily"
       },
       social: {
+        links: parseSocialLinks(settings.socialLinksJson),
         instagramHandle,
         instagramUrl: instagramHandle ? `https://instagram.com/${instagramHandle}` : null,
         whatsappPhone: settings.whatsappPhone,
@@ -151,7 +155,8 @@ export async function lilyRoutes(app: FastifyInstance) {
       loyalty: {
         orderCentsPerPoint: settings.loyaltyOrderCentsPerPoint,
         campaignBonusPoints: settings.loyaltyCampaignBonusPoints,
-        couponBonusPoints: settings.loyaltyCouponBonusPoints
+        couponBonusPoints: settings.loyaltyCouponBonusPoints,
+        referralRewardPoints: settings.referralRewardPoints
       },
       tracking: {
         canonical: { qr: "la_qr", campaign: "la_campaign", variant: "la_variant" },
@@ -225,6 +230,13 @@ export async function lilyRoutes(app: FastifyInstance) {
 
     const existing = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized } });
     if (existing) throw new ApiError(409, "Já existe uma conta CookLily para este telefone.", { code: "LILY_PHONE_EXISTS" });
+    const settings = await getLilyOperationalSettings();
+    const referral = input.referralCode && settings.referralRewardPoints > 0
+      ? await lilyPrisma.lilyReferralInvite.findUnique({ where: { code: input.referralCode }, include: { referrer: { select: { id: true, phoneNormalized: true, status: true, role: true } } } })
+      : null;
+    if (input.referralCode && settings.referralRewardPoints > 0 && (!referral || referral.referrer.status !== "active" || referral.referrer.role !== "customer" || referral.referrer.phoneNormalized === phoneNormalized)) {
+      throw new ApiError(400, "O link de indicação é inválido ou não pode ser usado nesta conta.", { code: "LILY_REFERRAL_UNAVAILABLE" });
+    }
 
     const passwordHash = await hashPassword(input.password);
     let created: {
@@ -252,6 +264,29 @@ export async function lilyRoutes(app: FastifyInstance) {
           }
         });
         await tx.lilyConsentRecord.createMany({ data: consentRows(user.id, input) });
+        if (referral) {
+          const claimed = await tx.lilyReferralInvite.updateMany({
+            where: { id: referral.id, referredUserId: null },
+            data: { referredUserId: user.id, creditedPoints: settings.referralRewardPoints, creditedAt: new Date() }
+          });
+          if (claimed.count === 1) {
+            await tx.lilyLoyaltyEvent.create({ data: {
+              userId: referral.referrer.id,
+              type: "referral_signup",
+              points: settings.referralRewardPoints,
+              sourceKey: `referral:${referral.id}`,
+              metadataJson: JSON.stringify({ referredUserId: user.id })
+            } });
+            await tx.lilyCustomerNotification.create({ data: {
+              userId: referral.referrer.id,
+              sourceKey: `referral:${referral.id}:credited`,
+              type: "referral_reward",
+              title: "Você ganhou pontos por uma indicação",
+              body: `Uma pessoa criou uma conta pelo seu link. +${settings.referralRewardPoints.toLocaleString("pt-BR")} pontos foram adicionados.`,
+              metadataJson: JSON.stringify({ points: settings.referralRewardPoints, href: "/lilyacai/perfil" })
+            } });
+          }
+        }
         return user;
       });
     } catch (error) {
@@ -269,6 +304,17 @@ export async function lilyRoutes(app: FastifyInstance) {
       sessionExpiresAt: session.expiresAt,
       consents
     });
+  });
+
+  app.get("/api/v1/lily/customer/referral-link", async (request) => {
+    const context = await requireLilySession(request);
+    const settings = await getLilyOperationalSettings();
+    if (context.user.role !== "customer" || settings.referralRewardPoints < 1) return { enabled: false, points: 0, url: null };
+    let invite = await lilyPrisma.lilyReferralInvite.findFirst({ where: { referrerUserId: context.user.id, referredUserId: null }, orderBy: { createdAt: "desc" } });
+    if (!invite) {
+      invite = await lilyPrisma.lilyReferralInvite.create({ data: { code: randomBytes(15).toString("base64url"), referrerUserId: context.user.id } });
+    }
+    return { enabled: true, points: settings.referralRewardPoints, url: `/lilyacai/cadastro?referral=${encodeURIComponent(invite.code)}` };
   });
 
   app.post("/api/v1/lily/auth/login", {
