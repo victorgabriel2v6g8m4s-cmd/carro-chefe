@@ -5,9 +5,9 @@
 - branch: `codex/vip-expiry-guard`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `5a5cccd4a8e307ed5fcb2ab2396a41b8130e9388`
-- head_sha_verified: `7a790ba`
+- head_sha_verified: `c9ccc6dd3adf4b9c308ade9d1ce436fbea53711d`
 - pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) (rascunho)
-- ci_run: `40628785491` (#808), em execução
+- ci_run: aguardando workflow de sincronização da PR para o head atual
 - last_verified_at: 2026-10-28
 - interruption_state: none
 
@@ -43,6 +43,7 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 - `npm run check`: PASS no Windows.
 - Teste direcionado `vip.test.ts`: PASS — 5 testes, incluindo emissão, bloqueio de validade passada, reativação sem prazo, resgate, consentimento e inscrição. As migrações isoladas foram aplicadas às bases descartáveis locais com o driver SQLite porque o Prisma Migrate local falhou sem diagnóstico no Windows.
 - `npm run check`: PASS; `npm test`: PASS — 62 arquivos, 331 aprovados, 3 ignorados; `npm run build`: PASS, orçamento CookLily verde; `npm run policy:check`: PASS; `git diff --check`: PASS.
+- Após ajustar a exibição para nunca oferecer reativação de códigos `disabled`: teste VIP direcionado 5/5, `npm run check` e `npm run build` PASS novamente; budget continua verde.
 - Navegador real: autenticação da conta de teste confirmada; perfil e seção de resgate inspecionados. Página de termos aberta e conteúdo examinado. Ainda não houve código válido disponível para submeter; portanto popup, consentimento, inscrição, coroa e acesso VIP não foram homologados visualmente.
 - Capturas visíveis nesta sessão: perfil com seção de resgate expandida e página de termos/cancelamento. A captura da conta contém apenas a seção inferior; dados identificadores não foram incluídos.
 - Painel VIP em produção: a sessão da conta de teste abre o painel, mas recebe “Acesso restrito à equipe CookLily” e não pode emitir nem reativar convites.
