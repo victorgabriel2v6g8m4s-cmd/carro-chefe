@@ -1,6 +1,7 @@
 import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Trophy, UserRound } from "lucide-react";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia, AdminGate } from "./admin";
@@ -45,24 +46,6 @@ import "./styles.css";
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
-function CartIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20 8H7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>;
-}
-
-function CatalogIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
-
-function MenuIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
-}
-
-function PersonIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M5.5 19c.8-4 3-6 6.5-6s5.7 2 6.5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-}
-
-function BellIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
-
 function PasswordInput(props: { name: string; autoComplete: string; required?: boolean; minLength?: number; maxLength?: number }) {
   const [visible, setVisible] = useState(false);
   return <span className="password-field"><input {...props} type={visible ? "text" : "password"} /><button type="button" className="password-toggle" aria-label={visible ? "Ocultar senha" : "Mostrar senha"} aria-pressed={visible} onClick={() => setVisible((value) => !value)}>{visible ? "Ocultar" : "Mostrar"}</button></span>;
@@ -86,7 +69,7 @@ function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
       ? <img src={user.avatarUrl} alt="" />
       : initial
         ? <span aria-hidden="true">{initial}</span>
-        : <PersonIcon />}
+        : <UserRound size={22} strokeWidth={1.8} />}
     {vip && <span className="vip-avatar-crown" aria-label="Cliente VIP">♛</span>}
   </span>;
 }
@@ -229,7 +212,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="header-actions">
-          <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><BellIcon />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
+          <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><Bell size={22} strokeWidth={1.8} />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
           {!user && <div className="auth-actions-desktop">
             <Link to="/entrar">Entrar</Link>
             <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
@@ -239,17 +222,17 @@ function Shell({ children }: { children: ReactNode }) {
             ? <Link className="header-icon profile-icon" to="/perfil" aria-label={user.displayName ? `Abrir perfil de ${user.displayName}` : "Abrir perfil"}>
                 <ProfileBubble user={user} />
               </Link>
-            : <Link className="header-icon mobile-only" to="/entrar" aria-label="Entrar ou criar conta">
+            : <Link className="header-icon mobile-only profile-icon" to="/entrar" aria-label="Entrar ou criar conta">
                 <ProfileBubble user={null} />
               </Link>}
 
           <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
-            <CartIcon />
+            <ShoppingCart size={22} strokeWidth={1.8} />
             {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
           </Link>
 
-          <button ref={menuButtonRef} className="header-icon mobile-only" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
-            <MenuIcon />
+          <button ref={menuButtonRef} className="header-icon mobile-only menu-icon" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
+            <Menu size={22} strokeWidth={1.8} />
           </button>
         </div>
       </div>
@@ -283,11 +266,11 @@ function Shell({ children }: { children: ReactNode }) {
     <main id="lily-main-content" tabIndex={-1}>{children}</main>
 
     <nav className="mobile-footer-nav" aria-label="Navegação principal mobile">
-      <NavLink to="/" end><span aria-hidden="true">⌂</span><small>Início</small></NavLink>
-      <NavLink to="/dashboard"><span aria-hidden="true">◷</span><small>Dashboard</small></NavLink>
-      <NavLink className="footer-reels-link" to="/reels"><span aria-hidden="true">▶</span><small>Reels</small></NavLink>
-      <NavLink to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}><span className="footer-cart-icon"><CartIcon />{cart.itemCount > 0 && <i>{cart.itemCount > 9 ? "9+" : cart.itemCount}</i>}</span><small>Carrinho</small></NavLink>
-      <NavLink to="/cardapio"><span className="footer-catalog-icon"><CatalogIcon /></span><small>Cardápio</small></NavLink>
+      <NavLink to="/" end><House size={22} strokeWidth={1.8} aria-hidden="true" /><small>Início</small></NavLink>
+      <NavLink to="/dashboard"><LayoutDashboard size={22} strokeWidth={1.8} aria-hidden="true" /><small>Dashboard</small></NavLink>
+      <NavLink className="footer-reels-link" to="/reels"><Play size={22} strokeWidth={1.8} fill="currentColor" aria-hidden="true" /><small>Reels</small></NavLink>
+      <NavLink to="/ranking"><Trophy size={22} strokeWidth={1.8} aria-hidden="true" /><small>Ranking</small></NavLink>
+      <NavLink to="/cardapio"><BookOpen size={22} strokeWidth={1.8} aria-hidden="true" /><small>Cardápio</small></NavLink>
     </nav>
 
     <footer>
