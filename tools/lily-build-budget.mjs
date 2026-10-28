@@ -11,12 +11,12 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  // Limites atualizados pela página administrativa lazy-loaded da integração WhatsApp.
-  jsRawBytes: 674_000,
+  // Margem incremental para a prévia autenticada, o alvo de pontos e a recompensa da pesquisa (chunk lazy).
+  jsRawBytes: 676_560,
   jsGzipBytes: 180_400,
-  cssRawBytes: 139_264,
+  cssRawBytes: 139_776,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 206_600
+  combinedGzipBytes: 206_856
 });
 
 function emptyBucket() {
