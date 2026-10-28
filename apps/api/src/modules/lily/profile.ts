@@ -5,7 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
+import { getOptionalLilySession, hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
 
 export const LILY_PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
@@ -42,18 +42,20 @@ type LoyaltyRow = {
   displayName: string | null;
   avatarMediaId: string | null;
   rankingOptIn: boolean;
+  isTestAccount: boolean;
   createdAt: Date;
   points: number;
   orderCount: number;
   campaignCount: number;
 };
 
-async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[] } = {}) {
+async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[]; includeTestAccounts?: boolean; excludeTestAccounts?: boolean } = {}) {
   const settings = await getLilyOperationalSettings();
   const users = await lilyPrisma.lilyUser.findMany({
     where: {
       status: "active",
-      ...(options.onlyOptedIn ? { rankingOptIn: true } : {}),
+      ...(options.onlyOptedIn ? { ...(options.includeTestAccounts ? { OR: [{ rankingOptIn: true }, { isTestAccount: true }] } : { rankingOptIn: true }) } : {}),
+      ...(options.excludeTestAccounts ? { isTestAccount: false } : {}),
       ...(options.userIds ? { id: { in: options.userIds } } : {})
     },
     select: {
@@ -61,6 +63,7 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[] 
       displayName: true,
       avatarMediaId: true,
       rankingOptIn: true,
+      isTestAccount: true,
       createdAt: true
     }
   });
@@ -97,6 +100,7 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[] 
       displayName: user.displayName,
       avatarMediaId: user.avatarMediaId,
       rankingOptIn: user.rankingOptIn,
+      isTestAccount: user.isTestAccount,
       createdAt: user.createdAt,
       points: 0,
       orderCount: 0,
@@ -145,6 +149,31 @@ function serializeRankingRow(row: LoyaltyRow, rank: number) {
   };
 }
 
+function denseRanking(rows: LoyaltyRow[]) {
+  let rank = 0;
+  let previousPoints: number | undefined;
+  return rows.map((row) => {
+    if (row.points !== previousPoints) {
+      rank += 1;
+      previousPoints = row.points;
+    }
+    return serializeRankingRow(row, rank);
+  });
+}
+
+function denseRankForUser(rows: LoyaltyRow[], userId: string) {
+  let rank = 0;
+  let previousPoints: number | undefined;
+  for (const row of rows) {
+    if (row.points !== previousPoints) {
+      rank += 1;
+      previousPoints = row.points;
+    }
+    if (row.userId === userId) return rank;
+  }
+  return null;
+}
+
 async function profilePayload(userId: string) {
   const user = await lilyPrisma.lilyUser.findUnique({
     where: { id: userId },
@@ -153,7 +182,9 @@ async function profilePayload(userId: string) {
       phoneNormalized: true,
       displayName: true,
       avatarMediaId: true,
-      rankingOptIn: true
+      rankingOptIn: true,
+      isTestAccount: true,
+      role: true
     }
   });
   if (!user) throw new ApiError(404, "Perfil não encontrado.");
@@ -176,8 +207,9 @@ async function profilePayload(userId: string) {
   }
   const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers") ?? false;
   const whatsappUpdatesOptIn = latestPreferences.get("whatsapp_order_updates") ?? true;
-  const publicRows = await loyaltyRows({ onlyOptedIn: true });
-  const publicIndex = publicRows.findIndex((row) => row.userId === userId);
+  const internalRanking = user.isTestAccount || user.role === "admin";
+  const publicRows = await loyaltyRows({ onlyOptedIn: true, includeTestAccounts: internalRanking, excludeTestAccounts: !internalRanking });
+  const userRank = denseRankForUser(publicRows, userId);
 
   return {
     user: {
@@ -194,7 +226,7 @@ async function profilePayload(userId: string) {
       points: own?.points ?? 0,
       orderCount: own?.orderCount ?? 0,
       campaignCount: own?.campaignCount ?? 0,
-      rank: publicIndex >= 0 ? publicIndex + 1 : null,
+      rank: userRank,
       vipPointsThreshold: vipSettings.vipPointsThreshold
     }
   };
@@ -203,10 +235,12 @@ async function profilePayload(userId: string) {
 export async function lilyProfileRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/public/loyalty/ranking", async (request) => {
     const query = z.object({ limit: leaderboardLimitSchema.optional() }).parse(request.query);
-    const rows = await loyaltyRows({ onlyOptedIn: true });
+    const viewer = await getOptionalLilySession(request);
+    const includeTestAccounts = Boolean(viewer && (viewer.user.role === "admin" || viewer.user.isTestAccount));
+    const rows = await loyaltyRows({ onlyOptedIn: true, includeTestAccounts, excludeTestAccounts: !includeTestAccounts });
     const limit = query.limit ?? 20;
     return {
-      ranking: rows.slice(0, limit).map((row, index) => serializeRankingRow(row, index + 1))
+      ranking: denseRanking(rows).slice(0, limit)
     };
   });
 

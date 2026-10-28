@@ -50,14 +50,16 @@ export function AdminTeamPage() {
     }
   }
 
-  async function update(member: LilyTeamMember, input: { role?: "customer" | "staff" | "courier" | "admin"; status?: "active" | "suspended" }) {
+  async function update(member: LilyTeamMember, input: { role?: "customer" | "staff" | "courier" | "admin"; status?: "active" | "suspended"; isTestAccount?: boolean }) {
     if (!session) return;
     setBusyId(member.id);
     setError("");
     setMessage("");
     try {
       const updated = await updateLilyTeamMember(member.id, input, session.csrfToken);
-      setMessage(`Conta ${updated.phone} atualizada.`);
+      setMessage(input.isTestAccount === undefined
+        ? `Conta ${updated.phone} atualizada.`
+        : `Conta ${updated.phone} ${updated.isTestAccount ? "promovida a conta de teste" : "retirada do modo de teste"}.`);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível atualizar a conta.");
@@ -79,7 +81,7 @@ export function AdminTeamPage() {
       <div>
         <span className="eyebrow">Segurança e permissões</span>
         <h1>Equipe CookLily</h1>
-        <p>Crie a conta pelo fluxo normal e promova aqui. Promoções exigem troca de senha e MFA antes do primeiro acesso administrativo.</p>
+        <p>Promova clientes para staff/admin ou marque contas dedicadas à homologação. Contas de teste usam os acessos normais de cliente, mas ficam invisíveis no ranking público e aparecem no ranking interno apenas para admins e outras contas de teste.</p>
       </div>
       <Link className="button ghost" to="/painel">Painel</Link>
     </div>
@@ -126,6 +128,7 @@ export function AdminTeamPage() {
           <div className="team-member-badges">
             <span className={`team-role role-${member.role}`}>{member.role}</span>
             <span className={member.status === "active" ? "state-live" : "state-off"}>{member.status}</span>
+            {member.isTestAccount && <span className="team-password-warning">Conta de teste</span>}
             {member.staffPasswordUpgradeRequired && <span className="team-password-warning">senha pendente</span>}
             {member.role !== "customer" && <span className={member.mfaEnabled ? "state-live" : "team-password-warning"}>{member.mfaEnabled ? "MFA ativa" : "MFA pendente"}</span>}
           </div>
@@ -135,6 +138,10 @@ export function AdminTeamPage() {
           <small>Conta desde {new Date(member.createdAt).toLocaleDateString("pt-BR")}</small>
         </div>
         <div className="team-member-actions">
+          {member.role === "customer" && <label className="check">
+            <input type="checkbox" checked={member.isTestAccount} disabled={busyId === member.id} onChange={(event) => void update(member, { isTestAccount: event.target.checked })} />
+            <span>Conta de teste</span>
+          </label>}
           <label>Papel
             <select
               value={member.role}

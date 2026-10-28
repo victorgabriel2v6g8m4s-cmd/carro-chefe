@@ -34,6 +34,7 @@ model LilyUser {
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
+  isTestAccount   Boolean             @default(false)
   staffPasswordUpgradeRequired Boolean @default(false)
   mfaEnabled                  Boolean  @default(false)
   mfaSecretEncrypted          String?
@@ -971,6 +972,7 @@ model LilyVipAnalyticsEvent {
 
 model LilySurvey {
   id                    String   @id @default(cuid())
+  publicToken           String?  @unique
   title                 String
   subtitle              String?
   description           String?

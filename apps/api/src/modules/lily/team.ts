@@ -16,8 +16,9 @@ const promoteSchema = z.object({
 
 const memberPatchSchema = z.object({
   role: roleSchema.optional(),
-  status: z.enum(["active", "suspended"]).optional()
-}).strict().refine((value) => value.role !== undefined || value.status !== undefined, {
+  status: z.enum(["active", "suspended"]).optional(),
+  isTestAccount: z.boolean().optional()
+}).strict().refine((value) => value.role !== undefined || value.status !== undefined || value.isTestAccount !== undefined, {
   message: "Informe papel ou status."
 });
 
@@ -43,6 +44,7 @@ function serializeMember(user: any) {
     displayName: user.displayName,
     role: user.role,
     status: user.status,
+    isTestAccount: user.isTestAccount,
     staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
     mfaEnabled: user.mfaEnabled,
     createdAt: user.createdAt,
@@ -102,6 +104,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
         where: { id: target.id },
         data: {
           role: input.role,
+          isTestAccount: false,
           staffPasswordUpgradeRequired: target.role === input.role
             ? target.staffPasswordUpgradeRequired
             : true
@@ -144,6 +147,11 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
 
     const nextRole = input.role ?? target.role;
     const nextStatus = input.status ?? target.status;
+    if (input.isTestAccount !== undefined && target.role !== "customer") {
+      throw new ApiError(409, "Somente uma conta cliente pode ser marcada como conta de teste.", {
+        code: "LILY_TEST_ACCOUNT_CUSTOMER_REQUIRED"
+      });
+    }
     if (target.role === "admin" && target.status === "active"
       && (nextRole !== "admin" || nextStatus !== "active")) {
       await ensureAnotherActiveAdmin(target.id);
@@ -156,6 +164,8 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
         data: {
           ...(input.role === undefined ? {} : { role: input.role }),
           ...(input.status === undefined ? {} : { status: input.status }),
+          ...(input.isTestAccount === undefined ? {} : { isTestAccount: input.isTestAccount }),
+          ...(input.role !== undefined && input.role !== "customer" ? { isTestAccount: false } : {}),
           ...(input.role === "customer" ? { staffPasswordUpgradeRequired: false } : {}),
           ...(roleChangedToPrivileged ? { staffPasswordUpgradeRequired: true } : {})
         },
@@ -175,6 +185,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     await auditLilyAdmin(context.user.id, "team.update", "user", id, {
       fromRole: target.role,
       toRole: nextRole,
+      isTestAccount: input.role !== undefined && input.role !== "customer" ? false : input.isTestAccount,
       fromStatus: target.status,
       toStatus: nextStatus
     });

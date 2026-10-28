@@ -88,12 +88,13 @@ describe("programa VIP CookLily", () => {
 
   it("recompensa uma indicação apenas após novo cadastro e preserva o convite no link", async () => {
     const owner = await register();
-    await lilyPrisma.lilyOperationalSettings.upsert({ where: { id: "default" }, create: { id: "default", referralRewardPoints: 25 }, update: { referralRewardPoints: 25 } });
+    await lilyPrisma.lilyOperationalSettings.upsert({ where: { id: "default" }, create: { id: "default", referralRewardPoints: 2000 }, update: { referralRewardPoints: 2000 } });
     const share = await app.inject({ method: "GET", url: "/api/v1/lily/customer/referral-link", headers: { cookie: owner.cookie } });
     expect(share.statusCode, JSON.stringify(share.json())).toBe(200);
     expect(share.json().enabled).toBe(true);
     const code = new URL(`https://carrochefe.com${share.json().url}`).searchParams.get("referral");
     expect(code).toBeTruthy();
+    expect(code).toMatch(/^[A-Za-z0-9_-]{43}$/);
     const registration = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", remoteAddress: nextTestIp(), headers: { origin }, payload: {
       phone: referredPhone, password: "senha-cooklily-referral-test-2026", displayName: "Pessoa convidada",
       referralCode: code,
@@ -103,7 +104,15 @@ describe("programa VIP CookLily", () => {
     expect(registration.statusCode).toBe(201);
     const invite = await lilyPrisma.lilyReferralInvite.findUniqueOrThrow({ where: { code: code! } });
     expect(invite.referredUserId).toBe(registration.json().user.id);
-    expect(invite.creditedPoints).toBe(25);
+    expect(invite.creditedPoints).toBe(2000);
+    expect(await lilyPrisma.lilyLoyaltyEvent.count({ where: { sourceKey: `referral:${invite.id}`, userId: owner.userId } })).toBe(1);
+    const duplicate = await app.inject({ method: "POST", url: "/api/v1/lily/auth/register", remoteAddress: nextTestIp(), headers: { origin }, payload: {
+      phone: "+5567999133555", password: "senha-cooklily-referral-test-2026", displayName: "Segunda pessoa",
+      referralCode: code,
+      termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+    } });
+    expect(duplicate.statusCode).toBe(400);
     expect(await lilyPrisma.lilyLoyaltyEvent.count({ where: { sourceKey: `referral:${invite.id}`, userId: owner.userId } })).toBe(1);
   });
 

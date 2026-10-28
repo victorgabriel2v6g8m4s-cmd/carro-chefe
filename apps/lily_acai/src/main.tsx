@@ -421,6 +421,8 @@ function Cardapio() {
 
 function Cadastro() {
   const navigate = useNavigate();
+  const rawNextPath = new URLSearchParams(window.location.search).get("next");
+  const nextPath = safeNextPath(rawNextPath);
   const vipInviteCode = new URLSearchParams(window.location.search).get("vipInvite")?.trim() ?? "";
   const referralCode = new URLSearchParams(window.location.search).get("referral")?.trim() ?? "";
   const [config, setConfig] = useState<{ termsVersion: string; privacyPolicyVersion: string } | null>(null);
@@ -463,7 +465,7 @@ function Cadastro() {
         try { await postLilyVipAction("redeem", registered.csrfToken, { code: vipInviteCode }); }
         catch { navigate("/perfil?invite-redeem-error=1"); return; }
       }
-      navigate(vipInviteCode ? "/perfil?vip-invite=1" : "/cardapio");
+      navigate(vipInviteCode ? "/perfil?vip-invite=1" : rawNextPath ? nextPath : "/cardapio", { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao criar conta.");
     } finally {
@@ -486,7 +488,7 @@ function Cadastro() {
       </div>
       {error && <p className="error" role="alert">{error}</p>}
       <button className="button primary" disabled={busy || !config}>{busy ? <LilyLoadingSpinner size="sm" label="Criando conta" /> : "Criar conta"}</button>
-      <p className="form-switch">Já tem conta? <Link to="/entrar">Entrar</Link></p>
+      <p className="form-switch">Já tem conta? <Link to={rawNextPath ? `/entrar?next=${encodeURIComponent(nextPath)}` : "/entrar"}>Entrar</Link></p>
     </form>
   </section></Shell>;
 }
