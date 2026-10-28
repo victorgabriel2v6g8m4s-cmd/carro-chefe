@@ -187,6 +187,7 @@ required_nginx_patterns=(
   'location ^~ /api/v1/lily/survey-option-media/'
   'location = /api/v1/lily/notifications'
   'location ^~ /api/v1/lily/notifications/'
+  'location = /api/v1/lily/missions'
   'location ^~ /api/v1/lily/courier/'
   'location = /api/v1/integrations/cooklily/whatsapp/webhook'
   'location = /api/v1/integrations/carro-chefe/whatsapp/webhook'
