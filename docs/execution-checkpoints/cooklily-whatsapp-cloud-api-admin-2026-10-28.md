@@ -5,14 +5,14 @@
 - branch: codex/lily-whatsapp-cloud-api-admin
 - base_branch: cooklily/canonical
 - base_sha_verified: 99db2f3a4fa429699450e1ce8d1a8cf01dad2706
-- head_sha_verified: 9603ac86d102d67fc7e585f697b5231e88076dfb (merge canonical base; checkpoint update pending)
-- pull_requests: #219 open draft; https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/219
+- head_sha_verified: df5798c6669712fc3881719d1bb89cf1d7f91928
+- pull_requests: #219 open ready-for-review; CI run 40697518384 pending; https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/219
 - deploy_sha: 1cb9741c1a97e97700eeacccfa6143a90145864e
 - tests/gates: policy preflight passed for API Lily, Lily admin UI and docs; `npm test` passed (64 files, 347 passed, 3 skipped); `npm run check` passed; `npm run build` passed; Lily budget tests passed; `git diff --check` passed. PR/CI/deploy/real-domain verification pending.
 - migrations: existing `20260929150000_lily_whatsapp_outbox` and `20261009130000_cooklily_whatsapp_templates_webhooks`; no new migration planned yet.
 - blockers: Meta credentials and Business assets are not available in the repo/session; live sending and Meta dashboard subscription must remain disabled until the owner configures them in the protected VPS environment and Meta Developers.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: commit/push this refreshed checkpoint, inspect PR #219 checks and mergeability, then resolve CI before merge.
+- next_action: wait for CI run 40697518384; inspect failures/checks, then merge PR #219 when all required gates pass.
 
 ## Objetivo
 
@@ -25,7 +25,7 @@ Concluir a experiência administrativa e os gates operacionais da integração o
 3. [x] Implementar painel lazy-loaded em `/lilyacai/painel/whatsapp`, com checklist sem revelar segredos, callback URL, fila filtrável, retry admin e CRUD de templates; ligar a navegação do painel.
 4. [x] Corrigir o erro genérico ao ativar template sem nome aprovado; adicionar teste de validação e revisar testes de opt-in, outbox e webhook.
 5. [x] Executar `npm test`, `npm run check`, `npm run build`, Lily budget, policy preflight e `git diff --check`.
-6. [x] Abrir PR #219 para `cooklily/canonical` como draft e anexar à tarefa; canonical avançou para `99db2f3`, integrado sem reescrever histórico. Aguardar CI/CodeQL e integrar por squash.
+6. [x] Abrir PR #219 para `cooklily/canonical`, marcar ready-for-review e anexar à tarefa; canonical avançou para `99db2f3`, integrado sem reescrever histórico. CI run 40697518384 está pending.
 7. [ ] Implantar com `sudo cc deploy canonical`; validar health/readiness/HTTPS e caminhos do painel no navegador integrado do Codex.
 8. [ ] Atualizar este checkpoint e a documentação setup com SHA, evidências, screenshots, falhas/retestes e limitações.
 
