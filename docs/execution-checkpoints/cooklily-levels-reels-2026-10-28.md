@@ -5,14 +5,14 @@
 - branch: codex/cooklily-levels-reels
 - base_branch: cooklily/canonical
 - base_sha_verified: 83c5571afa3d152ceaa47991c4f5c13a9e1eec03
-- head_sha_verified: 4930d08 plus uncommitted delivery changes (docs PR #222 cherry-picked after merge to keep this feature branch current)
-- pull_requests: documentation PR #222 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/222
+- head_sha_verified: 47e850248a3e421743acd666976e69eb8cc7964d
+- pull_requests: documentation PR #222 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/222; implementation PR #223 open — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/223
 - deployed_sha: 83c5571afa3d152ceaa47991c4f5c13a9e1eec03
 - tests/gates: policy preflight PASS; `npm test` PASS on disposable migrated DB (66 files, 352 passed, 3 skipped); sequential `npm run check` PASS; sequential `npm run build` PASS; `git diff --check` PASS. Parallel check/build initially collided while regenerating the same Prisma Client; sequential reruns passed.
 - migrations: `20261028200000_lily_levels_coins` added; schema check PASS; disposable database uses this migration SQL for integration tests; production deployment pending PR integration.
 - blockers: no technical blocker. Real-domain deployment/homologation and Meta template approval are external follow-ups. Existing `.runtime/lily-acai.db` predates this migration; tests must use a disposable migrated copy until it is refreshed through normal deployment.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: review final diff, commit and open PR against cooklily/canonical; wait for CI, integrate and deploy, then capture desktop/mobile IAB screenshots for Dashboard, Reels, and research invitation flow.
+- next_action: wait for PR #223 CI, fix any failures and rerun; then squash-merge under existing authorization, deploy canonical, and capture desktop/mobile IAB screenshots for Dashboard, Reels, and research invitation flow.
 
 ## Objetivo e precedência de requisitos
 
@@ -38,7 +38,7 @@ Decisões recentes do proprietário prevalecem sobre lacunas ou números tratado
 6. [x] Implementar Dashboard com nível, avanço, saldo de LilyCoins, recompensa disponível, reivindicação e pedidos/missões; rounding configurável aplica-se aos pontos de pedidos.
 7. [~] Implementar Reels com capa/carrossel, vídeo, gestos, modos de sequência, salvar local, compartilhar, carrinho e bloqueio VIP desfocado. Curtidas/comentários persistentes permanecem pendentes por dependerem de requisitos de conta/moderação ainda não decididos.
 8. [x] `npm run check`, `npm run build`, teste focal da progressão e `npm test` passaram; suíte completa executada na cópia descartável migrada: 66 arquivos, 352 testes aprovados e 3 ignorados. `git diff --check` passou.
-9. [ ] Abrir PR, aprovar CI, integrar; deploy canonical autorizado e homologar IAB em desktop/mobile. Corrigir e repetir até aceite; registrar screenshots/evidências.
+9. [~] PR #223 aberto para `cooklily/canonical`; CI em execução. Após checks verdes, integrar, fazer deploy canonical autorizado e homologar IAB em desktop/mobile com screenshots.
 
 ## Evidências, riscos e decisões técnicas
 
@@ -57,10 +57,10 @@ Decisões recentes do proprietário prevalecem sobre lacunas ou números tratado
 
 - 2026-10-28: pesquisa/link público corrigidos, CI PR #221 passou, deploy `83c5571afa3d152ceaa47991c4f5c13a9e1eec03`, resposta real de teste concedeu 50 pontos; entrega seguinte direcionada para níveis e Reels.
 - 2026-10-28: implementadas APIs/schema/admin/Dashboard de níveis e LilyCoins, ledger de nível/indicação/missão/pedido, e Reels com teaser VIP; adicionada orientação Meta para callbacks próprios CookLily/Carro Chefe e minuta de template transacional. `check` e `build` passaram; aprovação Meta, merge, deploy e homologação real ainda pendentes.
-- 2026-10-28: suíte completa aprovada em DB descartável migrado (352 passed, 3 skipped); `check`, `build` e `diff --check` verdes em execução sequencial. Revalidado o link público: token H3s1 inválido/obsoleto; link atual da pesquisa publicada abre o gate e mostra “Iniciar pesquisa” com sessão autenticada. CI, integração, deploy e evidência visual dos módulos seguem pendentes.
+- 2026-10-28: suíte completa aprovada em DB descartável migrado (352 passed, 3 skipped); `check`, `build` e `diff --check` verdes em execução sequencial. Revalidado o link público: token H3s1 inválido/obsoleto; link atual da pesquisa publicada abre o gate e mostra “Iniciar pesquisa” com sessão autenticada. PR #223 aberto; CI em execução, integração, deploy e evidência visual dos módulos pendentes.
 
 ## Homologação e dependências externas
 
 - Passo a passo Meta e texto inicial do template: `docs/lily-acai/WHATSAPP_META_SETUP_E_PEDIDO_2026-10-28.md`.
 - O template não foi cadastrado nem enviado à Meta; o proprietário precisa executar as etapas no WhatsApp Manager e aguardar `Approved` antes do envio de teste.
-- Próxima ação exata: revisar o diff final, abrir PR da branch atual; acompanhar CI; integrar conforme autorização anterior; aplicar deploy; testar no navegador IAB a tela de login/convite da pesquisa e as rotas de Dashboard/Reels, capturando imagens desktop e mobile.
+- Próxima ação exata: acompanhar os checks do PR #223; corrigir falhas se existirem; depois integrar, aplicar deploy e validar no navegador IAB a pesquisa, Dashboard e Reels em desktop e mobile, salvando screenshots.
