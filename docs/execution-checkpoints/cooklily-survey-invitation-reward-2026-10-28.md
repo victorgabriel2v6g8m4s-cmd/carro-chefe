@@ -2,17 +2,17 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/lily-survey-invitation-reward
+- branch: codex/fix-survey-public-link
 - base_branch: cooklily/canonical
-- base_sha_verified: b840497951b3fc207f087b84b5c87703a4fcd6e8
-- head_sha_verified: 3d0b83a2123ecafe4cf232dfe9941bff45cd51fb
-- pull_requests: #220 draft — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/220
-- deployed_sha: b840497951b3fc207f087b84b5c87703a4fcd6e8 (entrega WhatsApp Cloud API; pesquisa ainda não implantada)
-- tests/gates: preflight AG-DEV para surveys/API/docs/tools/admin/deploy PASS; teste direcionado `routes.test.ts` PASS (6/6); full `npm test` PASS (64 arquivos, 348 aprovados, 3 ignorados); `npm run check` PASS; `npm run build` PASS e build budget aprovado (660,31/660,70 KiB JS bruto; 136,38/136,50 KiB CSS bruto; 201,79/202,01 KiB JS+CSS gzip); `npm run policy:check` PASS; `git diff --check` PASS. Correção adicional de callback/Nginx ainda precisa rodar os gates atualizados e CI.
+- base_sha_verified: b5c94423a556c35ee941e1a68733565540d06656
+- head_sha_verified: 3d9171dd18d61f7aa423a8b9a0acb209dbf59060 (reparo do link público commitado; checkpoint desta etapa está em andamento)
+- pull_requests: #220 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/220; PR do reparo do link público ainda não aberto
+- deployed_sha: b5c94423a556c35ee941e1a68733565540d06656 (deploy concluído em 2026-10-28; novas rotas Nginx instaladas)
+- tests/gates: PR #220 CI run 40703811809 passou em Node 20/24 e jobs auxiliares; `npm test` local PASS (65 arquivos, 351 aprovados, 3 ignorados); `npm run check`, `npm run build`/budget, `npm run policy:check` e `git diff --check` PASS. Helper Nginx e teste Fastify WhatsApp direcionados PASS; callback CookLily com token inválido retorna 403 (rota + token configurado), callback Carro Chefe retorna 503 (rota existente, credenciais ainda ausentes). CI do reparo do link público ainda pendente.
 - migrations: nenhuma prevista
-- blockers: nenhum acesso de agente pendente; chave local assinou desafio e sessão staff/admin foi aberta no navegador integrado do Codex. A homologação ainda não foi executada com conta cliente.
+- blockers: credenciais Meta próprias do Carro Chefe ainda não configuradas; não bloqueiam CookLily nem o deploy. Sessão admin ativa no navegador integrado do Codex. Pesquisa de teste foi publicada e notificou contas ativas; falta responder e depois cancelar a pesquisa.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: aguardar checks do PR #220, marcar pronto, revisar/mergear; implantar canonical e concluir a homologação de pesquisa no perfil de teste.
+- next_action: concluir correção da função de salvar/link público, rodar gates, abrir PR, integrar e publicar; então testar o link copiado, completar a pesquisa com conta de teste, verificar pontos/progresso/recompensa, cancelar a pesquisa e registrar capturas/evidências.
 
 ## Objetivo
 
@@ -28,9 +28,14 @@ Garantir que qualquer pessoa que abra o link público da pesquisa veja primeiro 
 6. [x] Extrair a tela de recompensa, manter barra animada, incluir explosão breve de confetes e renderizar barra de proximidade ao acesso VIP por pontos quando há limite configurado; o alvo é consultado no banco ao iniciar e fica oculto sem configuração ou para membro VIP ativo/convidado.
 7. [x] Executar gates completos e revisão do diff; corrigir problemas encontrados.
 8. [x] Verificar callback Meta: o painel exibia URL genérica inexistente e o domínio respondia 404; corrigir a URL para CookLily e adicionar ao helper/precheck do deploy as duas rotas exatas e independentes, uma para CookLily e outra para Carro Chefe.
-9. [ ] Criar pesquisa descartável, responder em conta de teste no domínio real e capturar telas do convite autenticado, formulário, aviso de desistência e recompensa.
-10. [ ] Abrir PR, aguardar checks, integrar, implantar na VPS e repetir homologação real após deploy.
-11. [ ] Atualizar este checkpoint com SHA, run IDs, evidências, telas, falhas/retestes e bloqueios restantes.
+9. [x] Abrir PR #220, aprovar CI, integrar e executar `sudo cc deploy canonical`; readiness, smoke HTTPS e backups passaram em `b5c94423a556c35ee941e1a68733565540d06656`.
+10. [x] Confirmar no IAB o callback CookLily no painel e consultar os dois callbacks no domínio real; CookLily sai do 404 e rejeita token falso com 403; Carro Chefe sai do 404 e retorna 503 por ausência de credenciais próprias.
+11. [x] Criar/publicar pesquisa descartável: título “Pesquisa de homologação CookLily — 28/10/2026”, 1 pergunta curta, 50 pontos; painel confirmou “Pesquisa publicada. A notificação foi enviada às contas CookLily ativas.”
+12. [x] Abrir a prévia autenticada com token público e confirmar benefício de até 50 pontos e botão “Iniciar pesquisa”.
+13. [x] Corrigir bug confirmado: o salvamento local descartava `publicToken`, então “Copiar link público” copiava o ID interno e levava a “Pesquisa não encontrada”. A linha agora mantém o token retornado pelo servidor; novo helper cria o link codificado e testes cobrem criação, atualização e fallback.
+14. [ ] Abrir PR do reparo, aguardar CI, integrar e republicar na VPS.
+15. [ ] Testar link copiado já com token, responder com conta de teste e registrar tela de pergunta, saída/aviso e tela de recompensa; conferir saldo e barra de progresso.
+16. [ ] Cancelar a pesquisa descartável no painel e atualizar checkpoint com SHA, evidências e limites.
 
 ## Requisitos prévios localizados
 
@@ -47,7 +52,8 @@ Garantir que qualquer pessoa que abra o link público da pesquisa veja primeiro 
 - O usuário autorizou anteriormente criar e responder pesquisa de teste; submissão será limitada a dados descartáveis, sem dados pessoais.
 - A checagem pública em 2026-10-28 encontrou 404 nos callbacks esperados porque o helper do deploy só autorizava rotas listadas e os dois callbacks Meta não estavam na lista do helper/precheck, apesar de constarem no exemplo Nginx. Corrigido no branch: painel mostra `/api/v1/integrations/cooklily/whatsapp/webhook`; helper passa a instalar ambos os callbacks independentes antes do deny genérico; precheck exige os dois. Os testes de deploy e de rotas Fastify passaram após a correção. Handshake válido depende ainda de Verify Token/App Secret e associação de cada WABA/número no Meta, indisponíveis no repositório.
 - Não registrar segredos de agente no checkpoint, browser, terminal capturado, screenshots ou Git.
+- Evidência visual da prévia com recompensa e CTA foi capturada via IAB; token de pesquisa foi mantido fora deste checkpoint. O ID do registro é `cmvs7d0jy00008zlpa9xnmv6g`; o link copiado incorretamente usando o ID retornou 404. O endpoint admin confirmou que há `publicToken` independente, e a prévia funciona ao usar esse token.
 
 ## Próxima ação exata
 
-Terminar gates locais e remotos para o delta do callback, revisar diff, integrar e implantar na VPS. Confirmar no domínio que os dois callbacks saíram do 404 e chegam à verificação do serviço (resposta 503/403 é esperada sem credencial válida). A chave agente já foi validada sem expor o segredo e a sessão administrativa está aberta apenas no navegador integrado do Codex. Após deploy, criar e publicar pesquisa claramente identificada como homologação, responder no perfil de teste, conferir o saldo e registrar que a publicação aciona a notificação interna aos clientes ativos; depois limpar a pesquisa de teste pelo fluxo de cancelamento do painel.
+Reparar preservação do publicToken no estado após salvar, validar helper e componentes, executar gates completos, abrir PR e aguardar CI. Após merge, executar deploy canonical; usar “Copiar link público” na pesquisa de homologação e confirmar que abre a prévia com o token. Responder como conta de teste sem dados pessoais, conferir crédito e UI da recompensa, depois cancelar a pesquisa de teste. Somente após esta entrega iniciar a implementação configurável de níveis solicitada pelo proprietário.
