@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { getLilyCatalog, getLilySession, postLilyVipAction, type CatalogProduct } from "../../api";
+import { getLilySession, postLilyVipAction, type CatalogProduct } from "../../api";
 import { useCart } from "../cart/CartContext";
 import { trackLilyAnalytics } from "../../analytics";
+import { loadReelsCatalog } from "./catalog";
 
 const placeholder = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 type Sequence = "related" | "catalog" | "random";
@@ -28,7 +29,7 @@ export function ReelsPage() {
   const activeMedia = media[mediaIndex];
 
   const nextProduct = useCallback((direction: 1 | -1) => { setIndex((current) => Math.max(0, Math.min(products.length - 1, current + direction))); setMediaIndex(0); }, [products.length]);
-  useEffect(() => { let alive = true; void getLilyCatalog({ limit: 100 }).then(({ products: rows }) => { if (alive) setProducts(rows.filter((row) => row.status === "published" && (row.isAvailable || row.vipLocked))); }).catch((cause) => { if (alive) setError(cause instanceof Error ? cause.message : "Não foi possível abrir os Reels."); }); return () => { alive = false; }; }, []);
+  useEffect(() => { let alive = true; void loadReelsCatalog().then((rows) => { if (alive) setProducts(rows); }).catch((cause) => { if (alive) setError(cause instanceof Error ? cause.message : "Não foi possível abrir os Reels."); }); return () => { alive = false; }; }, []);
   useEffect(() => { try { localStorage.setItem("cooklily:saved-reels", JSON.stringify(saved)); } catch { /* local storage can be unavailable in private browsing */ } }, [saved]);
   useEffect(() => { setMediaIndex(0); setPlaying(true); }, [index]);
   useEffect(() => { if (!toast) return; const timeout = window.setTimeout(() => setToast(""), 2400); return () => window.clearTimeout(timeout); }, [toast]);
@@ -66,7 +67,7 @@ export function ReelsPage() {
     } catch (cause) { setToast(cause instanceof Error ? cause.message : "Não foi possível adicionar esse produto."); }
   }
   async function share() { try { await navigator.share({ title: product.displayName, text: product.description ?? product.displayName, url: `${window.location.origin}/lilyacai/cardapio?produto=${encodeURIComponent(product.slug)}` }); } catch { try { await navigator.clipboard.writeText(`${window.location.origin}/lilyacai/cardapio?produto=${encodeURIComponent(product.slug)}`); setToast("Link do produto copiado."); } catch { setToast("Não foi possível compartilhar agora."); } } }
-  function cycleSequence() { setSequence((current) => { const next = current === "related" ? "catalog" : current === "catalog" ? "random" : "related"; if (next === "random" && products.length > 1) { const order = [...products]; for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } if (order[0]?.id === product?.id) [order[0], order[1]] = [order[1]!, order[0]!]; setProducts(order); setIndex(0); } else if (next === "catalog") { void getLilyCatalog({ limit: 100 }).then(({ products: rows }) => setProducts(rows.filter((row) => row.status === "published" && (row.isAvailable || row.vipLocked)))); setIndex(0); } else if (next === "related" && product) { setProducts((currentProducts) => [...currentProducts].sort((a, b) => Number(b.category.id === product.category.id) - Number(a.category.id === product.category.id))); setIndex(0); } setToast(`Sequência: ${next === "related" ? "relacionados" : next === "catalog" ? "catálogo" : "aleatória"}`); return next; }); }
+  function cycleSequence() { setSequence((current) => { const next = current === "related" ? "catalog" : current === "catalog" ? "random" : "related"; if (next === "random" && products.length > 1) { const order = [...products]; for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } if (order[0]?.id === product?.id) [order[0], order[1]] = [order[1]!, order[0]!]; setProducts(order); setIndex(0); } else if (next === "catalog") { void loadReelsCatalog().then(setProducts).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar o catálogo.")); setIndex(0); } else if (next === "related" && product) { setProducts((currentProducts) => [...currentProducts].sort((a, b) => Number(b.category.id === product.category.id) - Number(a.category.id === product.category.id))); setIndex(0); } setToast(`Sequência: ${next === "related" ? "relacionados" : next === "catalog" ? "catálogo" : "aleatória"}`); return next; }); }
   function reportVipView() { if (product.vipEarlyAccess) void getLilySession().then((session) => postLilyVipAction("launch-view", session.csrfToken, { productId: product.id })).catch(() => undefined); }
 
   if (!products.length) return <section className="reels-page"><span className="eyebrow">CookLily · descubra</span><h1>Reels</h1>{error ? <p className="error" role="alert">{error}</p> : <p>Os produtos aparecerão aqui quando o catálogo estiver disponível.</p>}</section>;
