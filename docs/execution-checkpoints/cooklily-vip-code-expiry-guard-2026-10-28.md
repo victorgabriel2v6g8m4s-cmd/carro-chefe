@@ -1,12 +1,13 @@
 # Validade e resgate do convite VIP CookLily
 
-- status: candidate; correção implementada e gates locais verdes; aguardando PR/CI
+- status: PR aberta; correção candidata; CI #808 em execução; homologação de produção parcial
 - owner: AG-DEV
 - branch: `codex/vip-expiry-guard`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `5a5cccd4a8e307ed5fcb2ab2396a41b8130e9388`
 - head_sha_verified: `7a790ba`
-- pull_requests: pending
+- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) (rascunho)
+- ci_run: `40628785491` (#808), em execução
 - last_verified_at: 2026-10-28
 - interruption_state: none
 
@@ -44,15 +45,16 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 - `npm run check`: PASS; `npm test`: PASS — 62 arquivos, 331 aprovados, 3 ignorados; `npm run build`: PASS, orçamento CookLily verde; `npm run policy:check`: PASS; `git diff --check`: PASS.
 - Navegador real: autenticação da conta de teste confirmada; perfil e seção de resgate inspecionados. Página de termos aberta e conteúdo examinado. Ainda não houve código válido disponível para submeter; portanto popup, consentimento, inscrição, coroa e acesso VIP não foram homologados visualmente.
 - Capturas visíveis nesta sessão: perfil com seção de resgate expandida e página de termos/cancelamento. A captura da conta contém apenas a seção inferior; dados identificadores não foram incluídos.
+- Painel VIP em produção: a sessão da conta de teste abre o painel, mas recebe “Acesso restrito à equipe CookLily” e não pode emitir nem reativar convites.
 
 ## Integração, deploy e homologação
 
-- PR/CI: aguardando abertura e execução.
+- PR #204 aberta em rascunho; CI #808 em execução.
 - Deploy VPS: pending; executar `sudo cc deploy canonical` depois da integração aprovada e gates verdes.
 - Pós-deploy: conferir SHA, serviço, Nginx e health checks; abrir novamente o domínio e repetir jornada desktop/mobile.
 - Conta de teste: sessão autenticada no navegador. Ela não tem permissão staff/admin; código completo não é recuperável do hash. Necessário que staff reative um convite vencido sem prazo ou emita um novo; o código pode ser preenchido no perfil de teste sem ser compartilhado no chat. Proprietário autorizou consentimento dos termos nesta conta; submeter somente quando o convite pendente habilitar o fluxo.
 
 ## Próxima ação exata
 
-Revisar a diff, completar validação de teste/build, abrir PR para `cooklily/canonical`, aguardar CI, integrar e implantar. Depois usar o painel staff para reativar um convite de teste sem vencimento (ou criar um novo) e submeter esse convite no perfil de teste. Parar antes de aceitar termos e pedir aprovação específica para registrar o consentimento; concluir capturas e relatório da jornada após essa ação.
+Concluir CI #808, integrar e implantar após gates aprovados. Depois usar o convite de teste que o proprietário disponibilizar e submeter no perfil. O consentimento dos termos nesta conta já foi explicitamente autorizado; concluir inscrição, conferir coroa/acesso VIP, capturar as telas e fechar o relatório. Em seguida, executar a atualização do Instagram solicitada separadamente.
 
