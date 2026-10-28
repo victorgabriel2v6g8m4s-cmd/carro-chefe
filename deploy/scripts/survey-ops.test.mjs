@@ -46,13 +46,15 @@ test('WhatsApp, survey and notification Nginx routes are inserted before the API
     const mediaPrefixAt = content.indexOf('location ^~ /api/v1/lily/survey-option-media/');
     const exactAt = content.indexOf('location = /api/v1/lily/notifications');
     const prefixAt = content.indexOf('location ^~ /api/v1/lily/notifications/');
+    const missionsAt = content.indexOf('location = /api/v1/lily/missions');
     const denyAt = content.indexOf('location ^~ /api/ { return 404; }');
-    assert.ok(cooklilyWebhookAt >= 0 && carroChefeWebhookAt > cooklilyWebhookAt && surveyExactAt > carroChefeWebhookAt && surveyPrefixAt > surveyExactAt && mediaPrefixAt > surveyPrefixAt && exactAt > mediaPrefixAt && prefixAt > exactAt && denyAt > prefixAt);
+    assert.ok(cooklilyWebhookAt >= 0 && carroChefeWebhookAt > cooklilyWebhookAt && surveyExactAt > carroChefeWebhookAt && surveyPrefixAt > surveyExactAt && mediaPrefixAt > surveyPrefixAt && exactAt > mediaPrefixAt && prefixAt > exactAt && missionsAt > prefixAt && denyAt > missionsAt);
     assert.equal((content.match(/location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/surveys\b/g) ?? []).length, 1);
     assert.equal((content.match(/location \^~ \/api\/v1\/lily\/survey-option-media\//g) ?? []).length, 1);
     assert.equal((content.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
+    assert.equal((content.match(/location = \/api\/v1\/lily\/missions\b/g) ?? []).length, 1);
     assert.equal(runPython(python, [config]).status, 0, 'second application should be idempotent');
 
     writeFileSync(config, 'server {\n    location = /api/v1/lily/notifications { }\n    location ^~ /api/ { return 404; }\n}\n');
@@ -64,6 +66,7 @@ test('WhatsApp, survey and notification Nginx routes are inserted before the API
     const upgraded = readFileSync(config, 'utf8');
     assert.equal((upgraded.match(/location = \/api\/v1\/lily\/notifications\b/g) ?? []).length, 1);
     assert.match(upgraded, /location = \/api\/v1\/lily\/surveys/);
+    assert.match(upgraded, /location = \/api\/v1\/lily\/missions/);
     writeFileSync(config, 'server { }\n');
     assert.equal(runPython(python, [config]).status, 3, 'unknown Nginx layout must fail closed');
   } finally {
@@ -108,12 +111,14 @@ test('deployment applies the notification route helper before enforcing the Ngin
   assert.match(source, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
   assert.match(source, /location = \/api\/v1\/lily\/notifications/);
   assert.match(source, /location \^~ \/api\/v1\/lily\/notifications\//);
+  assert.match(source, /location = \/api\/v1\/lily\/missions/);
   assert.match(source, /location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/);
   assert.match(source, /location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/);
   const template = readFileSync(path.join(root, 'deploy/nginx/carrochefe.com.conf.example'), 'utf8');
   assert.match(template, /location = \/api\/v1\/lily\/surveys/);
   assert.match(template, /location \^~ \/api\/v1\/lily\/surveys\//);
   assert.match(template, /location \^~ \/api\/v1\/lily\/survey-option-media\//);
+  assert.match(template, /location = \/api\/v1\/lily\/missions/);
   assert.match(template, /location = \/api\/v1\/integrations\/cooklily\/whatsapp\/webhook/);
   assert.match(template, /location = \/api\/v1\/integrations\/carro-chefe\/whatsapp\/webhook/);
 });
