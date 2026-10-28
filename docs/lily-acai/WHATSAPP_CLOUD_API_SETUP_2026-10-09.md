@@ -39,7 +39,7 @@ URL para colar no Meta Developers, substituindo pelo host real de produção:
 https://SEU_DOMINIO_PUBLICO/api/v1/integrations/cooklily/whatsapp/webhook
 ```
 
-O Carro Chefe usa callback independente: `https://SEU_DOMINIO_PUBLICO/api/v1/integrations/carro-chefe/whatsapp/webhook`. Configure cada URL somente no app/WABA e número de WhatsApp pertencentes à respectiva operação. Cada operação usa Verify Token e App Secret próprios (`COOKLILY_WHATSAPP_*` e `CARRO_CHEFE_WHATSAPP_*`); não reutilize credenciais entre elas.
+O Carro Chefe usa callback independente: `https://SEU_DOMINIO_PUBLICO/api/v1/integrations/carro-chefe/whatsapp/webhook`. Cada app Meta tem um callback URL próprio; para manter estes dois endpoints independentes, use **dois apps Meta**, um para a CookLily e outro para o Carro Chefe, e associe a WABA de cada operação ao app correspondente. Depois assine cada WABA ao seu app. Se as duas WABAs forem associadas ao mesmo app, os eventos irão para o único callback configurado nesse app, não para dois caminhos diferentes. Cada operação usa Verify Token e App Secret próprios (`COOKLILY_WHATSAPP_*` e `CARRO_CHEFE_WHATSAPP_*`); não reutilize credenciais entre elas.
 ```
 
 O host precisa usar HTTPS válido e o proxy reverso precisa encaminhar `/api/v1/` para o serviço da API. A rota pública está em `/api/v1/integrations/...` porque o middleware de segurança já isenta essa família de webhooks de origem/browser; a autenticação é feita pela verificação Meta, não por cookie de sessão.
@@ -111,6 +111,35 @@ Para listar, use GET no endpoint de templates. Para atualizar, use PATCH com o I
 7. Configure também Access Token, Phone Number ID e Graph API version para habilitar o worker de envio.
 8. Reinicie o serviço da API após alterar as variáveis de ambiente.
 9. Use a ferramenta de teste de webhooks da Meta e consulte os logs operacionais sem imprimir tokens, App Secret, texto recebido ou números de telefone.
+
+### Checklist visual no Meta — callbacks separados
+
+Use dois apps Meta, um por operação, e faça o procedimento abaixo para cada app e sua WABA correspondente. Não reutilize o Verify Token, App Secret, Access Token, Phone Number ID ou número de telefone entre CookLily e Carro Chefe.
+
+**CookLily**
+
+1. Abra `developers.facebook.com/apps` e selecione o app da CookLily.
+2. Em WhatsApp > Configuration (ou Webhooks, conforme a versão do painel), confirme que este app e seu produto WhatsApp estão conectados à WABA CookLily.
+3. Configure Callback URL `https://carrochefe.com/api/v1/integrations/cooklily/whatsapp/webhook`.
+4. Cole no Verify Token o valor configurado somente em `COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN` na VPS; não envie esse segredo em mensagens nem o coloque no Git.
+5. Use **Verify and save**. A confirmação só está concluída quando a Meta aceita o handshake; um 403 em teste com token inválido não equivale a essa confirmação.
+6. Em Webhooks, assine o campo `messages` e confirme a assinatura da WABA CookLily ao app.
+
+**Carro Chefe**
+
+Repita os passos no segundo app Meta e na WABA próprios do Carro Chefe com `https://carrochefe.com/api/v1/integrations/carro-chefe/whatsapp/webhook` e o segredo `CARRO_CHEFE_WHATSAPP_WEBHOOK_VERIFY_TOKEN`. Não configure os dois números/WABAs no mesmo app se a intenção é usar callbacks separados.
+
+Depois de salvar, confira no painel da Meta que a URL aparece sem erro e que o campo `messages` está assinado. A validação ponta a ponta ainda precisa do teste de webhook da Meta e de um evento real de número autorizado. A URL conhecida e a rota acessível no servidor não provam que o callback foi salvo no painel Meta.
+
+### Rascunho do template de acompanhamento de pedido
+
+Quando a operação WhatsApp da CookLily estiver selecionada no WhatsApp Manager, criar um template de categoria **Utility**, idioma **Portuguese (Brazil) / pt_BR**, com nome simples como `cooklily_atualizacao_pedido`. Texto sugerido, submetido à aprovação da Meta:
+
+> Oi! O pedido {{1}} da CookLily está {{2}}. Acompanhe as próximas atualizações por aqui. Se precisar de ajuda, responda esta mensagem.
+
+Mapear `{{1}}` para `orderNumber` e `{{2}}` para `stageLabel`, conforme as variáveis atualmente aceitas pelo worker. Usar o mesmo conteúdo aprovado para as etapas cadastradas no painel, desde que os placeholders e idioma permaneçam idênticos. Não adicionar preço, promoção ou conteúdo de marketing a este template de utilidade. O nome, conteúdo, categoria e idioma só podem ser ativados no painel depois de a Meta mostrar status aprovado. Um template cadastrado localmente não é criado nem aprovado na Meta.
+
+O plano de homologação posterior deve cobrir, com número de teste e opt-in: confirmação de pedido, transição de status (preparo/retirada ou entrega), recebimento de status de mensagem no webhook, deduplicação, correlação por pedido e logs sem conteúdo sensível. Não enviar mensagens para clientes reais durante o teste.
 
 A Meta assina o corpo HTTP bruto. O endpoint calcula HMAC-SHA256 usando o App Secret e compara em tempo constante com `X-Hub-Signature-256`; não reserializa o JSON para validar. Assinaturas inválidas recebem 401. O evento só é aceito depois da verificação.
 
