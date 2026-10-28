@@ -470,6 +470,21 @@ A relação inicial de 990 pontos para R$ 1 é uma referência interna, não uma
 - Registrar alterações e valores anteriores na auditoria.
 - Tratar cashback, cupons e produtos por suas regras específicas, não inferindo automaticamente um valor de resgate só a partir dessa equivalência.
 
+### 7.8 Decisão posterior — pontos, LilyCoins e reivindicação (2026-10-25)
+
+Esta decisão posterior complementa a seção 7 e prevalece sobre qualquer sugestão antiga de usar o mesmo saldo para progressão e resgate:
+
+- **Pontos** são progresso de fidelidade: pontos ganhos fazem o usuário avançar pelos níveis. Reivindicar uma recompensa não desconta pontos nem rebaixa o nível.
+- **LilyCoins** são a moeda de recompensa resgatável. O usuário pode gastar o saldo ao reivindicar um item elegível ou continuar acumulando. Cada resgate desconta LilyCoins de forma transacional e idempotente.
+- Configurar no painel, sem valores fixos em código: nomes e ordem dos níveis; pontos necessários para cada avanço; benefícios de cada nível; LilyCoins concedidas por nível e por missão; regra de arredondamento para qualquer cálculo que gere quantidade inteira; e regras/custos das recompensas.
+- Os 21 níveis e os valores-base históricos (200 pontos para Bronze I→II, multiplicador inicial 1,66, limiar especial inicial de 10.000.000 para Mestre→Elite) são uma configuração inicial editável, não uma fórmula obrigatória nem limite de implementação. A tela administrativa deve permitir configurar cada threshold explicitamente e, se houver fórmula auxiliar, pré-visualizar e gravar os valores arredondados resultantes.
+- O arredondamento é uma política administrável versionada (por exemplo: para baixo, para cima ou para o inteiro mais próximo); cada operação aplica a regra ativa no servidor e registra a versão usada. Não recalcular silenciosamente lançamentos ou resgates históricos quando uma configuração mudar.
+- O saldo de LilyCoins é exibido numa barra cumulativa com marcos de recompensas elegíveis. O cliente deve poder escolher entre reivindicar uma recompensa disponível ou continuar acumulando; a confirmação do saldo e do resgate é sempre server-side.
+- Pontos de progressão, saldo de LilyCoins, histórico de cada ledger, nível e recompensas reivindicadas são conceitos e contratos separados. A equivalência interna de pontos por real não é conversão pública de LilyCoins.
+- Concessões por avanço de nível e missão devem ser atômicas, auditáveis e idempotentes por origem. Um retry ou concorrência não pode creditar LilyCoins duas vezes; um saldo insuficiente não pode criar recompensa parcialmente reivindicada.
+
+**Configuração de fidelidade — requisitos adicionais:** o painel precisa exibir uma prévia da curva de níveis e da barra de LilyCoins; validar nomes/ordem, thresholds crescentes, valores inteiros válidos, regra de arredondamento e recompensas publicáveis; auditar autor/versão; e deixar explícito se uma nova curva vale somente para progressão futura ou recalcula nível já atribuído. Preservar nível e ledger existentes quando o cliente gastar LilyCoins.
+
 ## 8. Página administrativa de configuração
 
 **DECIDIDO PELO PROPRIETÁRIO:** pontos, ranking e missões precisam de uma página específica de configuração. Os valores apresentados são iniciais e poderão ser alterados futuramente nessa página.

@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
-import { AdminCatalog, AdminHome, AdminMedia } from "./admin";
+import { AdminCatalog, AdminHome, AdminMedia, AdminGate } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { CartPage } from "./features/cart/CartPage";
 import { CheckoutPage } from "./features/checkout/CheckoutPage";
@@ -32,13 +32,14 @@ import { formatBrazilianPhone } from "./features/account/phone-format";
 import { surveyJson } from "./features/surveys/api";
 const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
 const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
-const DashboardPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.DashboardPage })));
+const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").then((module) => ({ default: module.DashboardPage })));
 const NotificationsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.NotificationsPage })));
-const ReelsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.ReelsPage })));
+const ReelsPage = lazy(() => import("./features/reels/ReelsPage").then((module) => ({ default: module.ReelsPage })));
 const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyListPage })));
 const SurveyRespondPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyRespondPage })));
 const AdminCouponsPage = lazy(() => import("./features/admin/AdminCouponsPage").then((module) => ({ default: module.AdminCouponsPage })));
 const AdminVipPage = lazy(() => import("./features/admin/AdminVipPage").then((module) => ({ default: module.AdminVipPage })));
+const AdminLoyaltyPage = lazy(() => import("./features/admin/AdminLoyaltyPage").then((module) => ({ default: module.AdminLoyaltyPage })));
 const VipTermsPage = lazy(() => import("./features/account/VipTermsPage").then((module) => ({ default: module.VipTermsPage })));
 import "./styles.css";
 
@@ -576,6 +577,7 @@ function App() {
     <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
     <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><Shell><AdminCouponsPage /></Shell></Suspense>} />
     <Route path="/painel/vip" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando programa VIP" />}><Shell><AdminVipPage /></Shell></Suspense>} />
+    <Route path="/painel/fidelidade" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando níveis e recompensas" />}><Shell><AdminGate>{() => <AdminLoyaltyPage />}</AdminGate></Shell></Suspense>} />
     <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><AdminSurveysPage /></Shell></Suspense>} />
     <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><Shell><AdminSurveyResponsesPage /></Shell></Suspense>} />
     <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />

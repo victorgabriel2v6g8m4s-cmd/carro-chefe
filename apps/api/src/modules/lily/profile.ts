@@ -7,6 +7,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { getOptionalLilySession, hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
+import { loyaltySnapshot, roundLoyaltyPoints } from "./loyalty/service";
 
 export const LILY_PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -35,6 +36,7 @@ function uploadRoot() {
 type LoyaltySettings = {
   loyaltyOrderCentsPerPoint: number;
   loyaltyCampaignBonusPoints: number;
+  loyaltyRoundingMode: string;
 };
 
 type LoyaltyRow = {
@@ -115,7 +117,7 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
     const row = map.get(order.userId);
     if (!row) continue;
     row.orderCount += 1;
-    row.points += Math.floor(order.grandTotalCents / perPoint);
+    row.points += roundLoyaltyPoints(order.grandTotalCents / perPoint, settings.loyaltyRoundingMode);
     if (order.laCampaign) campaigns.get(order.userId)?.add(order.laCampaign);
   }
 
@@ -191,6 +193,7 @@ async function profilePayload(userId: string) {
   if (!user) throw new ApiError(404, "Perfil não encontrado.");
 
   const [own] = await loyaltyRows({ userIds: [userId] });
+  const loyalty = await loyaltySnapshot(userId);
   const [vipMembership, vipSettings] = await Promise.all([
     lilyPrisma.lilyVipMembership.findUnique({ where: { userId } }),
     getLilyOperationalSettings()
@@ -229,7 +232,11 @@ async function profilePayload(userId: string) {
       campaignCount: own?.campaignCount ?? 0,
       rank: userRank,
       rankScope: internalRanking ? "internal" : "public",
-      vipPointsThreshold: vipSettings.vipPointsThreshold
+      vipPointsThreshold: vipSettings.vipPointsThreshold,
+      currentLevel: loyalty.currentLevel,
+      nextLevel: loyalty.nextLevel,
+      levelProgressPercent: loyalty.levelProgressPercent,
+      lilyCoins: loyalty.lilyCoins
     }
   };
 }

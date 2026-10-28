@@ -432,8 +432,40 @@ export type LilyProfilePayload = {
     rank: number | null;
     rankScope: "public" | "internal";
     vipPointsThreshold: number;
+    currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+    nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+    levelProgressPercent: number;
+    lilyCoins: number;
   };
 };
+
+export type LilyLoyaltyPayload = {
+  points: number;
+  lilyCoins: number;
+  currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+  nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+  levelProgressPercent: number;
+  milestones: Array<{ id: string; name: string; requiredPoints: number; lilyCoins: number; reached: boolean }>;
+  nextRewardTarget: { title: string; lilyCoinCost: number } | null;
+  roundingMode: "floor" | "ceil" | "nearest";
+  rewards: Array<{ id: string; title: string; description: string | null; type: string; lilyCoinCost: number; canRedeem: boolean }>;
+};
+
+export async function getLilyLoyalty() {
+  return parseResponse<LilyLoyaltyPayload>(await fetch("/api/v1/lily/customer/loyalty", { credentials: "same-origin" }));
+}
+
+export async function redeemLilyReward(rewardId: string, csrfToken: string) {
+  return parseResponse<{ redeemed: boolean; loyalty: LilyLoyaltyPayload }>(await fetch(`/api/v1/lily/customer/loyalty/rewards/${encodeURIComponent(rewardId)}/redeem`, {
+    method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: "{}"
+  }));
+}
+
+export async function claimLilyMission(missionId: string, csrfToken: string) {
+  return parseResponse<{ claimed: boolean; pointsAwarded: number; lilyCoinsAwarded: number; loyalty: LilyLoyaltyPayload }>(await fetch(`/api/v1/lily/customer/missions/${encodeURIComponent(missionId)}/claim`, {
+    method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: "{}"
+  }));
+}
 
 export type LilyVipPayload = {
   membership: { status: string; source: string; consentVersion: string | null; consentedAt: string | null; enrolledAt: string | null } | null;

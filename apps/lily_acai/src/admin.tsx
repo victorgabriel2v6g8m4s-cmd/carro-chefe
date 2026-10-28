@@ -150,7 +150,7 @@ function useAdminData() {
   return { session, data, error, loading, refresh, setError };
 }
 
-function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => ReactNode }) {
+export function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => ReactNode }) {
   const state = useAdminData();
   if (state.loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando painel"/></section>;
   if (!state.session || !state.data) return <section className="admin-state">
@@ -180,6 +180,7 @@ export function AdminHome() {
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cupons`}>Cupons e ofertas</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/vip`}>Programa VIP</a>
+      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/fidelidade`}>Níveis e LilyCoins</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>

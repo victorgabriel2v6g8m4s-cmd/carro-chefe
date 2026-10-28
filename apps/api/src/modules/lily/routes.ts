@@ -21,6 +21,7 @@ import { lilyPixReconciliationRoutes } from "./pix-reconciliation";
 import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
 import { lilyVipRoutes } from "./vip";
+import { awardReachedLevelCoins, lilyLevelRoutes, progressPointsForUser } from "./loyalty/service";
 import { lilyAgentAuthRoutes } from "./agent-auth";
 import { parseSocialLinks } from "./social-links";
 import {
@@ -271,6 +272,7 @@ export async function lilyRoutes(app: FastifyInstance) {
             data: { referredUserId: user.id, creditedPoints: settings.referralRewardPoints, creditedAt: new Date() }
           });
           if (claimed.count === 1) {
+            const pointsBeforeReferral = await progressPointsForUser(referral.referrer.id, tx);
             await tx.lilyLoyaltyEvent.create({ data: {
               userId: referral.referrer.id,
               type: "referral_signup",
@@ -278,6 +280,7 @@ export async function lilyRoutes(app: FastifyInstance) {
               sourceKey: `referral:${referral.id}`,
               metadataJson: JSON.stringify({ referredUserId: user.id })
             } });
+            await awardReachedLevelCoins(referral.referrer.id, pointsBeforeReferral, pointsBeforeReferral + settings.referralRewardPoints, tx);
             await tx.lilyCustomerNotification.create({ data: {
               userId: referral.referrer.id,
               sourceKey: `referral:${referral.id}:credited`,
@@ -394,4 +397,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyAnalyticsRoutes);
   await app.register(lilyObservabilityRoutes);
   await app.register(lilyVipRoutes);
+  await app.register(lilyLevelRoutes);
 }

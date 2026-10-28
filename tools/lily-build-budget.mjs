@@ -11,12 +11,12 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  // Margem incremental para a prévia autenticada, o alvo de pontos e a recompensa da pesquisa (chunk lazy).
-  jsRawBytes: 676_560,
-  jsGzipBytes: 180_400,
-  cssRawBytes: 139_776,
+  // Margem incremental para níveis configuráveis, carteira de LilyCoins e Reels (rotas lazy-loaded).
+  jsRawBytes: 716_800,
+  jsGzipBytes: 194_560,
+  cssRawBytes: 151_552,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 206_856
+  combinedGzipBytes: 222_208
 });
 
 function emptyBucket() {
