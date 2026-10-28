@@ -10,9 +10,15 @@ import Database from 'better-sqlite3';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const helperPath = path.join(root, 'deploy/scripts/enable-lily-survey-notifications-nginx');
 const diagnosePath = path.join(root, 'deploy/scripts/diagnose-cooklily-access');
+const captureTlsPath = path.join(root, 'deploy/scripts/capture-cooklily-tls');
+const enableTlsLogPath = path.join(root, 'deploy/scripts/enable-cooklily-tls-logging');
+const enablePmtudPath = path.join(root, 'deploy/scripts/enable-cooklily-tcp-pmtud');
 const deployerPath = path.join(root, 'deploy/scripts/carro-chefe-deploy');
 const helperSource = readFileSync(helperPath, 'utf8');
 const diagnoseSource = readFileSync(diagnosePath, 'utf8');
+const captureTlsSource = readFileSync(captureTlsPath, 'utf8');
+const enableTlsLogSource = readFileSync(enableTlsLogPath, 'utf8');
+const enablePmtudSource = readFileSync(enablePmtudPath, 'utf8');
 
 function pythonBlock(source, expression) {
   const match = source.match(expression);
@@ -25,9 +31,32 @@ function runPython(source, args) {
 }
 
 test('Nginx helper and diagnostic script have valid Bash syntax', () => {
-  for (const file of [helperPath, diagnosePath, deployerPath]) {
+  for (const file of [helperPath, diagnosePath, captureTlsPath, enableTlsLogPath, enablePmtudPath, deployerPath]) {
     execFileSync('bash', ['-n'], { cwd: root, input: readFileSync(file, 'utf8').replace(/\r\n/g, '\n') });
   }
+});
+
+test('TLS capture watches Nginx handshake and service events with bounded private output', () => {
+  assert.match(captureTlsSource, /--minutes/);
+  assert.match(captureTlsSource, /MINUTES <= 180/);
+  assert.match(captureTlsSource, /tail.*-F.*error_log/);
+  assert.match(captureTlsSource, /journalctl.*-f.*-u.*nginx/);
+  assert.match(captureTlsSource, /ssl_do_handshake|handshake/);
+  assert.match(captureTlsSource, /plain http request to https port/);
+  assert.match(captureTlsSource, /chmod 0600/);
+  assert.match(captureTlsSource, /ipaddress\.ip_network/);
+  assert.match(captureTlsSource, /Observa falhas de handshake TLS/);
+  assert.match(captureTlsSource, /NGINX_TLS_OK/);
+  assert.match(captureTlsSource, /carrochefe-tls-error\.log/);
+  assert.match(enableTlsLogSource, /\$ssl_protocol/);
+  assert.match(enableTlsLogSource, /\$ssl_cipher/);
+  assert.match(enableTlsLogSource, /\$ssl_alpn_protocol/);
+  assert.match(enableTlsLogSource, /error_log .* info/);
+  assert.doesNotMatch(enableTlsLogSource, /\$remote_addr|\$request_uri|\$request_body/);
+  assert.match(enableTlsLogSource, /rotate 7/);
+  assert.match(enablePmtudSource, /net\.ipv4\.tcp_mtu_probing=1/);
+  assert.match(enablePmtudSource, /OLD_VALUE/);
+  assert.match(enablePmtudSource, /restaurado/);
 });
 
 test('WhatsApp, survey and notification Nginx routes are inserted before the API deny rule', () => {
@@ -98,6 +127,23 @@ test('diagnostic access-log filter masks IPs and removes query strings and stale
     assert.doesNotMatch(result.stdout, /4 hours ago/);
     assert.match(result.stdout, /lily\/surveys/);
     assert.equal((result.stdout.match(/HTTP\/1\.1/g) ?? []).length, 3, result.stdout);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('TLS diagnostic masks IPv6 without corrupting OpenSSL double-colon error tokens', () => {
+  const python = pythonBlock(diagnoseSource, /python3 - "\$MINUTES" "\$\{error_files\[@\]\}" <<'PY'\r?\n([\s\S]*?)\r?\nPY/);
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'lily-tls-error-log-'));
+  try {
+    const log = path.join(directory, 'error.log');
+    const stamp = new Date().toISOString().replace(/-/g, '/').replace('T', ' ').slice(0, 19);
+    writeFileSync(log, `${stamp} [info] 1#1: *1 SSL_do_handshake() failed (SSL: error:0A000102:SSL routines::unsupported protocol) while SSL handshaking, client: 2001:db8:abcd::1234, server: 0.0.0.0:443\n`);
+    const result = runPython(python, ['20', log]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /SSL routines::unsupported protocol/);
+    assert.match(result.stdout, /2001:db8:abcd::\/48/);
+    assert.doesNotMatch(result.stdout, /2001:db8:abcd::1234/);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

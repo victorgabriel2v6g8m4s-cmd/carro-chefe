@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+usage() {
+  echo "Uso: sudo bash deploy/scripts/capture-cooklily-tls [--minutes 30]"
+  echo "Observa falhas de handshake TLS do Nginx e eventos de reload/restart, mascara IPs e salva TXT privado em /var/tmp."
+}
+
+MINUTES=30
+while (($#)); do
+  case "$1" in
+    --minutes)
+      [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]] || { usage >&2; exit 64; }
+      MINUTES="$2"
+      shift 2
+      ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 64 ;;
+  esac
+done
+(( MINUTES >= 1 && MINUTES <= 180 )) || { echo "--minutes deve ficar entre 1 e 180." >&2; exit 64; }
+(( EUID == 0 )) || { echo "Execute com sudo para ler o error log do Nginx." >&2; exit 77; }
+
+ERROR_LOG="${CARRO_CHEFE_NGINX_TLS_ERROR_LOG:-/var/log/nginx/carrochefe-tls-error.log}"
+OUT_DIR="${CARRO_CHEFE_DIAGNOSTIC_DIR:-/var/tmp}"
+[[ -r "$ERROR_LOG" ]] || { echo "Sem acesso ao error log: ${ERROR_LOG}" >&2; exit 66; }
+command -v timeout >/dev/null && command -v tail >/dev/null && command -v python3 >/dev/null || {
+  echo "São necessários timeout, tail e python3." >&2
+  exit 69
+}
+
+umask 077
+mkdir -p "$OUT_DIR"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+REPORT="$(mktemp "${OUT_DIR%/}/cooklily-tls-${STAMP}-XXXXXX.txt")"
+chmod 0600 "$REPORT"
+SECONDS_TO_CAPTURE=$((MINUTES * 60))
+
+{
+  echo "CookLily TLS handshake capture"
+  echo "Início: $(date --iso-8601=seconds 2>/dev/null || date)"
+  echo "Duração: ${MINUTES} minutos"
+  echo "Fonte: error log TLS em nível info, metadados TLS de requisições concluídas e eventos novos do serviço Nginx"
+  echo "Privacidade: endereços IP mascarados; conteúdo HTTP e segredos não são coletados."
+  echo "Relatório: ${REPORT}"
+  echo
+} | tee -a "$REPORT"
+
+python3 - "$ERROR_LOG" "$SECONDS_TO_CAPTURE" "$REPORT" <<'PY'
+from datetime import datetime, timezone
+import ipaddress
+import os
+import re
+import selectors
+import signal
+import subprocess
+import sys
+import time
+
+error_log, duration, report = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+patterns = re.compile(r"ssl_do_handshake|handshake|tls|ssl alert|no suitable key share|unsupported protocol|wrong version number|plain http request to https port", re.I)
+journal_patterns = re.compile(r"nginx.*(reload|restart|start|stop)|(?:reloaded|started|stopped) nginx", re.I)
+ipv4 = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])")
+ipv6 = re.compile(r"(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,}[0-9A-Fa-f]{0,4}(?![0-9A-Fa-f:])")
+
+def redact(line):
+    def mask(match):
+        candidate = match.group(0)
+        if candidate == "::" or not re.search(r"[0-9A-Fa-f]", candidate):
+            return candidate
+        try:
+            address = ipaddress.ip_address(candidate)
+            prefix = 24 if address.version == 4 else 48
+            return f"{ipaddress.ip_network(f'{address}/{prefix}', strict=False).network_address}/{prefix}"
+        except ValueError:
+            return match.group(0)
+    line = ipv4.sub(mask, line)
+    line = ipv6.sub(mask, line)
+    line = re.sub(r"(?i)(authorization|cookie|token|secret|password|api[_-]?key)(=|: +)[^ ,;]+", r"\1=<redacted>", line)
+    line = re.sub(r'((?:GET|HEAD|POST|PUT|PATCH|DELETE) +)[^ ?"]+\?[^ "]+', r"\1<path>?<query-redacted>", line)
+    return line.rstrip()
+
+processes = [
+    ("NGINX_TLS", subprocess.Popen(["tail", "-n", "0", "-F", error_log], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1), patterns),
+    ("NGINX_SERVICE", subprocess.Popen(["journalctl", "-f", "--since", "now", "-u", "nginx", "-o", "short-iso", "--no-pager"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1), journal_patterns),
+]
+success_log = os.environ.get("CARRO_CHEFE_TLS_SUCCESS_LOG", "/var/log/nginx/carrochefe-tls.log")
+if os.path.exists(success_log):
+    processes.append(("NGINX_TLS_OK", subprocess.Popen(["tail", "-n", "0", "-F", success_log], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1), None))
+selector = selectors.DefaultSelector()
+for tag, process, matcher in processes:
+    selector.register(process.stdout, selectors.EVENT_READ, (tag, matcher))
+end = time.monotonic() + duration
+count = 0
+try:
+    while time.monotonic() < end:
+        for key, _ in selector.select(timeout=.5):
+            line = key.fileobj.readline()
+            tag, matcher = key.data
+            if not line or (matcher is not None and not matcher.search(line)):
+                continue
+            stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            with open(report, "a", encoding="utf-8") as output:
+                output.write(f"[{stamp}] {tag} {redact(line)}\n")
+                output.flush()
+            count += 1
+finally:
+    selector.close()
+    for _, process, _ in processes:
+        process.send_signal(signal.SIGTERM)
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            process.kill()
+with open(report, "a", encoding="utf-8") as output:
+    output.write(f"\nCaptura encerrada: {datetime.now(timezone.utc).isoformat(timespec='seconds')}\n")
+    output.write(f"Falhas/eventos TLS observados: {count}\n")
+    if count == 0:
+        output.write("Nenhuma falha TLS do lado do Nginx chegou ao error log nesta janela. Isso não exclui falha antes de o tráfego alcançar a VPS.\n")
+print(f"Captura concluída. Eventos TLS: {count}. Relatório: {report}")
+PY

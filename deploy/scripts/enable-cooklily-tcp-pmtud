@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+CONF="${COOKLILY_PMTUD_SYSCTL_CONF:-/etc/sysctl.d/99-cooklily-tcp-pmtud.conf}"
+EXPECTED='net.ipv4.tcp_mtu_probing=1'
+
+(( EUID == 0 )) || { echo "Execute com sudo/root." >&2; exit 77; }
+command -v sysctl >/dev/null || { echo "sysctl indisponível." >&2; exit 69; }
+mkdir -p "$(dirname "$CONF")"
+umask 077
+TMP="$(mktemp "${CONF}.XXXXXX")"
+trap 'rm -f "$TMP"' EXIT
+
+if [[ -e "$CONF" ]] && [[ "$(cat "$CONF")" != "$EXPECTED" ]]; then
+  echo "Configuração sysctl existente e diferente; nenhuma alteração aplicada: $CONF" >&2
+  exit 73
+fi
+
+OLD_VALUE="$(sysctl -n net.ipv4.tcp_mtu_probing)"
+printf '%s\n' "$EXPECTED" > "$TMP"
+if ! sysctl -p "$TMP"; then
+  sysctl -w "net.ipv4.tcp_mtu_probing=${OLD_VALUE}" || true
+  echo "Aplicação falhou; valor anterior restaurado." >&2
+  exit 1
+fi
+install -m 0644 "$TMP" "$CONF"
+CURRENT="$(sysctl -n net.ipv4.tcp_mtu_probing)"
+[[ "$CURRENT" == 1 ]] || {
+  sysctl -w "net.ipv4.tcp_mtu_probing=${OLD_VALUE}" || true
+  rm -f "$CONF"
+  echo "Valor ativo não confirmou; configuração removida e valor anterior restaurado." >&2
+  exit 1
+}
+echo "TCP PLPMTUD habilitado em modo de fallback para detecção de blackhole (tcp_mtu_probing=1)."
+echo "Valor ativo: $CURRENT"
+echo "Persistência: $CONF"
