@@ -53,6 +53,7 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(reelsSource).toContain('onClickCapture={suppressDragClick}');
     expect(reelsSource).toContain('suppressClick.current = start.moved || Math.abs(dx) > 6 || Math.abs(dy) > 6');
     expect(reelsSource).toContain('onDragStart={(event) => event.preventDefault()}');
+    expect(reelsSource).toContain('onMouseDown={onMouseDown} onMouseUp={onMouseUp}');
     expect(reelsSource).toContain('onClick={() => setCommentsOpen(true)}');
     expect(reelsSource).toContain('className="reels-timeline"');
     expect(reelsSource).toContain('className="reels-feed"');
