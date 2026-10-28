@@ -156,7 +156,7 @@ function recoveryHashes(value: string) {
   }
 }
 
-async function mfaState(userId: string, sessionId: string, role: string) {
+async function mfaState(userId: string, sessionId: string, role: string, agentKeyId: string | null) {
   const [user, session] = await Promise.all([
     lilyPrisma.lilyUser.findUnique({
       where: { id: userId },
@@ -172,11 +172,12 @@ async function mfaState(userId: string, sessionId: string, role: string) {
   ]);
   if (!user || !session) throw new ApiError(401, "Sessão Lily inválida.", { code: "LILY_SESSION_INVALID" });
   const required = isPrivileged(role);
+  const agentVerified = Boolean(agentKeyId);
   return {
     required,
-    enabled: user.mfaEnabled,
-    verified: !required || Boolean(session.mfaVerifiedAt),
-    setupRequired: required && !user.mfaEnabled,
+    enabled: user.mfaEnabled || agentVerified,
+    verified: !required || Boolean(session.mfaVerifiedAt) || agentVerified,
+    setupRequired: required && !user.mfaEnabled && !agentVerified,
     recoveryCodesRemaining: recoveryHashes(user.mfaRecoveryCodesJson).length
   };
 }
@@ -184,7 +185,7 @@ async function mfaState(userId: string, sessionId: string, role: string) {
 export async function lilyMfaRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/customer/security/mfa/status", async (request) => {
     const context = await requireLilySession(request);
-    return mfaState(context.user.id, context.session.id, context.user.role);
+    return mfaState(context.user.id, context.session.id, context.user.role, context.session.agentKeyId);
   });
 
   app.post("/api/v1/lily/customer/security/mfa/setup", {

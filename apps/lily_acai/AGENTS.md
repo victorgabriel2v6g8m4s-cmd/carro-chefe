@@ -10,6 +10,7 @@ Aplicação temporária e independente da CookLily. Herda `REGRAS.md`, `AGENTS.m
 - Consumir somente `/api/v1/lily/*` para dados Lily.
 - Não importar identidade, conteúdo comercial, autenticação ou estado transacional do Carro Chefe.
 - Não usar `packages/database` nem qualquer tabela da Central Operacional.
+- A página estática `/agent-auth.html` aceita somente ticket de uso único no fragmento, remove-o do histórico antes da troca e nunca o persiste ou exibe.
 - O branding deve ser próprio da Lily: rosa/roxo, sem reaproveitar logo, slogan, tokens ou estética Carro Chefe.
 - A parceria com o Carro Chefe aparece apenas como informação textual de transparência, sem criar aparência de submarca.
 

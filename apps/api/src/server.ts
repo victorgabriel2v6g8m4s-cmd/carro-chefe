@@ -32,10 +32,11 @@ async function sendFile(reply: FastifyReply, root: string, requested: string) {
   try {
     const file = await readStaticFile(root, requested);
     const response = reply.type(file.mimeType);
-    if (requested === "index.html") {
+    if (requested === "index.html" || requested === "agent-auth.html") {
       response.header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
       response.header("Pragma", "no-cache");
       response.header("Expires", "0");
+      if (requested === "agent-auth.html") response.header("Referrer-Policy", "no-referrer");
     }
     return response.send(file.body);
   } catch (error) {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -66,4 +66,13 @@ test("mede apenas JS/CSS existentes no diretório de assets", async () => {
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
+});
+
+test("handoff de agente é isolado e permanece abaixo de 2 KiB", async () => {
+  const pagePath = path.resolve("apps/lily_acai/public/agent-auth.html");
+  const page = await readFile(pagePath, "utf8");
+  assert.ok(Buffer.byteLength(page) <= 2_048);
+  assert.ok(page.indexOf("history.replaceState") < page.indexOf("fetch("));
+  assert.match(page, /agent\/exchange/);
+  assert.doesNotMatch(page, /localStorage|sessionStorage|console\.log/);
 });

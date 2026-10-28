@@ -12,6 +12,7 @@ describe("scripts operacionais CookLily", () => {
       "deploy/scripts/carro-chefe-deploy",
       "deploy/scripts/cc",
       "deploy/scripts/lily-promote-user",
+      "deploy/scripts/lily-agent-key",
       "deploy/scripts/enable-lily-entrega06-nginx",
       "deploy/scripts/enable-lily-entrega07-nginx",
       "deploy/scripts/enable-lily-entrega11-nginx",
@@ -172,5 +173,29 @@ describe("scripts operacionais CookLily", () => {
     expect(cli).toContain("systemctl restart carro-chefe");
     expect(cli).toContain("git -C \"${APP_DIR}\" ls-tree -r --name-only");
     expect(cli).not.toContain('echo "${key}"');
+  });
+
+  it("instala o provisionador de chaves de agente depois do deploy", () => {
+    const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
+    const provisioner = readFileSync(path.join(root, "deploy/scripts/lily-agent-key"), "utf8");
+    expect(deployer).toContain('install -m 0755 "${APP_DIR}/deploy/scripts/lily-agent-key" /usr/local/sbin/lily-agent-key');
+    expect(provisioner).toContain("role, status FROM LilyUser");
+    expect(provisioner).toContain("agentIdentity=1");
+    expect(provisioner).toContain("UPDATE LilySession SET revokedAt=CURRENT_TIMESTAMP WHERE userId=");
+    expect(provisioner).toContain("security.agent_key.registered");
+    expect(provisioner).toContain("security.agent_key.revoked");
+    expect(provisioner).not.toContain("privateKey");
+  });
+
+  it("valida sintaxe e falha fechada da CLI local de agente", () => {
+    const script = path.join(root, "tools/lily-agent-auth.mjs");
+    const syntax = spawnSync(process.execPath, ["--check", script], { encoding: "utf8" });
+    expect(syntax.status, syntax.stderr || syntax.stdout).toBe(0);
+    const usage = spawnSync(process.execPath, [script], { encoding: "utf8" });
+    expect(usage.status).toBe(64);
+    const implementation = readFileSync(script, "utf8");
+    expect(implementation).toContain('"-Y", "sign"');
+    expect(implementation).toContain('"-U"');
+    expect(implementation).not.toContain("console.log(loginUrl)");
   });
 });

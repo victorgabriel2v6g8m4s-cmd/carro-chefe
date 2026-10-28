@@ -20,6 +20,7 @@ import { lilyPixReconciliationRoutes } from "./pix-reconciliation";
 import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
 import { lilyVipRoutes } from "./vip";
+import { lilyAgentAuthRoutes } from "./agent-auth";
 import {
   LILY_ANALYTICS_VERSION,
   LILY_MARKETING_VERSION,
@@ -212,7 +213,7 @@ export async function lilyRoutes(app: FastifyInstance) {
 
   app.get("/api/v1/lily/auth/status", async (request) => {
     const context = await getOptionalLilySession(request);
-    return { user: context ? publicLilyUser(context.user) : null };
+    return { user: context ? publicLilyUser(context.user, Boolean(context.session.agentKeyId)) : null };
   });
 
   app.post("/api/v1/lily/auth/register", {
@@ -236,6 +237,7 @@ export async function lilyRoutes(app: FastifyInstance) {
       rankingOptIn: boolean;
       staffPasswordUpgradeRequired: boolean;
       mfaEnabled: boolean;
+      agentIdentity: boolean;
     };
     try {
       created = await lilyPrisma.$transaction(async (tx) => {
@@ -277,7 +279,7 @@ export async function lilyRoutes(app: FastifyInstance) {
     if (!phoneNormalized) throw new ApiError(401, "Telefone ou senha inválidos.", { code: "LILY_INVALID_CREDENTIALS" });
 
     const user = await lilyPrisma.lilyUser.findUnique({ where: { phoneNormalized } });
-    if (!user || user.status !== "active" || !await verifyPassword(input.password, user.passwordHash)) {
+    if (!user || user.status !== "active" || user.agentIdentity || !await verifyPassword(input.password, user.passwordHash)) {
       throw new ApiError(401, "Telefone ou senha inválidos.", { code: "LILY_INVALID_CREDENTIALS" });
     }
     const session = await createLilySession(user.id, request, reply);
@@ -301,15 +303,15 @@ export async function lilyRoutes(app: FastifyInstance) {
     const csrfToken = await currentLilyCsrfToken(request, context);
     const privileged = ["staff", "courier", "admin"].includes(context.user.role);
     return {
-      user: publicLilyUser(context.user),
+      user: publicLilyUser(context.user, Boolean(context.session.agentKeyId)),
       csrfToken,
       sessionExpiresAt: context.session.expiresAt,
       consents: await getConsentSnapshot(context.user.id),
       mfa: {
         required: privileged,
-        enabled: context.user.mfaEnabled,
-        verified: !privileged || Boolean(context.session.mfaVerifiedAt),
-        setupRequired: privileged && !context.user.mfaEnabled
+        enabled: Boolean(context.user.mfaEnabled || context.session.agentKeyId),
+        verified: !privileged || Boolean(context.session.mfaVerifiedAt || context.session.agentKeyId),
+        setupRequired: privileged && !context.user.mfaEnabled && !context.session.agentKeyId
       }
     };
   });
@@ -339,6 +341,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyTeamRoutes);
   await app.register(lilyProfileRoutes);
   await app.register(lilyMfaRoutes);
+  await app.register(lilyAgentAuthRoutes);
   await app.register(lilyWhatsAppRoutes);
   await app.register(lilyPixReconciliationRoutes);
   await app.register(lilyAnalyticsRoutes);

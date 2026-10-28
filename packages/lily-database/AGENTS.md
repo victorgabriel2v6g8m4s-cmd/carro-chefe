@@ -19,6 +19,7 @@ Persistência exclusiva da operação temporária CookLily. Este pacote é separ
 - Pedido mantém snapshots comerciais de nome/preço para preservar histórico.
 - Consentimentos preservam versão, momento, finalidade e revogação.
 - Sessão persiste somente hash de token.
+- A autenticação de agente persiste somente chave pública, fingerprint, hash de handoff e metadados de sessão; nunca armazenar chave privada, senha ou código MFA de agente.
 - Pagamento não persiste número de cartão, CVV ou payload sensível desnecessário.
 - Migrações são versionadas; nunca editar migração aplicada ou banco manualmente.
 
