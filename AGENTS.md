@@ -15,7 +15,7 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 
 1. Leia integralmente `REGRAS.md`: ele define as diretrizes obrigatórias de arquitetura, segurança, dados, UX, testes e manutenção.
 2. Este `AGENTS.md` define as regras gerais do Carro Chefe; o `AGENTS.md` mais próximo do caminho trabalhado acrescenta regras locais sem enfraquecer `REGRAS.md`.
-3. Antes de alterar código, execute `npm run policy:preflight -- --agent AG-DEV --scope <região>`; outros agentes usam seu próprio ID e permanecem dentro da especialidade declarada.
+3. Antes de alterar código, verifique a última execução válida do preflight para o agente/escopo. Execute `npm run policy:preflight -- --agent AG-DEV --scope <região>` somente quando tiver transcorrido mais de 6 dias desde essa execução; dentro da janela de 6 dias, não repita o preflight por nova tarefa, sessão ou alteração. Outros agentes usam seu próprio ID e a mesma regra temporal, permanecendo dentro da especialidade declarada.
 4. `planejamento/data/plan.seed.json` é a origem versionada da primeira importação.
 5. Em execução, `.runtime/carro-chefe.db` (Prisma + SQLite) é a fonte operacional mutável do plano, histórico e coordenação dos agentes.
 6. `docs/` explica as decisões e a arquitetura em linguagem humana.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policyVersion": "2026.08.20.1",
+  "policyVersion": "2026.10.28.1",
   "runtimeBudgetChars": 6500,
   "commonCapsuleIds": [
     "global.authority",
@@ -10,12 +10,12 @@
     "global.context"
   ],
   "capsules": {
-    "global.authority": "REGRAS.md e a cadeia AGENTS.md raiz→região são obrigatórios. Esta cápsula é um índice compacto, não substitui as fontes: antes de alterar um caminho, leia a cadeia indicada e execute o preflight para esse caminho. Regra local pode restringir, nunca enfraquecer segurança, integridade ou qualidade.",
+    "global.authority": "REGRAS.md e a cadeia AGENTS.md raiz→região são obrigatórios. Esta cápsula é um índice compacto, não substitui as fontes: antes de alterar um caminho, leia a cadeia indicada. O preflight só é obrigatório quando não houver execução válida do agente/escopo nos últimos 6 dias, isto é, quando tiver transcorrido mais de 6 dias desde a última execução válida; dentro dessa janela, não repita o preflight. Regra local pode restringir, nunca enfraquecer segurança, integridade ou qualidade.",
     "global.architecture": "Mapeie owner e fluxo ponta a ponta antes de mudar. Preserve contratos, fonte única da verdade e dependência direcional. Prefira módulos pequenos, uma responsabilidade central, funções puras e reutilização real; evite god files, duplicação, any, magic values e abstração artificial.",
     "global.security": "Trate entradas externas como não confiáveis; valide na fronteira, sanitize quando necessário e negue por padrão. Não exponha segredos ou dados pessoais em código, prompt, resposta ou logs. Operações críticas exigem autorização server-side, menor privilégio, idempotência/auditoria conforme risco e erros controlados.",
     "global.delivery": "A entrega precisa de testes proporcionais, lint/typecheck/build aplicáveis, evidência, observabilidade e documentação/AGENTS atualizados quando a arquitetura mudar. Não esconda falhas. Não publique, compre, faça deploy ou altere serviço externo sem autorização explícita.",
     "global.context": "Use o contexto já fornecido e buscas dirigidas; não faça inventário amplo nem despeje documentos, banco, terminal ou logs no prompt. Consulte fatos por caminho e relate somente novidades, evidências, riscos e próximo passo.",
-    "role.development": "Você é AG-DEV, único agente autorizado a implementar ou alterar código. Faça mudanças pequenas e testáveis, preserve contratos do ERP, rode o preflight do escopo antes de editar e execute npm run check, npm test e npm run build antes de concluir código.",
+    "role.development": "Você é AG-DEV, único agente autorizado a implementar ou alterar código. Faça mudanças pequenas e testáveis, preserve contratos do ERP e verifique a data da última execução válida do preflight para o agente/escopo antes de editar. Execute o preflight somente se tiver transcorrido mais de 6 dias desde essa execução; dentro dos 6 dias, não repita. Execute npm run check, npm test e npm run build antes de concluir código.",
     "role.business": "Você é agente de negócio. Não programe, não edite código/configuração e não use terminal para simular implementação. Produza análise, requisitos, evidências ou artefatos no workspace permitido e faça handoff ao AG-DEV quando software for necessário.",
     "region.root": "Carro Chefe usa PT-BR, IDs estáveis e dados oficiais. Não invente preços, custos, datas, fornecedores ou métricas. Pedidos, pagamentos, estoque, fiscal e financeiro pertencem ao ERP; o site não duplica checkout nem armazena cartão.",
     "region.apps": "Aplicações são orquestradores finos por domínio. UI, estado, API, validação, persistência, segurança, performance e observabilidade devem permanecer em módulos próprios e com contratos explícitos.",
@@ -29,7 +29,7 @@
     "region.ui": "Componentes compartilhados são visuais, acessíveis, responsivos e orientados por tokens/variantes sem conhecimento de API, Prisma ou regra de negócio.",
     "region.tools": "Ferramentas internas devem ser determinísticas, não interativas em CI, validar caminhos/entrada e falhar de modo seguro. Não imprimem segredos e não executam ação externa/destrutiva implicitamente.",
     "region.github": "Workflows usam permissões mínimas, dependências pinadas, cache seguro e falham diante de política desatualizada, segredo rastreado ou quality gate quebrado.",
-    "region.codex": "Perfis Codex são estreitos e sempre fazem preflight, leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
+    "region.codex": "Perfis Codex são estreitos e só fazem preflight quando a última execução válida do agente/escopo tiver mais de 6 dias; dentro da janela de 6 dias, não repetem o preflight por nova tarefa, sessão ou alteração. Eles leem REGRAS.md e a cadeia AGENTS do alvo. Somente development altera código; perfis de negócio criam análise/artefatos de sua área e fazem handoff técnico.",
     "region.docs": "Documentação registra decisões, riscos, contratos e fluxos sem virar fonte transacional. Não invente fatos; links e caminhos precisam ser verificáveis; segredos e dados pessoais são proibidos."
   },
   "agentCapsules": {

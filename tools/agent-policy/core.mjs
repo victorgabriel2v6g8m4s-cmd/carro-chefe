@@ -6,6 +6,7 @@ const ignoredDirectories = new Set([".git", ".runtime", "dist", "node_modules", 
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 
 export const toPosix = (value) => value.split(path.sep).join("/");
+const normalizeLineEndings = (value) => value.replace(/\r\n?/g, "\n");
 
 export function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -81,7 +82,7 @@ export async function buildManifest(projectRoot) {
     sources: sourcePaths.sort(compareText).map((sourcePath) => ({
       path: sourcePath,
       kind: sourcePath === "REGRAS.md" ? "rules" : sourcePath.endsWith("AGENTS.md") ? "agents" : "capsules",
-      sha256: sha256(sourceContents.get(sourcePath))
+      sha256: sha256(normalizeLineEndings(sourceContents.get(sourcePath)))
     })),
     capsules: settings.capsules,
     agentCapsules: settings.agentCapsules,
