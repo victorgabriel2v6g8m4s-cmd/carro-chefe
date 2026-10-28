@@ -50,6 +50,9 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(reelsSource).toContain('event.key === "ArrowUp"');
     expect(reelsSource).toContain('feed.querySelector<HTMLElement>(`[data-reel-index="${targetIndex}"]`)?.scrollIntoView');
     expect(reelsSource).not.toContain('feed.scrollTop = start.scrollTop - dy');
+    expect(reelsSource).toContain('onClickCapture={suppressDragClick}');
+    expect(reelsSource).toContain('suppressClick.current = start.moved || Math.abs(dx) > 6 || Math.abs(dy) > 6');
+    expect(reelsSource).toContain('onDragStart={(event) => event.preventDefault()}');
     expect(reelsSource).toContain('onClick={() => setCommentsOpen(true)}');
     expect(reelsSource).toContain('className="reels-timeline"');
     expect(reelsSource).toContain('className="reels-feed"');
