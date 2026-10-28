@@ -5,15 +5,15 @@
 - branch: codex/reels-lucide-navigation
 - base_branch: cooklily/canonical
 - base_sha_verified: d06f0199faefbcf9e9d1afbc6ec29ea2064dac15
-- head_sha_verified: uncommitted changes after base; refresh before commit/PR
+- head_sha_verified: 0f8605a (feat(lily): refine immersive reels navigation)
 - pull_requests: pending
 - deployed_sha: d06f0199faefbcf9e9d1afbc6ec29ea2064dac15
-- tests/gates: `npm run policy:preflight -- --agent AG-DEV --scope lily-reels-icons-navigation` PASS; `npm run test:lily-ui` PASS (16 files, 72 tests); `npm run check` PASS; `npm test` PASS (67 files, 356 passed, 3 skipped); `npm run build` PASS, including CookLily size budget (JS+CSS gzip 216.97/217 KiB); `git diff --check` PASS. Re-run relevant gates after final edits and wait for PR CI.
+- tests/gates: `npm run policy:preflight -- --agent AG-DEV --scope lily-reels-icons-navigation` PASS; `npm run test:lily-ui` PASS (16 files, 72 tests); `npm run check` PASS; `npm test` PASS (67 files, 356 passed, 3 skipped); `npm run build` PASS, including CookLily size budget (JS+CSS gzip 216.97/217 KiB); `git diff --check` PASS. Await PR CI.
 - migrations: none
 - blockers: production deployment and IAB evidence pending PR integration
 - known_limitations: comments control opens an accessible empty state; product comments API/persistence does not exist in this codebase. Add-to-cart is in-place for fixed products with no required add-ons; products requiring selection/minimum add-ons route to the catalog configurator to avoid silently choosing required customizations.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: finish source review, commit/push and open draft PR to `cooklily/canonical`; wait for CI, merge under existing owner authorization, deploy canonical, then visually verify via Codex integrated browser and update evidence/status.
+- next_action: push commit `0f8605a`, open draft PR to `cooklily/canonical`; wait for CI, merge under existing owner authorization, deploy canonical, then visually verify via Codex integrated browser and update evidence/status.
 
 ## Entrega solicitada
 
