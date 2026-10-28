@@ -1,14 +1,14 @@
 # CookLily: canais sociais, cupons VIP e convites compartilháveis
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
-- branch: `codex/vip-social-launch-sharing`
+- branch: `codex/cooklily-final-homologation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ffce992fd2b4146d395334bbb0686e681aabe2c0`
-- head_sha_verified: alterações locais ainda não commitadas (sha base `ffce992fd2b4146d395334bbb0686e681aabe2c0`)
-- pull_requests: nenhum
-- ci_run: pendente (sem PR)
-- last_verified_at: 2026-10-28 07:24 America/Sao_Paulo
+- head_sha_verified: `2d4f5a603632f9969d599447d1ee318845fd1fb2`
+- pull_requests: #207, #208 e #209 integrados em `cooklily/canonical`
+- ci_run: PR #209 CI `40678342102` verde em 7 checks; CodeQL `40678346560` verde
+- last_verified_at: 2026-10-28 11:40 America/Sao_Paulo
 - interruption_state: none
 
 ## Escopo desta entrega
@@ -43,35 +43,35 @@
 - [x] CRUD/admin acessível a admin; validação por plataforma, URL HTTPS allowlist e identificação opcional.
 - [x] Renderizar canais presentes no footer/menu, sem links vazios; migration atualiza Instagram para `cook._lily` preservando o WhatsApp legado.
 - [x] Validação HTTPS + allowlist por rede, identificação e URL opcionais; canais vazios não renderizam.
-- [ ] Verificar visualmente responsividade e links pós-deploy no domínio real.
+- [x] Verificar visualmente links sociais no footer e navegação mobile no domínio real; Instagram já aparece como `@cook._lily`.
 
 ### C. VIP e produtos de homologação
-- [ ] Criar dois produtos claramente rotulados `HOMOLOGAÇÃO` com imagens de teste, 1 teaser VIP.
-- [ ] Conta padrão vê imagem desfocada, título mascarado e teaser; endpoint de configuração/pedido não vaza nem concede acesso.
-- [ ] Conta VIP ativa vê imagem/título/compra normalmente com selo VIP; não submeter pedido/pagamento real.
-- [ ] Registrar e limpar/desativar dados de teste após capturas, sem mexer em produtos reais.
+- [x] Dois produtos temporários `HOMOLOGAÇÃO` criados com imagens de teste; um com teaser VIP.
+- [x] Conta não VIP vê imagem desfocada, título `???` e teaser; conta VIP vê imagem/título/opções normalmente com selo VIP. Nenhum pedido foi enviado.
+- [x] Dois produtos e variações de homologação estão `Pausado` e `Disponível=0`; recarga confirmou `Esgotado/pausado`. Nenhum produto real foi alterado.
 
 ### D. Cupons e notificações
 - [x] Campo `vipOnly` com default false e enforcement em listagem e quote do servidor; teste garante que usuário padrão não lista nem aplica cupom VIP. VIP positivo e notificações ainda precisam de testes integrados.
 - [x] Testes de serviço provam segmentação da notificação VIP e recusa de cupom VIP para cliente padrão.
-- [ ] Emitir cupom VIP-only e um cupom público de homologação; ativar e enviar notificações somente ao público elegível.
+- [x] Cupom VIP-only e cupom público de homologação ativados; notificações foram geradas para os públicos elegíveis.
 - [x] Testes de integração cobrem conta VIP listando/aplicando cupom VIP, e padrão sem listagem e quote bloqueado.
-- [ ] Cupom público aparece para ambos; verificar notificação e estado lido/não lido.
-- [ ] Pausar/desativar cupons de teste depois dos testes; registrar comportamento.
+- [x] Notificações do cupom VIP e público verificadas na conta VIP; endpoint sem autenticação omite o cupom VIP. O estado de leitura da conta de teste foi preservado.
+- [x] Cupons temporários pausados após a homologação.
 
 ### E. Convites compartilháveis
-- [ ] Link VIP abre convite e leva pessoa não autenticada ao cadastro sem perder o convite; após cadastro, consentimento dos termos segue obrigatório antes da inscrição VIP.
-- [ ] Link de pesquisa abre a pesquisa correta e encaminha login/cadastro quando não autenticado.
-- [ ] Link de produto abre o produto exato e respeita gate VIP.
+- [x] Link VIP abre cadastro anônimo com convite preservado e informa que o consentimento VIP segue obrigatório; nenhum cadastro/termo foi submetido.
+- [x] Link da pesquisa abre o questionário correto para usuário logado; anônimo recebe login com retorno ao destino. Nenhuma resposta foi enviada.
+- [x] Link direto do produto Morango abriu item, imagem e opções; nenhum item foi adicionado ao carrinho.
 - [ ] Links usam identificadores/tokens opacos; nenhum ID interno, telefone ou segredo aparece.
 - [ ] A recompensa por indicação permanece em 0/off até configurada; se ativada, atribuição é única e crédito ocorre só em conta nova válida.
 
 ### F. Entrega
 - [x] `npm run check`, `npm test`, `npm run build`, policy e diff check verdes localmente.
-- [ ] CI/CodeQL no PR.
-- [ ] PR aprovado pelos gates e squash em `cooklily/canonical`.
+- [x] CI/CodeQL verdes no PR #209.
+- [x] PR #209 integrado por squash em `cooklily/canonical`.
 - [ ] `sudo cc deploy canonical` completo, SHA confirmado, health externo 200.
-- [ ] Homologação final com uma conta padrão e conta VIP no navegador do Codex; guardar screenshots sanitizadas fora do Git.
+- [x] Deploy da correção de cupom concluído; reteste do botão Pausar no domínio real pendente.
+- [x] Links validados em sessão anônima Playwright e questionário em sessão VIP do navegador Codex. Capturas sanitizadas fora do Git em `C:\Users\valdi\Pictures\CookLily-Exec-2026-10-28\` (`01-vip-invite-mobile.png`, `02-survey-login-required-mobile.png`, `03-product-direct-link-mobile.png`).
 - [ ] Atualizar este arquivo após migration, PR, CI, merge, deploy e cada ciclo de correção.
 
 ## Migrations
@@ -130,4 +130,31 @@ Preparar commit e PR para `cooklily/canonical`; acompanhar CI/CodeQL e integrar 
 
 ### Próxima ação exata
 
-Confirmar o PR #209 ainda está verde, integrar via squash e fazer deploy autorizado; reautenticar e repetir no domínio o botão Pausar em cupom VIP de frete grátis, conferindo preservação das flags; capturar evidências finais e encerrar a entrega. Depois desta tarefa, cumprir a solicitação pendente de trocar todas as referências públicas ao Instagram `@acai._lily` por `cook._lily` (a referência antiga existe na migration histórica, documentação e fixtures de teste; revisar se deve ser atualizada por nova migration sem reescrever histórico).
+Reautenticar no navegador Codex, abrir `/lilyacai/painel/cupons`, ativar o cupom `HOMO-VIP-OCT28` usando o atalho rápido e pausá-lo novamente; conferir no estado administrativo `vipOnly=true`, `appliesToShipping=true`, tipo `free_shipping` e zero usos. Capturar screenshot do resultado e, se passar, atualizar a seção final do checkpoint e abrir PR de documentação para canonical.
+
+## Merge #209 e homologação dos links (2026-10-28)
+
+- PR #209 foi integrado por squash em `cooklily/canonical`, commit `2d4f5a603632f9969d599447d1ee318845fd1fb2`; CI `40678342102` passou nos 7 checks e CodeQL `40678346560` passou.
+- A correção preserva `vipOnly` e `appliesToShipping` quando um PATCH de status omite os demais campos defaultados; suíte local isolada: 64 arquivos, 343 passaram e 3 ignorados; `npm run check`, `npm run build`, policy preflight e `git diff --check` passaram.
+- Playwright em sessão anônima mostrou o cadastro com convite VIP retido na URL e os termos VIP como consentimento obrigatório; a pesquisa encaminha anônimos para login preservando `next`; o produto `Morango` abriu com imagem, opções e preço, sem iniciar pedido. A pesquisa autenticada foi aberta sem enviar resposta.
+- Capturas fora do Git: `C:\Users\valdi\Pictures\CookLily-Exec-2026-10-28\01-vip-invite-mobile.png`, `02-survey-login-required-mobile.png` e `03-product-direct-link-mobile.png`.
+- Reteste da correção do atalho Pausar após deploy ainda pendente. Itens/cupones de teste encontram-se pausados; não há pedido ou resposta de pesquisa de teste enviados.
+- Deploy `sudo cc deploy canonical` concluído em 2026-10-28 11:18 UTC (08:18 local); SHA `2d4f5a603632f9969d599447d1ee318845fd1fb2`. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.log`.
+- Deploy validation incremental: migrations de preflight aplicadas e schemas válidos; produção sem migration pendente; backups dos bancos core e Lily verificados; check, suite 346/346, build/budget e Tool Health passaram; Nginx config válida; readiness OK na tentativa 6; smoke HTTPS externo OK na tentativa 1. Deploy reportou `DEPLOY CONCLUÍDO`.
+
+## Homologação final do cupom rápido (2026-10-28)
+
+- Após o deploy de `2d4f5a603632f9969d599447d1ee318845fd1fb2`, o painel real `/lilyacai/painel/cupons` foi validado com a conta de agente autenticada.
+- O atalho `Ativar` do `HOMO-VIP-OCT28` alterou o estado para `active` e exibiu `Alteração salva com sucesso.`; em seguida, o atalho `Pausar` retornou o estado para `paused`, também com confirmação de sucesso. A leitura visual confirma os estados e que o cupom de teste terminou pausado.
+- O cupom permaneceu listado como `Frete grátis`, sem resgates, e continuou identificado como VIP no registro operacional anterior (`vipOnly=true`, `appliesToShipping=true`). Não houve compra nem resgate. A ativação não duplicou a notificação para usuários anteriormente notificados; possíveis novos elegíveis seguem a regra normal de audiência.
+- Imagem da tela final do painel capturada nesta execução; a confirmação também está registrada no estado acessível como `Alteração salva com sucesso.`
+- Testes dos links foram feitos sem submeter respostas de pesquisa, cadastro, pedidos ou pagamentos. Os produtos de homologação e cupons temporários permanecem pausados; a recompensa por indicação continua desligada/zerada.
+- Deploy de aplicação concluído em `2d4f5a603632f9969d599447d1ee318845fd1fb2`; fluxo de deploy e smoke real documentados acima. Não há mudança de código pós-deploy nesta homologação.
+
+### Estado final
+
+`completed` — PR #209 corrigiu o PATCH parcial, CI e CodeQL passaram, correção implantada na canonical e fluxo de ativar/pausar verificado no domínio real. Links de convite, pesquisa e produto verificados; produto VIP foi comparado para público anônimo e VIP. Dados de teste não ficaram disponíveis para pedidos.
+
+### Próxima ação exata
+
+Nenhuma ação técnica pendente para esta entrega. O proprietário pode revisar as capturas e, quando desejar, compartilhar o link de convite VIP. Homologação prática no domínio real permanece sujeita à revisão visual do proprietário.
