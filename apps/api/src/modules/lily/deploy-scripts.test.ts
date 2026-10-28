@@ -197,6 +197,7 @@ describe("scripts operacionais CookLily", () => {
     expect(implementation).toContain('"-Y", "sign"');
     expect(implementation).toContain('"-U"');
     expect(implementation).toContain('Origin: apiOrigin');
+    expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "edge"');
     expect(implementation).not.toContain("console.log(loginUrl)");
   });
 });

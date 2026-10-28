@@ -72,6 +72,12 @@ function signChallenge(challenge) {
 }
 
 function openBrowser(url) {
+  if (process.platform === "win32" && process.env.COOKLILY_AGENT_BROWSER === "edge") {
+    const edgePath = path.join(process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)", "Microsoft", "Edge", "Application", "msedge.exe");
+    const opened = spawnSync(edgePath, [url], { stdio: "ignore", windowsHide: true, timeout: 10_000 });
+    if (opened.error || opened.status !== 0) throw new Error("Não foi possível abrir o Microsoft Edge.");
+    return;
+  }
   const command = process.platform === "win32" ? "rundll32.exe" : process.platform === "darwin" ? "open" : "xdg-open";
   const commandArgs = process.platform === "win32" ? ["url.dll,FileProtocolHandler", url] : [url];
   const opened = spawnSync(command, commandArgs, { stdio: "ignore", windowsHide: true, timeout: 10_000 });

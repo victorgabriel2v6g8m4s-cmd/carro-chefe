@@ -74,6 +74,8 @@ node tools/lily-agent-auth.mjs login
 
 O comando solicita um desafio, assina usando `ssh-agent` e abre o navegador padrão no fluxo CookLily. Não imprime nem salva o ticket. Para uma chave em outro local, use `--key "C:\caminho\da\chave"`.
 
+No Windows, para manter a sessão de cliente/teste em outro navegador, defina `$env:COOKLILY_AGENT_BROWSER = "edge"` antes de executar a CLI; o handoff será aberto no Microsoft Edge.
+
 ## Limites e resposta a incidentes
 
 - Desafio: 2 minutos; até 5 tentativas de assinatura.
