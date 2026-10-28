@@ -33,6 +33,7 @@ export type LilySessionContext = {
     status: string;
     avatarMediaId: string | null;
     rankingOptIn: boolean;
+    isTestAccount: boolean;
     staffPasswordUpgradeRequired: boolean;
     mfaEnabled: boolean;
     agentIdentity: boolean;
@@ -187,6 +188,7 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
       status: record.user.status,
       avatarMediaId: record.user.avatarMediaId,
       rankingOptIn: record.user.rankingOptIn,
+      isTestAccount: record.user.isTestAccount,
       staffPasswordUpgradeRequired: record.user.staffPasswordUpgradeRequired,
       mfaEnabled: record.user.mfaEnabled,
       agentIdentity: record.user.agentIdentity

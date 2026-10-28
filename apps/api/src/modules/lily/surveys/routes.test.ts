@@ -16,6 +16,7 @@ async function register(role: "customer" | "staff", phone: string) {
   const response = await app.inject({
     method: "POST",
     url: "/api/v1/lily/auth/register",
+    remoteAddress: `127.0.2.${Number(phone.slice(-2)) || 1}`,
     headers: { origin },
     payload: {
       phone,
@@ -109,6 +110,35 @@ describe.sequential("CookLily survey lifecycle", () => {
 
     const profile = await app.inject({ method: "GET", url: "/api/v1/lily/customer/profile", headers: { cookie: customer.cookie } });
     expect(profile.json().loyalty.points).toBe(40);
+  });
+
+  it("public survey links show only a reward preview before login and never expose internal IDs or questions", async () => {
+    const staff = await register("staff", "67911114451");
+    const customer = await register("customer", "67911114452");
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/admin/surveys",
+      headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin },
+      payload: { ...definition("Pesquisa de teste público"), description: "Conteúdo de apresentação", estimatedMinutes: 4, pointsPerForm: 20, pointsPerAnswer: 30, showPoints: true }
+    });
+    expect(created.statusCode).toBe(200);
+    const createdSurvey = created.json().survey as { id: string; publicToken: string; version: number };
+    expect(createdSurvey.publicToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(createdSurvey.publicToken).not.toBe(createdSurvey.id);
+    await app.inject({ method: "POST", url: `/api/v1/lily/admin/surveys/${createdSurvey.id}/publish`, headers: { cookie: staff.cookie, "x-lily-csrf": staff.csrf, origin }, payload: {} });
+
+    const preview = await app.inject({ method: "GET", url: `/api/v1/lily/public/surveys/${createdSurvey.publicToken}/preview` });
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json().survey).toMatchObject({ title: "Pesquisa de teste público", estimatedMinutes: 4, questionCount: 1, points: 50 });
+    expect(JSON.stringify(preview.json())).not.toContain(createdSurvey.id);
+    expect(preview.json().survey).not.toHaveProperty("questions");
+    expect(preview.headers["cache-control"]).toContain("no-store");
+    const available = await app.inject({ method: "GET", url: "/api/v1/lily/surveys", headers: { cookie: customer.cookie } });
+    expect(available.json().surveys[0].id).toBe(createdSurvey.publicToken);
+    expect(available.json().surveys[0].id).not.toBe(createdSurvey.id);
+    const started = await app.inject({ method: "POST", url: `/api/v1/lily/surveys/${createdSurvey.publicToken}/start`, headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf }, payload: {} });
+    expect(started.statusCode).toBe(200);
+    expect(started.json().survey.title).toBe("Pesquisa de teste público");
   });
 
   it("requires pause before edit, lets existing responses finish, and resumes with a new version", async () => {

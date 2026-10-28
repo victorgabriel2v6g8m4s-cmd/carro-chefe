@@ -49,6 +49,10 @@ function surveyData(definition: SurveyDefinition) {
   };
 }
 
+async function findSurveyByPublicReference(reference: string) {
+  return lilyPrisma.lilySurvey.findFirst({ where: { OR: [{ id: reference }, { publicToken: reference }] } });
+}
+
 async function completedSurveyIds(userId: string) {
   const completed = await lilyPrisma.lilySurveyParticipation.findMany({ where: { userId, status: "completed" }, select: { surveyId: true } });
   return new Set(completed.map((row) => row.surveyId));
@@ -75,7 +79,19 @@ function serializePublicSurvey(row: { id: string; title: string; subtitle: strin
   };
 }
 
+function serializeSurveyPreview(row: { title: string; subtitle: string | null; description: string | null; showPoints: boolean; pointsPerForm: number; pointsPerAnswer: number; estimatedMinutes: number }, questionCount: number) {
+  return { title: row.title, subtitle: row.subtitle, description: row.description, estimatedMinutes: row.estimatedMinutes, questionCount, points: row.showPoints ? row.pointsPerForm + row.pointsPerAnswer * questionCount : null, showPoints: row.showPoints };
+}
+
 export async function lilySurveyRoutes(app: FastifyInstance) {
+  app.get("/api/v1/lily/public/surveys/:token/preview", async (request, reply) => {
+    const token = idSchema.parse((request.params as { token: string }).token);
+    const survey = await lilyPrisma.lilySurvey.findFirst({ where: { publicToken: token, status: "published" } });
+    if (!survey) throw new ApiError(404, "Pesquisa não encontrada.");
+    const definition = definitionOf(survey);
+    reply.header("Cache-Control", "private, no-store");
+    return { survey: serializeSurveyPreview(survey, definition.questions.length) };
+  });
   app.post("/api/v1/lily/admin/survey-option-media", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     const context = await requireLilyStaff(request, true);
     const part = await request.file();
@@ -109,7 +125,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/surveys/:id/uploads", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request, reply) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
-    const id = idSchema.parse((request.params as { id: string }).id);
+    const reference = idSchema.parse((request.params as { id: string }).id);
     const part = await request.file();
     if (!part) throw new ApiError(400, "Selecione um arquivo para anexar.");
     const maxAllowed = Math.min(Number(process.env.LILY_SURVEY_UPLOAD_MAX_BYTES ?? 10 * 1024 * 1024), 10 * 1024 * 1024);
@@ -117,7 +133,8 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     if (!allowed.has(part.mimetype)) throw new ApiError(400, "Este tipo de arquivo não é permitido.");
     const buffer = await part.toBuffer();
     if (!buffer.length || buffer.length > maxAllowed) throw new ApiError(400, "Arquivo vazio ou acima do limite permitido.");
-    const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    const survey = await findSurveyByPublicReference(reference);
+    const id = survey?.id ?? reference;
     const participation = await lilyPrisma.lilySurveyParticipation.findFirst({ where: { userId: context.user.id, surveyId: id, status: "in_progress" } });
     if (!survey || !["published", "paused"].includes(survey.status) || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
     const definition = definitionOf(survey);
@@ -140,7 +157,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const rows = await lilyPrisma.lilySurvey.findMany({ where: { status: "published" }, orderBy: { publishedAt: "desc" }, take: 100 });
     const surveys = rows.filter((row) => !completed.has(row.id) && surveyUnlocked(row.prerequisitesJson, completed)).map((row) => {
       const definition = definitionOf(row);
-      return { id: row.id, title: row.title, subtitle: row.subtitle, description: row.description, questionCount: definition.questions.length, estimatedMinutes: row.estimatedMinutes, showPoints: row.showPoints, points: row.showPoints ? row.pointsPerForm + row.pointsPerAnswer * definition.questions.length : null };
+      return { id: row.publicToken ?? row.id, title: row.title, subtitle: row.subtitle, description: row.description, questionCount: definition.questions.length, estimatedMinutes: row.estimatedMinutes, showPoints: row.showPoints, points: row.showPoints ? row.pointsPerForm + row.pointsPerAnswer * definition.questions.length : null };
     });
     const points = await currentPoints(context.user.id);
     return { surveys, points };
@@ -149,10 +166,11 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/surveys/:id/start", async (request) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
-    const id = idSchema.parse((request.params as { id: string }).id);
+    const reference = idSchema.parse((request.params as { id: string }).id);
     const { viewId: requestedViewId } = z.object({ viewId: z.string().uuid().optional() }).strict().parse(request.body ?? {});
-    const survey = await lilyPrisma.lilySurvey.findUnique({ where: { id } });
+    const survey = await findSurveyByPublicReference(reference);
     if (!survey || survey.status !== "published") throw new ApiError(404, "Pesquisa não encontrada.");
+    const id = survey.id;
     const completed = await completedSurveyIds(context.user.id);
     if (!surveyUnlocked(survey.prerequisitesJson, completed)) throw new ApiError(403, "Conclua as pesquisas anteriores para desbloquear esta.");
     const definition = definitionOf(survey);
@@ -185,12 +203,11 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/surveys/:id/progress", async (request) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
-    const id = idSchema.parse((request.params as { id: string }).id);
+    const reference = idSchema.parse((request.params as { id: string }).id);
     const body = z.object({ participationId: idSchema, answers: answersSchema, questionTimesMs: questionTimesSchema.default({}) }).strict().parse(request.body);
-    const [survey, participation] = await Promise.all([
-      lilyPrisma.lilySurvey.findUnique({ where: { id } }),
-      lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: body.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } })
-    ]);
+    const survey = await findSurveyByPublicReference(reference);
+    const id = survey?.id ?? reference;
+    const participation = await lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: body.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } });
     if (!survey || !participation) throw new ApiError(404, "Sessão da pesquisa não encontrada.");
     const definition = definitionOf(survey);
     const visibleQuestions = visibleSurveyQuestions(definition, body.answers);
@@ -204,12 +221,11 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/surveys/:id/submit", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (request) => {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
-    const id = idSchema.parse((request.params as { id: string }).id);
+    const reference = idSchema.parse((request.params as { id: string }).id);
     const input = submitSchema.parse(request.body);
-    const [survey, participation] = await Promise.all([
-      lilyPrisma.lilySurvey.findUnique({ where: { id } }),
-      lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: input.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } })
-    ]);
+    const survey = await findSurveyByPublicReference(reference);
+    const id = survey?.id ?? reference;
+    const participation = await lilyPrisma.lilySurveyParticipation.findFirst({ where: { id: input.participationId, userId: context.user.id, surveyId: id, status: "in_progress" } });
     if (!survey || !["published", "paused"].includes(survey.status) || !participation || survey.version !== participation.surveyVersion) throw new ApiError(409, "A pesquisa mudou ou foi encerrada. Atualize a página e tente novamente.");
     const definition = definitionOf(survey);
     const invalidQuestionId = validateSurveyAnswers(definition, input.answers);
@@ -277,7 +293,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
       lilyPrisma.lilySurvey.findMany({ orderBy: { updatedAt: "desc" }, take: limit, skip: offset, include: { _count: { select: { views: true, responses: true } } } }),
       lilyPrisma.lilySurvey.count()
     ]);
-    return { surveys: rows.map(({ _count, ...row }) => ({ id: row.id, title: row.title, subtitle: row.subtitle, description: row.description, status: row.status, version: row.version, createdAt: row.createdAt, updatedAt: row.updatedAt, publishedAt: row.publishedAt, viewCount: _count.views, responseCount: _count.responses, definition: definitionOf(row) })), total, limit, offset };
+    return { surveys: rows.map(({ _count, ...row }) => ({ id: row.id, publicToken: row.publicToken, title: row.title, subtitle: row.subtitle, description: row.description, status: row.status, version: row.version, createdAt: row.createdAt, updatedAt: row.updatedAt, publishedAt: row.publishedAt, viewCount: _count.views, responseCount: _count.responses, definition: definitionOf(row) })), total, limit, offset };
   });
 
   app.get("/api/v1/lily/admin/surveys/:id/analytics", async (request) => {
@@ -312,7 +328,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/surveys", async (request) => {
     const context = await requireLilyStaff(request, true);
     const input = surveyDefinitionSchema.parse(request.body);
-    const row = await lilyPrisma.lilySurvey.create({ data: { ...surveyData(input), createdByUserId: context.user.id } });
+    const row = await lilyPrisma.lilySurvey.create({ data: { ...surveyData(input), publicToken: crypto.randomBytes(32).toString("base64url"), createdByUserId: context.user.id } });
     await auditLilyAdmin(context.user.id, "create", "survey", row.id, { version: row.version });
     return { survey: row };
   });
@@ -386,7 +402,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
       const pointText = points && points > 0 ? ` Ela pode render ${points.toLocaleString("pt-BR")} pontos.` : "";
       const body = `Responda “${survey.title}” em cerca de ${survey.estimatedMinutes} min.${pointText}`;
       for (let offset = 0; offset < customers.length; offset += 80) {
-        await tx.lilyCustomerNotification.createMany({ data: customers.slice(offset, offset + 80).map(({ id: userId }) => ({ userId, sourceKey, type: "survey_available", title, body, metadataJson: JSON.stringify({ surveyId: survey.id, surveyTitle: survey.title, estimatedMinutes: survey.estimatedMinutes, questionCount: definition.questions.length, points }) })) });
+        await tx.lilyCustomerNotification.createMany({ data: customers.slice(offset, offset + 80).map(({ id: userId }) => ({ userId, sourceKey, type: "survey_available", title, body, metadataJson: JSON.stringify({ surveyId: survey.publicToken ?? survey.id, surveyTitle: survey.title, estimatedMinutes: survey.estimatedMinutes, questionCount: definition.questions.length, points }) })) });
       }
       return tx.lilySurvey.findUniqueOrThrow({ where: { id } });
     });

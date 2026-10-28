@@ -170,6 +170,34 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Começar por análise/assistência de baixo risco; não conceder autoridade transacional ampla por padrão.
 - [ ] Avaliar qualidade, custo, latência, falhas e mecanismo de desligamento.
 
+## Próximas entregas aprovadas pelo proprietário (2026-10-28)
+
+### Critérios para links compartilháveis CookLily
+- Produto: slug público estável; o link pode abrir o produto para visitante, sem expor IDs internos ou dados de conta.
+- Pesquisa: token opaco aleatório, distinto do ID de banco; visitante vê somente título, texto introdutório, duração, quantidade de perguntas e recompensa quando visível/configurada; responder exige conta e o retorno de login/cadastro preserva o link. Pausa/cancelamento desativa o link.
+- Indicação: token aleatório único; crédito ocorre uma vez após novo cadastro elegível, sem autorreferência, contas suspensas ou de equipe; a configuração operacional define os pontos (2.000 nesta entrega). URL não leva telefone/nome/ID interno. Registro e crédito são server-side e idempotentes.
+- Não encaminhar token de indicação, conteúdo de respostas, telefone ou nome a analytics. Expiração/revogação manual de convites permanece decisão futura; pesquisa pode ser desativada pausando/cancelando.
+
+### Próxima execução: WhatsApp oficial
+- [ ] Finalizar integração por WhatsApp Business Platform / WhatsApp Cloud API oficial.
+- [ ] Validar conta Meta Business, número, templates, webhooks, tokens e secrets no ambiente protegido da VPS; nunca versionar credenciais.
+- [ ] Separar mensagens operacionais de promocionais, respeitar opt-in/opt-out e limitar retries/idempotência para não duplicar mensagens.
+- [ ] Testar ponta a ponta em número de homologação e só então liberar os fluxos aprovados.
+
+### Conector MCP administrativo para LLMs
+- [ ] Projetar ferramenta MCP para tarefas autorizadas de admin/staff (configuração, catálogo, cupons, pesquisas, diagnóstico e correções) via linguagem natural.
+- [ ] Reutilizar casos de uso e autorização da API de automação; negar por padrão, validar role/escopo por ferramenta, registrar auditoria, limitar dados pessoais e evitar sessões humanas compartilhadas.
+- [ ] Exigir confirmação humana para operações de alto impacto, pagamentos, comunicação externa, exclusões definitivas e alterações de acesso; manter idempotência, rate limits e kill switch.
+- [ ] Adicionar testes de autorização, prompt injection em dados retornados, replay, concorrência e auditoria antes de habilitar em produção.
+
+### API de automação do painel para scripts
+- [ ] Publicar API versionada para scripts executarem os mesmos casos administrativos cobertos pelo painel.
+- [ ] Usar credenciais de máquina rotacionáveis, escopos mínimos e revogáveis; não usar cookies/sessões humanas nem expor secrets nas respostas.
+- [ ] Aplicar rate limits, idempotency keys, validação de entrada, auditoria append-only, paginação e mensagens de erro estáveis.
+- [ ] Incluir documentação OpenAPI, SDK/exemplos mínimos, ambiente de homologação e testes de segurança antes de emitir credenciais de produção.
+
+Ordem: concluir primeiro a entrega atual; em seguida priorizar WhatsApp oficial conforme orientação do proprietário. MCP e API administrativa ficam planejados para entregas próprias, depois de definidos e aprovados os limites de autonomia.
+
 ## Fase 5 — Expansão técnica
 - [ ] Planejar novas unidades, marcas, canais ou aumento de volume somente após estabilizar a operação atual.
 - [ ] Distinguir componentes reutilizáveis de domínios que devem permanecer isolados.

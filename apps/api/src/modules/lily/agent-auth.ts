@@ -135,6 +135,7 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
         status: handoff.agentKey.user.status,
         avatarMediaId: handoff.agentKey.user.avatarMediaId,
         rankingOptIn: handoff.agentKey.user.rankingOptIn,
+        isTestAccount: handoff.agentKey.user.isTestAccount,
         staffPasswordUpgradeRequired: false,
         mfaEnabled: true,
         agentIdentity: true

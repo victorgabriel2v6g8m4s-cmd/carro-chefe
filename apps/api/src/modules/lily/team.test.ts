@@ -17,6 +17,7 @@ async function register(phone: string, role: "customer" | "admin" = "customer") 
   const response = await app.inject({
     method: "POST",
     url: "/api/v1/lily/auth/register",
+    remoteAddress: `127.0.3.${Number(phone.slice(-2)) || 1}`,
     headers: { origin },
     payload: {
       phone,
@@ -79,6 +80,22 @@ afterAll(async () => {
 });
 
 describe("CookLily gestão de equipe e RBAC", () => {
+  it("admin pode marcar uma conta cliente como teste e a própria conta não pode fazê-lo", async () => {
+    const admin = await register("67999907131", "admin");
+    const customer = await register("67999907132");
+    const changed = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/team/${customer.user.id}`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf }, payload: { isTestAccount: true }
+    });
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json().isTestAccount).toBe(true);
+    const selfService = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/team/${customer.user.id}`,
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf }, payload: { isTestAccount: false }
+    });
+    expect(selfService.statusCode).toBe(403);
+  });
+
   it("suspensão revoga sessão e admin não remove o próprio acesso", async () => {
     const admin = await register("67999907103", "admin");
     const member = await register("67999907104");

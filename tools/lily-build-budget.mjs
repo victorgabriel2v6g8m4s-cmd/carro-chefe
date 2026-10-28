@@ -11,11 +11,12 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  jsRawBytes: 658_000,
-  jsGzipBytes: 174_500,
+  // Espaço incremental de 1.5 KiB para o gate de pesquisa e gestão de contas de teste.
+  jsRawBytes: 659_500,
+  jsGzipBytes: 175_000,
   cssRawBytes: 136_000,
   cssGzipBytes: 30_000,
-  combinedGzipBytes: 200_500
+  combinedGzipBytes: 201_000
 });
 
 function emptyBucket() {

@@ -6,6 +6,7 @@ export type LilyTeamMember = {
   displayName: string | null;
   role: "customer" | "staff" | "courier" | "admin";
   status: "active" | "suspended";
+  isTestAccount: boolean;
   staffPasswordUpgradeRequired: boolean;
   mfaEnabled: boolean;
   createdAt: string;
@@ -42,7 +43,7 @@ export async function promoteLilyTeamMember(
 
 export async function updateLilyTeamMember(
   userId: string,
-  input: { role?: "customer" | "staff" | "courier" | "admin"; status?: "active" | "suspended" },
+  input: { role?: "customer" | "staff" | "courier" | "admin"; status?: "active" | "suspended"; isTestAccount?: boolean },
   csrfToken: string
 ) {
   const response = await fetch(`/api/v1/lily/admin/team/${encodeURIComponent(userId)}`, {

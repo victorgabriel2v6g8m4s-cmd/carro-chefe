@@ -50,7 +50,7 @@ const registerSchema = z.object({
   phone,
   password,
   displayName: optionalName,
-  referralCode: z.string().trim().min(16).max(40).optional(),
+  referralCode: z.string().trim().min(16).max(64).optional(),
   termsAccepted: z.literal(true),
   termsVersion: z.literal(LILY_TERMS_VERSION),
   privacyPolicyVersion: z.literal(LILY_PRIVACY_VERSION),
@@ -234,7 +234,7 @@ export async function lilyRoutes(app: FastifyInstance) {
     const referral = input.referralCode && settings.referralRewardPoints > 0
       ? await lilyPrisma.lilyReferralInvite.findUnique({ where: { code: input.referralCode }, include: { referrer: { select: { id: true, phoneNormalized: true, status: true, role: true } } } })
       : null;
-    if (input.referralCode && settings.referralRewardPoints > 0 && (!referral || referral.referrer.status !== "active" || referral.referrer.role !== "customer" || referral.referrer.phoneNormalized === phoneNormalized)) {
+    if (input.referralCode && settings.referralRewardPoints > 0 && (!referral || referral.referredUserId !== null || referral.referrer.status !== "active" || referral.referrer.role !== "customer" || referral.referrer.phoneNormalized === phoneNormalized)) {
       throw new ApiError(400, "O link de indicação é inválido ou não pode ser usado nesta conta.", { code: "LILY_REFERRAL_UNAVAILABLE" });
     }
 
@@ -247,6 +247,7 @@ export async function lilyRoutes(app: FastifyInstance) {
       status: string;
       avatarMediaId: string | null;
       rankingOptIn: boolean;
+      isTestAccount: boolean;
       staffPasswordUpgradeRequired: boolean;
       mfaEnabled: boolean;
       agentIdentity: boolean;
@@ -312,7 +313,7 @@ export async function lilyRoutes(app: FastifyInstance) {
     if (context.user.role !== "customer" || settings.referralRewardPoints < 1) return { enabled: false, points: 0, url: null };
     let invite = await lilyPrisma.lilyReferralInvite.findFirst({ where: { referrerUserId: context.user.id, referredUserId: null }, orderBy: { createdAt: "desc" } });
     if (!invite) {
-      invite = await lilyPrisma.lilyReferralInvite.create({ data: { code: randomBytes(15).toString("base64url"), referrerUserId: context.user.id } });
+      invite = await lilyPrisma.lilyReferralInvite.create({ data: { code: randomBytes(32).toString("base64url"), referrerUserId: context.user.id } });
     }
     return { enabled: true, points: settings.referralRewardPoints, url: `/lilyacai/cadastro?referral=${encodeURIComponent(invite.code)}` };
   });
