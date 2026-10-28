@@ -26,7 +26,7 @@
     {
       "path": "AGENTS.md",
       "kind": "agents",
-      "sha256": "039b81ba4a2514e84122bf21cc0a281257c12dfc501e1fb306b345ec63d1f326"
+      "sha256": "413284d811935ec69d562b61f58a087a353fa06f2d9cc54ffe803e369cc17bbf"
     },
     {
       "path": "REGRAS.md",
@@ -714,5 +714,5 @@
       ]
     }
   },
-  "manifestHash": "409491d7778fa8b22c17f1490398aa676fefbb3f4228467a42bc566317975596"
+  "manifestHash": "24d8c85aea46ed391826fb0e89daad9df54cce974cadfd30f1bc6008f8d1e7a5"
 }

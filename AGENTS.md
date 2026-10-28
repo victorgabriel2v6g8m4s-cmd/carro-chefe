@@ -221,6 +221,7 @@ KPIs centrais: pedidos pagos, faturamento líquido, ticket médio, CMV, margem d
 - Não faça push forçado nem reescreva histórico compartilhado.
 - Revise o escopo antes de versionar e publique somente arquivos confirmados do projeto.
 - Consulte `docs/GITHUB_E_AGENTES.md` para modelos, configuração dos agentes, credenciais e fluxo de colaboração.
+- Em homologação visual quando o proprietário direcionar para o navegador integrado do Codex, use exclusivamente essa aba para navegação e testes. Não abra, selecione, inspecione nem controle Chrome ou Edge externos; não interrompa janelas do proprietário. Se o navegador integrado estiver indisponível, registre o bloqueio e peça orientação em vez de trocar de navegador.
 
 ## 13. Comunicação
 
