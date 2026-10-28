@@ -8,7 +8,7 @@
 - head_sha_verified: `2d4f5a603632f9969d599447d1ee318845fd1fb2`
 - pull_requests: #207, #208 e #209 integrados em `cooklily/canonical`
 - ci_run: PR #209 CI `40678342102` verde em 7 checks; CodeQL `40678346560` verde
-- last_verified_at: 2026-10-28 08:17 America/Sao_Paulo
+- last_verified_at: 2026-10-28 08:22 America/Sao_Paulo
 - interruption_state: none
 
 ## Escopo desta entrega
@@ -70,7 +70,7 @@
 - [x] CI/CodeQL verdes no PR #209.
 - [x] PR #209 integrado por squash em `cooklily/canonical`.
 - [ ] `sudo cc deploy canonical` completo, SHA confirmado, health externo 200.
-- [ ] Deploy da correção de cupom e reteste do botão Pausar no domínio real.
+- [x] Deploy da correção de cupom concluído; reteste do botão Pausar no domínio real pendente.
 - [x] Links validados em sessão anônima Playwright e questionário em sessão VIP do navegador Codex. Capturas sanitizadas fora do Git em `C:\Users\valdi\Pictures\CookLily-Exec-2026-10-28\` (`01-vip-invite-mobile.png`, `02-survey-login-required-mobile.png`, `03-product-direct-link-mobile.png`).
 - [ ] Atualizar este arquivo após migration, PR, CI, merge, deploy e cada ciclo de correção.
 
@@ -130,7 +130,7 @@ Preparar commit e PR para `cooklily/canonical`; acompanhar CI/CodeQL e integrar 
 
 ### Próxima ação exata
 
-Fazer deploy autorizado de `cooklily/canonical` no SHA `2d4f5a603632f9969d599447d1ee318845fd1fb2`; autenticar de novo, testar no painel real o atalho Pausar do cupom VIP de frete grátis, confirmar preservação de `vipOnly`/`appliesToShipping`, checar health externo e registrar a evidência do deploy.
+Reautenticar no navegador Codex, abrir `/lilyacai/painel/cupons`, ativar o cupom `HOMO-VIP-OCT28` usando o atalho rápido e pausá-lo novamente; conferir no estado administrativo `vipOnly=true`, `appliesToShipping=true`, tipo `free_shipping` e zero usos. Capturar screenshot do resultado e, se passar, atualizar a seção final do checkpoint e abrir PR de documentação para canonical.
 
 ## Merge #209 e homologação dos links (2026-10-28)
 
@@ -139,3 +139,5 @@ Fazer deploy autorizado de `cooklily/canonical` no SHA `2d4f5a603632f9969d599447
 - Playwright em sessão anônima mostrou o cadastro com convite VIP retido na URL e os termos VIP como consentimento obrigatório; a pesquisa encaminha anônimos para login preservando `next`; o produto `Morango` abriu com imagem, opções e preço, sem iniciar pedido. A pesquisa autenticada foi aberta sem enviar resposta.
 - Capturas fora do Git: `C:\Users\valdi\Pictures\CookLily-Exec-2026-10-28\01-vip-invite-mobile.png`, `02-survey-login-required-mobile.png` e `03-product-direct-link-mobile.png`.
 - Reteste da correção do atalho Pausar após deploy ainda pendente. Itens/cupones de teste encontram-se pausados; não há pedido ou resposta de pesquisa de teste enviados.
+- Deploy `sudo cc deploy canonical` concluído em 2026-10-28 11:18 UTC (08:18 local); SHA `2d4f5a603632f9969d599447d1ee318845fd1fb2`. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-111827-2d4f5a603632.log`.
+- Deploy validation incremental: migrations de preflight aplicadas e schemas válidos; produção sem migration pendente; backups dos bancos core e Lily verificados; check, suite 346/346, build/budget e Tool Health passaram; Nginx config válida; readiness OK na tentativa 6; smoke HTTPS externo OK na tentativa 1. Deploy reportou `DEPLOY CONCLUÍDO`.
