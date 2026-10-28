@@ -4698,8 +4698,8 @@ img, svg { max-width: 100%; }
 .reels-top-controls .reels-sound-button { width:48px; height:48px; }
 .reels-icon-button:hover,.reels-actions button:hover,.reels-nav:hover { background:rgb(40 13 27 / 92%); }
 .reels-icon-button:focus-visible,.reels-actions button:focus-visible,.reels-nav:focus-visible,.reels-media-dots button:focus-visible { outline:3px solid white; outline-offset:3px; }
-.reels-media-dots { display:flex; flex:1; gap:4px; }
-.reels-media-dots button { height:4px; flex:1; border:0; border-radius:9px; background:rgb(255 255 255 / 50%); }
+.reels-media-dots { display:flex; min-width:0; flex:1; gap:4px; }
+.reels-media-dots button { width:auto; min-width:0; min-height:4px; height:4px; flex:1; padding:0; border:0; border-radius:9px; background:rgb(255 255 255 / 50%); }
 .reels-media-dots button[aria-current=true] { background:#fff; }
 .reels-vip-tag { top:calc(env(safe-area-inset-top) + 68px); right:14px; padding:8px 12px; border:1px solid #f3d37e; border-radius:999px; background:linear-gradient(120deg,#aa792e,#f5df91,#a87324); color:#421d08; font-weight:900; }
 .reels-actions { right:14px; bottom:calc(env(safe-area-inset-bottom) + 118px); display:grid; gap:10px; }

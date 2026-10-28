@@ -1,18 +1,18 @@
 # CookLily — Reels imersivo em tela cheia
 
-- status: in_progress
+- status: deployed_with_visual_fix_pending
 - owner: AG-DEV
 - branch: codex/reels-immersive-fullscreen
 - base_branch: cooklily/canonical
 - base_sha_verified: ac4528f52d9462623e821f62a633ec11370dded7
-- head_sha_verified: 3903e8c988cbfc515123d5f4b6f6a3389784b63b (feature code); checkpoint follow-up commit pending
-- pull_requests: #227 https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/227 (CI running)
-- deployed_sha: ac4528f52d9462623e821f62a633ec11370dded7
-- tests/gates: `npm run test:lily-ui` PASS (16 files, 70 tests); `npm run build` PASS including CookLily budget; `npm run check` PASS. Full `npm test` reached Vitest but failed many unrelated API integration suites because this worktree lacks the core test database setup; rerun with project test DB configuration before claiming full-suite pass. Production IAB before deploy confirms current baseline still has old header/footer and text controls; post-deploy evidence pending.
+- head_sha_verified: e3d648632ac035070f970c21d1f37f1598f0902b merged/deployed; CSS correction pending PR
+- pull_requests: #227 MERGED https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/227; visual dot-sizing correction pending
+- deployed_sha: e3d648632ac035070f970c21d1f37f1598f0902b
+- tests/gates: PR #227 all CI checks PASS; deploy ran check, all 67 Vitest files / 357 tests PASS, build and tool-health PASS. `npm run test:lily-ui` 16 files/70 tests, `npm run check`, and `npm run build` also PASS locally for CSS correction. IAB production confirms full-viewport media, hidden site navigation/footer, accessible exit, icon-only sound, and no visible pause button. Screenshot exposed media progress button height inherited as 44px; CSS fix pending deployment.
 - migrations: none
-- blockers: current production Reels UI remains the old card with header/footer navigation, text-labeled sound and visible pause button. Feature code not yet merged/deployed; IAB after deploy required.
+- blockers: screenshot revealed oversized active-media progress indicator in production. CSS correction requires PR and redeploy. The owner also requested follow-up Lucide icons, interaction redundancy review, header order and footer destination; these are sequenced after this immersive UI correction.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: record current PR state in checkpoint, wait for CI, resolve any failures, merge/deploy, then validate mobile/desktop through Codex IAB and capture screenshots.
+- next_action: open PR for progress indicator sizing, wait for CI, merge/deploy, verify through Codex IAB and capture final screenshot; then begin requested Lucide/icon/navigation follow-up.
 
 ## Requirements and evidence
 
