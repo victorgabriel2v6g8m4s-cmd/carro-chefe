@@ -6,13 +6,13 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: bf9fab69085b38d8f9e375bb7519ede7823bc0c6
 - head_sha_verified: 1cb9741c1a97e97700eeacccfa6143a90145864e
-- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; #213 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/213; #214 checkpoint/rule update in progress
+- pull_requests: #211 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/211; #213 merged — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/213; #214 merged as `0696105f160e520dfc8af1e26d9280ea995f6588` — https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/214
 - deploy_sha: 1cb9741c1a97e97700eeacccfa6143a90145864e
 - tests/gates: focused profile API tests PASS (9/9); full `npm test` PASS (64 files, 346 passed/3 skipped); `npm run check` PASS; `npm run build` and CookLily bundle budget PASS; PR #213 CI PASS. VPS deploy reran 64 files/349 tests, check, builds, bundle budget, tool health, DB backup verification, migrations, local readiness and external HTTPS smoke — all PASS. Real-domain IAB checks confirmed anonymous ranking hides staff/test accounts, internal test ranking includes test account with dense ties, and profile says "posição interna". All tests used disposable Lily DB with 30 migrations.
 - migrations: `20261028180000_lily_test_accounts_survey_tokens` committed; all Lily migrations applied to fresh disposable SQLite and exercised by API suite
-- blockers: none for implementation or live-domain acceptance; PR #214 still needs its final CI and squash merge to persist the checkpoint and agent browser rule. Captured browser screenshots are visible in the Codex execution transcript, but were not exported as local image files by the browser tool.
+- blockers: none. Captured browser screenshots are visible in the Codex execution transcript, but were not exported as local image files by the browser tool.
 - last_verified_at: 2026-10-28 America/Sao_Paulo
-- next_action: merge the updated checkpoint and Codex in-app-browser rule through PR #214 after CI; no redeploy is required for the docs-only follow-up.
+- next_action: none; implementation, production deploy, live-domain validation, persistent browser rule and checkpoint integration are complete.
 
 ## Objetivo
 
@@ -57,3 +57,4 @@ Fechar os itens que ficaram sem homologação na execução de links/VIP/cupons,
 - Deploy do PR #213 concluído por `sudo cc deploy canonical` em `2026-10-28 12:59` local, release SHA `1cb9741c1a97e97700eeacccfa6143a90145864e`, sem migrations pendentes. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-125359-1cb9741c1a97.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-125359-1cb9741c1a97.log`.
 - Homologação visual feita no navegador integrado do Codex em `https://carrochefe.com/lilyacai/ranking` e `/perfil`: sessão da conta teste exibiu Conta de Testes em #1 e clientes empatados em #2; perfil mostrou "posição interna". Após sair da conta, ranking público listou somente `teste` e `teste2` empatados em #1, sem a conta de teste nem a conta administrativa. Capturas foram mostradas no transcript do Codex.
 - Preferência operacional adicionada ao `AGENTS.md`: quando o proprietário indicar o navegador integrado do Codex, não tocar em Chrome/Edge externos e registrar um bloqueio se o navegador do Codex não estiver disponível.
+- PR #214 foi squash-merged em `0696105f160e520dfc8af1e26d9280ea995f6588`; todos os sete checks de CI passaram. O manifesto de política foi regenerado e `policy:build`, `policy:check`, `test:tool-health` (8/8) e `git diff --check` passaram.
