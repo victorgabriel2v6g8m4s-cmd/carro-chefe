@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -74,8 +74,15 @@ function signChallenge(challenge) {
 function openBrowser(url) {
   if (process.platform === "win32" && process.env.COOKLILY_AGENT_BROWSER === "edge") {
     const edgePath = path.join(process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)", "Microsoft", "Edge", "Application", "msedge.exe");
-    const opened = spawnSync(edgePath, [url], { stdio: "ignore", windowsHide: true, timeout: 10_000 });
-    if (opened.error || opened.status !== 0) throw new Error("Não foi possível abrir o Microsoft Edge.");
+    if (!existsSync(edgePath)) throw new Error("Microsoft Edge não foi encontrado no caminho padrão.");
+    const launcher = spawn("powershell.exe", ["-NoProfile", "-Command", "Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH -ArgumentList $env:COOKLILY_AGENT_HANDOFF_URL"], {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      env: { ...process.env, COOKLILY_AGENT_EDGE_PATH: edgePath, COOKLILY_AGENT_HANDOFF_URL: url }
+    });
+    launcher.on("error", () => {});
+    launcher.unref();
     return;
   }
   const command = process.platform === "win32" ? "rundll32.exe" : process.platform === "darwin" ? "open" : "xdg-open";

@@ -1,13 +1,13 @@
 # Validade e resgate do convite VIP CookLily
 
-- status: correção VIP e autenticação por chave implantadas; fluxo VIP real concluído com conta de teste; PR #205 corrige Origin ausente e permite handoff isolado no Edge; CI do último HEAD pendente
+- status: correção VIP e autenticação por chave implantadas; fluxo VIP real concluído com conta de teste; PR #205 integrado e implantado; ajuste de abertura do handoff Edge em validação
 - owner: AG-DEV
-- branch: `codex/agent-auth-origin-vip-flow`
+- branch: `codex/cooklily-instagram-handle`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `59e45f8c616d2b95be7c01760dd1fe4e366b776e`
-- head_sha_verified: `8e63014fd81ad2e9277fd2bd9f45df1912341748`
-- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) (merged), [PR #205](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/205) (open; CI pendente)
-- ci_run: #811 / run ID `40632536335`, todos os sete jobs success para o HEAD que virou o merge `59e45f8...`; CI do PR #205 deve ser consultado para o HEAD `8e63014...`
+- base_sha_verified: `accf9423d5f9237f6a8bc9aaaa8b0a7c0f6f4749`
+- head_sha_verified: a registrar após commit desta correção de abertura do Edge
+- pull_requests: [PR #204](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/204) e [PR #205](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/205), ambos merged
+- ci_run: PR #205 run #815 / ID `40634250428`, success; deploy #`20261028-045102` concluído no release `accf9423d5f9237f6a8bc9aaaa8b0a7c0f6f4749`
 - last_verified_at: 2026-10-28
 - interruption_state: none
 
@@ -68,6 +68,7 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 - `git diff --check`: PASS; avisos apenas de conversão automática LF/CRLF do Git no Windows.
 - Merge PR #204: `59e45f8c616d2b95be7c01760dd1fe4e366b776e`. Deploy `sudo cc deploy canonical` em 2026-10-28 terminou com release SHA idêntico, migration `20261028120000_lily_agent_admin_auth`, testes 63/337, budget e checks externos verdes; evidência operacional em `/srv/carro-chefe/data/deploy-logs/deploy-20261028-043403-59e45f8c616d.evidence`.
 - Fingerprint da chave agente provisionada na VPS: `SHA256:uI4S77+pEUl1/bza+GyE+giCANgi444HDzGef0Cz0+A`; status verificado `role=admin`, `account_status=active`, `identity=agent`, `key_status=active`. Não registrar chave privada nem senha neste checkpoint.
+- Deploy do PR #205: `/srv/carro-chefe/data/deploy-logs/deploy-20261028-045102-accf9423d5f9.evidence`; validações, build budget, migrations sem pendências, readiness e smoke externo passaram; health público respondeu HTTP 200.
 - Falha de homologação inicial: CLI enviada sem `Origin` e a API respondeu HTTP 403 pela proteção global de origem. Corrigido localmente com `Origin: https://carrochefe.com`; teste direcionado após fix PASS. PR #205 adiciona Origin e opção Windows para abrir handoff no Edge, evitando substituir a sessão de teste aberta no Chrome.
 - Homologação real concluída: CLI corrigida completou desafio/assinatura/handoff no domínio; painel carregou como `Chat GPT Codex Agent`; gestão VIP mostrou três convites antigos expirados; agente emitiu convite ilimitado de teste sem validade, cliente resgatou em `perfil`, popup dourado apareceu, consentimento `cooklily-vip-2026-10-v1` foi registrado com autorização anterior do proprietário, e a inscrição mudou para `active` com `enrolledAt` persistido e coroa no avatar.
 - Capturas sanitizadas fora do repositório: `C:\Users\valdi\.codex\visualizations\2026\10\28\agent-admin-panel.png`, `...\vip-terms-page.png`, `...\vip-active-membership.png`, `...\vip-crown.png`. A captura integral do perfil usada durante a depuração contém dados identificadores do cliente de teste; não anexar nem versionar.
@@ -75,11 +76,11 @@ Consentimento legal não será submetido pelo agente sem autorização específi
 
 ## Integração, deploy e homologação
 
-- PR #204 merged e deploy live em `59e45f8...`; PR #205 aguarda CI. A CLI com Origin foi exercida contra a produção e completou o fluxo; correção do CLI aguarda merge/deploy para ficar versionada/disponível na canonical.
+- PR #204 e #205 merged; deploy live em `accf9423...`. O agente está ativo como admin. No teste após publicação, a assinatura e o uso do desafio foram confirmados na VPS, mas o Edge não abriu com a chamada síncrona anterior; ajuste local usa `Start-Process` destacado e ainda aguarda PR/CI/deploy.
 - Conta de teste agora está inscrita no VIP (`active`) com consentimento gravado; não cancelar ou alterar sem pedido do proprietário.
 - Pendência de política: os termos VIP publicados dizem que o prazo exato de retenção ainda precisa ser definido antes da entrada de participantes em produção; não anunciar/coletar participantes reais antes dessa decisão.
 
 ## Próxima ação exata
 
-Consultar CI do PR #205 para `8e63014...`; se verde, revisar e fazer merge squash autorizado, depois rodar `sudo cc deploy canonical` e confirmar SHA/health. A homologação VIP real já passou; conferir que o code fix publicado permite reautenticação futura pela CLI. Em seguida, cumprir a solicitação pendente de substituir `@acai._lily` por `cook._lily` em todas as referências do site, com PR/CI/deploy e teste real separado. Registrar capturas finais e atualizar este checkpoint após cada marco.
+Concluir `npm run check`, `npm test`, `npm run build`, preflight e diff-check sem concorrência de geração Prisma; commitar a correção de launcher, abrir PR contra `cooklily/canonical`, aguardar CI, fazer squash autorizado, deploy e autenticar novamente abrindo o handoff no Edge. A homologação VIP da conta de teste permanece `active`. Depois, cumprir a solicitação pendente de substituir `@acai._lily` por `cook._lily` nos canais públicos do site com PR/CI/deploy e teste real separado.
 
