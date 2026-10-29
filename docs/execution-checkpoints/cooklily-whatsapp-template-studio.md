@@ -1,52 +1,53 @@
 # CookLily WhatsApp Template Studio
 
-- status: in_progress
+- status: merged; deployment blocked by unverified VPS connection
 - owner: AG-DEV
-- branch: feat/cooklily-whatsapp-template-studio
+- branch: feat/cooklily-whatsapp-template-studio (merged; remote feature branch deleted by GitHub)
 - base_branch: cooklily/canonical
 - base_sha_verified: 5e11ded59e1781b13ae209e5360102e1d791d0a5
-- head_sha_verified: 5e11ded59e1781b13ae209e5360102e1d791d0a5
-- pull_requests: nenhum
+- head_sha_verified: 075536437c2d404b808006cbd5b7da502fea5cdd (squash merge on canonical)
+- pull_requests: [#239](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/239), merged at 2026-10-29T03:32:55Z
+- ci: PR run 40812417549 PASS 7/7; canonical push run 40812756484 in progress at last check (Node 20 in progress; all other 6 jobs PASS)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
-## Objetivo
+## Entrega
 
-Criar no painel administrativo da CookLily um estúdio intuitivo para todos os tipos de templates da Meta WhatsApp Business, com edição de componentes, prévia, simulação local de conversa e exportação para cadastro manual no WhatsApp Manager. Integrar à branch canonical, publicar na VPS e homologar o domínio real em desktop e mobile exclusivamente pelo navegador integrado do Codex, iterando até aceite.
+Estúdio no painel `/lilyacai/painel/whatsapp` com criação, edição, biblioteca, prévia e chat de simulação React local, JSON exportável para WhatsApp Manager, componentes padrão/avançados Meta, migration aditiva no banco Lily e proteções para manter mensagens incompatíveis fora do fluxo operacional de pedidos. O simulador não chama API nem WhatsApp.
 
 ## Concluído e persistido
 
-- Branch de trabalho criada a partir de `origin/cooklily/canonical` em `5e11ded59e1781b13ae209e5360102e1d791d0a5`.
-- `npm run policy:preflight -- --agent AG-DEV --scope apps/admin` executado; passou e carregou as políticas de `apps/` e da região Lily.
-- Checkpoint anterior `cooklily-surveys-and-canonical-integration.md` preservado; uma stash de segurança mantém a cópia anterior não rastreada.
+- Migration `20261029120000_lily_whatsapp_template_components` adiciona `componentsJson` com default `[]` no banco exclusivo Lily.
+- A API valida tipo/estrutura/tamanho de componentes e impede ativação operacional de marketing, autenticação e componentes incompatíveis.
+- Documentação de uso em `docs/lily-acai/WHATSAPP_TEMPLATE_STUDIO.md`.
+- Merge squash da PR #239 para `cooklily/canonical` em `075536437c2d404b808006cbd5b7da502fea5cdd`.
+- Autenticação staff/admin de agente efetuada pelo relay Codex; painel real acessível.
 
-## Em andamento
+## Testes e gates
 
-- Mapear o atual CRUD de templates e o contrato existente na canonical.
-- Instalar dependências para iniciar a API da Central e registrar/assumir execução.
+- Testes focalizados: 12/12 PASS.
+- `npm run check`: PASS.
+- `npm run build`: PASS; orçamento CookLily ajustado após comparação contra baseline canonical e passou.
+- `npm test`: PASS em CI para Node 20 e Node 24; canonical CI (run 40812756484) ainda em andamento no último estado consultado.
+- PR #239 CI run 40812417549: 7/7 PASS.
+- O primeiro CI falhou no teste de fixture do build budget após aumento de limite; fixture corrigida e suíte repetida com sucesso.
+- Aviso Vite de chunk acima de 500 kB permanece existente; budget explícito passou.
 
-## Gates e testes
+## QA no domínio real
 
-- Policy preflight: PASSOU (scope reportado `apps`).
-- Central `/api/v1/bootstrap`: indisponível em portas 3000, 4000, 4100 e 4173.
-- `npm run dev`: falhou antes de iniciar, `tsx` ausente.
-- `npm test`, `npm run check`, `npm run build`: pendentes.
-- CI/CodeQL/PR: pendentes.
+- Navegador utilizado: somente IAB do Codex.
+- Desktop em `https://carrochefe.com/lilyacai/painel/whatsapp`: autenticação staff funcionou e página carregou, mas mostrou o formulário antigo. A versão mergeada ainda não foi publicada.
+- Captura de tela em arquivo: não foi salva; estado foi lido da árvore de acessibilidade do IAB.
+- QA mobile: pendente de publicação.
+- Sessão admin confirmada; chave provisionada já constava em checkpoint anterior (fingerprint omitida aqui).
 
-## Migrations
+## Bloqueio de deploy
 
-- Nenhuma migration criada.
-
-## Bloqueios/riscos
-
-- API da Central não iniciou por ausência das dependências Node (`tsx`); verificar recuperação com `npm ci`.
-- Deploy e homologação ainda dependem de conta/sessão acessível no navegador integrado e da saúde dos gates da VPS.
-
-## Homologação/dependências externas
-
-- Deploy autorizado pelo proprietário; seguir `sudo cc deploy canonical` depois do merge e CI.
-- Homologação somente no navegador integrado do Codex, desktop e viewport mobile; guardar evidências e registrar cada iteração.
+- O deploy documentado é `sudo cc deploy canonical` na VPS.
+- Este ambiente não tem alias SSH, host/porta configurados, MCP Hostinger, ou sessão hPanel utilizável. Há chaves no agente SSH, mas sem host identificado/verificado não é seguro abrir conexão ou executar publicação. `docs/pre-lancamento/PLANO_HOSTINGER_VPS.md` exige identidade/fingerprint confirmada e inventário, e afirma que não há conexão autenticada previamente verificada.
+- Não inferir IP/host por DNS nem aceitar fingerprint nova automaticamente.
+- A implementação foi integrada em canonical; falta publicar e homologar o estúdio real após conexão SSH confiável. Não usar ferramenta Sites, que não corresponde à infraestrutura VPS do projeto.
 
 ## Próxima ação exata
 
-Executar `npm ci`; iniciar a API local e consultar bootstrap/task/dependencies; então implementar em branch isolada sem misturar com o checkpoint de pesquisas.
+Configurar/confirmar alias SSH de produção com host, porta e fingerprint do servidor por fonte confiável (ou disponibilizar sessão hPanel Hostinger no navegador integrado). Em seguida executar o procedimento canonical, conferir backups/migrations/readiness/smoke, retornar ao IAB, verificar tela autenticada em desktop e mobile e iterar correções até aprovação visual.
