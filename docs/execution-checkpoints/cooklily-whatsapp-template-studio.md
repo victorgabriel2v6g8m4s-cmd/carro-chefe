@@ -7,7 +7,7 @@
 - base_sha_verified: 5e11ded59e1781b13ae209e5360102e1d791d0a5
 - head_sha_verified: 075536437c2d404b808006cbd5b7da502fea5cdd (squash merge on canonical)
 - pull_requests: [#239](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/239), merged at 2026-10-29T03:32:55Z
-- ci: PR run 40812417549 PASS 7/7; canonical push run 40812756484 in progress at last check (Node 20 in progress; all other 6 jobs PASS)
+- ci: PR run 40812417549 PASS 7/7; canonical push run 40812756484 PASS 7/7; checkpoint-only push run 40813142095 queued/in progress (6 jobs PASS; Node 20/24 in progress at last check)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
@@ -28,7 +28,7 @@ Estúdio no painel `/lilyacai/painel/whatsapp` com criação, edição, bibliote
 - Testes focalizados: 12/12 PASS.
 - `npm run check`: PASS.
 - `npm run build`: PASS; orçamento CookLily ajustado após comparação contra baseline canonical e passou.
-- `npm test`: PASS em CI para Node 20 e Node 24; canonical CI (run 40812756484) ainda em andamento no último estado consultado.
+- `npm test`: PASS em CI para Node 20 e Node 24 na PR e na canonical (runs 40812417549 e 40812756484).
 - PR #239 CI run 40812417549: 7/7 PASS.
 - O primeiro CI falhou no teste de fixture do build budget após aumento de limite; fixture corrigida e suíte repetida com sucesso.
 - Aviso Vite de chunk acima de 500 kB permanece existente; budget explícito passou.
@@ -38,7 +38,7 @@ Estúdio no painel `/lilyacai/painel/whatsapp` com criação, edição, bibliote
 - Navegador utilizado: somente IAB do Codex.
 - Desktop em `https://carrochefe.com/lilyacai/painel/whatsapp`: autenticação staff funcionou e página carregou, mas mostrou o formulário antigo. A versão mergeada ainda não foi publicada.
 - Captura de tela em arquivo: não foi salva; estado foi lido da árvore de acessibilidade do IAB.
-- QA mobile: pendente de publicação.
+- QA mobile: pendente de publicação; viewport anterior não foi tratado como aceite do novo recurso.
 - Sessão admin confirmada; chave provisionada já constava em checkpoint anterior (fingerprint omitida aqui).
 
 ## Bloqueio de deploy
