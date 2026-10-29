@@ -9,7 +9,7 @@
 - PR #236: merged por squash; merge SHA `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
 - Deploy VPS: concluído em 29/10/2026 00:01 UTC, release `b93445996dfd47ee2386644bbdba120cd0cc33d2`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.evidence`.
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
-- Última verificação: 29/10/2026 00:28 UTC.
+- Última verificação: 29/10/2026 00:31 UTC.
 
 ## Sintoma e evidência
 
@@ -30,6 +30,7 @@
 - Observador ativo por 60 minutos. Após corrigir a redação de IPv6, a captura anterior foi encerrada e substituída por `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt`, modo `0600`, iniciada às 23:48:21 UTC e prevista para encerrar às 00:48:21 UTC em 29/10. O relatório já mostra eventos recentes e mascara IPv4/IPv6.
 - Na ocorrência reportada novamente às 00:26 UTC, a captura de 20 minutos iniciada às 00:19:14 (`/var/tmp/cooklily-tls-20261029-001914-jsDsUb.txt`) mostrou apenas acessos normais de diagnóstico (TLS 1.3/HTTP2), sem erro de handshake correspondente. O diagnóstico retrospectivo `/var/tmp/cooklily-access-20261029-002645-XKtb8f.txt` também não encontrou erro TLS/rede na janela. Não há evidência de que a conexão daquele cliente chegou ao Nginx.
 - Como experimento temporário para a hipótese PMTU, o kernel foi mudado de `tcp_mtu_probing=1` para `2` às 00:28 UTC, sem alterar a persistência. `tcp_base_mss=1024`; depois da mudança, 10/10 handshakes TLS 1.2, 10/10 TLS 1.3 e HTTPS `200`/HTTP2 passaram. Retorno automático ao modo `1` agendado para 15 minutos após o teste, para limitar impacto de throughput. O resultado do cliente ainda não foi informado.
+- Captura TCP de cabeçalhos iniciada em 00:31:22 UTC por cinco minutos: `/var/tmp/cooklily-tcp-path-20261029-003122-ZWJVq5.txt`. Observa flags, MSS, sequências e retransmissões em TCP/443, snaplen 96, sem imprimir nem salvar payload; IPs são mascarados e o arquivo é privado. Foi iniciada para a nova tentativa do cliente.
 - Após o deploy, o observador seguiu ativo. A janela registrou sucesso HTTP/TLS e dois `502` transitórios em 00:04:08 UTC durante o restart do Fastify; o health/smoke voltou a `200` em 00:04:10. Isso foi indisponibilidade HTTP breve durante restart, não falha de handshake TLS.
 - Helpers instalados em `/usr/local/sbin/enable-cooklily-tls-logging`, `/usr/local/sbin/enable-cooklily-tcp-pmtud` e `/usr/local/sbin/capture-cooklily-tls`.
 - Para iniciar uma nova janela antes da próxima tentativa do cliente: `sudo /usr/local/sbin/capture-cooklily-tls --minutes 60`. Para consultar retrospectivamente até 180 minutos após uma tentativa: `sudo bash /srv/carro-chefe/current/deploy/scripts/diagnose-cooklily-access --minutes 20`.
@@ -39,6 +40,7 @@
 - `deploy/scripts/enable-cooklily-tls-logging`: configura log TLS de sucesso sem dados do cliente, error log TLS em nível info e retenção curta, com backup/validação do Nginx.
 - `deploy/scripts/enable-cooklily-tcp-pmtud`: habilita fallback PMTU persistente com rollback do valor sysctl em caso de erro.
 - `deploy/scripts/capture-cooklily-tls`: captura erros reais de handshake, metadados de sucesso e reloads durante uma janela limitada; mascara IPs e protege o TXT.
+- `deploy/scripts/capture-cooklily-tcp-path`: captura metadados apenas do cabeçalho TCP/443, com IPs mascarados e sem payload.
 - `deploy/scripts/diagnose-cooklily-access`: correção da redação IPv6 que preserva tokens `::` de erros OpenSSL.
 - `deploy/scripts/survey-ops.test.mjs`: testes de sintaxe, retenção, privacidade e redação IPv6.
 
@@ -52,6 +54,7 @@
 - `npm run build`: passou; Vite mostrou alerta já existente sobre chunk JavaScript acima de 500 kB, e o limite próprio da CookLily passou (`build_budget=ok`).
 - `npm run policy:check`: passou (`2026.09.19.1`).
 - `node --test deploy/scripts/survey-ops.test.mjs`: 9/9 passaram; `bash -n` dos três helpers e `git diff --check` passaram após a correção do redator.
+- Reteste do helper TCP: `node --test deploy/scripts/survey-ops.test.mjs` 10/10 passou; Bash syntax e `git diff --check` passaram. Helper instalado no VPS; observador de cinco minutos ativo.
 - VPS: `tcp_mtu_probing=1`, `nginx -t` passou, serviço ativo; 10/10 conexões TLS 1.2 e 10/10 TLS 1.3 passaram após a instalação final.
 - Domínio real confirmado na aba Codex in-app: `https://carrochefe.com/lilyacai/cardapio` carregou conteúdo e imagens do catálogo; screenshot capturado e aba marcada como entregável. Não foram controlados Chrome/Edge externos.
 - Nota de execução: uma primeira execução da suíte contra o banco SQLite padrão local encontrou migrations antigas e resultou em 103 falhas de API. Os gates completos passaram depois de preparar bancos descartáveis migrados. A execução de migration também atualizou migrations pendentes no banco de desenvolvimento ignorado `.runtime/carro-chefe.db`; nenhum banco de produção foi usado.
@@ -65,4 +68,4 @@
 
 O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; ainda não há prova de que a conexão dos clientes afetados tenha exatamente o mesmo problema. Não afirmar causa raiz nem resolução garantida até surgir uma falha real no log dedicado ou confirmação dos usuários.
 
-Próxima ação exata: verificar o resultado do reteste do cliente com `tcp_mtu_probing=2`; confirmar que o timer retornou o kernel a `1`; depois ler `/var/tmp/cooklily-tls-20261029-001914-jsDsUb.txt`. Se o erro persistir sem evento no VPS, capturar cabeçalhos TCP durante uma nova tentativa e investigar o caminho entre o Wi‑Fi do cliente e a VPS; não fazer novas alterações globais sem esse sinal.
+Próxima ação exata: pedir ao cliente para tentar novamente agora enquanto `/var/tmp/cooklily-tcp-path-20261029-003122-ZWJVq5.txt` está capturando; depois ler esse relatório junto do TLS TXT, identificar SYN/ACK/retransmissões e confirmar se o erro aparece antes da VPS. Confirmar também que o timer retorna `tcp_mtu_probing` a `1` após 15 minutos. Não fazer novas alterações globais sem esse sinal.

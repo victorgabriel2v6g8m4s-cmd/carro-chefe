@@ -11,12 +11,14 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const helperPath = path.join(root, 'deploy/scripts/enable-lily-survey-notifications-nginx');
 const diagnosePath = path.join(root, 'deploy/scripts/diagnose-cooklily-access');
 const captureTlsPath = path.join(root, 'deploy/scripts/capture-cooklily-tls');
+const captureTcpPath = path.join(root, 'deploy/scripts/capture-cooklily-tcp-path');
 const enableTlsLogPath = path.join(root, 'deploy/scripts/enable-cooklily-tls-logging');
 const enablePmtudPath = path.join(root, 'deploy/scripts/enable-cooklily-tcp-pmtud');
 const deployerPath = path.join(root, 'deploy/scripts/carro-chefe-deploy');
 const helperSource = readFileSync(helperPath, 'utf8');
 const diagnoseSource = readFileSync(diagnosePath, 'utf8');
 const captureTlsSource = readFileSync(captureTlsPath, 'utf8');
+const captureTcpSource = readFileSync(captureTcpPath, 'utf8');
 const enableTlsLogSource = readFileSync(enableTlsLogPath, 'utf8');
 const enablePmtudSource = readFileSync(enablePmtudPath, 'utf8');
 
@@ -26,13 +28,37 @@ function pythonBlock(source, expression) {
   return match[1];
 }
 
-function runPython(source, args) {
-  return spawnSync('python3', ['-c', source, ...args], { encoding: 'utf8' });
+function runPython(source, args, input) {
+  return spawnSync('python3', ['-c', source, ...args], { encoding: 'utf8', input });
 }
 
 test('Nginx helper and diagnostic script have valid Bash syntax', () => {
-  for (const file of [helperPath, diagnosePath, captureTlsPath, enableTlsLogPath, enablePmtudPath, deployerPath]) {
+  for (const file of [helperPath, diagnosePath, captureTlsPath, captureTcpPath, enableTlsLogPath, enablePmtudPath, deployerPath]) {
     execFileSync('bash', ['-n'], { cwd: root, input: readFileSync(file, 'utf8').replace(/\r\n/g, '\n') });
+  }
+});
+
+test('TCP path capture records header metadata and masks IPv4 addresses', () => {
+  const python = pythonBlock(captureTcpSource, /python3 -c "\$\(cat <<'PY'\r?\n([\s\S]*?)\r?\nPY\r?\n\)" "\$REPORT"/);
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'cooklily-tcp-path-'));
+  try {
+    const report = path.join(directory, 'capture.txt');
+    const sample = '2026-10-29 00:30:00.000001 IP 203.0.113.10.54321 > 198.51.100.20.443: Flags [S], seq 10, win 65535, options [mss 1460], length 0\n2026-10-29 00:30:00.000002 IP6 2001:db8:abcd::10.54322 > 2001:db8:ffff::20.443: Flags [S], seq 20, win 65535, length 0\n';
+    const result = runPython(python, [report], sample);
+    assert.equal(result.status, 0, result.stderr);
+    const output = readFileSync(report, 'utf8');
+    assert.match(output, /203\.0\.113\.0\/24/);
+    assert.match(output, /198\.51\.100\.0\/24/);
+    assert.match(output, /Flags \[S\]/);
+    assert.doesNotMatch(output, /203\.0\.113\.10|198\.51\.100\.20/);
+    assert.match(output, /2001:db8:abcd::\/48/);
+    assert.match(output, /2001:db8:ffff::\/48/);
+    assert.doesNotMatch(output, /2001:db8:abcd::10|2001:db8:ffff::20/);
+    assert.match(captureTcpSource, /-s 96 'tcp port 443'/);
+    assert.doesNotMatch(captureTcpSource, /tcpdump[^\n]*\s-w\s/);
+    assert.match(captureTcpSource, /chmod 0600/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });
 
