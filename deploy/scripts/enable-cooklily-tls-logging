@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+CONF="${CARRO_CHEFE_TLS_LOG_CONF:-/etc/nginx/conf.d/carrochefe-tls-observability.conf}"
+ROTATE="${CARRO_CHEFE_TLS_LOGROTATE_CONF:-/etc/logrotate.d/carrochefe-tls-observability}"
+BACKUP_DIR="${CARRO_CHEFE_NGINX_BACKUP_DIR:-/var/backups/carrochefe/nginx}"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+EXPECTED_CONF=$'log_format carrochefe_tls \'$time_iso8601 host=$host tls=$ssl_protocol cipher=$ssl_cipher alpn=$ssl_alpn_protocol status=$status\';\naccess_log /var/log/nginx/carrochefe-tls.log carrochefe_tls;\nerror_log /var/log/nginx/carrochefe-tls-error.log info;'
+LEGACY_CONF=$'log_format carrochefe_tls \'$time_iso8601 host=$host tls=$ssl_protocol cipher=$ssl_cipher alpn=$ssl_alpn_protocol status=$status\';\naccess_log /var/log/nginx/carrochefe-tls.log carrochefe_tls;'
+EXPECTED_ROTATE=$'/var/log/nginx/carrochefe-tls.log /var/log/nginx/carrochefe-tls-error.log {\n  daily\n  rotate 7\n  missingok\n  notifempty\n  compress\n  delaycompress\n  create 0640 root adm\n  sharedscripts\n  postrotate\n    [ -s /run/nginx.pid ] && kill -USR1 "$(cat /run/nginx.pid)" || true\n  endscript\n}'
+LEGACY_ROTATE=$'/var/log/nginx/carrochefe-tls.log {\n  daily\n  rotate 7\n  missingok\n  notifempty\n  compress\n  delaycompress\n  create 0640 www-data adm\n  sharedscripts\n  postrotate\n    [ -s /run/nginx.pid ] && kill -USR1 "$(cat /run/nginx.pid)" || true\n  endscript\n}'
+
+(( EUID == 0 )) || { echo "Execute com sudo/root." >&2; exit 77; }
+[[ -f /etc/nginx/nginx.conf ]] || { echo "nginx.conf não encontrado." >&2; exit 66; }
+grep -Fq 'include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf || {
+  echo "O Nginx não inclui /etc/nginx/conf.d/*.conf; nenhuma alteração aplicada." >&2
+  exit 78
+}
+command -v nginx >/dev/null && command -v logrotate >/dev/null || { echo "nginx ou logrotate indisponível." >&2; exit 69; }
+
+mkdir -p "$BACKUP_DIR" "$(dirname "$CONF")" "$(dirname "$ROTATE")"
+umask 077
+CONF_TMP="$(mktemp "${CONF}.XXXXXX")"
+ROTATE_TMP="$(mktemp "${ROTATE}.XXXXXX")"
+cleanup() { rm -f "$CONF_TMP" "$ROTATE_TMP"; }
+trap cleanup EXIT
+
+CONF_CONTENT="$(cat "$CONF" 2>/dev/null || true)"
+ROTATE_CONTENT="$(cat "$ROTATE" 2>/dev/null || true)"
+if [[ -e "$CONF" && "$CONF_CONTENT" != "$EXPECTED_CONF" && "$CONF_CONTENT" != "$LEGACY_CONF" ]]; then
+  echo "Configuração TLS existente e diferente; nenhuma alteração aplicada: $CONF" >&2
+  exit 73
+fi
+if [[ -e "$ROTATE" && "$ROTATE_CONTENT" != "$EXPECTED_ROTATE" && "$ROTATE_CONTENT" != "$LEGACY_ROTATE" ]]; then
+  echo "Configuração logrotate existente e diferente; nenhuma alteração aplicada: $ROTATE" >&2
+  exit 73
+fi
+if [[ "$CONF_CONTENT" == "$EXPECTED_CONF" && "$ROTATE_CONTENT" == "$EXPECTED_ROTATE" ]]; then
+  echo "TLS observability is already configured; no reload required."
+  exit 0
+fi
+
+if [[ ! -e "$CONF" || ! -e "$ROTATE" ]]; then
+  for file in "$CONF" "$ROTATE"; do
+    [[ ! -e "$file" ]] || cp -a "$file" "${BACKUP_DIR}/$(basename "$file").${STAMP}.bak"
+  done
+fi
+printf '%s\n' "$EXPECTED_CONF" > "$CONF_TMP"
+printf '%s\n' "$EXPECTED_ROTATE" > "$ROTATE_TMP"
+install -m 0644 "$CONF_TMP" "$CONF"
+install -m 0644 "$ROTATE_TMP" "$ROTATE"
+if [[ -e /var/log/nginx/carrochefe-tls-error.log ]]; then
+  chown root:adm /var/log/nginx/carrochefe-tls-error.log
+  chmod 0640 /var/log/nginx/carrochefe-tls-error.log
+else
+  install -o root -g adm -m 0640 /dev/null /var/log/nginx/carrochefe-tls-error.log
+fi
+chown root:adm /var/log/nginx/carrochefe-tls.log
+chmod 0640 /var/log/nginx/carrochefe-tls.log
+
+if ! nginx -t || ! logrotate --debug "$ROTATE" >/dev/null 2>&1; then
+  for file in "$CONF" "$ROTATE"; do
+    backup="${BACKUP_DIR}/$(basename "$file").${STAMP}.bak"
+    if [[ -e "$backup" ]]; then cp -a "$backup" "$file"; else rm -f "$file"; fi
+  done
+  nginx -t || true
+  echo "Validação falhou; configuração restaurada." >&2
+  exit 1
+fi
+systemctl reload nginx
+echo "TLS observability enabled. Nginx logs protocol, cipher, ALPN and status only; no client IP, URL, query string or body."
+echo "TLS handshake errors are captured separately at info level; that file is private and rotates daily for 7 days."
+echo "Config: $CONF"
+echo "Rotation: $ROTATE"
+echo "Backup directory: $BACKUP_DIR"
