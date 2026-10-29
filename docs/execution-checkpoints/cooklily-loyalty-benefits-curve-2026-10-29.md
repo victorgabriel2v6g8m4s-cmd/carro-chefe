@@ -1,14 +1,14 @@
 # CookLily — benefícios de nível, painel de fidelidade e migrations
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
-- branch: codex/lily-loyalty-benefits-levels-ui
+- branch: codex/cooklily-loyalty-final-checkpoint
 - base_branch: cooklily/canonical
-- base_sha_verified: 5742fe5bfc59e200f61ea28d825fc7e286f2adf7
-- head_sha_verified: 6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/257 (merged)
-- last_verified_at: 2026-10-29 21:38 UTC
-- interruption_state: active
+- base_sha_verified: 6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2
+- head_sha_verified: fa0e81d1c944c3be6c332140c05859ab98882f91
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/257 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/258 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/259 (merged)
+- last_verified_at: 2026-10-29 22:02 UTC
+- interruption_state: none
 
 ## Objetivo
 
@@ -18,47 +18,39 @@ Implementar no painel CookLily benefícios estruturados por nível, limites conf
 
 - Preflight `AG-DEV`, escopo `lily-loyalty-benefits-curve`: PASS.
 - Task runtime `TASK-DEV-LOYALTY-BENEFITS-UI`, execução `cmvu0kcga000lactpxz5lelcs` iniciada.
-- PR #257 passou todos os jobs de CI em Node 20 e Node 24 e foi integrado por squash às 21:38 UTC. SHA canônico: `6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2`.
-- Migrations versionadas criadas: `20261029210000_lily_loyalty_benefit_assets` e `20261029220000_lily_level_benefit_redemptions`.
-- Respostas do proprietário aplicadas: benefícios de nível desbloqueados para resgate no dashboard; limite individual configurável por benefício (padrão 1); LilyCoins ficam preparadas para a futura Store sem implementar Store nesta tarefa.
-- Hook `pretest`/`pretest:api` aplica migrations pendentes no banco local padrão `.runtime/lily-acai.db`; respeita e não modifica URLs explícitas usadas por CI/testes isolados.
-- A chave VPS foi localizada e o fingerprint conferido: `SHA256:/Fl2E1ADG3RPCCNxS65PRbmN1f07jyCTYsPesSDd2B8`.
-
-## Em andamento
-
-- Implementação frontend, API, schema, migrations e documentação integradas à canonical.
-- Release/deploy, homologação IAB desktop/mobile e fechamento da task runtime pendentes.
+- PR #257 passou CI e foi integrado por squash. Feature SHA: `6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2`.
+- PR #258 atualizou o checkpoint pré-deploy e foi integrado por squash: `7a6802c4ee243fd005d52244ea4e36676c1e16e`.
+- PR #259 corrigiu o seletor de benefícios no mobile e foi integrado por squash após todos os checks PASS: `fa0e81d1c944c3be6c332140c05859ab98882f91`.
+- Deploy incremental desse SHA concluído com backup dos bancos, 38 migrations Lily aplicadas e nenhum migration pendente. Readiness Fastify passou na tentativa 6; smoke HTTPS externo passou na tentativa 1.
+- Evidência de deploy: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-215651-fa0e81d1c944.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-215651-fa0e81d1c944.log`.
+- Backups verificados: core `/srv/carro-chefe/data/backups/carro-chefe-pre-fa0e81d1c944-20261029-215651.db` (643072 bytes; SHA-256 `9757ae223f7eb8e9b300fd70de6f6e8a4d6a8fc1e16443f56dd4961ba972a95e`, 12 migrations); Lily `/srv/carro-chefe/data/backups/lily-acai-pre-fa0e81d1c944-20261029-215651.db` (2461696 bytes; SHA-256 `ca0928c87e7952ae551e5fd8e21b6981447ef313f59d1b5b04cef4bc59472472`, 38 migrations).
+- A correção mobile passou gates locais e CI. No celular, categorias agora formam uma faixa horizontal rolável com alvos de toque; a lista de itens fica em uma coluna. Desktop preserva categorias e itens lado a lado.
+- Homologação no domínio real foi feita somente na aba Codex integrada, sem salvar/configurar benefícios de clientes. A página autenticada e catálogo carregaram após deploy; a lista foi semanticamente confirmada como disponível. Desktop foi verificado a 1440×900; mobile no viewport original aproximado de 418×563.
+- Respostas do proprietário aplicadas: benefícios desbloqueados para resgate no dashboard; limite por benefício configurável (padrão 1); LilyCoins preparadas para futura Store, que não faz parte desta entrega.
+- Hook `pretest`/`pretest:api` aplica migrations pendentes no banco local padrão `.runtime/lily-acai.db`; respeita URLs explícitas para preservar CI/testes isolados.
 
 ## Gates e testes
 
-- `npm test`: PASS local, 74 arquivos, 387 testes passaram, 3 skipped, antes do caso concorrente adicionado.
-- `npm run test:api`: PASS local, 49 arquivos, 281 testes passaram, 3 skipped; inclui concorrência do limite de resgate.
-- `npm run test:lily-ui`: PASS local, 20 arquivos, 93 testes.
-- `npm run check`: PASS após ajustes finais de validade de cupom, transação e clique duplo.
-- `npm run build`: PASS após os ajustes finais; orçamento CookLily 789.21 KiB JS raw / 800 KiB, 217.74 KiB gzip / 220 KiB, CSS 169.74 KiB raw / 174 KiB, combinado 250.82 KiB gzip / 254 KiB.
-- PR #257 CI: todos os jobs PASS, incluindo Quality Node 20/24, snapshots, tool health e receitas.
-- `git diff --cached --check`: PASS.
+- Feature local antes do ajuste responsive: `npm run check`, `npm test` (74 arquivos; 391 testes), `npm run build` PASS.
+- Ajuste mobile: `npm run policy:preflight -- --agent AG-DEV --scope lily-loyalty-picker-mobile`, `npm run check`, `npm test` (74 arquivos; 388 passaram, 3 skipped), `npm run build` PASS; budget CookLily PASS (789.21 KiB JS raw / 800, 217.75 KiB gzip / 220, CSS 170.08 KiB / 174, combined gzip 250.87 KiB / 254).
+- PR #259: todos os checks CI PASS (Quality Node 20/24, Tool Health, Windows Supervisor e receitas Excel Linux/Windows, Workbook Snapshot).
+- Deploy SHA `fa0e81d1c944c3be6c332140c05859ab98882f91`: gates incrementais policy, check, 74 arquivos/391 testes, build com budget PASS, tool health (12/12 aplicáveis PASS), migrations isolated preflight e smoke/readiness PASS.
+- Warning informativo de chunk Vite >500 kB permanece; budget do bundle passa.
 
 ## Migrations
 
-- Nova migration de ativos de benefícios e marca LilyCoins.
-- Nova migration de resgates de benefícios, snapshot, código único e status de fulfillment por equipe.
-- Ambas aplicadas no `.runtime/lily-acai.db` local e verificadas com `npm run db:deploy:lily` (38 migrations, zero pendentes). Na VPS, inspeção somente leitura encontrou 36 migrations aplicadas antes desta release; banco ainda não alterado.
+- `20261029210000_lily_loyalty_benefit_assets` e `20261029220000_lily_level_benefit_redemptions` aplicadas localmente e na VPS; produção confirma 38 migrations sem pendências.
 
 ## Bloqueios/riscos
 
-- Nenhum bloqueio de autorização para deploy; acesso SSH autorizado via arquivo `C:\Users\valdi\.ssh\hostinger_cooklily_ed25519`, fingerprint comparado ao `.pub`.
-- Em homologação real, não alterar dados/configuração comercial nem resgatar benefícios de clientes.
-- Deploy será executado pelo `/usr/local/sbin/carro-chefe-deploy`, após backup e preflight isolado integrados ao script. Inspeção read-only confirmou o helper instalado, serviço ativo e banco Lily em `/srv/carro-chefe/data/lily-acai.db`.
-- Homologação de domínio ainda não comprovada.
+- Nenhum bloqueio conhecido para a entrega. Configurações comerciais de produção não foram salvas nem alteradas durante homologação.
+- O viewport estreito original não permitia ver toda a faixa de categorias simultaneamente; ela é rolável horizontalmente por design e os itens aparecem abaixo da faixa.
 
 ## Homologação/dependências externas
 
-- Usar exclusivamente a aba integrada Codex autenticada no domínio real, desktop e em viewport mobile.
-- SHA de release integrado: `6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2`.
-- Aguardar conclusão do deployer, confirmar os backups/migrations/health check no log e então validar domínio desktop/mobile.
-- Guardar evidência e corrigir/redeploy/retestar qualquer falha.
+- Domínio validado: `https://carrochefe.com/lilyacai/painel/fidelidade` no Codex IAB autenticado.
+- Ajuste CSS mobile integrado e publicado em `fa0e81d1c944c3be6c332140c05859ab98882f91`.
 
 ## Próxima ação exata
 
-Publicar esta atualização do checkpoint; executar o deploy do SHA `6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2`; homologar fidelidade no navegador IAB em desktop e mobile sem salvar configurações; registrar evidências, falhas e retestes; fechar execução e tarefa runtime.
+Publicar este checkpoint final somente em `cooklily/canonical` e registrar a execução `cmvu0kcga000lactpxz5lelcs` como concluída na API runtime; depois encerrar.
