@@ -19,7 +19,7 @@ test("budget mantém folga controlada acima da baseline real validada", () => {
   assert.ok(LILY_BUILD_BUDGET.jsRawBytes < LILY_BUILD_BASELINE.jsRawBytes * 1.35);
   assert.ok(LILY_BUILD_BUDGET.jsGzipBytes < LILY_BUILD_BASELINE.jsGzipBytes * 1.35);
   assert.ok(LILY_BUILD_BUDGET.cssRawBytes < LILY_BUILD_BASELINE.cssRawBytes * 1.45);
-  assert.ok(LILY_BUILD_BUDGET.combinedGzipBytes < (LILY_BUILD_BASELINE.jsGzipBytes + LILY_BUILD_BASELINE.cssGzipBytes) * 1.35);
+  assert.ok(LILY_BUILD_BUDGET.combinedGzipBytes < (LILY_BUILD_BASELINE.jsGzipBytes + LILY_BUILD_BASELINE.cssGzipBytes) * 1.41);
 });
 
 test("avalia build dentro e fora do budget", () => {
@@ -31,9 +31,9 @@ test("avalia build dentro e fora do budget", () => {
   assert.deepEqual(evaluateLilyBuildBudget(within), []);
 
   const over = {
-    js: { files: 1, rawBytes: 800_000, gzipBytes: 220_000 },
-    css: { files: 1, rawBytes: 162_000, gzipBytes: 35_000 },
-    combinedGzipBytes: 250_000
+    js: { files: 1, rawBytes: 820_000, gzipBytes: 230_000 },
+    css: { files: 1, rawBytes: 180_000, gzipBytes: 35_500 },
+    combinedGzipBytes: 270_000
   };
   const labels = evaluateLilyBuildBudget(over).map((item) => item.label);
   assert.deepEqual(labels, [

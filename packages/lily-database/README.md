@@ -73,6 +73,12 @@ npm run db:deploy:lily
 npm run db:studio:lily
 ```
 
+## Testes locais
+
+`npm test` e `npm run test:api` aplicam `prisma migrate deploy` ao banco padrão `.runtime/lily-acai.db` antes de executar os testes, quando nenhuma URL de banco foi definida no ambiente. O arquivo é o mesmo banco local CookLily do checkout e permanece ignorado pelo Git; a preparação é incremental e não recria nem limpa o banco.
+
+Quando `LILY_DATABASE_URL` estiver definido explicitamente, o hook não escolhe nem migra outro destino: CI e deploy continuam responsáveis por preparar seus bancos de teste/snapshot antes dos gates.
+
 ## Produção
 
 Nunca executar reset ou seed de desenvolvimento no banco de produção.

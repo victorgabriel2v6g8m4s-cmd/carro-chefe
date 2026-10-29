@@ -436,6 +436,22 @@ export async function getLilyComboBuilder(comboId: string) {
   return parseResponse<ComboBuilderPayload>(response);
 }
 
+export type LilyBenefit = {
+  id: string;
+  kind: "product" | "coupon" | "discount" | "offer" | "combo" | "user_class" | "note";
+  entityId: string;
+  label: string;
+  categoryId: string | null;
+  maxRedemptionsPerUser: number;
+  selectionMode: "customer_choice" | "preset";
+  configuration: {
+    variantIds: string[];
+    flavorIds: string[];
+    addonIds: string[];
+    comboItems?: Array<{ comboItemId: string; variantIds: string[]; flavorIds: string[]; addonIds: string[] }>;
+  };
+};
+
 export type LilyProfilePayload = {
   user: {
     id: string;
@@ -454,20 +470,25 @@ export type LilyProfilePayload = {
     rank: number | null;
     rankScope: "public" | "internal";
     vipPointsThreshold: number;
-    currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
-    nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+    currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; iconUrl?: string | null; benefits: LilyBenefit[] } | null;
+    nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; iconUrl?: string | null; benefits: LilyBenefit[] } | null;
     levelProgressPercent: number;
     lilyCoins: number;
+    coinName: string;
+    coinIconUrl: string | null;
   };
 };
 
 export type LilyLoyaltyPayload = {
   points: number;
   lilyCoins: number;
-  currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
-  nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: string[] } | null;
+  coinName: string;
+  coinIconUrl: string | null;
+  currentLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; iconUrl: string | null; benefits: LilyBenefit[] } | null;
+  nextLevel: { id: string; name: string; requiredPoints: number; lilyCoins: number; iconUrl: string | null; benefits: LilyBenefit[] } | null;
+  unlockedLevels: Array<{ id: string; name: string; requiredPoints: number; iconUrl: string | null; benefits: Array<LilyBenefit & { redemptionsUsed: number; remainingRedemptions: number; canRedeem: boolean; redemptions: Array<{ id: string; redemptionCode: string; status: string; createdAt: string; fulfilledAt: string | null }> }> }>;
   levelProgressPercent: number;
-  milestones: Array<{ id: string; name: string; requiredPoints: number; lilyCoins: number; reached: boolean }>;
+  milestones: Array<{ id: string; name: string; requiredPoints: number; lilyCoins: number; iconUrl: string | null; reached: boolean }>;
   nextRewardTarget: { title: string; lilyCoinCost: number } | null;
   roundingMode: "floor" | "ceil" | "nearest";
   rewards: Array<{ id: string; title: string; description: string | null; type: string; lilyCoinCost: number; canRedeem: boolean }>;
@@ -479,6 +500,12 @@ export async function getLilyLoyalty() {
 
 export async function redeemLilyReward(rewardId: string, csrfToken: string) {
   return parseResponse<{ redeemed: boolean; loyalty: LilyLoyaltyPayload }>(await fetch(`/api/v1/lily/customer/loyalty/rewards/${encodeURIComponent(rewardId)}/redeem`, {
+    method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: "{}"
+  }));
+}
+
+export async function redeemLilyLevelBenefit(levelId: string, benefitId: string, csrfToken: string) {
+  return parseResponse<{ redeemed: boolean; redemption: { id: string; levelName: string; benefitLabel: string; benefitKind: string; redemptionCode: string; status: string; createdAt: string }; loyalty: LilyLoyaltyPayload }>(await fetch(`/api/v1/lily/customer/loyalty/levels/${encodeURIComponent(levelId)}/benefits/${encodeURIComponent(benefitId)}/redeem`, {
     method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: "{}"
   }));
 }

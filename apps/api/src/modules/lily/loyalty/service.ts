@@ -5,6 +5,9 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../../lib/errors";
 import { requireLilyCsrf, requireLilySession } from "../auth";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "../admin-security";
+import { loyaltyBenefitSchema, parseLoyaltyBenefits } from "./benefits";
+
+const mediaUrl = (id: string | null) => id ? `/api/v1/lily/public/media/${encodeURIComponent(id)}` : null;
 
 export const STARTER_LEVELS = [
   "Bronze I", "Bronze II", "Bronze III", "Prata I", "Prata II", "Prata III",
@@ -39,8 +42,8 @@ export async function progressPointsForUser(userId: string, db: Pick<typeof lily
 
 export async function createLoyaltyConfigVersion(actorUserId: string, db: Pick<LoyaltyLedgerDb, "lilyOperationalSettings" | "lilyLevel" | "lilyReward" | "lilyMission" | "lilyLoyaltyConfigVersion"> = lilyPrisma) {
   const [settings, levels, rewards, missions, latest] = await Promise.all([
-    db.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyOrderCentsPerPoint: true, loyaltyCampaignBonusPoints: true, loyaltyCouponBonusPoints: true, loyaltyRoundingMode: true } }),
-    db.lilyLevel.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true, sortOrder: true, requiredPoints: true, lilyCoins: true, benefitsJson: true, active: true } }),
+    db.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyOrderCentsPerPoint: true, loyaltyCampaignBonusPoints: true, loyaltyCouponBonusPoints: true, loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } }),
+    db.lilyLevel.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true, sortOrder: true, requiredPoints: true, lilyCoins: true, benefitsJson: true, iconMediaId: true, active: true } }),
     db.lilyReward.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, title: true, description: true, type: true, lilyCoinCost: true, couponId: true, productId: true, active: true, startsAt: true, endsAt: true, maxRedemptions: true } }),
     db.lilyMission.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, title: true, points: true, lilyCoins: true, status: true, prerequisiteJson: true } }),
     db.lilyLoyaltyConfigVersion.findFirst({ orderBy: { version: "desc" }, select: { version: true } })
@@ -52,6 +55,8 @@ export async function createLoyaltyConfigVersion(actorUserId: string, db: Pick<L
     campaignBonusPoints: settings.loyaltyCampaignBonusPoints,
     couponBonusPoints: settings.loyaltyCouponBonusPoints,
     roundingMode: settings.loyaltyRoundingMode,
+    loyaltyCoinName: settings.loyaltyCoinName,
+    loyaltyCoinIconMediaId: settings.loyaltyCoinIconMediaId,
     levelsJson: JSON.stringify(levels),
     rewardsJson: JSON.stringify(rewards),
     missionsJson: JSON.stringify(missions),
@@ -112,27 +117,62 @@ export async function reversePaidOrderPoints(userId: string, order: { id: string
 export async function loyaltySnapshot(userId: string) {
   const [points, levels, settings] = await Promise.all([
     progressPointsForUser(userId),
-    lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
-    lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true } })
+    lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, include: { iconMedia: { select: { id: true, status: true } } } }),
+    lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } })
   ]);
-  const [coinEvents] = await Promise.all([
-    lilyPrisma.lilyCoinEvent.findMany({ where: { userId }, select: { amount: true } })
-  ]);
+  const coinEvents = await lilyPrisma.lilyCoinEvent.findMany({ where: { userId }, select: { amount: true } });
+  const coinIcon = settings?.loyaltyCoinIconMediaId ? await lilyPrisma.lilyMediaAsset.findFirst({ where: { id: settings.loyaltyCoinIconMediaId, status: "active" }, select: { id: true } }) : null;
   const levelIndex = levels.reduce((index, level, i) => points >= level.requiredPoints ? i : index, -1);
   const currentLevel = levelIndex >= 0 ? levels[levelIndex] : null;
   const nextLevel = levels[levelIndex + 1] ?? null;
   const lilyCoins = coinEvents.reduce((total, event) => total + event.amount, 0);
+  const unlockedLevels = levels.filter((level) => points >= level.requiredPoints);
+  const levelRedemptions = unlockedLevels.length ? await lilyPrisma.lilyLevelBenefitRedemption.findMany({ where: { userId, levelId: { in: unlockedLevels.map(({ id }) => id) } }, orderBy: { createdAt: "desc" }, select: { id: true, levelId: true, benefitId: true, redemptionCode: true, status: true, createdAt: true, fulfilledAt: true } }) : [];
   const rewards = await lilyPrisma.lilyReward.findMany({ where: { active: true, OR: [{ startsAt: null }, { startsAt: { lte: new Date() } }], AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] }] }, orderBy: { lilyCoinCost: "asc" } });
   const earliestReward = rewards[0];
   return {
-    points, lilyCoins, currentLevel: currentLevel ? { id: currentLevel.id, name: currentLevel.name, requiredPoints: currentLevel.requiredPoints, lilyCoins: currentLevel.lilyCoins, benefits: JSON.parse(currentLevel.benefitsJson) as string[] } : null,
-    nextLevel: nextLevel ? { id: nextLevel.id, name: nextLevel.name, requiredPoints: nextLevel.requiredPoints, lilyCoins: nextLevel.lilyCoins, benefits: JSON.parse(nextLevel.benefitsJson) as string[] } : null,
-    milestones: levels.map(({ id, name, requiredPoints, lilyCoins: award }) => ({ id, name, requiredPoints, lilyCoins: award, reached: points >= requiredPoints })),
+    points, lilyCoins, coinName: settings?.loyaltyCoinName ?? "LilyCoins", coinIconUrl: mediaUrl(coinIcon?.id ?? null),
+    currentLevel: currentLevel ? { id: currentLevel.id, name: currentLevel.name, requiredPoints: currentLevel.requiredPoints, lilyCoins: currentLevel.lilyCoins, iconUrl: currentLevel.iconMedia?.status === "active" ? mediaUrl(currentLevel.iconMedia.id) : null, benefits: parseLoyaltyBenefits(currentLevel.benefitsJson) } : null,
+    nextLevel: nextLevel ? { id: nextLevel.id, name: nextLevel.name, requiredPoints: nextLevel.requiredPoints, lilyCoins: nextLevel.lilyCoins, iconUrl: nextLevel.iconMedia?.status === "active" ? mediaUrl(nextLevel.iconMedia.id) : null, benefits: parseLoyaltyBenefits(nextLevel.benefitsJson) } : null,
+    unlockedLevels: unlockedLevels.map((level) => ({ id: level.id, name: level.name, requiredPoints: level.requiredPoints, iconUrl: level.iconMedia?.status === "active" ? mediaUrl(level.iconMedia.id) : null, benefits: parseLoyaltyBenefits(level.benefitsJson).map((benefit) => {
+      const redemptions = levelRedemptions.filter((redemption) => redemption.levelId === level.id && redemption.benefitId === benefit.id);
+      const maxRedemptionsPerUser = benefit.maxRedemptionsPerUser ?? 1;
+      return { ...benefit, maxRedemptionsPerUser, redemptionsUsed: redemptions.length, remainingRedemptions: Math.max(0, maxRedemptionsPerUser - redemptions.length), canRedeem: redemptions.length < maxRedemptionsPerUser, redemptions: redemptions.map(({ id, redemptionCode, status, createdAt, fulfilledAt }) => ({ id, redemptionCode, status, createdAt, fulfilledAt })) };
+    }) })),
+    milestones: levels.map(({ id, name, requiredPoints, lilyCoins: award, iconMedia }) => ({ id, name, requiredPoints, lilyCoins: award, iconUrl: iconMedia?.status === "active" ? mediaUrl(iconMedia.id) : null, reached: points >= requiredPoints })),
     levelProgressPercent: currentLevel && nextLevel ? Math.max(0, Math.min(100, Math.round((points - currentLevel.requiredPoints) / Math.max(1, nextLevel.requiredPoints - currentLevel.requiredPoints) * 100))) : currentLevel ? 100 : 0,
     roundingMode: settings?.loyaltyRoundingMode ?? "floor",
     nextRewardTarget: earliestReward ? { title: earliestReward.title, lilyCoinCost: earliestReward.lilyCoinCost } : null,
     rewards: rewards.map(({ id, title, description, type, lilyCoinCost }) => ({ id, title, description, type, lilyCoinCost, canRedeem: lilyCoins >= lilyCoinCost }))
   };
+}
+
+export async function redeemLoyaltyLevelBenefit(userId: string, levelId: string, benefitId: string, database: Pick<typeof lilyPrisma, "$transaction"> = lilyPrisma) {
+  return database.$transaction(async (tx) => {
+    const [points, level] = await Promise.all([
+      progressPointsForUser(userId, tx),
+      tx.lilyLevel.findFirst({ where: { id: levelId, active: true } })
+    ]);
+    if (!level || points < level.requiredPoints) throw new ApiError(404, "Este nível ainda não está disponível para resgate.");
+    const benefit = parseLoyaltyBenefits(level.benefitsJson).find(({ id }) => id === benefitId);
+    if (!benefit) throw new ApiError(404, "Benefício não encontrado neste nível.");
+    const used = await tx.lilyLevelBenefitRedemption.count({ where: { userId, levelId, benefitId } });
+    if (used >= (benefit.maxRedemptionsPerUser ?? 1)) throw new ApiError(409, "Você já usou o limite de resgates deste benefício.");
+    let couponId: string | null = null;
+    let redemptionCode = `LILY-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+    if (benefit.kind === "coupon" || benefit.kind === "discount") {
+      const now = new Date();
+      const original = await tx.lilyCoupon.findFirst({ where: { id: benefit.entityId, status: "active", assignedUserId: null, AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gt: now } }] }] } });
+      if (!original) throw new ApiError(409, "O cupom deste benefício não está mais disponível.");
+      const coupon = await tx.lilyCoupon.create({ data: { id: crypto.randomUUID(), code: `${original.code.slice(0, 16)}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, title: original.title, description: original.description, type: original.type, value: original.value, minimumOrderCents: original.minimumOrderCents, maxDiscountCents: original.maxDiscountCents, color: original.color, imageMediaId: original.imageMediaId, status: "active", startsAt: new Date(), endsAt: original.endsAt, recurrence: "none", maxUsesTotal: 1, maxUsesPerCustomer: 1, allowCombination: original.allowCombination, isAdditive: original.isAdditive, vipOnly: false, appliesToShipping: original.appliesToShipping, createdBy: "system:loyalty-level", assignedUserId: userId } });
+      for (const category of await tx.lilyCouponCategory.findMany({ where: { couponId: original.id } })) await tx.lilyCouponCategory.create({ data: { couponId: coupon.id, categoryId: category.categoryId } });
+      for (const product of await tx.lilyCouponProduct.findMany({ where: { couponId: original.id } })) await tx.lilyCouponProduct.create({ data: { couponId: coupon.id, productId: product.productId } });
+      couponId = coupon.id;
+      redemptionCode = coupon.code;
+    }
+    const redemption = await tx.lilyLevelBenefitRedemption.create({ data: { id: crypto.randomUUID(), userId, levelId, levelName: level.name, benefitId, benefitKind: benefit.kind, benefitLabel: benefit.label, configurationJson: JSON.stringify(benefit.configuration), redemptionCode, couponId } });
+    return { id: redemption.id, levelName: level.name, benefitLabel: benefit.label, benefitKind: benefit.kind, redemptionCode, status: redemption.status, createdAt: redemption.createdAt };
+  });
 }
 
 export async function awardMissionLilyCoins(userId: string, missionId: string, amount: number) {
@@ -150,20 +190,156 @@ export async function awardReachedLevelCoins(userId: string, priorPoints: number
   } });
 }
 
+async function validateLevelBenefits(levels: Array<z.infer<typeof loyaltyLevelInputSchema>>) {
+  const benefits = levels.flatMap(({ benefits }) => benefits);
+  const productIds = [...new Set(benefits.filter((benefit) => benefit.kind === "product").map(({ entityId }) => entityId))];
+  const couponIds = [...new Set(benefits.filter((benefit) => benefit.kind === "coupon" || benefit.kind === "discount").map(({ entityId }) => entityId))];
+  const offerIds = [...new Set(benefits.filter((benefit) => benefit.kind === "offer").map(({ entityId }) => entityId))];
+  const comboIds = [...new Set(benefits.filter((benefit) => benefit.kind === "combo").map(({ entityId }) => entityId))];
+  const [products, coupons, offers, combos] = await Promise.all([
+    lilyPrisma.lilyProduct.findMany({ where: { id: { in: productIds }, status: "published" }, select: { id: true, minimumAddonUnits: true, maximumAddonUnits: true, variants: { where: { status: "published" }, select: { id: true } }, flavorLinks: { where: { flavor: { status: "published" } }, select: { flavorId: true } }, addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addonId: true } } } }),
+    lilyPrisma.lilyCoupon.findMany({ where: { id: { in: couponIds }, status: "active", assignedUserId: null, AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: new Date() } }] }, { OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] }] }, select: { id: true } }),
+    lilyPrisma.lilyOffer.findMany({ where: { id: { in: offerIds }, status: "published" }, select: { id: true } }),
+    lilyPrisma.lilyCombo.findMany({
+      where: { id: { in: comboIds }, status: "published" },
+      select: {
+        id: true,
+        items: {
+          select: {
+            id: true,
+            product: {
+              select: {
+                minimumAddonUnits: true, maximumAddonUnits: true,
+                variants: { where: { status: "published" }, select: { id: true } },
+                flavorLinks: { where: { flavor: { status: "published" } }, select: { flavorId: true } },
+                addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addonId: true } }
+              }
+            }
+          }
+        }
+      }
+    })
+  ]);
+  const productById = new Map(products.map((product) => [product.id, product]));
+  const comboById = new Map(combos.map((combo) => [combo.id, combo]));
+  const allowedIds = {
+    coupon: new Set(coupons.map(({ id }) => id)), discount: new Set(coupons.map(({ id }) => id)),
+    offer: new Set(offers.map(({ id }) => id)), combo: new Set(combos.map(({ id }) => id))
+  };
+  for (const benefit of benefits) {
+    if (benefit.kind === "product") {
+      const product = productById.get(benefit.entityId);
+      if (!product) throw new ApiError(400, `O produto do benefício “${benefit.label}” não está publicado.`);
+      const chosen = benefit.configuration;
+      if (chosen.variantIds.some((id) => !product.variants.some((variant) => variant.id === id)) || chosen.flavorIds.some((id) => !product.flavorLinks.some((link) => link.flavorId === id)) || chosen.addonIds.some((id) => !product.addonLinks.some((link) => link.addonId === id))) throw new ApiError(400, `As variações do benefício “${benefit.label}” não pertencem mais ao produto.`);
+      if (benefit.selectionMode === "preset" && product.variants.length > 0 && chosen.variantIds.length !== 1) throw new ApiError(400, `Escolha um único tamanho para a combinação fixa de “${benefit.label}”.`);
+      if (benefit.selectionMode === "preset" && (chosen.addonIds.length < product.minimumAddonUnits || product.maximumAddonUnits > 0 && chosen.addonIds.length > product.maximumAddonUnits)) throw new ApiError(400, `A combinação fixa de “${benefit.label}” precisa respeitar a quantidade de adicionais permitida.`);
+    } else if (benefit.kind === "combo") {
+      const combo = comboById.get(benefit.entityId);
+      if (!combo) throw new ApiError(400, `O combo do benefício “${benefit.label}” não está publicado.`);
+      if (benefit.configuration.variantIds.length || benefit.configuration.flavorIds.length || benefit.configuration.addonIds.length) throw new ApiError(400, `Configure as opções do combo “${benefit.label}” por item.`);
+      const chosenItems = benefit.configuration.comboItems ?? [];
+      if (benefit.selectionMode === "preset" && chosenItems.length !== combo.items.length) throw new ApiError(400, `Configure cada item do combo “${benefit.label}”.`);
+      if (new Set(chosenItems.map(({ comboItemId }) => comboItemId)).size !== chosenItems.length) throw new ApiError(400, `O combo “${benefit.label}” não pode repetir itens configurados.`);
+      for (const chosen of chosenItems) {
+        const item = combo.items.find(({ id }) => id === chosen.comboItemId);
+        if (!item) throw new ApiError(400, `Um item da configuração do combo “${benefit.label}” não está mais disponível.`);
+        if (chosen.variantIds.some((id) => !item.product.variants.some((variant) => variant.id === id)) || chosen.flavorIds.some((id) => !item.product.flavorLinks.some((link) => link.flavorId === id)) || chosen.addonIds.some((id) => !item.product.addonLinks.some((link) => link.addonId === id))) throw new ApiError(400, `As variações do combo “${benefit.label}” não pertencem ao respectivo produto.`);
+        if (benefit.selectionMode === "preset" && item.product.variants.length && chosen.variantIds.length !== 1) throw new ApiError(400, `Escolha um tamanho para cada item de “${benefit.label}”.`);
+        if (benefit.selectionMode === "preset" && (chosen.addonIds.length < item.product.minimumAddonUnits || item.product.maximumAddonUnits > 0 && chosen.addonIds.length > item.product.maximumAddonUnits)) throw new ApiError(400, `A combinação de “${benefit.label}” precisa respeitar a quantidade de adicionais permitida.`);
+      }
+    } else if (benefit.kind === "user_class" && benefit.entityId !== "vip") {
+      throw new ApiError(400, "A classe de usuário selecionada não está disponível.");
+    } else if (benefit.kind !== "user_class" && benefit.kind !== "note" && !allowedIds[benefit.kind].has(benefit.entityId)) {
+      throw new ApiError(400, `O item “${benefit.label}” não está mais disponível no catálogo.`);
+    }
+  }
+}
+
+const loyaltyLevelInputSchema = z.object({
+  id: z.string().max(80).optional(), name: z.string().trim().min(1).max(80), sortOrder: z.number().int().min(0).max(100),
+  requiredPoints: z.number().int().min(0).max(1000000000), lilyCoins: z.number().int().min(0).max(100000000),
+  benefits: z.array(loyaltyBenefitSchema).max(20).default([]), iconMediaId: z.string().max(80).nullable().default(null), active: z.boolean()
+}).strict();
+
 export async function lilyLevelRoutes(app: FastifyInstance) {
-  const levelsSchema = z.object({ levels: z.array(z.object({ id: z.string().max(80).optional(), name: z.string().trim().min(1).max(80), sortOrder: z.number().int().min(0).max(100), requiredPoints: z.number().int().min(0).max(1000000000), lilyCoins: z.number().int().min(0).max(100000000), benefits: z.array(z.string().trim().min(1).max(240)).max(20).default([]), active: z.boolean() }).strict()).max(100), roundingMode: z.enum(["floor", "ceil", "nearest"]) }).strict();
+  const levelsSchema = z.object({ levels: z.array(loyaltyLevelInputSchema).max(100), roundingMode: z.enum(["floor", "ceil", "nearest"]) }).strict();
   app.get("/api/v1/lily/admin/loyalty", async (request) => {
     await requireLilyStaff(request);
-    const [levels, settings, rewards, missions, coupons, config, products] = await Promise.all([
+    const [levels, settings, rewards, missions, config, products, categories, offers, combos, coupons] = await Promise.all([
       lilyPrisma.lilyLevel.findMany({ orderBy: { sortOrder: "asc" } }),
-      lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true } }),
+      lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } }),
       lilyPrisma.lilyReward.findMany({ orderBy: { createdAt: "desc" } }),
       lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" }, select: { id: true, title: true, status: true, points: true, lilyCoins: true } }),
-      lilyPrisma.lilyCoupon.findMany({ where: { status: "active", assignedUserId: null }, select: { id: true, title: true, code: true }, orderBy: { title: "asc" } }),
       lilyPrisma.lilyLoyaltyConfigVersion.findFirst({ orderBy: { version: "desc" }, select: { version: true } }),
-      lilyPrisma.lilyProduct.findMany({ where: { status: "published" }, select: { id: true, displayName: true, slug: true }, orderBy: { displayName: "asc" } })
+      lilyPrisma.lilyProduct.findMany({ where: { status: "published" }, select: { id: true, displayName: true, slug: true, categoryId: true, category: { select: { name: true } }, minimumAddonUnits: true, maximumAddonUnits: true, variants: { where: { status: "published" }, select: { id: true, name: true, sizeMl: true } }, flavorLinks: { where: { flavor: { status: "published" } }, select: { flavor: { select: { id: true, name: true } } } }, addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addon: { select: { id: true, name: true } } } } }, orderBy: { displayName: "asc" } }),
+      lilyPrisma.lilyCategory.findMany({ where: { status: "published" }, select: { id: true, name: true, parentId: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
+      lilyPrisma.lilyOffer.findMany({ where: { status: "published" }, select: { id: true, name: true, productId: true, variantId: true, regularPriceCents: true, offerPriceCents: true, startsAt: true, endsAt: true }, orderBy: { name: "asc" } }),
+      lilyPrisma.lilyCombo.findMany({
+        where: { status: "published" },
+        select: {
+          id: true, name: true, description: true,
+          items: {
+            select: {
+              id: true, quantity: true, sizeMl: true, flavorCount: true,
+              product: {
+                select: {
+                  id: true, displayName: true, slug: true, categoryId: true, category: { select: { name: true } }, minimumAddonUnits: true, maximumAddonUnits: true,
+                  variants: { where: { status: "published" }, select: { id: true, name: true, sizeMl: true } },
+                  flavorLinks: { where: { flavor: { status: "published" } }, select: { flavor: { select: { id: true, name: true } } } },
+                  addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addon: { select: { id: true, name: true } } } }
+                }
+              }
+            }
+          }
+        },
+        orderBy: { name: "asc" }
+      }),
+      lilyPrisma.lilyCoupon.findMany({ where: { status: "active", assignedUserId: null }, select: { id: true, title: true, code: true, type: true, value: true }, orderBy: { title: "asc" } })
     ]);
-    return { levels: levels.map(({ benefitsJson, ...row }) => ({ ...row, benefits: JSON.parse(benefitsJson) as string[] })), roundingMode: settings?.loyaltyRoundingMode ?? "floor", configVersion: config?.version ?? 0, rewards, missions, coupons, products };
+    const mediaIds = [...new Set([settings?.loyaltyCoinIconMediaId, ...levels.map((level) => level.iconMediaId)].filter((id): id is string => Boolean(id)))];
+    const media = mediaIds.length ? await lilyPrisma.lilyMediaAsset.findMany({ where: { id: { in: mediaIds }, status: "active" }, select: { id: true } }) : [];
+    const activeMediaIds = new Set(media.map(({ id }) => id));
+    return {
+      levels: levels.map(({ benefitsJson, ...row }) => ({ ...row, benefits: parseLoyaltyBenefits(benefitsJson), iconMediaId: activeMediaIds.has(row.iconMediaId ?? "") ? row.iconMediaId : null, iconUrl: activeMediaIds.has(row.iconMediaId ?? "") ? mediaUrl(row.iconMediaId) : null })),
+      roundingMode: settings?.loyaltyRoundingMode ?? "floor", configVersion: config?.version ?? 0, rewards, missions,
+      coupons: coupons.map(({ id, title, code }) => ({ id, title, code })), products,
+      branding: { coinName: settings?.loyaltyCoinName ?? "LilyCoins", coinIconMediaId: activeMediaIds.has(settings?.loyaltyCoinIconMediaId ?? "") ? settings?.loyaltyCoinIconMediaId ?? null : null, coinIconUrl: activeMediaIds.has(settings?.loyaltyCoinIconMediaId ?? "") ? mediaUrl(settings?.loyaltyCoinIconMediaId ?? null) : null },
+      benefitCatalog: {
+        categories, products, coupons,
+        discounts: coupons.filter((coupon) => ["percent", "percentage", "fixed", "amount"].includes(coupon.type.toLowerCase())),
+        offers, combos,
+        userClasses: [{ id: "vip", name: "Programa VIP", description: "Acesso à classe VIP CookLily." }]
+      }
+    };
+  });
+  app.put("/api/v1/lily/admin/loyalty/branding", async (request) => {
+    const actor = await requireLilyStaff(request, true);
+    const input = z.object({ coinName: z.string().trim().min(1).max(32), coinIconMediaId: z.string().max(80).nullable() }).strict().parse(request.body);
+    if (input.coinIconMediaId) {
+      const asset = await lilyPrisma.lilyMediaAsset.findFirst({ where: { id: input.coinIconMediaId, status: "active", mime: { startsWith: "image/" } }, select: { id: true } });
+      if (!asset) throw new ApiError(400, "A arte da moeda precisa ser uma imagem ativa da biblioteca CookLily.");
+    }
+    const saved = await lilyPrisma.$transaction(async (tx) => {
+      await tx.lilyOperationalSettings.update({ where: { id: "default" }, data: { loyaltyCoinName: input.coinName, loyaltyCoinIconMediaId: input.coinIconMediaId } });
+      return createLoyaltyConfigVersion(actor.user.id, tx);
+    });
+    await auditLilyAdmin(actor.user.id, "configure", "loyalty-branding", "default", { ...input, configVersion: saved.version });
+    return { ...input, coinIconUrl: mediaUrl(input.coinIconMediaId), configVersion: saved.version };
+  });
+  app.get("/api/v1/lily/admin/loyalty/benefit-redemptions", async (request) => {
+    await requireLilyStaff(request);
+    const redemptions = await lilyPrisma.lilyLevelBenefitRedemption.findMany({ orderBy: { createdAt: "desc" }, take: 100, select: { id: true, levelName: true, benefitLabel: true, benefitKind: true, redemptionCode: true, status: true, createdAt: true, fulfilledAt: true } });
+    return { redemptions };
+  });
+  app.patch("/api/v1/lily/admin/loyalty/benefit-redemptions/:id/fulfill", async (request) => {
+    const actor = await requireLilyStaff(request, true);
+    const id = (request.params as { id: string }).id;
+    const updated = await lilyPrisma.lilyLevelBenefitRedemption.updateMany({ where: { id, status: "claimed" }, data: { status: "fulfilled", fulfilledBy: actor.user.id, fulfilledAt: new Date() } });
+    if (!updated.count) throw new ApiError(409, "Este código já foi concluído ou não está disponível.");
+    const redemption = await lilyPrisma.lilyLevelBenefitRedemption.findUniqueOrThrow({ where: { id }, select: { id: true, levelName: true, benefitLabel: true, redemptionCode: true, status: true, fulfilledAt: true } });
+    await auditLilyAdmin(actor.user.id, "fulfill", "loyalty-benefit-redemption", redemption.id, { redemptionCode: redemption.redemptionCode });
+    return { redemption };
   });
   app.post("/api/v1/lily/admin/loyalty/rewards", async (request) => {
     const actor = await requireLilyStaff(request, true);
@@ -223,6 +399,13 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     });
     return { claimed: true, pointsAwarded: mission.points, lilyCoinsAwarded: mission.lilyCoins, loyalty: await loyaltySnapshot(context.user.id) };
   });
+  app.post("/api/v1/lily/customer/loyalty/levels/:levelId/benefits/:benefitId/redeem", async (request) => {
+    const context = await requireLilySession(request);
+    requireLilyCsrf(request, context);
+    const { levelId, benefitId } = z.object({ levelId: z.string().min(1).max(80), benefitId: z.string().min(1).max(100) }).parse(request.params);
+    const redemption = await redeemLoyaltyLevelBenefit(context.user.id, levelId, benefitId);
+    return { redeemed: true, redemption, loyalty: await loyaltySnapshot(context.user.id) };
+  });
   app.put("/api/v1/lily/admin/loyalty/levels", async (request) => {
     const actor = await requireLilyStaff(request, true);
     const input = levelsSchema.parse(request.body);
@@ -230,10 +413,15 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     if (new Set(input.levels.map((level) => level.name.trim().toLocaleLowerCase("pt-BR"))).size !== input.levels.length) throw new ApiError(400, "Os nomes dos níveis não podem se repetir.");
     const sorted = [...input.levels].sort((a, b) => a.sortOrder - b.sortOrder);
     if (sorted.some((level, index) => index > 0 && level.requiredPoints <= sorted[index - 1].requiredPoints)) throw new ApiError(400, "Os pontos de cada nível precisam ser maiores que os do nível anterior.");
+    if (sorted.some((level) => new Set(level.benefits.map(({ id }) => id)).size !== level.benefits.length)) throw new ApiError(400, "Um nível não pode repetir o mesmo benefício.");
+    await validateLevelBenefits(sorted);
+    const iconIds = [...new Set(sorted.map(({ iconMediaId }) => iconMediaId).filter((id): id is string => Boolean(id)))];
+    const validIcons = iconIds.length ? await lilyPrisma.lilyMediaAsset.findMany({ where: { id: { in: iconIds }, status: "active", mime: { startsWith: "image/" } }, select: { id: true } }) : [];
+    if (validIcons.length !== iconIds.length) throw new ApiError(400, "Cada nível precisa usar uma arte de imagem ativa da biblioteca CookLily.");
     const before = await lilyPrisma.lilyLevel.findMany({ select: { id: true, requiredPoints: true, lilyCoins: true } });
     const version = await lilyPrisma.$transaction(async (tx) => {
       for (const [index, level] of sorted.entries()) {
-        const data = { name: level.name, sortOrder: index, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins, benefitsJson: JSON.stringify(level.benefits), active: level.active };
+        const data = { name: level.name, sortOrder: index, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins, benefitsJson: JSON.stringify(level.benefits), iconMediaId: level.iconMediaId, active: level.active };
         await tx.lilyLevel.upsert({ where: { sortOrder: index }, create: { id: level.id ?? crypto.randomUUID(), ...data }, update: data });
       }
       await tx.lilyLevel.deleteMany({ where: { sortOrder: { gte: sorted.length } } });
