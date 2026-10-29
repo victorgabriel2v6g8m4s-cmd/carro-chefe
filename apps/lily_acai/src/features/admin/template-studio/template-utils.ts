@@ -7,6 +7,8 @@ export const emptyTemplate: TemplateDraft = {
   language: "pt_BR",
   bodyTemplate: "",
   variables: [],
+  variableNames: [],
+  flow: [],
   metaTemplateName: "",
   components: [{ type: "BODY", text: "" }]
 };

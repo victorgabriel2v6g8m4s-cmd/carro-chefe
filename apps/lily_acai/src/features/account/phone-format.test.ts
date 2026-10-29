@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBrazilianPhone } from "./phone-format";
+import { formatBrazilianPhone, formatBrazilianPhoneInput } from "./phone-format";
 
 describe("formatBrazilianPhone", () => {
   it("formata celular brasileiro com DDI", () => {
@@ -20,5 +20,12 @@ describe("formatBrazilianPhone", () => {
 
   it("não altera valores que não têm tamanho telefônico brasileiro reconhecido", () => {
     expect(formatBrazilianPhone("123")).toBe("123");
+  });
+
+  it("preserva o ponto de edição ao remover um dígito no meio do telefone formatado", () => {
+    const input = "+55 (67) 99986-4851";
+    const result = formatBrazilianPhoneInput(input.slice(0, 12) + input.slice(13), 12);
+    expect(result.value).toBe("+55 (67) 9996-4851");
+    expect(result.caret).toBeLessThan(result.value.length);
   });
 });

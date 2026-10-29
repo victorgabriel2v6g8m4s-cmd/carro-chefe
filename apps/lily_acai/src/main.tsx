@@ -29,7 +29,7 @@ import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, rea
 import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import { LilyLoadingSpinner } from "./loading-spinner";
-import { formatBrazilianPhone } from "./features/account/phone-format";
+import { formatBrazilianPhoneInput } from "./features/account/phone-format";
 import { surveyJson } from "./features/surveys/api";
 const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
 const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
@@ -51,7 +51,14 @@ function PasswordInput(props: { name: string; autoComplete: string; required?: b
   return <span className="password-field"><input {...props} type={visible ? "text" : "password"} /><button type="button" className="password-toggle" aria-label={visible ? "Ocultar senha" : "Mostrar senha"} aria-pressed={visible} onClick={() => setVisible((value) => !value)}>{visible ? "Ocultar" : "Mostrar"}</button></span>;
 }
 
-function formatPhoneInput(event: React.ChangeEvent<HTMLInputElement>) { event.currentTarget.value = formatBrazilianPhone(event.currentTarget.value); }
+function formatPhoneInput(event: React.ChangeEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  const formatted = formatBrazilianPhoneInput(input.value, input.selectionStart);
+  if (formatted.value !== input.value) {
+    input.value = formatted.value;
+    input.setSelectionRange(formatted.caret, formatted.caret);
+  }
+}
 
 function ProfileBubble({ user }: { user: AuthPayload["user"] | null }) {
   const initial = user?.displayName?.trim()[0]?.toUpperCase();

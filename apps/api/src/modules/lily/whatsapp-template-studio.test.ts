@@ -45,6 +45,7 @@ afterEach(async () => {
     await lilyPrisma.lilyUser.delete({ where: { id: createdUserId } });
     createdUserId = "";
   }
+  await lilyPrisma.lilyWhatsAppSimulatorSettings.deleteMany({ where: { id: "default" } });
 });
 
 afterAll(async () => app.close());
@@ -64,26 +65,38 @@ describe("CookLily WhatsApp template studio API", () => {
       headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
       payload: {
         key, displayName: "Pedido pronto", category: "utility", language: "pt_BR",
-        bodyTemplate: "Pedido {{1}} pronto", variables: [], metaTemplateName: null,
+        bodyTemplate: "Pedido {{1}} pronto", variables: [], variableNames: ["numero_do_pedido"], metaTemplateName: null,
         components, status: "draft"
       }
     });
     expect(created.statusCode).toBe(201);
     expect(created.json().template.components).toEqual(components);
+    expect(created.json().template.variableNames).toEqual(["numero_do_pedido"]);
 
     const listed = await app.inject({ method: "GET", url: "/api/v1/lily/admin/whatsapp/templates?limit=100", headers: { cookie: auth.cookie } });
     expect(listed.statusCode).toBe(200);
     const stored = listed.json().templates.find((item: { key: string }) => item.key === key);
     expect(stored.components).toEqual(components);
+    expect(stored.variableNames).toEqual(["numero_do_pedido"]);
+    const nodes = [{ id: "start", name: "Boas-vindas", trigger: "início", templateKey: key, response: "", nextNodeId: "", branches: [{ id: "track", trigger: "botão", response: "Acompanhar", nextNodeId: "status" }] }, { id: "status", name: "Status", trigger: "manual", templateKey: key, response: "", nextNodeId: "" }];
+    const savedFlow = await app.inject({ method: "PUT", url: `/api/v1/lily/admin/whatsapp/templates/${key}/flow`, headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf }, payload: nodes });
+    expect(savedFlow.statusCode).toBe(200);
+    expect(savedFlow.json().nodes).toEqual(nodes);
+    const pricing = { usdToBrl: 5.3, usd: { marketing: 0.06, utility: 0.007, authentication: 0.007, service: 0.007 }, freeServiceMessages: 1000, effectiveDate: "2026-10-01", source: "test" };
+    const savedPricing = await app.inject({ method: "PUT", url: "/api/v1/lily/admin/whatsapp/simulator", headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf }, payload: { pricing } });
+    expect(savedPricing.statusCode).toBe(200);
+    const simulator = await app.inject({ method: "GET", url: "/api/v1/lily/admin/whatsapp/simulator", headers: { cookie: auth.cookie } });
+    expect(simulator.json()).toMatchObject({ pricing, flows: { [key]: nodes } });
 
     const updatedComponents = [{ type: "BODY", text: "Seu pedido {{1}} foi entregue." }, { type: "FOOTER", text: "CookLily" }];
     const updated = await app.inject({
       method: "PATCH", url: `/api/v1/lily/admin/whatsapp/templates/${created.json().template.id}`,
       headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
-      payload: { components: updatedComponents, bodyTemplate: "Seu pedido {{1}} foi entregue.", status: "draft" }
+      payload: { components: updatedComponents, bodyTemplate: "Seu pedido {{1}} foi entregue.", variableNames: ["codigo_de_rastreio"], status: "draft" }
     });
     expect(updated.statusCode).toBe(200);
     expect(updated.json().template.components).toEqual(updatedComponents);
+    expect(updated.json().template.variableNames).toEqual(["codigo_de_rastreio"]);
   });
 
   it("rejects malformed or oversized advanced components", async () => {

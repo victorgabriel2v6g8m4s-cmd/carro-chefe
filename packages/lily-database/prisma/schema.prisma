@@ -87,6 +87,8 @@ model LilyWhatsAppMessageTemplate {
   language        String   @default("pt_BR")
   bodyTemplate    String
   variablesJson   String   @default("[]")
+  variableNamesJson String  @default("[]")
+  flowJson          String  @default("[]")
   componentsJson  String   @default("[]")
   metaTemplateName String? @unique
   status          String   @default("draft")
@@ -95,6 +97,13 @@ model LilyWhatsAppMessageTemplate {
   updatedAt       DateTime @updatedAt
 
   @@index([status, category, updatedAt])
+}
+
+model LilyWhatsAppSimulatorSettings {
+  id         String   @id @default("default")
+  pricingJson String @default("{}")
+  updatedBy  String?
+  updatedAt  DateTime @updatedAt
 }
 
 model LilyWhatsAppWebhookEvent {

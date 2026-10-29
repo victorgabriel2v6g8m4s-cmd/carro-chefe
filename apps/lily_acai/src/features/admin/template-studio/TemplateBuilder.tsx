@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { bodyTemplateFrom, componentText, upsertComponent, validateComponents } from "./template-utils";
 import type { JsonValue, MetaTemplateComponent, TemplateDraft } from "./template-types";
 import { createAuthenticationComponents, setAuthenticationExpiration, setAuthenticationSecurityRecommendation, setOtpType, type OtpType } from "./authentication-template";
+import { TemplateTextEditor } from "./TemplateTextEditor";
+import { TemplateVariableManager } from "./TemplateVariableManager";
+import { ensureVariableNames } from "./template-text";
 
 type Props = { draft: TemplateDraft; onChange: (next: TemplateDraft) => void; disabled?: boolean; isEditing?: boolean };
 type HeaderFormat = "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT" | "LOCATION";
@@ -42,6 +45,8 @@ export function TemplateBuilder({ draft, onChange, disabled = false, isEditing =
   const authFooter = draft.components.find((item) => item.type === "FOOTER");
   const authOtp = Array.isArray(buttonsComponent?.buttons) ? buttonsComponent.buttons[0] : undefined;
   const authOtpType = authOtp && typeof authOtp === "object" && !Array.isArray(authOtp) && typeof authOtp.otp_type === "string" ? authOtp.otp_type : "COPY_CODE";
+  const variableNames = useMemo(() => ensureVariableNames(draft.components, draft.variableNames), [draft.components, draft.variableNames]);
+  const activeInsertRef = useRef<((number: number, name?: string) => void) | null>(null);
 
   useEffect(() => {
     if (!isAuthentication) return;
@@ -83,6 +88,10 @@ export function TemplateBuilder({ draft, onChange, disabled = false, isEditing =
       : upsertComponent(draft.components, { type, text });
     const bodyTemplate = type === "BODY" ? text : draft.bodyTemplate;
     onChange({ ...draft, components, bodyTemplate });
+  }
+
+  function setVariableData(names: string[], components: MetaTemplateComponent[]) {
+    onChange({ ...draft, variableNames: names, components, bodyTemplate: bodyTemplateFrom(components) });
   }
 
   function setButtonCount(count: number) {
@@ -139,7 +148,7 @@ export function TemplateBuilder({ draft, onChange, disabled = false, isEditing =
       <label>Idioma do template<input required pattern="[a-z]{2}_[A-Z]{2}" maxLength={12} value={draft.language} onChange={(event) => setField("language", event.target.value)} disabled={disabled} placeholder="pt_BR" /><small>Formato local, por exemplo pt_BR ou en_US.</small></label>
     </div>
 
-    <div className="template-step-heading"><span>Etapa 2 de 3</span><strong>Conteúdo e componentes</strong><p>Monte os blocos como serão cadastrados na Meta. Use variáveis numeradas como <code>{"{{1}}"}</code> e preencha exemplos na simulação.</p></div>
+    <div className="template-step-heading"><span>Etapa 2 de 3</span><strong>Conteúdo e componentes</strong><p>Monte os blocos como serão cadastrados na Meta. Crie variáveis nomeadas, formate o texto e preencha os exemplos no simulador.</p></div>
     {isAuthentication ? <div className="template-auth-builder">
       <p className="template-hint">Templates de autenticação usam a estrutura de verificação da Meta: código gerado no envio, texto padrão protegido e um botão OTP. O simulador usa o código fictício 123456.</p>
       <label className="toggle"><input type="checkbox" checked={authBody?.add_security_recommendation === true} onChange={(event) => onChange({ ...draft, components: setAuthenticationSecurityRecommendation(draft.components, event.target.checked) })} disabled={disabled} />Incluir aviso de segurança recomendado pela Meta</label>
@@ -149,12 +158,13 @@ export function TemplateBuilder({ draft, onChange, disabled = false, isEditing =
       <p className="template-hint">O texto do código e o rótulo do botão são definidos pela Meta. Não é possível adicionar cabeçalho, mensagem livre, rodapé personalizado ou botões comuns neste modo.</p>
     </div> : <div className="template-form-grid">
       <label>Cabeçalho<select value={componentFormat(header) as HeaderFormat | "NONE"} onChange={(event) => setHeaderFormat(event.target.value as HeaderFormat | "NONE")} disabled={disabled}>{headers.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
-      {componentFormat(header) === "TEXT" && <label className="template-span-two">Texto do cabeçalho<input maxLength={60} value={componentText(draft.components, "HEADER")} onChange={(event) => onChange({ ...draft, components: upsertComponent(draft.components, { ...header!, text: event.target.value }) })} disabled={disabled} placeholder="Ex.: Atualização do seu pedido" /><small>Até 60 caracteres. As variáveis de cabeçalho também aparecem na simulação.</small></label>}
+      <TemplateVariableManager names={variableNames} components={draft.components} onChange={setVariableData} activeInsertRef={activeInsertRef} disabled={disabled} />
+      {componentFormat(header) === "TEXT" && <section className="template-span-two template-text-field"><strong>Texto do cabeçalho</strong><TemplateTextEditor label="Texto do cabeçalho" value={componentText(draft.components, "HEADER")} variableNames={variableNames} onActivate={(insert) => { activeInsertRef.current = insert; }} onChange={(text) => onChange({ ...draft, components: upsertComponent(draft.components, { ...header!, text }) })} disabled={disabled} rows={2} maxLength={60} hint="Até 60 caracteres." placeholder="Ex.: Atualização do seu pedido" /></section>}
       {header && !["TEXT", "LOCATION"].includes(componentFormat(header)) && <p className="template-hint template-span-two">O arquivo de mídia de exemplo é escolhido no WhatsApp Manager. O componente será incluído no JSON, sem enviar ou armazenar mídia aqui.</p>}
       {header && componentFormat(header) === "LOCATION" && <p className="template-hint template-span-two">O cabeçalho de localização será montado com os campos de localização no WhatsApp Manager.</p>}
-      <label className="template-span-two">Mensagem principal<textarea required rows={5} maxLength={1024} value={componentText(draft.components, "BODY")} onChange={(event) => setTextComponent("BODY", event.target.value)} disabled={disabled} placeholder="Escreva a mensagem. Para inserir um dado variável, use {{1}}." /><small>{componentText(draft.components, "BODY").length}/1024 · Evite mensagens vagas e explique o contexto ao cliente.</small></label>
+      <section className="template-span-two template-text-field"><strong>Mensagem principal</strong><TemplateTextEditor label="Mensagem principal" value={componentText(draft.components, "BODY")} variableNames={variableNames} onActivate={(insert) => { activeInsertRef.current = insert; }} onChange={(text) => setTextComponent("BODY", text)} disabled={disabled} rows={5} maxLength={1024} hint="Evite mensagens vagas e explique o contexto ao cliente." placeholder="Escreva a mensagem e insira variáveis pelo quadro acima." /></section>
       <fieldset className="template-variables-fieldset template-span-two"><legend>Valores para notificações de pedidos</legend><p>Opcional. Se este rascunho for uma etapa operacional, marque os valores na mesma ordem das variáveis do corpo.</p>{(["orderNumber", "stageLabel"] as const).map((name) => <label className="toggle" key={name}><input type="checkbox" checked={draft.variables.includes(name)} onChange={(event) => setField("variables", event.target.checked ? [...draft.variables, name] : draft.variables.filter((value) => value !== name))} disabled={disabled} />{name === "orderNumber" ? "Número do pedido" : "Etapa atual do pedido"}</label>)}</fieldset>
-      <label className="template-span-two">Rodapé opcional<textarea rows={2} maxLength={60} value={componentText(draft.components, "FOOTER")} onChange={(event) => setTextComponent("FOOTER", event.target.value)} disabled={disabled} placeholder="Ex.: CookLily" /><small>Até 60 caracteres.</small></label>
+      <section className="template-span-two template-text-field"><strong>Rodapé opcional</strong><TemplateTextEditor label="Rodapé opcional" value={componentText(draft.components, "FOOTER")} variableNames={variableNames} onActivate={(insert) => { activeInsertRef.current = insert; }} onChange={(text) => setTextComponent("FOOTER", text)} disabled={disabled} rows={2} maxLength={60} hint="Até 60 caracteres." placeholder="Ex.: CookLily" /></section>
     </div>}
 
     {!isAuthentication && <fieldset className="template-buttons-fieldset"><legend>Botões opcionais</legend><div className="template-fieldset-intro"><span>Adicione até 3 botões e escolha a ação de cada um.</span><label>Quantidade<select value={buttons.length} onChange={(event) => setButtonCount(Number(event.target.value))} disabled={disabled}>{[0, 1, 2, 3].map((count) => <option key={count} value={count}>{count}</option>)}</select></label></div>

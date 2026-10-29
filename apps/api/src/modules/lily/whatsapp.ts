@@ -525,6 +525,12 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     .refine((component) => isBoundedJson(component) && JSON.stringify(component).length <= 8000, "Componente Meta excede os limites de estrutura ou tamanho.")
   ).max(10).refine((components) => JSON.stringify(components).length <= 24000, "A lista de componentes Meta excede 24 KB.");
 
+  const flowNodeSchema = z.object({
+    id: z.string().trim().min(1).max(80), name: z.string().trim().min(1).max(120),
+    trigger: z.enum(["início", "texto contém: status", "botão selecionado", "manual"]),
+    templateKey: z.string().max(80), response: z.string().max(500), nextNodeId: z.string().max(80),
+      branches: z.array(z.object({ id: z.string().min(1).max(80), trigger: z.enum(["texto", "botão", "qualquer resposta"]), response: z.string().max(500), nextNodeId: z.string().max(80) }).strict()).max(30).optional()
+  }).strict();
   const templateInputSchema = z.object({
     key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/),
     displayName: z.string().trim().min(2).max(120),
@@ -532,10 +538,53 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
     bodyTemplate: z.string().trim().min(1).max(4000),
     variables: z.array(z.enum(["orderNumber", "stageLabel"])).max(20).default([]),
+    variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).default([]),
+    flow: z.array(flowNodeSchema).max(100).default([]),
     components: metaComponentsSchema.optional(),
     metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
     status: z.enum(["draft", "active", "archived"]).default("draft")
   }).strict();
+  async function validateTemplateFlow(nodes: Array<z.infer<typeof flowNodeSchema>>, ownKey?: string) {
+    const ids = new Set(nodes.map((node) => node.id));
+    const branchIds = nodes.flatMap((node) => (node.branches ?? []).map((branch) => branch.id));
+    if (nodes.filter((node) => node.trigger === "início").length > 1 || ids.size !== nodes.length || new Set(branchIds).size !== branchIds.length || nodes.some((node) =>
+      (node.nextNodeId && !ids.has(node.nextNodeId)) || (node.branches ?? []).some((branch) => branch.nextNodeId && !ids.has(branch.nextNodeId))
+    ) || nodes.some((node) => (node.branches ?? []).some((branch) => branch.trigger !== "qualquer resposta" && !branch.response.trim()))) throw new ApiError(400, "A árvore contém IDs repetidos, gatilho incompleto ou destino inexistente.", { code: "WHATSAPP_FLOW_INVALID" });
+    const keys = new Set((await lilyPrisma.lilyWhatsAppMessageTemplate.findMany({ select: { key: true } })).map((item) => item.key));
+    if (ownKey) keys.add(ownKey);
+    if (nodes.some((node) => node.templateKey && !keys.has(node.templateKey))) throw new ApiError(400, "A árvore aponta para um template inexistente.", { code: "WHATSAPP_FLOW_TEMPLATE_NOT_FOUND" });
+  }
+  const simulatorPricingSchema = z.object({
+    usdToBrl: z.number().min(0).max(1000),
+    usd: z.object({ marketing: z.number().min(0).max(100), utility: z.number().min(0).max(100), authentication: z.number().min(0).max(100), service: z.number().min(0).max(100) }).strict(),
+    freeServiceMessages: z.number().int().min(0).max(100_000_000), effectiveDate: z.string().date().optional(), source: z.string().max(500)
+  }).strict();
+
+  app.get("/api/v1/lily/admin/whatsapp/simulator", async (request) => {
+    await requireLilyStaff(request);
+    const settings = await lilyPrisma.lilyWhatsAppSimulatorSettings.findUnique({ where: { id: "default" } });
+    const flows = await lilyPrisma.lilyWhatsAppMessageTemplate.findMany({ select: { key: true, flowJson: true } });
+    return { pricing: settings ? JSON.parse(settings.pricingJson) : null, flows: Object.fromEntries(flows.map((item) => [item.key, JSON.parse(item.flowJson)])) };
+  });
+
+  app.put("/api/v1/lily/admin/whatsapp/simulator", async (request) => {
+    const context = await requireLilyAdmin(request, true);
+    const input = z.object({ pricing: simulatorPricingSchema }).strict().parse(request.body);
+    if (!Number.isFinite(input.pricing.usdToBrl) || Object.values(input.pricing.usd).some((rate) => !Number.isFinite(rate))) throw new ApiError(400, "Informe cotações numéricas válidas.", { code: "WHATSAPP_PRICING_INVALID" });
+    const saved = await lilyPrisma.lilyWhatsAppSimulatorSettings.upsert({ where: { id: "default" }, create: { id: "default", pricingJson: JSON.stringify(input.pricing), updatedBy: context.user.id }, update: { pricingJson: JSON.stringify(input.pricing), updatedBy: context.user.id } });
+    await auditLilyAdmin(context.user.id, "whatsapp.simulator.pricing.update", "whatsapp-simulator", "default", { fields: Object.keys(input.pricing) });
+    return { pricing: JSON.parse(saved.pricingJson) };
+  });
+
+  app.put("/api/v1/lily/admin/whatsapp/templates/:key/flow", async (request) => {
+    const context = await requireLilyAdmin(request, true);
+    const { key } = z.object({ key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/) }).parse(request.params);
+    const nodes = z.array(flowNodeSchema).max(100).parse(request.body);
+    await validateTemplateFlow(nodes, key);
+    const updated = await lilyPrisma.lilyWhatsAppMessageTemplate.update({ where: { key }, data: { flowJson: JSON.stringify(nodes) } });
+    await auditLilyAdmin(context.user.id, "whatsapp.template.flow.update", "whatsapp-template", updated.id, { nodeCount: nodes.length });
+    return { key, nodes };
+  });
 
   app.get("/api/v1/lily/admin/whatsapp/templates", async (request) => {
     await requireLilyStaff(request);
@@ -561,6 +610,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         language: row.language,
         bodyTemplate: row.bodyTemplate,
         variables: JSON.parse(row.variablesJson),
+        variableNames: JSON.parse(row.variableNamesJson),
+        flow: JSON.parse(row.flowJson),
         components: JSON.parse(row.componentsJson),
         metaTemplateName: row.metaTemplateName,
         status: row.status,
@@ -573,6 +624,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
     const context = await requireLilyAdmin(request, true);
     const input = templateInputSchema.parse(request.body);
+    await validateTemplateFlow(input.flow, input.key);
     const components = input.components ?? [{ type: "BODY", text: input.bodyTemplate }];
     assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components });
     const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
@@ -583,6 +635,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         language: input.language,
         bodyTemplate: input.bodyTemplate,
         variablesJson: JSON.stringify(input.variables),
+        variableNamesJson: JSON.stringify(input.variableNames),
+        flowJson: JSON.stringify(input.flow),
         componentsJson: JSON.stringify(components),
         metaTemplateName: input.metaTemplateName ?? null,
         status: input.status,
@@ -597,6 +651,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     return reply.code(201).send({ template: {
       id: created.id, key: created.key, displayName: created.displayName, category: created.category,
       language: created.language, bodyTemplate: created.bodyTemplate, variables: input.variables,
+      variableNames: input.variableNames,
+      flow: [],
       components,
       metaTemplateName: created.metaTemplateName, status: created.status, createdAt: created.createdAt,
       updatedAt: created.updatedAt
@@ -612,6 +668,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     const input = patchSchema.parse(request.body);
     const current = await lilyPrisma.lilyWhatsAppMessageTemplate.findUnique({ where: { id } });
     if (!current) throw new ApiError(404, "Template WhatsApp não encontrado.", { code: "WHATSAPP_TEMPLATE_NOT_FOUND" });
+    if (input.flow) await validateTemplateFlow(input.flow, input.key ?? current.key);
     const nextMetaName = input.metaTemplateName === undefined ? current.metaTemplateName : input.metaTemplateName;
     const nextStatus = input.status ?? current.status;
     const nextKey = input.key ?? current.key;
@@ -627,6 +684,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         ...(input.language !== undefined ? { language: input.language } : {}),
         ...(input.bodyTemplate !== undefined ? { bodyTemplate: input.bodyTemplate } : {}),
         ...(input.variables !== undefined ? { variablesJson: JSON.stringify(input.variables) } : {}),
+        ...(input.variableNames !== undefined ? { variableNamesJson: JSON.stringify(input.variableNames) } : {}),
+        ...(input.flow !== undefined ? { flowJson: JSON.stringify(input.flow) } : {}),
         ...(input.components !== undefined ? { componentsJson: JSON.stringify(input.components) } : {}),
         ...(input.metaTemplateName !== undefined ? { metaTemplateName: input.metaTemplateName } : {}),
         ...(input.status !== undefined ? { status: input.status } : {})
@@ -639,6 +698,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     return { template: {
       id: updated.id, key: updated.key, displayName: updated.displayName, category: updated.category,
       language: updated.language, bodyTemplate: updated.bodyTemplate, variables: JSON.parse(updated.variablesJson),
+      variableNames: JSON.parse(updated.variableNamesJson),
+      flow: JSON.parse(updated.flowJson),
       components: JSON.parse(updated.componentsJson),
       metaTemplateName: updated.metaTemplateName, status: updated.status, createdAt: updated.createdAt,
       updatedAt: updated.updatedAt
