@@ -1,55 +1,48 @@
 # CookLily WhatsApp Template Studio
 
-- status: merged; deploy authorized and in progress
+- status: merged; correction validated, canonical CI running, deploy pending
 - owner: AG-DEV
-- branch: feat/cooklily-whatsapp-template-studio (merged; remote feature branch deleted by GitHub)
-- base_branch: cooklily/canonical
-- base_sha_verified: 5e11ded59e1781b13ae209e5360102e1d791d0a5
-- head_sha_verified: 075536437c2d404b808006cbd5b7da502fea5cdd (squash merge on canonical)
-- pull_requests: [#239](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/239), merged at 2026-10-29T03:32:55Z
-- ci: PR run 40812417549 PASS 7/7; canonical feature merge run 40812756484 PASS 7/7; current canonical SHA b834a8b CI run 40813254791 PASS
-- last_verified_at: 2026-10-29 America/Sao_Paulo
+- branch: `cooklily/canonical`
+- base_branch: `cooklily/canonical`
+- base_sha_verified: `b9888658ddf9f43a9d0ee29be32974eb0d54fae8`
+- head_sha_verified: `d6123e6f3b440f1109e439f950490ace7b7c89d1` (squash merge PR #240)
+- pull_requests: [#239](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/239) initial studio; [#240](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/240) authentication correction, merged 2026-10-29T04:39:12Z
+- last_verified_at: 2026-10-29 04:39 UTC
 - interruption_state: none
 
 ## Entrega
 
-Estúdio no painel `/lilyacai/painel/whatsapp` com criação, edição, biblioteca, prévia e chat de simulação React local, JSON exportável para WhatsApp Manager, componentes padrão/avançados Meta, migration aditiva no banco Lily e proteções para manter mensagens incompatíveis fora do fluxo operacional de pedidos. O simulador não chama API nem WhatsApp.
+Estúdio administrativo em `/lilyacai/painel/whatsapp` para criar, editar, salvar como rascunho e exportar templates da Meta, com componentes padrão/avançados, biblioteca e simulador de conversa local. A simulação não usa WhatsApp nem envia mensagens. A correção da autenticação fornece editor OTP especializado e payload BODY/FOOTER/BUTTONS sem texto livre ou botão comum.
 
-## Concluído e persistido
+## Persistido e integrado
 
-- Migration `20261029120000_lily_whatsapp_template_components` adiciona `componentsJson` com default `[]` no banco exclusivo Lily.
-- A API valida tipo/estrutura/tamanho de componentes e impede ativação operacional de marketing, autenticação e componentes incompatíveis.
-- Documentação de uso em `docs/lily-acai/WHATSAPP_TEMPLATE_STUDIO.md`.
-- Merge squash da PR #239 para `cooklily/canonical` em `075536437c2d404b808006cbd5b7da502fea5cdd`.
-- Autenticação staff/admin de agente efetuada pelo relay Codex; painel real acessível.
-- SSH verificado com `StrictHostKeyChecking=yes` para o destino fornecido pelo proprietário `root@2.25.182.185`; hostname remoto `srv1979989`; checkout de produção em `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
+- Feature inicial implementada na PR #239 e integrada por squash em `075536437c2d404b808006cbd5b7da502fea5cdd`.
+- Correção de autenticação integrada pela PR #240 em `d6123e6f3b440f1109e439f950490ace7b7c89d1`.
+- Migration Lily `20261029120000_lily_whatsapp_template_components` é aditiva e já foi aplicada no deploy anterior da feature.
+- Deploy anterior da feature confirmou backups dos bancos, migration, readiness e smoke HTTPS; release `b9888658ddf9f43a9d0ee29be32974eb0d54fae8`.
+- VPS verificada por SSH com `StrictHostKeyChecking=yes`, host `root@2.25.182.185`, remoto `srv1979989`.
 
-## Testes e gates
+## Correção encontrada no QA e resultado
 
-- Testes focalizados: 12/12 PASS.
+- QA do estúdio encontrou modo de autenticação com campos comuns e botão OTP incompleto. A PR #240 substituiu esse modo por aviso de segurança, validade opcional (1–90 minutos), OTP COPY_CODE/ONE_TAP/ZERO_TAP e texto/código fictícios na simulação local.
+- Teste focal local: 4/4 PASS.
 - `npm run check`: PASS.
-- `npm run build`: PASS; orçamento CookLily ajustado após comparação contra baseline canonical e passou.
-- `npm test`: PASS em CI para Node 20 e Node 24 na PR e na canonical (runs 40812417549 e 40812756484).
-- PR #239 CI run 40812417549: 7/7 PASS.
-- Canonical atual antes do deploy: `b834a8b2bd4d87121097d7d4bec0f9c26039e44b`; CI run 40813254791 PASS.
-- O primeiro CI falhou no teste de fixture do build budget após aumento de limite; fixture corrigida e suíte repetida com sucesso.
-- Aviso Vite de chunk acima de 500 kB permanece existente; budget explícito passou.
+- `npm run build`: PASS. Budget atual medido: JS bruto 722.57/724 KiB; JS+CSS gzip 225.80/230 KiB. Aviso geral Vite de chunk >500 kB persiste.
+- CI da PR #240 run 40818599689: 7/7 PASS, incluindo Node 20 e 24.
+- CI canonical após merge, run 40818950724: em andamento na última verificação; aguardar conclusão antes de publicar checkpoint e deploy.
 
 ## QA no domínio real
 
-- Navegador utilizado: somente IAB do Codex.
-- Desktop em `https://carrochefe.com/lilyacai/painel/whatsapp`: autenticação staff funcionou e página carregou, mas mostrou o formulário antigo. A versão mergeada ainda não foi publicada.
-- Captura de tela em arquivo: não foi salva; estado foi lido da árvore de acessibilidade do IAB.
-- QA mobile: pendente de publicação; viewport anterior não foi tratado como aceite do novo recurso.
-- Sessão admin confirmada; chave provisionada já constava em checkpoint anterior (fingerprint omitida aqui).
+- Navegador usado exclusivamente: IAB do Codex, URL `https://carrochefe.com/lilyacai/painel/whatsapp`.
+- Antes da correção: fluxo local de utility passou em viewport desktop 1440×900 e mobile 390×844, sem overflow horizontal; simulador respondeu sem persistir rascunhos. A captura visual mostrou editor e chat em duas colunas no desktop e layout estreito no celular.
+- Correção de autenticação ainda precisa homologação no domínio depois do novo deploy, em desktop e mobile. Verificar trocar categoria/voltar, campos OTP, validade, export JSON e resposta do chat; confirmar biblioteca sem salvar dados de QA.
+- Não salvar templates de teste em produção.
 
-## Deploy
+## Em andamento / bloqueios
 
-- O deploy documentado é `sudo cc deploy canonical` na VPS.
-- Deploy ainda pendente; executar `sudo cc deploy canonical` após CI verde do checkpoint.
-- Host foi fornecido explicitamente pelo proprietário e a chave de host já correspondeu ao `known_hosts`; não foi aceita fingerprint nova.
-- O procedimento precisa registrar backup dos bancos, migration, readiness e smoke HTTPS.
+- Nenhum bloqueio técnico conhecido. Deploy autorizado pelo proprietário.
+- Deploy de `cooklily/canonical` está pendente do CI run 40818950724 verde e de atualizar este checkpoint em commit apenas documental.
 
 ## Próxima ação exata
 
-Executar `sudo cc deploy canonical` no host verificado `root@2.25.182.185`; aguardar backups/migrations/readiness/smoke e então testar o estúdio autenticado em desktop e mobile pelo IAB do Codex, corrigindo e repetindo o ciclo até aprovação.
+Confirmar run 40818950724 verde; publicar este checkpoint atualizado sozinho via `pwsh -File tools/recovery/push-cooklily-checkpoint.ps1 -Checkpoint docs/execution-checkpoints/cooklily-whatsapp-template-studio.md`; aguardar CI do novo HEAD; executar `sudo cc deploy canonical` por SSH no host verificado; então homologar autenticação + utilidade em desktop/mobile pelo IAB, corrigir/repetir se necessário e atualizar o checkpoint com release, evidências e SHA finais.
