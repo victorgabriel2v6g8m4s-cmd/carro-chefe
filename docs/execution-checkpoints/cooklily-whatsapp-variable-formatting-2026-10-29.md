@@ -1,67 +1,55 @@
 # Editor, simulador e jornada completa de pedidos no WhatsApp CookLily
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: codex/cooklily-whatsapp-variable-formatting-checkpoint
 - base_branch: cooklily/canonical
 - base_sha_verified: b0ca836318c1efc62882d1cf44a565611e2e8881
-- head_sha_verified: d1688aeed737cbec6293f43463949bbd1760412c (jornada implementada; atualização final deste checkpoint pendente)
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/255 (open, follow-up)
-- last_verified_at: 2026-10-29 15:34 America/Sao_Paulo
-- interruption_state: active
+- head_sha_verified: 0cf2d359f9abd020c7c068e87b9c89f8903870ea
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/255 (merged)
+- last_verified_at: 2026-10-29 16:15 America/Sao_Paulo
+- interruption_state: none
 
 ## Concluído e persistido
 
-- Reproduzido no painel publicado: aplicar negrito a seleção que inclui variável mantém o chip fora do elemento formatado.
-- Identificada outra falha: parser de markdown renderiza variável formatada como texto em vez de reconstituir o chip.
-- Correção local em `TemplateTextEditor.tsx`: parser inline recursivo e aplicação de estilo por range DOM preservando chips não editáveis.
-- `npm run check`, `npm run test:lily-ui` (20 arquivos, 89 testes) e `npm run build:lily` passaram. Build alerta chunks grandes existentes; budget passou.
-- Commit `14409f9a62eb23fe28e0a392de2ba6457e711fdd` publicado na branch remota.
-- PR #254 integrado por squash em `b0ca836318c1efc62882d1cf44a565611e2e8881`.
-- `npm run build` passou (builds Gestão, site, QR, Lily e TypeScript API); budget da Lily passou.
-- CI do PR #254 passou em Node 20/24 e nos demais jobs do workflow (`40927600859`).
-- Deploy da VPS no SHA `b0ca836318c1efc62882d1cf44a565611e2e8881` passou migrations, `npm test` (73 arquivos, 380 testes), build e smoke externo; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-180950-b0ca836318c1.evidence`.
-- QA em desktop e viewport 390×844 confirmou chips dentro dos estilos no editor. No balão, a combinação aninhada deixou `_` literal, nova falha visual identificada.
-- Correção local no `WhatsAppText.tsx`: parser inline recursivo para renderizar combinações de estilos sem delimitadores visíveis.
-- `npm run check`, `npm run test:lily-ui` (20 arquivos, 89 testes) e `npm run build:lily` passaram após o parser recursivo; budget JS gzip 207.82/208 KiB.
-- O usuário ampliou o escopo: simular desde chegada pelo WhatsApp, abertura do cardápio, pedido, alteração, acompanhamento e estados até entrega, usando gatilhos da árvore.
-- Implementação local: gatilhos tipados para abrir cardápio, pedido criado/alterado, acompanhamento aberto, em preparo, pronto, saiu para entrega e entregue. Controles adicionam eventos de demonstração no chat e acionam os ramos configurados; respostas de template interpolam o número de pedido editável. Nenhuma navegação nem pedido real é criado.
-- Teste de unidade encadeia a jornada completa até entrega e protege contra avanço legado em evento sem gatilho.
-- Commit local `d1688aeed737cbec6293f43463949bbd1760412c` implementou os gatilhos e controles da jornada; ainda não enviado ao remoto.
-- `npm run test:lily-ui -- --run`: passou após a jornada, 20 arquivos / 91 testes.
-- `npm run check`: passou.
-- `npm run build:lily`: passou; budget local ajustado em 1 KiB nos limites de JS e combinado para acomodar os controles da jornada; resultado 756.31/757 KiB JS bruto, 208.61/209 KiB gzip JS, 156.20/156.50 KiB CSS bruto e 239.41/240 KiB JS+CSS gzip.
-- `npm test`: gates legacy, tool-health, deploy-validation e lily-budget passaram. Vitest completo falhou nas suítes de API Lily por banco local `.runtime/lily-acai.db` desatualizado: 11 suítes falharam, 148 testes falharam / 231 passaram / 3 ignorados; erro representativo: tabela `main.LilyPaymentReconciliation` ausente. Não relacionado à lógica de fluxo do frontend.
+- PR #254 integrou a correção de formatação de variáveis no editor e no balão; merge SHA `b0ca836318c1efc62882d1cf44a565611e2e8881`.
+- PR #255 integrou gatilhos da jornada do pedido e controles locais para simular cardápio aberto, pedido criado e alterado, acompanhamento aberto, em preparo, pronto, saiu para entrega e entregue; merge SHA `0cf2d359f9abd020c7c068e87b9c89f8903870ea`.
+- Deploy do merge SHA `0cf2d359f9abd020c7c068e87b9c89f8903870ea` passou na VPS. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-183700-0cf2d359f9ab.evidence`; log: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-183700-0cf2d359f9ab.log`.
+- CI do PR #255 passou em Node 20/24, Excel Recipe Linux/Windows, Workbook Snapshot, Windows Supervisor e Tool Health (run `40931966910`, HEAD `5ca9a36038eb0a8c87cb9dbb97b3c324fe2b95f7`).
+- Suíte completa no deploy: 73 arquivos / 382 testes passaram; build, tool-health, readiness e smoke externo passaram.
+- QA no domínio real `https://carrochefe.com/lilyacai/painel/whatsapp` pelo navegador integrado Codex: desktop 1440×1000 e mobile 390×844.
+- Jornada simulada nos dois tamanhos: cliente chega pelo WhatsApp, abre cardápio, faz pedido, modifica, acompanha, e recebe os eventos em preparo, pronto, saiu para entrega e entregue. A árvore configurada respondeu em cada gatilho e o orçamento simulou nove mensagens Utility (US$ 0.0612 / R$ 0.3288).
+- Verificado no desktop que uma variável de template com negrito e itálico é renderizada dentro dos estilos no balão, sem delimitadores Markdown literais.
+- Mobile: largura do documento 375 px em viewport 390 px; chat com rolagem interna. Conversa e rascunho de QA não foram salvos; controles de sessão foram limpos ao final.
+- Nenhum envio real ao WhatsApp/Meta, navegação ao site ou pedido real foi efetuado.
 
 ## Em andamento
 
-- PR #255 atualizado e enviado ao remoto; run `40931782751` executa CI para o código da jornada. Merge, deploy e QA desktop/mobile ainda pendentes.
+- Nenhum.
 
 ## Gates e testes
 
-- check: passed
-- test:lily-ui: passed, 20 files / 89 tests
-- build:lily: passed; build budget ok
-- `npm test` local inicial falhou por banco de workspace sem migrations; no deploy isolado e com bancos de preflight, suíte completa passou (380/380).
-- `build`: passed
-- CI: passed no PR #254 (run 40927600859). PR #255 passou em Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot no HEAD anterior `54d6b97` (run 40929597649). Novo CI para `4893558` em andamento (run `40931782751`).
-- CodeQL: pending/unknown
+- `npm run check`: passed.
+- `npm run test:lily-ui -- --run`: passed, 20 arquivos / 91 testes.
+- `npm run build:lily`: passed; budget passou dentro dos limites ajustados.
+- `npm test`: 73 arquivos / 382 testes passed na execução de deploy.
+- Build geral, tool-health, health readiness e smoke externo: passed no deploy.
+- CI PR #255: passed, run `40931966910`.
+- QA manual Codex integrado: desktop e mobile passed para fluxo completo e renderização de variável formatada.
 
 ## Migrations
 
-- Nenhuma.
+- Nenhuma migration necessária.
 
 ## Bloqueios/riscos
 
-- Testes de API completos requerem banco Lily de testes com todas as migrations; CI/deploy deve ser a fonte para a suíte agregada enquanto a base local não é preparada.
+- Sem bloqueios conhecidos. Testes permaneceram totalmente locais no simulador; não validam envio/aprovação de template pela Meta.
 
 ## Homologação/dependências externas
 
-- URL alvo: https://carrochefe.com/lilyacai/painel/whatsapp
-- Aba de reprodução integrada: tab 11 (rascunho local não salvo).
-- Utilizar somente navegador integrado Codex para QA desktop e mobile.
-- Deploy via `sudo cc deploy <SHA>` no host conforme `docs/lily-acai/DEPLOY_VPS.md`.
+- Hospedagem verificada na VPS e no domínio real após deploy do SHA canonical `0cf2d359f9abd020c7c068e87b9c89f8903870ea`.
+- Aba integrada Codex 11 mantida aberta; viewport restaurado após QA.
 
 ## Próxima ação exata
 
-Aguardar conclusão do run `40931782751`; se verde, integrar PR #255 em `cooklily/canonical`, deployar o SHA de merge e homologar formatação de variável e cada etapa da jornada no domínio real em desktop e mobile usando exclusivamente o navegador integrado Codex.
+- Nenhuma. Entrega concluída e homologada.
