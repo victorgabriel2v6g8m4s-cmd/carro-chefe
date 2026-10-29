@@ -63,5 +63,9 @@ describe("WhatsApp Meta template studio utilities", () => {
       "123456 é seu código de verificação.",
       "[Preencher código]"
     ]);
+    expect(renderTemplateMessage(setOtpType(components, "ZERO_TAP"), {})).toEqual([
+      "123456 é seu código de verificação.",
+      "[Verificação sem toque]"
+    ]);
   });
 });

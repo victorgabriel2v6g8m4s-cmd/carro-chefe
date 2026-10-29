@@ -56,7 +56,8 @@ export function renderTemplateMessage(components: MetaTemplateComponent[], value
       return component.buttons.flatMap((button) => {
         if (!button || typeof button !== "object" || Array.isArray(button)) return [];
         const buttonText = "type" in button && button.type === "OTP"
-          ? "otp_type" in button && button.otp_type === "COPY_CODE" ? "Copiar código" : "Preencher código"
+          ? "otp_type" in button && button.otp_type === "COPY_CODE" ? "Copiar código"
+            : "otp_type" in button && button.otp_type === "ZERO_TAP" ? "Verificação sem toque" : "Preencher código"
           : "text" in button && typeof button.text === "string" ? button.text : "";
         return buttonText ? [`[${buttonText}]`] : [];
       });
