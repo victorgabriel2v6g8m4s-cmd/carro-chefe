@@ -1,58 +1,62 @@
 # CookLily — fidelidade: versionar progressão e ativar níveis
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: codex/cooklily-loyalty-level-versioning
 - base_branch: cooklily/canonical
 - base_sha_verified: eb6bed9b0000905b43e41000f47f1de75c2a9365
-- head_sha_verified: eb6bed9b0000905b43e41000f47f1de75c2a9365 (working tree changes validated; not committed)
-- pull_requests: none
+- head_sha_verified: 2e0a4dbd634f4e1eb2fb49c7414dc14a56c8d7eb (merged canonical)
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/256 (merged)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
-- interruption_state: active
+- interruption_state: none
 
 ## Objetivo
 
-Completar lacunas do sistema de fidelidade documentado em `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md`, preservando a operação CookLily e homologando desktop e mobile no navegador integrado Codex.
+Completar e homologar o sistema de níveis e LilyCoins descrito em `docs/lily-acai/UX_REELS_DASHBOARD_FIDELIDADE_2026-10-09.md`, integrado à branch `cooklily/canonical` e publicado no domínio real.
 
 ## Concluído e persistido
 
-- Auditoria da tela real `/lilyacai/painel/fidelidade`: não havia curva configurada.
-- Implementados ledger idempotente de pontos de pedido/campanha, reversão por estorno integral e leitura consistente por perfil, ranking e VIP.
-- Criado versionamento de configuração de pontos, curva, recompensas e missões; configuração inicial agora é prévia até o administrador salvar.
-- Adicionada prévia gráfica acessível da curva e correção do PATCH para ativar/pausar recompensa.
-- Criada migration `20261029200000_lily_loyalty_versions`; migration validada em SQLite descartável com todas as migrations aplicadas.
-- Arquivos de código ainda não commitados nesta branch.
-
-## Em andamento
-
-- Integrar por PR à `cooklily/canonical`, aguardar CI, merge, deploy e homologação visual em viewport desktop e mobile.
-- Conferir configuração inicial na tela de produção e registrar impacto de thresholds antes de publicar configuração.
+- Ledger idempotente de pontos de pedidos/campanhas, reversão compensatória em estorno integral e leitura consistente para perfil, ranking e VIP.
+- Versionamento das configurações de pontos, níveis, recompensas e missões; auditoria vinculada às versões.
+- Configuração de sequência inicial em rascunho, edição de níveis e curva logarítmica acessível com prévia de ganhos LilyCoins.
+- Endpoint PATCH para ativar/pausar recompensa.
+- Migration `20261029200000_lily_loyalty_versions` aplicada em produção.
+- PR #256 integrado por squash em `cooklily/canonical`; merge/deploy SHA `2e0a4dbd634f4e1eb2fb49c7414dc14a56c8d7eb`.
+- Deploy da VPS concluído; backup, migration, readiness, health e external smoke confirmados.
 
 ## Gates e testes
 
-- `npm run check`: PASS (Prisma generate/validate e TypeScript).
-- `npm test -- --reporter=dot`: PASS (73 arquivos, 381 testes aprovados, 3 ignorados), em DB descartável com migrations aplicadas.
-- `npm run build`: PASS (todos os bundles e TypeScript API); aviso preexistente de chunk CookLily >500 KiB; build budget dentro do limite, com pequena folga.
 - `npm run policy:preflight -- --agent AG-DEV --scope lily-loyalty`: PASS.
-- `git diff --check`: PASS.
-- `npm run db:deploy:lily`: falhou no Windows com `Schema engine error:` sem detalhe; SQL da migration e cadeia completa foram aplicados com sucesso em SQLite descartável por `better-sqlite3`.
+- `npm run check`: PASS.
+- `npm test -- --reporter=dot`: PASS (73 arquivos; 381 aprovados; 3 ignorados).
+- `npm run test:lily-ui -- --reporter=dot`: PASS (20 arquivos; 91 aprovados).
+- Testes direcionados de loyalty/orders/profile: PASS (28 testes).
+- `npm run build`: PASS; build budget dentro dos limites. Aviso do Vite sobre chunk acima de 500 KiB.
+- CI PR #256: 7 verificações PASS (Node 20/24, Ubuntu/Windows, tool health e snapshots).
+- SQL e cadeia de migrations validados em banco SQLite descartável; execução Prisma no Windows retornou erro silencioso, superado por CI/Linux e deploy VPS.
+- VPS deploy gates: schema, check, tests, builds, tools, integridade dos backups, migration, readiness, CookLily health e external smoke: PASS.
+- Deploy log: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-191906-2e0a4dbd634f.log`; evidence: `/srv/carro-chefe/data/deploy-logs/deploy-20261029-191906-2e0a4dbd634f.evidence`.
+- Backups verificados: core e Lily pré-deploy, com hashes no log.
 
 ## Migrations
 
-- Nova migration `20261029200000_lily_loyalty_versions`, validada em DB descartável; produção ainda não migrada.
+- `20261029200000_lily_loyalty_versions` aplicada em produção; total 36 migrations Lily no deploy.
+- Migration cria versão inicial e reconcilia pontos de pedidos pagos/concluídos e campanhas existentes para o ledger.
 
 ## Bloqueios/riscos
 
-- A falha silenciosa local do Prisma migrate deploy precisa ser superada por runner CI/Linux ou VPS antes do deploy.
-- Mudança de configuração pode alterar rank atual; não salvar curva inicial em produção antes de conferir os limites e impacto.
-- Não há cashback automático nem conversão monetária: LilyCoins seguem ledger separado.
+- Nenhum bloqueio de código/deploy.
+- A curva inicial de 21 níveis (0 a 10.000.000 pontos) foi testada como rascunho, mas não foi salva em produção. Salvar publica imediatamente e recalcula níveis dos clientes existentes; requer revisão dos thresholds antes da ativação.
+- LilyCoins iniciais são zero e a prévia deixa explícitos os ganhos; sem conversão para dinheiro/cashback automático.
+- Build passa com aviso de chunk CookLily acima de 500 KiB; budget total passou.
 
 ## Homologação/dependências externas
 
-- Usar exclusivamente navegador integrado Codex para domínio real.
-- Produção deve ser verificada em desktop e mobile após deploy.
-- IAB atual tem sessão admin autenticada e tela real da fidelidade; última tela acessada foi a produção pre-deploy.
+- Domínio real verificado exclusivamente no navegador integrado Codex, após recarga da página publicada `/lilyacai/painel/fidelidade`.
+- Desktop: viewport 1280×720, layout correto, sem overflow horizontal; versão 1, configuração ainda vazia, botão de salvar desabilitado.
+- Mobile: viewport 390×844 (conteúdo 375 px), sem overflow horizontal; navegação móvel, 21 níveis em rascunho, prévia da curva e LilyCoins visíveis após rolagem; botão salvar não acionado.
+- Prévia informa que nada muda para clientes até salvar. Nenhuma configuração comercial foi salva durante a homologação.
 
 ## Próxima ação exata
 
-Revisar diff completo, commitar alterações, abrir PR para `cooklily/canonical`, acompanhar CI e corrigir toda falha antes do merge.
+Nenhuma para a entrega de software. Quando a gestão definir/revisar os limiares da curva inicial, carregá-la como rascunho, conferir impacto sobre os clientes e publicar a configuração pela tela de fidelidade.
