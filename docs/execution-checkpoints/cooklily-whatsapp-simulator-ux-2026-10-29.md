@@ -1,13 +1,13 @@
 # CookLily WhatsApp simulator UX fixes
 
-- status: in_progress
+- status: merged
 - owner: AG-DEV
 - branch: `codex/cooklily-whatsapp-simulator-ux`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `8bbd57869d171bea3928a3e60b134101f6fc7df8`
-- head_sha_verified: pending commit
-- pull_requests: none
-- last_verified_at: 2026-10-29 13:08 America/Sao_Paulo
+- head_sha_verified: `4ae17c36f3ad59257d910352d9453d9b38db7687`
+- pull_requests: PR #250 merged by squash (https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/250)
+- last_verified_at: 2026-10-29 13:10 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -29,7 +29,7 @@ Corrigir o cadastro de variável para não submeter o template em edição; pres
 - `npm run test:lily-budget`: 4 testes PASS.
 - `npm run build:lily`: PASS; 156.12 KiB CSS raw / 156.50 KiB, 30.78 KiB gzip / 31.00 KiB; o aviso existente de JS chunk >500 KiB permanece.
 - `git diff --check`: PASS.
-- `npm test`: não validado neste worktree; os testes de API precisam bancos SQLite migrados. Tentativa com banco temporário via Prisma falhou no Schema Engine; as tabelas não foram criadas. CI e deploy gate ainda pendentes.
+- `npm test` local: 148 falhas em testes de API porque este worktree não tinha diretório/bancos SQLite migrados; `prisma migrate deploy` e `db push` contra arquivo temporário falharam no Schema Engine. Os checks Quality Node 20 e 24 no CI passaram, junto com todos os demais gates.
 
 ## Migrations
 
