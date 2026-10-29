@@ -11,12 +11,12 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  // Margem medida para níveis, Reels, carrosséis, editor, árvore e simulador WhatsApp lazy-loaded.
-  jsRawBytes: 774_144,
-  jsGzipBytes: 212_992,
+  // Margem para níveis, Reels, carrosséis, editor, árvore, simulador e jornada WhatsApp local.
+  jsRawBytes: 775_168,
+  jsGzipBytes: 214_016,
   cssRawBytes: 160_256,
   cssGzipBytes: 31_744,
-  combinedGzipBytes: 244_736
+  combinedGzipBytes: 245_760
 });
 
 function emptyBucket() {
