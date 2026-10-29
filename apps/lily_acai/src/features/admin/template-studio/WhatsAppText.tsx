@@ -3,18 +3,31 @@ import type { ReactNode } from "react";
 const inlinePattern = /(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_|~[^~]+~|```[^`]+```|`[^`]+`)/g;
 
 function renderInline(text: string, keyPrefix: string): ReactNode[] {
-  return text.split(inlinePattern).filter(Boolean).map((part, index) => {
-    const key = `${keyPrefix}-${index}`;
-    if (part.startsWith("**")) return <strong key={key}>{part.slice(2, -2)}</strong>;
-    if (part.startsWith("*")) return <strong key={key}>{part.slice(1, -1)}</strong>;
-    if (part.startsWith("_")) return <em key={key}>{part.slice(1, -1)}</em>;
-    if (part.startsWith("~")) return <del key={key}>{part.slice(1, -1)}</del>;
-    if (part.startsWith("```")) return <code key={key}>{part.slice(3, -3)}</code>;
-    if (part.startsWith("`")) return <code key={key}>{part.slice(1, -1)}</code>;
-    return part.split(/(https?:\/\/[^\s]+)/g).map((chunk, linkIndex) => /^https?:\/\//.test(chunk)
-      ? <a key={`${key}-link-${linkIndex}`} href={chunk} target="_blank" rel="noreferrer">{chunk}</a>
-      : chunk);
-  });
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(inlinePattern)) {
+    const start = match.index ?? 0;
+    const token = match[0];
+    const key = `${keyPrefix}-${start}`;
+    if (start > cursor) nodes.push(...renderPlain(text.slice(cursor, start), key));
+    const triple = token.startsWith("```");
+    const double = token.startsWith("**");
+    const content = token.slice(triple || double ? 2 + Number(triple) : 1, -(triple || double ? 2 + Number(triple) : 1));
+    const children = triple ? content : renderInline(content, key);
+    if (triple || token.startsWith("`")) nodes.push(<code key={key}>{triple ? content : token.slice(1, -1)}</code>);
+    else if (token.startsWith("*")) nodes.push(<strong key={key}>{children}</strong>);
+    else if (token.startsWith("_")) nodes.push(<em key={key}>{children}</em>);
+    else nodes.push(<del key={key}>{children}</del>);
+    cursor = start + token.length;
+  }
+  if (cursor < text.length) nodes.push(...renderPlain(text.slice(cursor), `${keyPrefix}-${cursor}`));
+  return nodes;
+}
+
+function renderPlain(text: string, keyPrefix: string): ReactNode[] {
+  return text.split(/(https?:\/\/[^\s]+)/g).filter(Boolean).map((chunk, index) => /^https?:\/\//.test(chunk)
+    ? <a key={`${keyPrefix}-link-${index}`} href={chunk} target="_blank" rel="noreferrer">{chunk}</a>
+    : chunk);
 }
 
 export function WhatsAppText({ text }: { text: string }) {
