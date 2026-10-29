@@ -41,6 +41,33 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".header-actions .menu-icon { order: 4; }");
   });
 
+  it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
+    expect(mainSource).toContain('className="header-coins"');
+    expect(mainSource).toContain('className="header-loyalty-progress"');
+    expect(mainSource).toContain('className="header-progress-segments"');
+    expect(mainSource).toContain('className="mobile-menu" aria-label="Menu CookLily"');
+    expect(css).toContain(".header-actions .cart-icon { order:2; }");
+    expect(css).toContain(".header-actions .profile-icon { order:3; }");
+    expect(css).toContain(".header-progress-segments { display:flex; width:88px; gap:3px; }");
+  });
+
+  it("mantém os controles da curva em um painel amplo com zoom, pan, minimapa e suporte ao toque", () => {
+    const curve = readFileSync(resolve(sourceDirectory, "features/admin/LoyaltyCurvePreview.tsx"), "utf8");
+    expect(curve).toContain('className="loyalty-preview-stack"');
+    expect(curve).toContain('className="loyalty-chart-minimap"');
+    expect(curve).toContain("if (!event.ctrlKey && !event.metaKey) return;");
+    expect(curve).toContain('event.pointerType === "touch"');
+    expect(css).toContain(".loyalty-curve-stage { display:grid; grid-template-columns:minmax(0,1fr) minmax(170px,230px);");
+    const benefitPicker = readFileSync(resolve(sourceDirectory, "features/admin/LoyaltyBenefitPicker.tsx"), "utf8");
+    expect(benefitPicker).toContain("openComboConfiguration");
+    expect(benefitPicker).toContain("comboConfiguration");
+    expect(benefitPicker).toContain('item.product.displayName');
+    expect(benefitPicker).toContain('maxRedemptionsPerUser');
+    const dashboard = readFileSync(resolve(sourceDirectory, "features/dashboard/DashboardPage.tsx"), "utf8");
+    expect(dashboard).toContain("Disponíveis para resgate");
+    expect(dashboard).toContain("Resgatar benefício");
+  });
+
   it("mantém uma só affordance para cada navegação do Reel e os controles em ícones Lucide", () => {
     expect(reelsSource).toContain('from "lucide-react"');
     expect(reelsSource).not.toContain("reels-nav");
@@ -150,10 +177,8 @@ describe("estrutura crítica de UX CookLily", () => {
   });
 
   it("mantém estado ativo visível na navegação principal", () => {
-    expect(mainSource).toContain("<NavLink to=\"/cardapio\">Cardápio</NavLink>");
-    expect(mainSource).toContain("<NavLink to=\"/ranking\">Ranking</NavLink>");
-    expect(css).toContain(".topbar .desktop-nav a.active");
-    expect(css).toContain(".topbar .desktop-nav a.active::after");
+    expect(mainSource).toContain('<NavLink to="/cardapio" onClick={closeMenu}>Cardápio</NavLink>');
+    expect(mainSource).toContain('<NavLink to="/ranking" onClick={closeMenu}>Ranking</NavLink>');
     expect(css).toContain(".topbar .mobile-menu a.active:not(.mobile-menu-primary):not(.staff-menu-link)");
   });
 

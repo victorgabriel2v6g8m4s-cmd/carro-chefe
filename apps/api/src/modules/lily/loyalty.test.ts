@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
-import { awardReachedLevelCoins, createLoyaltyConfigVersion, loyaltySnapshot, progressPointsForUser, recordPaidOrderPoints, reversePaidOrderPoints, starterLevelRows } from "./loyalty/service";
+import { awardReachedLevelCoins, createLoyaltyConfigVersion, loyaltySnapshot, progressPointsForUser, recordPaidOrderPoints, redeemLoyaltyLevelBenefit, reversePaidOrderPoints, starterLevelRows } from "./loyalty/service";
 
 const suffix = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
 const phoneNormalized = `+5567999${suffix.slice(0, 8)}`;
@@ -77,5 +77,35 @@ describe("progressão de níveis e LilyCoins", () => {
     await reversePaidOrderPoints(userId, order);
     expect(await progressPointsForUser(userId)).toBe(0);
     expect(await lilyPrisma.lilyLoyaltyEvent.count({ where: { sourceKey: `order-refund:${order.id}` } })).toBe(1);
+  });
+
+  it("emite códigos de benefício no limite configurado por usuário e conserva o histórico", async () => {
+    const user = await lilyPrisma.lilyUser.create({ data: { phoneNormalized, passwordHash: "test-only", displayName: "Conta teste de benefício" } });
+    userId = user.id;
+    const benefit = { id: "note:pickup", kind: "note", entityId: "pickup", label: "Acompanhamento grátis", categoryId: null, maxRedemptionsPerUser: 2, selectionMode: "customer_choice", configuration: { variantIds: [], flavorIds: [], addonIds: [] } };
+    const level = await lilyPrisma.lilyLevel.create({ data: { name: `Nível resgate ${suffix}`, sortOrder: 200, requiredPoints: 0, benefitsJson: JSON.stringify([benefit]) } });
+    levelId = level.id;
+
+    const first = await redeemLoyaltyLevelBenefit(userId, levelId, benefit.id);
+    const second = await redeemLoyaltyLevelBenefit(userId, levelId, benefit.id);
+    await expect(redeemLoyaltyLevelBenefit(userId, levelId, benefit.id)).rejects.toThrow("limite de resgates");
+    expect(first.redemptionCode).not.toBe(second.redemptionCode);
+    expect(await lilyPrisma.lilyLevelBenefitRedemption.count({ where: { userId, levelId, benefitId: benefit.id } })).toBe(2);
+  });
+
+  it("aplica o limite de resgate dentro da transação mesmo diante de chamadas simultâneas", async () => {
+    const user = await lilyPrisma.lilyUser.create({ data: { phoneNormalized, passwordHash: "test-only", displayName: "Conta teste concorrente" } });
+    userId = user.id;
+    const benefit = { id: "note:single", kind: "note", entityId: "single", label: "Benefício único", categoryId: null, maxRedemptionsPerUser: 1, selectionMode: "customer_choice", configuration: { variantIds: [], flavorIds: [], addonIds: [] } };
+    const level = await lilyPrisma.lilyLevel.create({ data: { name: `Nível concorrente ${suffix}`, sortOrder: 201, requiredPoints: 0, benefitsJson: JSON.stringify([benefit]) } });
+    levelId = level.id;
+
+    const results = await Promise.allSettled([
+      redeemLoyaltyLevelBenefit(userId, levelId, benefit.id),
+      redeemLoyaltyLevelBenefit(userId, levelId, benefit.id)
+    ]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect(await lilyPrisma.lilyLevelBenefitRedemption.count({ where: { userId, levelId, benefitId: benefit.id } })).toBe(1);
   });
 });

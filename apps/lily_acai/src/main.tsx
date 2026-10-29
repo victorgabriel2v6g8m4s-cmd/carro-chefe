@@ -1,8 +1,8 @@
 import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Trophy, UserRound } from "lucide-react";
-import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyPublicConfig } from "./api";
+import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Sparkles, Trophy, UserRound } from "lucide-react";
+import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
 import { CatalogPage, WeeklyProductBanner } from "./catalog";
 import { AdminCatalog, AdminHome, AdminMedia, AdminGate } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
@@ -127,9 +127,11 @@ function AttributionCapture() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const cart = useCart();
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
+  const [loyalty, setLoyalty] = useState<LilyLoyaltyPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const menuRef = useRef<HTMLElement | null>(null);
@@ -142,6 +144,20 @@ function Shell({ children }: { children: ReactNode }) {
     window.addEventListener("cooklily:profile-updated", onProfileUpdated);
     return () => window.removeEventListener("cooklily:profile-updated", onProfileUpdated);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) { setLoyalty(null); return () => { active = false; }; }
+    void getLilyLoyalty().then((value) => { if (active) setLoyalty(value); }).catch(() => { if (active) setLoyalty(null); });
+    return () => { active = false; };
+  }, [user?.id, location.pathname]);
+
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => void getLilyLoyalty().then(setLoyalty).catch(() => undefined);
+    window.addEventListener("cooklily:loyalty-updated", refresh);
+    return () => window.removeEventListener("cooklily:loyalty-updated", refresh);
+  }, [user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -190,10 +206,6 @@ function Shell({ children }: { children: ReactNode }) {
   }, [menuOpen]);
 
   const socialLinks = config?.social.links ?? [];
-  const instagramLink = socialLinks.find((link) => link.platform === "instagram");
-  const whatsappLink = socialLinks.find((link) => link.platform === "whatsapp");
-  const instagramUrl = instagramLink?.url ?? null;
-  const whatsappUrl = whatsappLink?.url ?? null;
   const socialName: Record<string, string> = { instagram: "Instagram", facebook: "Facebook", whatsapp: "WhatsApp", tiktok: "TikTok", google: "Google" };
   const socialLabel = (link: typeof socialLinks[number]) => link.label || `${socialName[link.platform]}${link.identifier ? ` · ${link.platform === "whatsapp" ? link.identifier : `@${link.identifier.replace(/^@+/, "")}`}` : ""}`;
   const trackSocial = (platform: string) => trackLilyAnalytics("social_click", { platform });
@@ -210,35 +222,32 @@ function Shell({ children }: { children: ReactNode }) {
           <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
         </Link>
 
-        <nav className="desktop-nav" aria-label="Navegação principal">
-          <NavLink to="/cardapio">Cardápio</NavLink>
-          <NavLink to="/ranking">Ranking</NavLink>
-          {instagramLink && <a href={instagramUrl!} target="_blank" rel="noreferrer" onClick={() => trackSocial("instagram")}>Instagram</a>}
-          {isStaff && <NavLink to="/painel">Painel</NavLink>}
-          {isCourier && <NavLink to="/entregas">Entregas</NavLink>}
-        </nav>
-
         <div className="header-actions">
+          {user && <>
+            <Link className="header-coins" to="/dashboard" aria-label={`${(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")} ${loyalty?.coinName ?? "LilyCoins"}`} title={loyalty?.coinName ?? "LilyCoins"}>
+              {loyalty?.coinIconUrl ? <img src={loyalty.coinIconUrl} alt="" /> : <Sparkles aria-hidden="true" />}
+              <strong>{(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")}</strong><span className="header-coin-name">{loyalty?.coinName ?? "LilyCoins"}</span>
+            </Link>
+            <Link className="header-loyalty-progress" to="/dashboard" title={`${loyalty?.levelProgressPercent ?? 0}% para ${loyalty?.nextLevel?.name ?? "o próximo nível"}`} aria-label={`${loyalty?.levelProgressPercent ?? 0}% do progresso. Nível atual: ${loyalty?.currentLevel?.name ?? "sem nível"}. Próximo nível: ${loyalty?.nextLevel?.name ?? "nível máximo"}`}>
+              <span>{loyalty?.levelProgressPercent ?? 0}%</span><span className="header-progress-segments" aria-hidden="true">{[0, 1, 2, 3].map((segment) => { const fill = Math.min(100, Math.max(0, ((loyalty?.levelProgressPercent ?? 0) - segment * 25) * 4)); return <i key={segment}><b style={{ width: `${fill}%` }} /></i>; })}</span>
+              {loyalty?.currentLevel?.iconUrl ? <img className="header-level-icon" src={loyalty.currentLevel.iconUrl} alt="" /> : <span className="header-level-icon-fallback" aria-hidden="true"><Sparkles size={14} /></span>}
+            </Link>
+          </>}
           <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><Bell size={22} strokeWidth={1.8} />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
-          {!user && <div className="auth-actions-desktop">
-            <Link to="/entrar">Entrar</Link>
-            <Link className="button primary header-signup" to="/cadastro">Criar conta</Link>
-          </div>}
-
-          {user
-            ? <Link className="header-icon profile-icon" to="/perfil" aria-label={user.displayName ? `Abrir perfil de ${user.displayName}` : "Abrir perfil"}>
-                <ProfileBubble user={user} />
-              </Link>
-            : <Link className="header-icon mobile-only profile-icon" to="/entrar" aria-label="Entrar ou criar conta">
-                <ProfileBubble user={null} />
-              </Link>}
-
           <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
             <ShoppingCart size={22} strokeWidth={1.8} />
             {cart.itemCount > 0 && <span className="cart-badge">{cart.itemCount}</span>}
           </Link>
 
-          <button ref={menuButtonRef} className="header-icon mobile-only menu-icon" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
+          {user
+            ? <Link className="header-icon profile-icon" to="/perfil" aria-label={user.displayName ? `Abrir perfil de ${user.displayName}` : "Abrir perfil"}>
+                <ProfileBubble user={user} />
+              </Link>
+            : <Link className="header-icon profile-icon" to="/entrar" aria-label="Entrar ou criar conta">
+                <ProfileBubble user={null} />
+              </Link>}
+
+          <button ref={menuButtonRef} className="header-icon menu-icon" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} aria-controls="lily-mobile-menu" onClick={() => setMenuOpen((value) => !value)}>
             <Menu size={22} strokeWidth={1.8} />
           </button>
         </div>
@@ -246,13 +255,16 @@ function Shell({ children }: { children: ReactNode }) {
 
       {menuOpen && <>
         <button className="mobile-menu-backdrop" type="button" aria-label="Fechar menu" tabIndex={-1} onClick={closeMenu} />
-        <nav ref={menuRef} id="lily-mobile-menu" className="mobile-menu" aria-label="Menu mobile" tabIndex={-1}>
+        <nav ref={menuRef} id="lily-mobile-menu" className="mobile-menu" aria-label="Menu CookLily" tabIndex={-1}>
           <div className="mobile-menu-heading">
             <strong>Menu</strong>
             {user && <small>{user.displayName || user.phone}</small>}
           </div>
+          <NavLink to="/" end onClick={closeMenu}>Início</NavLink>
           <NavLink to="/cardapio" onClick={closeMenu}>Cardápio</NavLink>
           <NavLink to="/ranking" onClick={closeMenu}>Ranking</NavLink>
+          <NavLink to="/notificacoes" onClick={closeMenu}>Notificações</NavLink>
+          {user && <NavLink to="/dashboard" onClick={closeMenu}>Meu progresso e recompensas</NavLink>}
           {isStaff && <NavLink className="staff-menu-link" to="/painel" onClick={closeMenu}>Painel administrativo</NavLink>}
           {isCourier && <NavLink className="staff-menu-link" to="/entregas" onClick={closeMenu}>Painel de entregas</NavLink>}
           {user ? <>

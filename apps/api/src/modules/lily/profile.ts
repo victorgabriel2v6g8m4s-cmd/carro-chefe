@@ -230,7 +230,9 @@ async function profilePayload(userId: string) {
       currentLevel: loyalty.currentLevel,
       nextLevel: loyalty.nextLevel,
       levelProgressPercent: loyalty.levelProgressPercent,
-      lilyCoins: loyalty.lilyCoins
+      lilyCoins: loyalty.lilyCoins,
+      coinName: loyalty.coinName,
+      coinIconUrl: loyalty.coinIconUrl
     }
   };
 }

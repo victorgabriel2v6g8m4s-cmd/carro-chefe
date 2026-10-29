@@ -23,6 +23,7 @@ model LilyUser {
   loyaltyEvents   LilyLoyaltyEvent[]
   lilyCoinEvents  LilyCoinEvent[]
   rewardRedemptions LilyRewardRedemption[]
+  levelBenefitRedemptions LilyLevelBenefitRedemption[]
   surveyParticipations LilySurveyParticipation[]
   surveyResponses LilySurveyResponse[]
   surveyUploads   LilySurveyUpload[]
@@ -258,6 +259,8 @@ model LilyMediaAsset {
   coverFor     LilyProduct[]      @relation("LilyProductCover")
   productLinks LilyProductMedia[]
   couponArts   LilyCoupon[]
+  levelIcons   LilyLevel[]           @relation("LilyLevelIcon")
+  coinIconFor  LilyOperationalSettings? @relation("LilyCoinIcon")
 
   @@index([status, createdAt])
 }
@@ -636,6 +639,9 @@ model LilyOperationalSettings {
   referralRewardPoints      Int       @default(0)
   vipAnalyticsRetentionDays Int       @default(180)
   loyaltyRoundingMode String @default("floor")
+  loyaltyCoinName          String   @default("LilyCoins")
+  loyaltyCoinIconMediaId   String?  @unique
+  loyaltyCoinIconMedia     LilyMediaAsset? @relation("LilyCoinIcon", fields: [loyaltyCoinIconMediaId], references: [id], onDelete: SetNull)
   paymentsEnabled           Boolean  @default(false)
   paymentProvider           String   @default("manual")
   manualPixEnabled          Boolean  @default(false)
@@ -747,6 +753,7 @@ model LilyCoupon {
   categories         LilyCouponCategory[]
   products           LilyCouponProduct[]
   redemptions        LilyCouponRedemption[]
+  levelBenefitRedemptions LilyLevelBenefitRedemption[]
   assignedUser       LilyUser? @relation("LilyAssignedCoupon", fields: [assignedUserId], references: [id], onDelete: Cascade)
 
   @@index([status, startsAt, endsAt])
@@ -958,6 +965,8 @@ model LilyLoyaltyConfigVersion {
   campaignBonusPoints   Int
   couponBonusPoints     Int
   roundingMode           String
+  loyaltyCoinName        String   @default("LilyCoins")
+  loyaltyCoinIconMediaId String?
   levelsJson             String   @default("[]")
   rewardsJson            String   @default("[]")
   missionsJson           String   @default("[]")
@@ -974,11 +983,35 @@ model LilyLevel {
   requiredPoints Int
   lilyCoins      Int      @default(0)
   benefitsJson   String   @default("[]")
+  iconMediaId    String?
+  iconMedia      LilyMediaAsset? @relation("LilyLevelIcon", fields: [iconMediaId], references: [id], onDelete: SetNull)
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([active, sortOrder])
+}
+
+model LilyLevelBenefitRedemption {
+  id                String   @id @default(cuid())
+  userId            String
+  levelId           String
+  levelName         String
+  benefitId         String
+  benefitKind       String
+  benefitLabel      String
+  configurationJson String   @default("{}")
+  redemptionCode    String   @unique
+  status            String   @default("claimed")
+  couponId          String?  @unique
+  fulfilledBy       String?
+  createdAt         DateTime @default(now())
+  fulfilledAt       DateTime?
+  user              LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon            LilyCoupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  @@index([userId, levelId, benefitId, createdAt])
+  @@index([status, createdAt])
 }
 
 model LilyCoinEvent {
