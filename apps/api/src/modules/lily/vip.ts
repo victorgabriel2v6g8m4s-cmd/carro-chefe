@@ -6,6 +6,7 @@ import { ApiError } from "../../lib/errors";
 import { getLilyOperationalSettings } from "./fulfillment";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
 import { requireLilyCsrf, requireLilySession } from "./auth";
+import { progressPointsForUser } from "./loyalty/service";
 
 export const LILY_VIP_TERMS_VERSION = "cooklily-vip-2026-10-v1";
 const normalizeVipCode = (value: string) => value.normalize("NFKC").replace(/[‐‑‒–—−]/g, "-").replace(/\s+/g, "").toUpperCase();
@@ -33,14 +34,7 @@ export async function requireVipProductAccess(productId: string, userId?: string
 }
 
 async function currentPoints(userId: string) {
-  const settings = await getLilyOperationalSettings();
-  const [events, orders] = await Promise.all([
-    lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId }, select: { points: true } }),
-    lilyPrisma.lilyOrder.findMany({ where: { userId, status: { in: ["paid", "completed"] } }, select: { grandTotalCents: true, laCampaign: true } })
-  ]);
-  const orderPoints = orders.reduce((sum, order) => sum + Math.floor(order.grandTotalCents / Math.max(1, settings.loyaltyOrderCentsPerPoint)), 0);
-  const campaigns = new Set(orders.map(({ laCampaign }) => laCampaign).filter((campaign): campaign is string => Boolean(campaign)));
-  return orderPoints + events.reduce((sum, event) => sum + event.points, 0) + campaigns.size * settings.loyaltyCampaignBonusPoints;
+  return progressPointsForUser(userId);
 }
 
 function suffix(code: string) { return code.slice(-4); }

@@ -17,7 +17,7 @@ import {
 import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
 import { lilyPixAutoReconciliationConfiguration } from "./pix-reconciliation";
 import { enqueueLilyWhatsAppStage } from "./whatsapp";
-import { awardReachedLevelCoins, progressPointsForUser } from "./loyalty/service";
+import { awardReachedLevelCoins, progressPointsForUser, recordPaidOrderPoints, reversePaidOrderPoints } from "./loyalty/service";
 
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -338,6 +338,7 @@ async function applyRemotePaymentState(
         data: { status: "paid", paidAt: current.order.paidAt ?? now }
       });
       if (current.order.userId) {
+        await recordPaidOrderPoints(current.order.userId, current.order, tx);
         const nextPoints = await progressPointsForUser(current.order.userId, tx);
         await awardReachedLevelCoins(current.order.userId, priorPoints, nextPoints, tx);
       }
@@ -360,6 +361,7 @@ async function applyRemotePaymentState(
         where: { id: current.orderId },
         data: { status: "refunded" }
       });
+      if (current.order.userId) await reversePaidOrderPoints(current.order.userId, current.order, tx);
       await tx.lilyOrderStatusEvent.create({
         data: {
           orderId: current.orderId,
@@ -639,6 +641,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
           data: { status: "paid", paidAt: now }
         });
         if (access.order.userId) {
+          await recordPaidOrderPoints(access.order.userId, access.order, tx);
           const nextPoints = await progressPointsForUser(access.order.userId, tx);
           await awardReachedLevelCoins(access.order.userId, priorPoints, nextPoints, tx);
         }
@@ -1077,6 +1080,8 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       providerReference = remote.operationReference ?? remote.providerReference ?? payment.providerReference;
       payment = await applyRemotePaymentState(payment, remote, `admin:${context.user.id}`) as typeof payment;
     } else {
+      if (!payment) throw new ApiError(404, "Pagamento não encontrado.");
+      const manualPayment = payment;
       if (!providerReference) {
         throw new ApiError(400, "Informe a referência financeira do estorno manual.", {
           code: "LILY_PAYMENT_REFUND_REFERENCE_REQUIRED"
@@ -1086,52 +1091,39 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       const full = refundedCents === payment.amountCents;
       const nextStatus = full ? "refunded" : "partially_refunded";
       const now = new Date();
-      const operations: any[] = [
-        lilyPrisma.lilyPayment.update({
+      await lilyPrisma.$transaction(async (tx) => {
+        await tx.lilyPayment.update({
           where: { id },
-          data: {
-            status: nextStatus,
-            refundedCents,
-            ...(full ? { refundedAt: now } : {})
-          }
-        }),
-        lilyPrisma.lilyPaymentEvent.create({
+          data: { status: nextStatus, refundedCents, ...(full ? { refundedAt: now } : {}) }
+        });
+        await tx.lilyPaymentEvent.create({
           data: {
             paymentId: id,
             source: `admin:${context.user.id}`,
             eventType: full ? "payment.refunded" : "payment.partially_refunded",
-            fromStatus: payment.status,
+            fromStatus: manualPayment.status,
             toStatus: nextStatus,
             payloadJson: safeEventPayload({ amountCents: input.amountCents, providerReference })
           }
-        })
-      ];
-      if (full && payment.order.status === "paid") {
-        operations.push(
-          lilyPrisma.lilyOrder.update({ where: { id: payment.orderId }, data: { status: "refunded" } }),
-          lilyPrisma.lilyOrderStatusEvent.create({
+        });
+        if (full && manualPayment.order.status === "paid") {
+          await tx.lilyOrder.update({ where: { id: manualPayment.orderId }, data: { status: "refunded" } });
+          if (manualPayment.order.userId) await reversePaidOrderPoints(manualPayment.order.userId, manualPayment.order, tx);
+          await tx.lilyOrderStatusEvent.create({
             data: {
-              orderId: payment.orderId,
-              fromStatus: payment.order.status,
+              orderId: manualPayment.orderId,
+              fromStatus: manualPayment.order.status,
               toStatus: "refunded",
               actor: `admin:${context.user.id}`
             }
-          }),
-          ...(payment.order.whatsappUpdatesOptIn ? [
-            lilyPrisma.lilyWhatsAppNotification.upsert({
-              where: { orderId_stage: { orderId: payment.orderId, stage: "refunded" } },
-              update: {},
-              create: {
-                orderId: payment.orderId,
-                stage: "refunded",
-                status: "pending",
-                nextAttemptAt: now
-              }
-            })
-          ] : [])
-        );
-      }
-      await lilyPrisma.$transaction(operations);
+          });
+          if (manualPayment.order.whatsappUpdatesOptIn) await tx.lilyWhatsAppNotification.upsert({
+            where: { orderId_stage: { orderId: manualPayment.orderId, stage: "refunded" } },
+            update: {},
+            create: { orderId: manualPayment.orderId, stage: "refunded", status: "pending", nextAttemptAt: now }
+          });
+        }
+      });
     }
 
     await lilyPrisma.lilyPaymentReconciliation.create({

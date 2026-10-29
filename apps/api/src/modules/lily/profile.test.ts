@@ -1,5 +1,6 @@
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
+import { recordPaidOrderPoints } from "./loyalty/service";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
 import { LILY_PROFILE_AVATAR_MAX_BYTES } from "./profile";
@@ -204,7 +205,7 @@ describe("CookLily perfil e fidelidade", () => {
       }
     });
 
-    await lilyPrisma.lilyOrder.create({
+    const paidOrder = await lilyPrisma.lilyOrder.create({
       data: {
         orderNumber: "POINTS-PAID-001",
         idempotencyKey: "points-paid-001",
@@ -219,6 +220,7 @@ describe("CookLily perfil e fidelidade", () => {
         laCampaign: "campanha-ranking"
       }
     });
+    await recordPaidOrderPoints(account.user.id, paidOrder);
 
     await lilyPrisma.lilyOrder.create({
       data: {

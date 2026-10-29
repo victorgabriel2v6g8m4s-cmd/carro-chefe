@@ -943,12 +943,28 @@ model LilyLoyaltyEvent {
   type         String
   points       Int
   sourceKey    String?  @unique
+  configVersion Int?
   metadataJson String?
   createdAt    DateTime @default(now())
   user         LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([type, createdAt])
+}
+
+model LilyLoyaltyConfigVersion {
+  version                Int      @id
+  orderCentsPerPoint     Int
+  campaignBonusPoints   Int
+  couponBonusPoints     Int
+  roundingMode           String
+  levelsJson             String   @default("[]")
+  rewardsJson            String   @default("[]")
+  missionsJson           String   @default("[]")
+  actorUserId            String
+  createdAt              DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model LilyLevel {
