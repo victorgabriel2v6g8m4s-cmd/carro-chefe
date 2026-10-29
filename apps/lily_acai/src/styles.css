@@ -4904,7 +4904,11 @@ img, svg { max-width: 100%; }
   .topbar .mobile-menu { position:fixed; top:68px; right:10px; }
   .loyalty-level-card-editor { grid-template-columns:minmax(0,1fr); }
   .level-order-controls { justify-content:flex-end; }
-  .loyalty-benefit-menu-body { grid-template-columns:minmax(110px,38%) minmax(0,1fr); max-height:320px; }
+  .loyalty-benefit-menu-body { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(180px,1fr); max-height:420px; }
+  .loyalty-benefit-categories { display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; border-right:0; border-bottom:1px solid var(--cl-color-border); scroll-snap-type:x proximity; }
+  .loyalty-benefit-categories button { flex:0 0 auto; min-height:42px; scroll-snap-align:start; }
+  .loyalty-benefit-items { min-width:0; }
+  .loyalty-benefit-option { min-height:54px; }
   .loyalty-benefit-chip { flex-wrap:wrap; }
   .loyalty-benefit-chip > span { flex-basis:calc(100% - 52px); }
   .loyalty-benefit-limit { flex:1; }
