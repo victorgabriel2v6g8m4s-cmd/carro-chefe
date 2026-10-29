@@ -176,6 +176,13 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".header-icon { width: 44px; height: 44px; min-width: 44px; }");
   });
 
+  it("mantém os ícones do header circulares no mobile e deixa somente a marca gráfica", () => {
+    expect(css).toContain(".header-actions .header-icon { flex:0 0 34px; min-width:34px; width:34px; height:34px; aspect-ratio:1; }");
+    expect(css).toContain(".header-actions .header-icon { flex-basis:30px; min-width:30px; width:30px; height:30px; }");
+    expect(mainSource).not.toContain('className="brand-copy"');
+    expect(mainSource).toContain('className="brand-logo"');
+  });
+
   it("mantém estado ativo visível na navegação principal", () => {
     expect(mainSource).toContain('<NavLink to="/cardapio" onClick={closeMenu}>Cardápio</NavLink>');
     expect(mainSource).toContain('<NavLink to="/ranking" onClick={closeMenu}>Ranking</NavLink>');

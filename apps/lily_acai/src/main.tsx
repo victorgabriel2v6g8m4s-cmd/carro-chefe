@@ -219,7 +219,6 @@ function Shell({ children }: { children: ReactNode }) {
       <div className="topbar-inner">
         <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
           <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
-          <span className="brand-copy"><strong><span className="brand-cook">cook</span><span className="brand-lily">Lily</span></strong><small>açaí · LilyShakes</small></span>
         </Link>
 
         <div className="header-actions">

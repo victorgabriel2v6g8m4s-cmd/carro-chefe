@@ -4897,7 +4897,7 @@ img, svg { max-width: 100%; }
   .header-progress-segments { width:54px; gap:2px; }
   .header-progress-segments i { height:6px; }
   .header-level-icon,.header-level-icon-fallback { width:24px; height:24px; }
-  .header-actions .header-icon { min-width:34px; width:34px; height:40px; }
+  .header-actions .header-icon { flex:0 0 34px; min-width:34px; width:34px; height:34px; aspect-ratio:1; }
   .header-actions .header-icon svg { width:19px; height:19px; }
   .profile-icon .header-profile-bubble { width:27px; height:27px; }
   .mobile-menu-backdrop { inset:62px 0 0; height:calc(100dvh - 62px); }
@@ -4922,7 +4922,7 @@ img, svg { max-width: 100%; }
   .header-coins { padding-inline:5px; }
   .header-loyalty-progress { gap:3px; }
   .header-progress-segments { width:42px; }
-  .header-actions .header-icon { min-width:30px; width:30px; }
+  .header-actions .header-icon { flex-basis:30px; min-width:30px; width:30px; height:30px; }
   .header-actions .header-icon svg { width:18px; height:18px; }
   .header-actions .notification-badge { right:-2px; }
 }
