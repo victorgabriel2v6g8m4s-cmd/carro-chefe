@@ -7,7 +7,7 @@
 - base_sha_verified: b0ca836318c1efc62882d1cf44a565611e2e8881
 - head_sha_verified: d1688aeed737cbec6293f43463949bbd1760412c (jornada implementada; atualização final deste checkpoint pendente)
 - pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/255 (open, follow-up)
-- last_verified_at: 2026-10-29 15:32 America/Sao_Paulo
+- last_verified_at: 2026-10-29 15:34 America/Sao_Paulo
 - interruption_state: active
 
 ## Concluído e persistido
@@ -35,7 +35,7 @@
 
 ## Em andamento
 
-- Adicionar e revisar as alterações locais da jornada no PR #255; CI após push, merge, deploy e QA do domínio desktop/mobile.
+- PR #255 atualizado e enviado ao remoto; run `40931782751` executa CI para o código da jornada. Merge, deploy e QA desktop/mobile ainda pendentes.
 
 ## Gates e testes
 
@@ -44,7 +44,7 @@
 - build:lily: passed; build budget ok
 - `npm test` local inicial falhou por banco de workspace sem migrations; no deploy isolado e com bancos de preflight, suíte completa passou (380/380).
 - `build`: passed
-- CI: passed no PR #254 (run 40927600859). PR #255 passou em Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot no HEAD anterior `54d6b97` (run 40929597649); novo CI pendente após push do commit `d1688ae`.
+- CI: passed no PR #254 (run 40927600859). PR #255 passou em Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot no HEAD anterior `54d6b97` (run 40929597649). Novo CI para `4893558` em andamento (run `40931782751`).
 - CodeQL: pending/unknown
 
 ## Migrations
@@ -64,4 +64,4 @@
 
 ## Próxima ação exata
 
-Finalizar e commitar este checkpoint, atualizar título/descrição do PR #255 e enviar os commits; acompanhar novo CI; depois integrar em `cooklily/canonical`, deployar e homologar formatação de variável e jornada do pedido no domínio real em desktop e mobile usando exclusivamente o navegador integrado Codex.
+Aguardar conclusão do run `40931782751`; se verde, integrar PR #255 em `cooklily/canonical`, deployar o SHA de merge e homologar formatação de variável e cada etapa da jornada no domínio real em desktop e mobile usando exclusivamente o navegador integrado Codex.
