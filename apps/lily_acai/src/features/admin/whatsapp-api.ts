@@ -1,4 +1,5 @@
 import { parseResponse } from "../../api";
+import type { MetaTemplateComponent, TemplateCategory } from "./template-studio/template-types";
 
 export type WhatsAppSettings = {
   provider: string;
@@ -6,7 +7,7 @@ export type WhatsAppSettings = {
   ready: boolean;
   credentials: Record<"accessTokenConfigured" | "phoneNumberIdConfigured" | "graphVersionConfigured" | "templateConfigured" | "languageConfigured", boolean>;
   queue: { pending: number; failed: number; dead: number };
-  templates: { total: number };
+  templates: { total: number; operationalStages: string[] };
   webhook: { verifyTokenConfigured: boolean; appSecretConfigured: boolean };
   consentVersion: string;
 };
@@ -15,10 +16,11 @@ export type WhatsAppTemplate = {
   id: string;
   key: string;
   displayName: string;
-  category: "utility" | "marketing" | "authentication";
+  category: TemplateCategory;
   language: string;
   bodyTemplate: string;
   variables: Array<"orderNumber" | "stageLabel">;
+  components: MetaTemplateComponent[];
   metaTemplateName: string | null;
   status: "draft" | "active" | "archived";
   updatedAt: string;

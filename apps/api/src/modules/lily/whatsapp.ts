@@ -101,9 +101,20 @@ export function lilyWhatsAppConfiguration() {
   };
 }
 
-export function assertWhatsAppTemplateCanActivate(status: string, metaTemplateName: string | null | undefined) {
+export function assertWhatsAppTemplateCanActivate(
+  status: string,
+  metaTemplateName: string | null | undefined,
+  operational?: { key: string; category: string; components: Array<{ type?: unknown }> }
+) {
   if (status === "active" && !metaTemplateName) {
     throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
+  }
+  if (status === "active" && operational && (
+    !LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage)
+    || operational.category !== "utility"
+    || operational.components.some((component) => !["BODY", "FOOTER"].includes(String(component.type)))
+  )) {
+    throw new ApiError(400, "Somente templates de utilidade vinculados a uma etapa do pedido e com corpo/rodapé podem ser ativados para notificações operacionais.", { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" });
   }
 }
 
@@ -432,7 +443,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         languageConfigured: configuration.languageConfigured
       },
       queue: { pending, failed, dead },
-      templates: { total: templates },
+      templates: { total: templates, operationalStages: LILY_WHATSAPP_STAGES },
       webhook: {
         verifyTokenConfigured: Boolean(env("COOKLILY_WHATSAPP_WEBHOOK_VERIFY_TOKEN")),
         appSecretConfigured: Boolean(env("COOKLILY_WHATSAPP_APP_SECRET"))
@@ -500,6 +511,20 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     return { retried: reset.count };
   });
 
+  function isBoundedJson(value: unknown, depth = 0): boolean {
+    if (depth > 8) return false;
+    if (value === null || ["string", "number", "boolean"].includes(typeof value)) return true;
+    if (Array.isArray(value)) return value.length <= 100 && value.every((item) => isBoundedJson(item, depth + 1));
+    if (typeof value !== "object") return false;
+    const entries = Object.entries(value);
+    return entries.length <= 80 && entries.every(([key, item]) => key.length <= 120 && isBoundedJson(item, depth + 1));
+  }
+
+  const metaComponentsSchema = z.array(z.record(z.string(), z.unknown())
+    .refine((component) => typeof component.type === "string" && /^[A-Z_]{2,40}$/.test(component.type), "Componente Meta precisa informar um type válido.")
+    .refine((component) => isBoundedJson(component) && JSON.stringify(component).length <= 8000, "Componente Meta excede os limites de estrutura ou tamanho.")
+  ).max(10).refine((components) => JSON.stringify(components).length <= 24000, "A lista de componentes Meta excede 24 KB.");
+
   const templateInputSchema = z.object({
     key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/),
     displayName: z.string().trim().min(2).max(120),
@@ -507,6 +532,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
     bodyTemplate: z.string().trim().min(1).max(4000),
     variables: z.array(z.enum(["orderNumber", "stageLabel"])).max(20).default([]),
+    components: metaComponentsSchema.optional(),
     metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
     status: z.enum(["draft", "active", "archived"]).default("draft")
   }).strict();
@@ -535,6 +561,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         language: row.language,
         bodyTemplate: row.bodyTemplate,
         variables: JSON.parse(row.variablesJson),
+        components: JSON.parse(row.componentsJson),
         metaTemplateName: row.metaTemplateName,
         status: row.status,
         createdAt: row.createdAt,
@@ -546,7 +573,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
     const context = await requireLilyAdmin(request, true);
     const input = templateInputSchema.parse(request.body);
-    assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName);
+    const components = input.components ?? [{ type: "BODY", text: input.bodyTemplate }];
+    assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components });
     const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
       data: {
         key: input.key,
@@ -555,6 +583,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         language: input.language,
         bodyTemplate: input.bodyTemplate,
         variablesJson: JSON.stringify(input.variables),
+        componentsJson: JSON.stringify(components),
         metaTemplateName: input.metaTemplateName ?? null,
         status: input.status,
         createdBy: context.user.id
@@ -568,6 +597,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     return reply.code(201).send({ template: {
       id: created.id, key: created.key, displayName: created.displayName, category: created.category,
       language: created.language, bodyTemplate: created.bodyTemplate, variables: input.variables,
+      components,
       metaTemplateName: created.metaTemplateName, status: created.status, createdAt: created.createdAt,
       updatedAt: created.updatedAt
     } });
@@ -584,7 +614,10 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     if (!current) throw new ApiError(404, "Template WhatsApp não encontrado.", { code: "WHATSAPP_TEMPLATE_NOT_FOUND" });
     const nextMetaName = input.metaTemplateName === undefined ? current.metaTemplateName : input.metaTemplateName;
     const nextStatus = input.status ?? current.status;
-    assertWhatsAppTemplateCanActivate(nextStatus, nextMetaName);
+    const nextKey = input.key ?? current.key;
+    const nextCategory = input.category ?? current.category;
+    const nextComponents = input.components ?? JSON.parse(current.componentsJson) as Array<{ type?: unknown }>;
+    assertWhatsAppTemplateCanActivate(nextStatus, nextMetaName, { key: nextKey, category: nextCategory, components: nextComponents });
     const updated = await lilyPrisma.lilyWhatsAppMessageTemplate.update({
       where: { id },
       data: {
@@ -594,6 +627,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         ...(input.language !== undefined ? { language: input.language } : {}),
         ...(input.bodyTemplate !== undefined ? { bodyTemplate: input.bodyTemplate } : {}),
         ...(input.variables !== undefined ? { variablesJson: JSON.stringify(input.variables) } : {}),
+        ...(input.components !== undefined ? { componentsJson: JSON.stringify(input.components) } : {}),
         ...(input.metaTemplateName !== undefined ? { metaTemplateName: input.metaTemplateName } : {}),
         ...(input.status !== undefined ? { status: input.status } : {})
       }
@@ -605,6 +639,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     return { template: {
       id: updated.id, key: updated.key, displayName: updated.displayName, category: updated.category,
       language: updated.language, bodyTemplate: updated.bodyTemplate, variables: JSON.parse(updated.variablesJson),
+      components: JSON.parse(updated.componentsJson),
       metaTemplateName: updated.metaTemplateName, status: updated.status, createdAt: updated.createdAt,
       updatedAt: updated.updatedAt
     } };
