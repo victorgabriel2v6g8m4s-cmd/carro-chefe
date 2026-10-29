@@ -1,11 +1,11 @@
 # Performance e modularização CookLily
 
-- status: merged
+- status: in_progress
 - owner: AG-DEV
 - branch: codex/cooklily-performance-modularization
 - base_branch: cooklily/canonical
 - base_sha_verified: 7465a72c82802aa83c3e3322ebd2f90b84d93b9d
-- head_sha_verified: dda8051e3f271c6e8cc4da8384d700c9867647de
+- head_sha_verified: e2fcb05ad426a0f3328321b1078be7bb3556e6ed
 - pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged)
 - last_verified_at: 2026-10-29
 - interruption_state: none
@@ -48,11 +48,12 @@
 ## Homologação/dependências externas
 
 - Ainda não testado no domínio real. Usar exclusivamente a aba integrada do Codex quando houver deploy.
-- Deploy ainda pendente; PR integrado e SSH key fingerprint local conferido com a chave previamente autorizada pelo proprietário.
+- PR integrado; SSH key fingerprint local conferido com a chave previamente autorizada pelo proprietário.
+- Deploy concluído em `2026-10-29 23:36 UTC`, SHA `e2fcb05ad426a0f3328321b1078be7bb3556e6ed`; readiness e external smoke PASS; sem migrations pendentes; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-233151-e2fcb05ad426.evidence`.
+- Homologação IAB iniciada nas rotas painel/fidelidade e painel/cardápio. Novas abas exibiram apenas o fallback transitório “Carregando página/painel”; leituras de aba existente falharam com `browser.user is unavailable`. Não foi possível validar desktop/mobile visualmente nem se usou navegador externo.
 
 ## Próxima ação exata
 
 1. Publicar este checkpoint atualizado na canonical usando `tools/recovery/push-cooklily-checkpoint.ps1`.
-2. Resolver e confirmar o SHA canonical mais recente; deployar esse SHA pelo comando `sudo cc deploy <sha>`.
-3. Homologar navegação por rota no navegador integrado do Codex em desktop e mobile.
-4. Executar a próxima fase do roadmap: separar catálogo admin em índice leve e detalhes carregados ao abrir um produto; medir de novo JS/CSS e refatorar os arquivos administrativos grandes por responsabilidade.
+2. Retomar a homologação no navegador integrado do Codex; observar as rotas carregadas, testar desktop/mobile, coletar falhas e corrigir até passar.
+3. Executar a próxima fase do roadmap: separar catálogo admin em índice leve e detalhes carregados ao abrir um produto; medir de novo JS/CSS e refatorar os arquivos administrativos grandes por responsabilidade.
