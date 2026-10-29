@@ -47,6 +47,10 @@ describe("WhatsApp Meta template studio utilities", () => {
       { type: "BODY" },
       { type: "BUTTONS", buttons: [{ type: "OTP", otp_type: "COPY_CODE" }] }
     ]);
+    expect(renderTemplateMessage(components, {})).toEqual([
+      "123456 é seu código de verificação.",
+      "[Copiar código]"
+    ]);
     components = setAuthenticationSecurityRecommendation(components, true);
     components = setAuthenticationExpiration(components, true, 10);
     components = setOtpType(components, "ONE_TAP");
