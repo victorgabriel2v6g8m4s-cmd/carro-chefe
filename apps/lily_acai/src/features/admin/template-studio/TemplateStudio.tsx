@@ -1,6 +1,6 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { lazy, Suspense, useMemo, useState, type FormEvent } from "react";
 import { TemplateBuilder } from "./TemplateBuilder";
-import { TemplateSimulator } from "./TemplateSimulator";
+const TemplateSimulator = lazy(() => import("./TemplateSimulator").then((module) => ({ default: module.TemplateSimulator })));
 import { emptyTemplate, makeMetaPayload } from "./template-utils";
 import type { TemplateDraft } from "./template-types";
 import type { WhatsAppTemplate } from "../whatsapp-api";
@@ -23,6 +23,8 @@ function draftFromTemplate(item: WhatsAppTemplate): TemplateDraft {
     language: item.language,
     bodyTemplate: item.bodyTemplate,
     variables: item.variables,
+    variableNames: item.variableNames ?? [],
+    flow: item.flow ?? [],
     metaTemplateName: item.metaTemplateName ?? "",
     components: item.components?.length ? item.components : [{ type: "BODY", text: item.bodyTemplate }]
   };
@@ -50,14 +52,15 @@ function TemplateCard({ item, canEdit, operationalStages, busy, onEdit, onStatus
   </article>;
 }
 
-export function TemplateStudio({ templates, operationalStages, isAdmin, busy, onSave, onStatusChange }: Props) {
+export function TemplateStudio({ templates, operationalStages, isAdmin, busy, csrfToken = "", onSave, onStatusChange }: Props & { csrfToken?: string }) {
   const [draft, setDraft] = useState<TemplateDraft>(emptyTemplate);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
+  const [editorSession, setEditorSession] = useState(0);
   const payload = useMemo(() => makeMetaPayload(draft), [draft]);
 
-  function beginNew() { setDraft(emptyTemplate); setEditingId(null); setCopyMessage(""); }
-  function edit(item: WhatsAppTemplate) { setDraft(draftFromTemplate(item)); setEditingId(item.id); setCopyMessage(""); }
+  function beginNew() { setDraft(emptyTemplate); setEditingId(null); setCopyMessage(""); setEditorSession((session) => session + 1); }
+  function edit(item: WhatsAppTemplate) { setDraft(draftFromTemplate(item)); setEditingId(item.id); setCopyMessage(""); setEditorSession((session) => session + 1); }
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -80,12 +83,12 @@ export function TemplateStudio({ templates, operationalStages, isAdmin, busy, on
       <form className="analytics-panel whatsapp-template-form template-editor-panel" onSubmit={save}>
         <div className="analytics-panel-heading"><div><span className="eyebrow">{editingId ? "Editando rascunho" : "Novo rascunho"}</span><h3>{editingId ? draft.displayName || "Editar template" : "Configurar template"}</h3></div></div>
         {isAdmin ? <>
-          <TemplateBuilder key={(editingId ?? draft.key) || "new-template"} draft={draft} onChange={setDraft} disabled={busy} isEditing={Boolean(editingId)} />
+          <TemplateBuilder key={editorSession} draft={draft} onChange={setDraft} disabled={busy} isEditing={Boolean(editingId)} />
           <div className="template-save-row"><button className="button primary" disabled={busy}>{busy ? "Salvando…" : editingId ? "Salvar alterações" : "Salvar rascunho"}</button><button type="button" className="button ghost" onClick={copyPayload} disabled={busy || !draft.key}>Copiar JSON da Meta</button></div>
           {copyMessage && <p className="template-copy-message" role="status">{copyMessage}</p>}
         </> : <p>Somente admins podem criar ou alterar templates.</p>}
       </form>
-      <TemplateSimulator key={(editingId ?? draft.key) || "new-template"} draft={draft} />
+      <Suspense fallback={<aside className="template-simulator" aria-label="Carregando simulador">Carregando simulador…</aside>}><TemplateSimulator key={editorSession} draft={draft} templates={templates} csrfToken={csrfToken} /></Suspense>
     </div>
 
     <details className="analytics-panel template-export-panel"><summary>Ver JSON pronto para copiar</summary><p>Este painel prepara os componentes para cadastro manual. O status de aprovação continua sendo definido no WhatsApp Manager.</p><pre>{JSON.stringify(payload, null, 2)}</pre></details>

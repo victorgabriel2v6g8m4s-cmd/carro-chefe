@@ -20,11 +20,25 @@ export type WhatsAppTemplate = {
   language: string;
   bodyTemplate: string;
   variables: Array<"orderNumber" | "stageLabel">;
+  variableNames: string[];
+  flow: import("./template-studio/template-types").SimulationNode[];
   components: MetaTemplateComponent[];
   metaTemplateName: string | null;
   status: "draft" | "active" | "archived";
   updatedAt: string;
 };
+
+export async function getWhatsAppSimulator() {
+  return parseResponse<{ pricing: import("./template-studio/template-pricing").PricingConfig | null; flows: Record<string, import("./template-studio/template-types").SimulationNode[]> }>(await fetch("/api/v1/lily/admin/whatsapp/simulator", { credentials: "same-origin", cache: "no-store" }));
+}
+
+export async function saveWhatsAppSimulator(csrf: string, pricing: import("./template-studio/template-pricing").PricingConfig) {
+  return parseResponse<{ pricing: import("./template-studio/template-pricing").PricingConfig }>(await fetch("/api/v1/lily/admin/whatsapp/simulator", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrf }, body: JSON.stringify({ pricing }) }));
+}
+
+export async function saveWhatsAppTemplateFlow(key: string, csrf: string, nodes: import("./template-studio/template-types").SimulationNode[]) {
+  return parseResponse<{ key: string; nodes: import("./template-studio/template-types").SimulationNode[] }>(await fetch(`/api/v1/lily/admin/whatsapp/templates/${encodeURIComponent(key)}/flow`, { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrf }, body: JSON.stringify(nodes) }));
+}
 
 export type WhatsAppNotification = {
   id: string;

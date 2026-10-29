@@ -1,0 +1,1 @@
+ALTER TABLE "LilyWhatsAppMessageTemplate" ADD COLUMN "variableNamesJson" TEXT NOT NULL DEFAULT '[]';
