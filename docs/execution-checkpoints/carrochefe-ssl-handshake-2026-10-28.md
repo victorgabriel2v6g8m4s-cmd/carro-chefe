@@ -1,14 +1,15 @@
 # Incidente — falhas intermitentes de handshake TLS
 
-- Estado: `mitigated_monitoring`; causa raiz do erro dos clientes ainda não confirmada.
+- Estado: `mitigated_monitoring`; mitigação implantada, causa raiz específica dos clientes ainda não confirmada; janela de captura continua ativa.
 - Responsável: `AG-DEV`.
 - Branch: `codex/fix-intermittent-tls-mtu`.
 - Base branch: `cooklily/canonical`.
 - Base SHA: `9f962d34895a228ac0114b89af0ccf84c9f8b33f`.
-- HEAD verificado: `9f962d34895a228ac0114b89af0ccf84c9f8b33f` (mudanças locais ainda sem commit).
-- PR: [#236 — Mitigate and instrument intermittent TLS handshake failures](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/236), aberto como draft; CI inicial `queued` (run `40790830012`).
+- HEAD canônico verificado após merge: `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
+- PR #236: merged por squash; merge SHA `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
+- Deploy VPS: concluído em 29/10/2026 00:01 UTC, release `b93445996dfd47ee2386644bbdba120cd0cc33d2`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.evidence`.
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
-- Última verificação: 28/10/2026 23:49 UTC.
+- Última verificação: 29/10/2026 00:05 UTC.
 
 ## Sintoma e evidência
 
@@ -27,7 +28,9 @@
 - Falhas TLS são capturadas em nível `info` em `/var/log/nginx/carrochefe-tls-error.log`. Como esse canal pode conter IPs e detalhes de erro, o arquivo é `0640 root:adm`, e o script remove IPs ao gerar o TXT. Rotação diária, sete cópias.
 - Nginx passou em `nginx -t` e permaneceu `active`; captura de teste mostrou a falha TLS 1.0 esperada e um handshake TLS 1.3/h2 com HTTP 200.
 - Observador ativo por 60 minutos. Após corrigir a redação de IPv6, a captura anterior foi encerrada e substituída por `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt`, modo `0600`, iniciada às 23:48:21 UTC e prevista para encerrar às 00:48:21 UTC em 29/10. O relatório já mostra eventos recentes e mascara IPv4/IPv6.
+- Após o deploy, o observador seguiu ativo. A janela registrou sucesso HTTP/TLS e dois `502` transitórios em 00:04:08 UTC durante o restart do Fastify; o health/smoke voltou a `200` em 00:04:10. Isso foi indisponibilidade HTTP breve durante restart, não falha de handshake TLS.
 - Helpers instalados em `/usr/local/sbin/enable-cooklily-tls-logging`, `/usr/local/sbin/enable-cooklily-tcp-pmtud` e `/usr/local/sbin/capture-cooklily-tls`.
+- Para iniciar uma nova janela antes da próxima tentativa do cliente: `sudo /usr/local/sbin/capture-cooklily-tls --minutes 60`. Para consultar retrospectivamente até 180 minutos após uma tentativa: `sudo bash /srv/carro-chefe/current/deploy/scripts/diagnose-cooklily-access --minutes 20`.
 
 ## Alterações versionadas deste hotfix
 
@@ -51,10 +54,12 @@
 - Domínio real confirmado na aba Codex in-app: `https://carrochefe.com/lilyacai/cardapio` carregou conteúdo e imagens do catálogo; screenshot capturado e aba marcada como entregável. Não foram controlados Chrome/Edge externos.
 - Nota de execução: uma primeira execução da suíte contra o banco SQLite padrão local encontrou migrations antigas e resultou em 103 falhas de API. Os gates completos passaram depois de preparar bancos descartáveis migrados. A execução de migration também atualizou migrations pendentes no banco de desenvolvimento ignorado `.runtime/carro-chefe.db`; nenhum banco de produção foi usado.
 - `npm run check`, `npm test` e `npm run build`: pendentes antes de concluir o PR, conforme `REGRAS.md`.
-- PR/CI/merge/deploy do hotfix: pendentes.
+- PR #236 CI: passou nos jobs Node 20 e 24, Tool Health, Workbook Snapshot, Windows Supervisor e Excel Recipe.
+- PR #236 merge/deploy: concluídos; `sudo cc deploy canonical` terminou com readiness e `external_smoke=ok`.
+- Pós-deploy: `sudo cc status` confirmou current/canonical SHA `b9344599...`; PMTU `1`; Nginx e aplicação ativos; `nginx -t` passou; 10/10 TLS 1.2, 10/10 TLS 1.3; cardápio HTTP `200` em HTTP/2. O browser integrado carregou novamente os 8 produtos e as imagens no domínio real; screenshot registrado na sessão.
 
 ## Limite e próxima ação
 
 O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; ainda não há prova de que a conexão dos clientes afetados tenha exatamente o mesmo problema. Não afirmar causa raiz nem resolução garantida até surgir uma falha real no log dedicado ou confirmação dos usuários.
 
-Próxima ação exata: aguardar CI do PR #236, marcar ready, integrar e fazer deploy em `cooklily/canonical`. Manter a captura até `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt` concluir após 00:48:21 UTC; depois ler o TXT e separar tráfego sintético de falhas de clientes. Se surgir falha real, cruzar razão TLS/tempo com o caminho de rede observado e ajustar somente com evidência.
+Próxima ação exata: depois de 00:48:21 UTC, ler `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt` na VPS; classificar somente eventos de origem real, separando probes sintéticos e os `502` do restart. Se nenhum cliente falhar durante a janela, manter os helpers instalados para uma nova captura iniciada antes da próxima tentativa do cliente. Se surgir erro real, cruzar motivo/tempo com handshake e rede observados e ajustar somente com evidência.
