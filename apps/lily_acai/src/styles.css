@@ -4772,9 +4772,8 @@ img, svg { max-width: 100%; }
 @media(prefers-reduced-motion:reduce) { .reels-stage { transition:none; } }
 
 /* Header CookLily: saldo e progresso sempre visíveis, navegação reunida no menu. */
-.topbar-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,auto) minmax(0,1fr); align-items:center; gap:16px; }
-.topbar-inner > .brand { justify-self:start; }
-.topbar-inner > .header-coins { justify-self:start; }
+.topbar-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,auto) minmax(0,1fr); align-items:center; gap:16px; }
+.topbar-inner > .header-brand-group { display:flex; align-items:center; justify-self:start; gap:12px; min-width:0; }
 .topbar-inner > .header-loyalty-progress { justify-self:center; }
 .header-actions { display:flex; align-items:center; gap:clamp(5px,1vw,12px); }
 .topbar-inner > .header-actions { justify-self:end; margin-left:0; }
@@ -4890,8 +4889,7 @@ img, svg { max-width: 100%; }
 .loyalty-admin-redemptions small { color:var(--cl-color-text-muted); }
 @media(max-width:760px) {
   .topbar-inner { display:flex; gap:5px; }
-  .topbar-inner > .brand { flex:0 0 auto; }
-  .topbar-inner > .header-coins { flex:0 0 auto; }
+  .topbar-inner > .header-brand-group { flex:0 0 auto; gap:5px; }
   .topbar-inner > .header-loyalty-progress { flex:1 1 auto; justify-content:center; min-width:0; }
   .topbar-inner > .header-actions { flex:0 0 auto; }
   .topbar-inner .brand-logo { width:38px; height:38px; }
