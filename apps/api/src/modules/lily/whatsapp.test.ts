@@ -89,6 +89,18 @@ describe("CookLily Entrega 11H WhatsApp", () => {
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_pedido_pronto")).not.toThrow();
   });
 
+  it("impede usar templates de campanha ou componentes avançados no envio automático de pedidos", () => {
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_oferta", {
+      key: "campanha_verao", category: "marketing", components: [{ type: "BODY" }]
+    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
+      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY" }, { type: "HEADER" }]
+    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
+      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY" }, { type: "FOOTER" }]
+    })).not.toThrow();
+  });
+
   it("fica fail-closed enquanto Meta Cloud API não estiver completamente configurada", () => {
     delete process.env.COOKLILY_WHATSAPP_PROVIDER;
     delete process.env.COOKLILY_WHATSAPP_ACCESS_TOKEN;

@@ -87,6 +87,7 @@ model LilyWhatsAppMessageTemplate {
   language        String   @default("pt_BR")
   bodyTemplate    String
   variablesJson   String   @default("[]")
+  componentsJson  String   @default("[]")
   metaTemplateName String? @unique
   status          String   @default("draft")
   createdBy       String?
