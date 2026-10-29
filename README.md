@@ -55,6 +55,10 @@ site/                  Placeholder legado; código ativo está em apps/site
 .repo/                 Contrato machine-readable da organização
 ```
 
+## Acessos CookLily
+
+O runbook resumido de acesso SSH à VPS, contas de teste e identidade administrativa de agentes está em [Acessos CookLily](./docs/governanca/ACESSOS_COOKLILY.md). A operação CookLily é mantida isolada na branch `cooklily/canonical`; os comandos descritos só existem quando a release canônica correspondente estiver implantada. Nunca inclua segredos no repositório.
+
 A árvore detalhada e as subpastas permitidas ficam no [mapa do repositório](./docs/governanca/MAPA_REPOSITORIO.md).
 
 ## Entregas desta fundação
