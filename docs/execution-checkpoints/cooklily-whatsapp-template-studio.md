@@ -20,7 +20,7 @@ Painel `/lilyacai/painel/whatsapp` cria, edita e organiza templates Meta, export
 - PR #239, #240, #241 e #242 integradas por squash. Correções de QA: editor próprio de Authentication; simulador sempre mostra código fictício `123456`; rótulos distinguem Copiar código, Preencher código e Verificação sem toque.
 - Teste focal: 4/4; `npm run check`: PASS; `npm run build`: PASS.
 - Último budget: JS bruto 722.74/724 KiB; JS+CSS gzip 225.84/230 KiB. Aviso Vite genérico de chunk >500 kB permanece.
-- CI PR #240 `40818599689`, canonical `40818950724`, PR #241 `40820187199`, canonical `40820539528`, PR #242 `40821799558`: todos 7/7 PASS. Canonical deploy/checkpoint SHA `4ccae283a8be51e97bf158d138f49ce0704ae050`, run `40822409752`: 7/7 PASS.
+- CI PR #240 `40818599689`, canonical `40818950724`, PR #241 `40820187199`, canonical `40820539528`, PR #242 `40821799558`: todos 7/7 PASS. Canonical deploy/checkpoint SHA `4ccae283a8be51e97bf158d138f49ce0704ae050`, run `40822409752`: 7/7 PASS. Checkpoint final `6e402868387cd3a888d33d5b7a8208e084389eb4`, run `40823440666`: 7/7 PASS.
 
 ## Deploy e QA comprovados
 
@@ -32,4 +32,4 @@ Painel `/lilyacai/painel/whatsapp` cria, edita e organiza templates Meta, export
 
 ## Próxima ação exata
 
-Entrega concluída: implementação integrada, PRs #239–#242 e CI verde; deploy `4ccae283a8be51e97bf158d138f49ce0704ae050` e QA desktop/móvel reais aprovados. Próximo passo operacional: publicar este checkpoint atualizado pelo script `pwsh -File tools/recovery/push-cooklily-checkpoint.ps1 -Checkpoint docs/execution-checkpoints/cooklily-whatsapp-template-studio.md` e confirmar o CI documental.
+Entrega concluída: implementação integrada, PRs #239–#242 e CI verde; deploy `4ccae283a8be51e97bf158d138f49ce0704ae050`, QA desktop/móvel reais aprovados, checkpoint final publicado e CI do checkpoint verde. Nenhuma ação pendente.
