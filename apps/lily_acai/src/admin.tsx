@@ -123,7 +123,7 @@ function ComponentAllergenEditor(props: {
   </details>;
 }
 
-function useAdminData() {
+function useAdminData(loadCatalog: boolean) {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState("");
@@ -135,7 +135,7 @@ function useAdminData() {
       const current = await getLilySession();
       if (!["staff", "admin"].includes(current.user.role)) throw new Error("Sua conta não possui perfil staff CookLily.");
       setSession(current);
-      setData(await getLilyAdminCatalog());
+      if (loadCatalog) setData(await getLilyAdminCatalog());
     } catch (cause) {
       if (!data) {
         setSession(null);
@@ -151,10 +151,13 @@ function useAdminData() {
   return { session, data, error, loading, refresh, setError };
 }
 
-export function AdminGate({ children }: { children: (state: ReturnType<typeof useAdminData>) => ReactNode }) {
-  const state = useAdminData();
+export function AdminGate({ children, loadCatalog = false }: {
+  children: (state: ReturnType<typeof useAdminData>) => ReactNode;
+  loadCatalog?: boolean;
+}) {
+  const state = useAdminData(loadCatalog);
   if (state.loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando painel"/></section>;
-  if (!state.session || !state.data) return <section className="admin-state">
+  if (!state.session || (loadCatalog && !state.data)) return <section className="admin-state">
     <span className="eyebrow">Painel CookLily</span>
     <h1>Acesso staff necessário.</h1>
     <p>{state.error || "Entre com uma conta da equipe para administrar o catálogo."}</p>
@@ -164,7 +167,7 @@ export function AdminGate({ children }: { children: (state: ReturnType<typeof us
 }
 
 export function AdminHome() {
-  return <AdminGate>{({ data, session }) => <section className="admin-page">
+  return <AdminGate loadCatalog>{({ data, session }) => <section className="admin-page">
     <div className="admin-heading">
       <div><span className="eyebrow">CookLily · operação</span><h1>Painel do catálogo</h1><p>Olá, {session!.user.displayName ?? session!.user.phone}.</p></div>
       <a className="button ghost" href={`${import.meta.env.BASE_URL}cardapio`} target="_blank" rel="noreferrer">Abrir cardápio</a>
@@ -1061,7 +1064,7 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
 }
 
 export function AdminCatalog() {
-  return <AdminGate>{({ data, session, error, refresh, setError }) => <section className="admin-page wide">
+  return <AdminGate loadCatalog>{({ data, session, error, refresh, setError }) => <section className="admin-page wide">
     <div className="admin-heading">
       <div><span className="eyebrow">Entrega 05</span><h1>Cardápio administrável</h1><p>Alterações publicadas refletem no cardápio sem rebuild.</p></div>
       <div className="admin-actions"><a className="button ghost" href={`${import.meta.env.BASE_URL}painel`}>Resumo</a><a className="button ghost" href={`${import.meta.env.BASE_URL}cardapio`} target="_blank" rel="noreferrer">Preview</a></div>
@@ -1078,7 +1081,7 @@ export function AdminCatalog() {
 }
 
 export function AdminMedia() {
-  return <AdminGate>{({ data, session, error, refresh, setError }) => {
+  return <AdminGate loadCatalog>{({ data, session, error, refresh, setError }) => {
     async function upload(event: FormEvent<HTMLFormElement>) {
       event.preventDefault();
     const formElement = event.currentTarget;

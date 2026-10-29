@@ -3,9 +3,13 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Sparkles, Trophy, UserRound } from "lucide-react";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
-import { CatalogPage, WeeklyProductBanner } from "./catalog";
-import { AdminCatalog, AdminHome, AdminMedia, AdminGate } from "./admin";
 import { CartProvider, useCart } from "./features/cart/CartContext";
+const CatalogPage = lazy(() => import("./catalog").then((module) => ({ default: module.CatalogPage })));
+const WeeklyProductBanner = lazy(() => import("./catalog").then((module) => ({ default: module.WeeklyProductBanner })));
+const AdminHome = lazy(() => import("./admin").then((module) => ({ default: module.AdminHome })));
+const AdminCatalog = lazy(() => import("./admin").then((module) => ({ default: module.AdminCatalog })));
+const AdminMedia = lazy(() => import("./admin").then((module) => ({ default: module.AdminMedia })));
+const AdminGate = lazy(() => import("./admin").then((module) => ({ default: module.AdminGate })));
 import { CartPage } from "./features/cart/CartPage";
 import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { AddressesPage, OrderDetailPage, OrdersPage } from "./features/account/AccountPages";
@@ -555,7 +559,7 @@ function Privacidade() {
 }
 
 function App() {
-  return <><AttributionCapture /><AnalyticsRouteTracker /><Routes>
+  return <><AttributionCapture /><AnalyticsRouteTracker /><Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando página" />}><Routes>
     <Route path="/" element={<Landing />} />
     <Route path="/cardapio" element={<Cardapio />} />
     <Route path="/cadastro" element={<Cadastro />} />
@@ -598,7 +602,7 @@ function App() {
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
     <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
-  </Routes><LilyAnalyticsConsentBanner /></>;
+  </Routes></Suspense><LilyAnalyticsConsentBanner /></>;
 }
 
 createRoot(document.getElementById("root")!).render(
