@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
 import { parseSocialLinks, socialLinksSchema } from "./social-links";
+import { createLoyaltyConfigVersion } from "./loyalty/service";
 
 const SETTINGS_ID = "default";
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -355,18 +356,26 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
     const input = storeSettingsPatchSchema.parse(request.body);
     const configuredInstagram = input.socialLinks?.find((link) => link.platform === "instagram");
     const configuredWhatsapp = input.socialLinks?.find((link) => link.platform === "whatsapp");
-    const updated = await lilyPrisma.lilyOperationalSettings.update({
-      where: { id: SETTINGS_ID },
-      data: {
-        ...(input.instagramHandle === undefined && configuredInstagram === undefined ? {} : { instagramHandle: (configuredInstagram?.identifier || input.instagramHandle || "").replace(/^@+/, "") }),
-        ...(input.whatsappPhone === undefined && configuredWhatsapp === undefined ? {} : { whatsappPhone: configuredWhatsapp?.identifier || input.whatsappPhone || "" }),
-        ...(input.socialLinks === undefined ? {} : { socialLinksJson: JSON.stringify(input.socialLinks) }),
-        ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
-        ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
-        ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
-        ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints }),
-        ...(input.referralRewardPoints === undefined ? {} : { referralRewardPoints: input.referralRewardPoints })
-      }
+    const updated = await lilyPrisma.$transaction(async (tx) => {
+      const before = await tx.lilyOperationalSettings.findUnique({ where: { id: SETTINGS_ID }, select: { loyaltyOrderCentsPerPoint: true, loyaltyCampaignBonusPoints: true, loyaltyCouponBonusPoints: true } });
+      const settings = await tx.lilyOperationalSettings.update({
+        where: { id: SETTINGS_ID },
+        data: {
+          ...(input.instagramHandle === undefined && configuredInstagram === undefined ? {} : { instagramHandle: (configuredInstagram?.identifier || input.instagramHandle || "").replace(/^@+/, "") }),
+          ...(input.whatsappPhone === undefined && configuredWhatsapp === undefined ? {} : { whatsappPhone: configuredWhatsapp?.identifier || input.whatsappPhone || "" }),
+          ...(input.socialLinks === undefined ? {} : { socialLinksJson: JSON.stringify(input.socialLinks) }),
+          ...(input.publicAddressText === undefined ? {} : { publicAddressText: input.publicAddressText || null }),
+          ...(input.loyaltyOrderCentsPerPoint === undefined ? {} : { loyaltyOrderCentsPerPoint: input.loyaltyOrderCentsPerPoint }),
+          ...(input.loyaltyCampaignBonusPoints === undefined ? {} : { loyaltyCampaignBonusPoints: input.loyaltyCampaignBonusPoints }),
+          ...(input.loyaltyCouponBonusPoints === undefined ? {} : { loyaltyCouponBonusPoints: input.loyaltyCouponBonusPoints }),
+          ...(input.referralRewardPoints === undefined ? {} : { referralRewardPoints: input.referralRewardPoints })
+        }
+      });
+      const includesLoyaltyPolicy = (input.loyaltyOrderCentsPerPoint !== undefined && input.loyaltyOrderCentsPerPoint !== before?.loyaltyOrderCentsPerPoint)
+        || (input.loyaltyCampaignBonusPoints !== undefined && input.loyaltyCampaignBonusPoints !== before?.loyaltyCampaignBonusPoints)
+        || (input.loyaltyCouponBonusPoints !== undefined && input.loyaltyCouponBonusPoints !== before?.loyaltyCouponBonusPoints);
+      if (includesLoyaltyPolicy) await createLoyaltyConfigVersion(context.user.id, tx);
+      return settings;
     });
     await auditLilyAdmin(context.user.id, "update", "store-settings", SETTINGS_ID, input);
     return serializeStoreSettings(updated);

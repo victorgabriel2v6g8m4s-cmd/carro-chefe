@@ -7,7 +7,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { getOptionalLilySession, hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
-import { loyaltySnapshot, roundLoyaltyPoints } from "./loyalty/service";
+import { loyaltySnapshot } from "./loyalty/service";
 
 export const LILY_PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -52,7 +52,6 @@ type LoyaltyRow = {
 };
 
 async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[]; includeTestAccounts?: boolean; excludeTestAccounts?: boolean } = {}) {
-  const settings = await getLilyOperationalSettings();
   const users = await lilyPrisma.lilyUser.findMany({
     where: {
       status: "active",
@@ -82,7 +81,6 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
       },
       select: {
         userId: true,
-        grandTotalCents: true,
         laCampaign: true
       }
     }),
@@ -92,8 +90,6 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
     })
   ]);
 
-  const perPoint = Math.max(1, settings.loyaltyOrderCentsPerPoint);
-  const campaignBonus = Math.max(0, settings.loyaltyCampaignBonusPoints);
   const map = new Map<string, LoyaltyRow>();
   const campaigns = new Map<string, Set<string>>();
 
@@ -117,7 +113,6 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
     const row = map.get(order.userId);
     if (!row) continue;
     row.orderCount += 1;
-    row.points += roundLoyaltyPoints(order.grandTotalCents / perPoint, settings.loyaltyRoundingMode);
     if (order.laCampaign) campaigns.get(order.userId)?.add(order.laCampaign);
   }
 
@@ -130,7 +125,6 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
     const row = map.get(userId);
     if (!row) continue;
     row.campaignCount = set.size;
-    row.points += set.size * campaignBonus;
   }
 
   return [...map.values()].sort((a, b) =>

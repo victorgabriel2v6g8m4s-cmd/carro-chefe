@@ -4677,6 +4677,20 @@ img, svg { max-width: 100%; }
 .loyalty-level-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); align-items:start; gap:12px; padding:16px; border:1px solid var(--cl-color-border); border-radius:16px; }
 .loyalty-level-row label,.loyalty-mission-row label { display:grid; gap:6px; font-weight:750; }
 .loyalty-level-row textarea { min-height:72px; }
+.level-order-controls { display:flex; gap:8px; }
+.level-order-controls .button { min-width:44px; min-height:44px; }
+.loyalty-preview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:16px; margin-top:20px; }
+.loyalty-preview-card { min-width:0; padding:18px; border:1px solid var(--cl-color-border); border-radius:18px; background:var(--cl-color-surface,#fff); }
+.loyalty-preview-card h3 { margin:0 0 6px; }
+.loyalty-curve-scroll { max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; }
+.loyalty-curve-line { fill:none; stroke:var(--cl-color-primary); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.loyalty-curve-point { fill:var(--cl-color-primary); stroke:#fff; stroke-width:2; }
+.loyalty-curve-value { fill:var(--cl-color-secondary); font-size:9px; font-weight:800; }
+.loyalty-curve-name { fill:var(--cl-color-text,#33252a); font-size:10px; font-weight:700; }
+.loyalty-coin-milestones { display:flex; gap:10px; overflow-x:auto; margin:14px 0 0; padding:0 0 8px; list-style:none; }
+.loyalty-coin-milestones li { display:grid; flex:0 0 128px; gap:4px; padding:12px; border:1px solid var(--cl-color-border); border-radius:14px; }
+.loyalty-coin-milestones strong { color:var(--cl-color-primary); }
+.loyalty-coin-milestones small { color:var(--cl-color-muted,#655d60); }
 .loyalty-mission-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--cl-color-border); }
 .loyalty-mission-row span { display:grid; gap:5px; }
 .lily-shell:has(.reels-page) { padding-bottom:0; }
