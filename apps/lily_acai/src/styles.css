@@ -4772,15 +4772,19 @@ img, svg { max-width: 100%; }
 @media(prefers-reduced-motion:reduce) { .reels-stage { transition:none; } }
 
 /* Header CookLily: saldo e progresso sempre visíveis, navegação reunida no menu. */
-.topbar-inner { gap:16px; }
+.topbar-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,auto) minmax(0,1fr); align-items:center; gap:16px; }
+.topbar-inner > .brand { justify-self:start; }
+.topbar-inner > .header-coins { justify-self:start; }
+.topbar-inner > .header-loyalty-progress { justify-self:center; }
 .header-actions { display:flex; align-items:center; gap:clamp(5px,1vw,12px); }
+.topbar-inner > .header-actions { justify-self:end; margin-left:0; }
 .header-coins,.header-loyalty-progress { display:flex; align-items:center; color:var(--cl-color-secondary); text-decoration:none; }
 .header-coins { gap:6px; min-width:0; padding:7px 10px; border:1px solid var(--cl-color-border); border-radius:999px; background:#fff; font-size:14px; }
 .header-coins > svg,.header-coins > img { width:19px; height:19px; object-fit:contain; color:var(--cl-color-primary); }
 .header-coins strong { font-size:15px; font-variant-numeric:tabular-nums; }
 .header-coin-name { max-width:100px; overflow:hidden; color:var(--cl-color-text-muted); text-overflow:ellipsis; white-space:nowrap; }
 .header-loyalty-progress { gap:7px; font-size:12px; font-weight:850; font-variant-numeric:tabular-nums; }
-.header-progress-segments { display:flex; width:88px; gap:3px; }
+.header-progress-segments { display:flex; width:clamp(120px,14vw,176px); gap:3px; }
 .header-progress-segments i { height:7px; flex:1; overflow:hidden; border-radius:99px; background:#eadce2; }
 .header-progress-segments b { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--cl-color-primary),#e69b52); }
 .header-level-icon,.header-level-icon-fallback { display:grid; width:28px; height:28px; flex:none; place-items:center; border:1px solid #ead8c3; border-radius:50%; object-fit:cover; background:#fff8eb; color:#9e6b32; }
@@ -4885,7 +4889,11 @@ img, svg { max-width: 100%; }
 .loyalty-admin-redemptions article > span { display:grid; min-width:160px; flex:1; gap:3px; }
 .loyalty-admin-redemptions small { color:var(--cl-color-text-muted); }
 @media(max-width:760px) {
-  .topbar-inner { gap:5px; }
+  .topbar-inner { display:flex; gap:5px; }
+  .topbar-inner > .brand { flex:0 0 auto; }
+  .topbar-inner > .header-coins { flex:0 0 auto; }
+  .topbar-inner > .header-loyalty-progress { flex:1 1 auto; justify-content:center; min-width:0; }
+  .topbar-inner > .header-actions { flex:0 0 auto; }
   .topbar-inner .brand-logo { width:38px; height:38px; }
   .brand-copy small { display:none; }
   .header-actions { gap:3px; }
@@ -4894,7 +4902,7 @@ img, svg { max-width: 100%; }
   .header-coins strong { font-size:13px; }
   .header-coin-name { display:none; }
   .header-loyalty-progress { gap:4px; font-size:11px; }
-  .header-progress-segments { width:54px; gap:2px; }
+  .header-progress-segments { width:clamp(72px,30vw,132px); gap:2px; }
   .header-progress-segments i { height:6px; }
   .header-level-icon,.header-level-icon-fallback { width:24px; height:24px; }
   .header-actions .header-icon { flex:0 0 34px; min-width:34px; width:34px; height:34px; aspect-ratio:1; }
@@ -4921,7 +4929,7 @@ img, svg { max-width: 100%; }
 @media(max-width:400px) {
   .header-coins { padding-inline:5px; }
   .header-loyalty-progress { gap:3px; }
-  .header-progress-segments { width:42px; }
+  .header-progress-segments { width:clamp(60px,25vw,88px); }
   .header-actions .header-icon { flex-basis:30px; min-width:30px; width:30px; height:30px; }
   .header-actions .header-icon svg { width:18px; height:18px; }
   .header-actions .notification-badge { right:-2px; }

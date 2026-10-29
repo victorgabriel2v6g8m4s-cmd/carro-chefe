@@ -48,7 +48,11 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(mainSource).toContain('className="mobile-menu" aria-label="Menu CookLily"');
     expect(css).toContain(".header-actions .cart-icon { order:2; }");
     expect(css).toContain(".header-actions .profile-icon { order:3; }");
-    expect(css).toContain(".header-progress-segments { display:flex; width:88px; gap:3px; }");
+    expect(css).toContain(".topbar-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,auto) minmax(0,1fr); align-items:center; gap:16px; }");
+    expect(css).toContain(".header-progress-segments { display:flex; width:clamp(120px,14vw,176px); gap:3px; }");
+    expect(css).toContain(".header-progress-segments { width:clamp(72px,22vw,132px); gap:2px; }");
+    expect(css).toContain(".topbar-inner > .header-coins { flex:0 0 auto; }");
+    expect(css).toContain(".topbar-inner > .header-loyalty-progress { flex:1 1 auto; justify-content:center; min-width:0; }");
   });
 
   it("mantém os controles da curva em um painel amplo com zoom, pan, minimapa e suporte ao toque", () => {

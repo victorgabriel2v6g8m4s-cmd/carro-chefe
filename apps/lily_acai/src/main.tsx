@@ -221,17 +221,17 @@ function Shell({ children }: { children: ReactNode }) {
           <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
         </Link>
 
-        <div className="header-actions">
-          {user && <>
-            <Link className="header-coins" to="/dashboard" aria-label={`${(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")} ${loyalty?.coinName ?? "LilyCoins"}`} title={loyalty?.coinName ?? "LilyCoins"}>
+        {user && <>
+          <Link className="header-coins" to="/dashboard" aria-label={`${(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")} ${loyalty?.coinName ?? "LilyCoins"}`} title={loyalty?.coinName ?? "LilyCoins"}>
               {loyalty?.coinIconUrl ? <img src={loyalty.coinIconUrl} alt="" /> : <Sparkles aria-hidden="true" />}
               <strong>{(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")}</strong><span className="header-coin-name">{loyalty?.coinName ?? "LilyCoins"}</span>
-            </Link>
-            <Link className="header-loyalty-progress" to="/dashboard" title={`${loyalty?.levelProgressPercent ?? 0}% para ${loyalty?.nextLevel?.name ?? "o próximo nível"}`} aria-label={`${loyalty?.levelProgressPercent ?? 0}% do progresso. Nível atual: ${loyalty?.currentLevel?.name ?? "sem nível"}. Próximo nível: ${loyalty?.nextLevel?.name ?? "nível máximo"}`}>
+          </Link>
+          <Link className="header-loyalty-progress" to="/dashboard" title={`${loyalty?.levelProgressPercent ?? 0}% para ${loyalty?.nextLevel?.name ?? "o próximo nível"}`} aria-label={`${loyalty?.levelProgressPercent ?? 0}% do progresso. Nível atual: ${loyalty?.currentLevel?.name ?? "sem nível"}. Próximo nível: ${loyalty?.nextLevel?.name ?? "nível máximo"}`}>
               <span>{loyalty?.levelProgressPercent ?? 0}%</span><span className="header-progress-segments" aria-hidden="true">{[0, 1, 2, 3].map((segment) => { const fill = Math.min(100, Math.max(0, ((loyalty?.levelProgressPercent ?? 0) - segment * 25) * 4)); return <i key={segment}><b style={{ width: `${fill}%` }} /></i>; })}</span>
               {loyalty?.currentLevel?.iconUrl ? <img className="header-level-icon" src={loyalty.currentLevel.iconUrl} alt="" /> : <span className="header-level-icon-fallback" aria-hidden="true"><Sparkles size={14} /></span>}
-            </Link>
-          </>}
+          </Link>
+        </>}
+        <div className="header-actions">
           <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><Bell size={22} strokeWidth={1.8} />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
           <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
             <ShoppingCart size={22} strokeWidth={1.8} />
