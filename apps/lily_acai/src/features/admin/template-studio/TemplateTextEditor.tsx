@@ -29,10 +29,10 @@ function inlineHtml(value: string, names: string[]) {
     if (variable) {
       const number = Number(variable[1]); const name = names[number - 1] || `variavel_${number}`;
       html += `<span class="template-variable-token" data-template-variable="${number}" contenteditable="false" draggable="true">${escapeHtml(name)}</span>`;
-    } else if (token.startsWith("*")) html += `<strong>${escapeHtml(token.slice(1, -1))}</strong>`;
-    else if (token.startsWith("_")) html += `<em>${escapeHtml(token.slice(1, -1))}</em>`;
-    else if (token.startsWith("~")) html += `<s>${escapeHtml(token.slice(1, -1))}</s>`;
-    else html += `<code>${escapeHtml(token.slice(1, -1))}</code>`;
+    } else if (token.startsWith("*")) html += `<strong>${inlineHtml(token.slice(1, -1), names)}</strong>`;
+    else if (token.startsWith("_")) html += `<em>${inlineHtml(token.slice(1, -1), names)}</em>`;
+    else if (token.startsWith("~")) html += `<s>${inlineHtml(token.slice(1, -1), names)}</s>`;
+    else html += `<code>${inlineHtml(token.slice(1, -1), names)}</code>`;
     cursor = index + token.length;
   }
   return html + escapeHtml(value.slice(cursor));
@@ -164,7 +164,15 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
     editor.focus();
     const range = currentRange(editor, savedRange); const selection = window.getSelection();
     selection?.removeAllRanges(); selection?.addRange(range);
-    document.execCommand(action, false, value);
+    const inlineTag = action === "bold" ? "strong" : action === "italic" ? "em" : action === "strikeThrough" ? "s" : null;
+    if (inlineTag && !range.collapsed) {
+      const wrapper = document.createElement(inlineTag);
+      try { range.surroundContents(wrapper); }
+      catch { wrapper.append(range.extractContents()); range.insertNode(wrapper); }
+      range.selectNodeContents(wrapper);
+      selection?.removeAllRanges(); selection?.addRange(range);
+      savedRange.current = range.cloneRange();
+    } else document.execCommand(action, false, value);
     emitChange();
   }
 
