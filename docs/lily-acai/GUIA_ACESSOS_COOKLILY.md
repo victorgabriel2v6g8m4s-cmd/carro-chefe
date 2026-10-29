@@ -4,15 +4,37 @@ Este guia descreve como entrar na VPS, autenticar um agente no painel, criar con
 
 ## 1. Acesso SSH à VPS
 
-O acesso à VPS é independente do acesso ao painel CookLily. No Hostinger, consulte os dados SSH mostrados para o servidor: endereço/IP, usuário e porta. Não tente deduzi-los a partir do domínio.
+O acesso à VPS é independente do acesso ao painel CookLily. **Antes de tentar conectar**, consulte primeiro as variáveis locais `COOKLILY_VPS_HOST`, `COOKLILY_VPS_USER`, `COOKLILY_VPS_PORT` e `COOKLILY_VPS_SSH_KEY`; confira também se o arquivo da chave existe. Não imprima a chave privada nem o conteúdo de outros arquivos secretos.
 
-No Windows, use a chave privada SSH que já foi instalada/autorizada no servidor:
+No PowerShell, a conexão usa os valores configurados localmente:
 
 ```powershell
-ssh -i "$env:USERPROFILE\.ssh\<arquivo-da-chave>" -o IdentitiesOnly=yes -p <porta> <usuario>@<ip-ou-host>
+$env:COOKLILY_VPS_HOST
+$env:COOKLILY_VPS_USER
+$env:COOKLILY_VPS_PORT
+Test-Path -LiteralPath $env:COOKLILY_VPS_SSH_KEY
+ssh -i $env:COOKLILY_VPS_SSH_KEY -o IdentitiesOnly=yes -p $env:COOKLILY_VPS_PORT "$($env:COOKLILY_VPS_USER)@$($env:COOKLILY_VPS_HOST)"
 ```
 
-Na primeira conexão, compare o fingerprint exibido pelo terminal com o fingerprint SSH mostrado pela Hostinger antes de aceitar. Se a chave já estiver no `ssh-agent` e configurada em `~/.ssh/config`, use `ssh <alias-configurado>`. Não coloque a chave privada em argumentos, variáveis versionadas ou neste repositório.
+As variáveis contêm somente destino SSH e caminho local da chave; nunca armazene senha, chave privada ou passphrase nelas. Se qualquer variável ou arquivo faltar, **não tente adivinhar**. Peça ao humano host/IP, usuário e porta tal como aparecem na área SSH da Hostinger; pergunte qual chave pública foi autorizada e localize a chave privada correspondente no computador. Não solicite senha, TOTP ou envio da chave privada.
+
+Para configurar persistentemente no Windows, substitua os valores pelos dados fornecidos/confirmados pelo humano e execute no PowerShell do computador que fará a conexão:
+
+```powershell
+$values = @{
+  COOKLILY_VPS_HOST = "<ip-ou-host-da-hostinger>"
+  COOKLILY_VPS_USER = "<usuario-ssh>"
+  COOKLILY_VPS_PORT = "<porta-ssh>"
+  COOKLILY_VPS_SSH_KEY = "$env:USERPROFILE\.ssh\<arquivo-da-chave-privada>"
+}
+foreach ($entry in $values.GetEnumerator()) {
+  [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value, "User")
+  Set-Item -Path "Env:$($entry.Key)" -Value $entry.Value
+}
+Test-Path -LiteralPath $env:COOKLILY_VPS_SSH_KEY
+```
+
+Se o agente não puder alterar o ambiente local, forneça ao humano esse bloco com os placeholders e instrua-o a executar no próprio PowerShell; depois, abra um terminal novo e confirme presença das três variáveis e existência da chave sem imprimir seu conteúdo. Na primeira conexão, compare o fingerprint do servidor com o mostrado pela Hostinger antes de aceitar. Não coloque os valores de destino ou chave em arquivos versionados.
 
 ## 2. Entrar no painel com uma identidade de agente/LLM
 
