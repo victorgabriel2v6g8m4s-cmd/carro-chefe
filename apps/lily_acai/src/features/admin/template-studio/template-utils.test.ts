@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emptyTemplate, makeMetaPayload, renderTemplateMessage, textVariables, validateComponents } from "./template-utils";
 import type { MetaTemplateComponent } from "./template-types";
+import { createAuthenticationComponents, setAuthenticationExpiration, setAuthenticationSecurityRecommendation, setOtpType } from "./authentication-template";
 
 describe("WhatsApp Meta template studio utilities", () => {
   it("prepara a categoria Meta, idioma e componentes sem enviar nada", () => {
@@ -38,5 +39,25 @@ describe("WhatsApp Meta template studio utilities", () => {
     for (let level = 0; level < 10; level += 1) nested = { value: nested };
     expect(validateComponents([{ type: "BODY", nested }])).toBeNull();
     expect(validateComponents([{ type: "BODY", text: "válido" }])).toEqual([{ type: "BODY", text: "válido" }]);
+  });
+
+  it("monta componentes Meta próprios para autenticação e simula o código local", () => {
+    let components = createAuthenticationComponents();
+    expect(components).toEqual([
+      { type: "BODY" },
+      { type: "BUTTONS", buttons: [{ type: "OTP", otp_type: "COPY_CODE" }] }
+    ]);
+    components = setAuthenticationSecurityRecommendation(components, true);
+    components = setAuthenticationExpiration(components, true, 10);
+    components = setOtpType(components, "ONE_TAP");
+    expect(components).toEqual([
+      { type: "BODY", add_security_recommendation: true },
+      { type: "FOOTER", code_expiration_minutes: 10 },
+      { type: "BUTTONS", buttons: [{ type: "OTP", otp_type: "ONE_TAP" }] }
+    ]);
+    expect(renderTemplateMessage(components, {})).toEqual([
+      "123456 é seu código de verificação.",
+      "[Preencher código]"
+    ]);
   });
 });

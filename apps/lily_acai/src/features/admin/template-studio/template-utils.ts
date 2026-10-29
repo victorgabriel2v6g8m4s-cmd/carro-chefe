@@ -47,11 +47,15 @@ export function renderTemplateMessage(components: MetaTemplateComponent[], value
       const format = typeof component.format === "string" ? component.format.toLowerCase() : "text";
       return text ? [`${text}`] : format !== "text" ? [`[${format} de demonstração]`] : [];
     }
-    if (["BODY", "FOOTER"].includes(component.type) && text) return [text];
+    if (component.type === "BODY" && text) return [text];
+    if (component.type === "BODY" && component.add_security_recommendation === true) return ["123456 é seu código de verificação."];
+    if (component.type === "FOOTER" && text) return [text];
     if (component.type === "BUTTONS" && Array.isArray(component.buttons)) {
       return component.buttons.flatMap((button) => {
         if (!button || typeof button !== "object" || Array.isArray(button)) return [];
-        const buttonText = "text" in button && typeof button.text === "string" ? button.text : "";
+        const buttonText = "type" in button && button.type === "OTP"
+          ? "otp_type" in button && button.otp_type === "COPY_CODE" ? "Copiar código" : "Preencher código"
+          : "text" in button && typeof button.text === "string" ? button.text : "";
         return buttonText ? [`[${buttonText}]`] : [];
       });
     }

@@ -12,7 +12,7 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 
 export const LILY_BUILD_BUDGET = Object.freeze({
   // Margem medida para níveis, Reels, editor de carrosséis e estúdio de templates WhatsApp.
-  jsRawBytes: 739_328,
+  jsRawBytes: 741_376,
   jsGzipBytes: 204_800,
   cssRawBytes: 158_720,
   cssGzipBytes: 31_744,
