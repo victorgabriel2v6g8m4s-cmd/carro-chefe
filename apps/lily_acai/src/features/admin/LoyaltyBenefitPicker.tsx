@@ -71,6 +71,10 @@ export function LoyaltyBenefitPicker({ benefits, catalog, onChange }: { benefits
       setSelectionError(`Esta combinação precisa incluir ao menos ${configuring.minimumAddonUnits} adicionais.`);
       return;
     }
+    if (configuring.maximumAddonUnits > 0 && configuration.addonIds.length > configuring.maximumAddonUnits) {
+      setSelectionError(`Esta combinação permite até ${configuring.maximumAddonUnits} adicionais.`);
+      return;
+    }
     const key = `product:${configuring.id}`;
     const selected = benefits.find((benefit) => `${benefit.kind}:${benefit.entityId}` === key);
     const benefit: LilyBenefit = { ...selected, id: key, kind: "product", entityId: configuring.id, label: configuring.displayName, categoryId: configuring.categoryId, maxRedemptionsPerUser: selected?.maxRedemptionsPerUser ?? 1, selectionMode: "preset", configuration };
@@ -122,8 +126,7 @@ export function LoyaltyBenefitPicker({ benefits, catalog, onChange }: { benefits
               else selectItem(currentGroup, item);
             };
             return <button type="button" key={item.id} className={`loyalty-benefit-option${selected ? " is-selected" : ""}`} aria-pressed={selected} aria-label={`${selected ? "Selecionado" : "Não selecionado"}: ${item.label}. Clique uma vez para alternar; dê dois cliques ou pressione F2 para montar combinação.`}
-              onClick={() => { if (clickTimer.current !== null) { window.clearTimeout(clickTimer.current); clickTimer.current = null; activate(); return; } clickTimer.current = window.setTimeout(() => { clickTimer.current = null; selectItem(currentGroup, item); }, 240); }}
-              onDoubleClick={(event) => { event.preventDefault(); if (clickTimer.current !== null) { window.clearTimeout(clickTimer.current); clickTimer.current = null; } activate(); }}
+              onClick={(event) => { if (clickTimer.current !== null) { window.clearTimeout(clickTimer.current); clickTimer.current = null; if (currentGroup.kind === "product" || currentGroup.kind === "combo") activate(); else selectItem(currentGroup, item); return; } if (event.detail > 1) { activate(); return; } clickTimer.current = window.setTimeout(() => { clickTimer.current = null; selectItem(currentGroup, item); }, 240); }}
               onKeyDown={(event) => { if (event.key === "F2" && (currentGroup.kind === "product" || currentGroup.kind === "combo")) { event.preventDefault(); if (clickTimer.current !== null) window.clearTimeout(clickTimer.current); activate(); } }}>
               <span className="loyalty-benefit-check" aria-hidden="true">{selected ? "✓" : ""}</span><span><strong>{item.label}</strong><small>{item.description || "CookLily"}</small></span><span className="loyalty-benefit-option-hint">{currentGroup.kind === "product" ? "2 cliques · montar" : "selecionar"}</span>
             </button>;
