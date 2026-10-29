@@ -81,3 +81,11 @@ Próxima ação exata: cliente indisponível; quando voltar, iniciar captura cur
 - Estado atual VPS: Nginx ativo, configuração TLS disponível, domínio público HTTP 200. Não há mudança permanente adicional feita nesta rodada.
 
 Conclusão provisória: incompatibilidade de assinatura ECDSA/RSA é uma hipótese testável para clientes antigos; fragmentação/PMTU específica da rede móvel permanece sem confirmação. A próxima coleta útil exige o horário exato da falha e uma tentativa durante captura TLS/TCP; idealmente, obter também modelo do aparelho, versão Android/Chrome e operadora, sem coletar identificadores pessoais.
+
+## Nova tentativa do cliente (2026-10-29 01:44:30 UTC aprox.)
+
+- Capturas TLS e TCP iniciadas em 01:43:43 UTC por 10 minutos: `/var/tmp/cooklily-tls-20261029-014343-oUIYmk.txt` e `/var/tmp/cooklily-tcp-path-20261029-014343-ioVBO9.txt`, ambas privadas e com endereços mascarados.
+- Até a leitura de 01:46:25 UTC, não há evento TCP de entrada na janela 01:44:25–01:44:49 UTC nem falha TLS do Nginx associável ao horário informado.
+- TLS logger registrou respostas HTTP 401 sobre TLS 1.3/HTTP2 às 01:44:08–09 UTC e repetiu às 01:45:08–09 UTC. São handshakes bem-sucedidos de origem não identificada; não atribuir ao cliente. HTTP 401 não é erro TLS.
+- Nginx permanece ativo e `nginx -t` passa. A captura continua até 01:53:43 UTC para observar uma nova tentativa, se houver.
+- Resultado ainda inconclusivo: confirmar com o cliente se a página abriu ou se repetiu `ERR_SSL_PROTOCOL_ERROR`; se repetiu, o horário aproximado reportado não coincide com tráfego recebido pela VPS, o que aponta para investigar DNS/rota/rede anterior à VPS, mas não identifica qual elemento falhou.
