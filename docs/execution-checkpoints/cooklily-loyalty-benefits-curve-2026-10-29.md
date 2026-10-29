@@ -1,6 +1,6 @@
 # CookLily — benefícios de nível, painel de fidelidade e migrations
 
-- status: completed
+- status: validated
 - owner: AG-DEV
 - branch: codex/cooklily-loyalty-final-checkpoint
 - base_branch: cooklily/canonical
@@ -18,6 +18,7 @@ Implementar no painel CookLily benefícios estruturados por nível, limites conf
 
 - Preflight `AG-DEV`, escopo `lily-loyalty-benefits-curve`: PASS.
 - Task runtime `TASK-DEV-LOYALTY-BENEFITS-UI`, execução `cmvu0kcga000lactpxz5lelcs` iniciada.
+- Tentativa de fechamento do runtime após o deploy: `GET /api/v1/agent-runs/cmvu0kcga000lactpxz5lelcs` retornou HTTP 404; `GET /api/v1/bootstrap` retornou `project: null`, `tasks: []`, `runs: []`. Nenhum registro foi criado/alterado por fora da API.
 - PR #257 passou CI e foi integrado por squash. Feature SHA: `6ec56ba7877ff2b35e9ba3e0ae92e7cf0e73cfb2`.
 - PR #258 atualizou o checkpoint pré-deploy e foi integrado por squash: `7a6802c4ee243fd005d52244ea4e36676c1e16e`.
 - PR #259 corrigiu o seletor de benefícios no mobile e foi integrado por squash após todos os checks PASS: `fa0e81d1c944c3be6c332140c05859ab98882f91`.
@@ -53,4 +54,4 @@ Implementar no painel CookLily benefícios estruturados por nível, limites conf
 
 ## Próxima ação exata
 
-Publicar este checkpoint final somente em `cooklily/canonical` e registrar a execução `cmvu0kcga000lactpxz5lelcs` como concluída na API runtime; depois encerrar.
+Reconciliar a indisponibilidade/ausência dos registros runtime pela API operacional autorizada, depois atualizar a execução `cmvu0kcga000lactpxz5lelcs` e transicionar `TASK-DEV-LOYALTY-BENEFITS-UI` com evidências, versão esperada e justificativa. Até então, Git, CI, deploy e homologação estão concluídos; a auditoria runtime permanece sem confirmação.
