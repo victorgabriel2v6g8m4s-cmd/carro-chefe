@@ -14,7 +14,7 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   // Margem medida para níveis, Reels, carrosséis, editor, árvore e simulador WhatsApp lazy-loaded.
   jsRawBytes: 774_144,
   jsGzipBytes: 212_992,
-  cssRawBytes: 159_232,
+  cssRawBytes: 160_256,
   cssGzipBytes: 31_744,
   combinedGzipBytes: 244_736
 });

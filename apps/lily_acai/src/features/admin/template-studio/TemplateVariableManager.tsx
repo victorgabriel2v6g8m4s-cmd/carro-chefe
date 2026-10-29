@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type FormEvent, type MutableRefObject } from "react";
+import { useState, type DragEvent, type KeyboardEvent, type MouseEvent, type MutableRefObject } from "react";
 import type { MetaTemplateComponent } from "./template-types";
 import { normalizeVariableName, removeVariable, variableUsage } from "./template-text";
 
@@ -14,13 +14,18 @@ export function TemplateVariableManager({ names, components, onChange, activeIns
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
 
-  function addVariable(event: FormEvent) {
-    event.preventDefault();
+  function addVariable() {
     const name = normalizeVariableName(value);
     if (!name) { setError("Digite um nome para a variável."); return; }
     if (names.includes(name)) { setError("Esse nome já está cadastrado."); return; }
     if (names.length >= 50) { setError("O template atingiu o limite de 50 variáveis."); return; }
     setError(""); setValue(""); onChange([...names, name], components);
+  }
+
+  function submitVariable(event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLInputElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    addVariable();
   }
 
   function startDrag(event: DragEvent<HTMLButtonElement>, index: number) {
@@ -40,10 +45,10 @@ export function TemplateVariableManager({ names, components, onChange, activeIns
   return <fieldset className="template-variable-manager template-span-two">
     <legend>Variáveis do template</legend>
     <p>Crie nomes simples e insira no texto: arraste uma ficha ou toque nela depois de posicionar o cursor. O painel converte tudo para variáveis numeradas da Meta.</p>
-    <form className="template-variable-create" onSubmit={addVariable}>
-      <label>Nome da variável<input value={value} onChange={(event) => setValue(event.target.value)} maxLength={60} placeholder="ex.: numero_do_pedido" disabled={disabled} /></label>
-      <button className="button ghost" type="submit" disabled={disabled}>Adicionar variável</button>
-    </form>
+    <div className="template-variable-create">
+      <label>Nome da variável<input value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") submitVariable(event); }} maxLength={60} placeholder="ex.: numero_do_pedido" disabled={disabled} /></label>
+      <button className="button ghost" type="button" onClick={submitVariable} disabled={disabled}>Adicionar variável</button>
+    </div>
     {error && <small className="error" role="alert">{error}</small>}
     <div className="template-variable-list" aria-label="Variáveis disponíveis">
       {names.map((name, index) => {
