@@ -1,12 +1,12 @@
 # Corrigir formatação de variáveis em templates WhatsApp
 
-- status: validated
+- status: in_progress
 - owner: AG-DEV
 - branch: codex/cooklily-whatsapp-variable-formatting
 - base_branch: cooklily/canonical
 - base_sha_verified: ac3de2d7eac3e783c49ed62d5dad755927cc1863
-- head_sha_verified: 14409f9a62eb23fe28e0a392de2ba6457e711fdd
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (draft)
+- head_sha_verified: b0ca836318c1efc62882d1cf44a565611e2e8881
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (merged)
 - last_verified_at: 2026-10-29
 - interruption_state: active
 
@@ -17,8 +17,9 @@
 - Correção local em `TemplateTextEditor.tsx`: parser inline recursivo e aplicação de estilo por range DOM preservando chips não editáveis.
 - `npm run check`, `npm run test:lily-ui` (20 arquivos, 89 testes) e `npm run build:lily` passaram. Build alerta chunks grandes existentes; budget passou.
 - Commit `14409f9a62eb23fe28e0a392de2ba6457e711fdd` publicado na branch remota.
-- PR #254 aberto como draft.
+- PR #254 integrado por squash em `b0ca836318c1efc62882d1cf44a565611e2e8881`.
 - `npm run build` passou (builds Gestão, site, QR, Lily e TypeScript API); budget da Lily passou.
+- CI do PR #254 passou em Node 20/24 e nos demais jobs do workflow (`40927600859`).
 
 ## Em andamento
 
@@ -33,7 +34,7 @@
 - `npm test`: 229 passed, 3 skipped, 148 failed; os testes API falham por bancos SQLite legados sem tabelas/colunas do schema atual (`LilyAnalyticsEvent`, `LilyPaymentReconciliation`, `rankingOptIn` etc.).
 - Reexecução com caminhos SQLite temporários não iniciou: Prisma retornou `Schema engine error` sem detalhe durante `migrate deploy`; nenhum banco de produção foi tocado.
 - `build`: passed
-- CI: passed no PR #254 (run 40926931507): Quality Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot.
+- CI: passed no PR #254 (run 40927600859): Quality Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot.
 - CodeQL: pending/unknown
 
 ## Migrations
@@ -53,4 +54,4 @@
 
 ## Próxima ação exata
 
-Integrar PR #254 por squash e prosseguir com deploy na VPS e validação desktop/mobile no navegador integrado.
+Fazer deploy de `b0ca836318c1efc62882d1cf44a565611e2e8881` e validar formatação da variável em desktop e mobile no navegador integrado; registrar o resultado.
