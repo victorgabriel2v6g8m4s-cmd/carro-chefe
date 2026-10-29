@@ -41,6 +41,8 @@ export function renderText(text: string, values: Record<number, string>) {
 }
 
 export function renderTemplateMessage(components: MetaTemplateComponent[], values: Record<number, string>) {
+  const hasOtpButton = components.some((component) => component.type === "BUTTONS" && Array.isArray(component.buttons) &&
+    component.buttons.some((button) => button && typeof button === "object" && !Array.isArray(button) && button.type === "OTP"));
   return components.flatMap((component) => {
     const text = typeof component.text === "string" ? renderText(component.text, values).trim() : "";
     if (component.type === "HEADER") {
@@ -48,7 +50,7 @@ export function renderTemplateMessage(components: MetaTemplateComponent[], value
       return text ? [`${text}`] : format !== "text" ? [`[${format} de demonstração]`] : [];
     }
     if (component.type === "BODY" && text) return [text];
-    if (component.type === "BODY" && component.add_security_recommendation === true) return ["123456 é seu código de verificação."];
+    if (component.type === "BODY" && hasOtpButton) return ["123456 é seu código de verificação."];
     if (component.type === "FOOTER" && text) return [text];
     if (component.type === "BUTTONS" && Array.isArray(component.buttons)) {
       return component.buttons.flatMap((button) => {
