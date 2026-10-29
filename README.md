@@ -39,6 +39,10 @@ docs/                 Documentação organizada por categoria
 planejamento/         Dados iniciais e implementação legada preservada
 ```
 
+## Acessos administrativos CookLily
+
+Para autenticação segura na VPS, login de agentes/LLMs no painel CookLily, criação de conta de teste e configuração de papéis, siga o [Guia de acessos CookLily](./docs/lily-acai/GUIA_ACESSOS_COOKLILY.md). O guia usa somente os scripts e configurações existentes e não contém credenciais. A chave privada SSH, senhas, MFA, tokens e arquivos de ambiente nunca devem ser enviados ao repositório ou ao chat.
+
 ## Entregas desta fundação
 
 - visão do negócio e proposta de valor;
