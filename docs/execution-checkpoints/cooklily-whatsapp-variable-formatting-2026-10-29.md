@@ -1,12 +1,12 @@
 # Corrigir formatação de variáveis em templates WhatsApp
 
-- status: in_progress
+- status: candidate
 - owner: AG-DEV
 - branch: codex/cooklily-whatsapp-variable-formatting
 - base_branch: cooklily/canonical
 - base_sha_verified: ac3de2d7eac3e783c49ed62d5dad755927cc1863
-- head_sha_verified: ac3de2d7eac3e783c49ed62d5dad755927cc1863 (alterações locais não commitadas)
-- pull_requests: nenhum
+- head_sha_verified: 14409f9a62eb23fe28e0a392de2ba6457e711fdd
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/254 (draft)
 - last_verified_at: 2026-10-29
 - interruption_state: active
 
@@ -16,12 +16,14 @@
 - Identificada outra falha: parser de markdown renderiza variável formatada como texto em vez de reconstituir o chip.
 - Correção local em `TemplateTextEditor.tsx`: parser inline recursivo e aplicação de estilo por range DOM preservando chips não editáveis.
 - `npm run check`, `npm run test:lily-ui` (20 arquivos, 89 testes) e `npm run build:lily` passaram. Build alerta chunks grandes existentes; budget passou.
+- Commit `14409f9a62eb23fe28e0a392de2ba6457e711fdd` publicado na branch remota.
+- PR #254 aberto como draft.
 - `npm run build` passou (builds Gestão, site, QR, Lily e TypeScript API); budget da Lily passou.
 
 ## Em andamento
 
 - Revisão do round-trip em browser e execução dos gates integrais.
-- Integração à `cooklily/canonical`, deploy na VPS e QA real em desktop/mobile via navegador integrado.
+- CI do PR em andamento; depois integrar à `cooklily/canonical`, deploy na VPS e QA real em desktop/mobile via navegador integrado.
 
 ## Gates e testes
 
@@ -31,7 +33,8 @@
 - `npm test`: 229 passed, 3 skipped, 148 failed; os testes API falham por bancos SQLite legados sem tabelas/colunas do schema atual (`LilyAnalyticsEvent`, `LilyPaymentReconciliation`, `rankingOptIn` etc.).
 - Reexecução com caminhos SQLite temporários não iniciou: Prisma retornou `Schema engine error` sem detalhe durante `migrate deploy`; nenhum banco de produção foi tocado.
 - `build`: passed
-- CI/CodeQL: pending
+- CI: pending no PR #254 (run 40926816118).
+- CodeQL: pending/unknown
 
 ## Migrations
 
@@ -50,4 +53,4 @@
 
 ## Próxima ação exata
 
-Criar commit da correção e checkpoint, publicar branch/PR e acompanhar CI; após integração, seguir deploy e QA real desktop/mobile.
+Aguardar os gates do PR #254 e corrigir falhas da entrega; então marcar PR pronto, fazer squash merge, deployar e validar desktop/mobile.
