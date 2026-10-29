@@ -68,4 +68,16 @@
 
 O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; ainda não há prova de que a conexão dos clientes afetados tenha exatamente o mesmo problema. Não afirmar causa raiz nem resolução garantida até surgir uma falha real no log dedicado ou confirmação dos usuários.
 
-Próxima ação exata: pedir ao cliente para tentar novamente agora enquanto `/var/tmp/cooklily-tcp-path-20261029-003122-ZWJVq5.txt` está capturando; depois ler esse relatório junto do TLS TXT, identificar SYN/ACK/retransmissões e confirmar se o erro aparece antes da VPS. Confirmar também que o timer retorna `tcp_mtu_probing` a `1` após 15 minutos. Não fazer novas alterações globais sem esse sinal.
+Próxima ação exata: cliente indisponível; quando voltar, iniciar captura curta antes da tentativa e cruzar o horário com TLS/TCP. Não fazer novas alterações globais sem esse sinal.
+
+## Investigação adicional sem o cliente (2026-10-29 01:23 UTC)
+
+- O rollback automático ocorreu: `net.ipv4.tcp_mtu_probing=1`; `tcp_base_mss=1024` (valor base do kernel, sem regra de MSS clamp em nftables/iptables). O teste em modo 2 não recebeu confirmação do cliente e não prova mitigação.
+- DNS atual resolve apenas `A 2.25.182.185`; não há `AAAA`. Não há seleção intermitente entre IPv4 e IPv6 observável via DNS público nesta configuração.
+- Certificado Let's Encrypt válido de 2026-09-14 a 2026-12-13, SAN cobre `carrochefe.com` e `www.carrochefe.com`, verificação OpenSSL OK. SNI correto e conexões TLS 1.2/1.3 passaram; HTTPS retornou 200 com verificação do certificado 0.
+- Nginx oferece TLS 1.2/1.3. A chave/certificado publicado é ECDSA. Probe TLS 1.2 com assinatura ECDSA passou; probe artificial limitado a assinatura RSA falhou com alerta 40. Isso identifica uma hipótese de compatibilidade para clientes TLS antigos/proxies que só anunciem assinatura RSA; não atribui o erro aos celulares reportados e não justifica trocar/duplicar certificados sem evidência do ClientHello afetado.
+- Probe sem SNI também passou e recebeu certificado válido do domínio. Ping DF de saída da VPS para 1.1.1.1 respondeu para payloads de 1472 até 1000 bytes; isso só testa o caminho de saída da VPS, não o caminho do cliente.
+- Captura TCP encerrada às 00:36:22 UTC: 125 pacotes no total; um SYN e um SYN-ACK vistos na amostra, sem correlação com cliente e sem retransmissão comprovada. TLS watcher não mostrou falha atribuível ao cliente. Resultado não identifica a causa.
+- Estado atual VPS: Nginx ativo, configuração TLS disponível, domínio público HTTP 200. Não há mudança permanente adicional feita nesta rodada.
+
+Conclusão provisória: incompatibilidade de assinatura ECDSA/RSA é uma hipótese testável para clientes antigos; fragmentação/PMTU específica da rede móvel permanece sem confirmação. A próxima coleta útil exige o horário exato da falha e uma tentativa durante captura TLS/TCP; idealmente, obter também modelo do aparelho, versão Android/Chrome e operadora, sem coletar identificadores pessoais.
