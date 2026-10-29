@@ -55,7 +55,23 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [ ] Priorizar configuração da loja, catálogo, disponibilidade, pedidos, pagamentos e estados operacionais.
 - [ ] Preservar RBAC, MFA, CSRF, auditoria, minimização de dados e isolamento por domínio.
 - [ ] Evitar segunda fonte de verdade para produtos, preços, estoque, pedidos, pagamentos ou financeiro quando o ERP assumir esses domínios.
-- [ ] Registrar gaps concretos antes de ampliar o painel; evitar refatoração sem necessidade comprovada.
+- [ ] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita.
+- [ ] Tornar a gestão do catálogo progressiva: listar produtos com os dados mínimos e carregar no popup/editor somente as configurações do produto selecionado; reaproveitar a apresentação do cardápio do cliente como base da lista.
+- [ ] Carregar sob demanda sabores, adicionais, mídia, combinações e outras dependências apenas quando a operação selecionada precisar delas; manter feedback de carregamento, erro e salvamento.
+- [ ] Auditar arquivos grandes e separar páginas, componentes, hooks, tipos e serviços por responsabilidade, extraindo somente lógica compartilhada comprovada.
+- [ ] Definir budgets distintos para entrada inicial, rotas críticas e total de assets; acompanhar tamanho minificado e gzip e impedir regressões em CI.
+- [ ] Registrar gaps concretos e entregas incrementais antes de ampliar o painel; evitar uma reescrita ampla sem medição.
+
+### 4A. Próximas atualizações de fidelidade e experiência
+- [ ] Aumentar a altura da barra de progresso de nível e remover a porcentagem exibida, liberando largura para a visualização dos segmentos.
+- [ ] Ajustar o fundo do saldo de LilyCoins no header para contraste claro com o fundo do header.
+- [ ] Fazer o saldo de LilyCoins abrir o dashboard já posicionado nas missões; fazer a barra de níveis abrir o dashboard.
+- [ ] Profissionalizar o dashboard com gráfico alternável entre visão semanal e mensal.
+- [ ] Mostrar histórico de pontos com missões concluídas, pesquisas respondidas, LilyCoins e pontos recebidos.
+- [ ] Adicionar um card interativo com timeline dos níveis e recompensas de cada nível, incluindo a data/regra da próxima reinicialização da temporada.
+- [ ] Definir e implementar temporadas: níveis e recompensas por nível reiniciam a cada temporada, com regra de transição e histórico preservado.
+- [ ] Criar recompensa diária por login e missões com periodicidade diária, semanal e perpétua.
+- [ ] Antes de conceder pontos/LilyCoins, especificar regras de elegibilidade, limites, idempotência, auditoria, expiração e fuso horário; não inventar valores ou calendário de temporada.
 
 ### 5. Finalizar landing page e UI pública
 - [ ] Fechar itens abertos de UI/UX conforme U1–U6 da especificação detalhada.
