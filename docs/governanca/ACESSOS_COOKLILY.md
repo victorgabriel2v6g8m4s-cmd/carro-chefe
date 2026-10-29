@@ -6,13 +6,33 @@ Este runbook existe na `main` para orientar operadores do site CookLily, cuja im
 
 ## Acesso SSH à VPS
 
-Obtenha host/IP, usuário e porta na área SSH da Hostinger. Na primeira conexão, confira o fingerprint informado pela Hostinger:
+Antes de conectar, consulte as variáveis locais `COOKLILY_VPS_HOST`, `COOKLILY_VPS_USER`, `COOKLILY_VPS_PORT` e `COOKLILY_VPS_SSH_KEY`, além de conferir se a chave privada existe. Não imprima nem envie o conteúdo da chave. Se faltar qualquer dado, peça ao humano o host/IP, usuário e porta exibidos na área SSH da Hostinger e confirme qual chave pública foi autorizada; não adivinhe nem solicite senha, TOTP ou chave privada.
 
 ```powershell
-ssh -i "$env:USERPROFILE\.ssh\<arquivo-da-chave>" -o IdentitiesOnly=yes -p <porta> <usuario>@<ip-ou-host>
+$env:COOKLILY_VPS_HOST
+$env:COOKLILY_VPS_USER
+$env:COOKLILY_VPS_PORT
+Test-Path -LiteralPath $env:COOKLILY_VPS_SSH_KEY
+ssh -i $env:COOKLILY_VPS_SSH_KEY -o IdentitiesOnly=yes -p $env:COOKLILY_VPS_PORT "$($env:COOKLILY_VPS_USER)@$($env:COOKLILY_VPS_HOST)"
 ```
 
-Não deduza usuário, porta ou IP pelo domínio. A chave SSH da VPS é distinta da chave de autenticação do painel CookLily.
+Para configurar no perfil do usuário Windows, substitua os placeholders pelos dados confirmados pelo humano e execute no PowerShell que fará a conexão; o processo salva no ambiente de usuário e atualiza a sessão atual:
+
+```powershell
+$values = @{
+  COOKLILY_VPS_HOST = "<ip-ou-host-da-hostinger>"
+  COOKLILY_VPS_USER = "<usuario-ssh>"
+  COOKLILY_VPS_PORT = "<porta-ssh>"
+  COOKLILY_VPS_SSH_KEY = "$env:USERPROFILE\.ssh\<arquivo-da-chave-privada>"
+}
+foreach ($entry in $values.GetEnumerator()) {
+  [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value, "User")
+  Set-Item -Path "Env:$($entry.Key)" -Value $entry.Value
+}
+Test-Path -LiteralPath $env:COOKLILY_VPS_SSH_KEY
+```
+
+Se o agente não puder configurar o ambiente local, envie ao humano o bloco preenchido apenas com os dados de conexão e peça que o execute; depois, abra um terminal novo e confira as variáveis e a existência da chave, sem exibir seu conteúdo. Não deduza host, usuário ou porta pelo domínio. A chave SSH da VPS é distinta da chave de autenticação do painel CookLily. Na primeira conexão, compare o fingerprint do servidor com o informado pela Hostinger.
 
 ## Conta de teste e papéis
 
