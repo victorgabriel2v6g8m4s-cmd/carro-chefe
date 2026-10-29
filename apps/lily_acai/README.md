@@ -34,6 +34,8 @@ Frontend independente da operação CookLily.
 - `/lilyacai/painel/pagamentos`;
 - `/lilyacai/painel/equipe` — admin.
 
+Procedimentos de acesso à VPS, autenticação administrativa de agentes, criação de conta de teste e papéis estão no [Guia de acessos CookLily](../../docs/lily-acai/GUIA_ACESSOS_COOKLILY.md).
+
 O backend continua sendo a autoridade de autorização; esconder uma rota no frontend não substitui sessão/role/CSRF.
 
 ## Landing

@@ -89,6 +89,7 @@ Relatórios: `entregas/ENTREGA_06_CARRINHO_PEDIDOS.md`, `entregas/ENTREGA_07_PAG
 - DEPLOY_VPS.md;
 - DEPLOY_INCREMENTAL_CLI.md;
 - AUTENTICACAO_AGENTE_ADMIN.md — login administrativo CookLily por chave OpenSSH, ticket de uso único, sessão curta, auditoria e revogação;
+- GUIA_ACESSOS_COOKLILY.md — runbook de acesso à VPS, agentes/LLMs, contas de teste e papéis de acesso, sem segredos;
 - DECISOES_PENDENCIAS.md;
 - PENDENCIAS_UX_SEGURANCA_2026-09-27.md;
 - CONSOLIDACAO_CANONICA_2026-09-27.md;
