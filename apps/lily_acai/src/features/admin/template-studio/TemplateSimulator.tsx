@@ -9,8 +9,8 @@ import "./template-simulation.css";
 const TemplatePricing = lazy(() => import("./TemplatePricing").then((module) => ({ default: module.TemplatePricing })));
 const TemplateFlowBuilder = lazy(() => import("./TemplateFlowBuilder").then((module) => ({ default: module.TemplateFlowBuilder })));
 type ChatAction = { label: string; type: string; url?: string; phone?: string };
-type ChatLine = { id: number; from: "customer" | "business"; text: string; header?: string; footer?: string; buttons?: ChatAction[]; category?: string; media?: string; windowOpenAtSend?: boolean; blocked?: boolean };
-const seedLines: ChatLine[] = [{ id: 1, from: "business", text: "Sua conversa de teste começa aqui." }];
+type ChatLine = { id: number; from: "customer" | "business" | "system"; text: string; header?: string; footer?: string; buttons?: ChatAction[]; category?: string; media?: string; windowOpenAtSend?: boolean; blocked?: boolean };
+const seedLines: ChatLine[] = [{ id: 1, from: "system", text: "Sua conversa de teste começa aqui." }];
 
 export function TemplateSimulator({ draft, templates = [], csrfToken = "" }: { draft: TemplateDraft; templates?: WhatsAppTemplate[]; csrfToken?: string }) {
   const [message, setMessage] = useState("");
