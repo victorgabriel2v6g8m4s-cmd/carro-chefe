@@ -1,6 +1,6 @@
 # Corrigir formatação de variáveis em templates WhatsApp
 
-- status: candidate
+- status: validated
 - owner: AG-DEV
 - branch: codex/cooklily-whatsapp-variable-formatting
 - base_branch: cooklily/canonical
@@ -33,7 +33,7 @@
 - `npm test`: 229 passed, 3 skipped, 148 failed; os testes API falham por bancos SQLite legados sem tabelas/colunas do schema atual (`LilyAnalyticsEvent`, `LilyPaymentReconciliation`, `rankingOptIn` etc.).
 - Reexecução com caminhos SQLite temporários não iniciou: Prisma retornou `Schema engine error` sem detalhe durante `migrate deploy`; nenhum banco de produção foi tocado.
 - `build`: passed
-- CI: pending no PR #254 (run 40926816118).
+- CI: passed no PR #254 (run 40926931507): Quality Node 20/24, Excel Recipe Linux/Windows, Tool Health, Windows Supervisor e Workbook Snapshot.
 - CodeQL: pending/unknown
 
 ## Migrations
@@ -53,4 +53,4 @@
 
 ## Próxima ação exata
 
-Aguardar os gates do PR #254 e corrigir falhas da entrega; então marcar PR pronto, fazer squash merge, deployar e validar desktop/mobile.
+Integrar PR #254 por squash e prosseguir com deploy na VPS e validação desktop/mobile no navegador integrado.
