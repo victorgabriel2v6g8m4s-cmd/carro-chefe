@@ -5,8 +5,8 @@
 - branch: codex/cooklily-performance-modularization
 - base_branch: cooklily/canonical
 - base_sha_verified: 7465a72c82802aa83c3e3322ebd2f90b84d93b9d
-- head_sha_verified: 7465a72c82802aa83c3e3322ebd2f90b84d93b9d (alterações locais ainda sem commit)
-- pull_requests: nenhum
+- head_sha_verified: 40dfc8fd4b88869d3e5349600bda801f8f0114bf
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (draft, CI pending)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
@@ -30,6 +30,8 @@
 - `npm test`: PASS, 74 arquivos, 389 testes passaram e 3 foram ignorados; os testes de build budget também passaram.
 - `npm run build`: PASS; inclui builds Gestão, Site, QR, Lily, budget Lily e TypeScript da API.
 - `git diff --check`: PASS.
+- Commit `40dfc8fd4b88869d3e5349600bda801f8f0114bf` publicado na branch da tarefa; PR #262 aberto em draft.
+- CI atual no PR: Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe e Workbook Snapshot pendentes na última consulta.
 - Testes de navegador desktop/mobile e domínio real ainda pendentes.
 
 ## Migrations
@@ -49,7 +51,7 @@
 
 ## Próxima ação exata
 
-1. Fazer revisão final e commit da mudança de carregamento/roadmap.
-2. Abrir PR para canonical, aguardar CI e integrar em squash; atualizar os SHAs neste checkpoint.
+1. Aguardar CI do PR #262, revisar resultados e corrigir somente falhas comprovadas.
+2. Integrar em squash após CI verde; registrar SHA canônico neste checkpoint.
 3. Deploy do SHA integrado e homologar navegação por rota no navegador integrado do Codex em desktop e mobile.
 4. Executar a próxima fase do roadmap: separar catálogo admin em índice leve e detalhes carregados ao abrir um produto; medir de novo JS/CSS e refatorar os arquivos administrativos grandes por responsabilidade.
