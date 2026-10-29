@@ -26,7 +26,7 @@ export type SimulationNode = {
   branches?: SimulationBranch[];
 };
 
-export type SimulationBranch = { id: string; trigger: "texto" | "botão" | "qualquer resposta"; response: string; nextNodeId: string };
+export type SimulationBranch = { id: string; trigger: "texto" | "botão" | "qualquer resposta" | import("./journey-events").JourneyEventId; response: string; nextNodeId: string };
 
 export type StoredTemplate = TemplateDraft & {
   id: string;
