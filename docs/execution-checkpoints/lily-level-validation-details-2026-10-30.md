@@ -5,7 +5,7 @@
 - implementation_branch: `codex/lily-level-validation-evidence`.
 - base_branch: `cooklily/canonical`.
 - base_sha_verified: `7d95339f6e4eb12f42234b12bbff0341ac126227`.
-- head_sha_verified: `0c69386a69b0cfd971e60a4fcfc268d860ee9b93` (antes da correção atual).
+- head_sha_verified: `cf12526ce2c77abc99ae394bed0193da59b47d36` (correção implementada e enviada à PR; checkpoint ainda pendente de nova revisão após este registro).
 - canonical_deploy_sha: `f974ad26d9db9f1435e3c21e7c102dcf6bb04b55` (build anterior, contém o diagnóstico mas ainda permite timestamps no payload).
 - pull_requests: PR #270, squash merge concluído; PR #271 aberto para evidências e correção da causa-raiz.
 - migrations: nenhuma.
