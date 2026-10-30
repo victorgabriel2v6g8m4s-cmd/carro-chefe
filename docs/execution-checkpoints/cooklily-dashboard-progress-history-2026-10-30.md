@@ -2,59 +2,57 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: `codex/lily-dashboard-budget-fix-round2`
+- branch: `codex/dashboard-progress-homologation` (checkpoint de homologação)
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `21d2549c3360d97e6abfa47927f7cb926c69779f`
-- head_sha_verified: `e76a04d9963710e35de98d8a69a5d82d6a82a8f9`
-- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; PR #294 merged as `21d2549c3360d97e6abfa47927f7cb926c69779f`, but deploy failed its Linux gzip budget gate; PR #295 open, CI running
+- base_sha_verified: `73721de10915dfb25abd75407346e9e75d868f82`
+- head_sha_verified: `73721de10915dfb25abd75407346e9e75d868f82` (base deste registro; alteração documental em andamento)
+- pull_requests: PR #293 integrada em `2fae845472cc0bb2700957997324edce6c491a31`; PR #294 integrada em `21d2549c3360d97e6abfa47927f7cb926c69779f`, mas o primeiro deploy excedeu o budget Linux; PR #295 integrada por squash em `73721de10915dfb25abd75407346e9e75d868f82`
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
 
-Implementar o próximo subitem desbloqueado de fidelidade: alternância dos gráficos no dashboard entre a série diária dos últimos sete dias e a série mensal dos últimos seis meses. O histórico de pontos permanece como item seguinte do roadmap.
+Implementar alternância dos gráficos do dashboard entre a série diária dos últimos sete dias e a série mensal dos últimos seis meses. O histórico de pontos permanece como próximo item do roadmap.
 
 ## Concluído e persistido
 
-- PR #293 foi integrado por squash na branch canônica como `2fae845472cc0bb2700957997324edce6c491a31`.
-- PR #294 foi integrada por squash, mas o deploy de `21d2549c3360d97e6abfa47927f7cb926c69779f` falhou no gate Linux: JS gzip `189,07/189 KiB` (+0,07 KiB). Nenhuma migration real foi iniciada e o rollback preservou o release `54d8b3600273366d46d47ef682f0ba503eca3712`.
-- A VPS usa Node `22.22.1`/zlib `1.3.1`; CI antes só testava Node 20 e 24, que passaram. A diferença de compressão explica por que o gate de deploy continuou falhando.
-- A segunda correção elimina o cálculo repetido do máximo do radar, evita parse de coordenadas SVG e torna os valores dos gráficos legíveis individualmente por tecnologia assistiva.
-- `npm run build:lily` local em Node 22 Windows passou para a segunda correção; JS gzip `188,80/189 KiB`, JS+CSS gzip `224,12/225 KiB`. A reprodução precisa do Linux Node 22 será feita pelo CI.
-- `npm run check` passou após a correção de tipos do radar e `npm run test:lily-ui` passou (25 arquivos/109 testes). CI Node 20/24 e Vitest Linux na VPS passaram na correção anterior (82 arquivos/425 testes); a execução local Windows foi interrompida após o worker Vitest encerrar sem emitir resultado.
+- PR #293 implementou a alternância e foi integrada em `2fae845472cc0bb2700957997324edce6c491a31`.
+- PR #294 foi integrada em `21d2549c3360d97e6abfa47927f7cb926c69779f`, mas o deploy falhou no budget Linux de JS gzip (`189,07/189 KiB`) e reverteu para `54d8b3600273366d46d47ef682f0ba503eca3712` antes de aplicar migrations reais.
+- PR #295 ajustou o custo do radar, melhorou a leitura assistiva dos gráficos e incluiu Node 22 no CI para reproduzir o runtime da VPS. Foi integrada por squash como `73721de10915dfb25abd75407346e9e75d868f82`.
+- O release `73721de10915dfb25abd75407346e9e75d868f82` foi implantado na VPS em 2026-10-30. `cc status` confirmou `current_sha` e `canonical_sha` iguais ao release, serviço ativo e Nginx OK.
+- O deploy executou validação completa, backup verificado, migrations de preflight e health/smoke. Os bancos operacionais não tinham migrations pendentes. Build CookLily na VPS passou: JS gzip `188,98/189 KiB`, JS+CSS gzip `224,33/225 KiB`.
+- No navegador integrado do Codex em `https://carrochefe.com/lilyacai/dashboard`, a conta autenticada mostrou Semanal com os sete dias e Mensal com seis meses; alternar entre eles atualizou rótulos e valores dos gráficos.
 
 ## Em andamento
 
-- Validar no CI com Node 22 em Linux, igual ao runtime da VPS, além de Node 20/24.
-- PR #295 aberta contra `cooklily/canonical`; após atualização final deste checkpoint, aguardar suites e orçamento gzip nos runtimes 20/22/24.
-- Após merge e CI verde com margem no Node 22, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
+- A homologação visual responsiva em viewport móvel permanece pendente. O navegador integrado disponível nesta execução abriu o site em viewport desktop; os controles acessíveis não oferecem emulação ou ajuste de viewport. Não foi usado navegador externo, conforme as regras do projeto.
+- A visualização desktop e a alternância semanal/mensal foram verificadas no domínio de produção.
 
 ## Gates e testes
 
-- Preflight AG-DEV frontend e `.github/workflows/ci.yml`: passou contra a base `21d2549`.
-- `npm run test:lily-ui`: 25 arquivos/109 testes passaram.
-- `npm run check`: passou.
-- `npm run build:lily` com Node 22 em Windows: JS gzip 188,80/189 KiB, JS+CSS gzip 224,12/225 KiB.
-- PR #293: CI Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
-- Deploy de `2fae845`: rollback confirmado por violação de 0,08 KiB no budget JS gzip; release anterior preservado.
-- CI da PR #294: todas as verificações Node 20/24, incluindo testes e builds, passaram; deploy Linux Node 22 excedeu o budget por 0,07 KiB.
-- Segunda correção local: `npm run check`, `npm run test:lily-ui` (25 arquivos/109 testes), `npm run build` em Node 24 e `npm run build:lily` em Node 22 Windows passaram. O `npm test` local foi interrompido após o worker Vitest encerrar sem emitir resultado; CI Linux deve confirmar a suíte completa.
-- CI Node 22 Linux para a segunda correção: pendente.
-- PR #295, novo deploy e homologação desktop/mobile: pendentes.
+- Preflight AG-DEV das alterações de frontend e `.github/workflows/ci.yml` passou na base `21d2549`.
+- `npm run check` passou; `npm run test:lily-ui` passou (25 arquivos/109 testes); `npm run build` Node 24 passou.
+- CI PR #295: Quality Node 20, Node 22 e Node 24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
+- Deploy completo no VPS: 82 arquivos e 425 testes passaram; checks estáticos, build e budget passaram. Build observado no runtime Node 22: JS gzip `188,98/189 KiB`, JS+CSS gzip `224,33/225 KiB`.
+- Verificação de produção: SHA confirmado por `cc status`; serviço ativo; Nginx OK; readiness e smoke externo `ok`.
+- Homologação visual desktop: alternância semanal/mensal e séries confirmadas por estado acessível e captura do navegador integrado.
+- Homologação móvel: pendente por falta de controle de viewport móvel no navegador integrado desta sessão.
 
 ## Migrations
 
-- Nenhuma prevista; serão usados os eventos existentes.
+- A funcionalidade usa eventos existentes e não adicionou migration.
+- No deploy do release, todas as migrations acumuladas do canonical já estavam aplicadas nos bancos operacionais; nenhuma migration ficou pendente.
 
 ## Bloqueios/riscos
 
-- Não há dependência de credenciais ou configurações externas identificada.
-- História de pontos não está nesta fatia; permanece como próxima pendência independente.
+- Falta homologar a interface em viewport móvel. A regra do projeto proíbe substituir o navegador integrado por Chrome/Edge externos.
+- O histórico de pontos não está nesta entrega e continua sendo o próximo item independente do roadmap.
 
 ## Homologação/dependências externas
 
-- Deploy deve seguir o runbook CookLily. Homologação de UI usar exclusivamente o navegador integrado do Codex.
+- Deploy de produção concluído no release `73721de10915dfb25abd75407346e9e75d868f82`.
+- Para fechar este item, repetir a verificação responsiva móvel quando o navegador integrado oferecer viewport móvel; depois disso, atualizar o roadmap e iniciar o histórico de pontos.
 
 ## Próxima ação exata
 
-Abrir a PR #295 com o segundo corte, cobertura CI Node 22 e checkpoint; aguardar Quality Node 20/22/24 e confirmar margem no build Linux Node 22. Só então integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.
+Executar homologação do dashboard em viewport móvel usando exclusivamente o navegador integrado do Codex; corrigir eventuais falhas, repetir desktop/mobile e só então marcar este item como concluído. Depois iniciar o histórico de pontos no dashboard.
