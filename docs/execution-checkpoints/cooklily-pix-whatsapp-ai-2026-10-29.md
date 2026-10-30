@@ -5,8 +5,8 @@
 - branch: codex/cooklily-pix-whatsapp-ai-plan
 - base_branch: cooklily/canonical
 - base_sha_verified: 29962ae5
-- head_sha_verified: abf203f2b37663d20bf8fd0217eeea4014e1a0c8
-- pull_requests: none
+- head_sha_verified: abf203f2b37663d20bf8fd0217eeea4014e1a0c8 (SVG support changes pending commit)
+- pull_requests: PR #269 draft
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
@@ -23,7 +23,7 @@
 - Implementação do provider Sicredi e cadastro cifrado concluída localmente; configuração de produção ainda não persistida.
 - Pacote de 15 templates draft e ação idempotente do painel concluídos; WhatsApp Manager ainda requer revisão/submissão manual.
 - Arquitetura de IA, estimativas de custo, jornada e lacunas documentadas em `docs/lily-acai/WHATSAPP_IA_SEGURA_E_JORNADA_2026-10-30.md`.
-- Commits locais: `36ec776` implementação e `abf203f` documentação/checkpoint; push/PR pendentes.
+- Commits enviados: `36ec776` implementação, `abf203f` documentação e `3d09d85` checkpoint. SVG e atualização do checkpoint pendentes de commit/push. PR #269 em draft; CI inicial enfileirado.
 
 ## Gates e testes
 
@@ -32,6 +32,7 @@
 - `npm run check`: PASS.
 - `npm run build`: PASS; orçamento CookLily: JS gzip 180.65/185 KiB, CSS gzip 33.88/34 KiB, combinado 214.53/220 KiB.
 - `npm test`: gates anteriores PASS, mas a fase Vitest raiz permaneceu sem saída até interrupção; registrar como inconclusivo, não PASS.
+- SVG para artes LilyCoin/níveis: sanitizador com allowlist e cabeçalhos restritivos implementado; teste focado 15/15 PASS; `npm run check` PASS e `npm run build` PASS (bundle combinado 214.71 KiB gzip).
 - `git diff --check`: PASS.
 - Nenhuma operação Pix ou envio WhatsApp de produção executado.
 - Nenhum merge/deploy desta entrega; CI remoto pendente.
@@ -55,8 +56,8 @@
 
 ## Próxima ação exata
 
-1. Fazer push da branch e abrir PR draft.
+1. Comitar e enviar suporte SVG; atualizar PR #269 e aguardar CI da revisão atual.
 2. Aguardar CI e corrigir falhas; executar/repetir teste geral isolando o hang Vitest.
-3. Integrar por squash após gates verdes, atualizar checkpoint e implantar o SHA canônico autorizado.
+3. Integrar por squash após gates verdes, atualizar checkpoint e então implantar o SHA canônico autorizado.
 4. Verificar configuração de cifragem VPS; cadastrar Pix alternativo de forma inativa sem trocar o meio ativo.
 5. Testar produção no Codex IAB desktop e mobile; registrar limitações e retestes.

@@ -20,12 +20,14 @@ export function LoyaltyLevelEditor({ level, index, priorThreshold, previousStep,
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-      onError("Use uma imagem de até 5 MB para o ícone do nível.");
+    const svg = file.type === "image/svg+xml" || file.name.toLocaleLowerCase("pt-BR").endsWith(".svg");
+    if (!(svg || ["image/png", "image/jpeg", "image/webp"].includes(file.type)) || file.size > (svg ? 1024 * 1024 : 5 * 1024 * 1024)) {
+      onError("Use SVG vetorial de até 1 MB ou PNG, JPEG e WebP de até 5 MB para o ícone do nível.");
       return;
     }
     try {
-      const media = await uploadLilyMedia(file, csrfToken);
+      const uploadFile = svg && file.type !== "image/svg+xml" ? new File([file], file.name, { type: "image/svg+xml" }) : file;
+      const media = await uploadLilyMedia(uploadFile, csrfToken);
       onChange({ iconMediaId: media.id, iconUrl: media.url });
     } catch (cause) {
       onError(cause instanceof Error ? cause.message : "Não foi possível enviar a arte do nível.");
@@ -35,7 +37,7 @@ export function LoyaltyLevelEditor({ level, index, priorThreshold, previousStep,
   return <article className="loyalty-level-row">
     <div className="loyalty-level-identity">
       <div className="loyalty-level-art">{level.iconUrl ? <img src={level.iconUrl} alt={`Ícone de ${level.name}`} /> : <span aria-hidden="true">✦</span>}</div>
-      <label>Ícone do nível<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void uploadIcon(event)} /></label>
+      <label>Ícone do nível (aceita SVG)<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg" onChange={(event) => void uploadIcon(event)} /></label>
     </div>
     <label>Nível<input value={level.name} maxLength={80} onChange={(event) => onChange({ name: event.target.value })} /></label>
     <label>Pontos acumulados<input type="number" min="0" step="1" value={level.requiredPoints} onChange={(event) => onChange({ requiredPoints: Number(event.target.value) })} /></label>

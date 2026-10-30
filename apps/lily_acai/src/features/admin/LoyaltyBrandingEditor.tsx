@@ -19,9 +19,13 @@ export function LoyaltyBrandingEditor({ initial, session, onSaved, onError, onMe
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) { onError("Use uma imagem de até 5 MB para a arte das LilyCoins."); return; }
+    const svg = file.type === "image/svg+xml" || file.name.toLocaleLowerCase("pt-BR").endsWith(".svg");
+    if (!(svg || ["image/png", "image/jpeg", "image/webp"].includes(file.type)) || file.size > (svg ? 1024 * 1024 : 5 * 1024 * 1024)) {
+      onError("Use SVG vetorial de até 1 MB ou PNG, JPEG e WebP de até 5 MB para a arte das LilyCoins."); return;
+    }
     try {
-      const media = await uploadLilyMedia(file, session.csrfToken);
+      const uploadFile = svg && file.type !== "image/svg+xml" ? new File([file], file.name, { type: "image/svg+xml" }) : file;
+      const media = await uploadLilyMedia(uploadFile, session.csrfToken);
       setDraft((current) => ({ ...current, coinIconMediaId: media.id, coinIconUrl: media.url }));
     } catch (cause) { onError(cause instanceof Error ? cause.message : "Não foi possível enviar a arte das LilyCoins."); }
   }
@@ -43,7 +47,7 @@ export function LoyaltyBrandingEditor({ initial, session, onSaved, onError, onMe
     <div><span className="eyebrow">Identidade da moeda</span><h2 id="loyalty-branding-title">LilyCoins no header</h2><p>Defina o nome e a arte que aparecem junto ao saldo do cliente.</p></div>
     <div className="loyalty-branding-fields">
       <label>Nome exibido<input value={draft.coinName} maxLength={32} onChange={(event) => setDraft((current) => ({ ...current, coinName: event.target.value }))} /></label>
-      <label className="button ghost loyalty-icon-upload">Enviar arte<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void upload(event)} /></label>
+      <label className="button ghost loyalty-icon-upload">Enviar arte ou ícone SVG<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg" onChange={(event) => void upload(event)} /></label>
       {draft.coinIconUrl && <div className="loyalty-brand-preview"><img src={draft.coinIconUrl} alt="Prévia da arte da moeda" /><span>{draft.coinName || "Moeda"}</span><button type="button" className="button ghost" onClick={() => setDraft((current) => ({ ...current, coinIconMediaId: null, coinIconUrl: null }))}>Remover arte</button></div>}
       <button type="button" className="button primary" disabled={busy || !draft.coinName.trim()} onClick={() => void save()}>{busy ? "Salvando…" : "Salvar identidade"}</button>
     </div>

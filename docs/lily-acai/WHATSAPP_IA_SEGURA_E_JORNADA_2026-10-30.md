@@ -8,6 +8,7 @@
 - O Pix Sicredi alternativo gera BR Code com valor, QR e Copia e Cola; a chave é cifrada em repouso e a tela mostra apenas uma máscara. O provider atual permanece selecionado até um admin alterar a preferência.
 - O QR estático não confirma pagamento. O pedido segue pendente até um meio autenticado de confirmação. A implementação não deve ser considerada homologação bancária.
 - O painel pode criar um pacote idempotente de 15 rascunhos de templates. Eles não são enviados nem submetidos à Meta; precisam ser cadastrados/revisados no WhatsApp Manager.
+- Os uploads das artes LilyCoin/níveis aceitam SVG estático sanitizado (até 1 MB), além de PNG/JPEG/WebP. Scripts, eventos, declarações XML/DOCTYPE e referências externas são recusados.
 - O webhook atual valida a assinatura e persiste metadados/hash do evento; não mantém conteúdo de mensagens de entrada nem oferece inbox de atendimento. IA ainda não está integrada.
 
 ## Templates de atendimento para preparar no WhatsApp Manager
