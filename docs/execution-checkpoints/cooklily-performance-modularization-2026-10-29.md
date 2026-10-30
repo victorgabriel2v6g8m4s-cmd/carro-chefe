@@ -25,6 +25,7 @@
 - Build pós-iteração: JS total 563.47 KiB raw / 178.57 KiB gzip; maior chunk 61.42 KiB; grafo JS inicial estático 40.93 KiB gzip. Em relação ao checkpoint anterior (790.11 KiB raw / 219.72 KiB gzip total; entrada 581.10 KiB raw / 138 KiB gzip), reduções aproximadas: total raw 28.7%, total gzip 18.7%, maior chunk raw 89.4% e JS inicial gzip 70.3%. A meta de 50% foi atingida no chunk de entrada; a meta de 20% foi atingida no grafo inicial gzip. O agregado de todos os chunks ainda está abaixo de 20% de redução e permanece explicitamente reportado.
 - Critério desta execução: reduzir ao menos 50% no maior chunk/entrada e 20% no JS gzip transferido na carga inicial. A medição final ficou em 89,4% no maior chunk (581,10 → 61,42 KiB raw) e 70,3% no grafo inicial gzip (138,00 → 40,93 KiB). O agregado gzip de todos os 35 assets reduziu 18,7% (219,72 → 178,57 KiB); esse indicador não é confundido com o gzip da carga inicial.
 - Experimentos após homologação: `minShareCount: 3` e `4` resultaram em 180,45 e 180,86 KiB gzip total; `minify: "esbuild"` resultou em 182,94 KiB. Todos pioraram frente a 178,57 KiB e foram descartados; a configuração versionada e implantada permaneceu inalterada.
+- Experimento Terser com três passes não pôde ser executado porque a dependência opcional `terser` não está instalada; o build falhou antes de emitir assets e a configuração experimental foi removida sem instalar nova dependência.
 - Budget reforçado: mede assets totais, grafo inicial pelo manifest e maior chunk; limites de 600 KiB raw total, 185 KiB gzip total, 110 KiB gzip inicial e 280 KiB para o maior chunk.
 
 ## Gates e testes
@@ -62,5 +63,4 @@
 
 ## Próxima ação exata
 
-1. Arquivar este checkpoint no branch canonical por meio de `tools/recovery/push-cooklily-checkpoint.ps1`.
-2. Nenhuma outra ação é necessária para o critério de carga inicial. Se a exigência passar a incluir redução agregada de ao menos 20% em todos os chunks gzip, abrir novo ciclo de otimização com esse aceite explícito e atacar o déficit atual de 1,3 p.p.
+1. Nenhuma ação pendente para o critério medido da carga inicial; checkpoint publicado na canonical. Uma meta separada de redução agregada de 20% em todos os chunks exigiria novo ciclo, pois o agregado atual reduziu 18,7%.
