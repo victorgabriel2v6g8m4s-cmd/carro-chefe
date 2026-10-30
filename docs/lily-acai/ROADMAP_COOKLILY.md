@@ -6,7 +6,7 @@
 **Site real:** `https://carrochefe.com/lilyacai/*`  
 **Documento atualizado:** 30/10/2026
 
-**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`) e PR #278 (merge `c589b794`, deploy `c02ed62a`). O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior; `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra o deploy e a verificação do inbox em desktop/mobile. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
+**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`), PR #278 (merge `c589b794`, deploy `c02ed62a`) e PR #279 (correção visual, deploy `fa430c8`). O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior; `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra o deploy e os ajustes responsivos ainda em homologação. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
 
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
