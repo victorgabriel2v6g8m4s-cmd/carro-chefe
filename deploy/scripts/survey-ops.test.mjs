@@ -232,3 +232,22 @@ test('CookLily levels and LilyCoins migration applies on a fresh SQLite schema',
     database.close();
   }
 });
+
+test('CookLily WhatsApp AI inbox migration applies to the Lily base schema', () => {
+  const migration = readFileSync(path.join(root, 'packages/lily-database/prisma/migrations/20261030160000_lily_whatsapp_ai_inbox/migration.sql'), 'utf8');
+  const database = new Database(':memory:');
+  try {
+    database.exec('CREATE TABLE "LilyUser" ("id" TEXT PRIMARY KEY);');
+    database.exec(migration);
+    for (const table of [
+      'LilyWhatsAppConversation', 'LilyWhatsAppConversationMessage', 'LilyWhatsAppAIJob',
+      'LilyWhatsAppAIContactPreference', 'LilyWhatsAppKnowledgeArticle', 'LilyWhatsAppKnowledgeEmbedding',
+      'LilyWhatsAppAIEmbeddingCache', 'LilyWhatsAppAIResponseCache', 'LilyWhatsAppAIUsage'
+    ]) {
+      assert.ok(database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table), `Missing ${table}`);
+    }
+    assert.ok(database.prepare('PRAGMA index_list("LilyWhatsAppConversationMessage")').all().some((index) => index.name === 'LilyWhatsAppConversationMessage_idempotencyKey_key'));
+  } finally {
+    database.close();
+  }
+});

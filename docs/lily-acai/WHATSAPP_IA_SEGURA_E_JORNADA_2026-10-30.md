@@ -9,7 +9,7 @@
 - O QR estático não confirma pagamento. O pedido segue pendente até um meio autenticado de confirmação. A implementação não deve ser considerada homologação bancária.
 - O painel pode criar um pacote idempotente de 15 rascunhos de templates. Eles não são enviados nem submetidos à Meta; precisam ser cadastrados/revisados no WhatsApp Manager.
 - Os uploads das artes LilyCoin/níveis aceitam SVG estático sanitizado (até 1 MB), além de PNG/JPEG/WebP. Scripts, eventos, declarações XML/DOCTYPE e referências externas são recusados.
-- O webhook atual valida a assinatura e persiste metadados/hash do evento; não mantém conteúdo de mensagens de entrada nem oferece inbox de atendimento. IA ainda não está integrada.
+- O webhook valida assinatura e persiste metadados/hash idempotentes. A branch de implementação `codex/cooklily-whatsapp-ai-agent` adiciona inbox cifrada, handoff humano, painel staff, agente/RAG e APIs; tudo continua desligado e ainda não foi integrado/deployado nem homologado no WABA real.
 
 ## Templates de atendimento para preparar no WhatsApp Manager
 
@@ -40,10 +40,10 @@ A categoria final é decidida pela Meta no Manager. Texto, variáveis, idioma, e
 ### Fluxo de mensagens
 
 1. Cloud API envia evento ao webhook CookLily; validar assinatura, WABA/phone number ID, tamanho e formato e deduplicar pelo ID do evento.
-2. Guardar somente o mínimo necessário e enfileirar processamento durável. Hoje o webhook não retém o conteúdo inbound, então esse caminho depende de uma entrega futura de inbox/armazenamento com retenção aprovada.
+2. Guardar somente o mínimo necessário em inbox cifrada e enfileirar processamento durável. A retenção configurável (1–90 dias) e a chave própria são pré-requisitos de runtime; ainda exigem decisão de prazo antes de ativar.
 3. Resolver cliente por telefone normalizado, estado de opt-in/opt-out, janela de atendimento e vínculo seguro com pedido. Não inferir identidade só pelo texto recebido.
 4. Dentro da janela de 24 horas após mensagem do cliente, responder como atendimento; fora dela, exigir template aprovado adequado. Mensagens Utility e Service dentro da janela têm tratamento sem cobrança segundo a página pública de preços consultada; as regras e tarifas exatas dependem do mercado e da tabela vigente no Manager.
-5. Enviar contexto mínimo para OpenAI Responses API (`POST /v1/responses`), com `store:false`, sem anexar dados de outros clientes. Começar com `gpt-6-luna`; aplicar teto de tokens, timeout, limite por telefone/conversa e orçamento diário.
+5. Enviar contexto mínimo para OpenAI Responses API (`POST /v1/responses`), com `store:false`, sem anexar dados de outros clientes. O esqueleto usa o modelo definido pelo ambiente e teto de tokens, timeout e orçamento diário; nome/modelo precisa ser confirmado e validado antes do piloto.
 6. Permitir somente ferramentas de leitura allowlistadas: cardápio publicado, horário configurado, estado do próprio pedido após verificação, e instruções públicas de entrega/retirada. Cada ferramenta verifica autorização no servidor.
 7. Escalar para atendente humano quando solicitado, em tema de pagamento/reembolso/cancelamento, alergia/segurança alimentar, conflito, incerteza ou falha repetida. O sistema de IA não pode criar/modificar/cancelar pedido, aprovar pagamento/estorno, alterar endereço ou conceder benefício.
 8. Registrar auditoria minimizada (IDs, categoria, latência, resultado, custo estimado, encaminhamento), sem guardar raciocínio interno ou texto integral sem finalidade e retenção aprovadas. Oferecer caminho claro para falar com pessoa e respeitar parar/SAIR.
@@ -61,7 +61,7 @@ A categoria final é decidida pela Meta no Manager. Texto, variáveis, idioma, e
 
 ### Gestão WhatsApp que falta
 
-O produto atual oferece templates e outbox/notificações operacionais. Para operar inbox humano e IA, ainda será necessário projetar/implementar: conversas e mensagens inbound minimizadas, fila/atribuição, status aberto/pendente/resolvido, notas internas, transferência humano/IA, bloqueio/opt-out, SLA, busca com controle de acesso, métricas e expurgo. O payload da Meta não deve virar log irrestrito.
+O produto tem templates e outbox; a branch em andamento implementa inbox, fila e transferência, mas ainda faltam atribuição/filas com UX final, notas internas, SLA, busca com controle de acesso, métricas completas e homologação. O payload da Meta não deve virar log irrestrito.
 
 ## Estimativa de custo da IA
 

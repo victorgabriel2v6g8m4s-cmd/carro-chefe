@@ -5,6 +5,7 @@ import { LilyLoadingSpinner } from "../../loading-spinner";
 import { getWhatsAppNotifications, getWhatsAppSettings, getWhatsAppTemplates, installWhatsAppStarterTemplates, mutateWhatsApp, type WhatsAppNotification, type WhatsAppSettings, type WhatsAppTemplate } from "./whatsapp-api";
 import { TemplateStudio } from "./template-studio/TemplateStudio";
 import type { TemplateDraft } from "./template-studio/template-types";
+import { WhatsAppInbox } from "./whatsapp-ai/WhatsAppInbox";
 
 const label = (value: string) => value.replaceAll("_", " ");
 
@@ -96,6 +97,8 @@ export function AdminWhatsAppPage() {
     {!settings.ready && <p className="operation-warning">O envio está protegido e permanece desligado até a configuração Meta completa no ambiente seguro da VPS. Esta página não recebe nem exibe segredos.</p>}
 
     <TemplateStudio templates={templates} operationalStages={settings.templates.operationalStages} isAdmin={isAdmin} busy={busy} csrfToken={session.csrfToken} onSave={saveTemplate} onStatusChange={changeTemplateStatus} onInstallStarterPack={() => void installStarterPack()} />
+
+    <WhatsAppInbox csrfToken={session.csrfToken} isAdmin={isAdmin} />
 
     <section className="analytics-panel whatsapp-config-panel"><div className="analytics-panel-heading"><div><span className="eyebrow">Configuração protegida</span><h2>Checklist de conexão</h2></div></div><ul className="whatsapp-checklist">{configuredItems.map(([name, ready]) => <li key={name}><span aria-hidden="true" className={ready ? "whatsapp-check good" : "whatsapp-check"}>{ready ? "✓" : "•"}</span><span>{name}</span><strong>{ready ? "Configurado" : "Pendente"}</strong></li>)}</ul><label>Callback HTTPS da CookLily para configurar no Meta<textarea readOnly rows={2} value={webhookUrl} onFocus={(event) => event.currentTarget.select()} /></label><small>Use esta URL somente no app Meta e no número/WABA da CookLily. O Carro Chefe tem callback e credenciais próprios, separados desta integração. Depois de configurar, confira o handshake e o recebimento de eventos antes de habilitar envio real.</small></section>
 

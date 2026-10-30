@@ -28,6 +28,7 @@ model LilyUser {
   surveyResponses LilySurveyResponse[]
   surveyUploads   LilySurveyUpload[]
   notifications   LilyCustomerNotification[]
+  whatsappConversationsAssigned LilyWhatsAppConversation[] @relation("LilyWhatsAppConversationAssignee")
   vipMembership  LilyVipMembership?
   vipRedemptions LilyVipRedemption[]
   assignedCoupons LilyCoupon[] @relation("LilyAssignedCoupon")
@@ -118,6 +119,129 @@ model LilyWhatsAppWebhookEvent {
 
   @@index([eventType, receivedAt])
   @@index([providerMessageId, receivedAt])
+}
+
+model LilyWhatsAppConversation {
+  id                String   @id @default(cuid())
+  contactHash       String
+  contactCiphertext String
+  status            String   @default("human")
+  assignedToUserId  String?
+  lastInboundAt     DateTime?
+  windowExpiresAt   DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  assignedTo        LilyUser? @relation("LilyWhatsAppConversationAssignee", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  messages          LilyWhatsAppConversationMessage[]
+  jobs              LilyWhatsAppAIJob[]
+
+  @@index([status, updatedAt])
+  @@index([contactHash, updatedAt])
+  @@index([expiresAt])
+  @@index([assignedToUserId, status, updatedAt])
+}
+
+model LilyWhatsAppConversationMessage {
+  id                String   @id @default(cuid())
+  conversationId    String
+  providerMessageId String?  @unique
+  idempotencyKey    String?  @unique
+  direction         String
+  contentType       String
+  bodyCiphertext    String
+  status            String   @default("received")
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+  conversation      LilyWhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  jobs              LilyWhatsAppAIJob[]
+
+  @@index([conversationId, createdAt])
+  @@index([expiresAt])
+}
+
+model LilyWhatsAppAIJob {
+  id             String   @id @default(cuid())
+  messageId      String   @unique
+  conversationId String
+  status         String   @default("pending")
+  attempts       Int      @default(0)
+  nextAttemptAt  DateTime @default(now())
+  leaseUntil     DateTime?
+  lastErrorCode  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  message        LilyWhatsAppConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversation   LilyWhatsAppConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([leaseUntil])
+}
+
+model LilyWhatsAppAIContactPreference {
+  contactHash String   @id
+  aiOptedOut  Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  optedOutAt  DateTime?
+}
+
+model LilyWhatsAppKnowledgeArticle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  body        String
+  status      String   @default("draft")
+  revision    Int      @default(1)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  embeddings  LilyWhatsAppKnowledgeEmbedding[]
+
+  @@index([status, updatedAt])
+}
+
+model LilyWhatsAppKnowledgeEmbedding {
+  id             String   @id @default(cuid())
+  articleId      String
+  contentHash    String
+  model          String
+  dimensions     Int
+  vectorJson     String
+  createdAt      DateTime @default(now())
+  article        LilyWhatsAppKnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, contentHash, model, dimensions])
+  @@index([contentHash, model, dimensions])
+}
+
+model LilyWhatsAppAIEmbeddingCache {
+  cacheKey     String   @id
+  model        String
+  dimensions   Int
+  vectorJson   String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model LilyWhatsAppAIResponseCache {
+  cacheKey       String   @id
+  responseText   String
+  sourceRevision String
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model LilyWhatsAppAIUsage {
+  dateKey            String   @id
+  requests           Int      @default(0)
+  responseInputTokens Int     @default(0)
+  responseOutputTokens Int    @default(0)
+  embeddingInputTokens Int    @default(0)
+  updatedAt          DateTime @updatedAt
 }
 
 model LilyWhatsAppNotification {

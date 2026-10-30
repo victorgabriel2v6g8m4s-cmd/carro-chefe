@@ -6,6 +6,8 @@
 **Site real:** `https://carrochefe.com/lilyacai/*`  
 **Documento atualizado:** 30/10/2026
 
+**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge `080eae62`, deploy verificado), revisão do código em `cooklily/canonical` (`a0cc107`) e execução de homologação documentada em `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md`. Esta reconciliação adicional considera a branch `codex/cooklily-whatsapp-ai-agent`; itens novos só viram concluídos após PR, integração e gates. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
+
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
 ## Regras de execução
@@ -44,12 +46,16 @@ Fora do escopo: redação publicitária final, arte gráfica e decisão da data 
 ### 3. Integração com WhatsApp
 - [ ] Concluir as integrações de software aprovadas que ainda estiverem pendentes.
 - [x] Disponibilizar pacote idempotente de rascunhos de templates de conta, código de autenticação, pagamento e etapas do pedido; revisar/submeter manualmente no WhatsApp Manager.
+- [x] Implementar outbox e envio transacional pela Cloud API com opt-in, retry/idempotência e credenciais exclusivamente por ambiente; a ativação segue fail-closed enquanto a VPS não tiver a configuração Meta validada.
+- [x] Validar handshake do webhook, assinatura HMAC, rate limit e persistência idempotente de hashes/estados sem guardar payload bruto.
 - [ ] Manter notificações operacionais separadas de mensagens promocionais.
 - [ ] Respeitar opt-in/opt-out, consentimentos e configuração do provider.
 - [ ] Manter segredos somente na configuração protegida da VPS.
 - [ ] Garantir que indisponibilidade do WhatsApp não bloqueie pedido, pagamento, cozinha ou entrega.
-- [ ] Implementar OTP no cadastro, inbox humana, processamento de mensagens inbound e trilha de opt-in/opt-out; webhook atual não processa conteúdo inbound.
-- [ ] Planejar e implementar IA somente após inbox e controles de segurança/privacidade definidos; ver `WHATSAPP_IA_SEGURA_E_JORNADA_2026-10-30.md`.
+- [ ] Implementar OTP no cadastro; template de autenticação existe como rascunho, mas emissão/validação OTP ainda não está integrada ao cadastro.
+- [*] Implementar inbox humana, processamento inbound durável e opt-out com armazenamento cifrado, dedupe, fila e rate limit por contato; painel básico de handoff/reply e expurgo foram iniciados na branch `codex/cooklily-whatsapp-ai-agent`. Atribuição de responsável, busca/SLA, opt-in conversacional e homologação ainda pendentes.
+- [*] Implementar fundação do agente IA com Responses `store:false`, prompt versionado, guardrails, handoff e orquestrador/RAG de conteúdo público. Está desligado por padrão; requer consentimento de envio das consultas para embeddings, retenção aprovada, secrets e avaliação offline antes de qualquer piloto.
+- [ ] Integrar e habilitar agente IA para clientes após gates técnicos, privacidade, configuração Meta/OpenAI e teste consentido em número de homologação, conforme `WHATSAPP_IA_ARQUITETURA_E_IMPLANTACAO.md`.
 
 As notificações operacionais já são descritas na Entrega 11H. Verificar gaps concretos antes de criar trabalho duplicado.
 
@@ -66,15 +72,18 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [ ] Registrar gaps concretos e entregas incrementais antes de ampliar o painel; evitar uma reescrita ampla sem medição.
 
 ### 4A. Próximas atualizações de fidelidade e experiência
-- [ ] Aumentar a altura da barra de progresso de nível e remover a porcentagem exibida, liberando largura para a visualização dos segmentos.
-- [ ] Ajustar o fundo do saldo de LilyCoins no header para contraste claro com o fundo do header.
-- [ ] Fazer o saldo de LilyCoins abrir o dashboard já posicionado nas missões; fazer a barra de níveis abrir o dashboard.
+- [x] Aumentar a altura útil do header, redimensionar os controles e aumentar a espessura/reduzir o comprimento da barra de nível; remover a porcentagem do header. PR #277, release `080eae62`.
+- [x] Ajustar o fundo do saldo de LilyCoins no header para alto contraste com o fundo do header. PR #277, release `080eae62`.
+- [x] Fazer o saldo de LilyCoins abrir o dashboard já posicionado nas missões; fazer a barra de níveis abrir o dashboard. PR #277, release `080eae62`.
 - [ ] Profissionalizar o dashboard com gráfico alternável entre visão semanal e mensal.
 - [ ] Mostrar histórico de pontos com missões concluídas, pesquisas respondidas, LilyCoins e pontos recebidos.
-- [ ] Adicionar um card interativo com timeline dos níveis e recompensas de cada nível, incluindo a data/regra da próxima reinicialização da temporada.
+- [x] Adicionar card do nível atual que abre uma timeline de níveis equidistantes; permitir selecionar o nível e consultar as recompensas configuradas. PR #277, release `080eae62`.
+- [ ] Exibir regra/data da próxima reinicialização da temporada; a funcionalidade de temporadas ainda não está implementada.
 - [ ] Definir e implementar temporadas: níveis e recompensas por nível reiniciam a cada temporada, com regra de transição e histórico preservado.
 - [ ] Criar recompensa diária por login e missões com periodicidade diária, semanal e perpétua.
 - [ ] Antes de conceder pontos/LilyCoins, especificar regras de elegibilidade, limites, idempotência, auditoria, expiração e fuso horário; não inventar valores ou calendário de temporada.
+- [x] Reutilizar no dashboard e nas estatísticas de ranking um painel com radar de cinco categorias, atividade e métricas por missões, pesquisas, pedidos e indicações; proteger perfis pelo consentimento e ocultar contas de teste de clientes comuns. PR #277, release `080eae62`.
+- [x] Manter no perfil configurações da conta e segurança, removendo conteúdo de dashboard/fidelidade que foi transferido para o dashboard. PR #277, release `080eae62`.
 
 ### 5. Finalizar landing page e UI pública
 - [ ] Fechar itens abertos de UI/UX conforme U1–U6 da especificação detalhada.
@@ -197,11 +206,14 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - Indicação: token aleatório único; crédito ocorre uma vez após novo cadastro elegível, sem autorreferência, contas suspensas ou de equipe; a configuração operacional define os pontos (2.000 nesta entrega). URL não leva telefone/nome/ID interno. Registro e crédito são server-side e idempotentes.
 - Não encaminhar token de indicação, conteúdo de respostas, telefone ou nome a analytics. Expiração/revogação manual de convites permanece decisão futura; pesquisa pode ser desativada pausando/cancelando.
 
-### Próxima execução: WhatsApp oficial
-- [ ] Finalizar integração por WhatsApp Business Platform / WhatsApp Cloud API oficial.
-- [ ] Validar conta Meta Business, número, templates, webhooks, tokens e secrets no ambiente protegido da VPS; nunca versionar credenciais.
-- [ ] Separar mensagens operacionais de promocionais, respeitar opt-in/opt-out e limitar retries/idempotência para não duplicar mensagens.
-- [ ] Testar ponta a ponta em número de homologação e só então liberar os fluxos aprovados.
+### Em andamento: WhatsApp oficial e agente IA seguro
+- [*] Integração base WhatsApp Cloud API: envio/outbox e callback com assinatura estão no código; ainda não foram comprovados com WABA/número/templates e secrets de produção. A mudança atual inicia a inbox/IA em etapas, com flags desligadas até preparação de ambiente.
+- [ ] Validar conta Meta Business, número e templates aprovados; provisionar segredos no ambiente protegido da VPS e comprovar handshake/entrega no número de homologação consentido.
+- [ ] Separar mensagens operacionais de promocionais, comprovar opt-in/opt-out e política de janela; manter retries idempotentes.
+- [ ] Implementar inbox, processamento inbound durável e transferências humanas; disponibilizar histórico somente à equipe autorizada.
+- [ ] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails determinísticos, contexto mínimo e APIs internas read-only; validar injeção, autorização, rate/cost limits e fallback humano.
+- [ ] Implementar base de conhecimento curada com embeddings cacheados e busca vetorial isolada; não gerar embeddings de conversa do cliente.
+- [ ] Testar ponta a ponta em número de homologação antes de liberar fluxos para clientes.
 
 ### Conector MCP administrativo para LLMs
 - [ ] Projetar ferramenta MCP para tarefas autorizadas de admin/staff (configuração, catálogo, cupons, pesquisas, diagnóstico e correções) via linguagem natural.
@@ -215,7 +227,7 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Aplicar rate limits, idempotency keys, validação de entrada, auditoria append-only, paginação e mensagens de erro estáveis.
 - [ ] Incluir documentação OpenAPI, SDK/exemplos mínimos, ambiente de homologação e testes de segurança antes de emitir credenciais de produção.
 
-Ordem: concluir primeiro a entrega atual; em seguida priorizar WhatsApp oficial conforme orientação do proprietário. MCP e API administrativa ficam planejados para entregas próprias, depois de definidos e aprovados os limites de autonomia.
+Ordem: fechar primeiro a fundação segura de inbox/atendimento IA e homologar a operação no WhatsApp oficial; depois priorizar a confirmação financeira real e ERP conforme os gates da Fase 1. MCP e API administrativa ficam em entregas próprias, depois de definidos e aprovados os limites de autonomia.
 
 ## Fase 5 — Expansão técnica
 - [ ] Planejar novas unidades, marcas, canais ou aumento de volume somente após estabilizar a operação atual.
