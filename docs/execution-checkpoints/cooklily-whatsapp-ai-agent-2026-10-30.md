@@ -1,13 +1,13 @@
 # Atendimento CookLily por WhatsApp com agente IA
 
-- status: candidate
+- status: in_progress
 - owner: AG-DEV
 - branch: codex/cooklily-whatsapp-ai-agent
 - base_branch: cooklily/canonical
 - base_sha_verified: a0cc107155f101ea6b0d835d2b9c103653b08cf9
-- head_sha_verified: a9d8a25
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (draft)
-- last_verified_at: 2026-10-30 13:54 America/Sao_Paulo
+- head_sha_verified: c589b7949226ff9269687e448903c9dbc3a9c5fa
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged)
+- last_verified_at: 2026-10-30 13:59 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -16,7 +16,9 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 ## Concluído e persistido
 
-- Confirmado que `origin/cooklily/canonical` continua no SHA `a0cc107155f101ea6b0d835d2b9c103653b08cf9` e a branch de entrega está 1 commit à frente.
+- PR #278 integrado por squash em `cooklily/canonical` no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`; todos os checks GitHub passaram.
+- Antes do deploy, VPS confirmou SHA `080eae62ae8615887b8e45f58038f6daad2de399`, serviço ativo e Nginx ok; após fetch remoto, `origin/cooklily/canonical` confirmou o SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`.
+- Ambiente da VPS verificado sem imprimir segredos: inbox, agente, consulta por embeddings e orçamento diário desligados/ausentes; credenciais Meta existentes; segredo OpenAI, chave de cifra e retenção não configurados.
 - Commit de implementação `26a149f` inclui webhook inbound idempotente, schema/migration, criptografia, inbox/API staff, fila/worker, guardrails, RAG público, embeddings e painel.
 - Commit `a9d8a25` reforça detecção de prompt injection e afirmações de pagamento/pedido no guardrail de saída; testes unitários após o ajuste passaram.
 - Roadmap reconciliado: entregas anteriores de dashboard/ranking/perfil marcadas concluídas com referência ao PR #277; backlog de temporada/missões/analytics continua aberto; WhatsApp atualizado para status parcial.
@@ -26,8 +28,8 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 ## Em andamento
 
-- PR rascunho #278 aberto e anexado; checks da revisão inicial estavam pendentes e serão reiniciados pelo push `a9d8a25`.
-- Merge/deploy/homologação de staff no navegador integrado ainda pendentes.
+- Deploy do SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e migration real pendentes.
+- Homologação desktop/mobile do painel de staff no navegador integrado ainda pendente.
 - Aprovar retenção e transparência do envio de consultas à OpenAI antes de ativar flags em qualquer WABA.
 
 ## Gates e testes
@@ -47,13 +49,13 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 ## Bloqueios/riscos
 
 - Não habilitar integração real até configuração de segredo Meta/OpenAI, chave de criptografia, retenção aprovada/configurada, templates aprovados e teste num número de homologação autorizado.
-- O banco Lily é SQLite; vector store começa como índice local de conhecimento estático, sem enviar mensagens dos clientes ao endpoint de embeddings.
+- O banco Lily é SQLite; vetores persistidos são apenas de conhecimento público. O texto das consultas só será enviado ao endpoint de embeddings com a flag explícita, que permanece desligada.
 
 ## Homologação/dependências externas
 
-- VPS ainda não comparada nesta entrega; deploy e teste no domínio real pendentes.
+- VPS verificada; deploy e teste no domínio real pendentes.
 - Quando houver UI, homologação exclusivamente no navegador integrado do Codex.
 
 ## Próxima ação exata
 
-Criar PR rascunho a partir de `codex/cooklily-whatsapp-ai-agent`, acompanhar CI e corrigir eventuais achados; então planejar deploy/migration e homologar desktop/mobile no navegador integrado com flags ainda desligadas.
+Executar `sudo cc deploy canonical` na VPS (canonical confirmado no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`), validar migration/serviço/health e depois homologar a tela `/lilyacai/painel/whatsapp` em desktop e mobile no navegador integrado, mantendo flags de IA desligadas.
