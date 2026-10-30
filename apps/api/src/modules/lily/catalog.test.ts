@@ -358,7 +358,14 @@ describe("CookLily catálogo", () => {
     });
     expect(index.statusCode).toBe(200);
     const summary = index.json().products.find((product: { id: string }) => product.id === "prod-lilymix");
-    expect(summary).toMatchObject({ id: "prod-lilymix", category: { id: expect.any(String) }, variants: expect.any(Array) });
+    expect(summary).toMatchObject({
+      id: "prod-lilymix",
+      category: { id: expect.any(String) },
+      variants: expect.any(Array)
+    });
+    expect(summary).toHaveProperty("description");
+    expect(summary.variants[0]).toMatchObject({ isAvailable: expect.any(Boolean) });
+    expect(summary.variants[0]).toHaveProperty("compareAtPriceCents");
     expect(summary).not.toHaveProperty("rawVariants");
     expect(index.json()).not.toHaveProperty("flavors");
     expect(index.json()).not.toHaveProperty("media");

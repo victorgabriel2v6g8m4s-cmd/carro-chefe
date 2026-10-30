@@ -33,6 +33,7 @@ const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
 const adminNavigationSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminNavigationLayout.tsx"), "utf8");
 const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-interaction-enhancements.ts"), "utf8");
 const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
+const sharedCatalogCardSource = readFileSync(resolve(sourceDirectory, "features/catalog/CatalogProductCard.tsx"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
   it("oferece navegação administrativa global responsiva sem substituir RBAC dos módulos", () => {
@@ -68,6 +69,18 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(editorForm).toContain('className="admin-product-editor-content"');
     expect(editorForm).not.toContain("<summary>");
     expect(editorForm).not.toContain("<details");
+    expect(adminSource).toContain("<CatalogProductCard");
+    expect(adminSource).toContain("dialog.showModal()");
+    expect(adminSource).toContain("<dialog");
+    expect(sharedCatalogCardSource).toContain('className={`product-card-media${product.vipLocked ? " vip-locked-media" : ""}`}');
+    expect(sharedCatalogCardSource).toContain('className="product-card-body"');
+  });
+
+  it("mantém no índice administrativo apenas dados resumidos e o detalhe progressivo por produto", () => {
+    expect(adminSource).toContain('loadCatalog="index"');
+    expect(adminSource).toContain("getLilyAdminProductEditor(summary.id)");
+    expect(adminSource).toContain("Carregando configurações de");
+    expect(adminSource).toContain("Tentar novamente");
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
