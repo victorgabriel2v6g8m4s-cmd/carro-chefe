@@ -39,6 +39,7 @@ import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./fe
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { formatBrazilianPhoneInput } from "./features/account/phone-format";
 import { surveyJson } from "./features/surveys/api";
+import { AdminNavigationLayout } from "./features/admin/AdminNavigationLayout";
 const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
 const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").then((module) => ({ default: module.DashboardPage })));
@@ -141,6 +142,10 @@ function AttributionCapture() {
     }
   }, []);
   return null;
+}
+
+function AdminWorkspace({ children }: { children: ReactNode }) {
+  return <Shell><AdminNavigationLayout>{children}</AdminNavigationLayout></Shell>;
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -587,27 +592,27 @@ function App() {
     <Route path="/notificacoes" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando notificações" />}><Shell><NotificationsPage /></Shell></Suspense>} />
     <Route path="/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><SurveyListPage /></Shell></Suspense>} />
     <Route path="/pesquisas/:id" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisa" />}><Shell><SurveyRespondPage /></Shell></Suspense>} />
-    <Route path="/painel" element={<Shell><AdminHome /></Shell>} />
-    <Route path="/painel/cardapio" element={<Shell><AdminCatalog /></Shell>} />
-    <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><Shell><AdminCouponsPage /></Shell></Suspense>} />
-    <Route path="/painel/vip" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando programa VIP" />}><Shell><AdminVipPage /></Shell></Suspense>} />
-    <Route path="/painel/fidelidade" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando níveis e recompensas" />}><Shell><AdminGate>{() => <AdminLoyaltyPage />}</AdminGate></Shell></Suspense>} />
-    <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><Shell><AdminSurveysPage /></Shell></Suspense>} />
-    <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><Shell><AdminSurveyResponsesPage /></Shell></Suspense>} />
-    <Route path="/painel/midias" element={<Shell><AdminMedia /></Shell>} />
-    <Route path="/painel/entrega" element={<Shell><AdminFulfillmentPage /></Shell>} />
-    <Route path="/painel/configuracoes" element={<Shell><AdminStoreSettingsPage /></Shell>} />
-    <Route path="/painel/pagamentos" element={<Shell><AdminPaymentsPage /></Shell>} />
-    <Route path="/painel/pagamentos/metodos" element={<Shell><AdminPaymentMethodsPage /></Shell>} />
-    <Route path="/painel/pedidos" element={<Shell><OrderControlPage /></Shell>} />
-    <Route path="/painel/analytics" element={<Shell><AdminAnalyticsPage /></Shell>} />
-    <Route path="/painel/saude" element={<Shell><AdminObservabilityPage /></Shell>} />
-    <Route path="/painel/whatsapp" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando operação WhatsApp" />}><Shell><AdminWhatsAppPage /></Shell></Suspense>} />
-    <Route path="/painel/cozinha" element={<Shell><KitchenPage /></Shell>} />
+    <Route path="/painel" element={<AdminWorkspace><AdminHome /></AdminWorkspace>} />
+    <Route path="/painel/cardapio" element={<AdminWorkspace><AdminCatalog /></AdminWorkspace>} />
+    <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><AdminWorkspace><AdminCouponsPage /></AdminWorkspace></Suspense>} />
+    <Route path="/painel/vip" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando programa VIP" />}><AdminWorkspace><AdminVipPage /></AdminWorkspace></Suspense>} />
+    <Route path="/painel/fidelidade" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando níveis e recompensas" />}><AdminWorkspace><AdminGate>{() => <AdminLoyaltyPage />}</AdminGate></AdminWorkspace></Suspense>} />
+    <Route path="/painel/pesquisas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisas" />}><AdminWorkspace><AdminSurveysPage /></AdminWorkspace></Suspense>} />
+    <Route path="/painel/pesquisas/:id/respostas" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando respostas" />}><AdminWorkspace><AdminSurveyResponsesPage /></AdminWorkspace></Suspense>} />
+    <Route path="/painel/midias" element={<AdminWorkspace><AdminMedia /></AdminWorkspace>} />
+    <Route path="/painel/entrega" element={<AdminWorkspace><AdminFulfillmentPage /></AdminWorkspace>} />
+    <Route path="/painel/configuracoes" element={<AdminWorkspace><AdminStoreSettingsPage /></AdminWorkspace>} />
+    <Route path="/painel/pagamentos" element={<AdminWorkspace><AdminPaymentsPage /></AdminWorkspace>} />
+    <Route path="/painel/pagamentos/metodos" element={<AdminWorkspace><AdminPaymentMethodsPage /></AdminWorkspace>} />
+    <Route path="/painel/pedidos" element={<AdminWorkspace><OrderControlPage /></AdminWorkspace>} />
+    <Route path="/painel/analytics" element={<AdminWorkspace><AdminAnalyticsPage /></AdminWorkspace>} />
+    <Route path="/painel/saude" element={<AdminWorkspace><AdminObservabilityPage /></AdminWorkspace>} />
+    <Route path="/painel/whatsapp" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando operação WhatsApp" />}><AdminWorkspace><AdminWhatsAppPage /></AdminWorkspace></Suspense>} />
+    <Route path="/painel/cozinha" element={<AdminWorkspace><KitchenPage /></AdminWorkspace>} />
     <Route path="/painel/cozinha/imprimir/:id" element={<KitchenPrintPage />} />
-    <Route path="/painel/entregas" element={<Shell><AdminDeliveriesPage /></Shell>} />
+    <Route path="/painel/entregas" element={<AdminWorkspace><AdminDeliveriesPage /></AdminWorkspace>} />
     <Route path="/entregas" element={<Shell><CourierPage /></Shell>} />
-    <Route path="/painel/equipe" element={<Shell><AdminTeamPage /></Shell>} />
+    <Route path="/painel/equipe" element={<AdminWorkspace><AdminTeamPage /></AdminWorkspace>} />
     <Route path="*" element={<Navigate to="/cardapio" replace />} />
   </Routes></Suspense><LilyAnalyticsConsentBanner /></>;
 }

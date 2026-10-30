@@ -4,6 +4,8 @@
 **Escopo:** somente CookLily (`/lilyacai/*`, `/api/v1/lily/*`, banco Lily e WABA próprio).  
 **Documentação técnica consultada:** OpenAI Docs oficial para Responses, controles de dados e embeddings.
 
+**Configuração do proprietário:** siga o [guia passo a passo para configuração e piloto](WHATSAPP_IA_GUIA_DE_CONFIGURACAO.md). Ele registra pré-requisitos externos, segredos na VPS, gates de segurança, homologação e rollback; defaults permanecem desligados até a aprovação.
+
 ## O que já existe e o que não existe
 
 - Templates Meta podem ser preparados como rascunhos; aprovação/submissão é manual no WhatsApp Manager.

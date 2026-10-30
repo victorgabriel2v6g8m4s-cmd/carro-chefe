@@ -44,4 +44,16 @@ Reconciliar o roadmap CookLily com a implementação canônica e implantar a fun
 
 ## Próxima ação exata
 
-Aguardar conclusão dos checks do PR #281; corrigir falhas se houver e integrar por squash se todos passarem. Depois atualizar este checkpoint com o SHA do merge. Manter o agente desativado e iniciar avaliação offline dos guardrails antes de qualquer piloto Meta.
+## Continuação 2026-10-30 — instruções do proprietário e roadmap
+
+- Nova entrega no branch `codex/cooklily-whatsapp-roadmap-reconciled`, com PR #281 aberto. Base canonical avançou de `b4673469cb75a96cd45c62ed3e46ad1c25f753ac` para checkpoint `8a4c29d7d3db620d55c95179911afdc7ce0787ab`, mergeado nesta branch e preservado neste arquivo.
+- Criado `docs/lily-acai/WHATSAPP_IA_GUIA_DE_CONFIGURACAO.md` com etapas externas Meta/OpenAI, privacidade/retenção, variáveis da VPS sem imprimir segredos, validação do painel, piloto, rollback e checklist do proprietário. A arquitetura referencia o guia.
+- Em implementação: primeira fase do roadmap que não depende de novas credenciais — navegação lateral global, recolhível e responsiva no painel admin Lily.
+- Preflight de política local passou para `lily/admin-navigation`, hash `24d8c85aea46ed391826fb0e89daad9df54cce974cadfd30f1bc6008f8d1e7a5`.
+- Build de produção completo passou; budget CookLily: JS gzip 188.42/189 KiB, entry gzip 52.05/110 KiB, maior chunk 70.94/280 KiB, CSS gzip 35.24/36 KiB. Limites globais ajustados apenas para conter o delta da barra do painel; limites de entrada e chunk máximo preservados.
+- `npm run check` passou; `npm run test:lily-ui` passou (24 arquivos, 106 testes); os testes de policy/tool-health (8), deploy validation (14) e build budget (4) passaram.
+- Limitação de teste local: `npm test` não alcançou a suíte porque o Prisma migrate deploy falha com `Schema engine error` após instalar dependências neste worktree sem a instalação de scripts do engine. Vitest direto: 57 arquivos/261 testes passaram, 23 suites/157 falharam por tabelas não migradas no banco local. CI Linux/Windows da PR #281 estava verde no SHA anterior; precisa repetir no novo commit.
+- Sidebar possui links para módulos, recolhimento desktop persistido em localStorage não sensível, menu mobile expansível e links admin-only visíveis apenas para role admin; cada módulo conserva suas próprias autorizações no servidor.
+- PR #281 tinha todos os checks verdes no commit anterior `95a9e49b082dc87d5b0275f36fc156a7f29732b8`; as alterações novas foram commitadas em `c5d88449f74f67ff075e717b456ff59f16836351`. A CI ainda precisa rodar neste head atualizado.
+- Tentativa de criação do run AG-DEV via bridge da Central falhou porque o project root configurado nela tem manifesto stale e uma árvore diferente. Não alterado: worktree OneDrive/Central; execução manual da tarefa `TASK-DEV-COOKLILY-ADMIN-NAV-WA-20261030` registrada como run `cmvv9x6hr002tactpozv9de8e` e ativa.
+- Aguardar CI atualizado da PR #281; corrigir falhas se houver, integrar por squash após todos os gates, implantar o canonical resultante e homologar o painel administrativo via navegador integrado do Codex em desktop e mobile. Repetir o ciclo até os critérios de UX passarem. Manter o agente WhatsApp desligado.
