@@ -2,12 +2,12 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-aggregate-gzip-20
+- branch: codex/cooklily-catalog-deploy-checkpoint
 - base_branch: cooklily/canonical
-- base_sha_verified: 4f1d09a5d5f5255bad8f2f816c285e34abdebafa
-- head_sha_verified: 72102e64957917fd5851cb34ae80139725d8f187
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (open draft; CI pending)
-- last_verified_at: 2026-10-29
+- base_sha_verified: 043c93544da013c0081eab7fe146efafb1d20da7
+- head_sha_verified: e0631d4e0c5fda6a900a1426b42d42bba5a08674
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7)
+- last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
 ## Concluído e persistido
@@ -76,12 +76,21 @@
 - Interface com busca por nome/categoria, filtro de categoria, contagem de resultados e detalhe expansível; só dispara busca do editor ao abrir o produto. Nenhuma migration.
 - Gates do item: `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS após retirar estilos CSS que excediam o budget; budget Lily PASS: JS 566.82 KiB raw / 179.47 KiB gzip, inicial 40.99 KiB, maior chunk 61.42 KiB; CSS 170.75 KiB raw / 33.88 KiB gzip; JS+CSS 213.35 KiB gzip; `git diff --check` PASS.
 - Novos testes de contrato verificam dados reduzidos no índice, detalhe específico e bloqueio a clientes. `catalog.test.ts` PASS 16/16; UI PASS 21 arquivos, 97 testes.
-- PR, CI, merge, deploy VPS e homologação integrada desktop/mobile ainda pendentes nesta etapa.
-- PR #264 passou 7/7 checks no Actions run `40986990923` para o head `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe Ubuntu/Windows e Workbook Snapshot: PASS. PR pronta e mergeável; próximo passo é squash merge.
+- PR #264 passou 7/7 checks no Actions run `40986990923` para o código `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; squash merge concluído em `043c93544da013c0081eab7fe146efafb1d20da7`.
+- SHA canonical confirmado após fetch: `043c93544da013c0081eab7fe146efafb1d20da7`. Deploy VPS pendente; estado consultado antes do deploy: current/canonical `6bfcf79279998614454c72e462b87cbcc43a053f`, serviço ativo, Nginx OK.
+- Chave SSH verificada sem revelar segredo: fingerprint pública bate com `SHA256:/Fl2E1ADG3RPCCNxS65PRbmN1f07jyCTYsPesSDd2B8` informado pelo proprietário. O comando `sudo cc status` mostrou um erro de `git rev-parse` fora de um repositório após reportar o status atual; deploy pelo SHA completo é o próximo passo autorizado.
+
+### Deploy e homologação do catálogo progressivo — 2026-10-29/30
+
+- Deploy autorizado executado na VPS por `sudo cc deploy 043c93544da013c0081eab7fe146efafb1d20da7`; release ativa `043c93544da013c0081eab7fe146efafb1d20da7`, anterior `6bfcf79279998614454c72e462b87cbcc43a053f`. Deploy evidenciado em `/srv/carro-chefe/data/deploy-logs/deploy-20261030-014210-043c93544da0.evidence` e `.log`. Backups core e Lily verificados; Nginx e readiness passaram; migrations core 12 e Lily 38 sem pendências.
+- Homologação desktop no domínio real via Codex IAB, aba integrada 17, em `https://carrochefe.com/lilyacai/painel/cardapio`: lista carregou com 35/35 produtos, busca `Morango Nutt` filtrou para 2/35 e limpar a busca restaurou 35/35. Abrir LilyMix carregou o detalhe individual com dados de foto, descrição, variações, preços, sabores, adicionais e combinações. Nenhum dado foi alterado.
+- O detalhe mostrou estado transitório “Carregando configurações” antes de preencher o formulário. Depois carregou por completo; logs de console não retornaram erros nem avisos.
+- Capturas de tela desktop foram feitas no Codex IAB durante a sessão. Não foi possível salvar essas capturas como arquivos do workspace através da API de UI disponível.
+- Homologação mobile permanece pendente: o controle Codex IAB desta sessão não expõe ajuste de viewport, e a tecla de alternância de device mode não alterou a janela. Não usar navegador externo nem declarar aprovação mobile sem viewport estreito real.
+- O item do catálogo progressivo segue `in_progress` até validar o domínio em viewport mobile pelo Codex IAB e registrar evidência. A meta de redução agregada gzip permanece em 18,73% (faltam 2.861 bytes para o limite de 179.994 bytes).
 
 ### Próxima ação exata
 
-1. Abrir PR draft para `cooklily/canonical`, aguardar CI e integrar o catálogo progressivo após CI verde.
-2. Implantar SHA integrado com `sudo cc deploy <sha-completo>` e registrar os dados reais do deploy.
-3. Homologar o editor no domínio em desktop e mobile somente pelo Codex IAB; corrigir e repetir até aceite.
-4. Retomar a redução agregada de gzip até o limite `<=179,994` bytes, depois de fechar este item, e atualizar o status do checkpoint com ambos os resultados.
+1. Obter pelo próprio Codex IAB um viewport mobile de 390×844 ou controle equivalente e homologar `/lilyacai/painel/cardapio` em desktop e mobile; corrigir, redeployar e repetir se necessário. Não usar Chrome/Edge externos.
+2. Persistir este checkpoint por PR de documentação após concluir a homologação mobile; não marcar o item como aceito até lá.
+3. Retomar a redução agregada gzip dos 35 chunks até `<=179,994` bytes, conforme autorização original, mantendo separados os indicadores de carga inicial e agregado.
