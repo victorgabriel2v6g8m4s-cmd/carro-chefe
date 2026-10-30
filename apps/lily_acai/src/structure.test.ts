@@ -10,6 +10,8 @@ const mainSource = readFileSync(resolve(sourceDirectory, "main.tsx"), "utf8");
 const reelsSource = ["features/reels/ReelsPage.tsx", "features/reels/ReelSlide.tsx"].map((path) => readFileSync(resolve(sourceDirectory, path), "utf8")).join("\n");
 const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf8");
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
+const dashboardSource = readFileSync(resolve(sourceDirectory, "features/dashboard/DashboardPage.tsx"), "utf8");
+const headerLoyaltySource = readFileSync(resolve(sourceDirectory, "features/loyalty/HeaderLoyaltyControls.tsx"), "utf8");
 const paymentSource = [
   "features/payments/PaymentPage.tsx",
   "features/payments/PaymentChoicePage.tsx",
@@ -54,18 +56,29 @@ describe("estrutura crítica de UX CookLily", () => {
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
-    expect(mainSource).toContain('className="header-coins"');
-    expect(mainSource).toContain('className="header-loyalty-progress"');
+    expect(mainSource).toContain('<HeaderLilyCoins loyalty={loyalty} />');
+    expect(mainSource).toContain('<HeaderLoyaltyProgress loyalty={loyalty} />');
+    expect(headerLoyaltySource).toContain("loyalty?.lilyCoins ?? 0");
+    expect(headerLoyaltySource).toContain("loyalty?.points ?? 0");
+    expect(headerLoyaltySource).toContain('to="/dashboard"');
     expect(mainSource).toContain('className="header-brand-group"');
-    expect(mainSource).toContain('className="header-progress-segments"');
     expect(mainSource).toContain('className="mobile-menu" aria-label="Menu CookLily"');
     expect(css).toContain(".header-actions .cart-icon { order:2; }");
     expect(css).toContain(".header-actions .profile-icon { order:3; }");
     expect(css).toContain(".topbar-inner { display:grid; grid-template-columns:minmax(0,1fr) minmax(240px,auto) minmax(0,1fr); align-items:center; gap:16px; }");
-    expect(css).toContain(".header-progress-segments { display:flex; width:clamp(120px,14vw,176px); gap:3px; }");
-    expect(css).toContain(".header-progress-segments { width:clamp(72px,30vw,132px); gap:2px; }");
+    expect(css).toContain(".header-progress-segments { display:flex; width:clamp(140px,18vw,220px); gap:3px; }");
+    expect(css).toContain(".header-progress-segments { width:clamp(72px,28vw,132px); gap:2px; }");
     expect(css).toContain(".topbar-inner > .header-brand-group { flex:0 0 auto; gap:5px; }");
     expect(css).toContain(".topbar-inner > .header-loyalty-progress { flex:1 1 auto; justify-content:center; min-width:0; }");
+  });
+
+  it("mostra o convite para entrar no dashboard e mantém o destino depois da autenticação", () => {
+    expect(dashboardSource).toContain("getLilyAuthStatus()");
+    expect(dashboardSource).toContain('setAccess("anonymous")');
+    expect(dashboardSource).toContain("Faça login ou crie uma conta para monitorar seu desempenho");
+    expect(dashboardSource).toContain('to="/entrar?next=%2Fdashboard"');
+    expect(dashboardSource).toContain('to="/cadastro?next=%2Fdashboard"');
+    expect(css).toContain(".loyalty-dashboard-auth-gate");
   });
 
   it("mantém os controles da curva em um painel amplo com zoom, pan, minimapa e suporte ao toque", () => {

@@ -4660,6 +4660,12 @@ img, svg { max-width: 100%; }
 
 .loyalty-dashboard,.loyalty-admin { display:grid; gap:24px; padding:36px 0 110px; }
 .loyalty-dashboard-heading h1,.loyalty-admin h1 { font-size:clamp(38px,7vw,66px); }
+.loyalty-dashboard-access { min-height:36vh; align-content:center; justify-items:center; }
+.loyalty-dashboard-auth-gate { display:grid; gap:14px; margin:0; }
+.loyalty-dashboard-auth-gate h2,.loyalty-dashboard-auth-gate p { margin:0; }
+.loyalty-dashboard-auth-gate h2 { max-width:24ch; font-size:clamp(25px,4vw,36px); line-height:1.15; }
+.loyalty-dashboard-auth-gate > p { max-width:58ch; color:var(--cl-color-text-muted); line-height:1.6; }
+.loyalty-dashboard-auth-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
 .loyalty-overview { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:16px; }
 .loyalty-level-card,.lilycoin-card,.loyalty-admin-section,.loyalty-reward-card { padding:clamp(20px,4vw,32px); border:1px solid rgb(130 0 35 / 14%); border-radius:24px; background:white; box-shadow:var(--cl-shadow-card); }
 .loyalty-level-card h2,.lilycoin-total { display:block; color:var(--cl-color-secondary); font-size:clamp(25px,4vw,38px); font-weight:900; }
@@ -4783,8 +4789,9 @@ img, svg { max-width: 100%; }
 .header-coins strong { font-size:15px; font-variant-numeric:tabular-nums; }
 .header-coin-name { max-width:100px; overflow:hidden; color:var(--cl-color-text-muted); text-overflow:ellipsis; white-space:nowrap; }
 .header-loyalty-progress { gap:7px; font-size:12px; font-weight:850; font-variant-numeric:tabular-nums; }
-.header-progress-segments { display:flex; width:clamp(120px,14vw,176px); gap:3px; }
-.header-progress-segments i { height:7px; flex:1; overflow:hidden; border-radius:99px; background:#eadce2; }
+.header-progress-points { white-space:nowrap; }
+.header-progress-segments { display:flex; width:clamp(140px,18vw,220px); gap:3px; }
+.header-progress-segments i { height:9px; flex:1; overflow:hidden; border-radius:99px; background:#eadce2; }
 .header-progress-segments b { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--cl-color-primary),#e69b52); }
 .header-level-icon,.header-level-icon-fallback { display:grid; width:28px; height:28px; flex:none; place-items:center; border:1px solid #ead8c3; border-radius:50%; object-fit:cover; background:#fff8eb; color:#9e6b32; }
 .header-actions .notifications-icon { order:1; }
@@ -4900,8 +4907,8 @@ img, svg { max-width: 100%; }
   .header-coins strong { font-size:13px; }
   .header-coin-name { display:none; }
   .header-loyalty-progress { gap:4px; font-size:11px; }
-  .header-progress-segments { width:clamp(72px,30vw,132px); gap:2px; }
-  .header-progress-segments i { height:6px; }
+  .header-progress-segments { width:clamp(72px,28vw,132px); gap:2px; }
+  .header-progress-segments i { height:8px; }
   .header-level-icon,.header-level-icon-fallback { width:24px; height:24px; }
   .header-actions .header-icon { flex:0 0 34px; min-width:34px; width:34px; height:34px; aspect-ratio:1; }
   .header-actions .header-icon svg { width:19px; height:19px; }
@@ -4927,8 +4934,12 @@ img, svg { max-width: 100%; }
 @media(max-width:400px) {
   .header-coins { padding-inline:5px; }
   .header-loyalty-progress { gap:3px; }
-  .header-progress-segments { width:clamp(60px,25vw,88px); }
+  .header-progress-segments { width:clamp(56px,23vw,84px); }
   .header-actions .header-icon { flex-basis:30px; min-width:30px; width:30px; height:30px; }
   .header-actions .header-icon svg { width:18px; height:18px; }
   .header-actions .notification-badge { right:-2px; }
+}
+@media(max-width:600px) {
+  .loyalty-dashboard-auth-actions { display:grid; grid-template-columns:1fr; }
+  .loyalty-dashboard-auth-actions .button { width:100%; }
 }

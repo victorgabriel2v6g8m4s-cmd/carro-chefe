@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "../../router";
-import { claimLilyMission, getLilySession, getLilyLoyalty, getLilyProfile, redeemLilyReward, redeemLilyLevelBenefit, type AuthPayload, type LilyLoyaltyPayload, type LilyProfilePayload } from "../../api";
+import { claimLilyMission, getLilyAuthStatus, getLilySession, getLilyLoyalty, getLilyProfile, redeemLilyReward, redeemLilyLevelBenefit, type AuthPayload, type LilyLoyaltyPayload, type LilyProfilePayload } from "../../api";
 import { getCustomerOrders } from "../orders/api";
 import { surveyJson } from "../surveys/api";
 
@@ -9,6 +9,7 @@ type Order = { id: string; orderNumber: string; status: string; grandTotalCents:
 const currency = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 export function DashboardPage() {
+  const [access, setAccess] = useState<"checking" | "anonymous" | "authenticated" | "unavailable">("checking");
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [profile, setProfile] = useState<LilyProfilePayload | null>(null);
   const [loyalty, setLoyalty] = useState<LilyLoyaltyPayload | null>(null);
@@ -21,17 +22,33 @@ export function DashboardPage() {
 
   useEffect(() => {
     let active = true;
-    void Promise.allSettled([getLilyProfile(), getLilyLoyalty(), surveyJson<{ missions: Mission[] }>("missions"), getCustomerOrders(), getLilySession()])
-      .then(([profileResult, loyaltyResult, missionResult, orderResult, sessionResult]) => {
+    async function loadDashboard() {
+      try {
+        const auth = await getLilyAuthStatus();
         if (!active) return;
-        if (profileResult.status === "fulfilled") setProfile(profileResult.value);
-        if (loyaltyResult.status === "fulfilled") setLoyalty(loyaltyResult.value);
-        if (missionResult.status === "fulfilled") setMissions(missionResult.value.missions);
-        if (orderResult.status === "fulfilled") setOrders(orderResult.value.orders.slice(0, 8));
-        if (sessionResult.status === "fulfilled") setSession(sessionResult.value);
-        const failed = [profileResult, loyaltyResult, missionResult, orderResult].some((result) => result.status === "rejected");
-        if (failed) setError("Algumas informações do dashboard não puderam ser carregadas. Atualize a página para tentar novamente.");
-      });
+        if (!auth.user) { setAccess("anonymous"); return; }
+        setAccess("authenticated");
+      } catch {
+        if (active) {
+          setAccess("unavailable");
+          setError("Não foi possível verificar seu acesso agora. Tente novamente.");
+        }
+        return;
+      }
+
+      const [profileResult, loyaltyResult, missionResult, orderResult, sessionResult] = await Promise.allSettled([
+        getLilyProfile(), getLilyLoyalty(), surveyJson<{ missions: Mission[] }>("missions"), getCustomerOrders(), getLilySession()
+      ]);
+      if (!active) return;
+      if (profileResult.status === "fulfilled") setProfile(profileResult.value);
+      if (loyaltyResult.status === "fulfilled") setLoyalty(loyaltyResult.value);
+      if (missionResult.status === "fulfilled") setMissions(missionResult.value.missions);
+      if (orderResult.status === "fulfilled") setOrders(orderResult.value.orders.slice(0, 8));
+      if (sessionResult.status === "fulfilled") setSession(sessionResult.value);
+      const failed = [profileResult, loyaltyResult, missionResult, orderResult].some((result) => result.status === "rejected");
+      if (failed) setError("Algumas informações do dashboard não puderam ser carregadas. Atualize a página para tentar novamente.");
+    }
+    void loadDashboard();
     return () => { active = false; };
   }, []);
 
@@ -59,6 +76,23 @@ export function DashboardPage() {
     catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível resgatar este benefício."); }
     finally { setBusyBenefit(""); }
   }
+
+  if (access === "checking") return <section className="loyalty-dashboard loyalty-dashboard-access" aria-live="polite"><p>Verificando seu acesso ao dashboard…</p></section>;
+
+  if (access === "anonymous") return <section className="loyalty-dashboard">
+    <header className="loyalty-dashboard-heading"><span className="eyebrow">CookLily · fidelidade</span><h1>Seu espaço CookLily</h1><p>Acompanhe pontos, LilyCoins, recompensas e pedidos em um só lugar.</p></header>
+    <section className="loyalty-dashboard-auth-gate survey-state survey-auth-gate" aria-labelledby="loyalty-dashboard-auth-title">
+      <span className="eyebrow">Seu progresso</span>
+      <h2 id="loyalty-dashboard-auth-title">Faça login ou crie uma conta para monitorar seu desempenho</h2>
+      <p>Depois de entrar, você poderá acompanhar seus pontos, níveis, LilyCoins, missões e recompensas.</p>
+      <div className="loyalty-dashboard-auth-actions">
+        <Link className="button primary" to="/entrar?next=%2Fdashboard">Fazer login</Link>
+        <Link className="button ghost" to="/cadastro?next=%2Fdashboard">Criar conta</Link>
+      </div>
+    </section>
+  </section>;
+
+  if (access === "unavailable") return <section className="loyalty-dashboard loyalty-dashboard-access"><p className="error" role="alert">{error}</p><button className="button primary" type="button" onClick={() => window.location.reload()}>Tentar novamente</button></section>;
 
   return <section className="loyalty-dashboard">
     <header className="loyalty-dashboard-heading"><span className="eyebrow">CookLily · fidelidade</span><h1>Seu espaço CookLily</h1><p>Acompanhe seu progresso, LilyCoins, recompensas e pedidos.</p></header>
