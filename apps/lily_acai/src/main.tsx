@@ -1,9 +1,10 @@
 import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "./router";
-import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Sparkles, Trophy, UserRound } from "lucide-react";
+import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Trophy, UserRound } from "lucide-react";
 import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
 import { CartProvider, useCart } from "./features/cart/CartContext";
+import { HeaderLilyCoins, HeaderLoyaltyProgress } from "./features/loyalty/HeaderLoyaltyControls";
 const CatalogPage = lazy(() => import("./catalog").then((module) => ({ default: module.CatalogPage })));
 const WeeklyProductBanner = lazy(() => import("./catalog").then((module) => ({ default: module.WeeklyProductBanner })));
 const AdminHome = lazy(() => import("./admin").then((module) => ({ default: module.AdminHome })));
@@ -228,18 +229,10 @@ function Shell({ children }: { children: ReactNode }) {
           <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
             <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
           </Link>
-          {user && <Link className="header-coins" to="/dashboard" aria-label={`${(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")} ${loyalty?.coinName ?? "LilyCoins"}`} title={loyalty?.coinName ?? "LilyCoins"}>
-            {loyalty?.coinIconUrl ? <img src={loyalty.coinIconUrl} alt="" /> : <Sparkles aria-hidden="true" />}
-            <strong>{(loyalty?.lilyCoins ?? 0).toLocaleString("pt-BR")}</strong><span className="header-coin-name">{loyalty?.coinName ?? "LilyCoins"}</span>
-          </Link>}
+          <HeaderLilyCoins loyalty={loyalty} />
         </div>
 
-        {user && <>
-          <Link className="header-loyalty-progress" to="/dashboard" title={`${loyalty?.levelProgressPercent ?? 0}% para ${loyalty?.nextLevel?.name ?? "o próximo nível"}`} aria-label={`${loyalty?.levelProgressPercent ?? 0}% do progresso. Nível atual: ${loyalty?.currentLevel?.name ?? "sem nível"}. Próximo nível: ${loyalty?.nextLevel?.name ?? "nível máximo"}`}>
-              <span>{loyalty?.levelProgressPercent ?? 0}%</span><span className="header-progress-segments" aria-hidden="true">{[0, 1, 2, 3].map((segment) => { const fill = Math.min(100, Math.max(0, ((loyalty?.levelProgressPercent ?? 0) - segment * 25) * 4)); return <i key={segment}><b style={{ width: `${fill}%` }} /></i>; })}</span>
-              {loyalty?.currentLevel?.iconUrl ? <img className="header-level-icon" src={loyalty.currentLevel.iconUrl} alt="" /> : <span className="header-level-icon-fallback" aria-hidden="true"><Sparkles size={14} /></span>}
-          </Link>
-        </>}
+        <HeaderLoyaltyProgress loyalty={loyalty} />
         <div className="header-actions">
           <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><Bell size={22} strokeWidth={1.8} />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
           <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>
