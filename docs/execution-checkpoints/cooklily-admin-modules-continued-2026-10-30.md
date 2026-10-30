@@ -5,9 +5,9 @@
 - branch: `codex/lily-admin-modules-continued`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `f3e83f8`
-- head_sha_verified: `54d8b3600273366d46d47ef682f0ba503eca3712`
-- pull_requests: PR #291 merged by squash; CI passed on Node 20/24 and all required jobs
-- last_verified_at: 2026-10-30 19:17 America/Sao_Paulo
+- head_sha_verified: `3593b4d8cb6bdfe9ec5449c9c06b241655e6411f`
+- pull_requests: PR #291 implementation and PR #292 roadmap reconciliation merged; CI passed on Node 20/24 and all required jobs
+- last_verified_at: 2026-10-30 19:19 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -21,6 +21,7 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 - Extraídos os componentes listados para módulos coesos sob `features/admin/catalog/`; utilitários de autosave e editor de alergênicos também foram isolados.
 - `admin.tsx` foi reduzido a 111 linhas e preserva o acesso lazy aos cadastros globais e ao detalhe por produto.
 - PR #291 integrou essa modularização em `cooklily/canonical` via squash commit `3ec266de587069f3c011786f3fc2d7ef1f8dc74d`.
+- PR #292 atualizou a referência de release e homologação no roadmap.
 - Deploy concluído no SHA `54d8b3600273366d46d47ef682f0ba503eca3712`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261030-220838-54d8b3600273.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-220838-54d8b3600273.evidence`.
 - Backup core/Lily verificado, nenhuma migration pendente, readiness e smoke HTTPS externos aprovados.
 - Navegador integrado no domínio real: desktop 1365×900 e mobile 390×844; 35 cards em ambos, formulários de novo produto e categorias abertos sem envio, cadastros globais lazy carregados e editor LilyMix aberto com 114 labels. Modal mobile 337 px, largura do documento 375 px, nenhum erro de console; modal fechado sem salvar e viewport restaurado.
