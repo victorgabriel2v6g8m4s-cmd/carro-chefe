@@ -11,8 +11,6 @@ describe("CatalogProductCard", () => {
         categoryName: "Açaí",
         cover: { url: "/media/lily-mix.webp", altText: "Copo de açaí" }
       },
-      badges: [{ label: "Disponível", className: "offer-badge" }],
-      actionLabel: "Editar produto",
       price: createElement("strong", null, "R$ 20,00"),
       onOpen: () => undefined
     }));
