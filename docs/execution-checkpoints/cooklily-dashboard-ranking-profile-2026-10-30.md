@@ -1,13 +1,13 @@
 # Dashboard, ranking, níveis e perfil CookLily
 
-- status: merged
+- status: completed
 - owner: AG-DEV
 - branch: codex/cooklily-dashboard-ranking-profile
 - base_branch: cooklily/canonical
 - base_sha_verified: a9b59e7e0ffdd037317e9883a3382f092fe820e4
-- head_sha_verified: 080eae62ae8615887b8e45f58038f6daad2de399 (squash merge)
+- head_sha_verified: 080eae62ae8615887b8e45f58038f6daad2de399 (feature squash merge; deployed)
 - pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/277 (merged)
-- last_verified_at: 2026-10-30 13:00 America/Sao_Paulo
+- last_verified_at: 2026-10-30 13:42 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -16,40 +16,44 @@ Ampliar header e controles de fidelidade; criar rota pública de níveis com tri
 
 ## Concluído e persistido
 
-- Implementação e testes integrados em `cooklily/canonical` por squash no SHA `080eae62ae8615887b8e45f58038f6daad2de399`.
-- PR #277 integrou a feature; CI run `41080102538` passou em Node 20/24, Tool Health, Workbook Snapshot, Excel Recipe Windows/Ubuntu e Windows Supervisor.
-- CodeQL não executou: configuração do workflow limita o gatilho a PRs com base `main`; este PR tinha base `cooklily/canonical`.
-- Conta CookLily atual não possui campo de email e não há fluxo verificado de troca de telefone; esses dados seguem sem alteração.
-- Nenhuma migration/schema.
+- Implementação e testes integrados em `cooklily/canonical` pelo PR #277 (squash SHA `080eae62ae8615887b8e45f58038f6daad2de399`).
+- Checkpoint atualizado e persistido em canonical no commit `f46f5fbc9d40541987b7fd2fae0b68d6465d2755` antes do deploy.
+- Deploy oficial concluído no SHA funcional `080eae62ae8615887b8e45f58038f6daad2de399`; status final da VPS confirma SHA, serviço ativo, nginx saudável e gates verdes.
+- Homologação no domínio real pelo navegador integrado do Codex: desktop e viewport 390×844. Dashboard, níveis, ranking, rota de estatísticas e perfil abriram sem erros; clique dashboard→níveis e seleção de nível/recompensas funcionaram. Ranking mostrou cards e KPIs; estatísticas exibiram radar de cinco categorias, frequência e gráficos/categorias com pontos. Perfil permaneceu nos dados e controles de conta/segurança.
+- Testes locais antes da integração: 79 arquivos / 413 testes; check e build completos passaram. Deploy rodou novamente 79 arquivos / 416 testes, check, build e tool-health, todos passaram.
+- Build CookLily no deploy: JS gzip 183.96/185 KiB, CSS gzip 33.99/34 KiB, combinado 217.95/220 KiB; budget aprovado.
+- CI run `41080102538` passou em Node 20/24, Tool Health, Workbook Snapshot, Excel Recipe Windows/Ubuntu e Windows Supervisor.
+- CodeQL não executou: workflow limita gatilho a PRs com base `main`; o PR tinha base `cooklily/canonical`.
+- Nenhuma migration/schema nova. Migrations em produção estavam atualizadas; backups Core e Lily foram verificados pelo deployer.
+- Conta CookLily não possui campo de email e não há fluxo verificado de troca de telefone; email não foi inventado nem alterado.
 
 ## Em andamento
 
-- Publicação do SHA integrado na VPS e homologação no domínio real usando exclusivamente o navegador integrado do Codex (desktop e mobile).
+- Nenhum.
 
 ## Gates e testes
 
-- `npm test`: passou; 79 arquivos / 413 testes passaram / 3 ignorados.
-- `npm run check`: passou (Prisma validate e TypeScript).
-- `npm run build`: passou para Gestão, site, QR, CookLily e TypeScript da API.
-- Build CookLily: JS gzip 183.74/185 KiB, CSS gzip 33.98/34 KiB, combinado 217.72/220 KiB.
-- GitHub Actions CI run `41080102538`: passou nos gates listados acima.
-- CodeQL: não disparado pela configuração do workflow na base canonical.
+- `npm test`: aprovado na VPS; 79 arquivos / 416 testes.
+- `npm run check`: aprovado no deployer (Prisma validate e TypeScript).
+- `npm run build`: aprovado no deployer para Gestão, site, QR, CookLily e TypeScript da API.
+- `tools:status:check`: aprovado; tool-health sincronizado.
+- Gates remotos em `/srv/carro-chefe/data/deploy-validation`: preflight-migrations, static-checks, tests, build e tool-health em `success` no release SHA.
 
 ## Migrations
 
-- Nenhuma.
+- Nenhuma migration nova.
 
 ## Bloqueios/riscos
 
 - Dados públicos de ranking/estatísticas dependem de consentimento `rankingOptIn`; contas de teste só aparecem para admin/staff/conta de teste.
-- Email não existe no modelo Lily atual e troca de telefone não possui verificação; não criar formulário inseguro.
+- Email não existe no modelo Lily atual e troca de telefone não possui verificação; os campos precisam de contrato e fluxo seguro antes de suportá-los.
+- CodeQL não foi executado pela configuração de workflow descrita acima.
 
 ## Homologação/dependências externas
 
-- VPS estava no SHA `b0608fc07e12b5a838148f06e044ed4d5fc1c02d`, serviço ativo e nginx saudável na última checagem.
-- Deploy e verificação no domínio real pendentes.
-- Homologação exclusivamente pelo navegador integrado Codex em desktop e mobile.
+- Domínio real `carrochefe.com/lilyacai` verificado em desktop e viewport mobile no navegador integrado Codex.
+- Browser deixado restaurado ao viewport desktop no dashboard.
 
 ## Próxima ação exata
 
-Publicar o SHA `080eae62ae8615887b8e45f58038f6daad2de399` pelo deployer oficial; em seguida verificar o domínio real em desktop e viewport mobile no navegador integrado, registrar evidências e corrigir/redeployar se necessário.
+Nenhuma; entrega concluída. Para incluir email e troca de telefone no perfil, definir schema/validação e fluxo de verificação em uma tarefa futura.
