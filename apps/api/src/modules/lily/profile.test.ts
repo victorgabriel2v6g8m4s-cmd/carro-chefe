@@ -313,6 +313,7 @@ describe("CookLily perfil e fidelidade", () => {
     expect(ownStats.statusCode).toBe(200);
     expect(ownStats.json().totals.missions).toBe(25);
     expect(ownStats.json().months).toHaveLength(6);
+    expect(ownStats.json().days).toHaveLength(7);
     const privateStats = await app.inject({ method: "GET", url: `/api/v1/lily/public/loyalty/stats?userId=${other.user.id}`, headers: { cookie: owner.cookie } });
     expect(privateStats.statusCode).toBe(404);
     await lilyPrisma.lilyUser.update({ where: { id: other.user.id }, data: { rankingOptIn: true } });

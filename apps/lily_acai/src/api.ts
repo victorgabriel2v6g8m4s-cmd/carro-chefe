@@ -572,7 +572,9 @@ export type LilyCustomerStats = {
   counts: { orders: number; surveys: number; referrals: number };
   activeDays: number;
   months: Array<{ key: string; label: string; missions: number; activity: number; surveys: number; orders: number; referrals: number }>;
+  days: Array<{ key: string; label: string; missions: number; activity: number; surveys: number; orders: number; referrals: number }>;
 };
+
 
 export async function getLilyProfile() {
   const response = await fetch("/api/v1/lily/customer/profile", { credentials: "same-origin" });
