@@ -1,13 +1,13 @@
 # Dashboard, ranking, níveis e perfil CookLily
 
-- status: candidate
+- status: merged
 - owner: AG-DEV
 - branch: codex/cooklily-dashboard-ranking-profile
 - base_branch: cooklily/canonical
 - base_sha_verified: a9b59e7e0ffdd037317e9883a3382f092fe820e4
-- head_sha_verified: 8724a58 (feature commit)
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/277 (ready for review, open)
-- last_verified_at: 2026-10-30 12:22 America/Sao_Paulo
+- head_sha_verified: 080eae62ae8615887b8e45f58038f6daad2de399 (squash merge)
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/277 (merged)
+- last_verified_at: 2026-10-30 13:00 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -16,14 +16,15 @@ Ampliar header e controles de fidelidade; criar rota pública de níveis com tri
 
 ## Concluído e persistido
 
-- Branch de trabalho criada a partir do SHA canonical verificado.
-- Componentes, endpoints e testes implementados localmente; ainda sem commit, PR ou deploy.
+- Implementação e testes integrados em `cooklily/canonical` por squash no SHA `080eae62ae8615887b8e45f58038f6daad2de399`.
+- PR #277 integrou a feature; CI run `41080102538` passou em Node 20/24, Tool Health, Workbook Snapshot, Excel Recipe Windows/Ubuntu e Windows Supervisor.
+- CodeQL não executou: configuração do workflow limita o gatilho a PRs com base `main`; este PR tinha base `cooklily/canonical`.
 - Conta CookLily atual não possui campo de email e não há fluxo verificado de troca de telefone; esses dados seguem sem alteração.
+- Nenhuma migration/schema.
 
 ## Em andamento
 
-- Implementação backend/frontend e revisão dos dados das estatísticas.
-- Build geral de produção passou; build CookLily mantém budgets incluindo CSS, sem aumentar os limites.
+- Publicação do SHA integrado na VPS e homologação no domínio real usando exclusivamente o navegador integrado do Codex (desktop e mobile).
 
 ## Gates e testes
 
@@ -31,25 +32,24 @@ Ampliar header e controles de fidelidade; criar rota pública de níveis com tri
 - `npm run check`: passou (Prisma validate e TypeScript).
 - `npm run build`: passou para Gestão, site, QR, CookLily e TypeScript da API.
 - Build CookLily: JS gzip 183.74/185 KiB, CSS gzip 33.98/34 KiB, combinado 217.72/220 KiB.
-- Commit feature: `8724a58`; checkpoint pós-commit: `d03c5b014a7c5734e62e171f963ca9660f28bfa8`.
-- GitHub Actions CI run `41079870275`: Excel Recipe, Workbook Snapshot, Tool Health e Windows Supervisor passaram; Quality Node 24 em testes/build e Node 20 em dependências, em andamento.
-- CodeQL: aguardando estado no PR.
+- GitHub Actions CI run `41080102538`: passou nos gates listados acima.
+- CodeQL: não disparado pela configuração do workflow na base canonical.
 
 ## Migrations
 
-- Nenhuma mudança de schema prevista; foram usados dados existentes Lily.
+- Nenhuma.
 
 ## Bloqueios/riscos
 
 - Dados públicos de ranking/estatísticas dependem de consentimento `rankingOptIn`; contas de teste só aparecem para admin/staff/conta de teste.
-- Login administrativo de agente confirmado pelo handoff do Codex integrado; ticket de uso único consumido sem exibição.
 - Email não existe no modelo Lily atual e troca de telefone não possui verificação; não criar formulário inseguro.
 
 ## Homologação/dependências externas
 
-- Deploy e domínio real pendentes.
-- Homologação deve ocorrer exclusivamente no navegador integrado Codex, em desktop e mobile.
+- VPS estava no SHA `b0608fc07e12b5a838148f06e044ed4d5fc1c02d`, serviço ativo e nginx saudável na última checagem.
+- Deploy e verificação no domínio real pendentes.
+- Homologação exclusivamente pelo navegador integrado Codex em desktop e mobile.
 
 ## Próxima ação exata
 
-Aguardar Quality Node 20/24 e CodeQL no PR #277; corrigir falhas se houver e integrar por squash quando os gates exigidos estiverem verdes.
+Publicar o SHA `080eae62ae8615887b8e45f58038f6daad2de399` pelo deployer oficial; em seguida verificar o domínio real em desktop e viewport mobile no navegador integrado, registrar evidências e corrigir/redeployar se necessário.
