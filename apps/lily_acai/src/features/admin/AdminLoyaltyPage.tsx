@@ -4,6 +4,7 @@ import { LoyaltyBrandingEditor } from "./LoyaltyBrandingEditor";
 import { LoyaltyLevelEditor } from "./LoyaltyLevelEditor";
 import { readAdminApiError } from "./admin-api-error";
 import { toLoyaltyLevelInput } from "./loyalty-level-payload";
+import { loyaltyLevelThresholdError } from "./loyalty-level-validation";
 import type { LoyaltyAdminPayload, LoyaltyLevel } from "./loyalty-types";
 
 type Reward = LoyaltyAdminPayload["rewards"][number];
@@ -72,6 +73,8 @@ export function AdminLoyaltyPage() {
 
   async function saveLevels() {
     if (!session || !data) return;
+    const thresholdError = loyaltyLevelThresholdError(sortedLevels);
+    if (thresholdError) { setError(thresholdError); return; }
     setBusy(true); setError(""); setMessage("");
     try {
       const response = await fetch("/api/v1/lily/admin/loyalty/levels", {

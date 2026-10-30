@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
+import { buildApp } from "../../app";
+import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
 import { awardReachedLevelCoins, createLoyaltyConfigVersion, loyaltySnapshot, progressPointsForUser, recordPaidOrderPoints, redeemLoyaltyLevelBenefit, reversePaidOrderPoints, starterLevelRows } from "./loyalty/service";
 
 const suffix = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
@@ -9,20 +11,51 @@ let userId = "";
 let levelId = "";
 let rewardId = "";
 let orderId = "";
+let adminUserId = "";
+let app: Awaited<ReturnType<typeof buildApp>> | null = null;
+const origin = "http://127.0.0.1:4173";
+
+function cookieFrom(response: { headers: Record<string, unknown> }) {
+  const value = response.headers["set-cookie"];
+  const raw = Array.isArray(value) ? value[0] : String(value ?? "");
+  return raw.split(";")[0];
+}
+
+async function registerAdmin() {
+  const server = app ??= await buildApp();
+  const phone = `679${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 90 + 10)}`;
+  const response = await server.inject({
+    method: "POST", url: "/api/v1/lily/auth/register", headers: { origin },
+    payload: { phone, password: "senha-loyalty-levels-2026", termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION, consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false } }
+  });
+  expect(response.statusCode, JSON.stringify(response.json())).toBe(201);
+  const cookie = cookieFrom(response);
+  adminUserId = response.json().user.id;
+  await lilyPrisma.lilyUser.update({ where: { id: adminUserId }, data: { role: "admin", mfaEnabled: true, staffPasswordUpgradeRequired: false } });
+  await lilyPrisma.lilySession.updateMany({ where: { userId: adminUserId }, data: { mfaVerifiedAt: new Date() } });
+  const me = await server.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
+  return { server, cookie, csrf: me.json().csrfToken as string };
+}
 
 async function cleanup() {
   if (userId) await lilyPrisma.lilyUser.deleteMany({ where: { id: userId } });
   if (rewardId) await lilyPrisma.lilyReward.deleteMany({ where: { id: rewardId } });
   if (orderId) await lilyPrisma.lilyOrder.deleteMany({ where: { id: orderId } });
   if (levelId) await lilyPrisma.lilyLevel.deleteMany({ where: { id: levelId } });
+  if (adminUserId) {
+    await lilyPrisma.lilySession.deleteMany({ where: { userId: adminUserId } });
+    await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: adminUserId } });
+    await lilyPrisma.lilyUser.delete({ where: { id: adminUserId } });
+  }
   userId = "";
   levelId = "";
   rewardId = "";
   orderId = "";
+  adminUserId = "";
 }
 
 afterEach(cleanup);
-afterAll(async () => { await cleanup(); });
+afterAll(async () => { await cleanup(); await app?.close(); });
 
 describe("progressão de níveis e LilyCoins", () => {
   it("fornece a sequência editável de 21 níveis com a curva inicial documentada", () => {
@@ -33,6 +66,22 @@ describe("progressão de níveis e LilyCoins", () => {
     expect(levels[2]).toMatchObject({ name: "Bronze III", requiredPoints: 532 });
     expect(levels.at(-1)).toMatchObject({ name: "Elite", requiredPoints: 10_000_000 });
     expect(levels.every((level, index) => index === 0 || level.requiredPoints > levels[index - 1].requiredPoints)).toBe(true);
+  });
+
+  it("salva um nível inicial de 0 pontos e aponta com clareza um limiar duplicado", async () => {
+    const { server, cookie, csrf } = await registerAdmin();
+    const initialLevels = [
+      { id: crypto.randomUUID(), name: "Sem Nível", sortOrder: 0, requiredPoints: 0, lilyCoins: 0, benefits: [], iconMediaId: null, active: true },
+      { id: crypto.randomUUID(), name: "Bronze I", sortOrder: 1, requiredPoints: 100, lilyCoins: 0, benefits: [], iconMediaId: null, active: true }
+    ];
+    const headers = { cookie, origin, "x-lily-csrf": csrf };
+    const saved = await server.inject({ method: "PUT", url: "/api/v1/lily/admin/loyalty/levels", headers, payload: { levels: initialLevels, roundingMode: "floor" } });
+    expect(saved.statusCode, JSON.stringify(saved.json())).toBe(200);
+    const duplicated = await server.inject({ method: "PUT", url: "/api/v1/lily/admin/loyalty/levels", headers, payload: {
+      levels: [initialLevels[0], { ...initialLevels[1], requiredPoints: 0 }], roundingMode: "floor"
+    } });
+    expect(duplicated.statusCode).toBe(400);
+    expect(duplicated.json().error).toContain("“Sem Nível” e “Bronze I”");
   });
 
   it("soma pontos, reconhece o nível alcançado e registra LilyCoins de nível sem duplicar", async () => {
