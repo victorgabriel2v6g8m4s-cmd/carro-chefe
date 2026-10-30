@@ -2,12 +2,12 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-whatsapp-ai-contrast
+- branch: codex/cooklily-whatsapp-ai-contrast (merged)
 - base_branch: cooklily/canonical
 - base_sha_verified: c02ed62a89350053679a5b6ba2c59b88a99494e9
-- head_sha_verified: d7c32e4
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/279 (draft)
-- last_verified_at: 2026-10-30 17:20 America/Sao_Paulo
+- head_sha_verified: 97170803b79430c8dc5d6df452b215d3dbe23225
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/279 (merged)
+- last_verified_at: 2026-10-30 14:16 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -18,6 +18,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 - PR #278 integrado por squash em `cooklily/canonical` no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`; todos os checks GitHub passaram.
 - Release `c02ed62a89350053679a5b6ba2c59b88a99494e9` implantada em 30/10/2026. Migration `20261030160000_lily_whatsapp_ai_inbox` aplicada no banco real após backup verificado; health interno/externo, Nginx, gates e serviço passaram.
+- A verificação visual inicial encontrou texto de baixo contraste nos painéis escuros; PR #279 foi integrado em `cooklily/canonical` por squash no SHA `97170803b79430c8dc5d6df452b215d3dbe23225`, com correção CSS e roadmap reconciliado.
 - Antes da primeira implantação, VPS confirmou SHA `080eae62ae8615887b8e45f58038f6daad2de399`; canonical integrou PR #278 no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e publicou o checkpoint `c02ed62` antes do deploy.
 - Suíte na VPS: 80 arquivos, 420 testes passaram. Banco backup pré-release: Lily 2,674,688 bytes, SHA-256 registrado no log de deploy; backup verificado.
 - Ambiente da VPS verificado sem imprimir segredos: inbox, agente, consulta por embeddings e orçamento diário desligados/ausentes; credenciais Meta existentes; segredo OpenAI, chave de cifra e retenção não configurados.
@@ -31,7 +32,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 ## Em andamento
 
 - Deploy do SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e migration real pendentes.
-- Inbox visualizado no domínio real com sessão autenticada pelo navegador integrado; estados desligados e vazio confirmados. A validação mobile revelou contraste insuficiente nos cartões escuros; PR #279 corrige, aguardando CI e redeploy para homologação final mobile/desktop.
+- Inbox visualizado no domínio real com sessão autenticada pelo navegador integrado; estados desligados e vazio confirmados. PR #279 corrige contraste; deploy do SHA `9717080` e homologação final desktop/mobile pendentes.
 - Aprovar retenção e transparência do envio de consultas à OpenAI antes de ativar flags em qualquer WABA.
 
 ## Gates e testes
@@ -44,10 +45,11 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 - `npm run db:deploy:lily` em cópia descartável do banco local migrado: migration AI aplicada. Banco original não foi usado nesse teste.
 - `git diff --check`: sem erros de whitespace.
 - Após o ajuste visual: `npm run check`, `npm test` (80 arquivos; 417 passaram, 3 ignorados), `npm run build` sequencial e `git diff --check` passaram. Build concorrente inicial falhou por disputa de geração dos clientes Prisma, foi repetido sequencialmente e passou.
+- PR #279: todos os gates passaram (Quality Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux).
 
 ## Migrations
 
-- `20261030160000_lily_whatsapp_ai_inbox`: aplicada em cópia descartável e no banco de produção após backup verificado; adiciona tabelas de inbox, jobs, preferências, KB/vetores e uso, além de chave de idempotência.
+- `20261030160000_lily_whatsapp_ai_inbox`: aplicada em cópia descartável e no banco de produção após backup verificado; adiciona tabelas de inbox, jobs, preferências, KB/vetores e uso, além de chave de idempotência. Correção CSS não altera schema.
 
 ## Bloqueios/riscos
 
@@ -56,9 +58,9 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 ## Homologação/dependências externas
 
-- VPS no release `c02ed62`; verificação inicial no domínio real concluída. A homologação responsiva final depende do PR #279.
+- VPS continua no release `c02ed62`; o commit canônico `9717080` já está integrado e aguarda deploy e homologação responsiva final.
 - Quando houver UI, homologação exclusivamente no navegador integrado do Codex.
 
 ## Próxima ação exata
 
-Aguardar CI do PR #279; se verde, marcar pronto e integrar por squash, conferir o SHA canônico, executar `sudo cc deploy canonical`, então confirmar contraste/layout de `/lilyacai/painel/whatsapp` em desktop e mobile pelo navegador integrado, mantendo flags de IA desligadas.
+Publicar o checkpoint atualizado em `cooklily/canonical`, implantar o HEAD canônico resultante com `sudo cc deploy canonical`, e confirmar contraste/layout de `/lilyacai/painel/whatsapp` em desktop e mobile pelo navegador integrado, mantendo flags de IA desligadas.
