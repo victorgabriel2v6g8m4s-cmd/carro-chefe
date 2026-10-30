@@ -5,8 +5,8 @@
 - branch: codex/cooklily-aggregate-gzip-20
 - base_branch: cooklily/canonical
 - base_sha_verified: 4f1d09a5d5f5255bad8f2f816c285e34abdebafa
-- head_sha_verified: 4f1d09a5d5f5255bad8f2f816c285e34abdebafa
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a)
+- head_sha_verified: 72102e64957917fd5851cb34ae80139725d8f187
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (open draft; CI pending)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
