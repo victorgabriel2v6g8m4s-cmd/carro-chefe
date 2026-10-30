@@ -5,9 +5,9 @@
 - branch: `codex/lily-admin-catalog-modularization`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `8526d5d0e6ec18b7495e78b4c146aa1f25c68a3d`
-- head_sha_verified: `8e27988` (local implementation commit; checkpoint update follows)
-- pull_requests: PR #289 (draft; CI pending)
-- last_verified_at: 2026-10-30 18:42 America/Sao_Paulo
+- head_sha_verified: `cec18f8ea63f43696b8c6b2d34208ca3d7c8d0c0`
+- pull_requests: PR #289 merged by squash; CI passed on Node 20/24 and all required jobs
+- last_verified_at: 2026-10-30 18:46 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -23,6 +23,7 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 - Primeira fatia extraída: `ProductEditor`/formulário/variações em `features/admin/catalog/ProductEditor.tsx`; resumo de produto em `types.ts`; formatação monetária em `product-money.ts`; controle compartilhado de alergênicos em `features/admin/AllergenAdminFields.tsx`.
 - `admin.tsx` agora compõe e usa esses módulos; as outras telas administrativas permanecem inalteradas.
 - Roadmap atualizado com a homologação de #284/#285/#288 e marca a auditoria modular como parcial, sem declarar concluída a reestruturação ampla.
+- Commit `cec18f8ea63f43696b8c6b2d34208ca3d7c8d0c0` integrou a primeira fatia modular em `cooklily/canonical` via PR #289.
 
 ## Em andamento
 
@@ -37,7 +38,7 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 - `npm test -- --maxWorkers=1`: passou, 80 arquivos/420 testes, 3 ignorados.
 - `npm run build`: passou; bundle CookLily 188.70/189 KiB JS gzip, 224.02/225 KiB JS+CSS gzip, budget OK.
 - `git diff --check`: passou.
-- PR #289 foi aberta como draft; CI, revisão, merge, deploy e homologação dessa fatia ainda pendentes.
+- CI e merge do PR #289 passaram; deploy e homologação dessa fatia ainda pendentes.
 
 ## Migrations
 
@@ -55,4 +56,4 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 
 ## Próxima ação exata
 
-Revisar o diff, executar preflight atualizado, commitar e abrir PR draft para a primeira fatia modular, e acompanhar CI/revisão antes do merge autorizado.
+Publicar este checkpoint no canonical e executar `sudo cc deploy canonical`; depois homologar o modal de edição em desktop e mobile pelo navegador integrado.
