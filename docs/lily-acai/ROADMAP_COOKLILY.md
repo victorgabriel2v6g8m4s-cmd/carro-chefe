@@ -6,7 +6,7 @@
 **Site real:** `https://carrochefe.com/lilyacai/*`  
 **Documento atualizado:** 30/10/2026
 
-**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`), PR #278 (fundação de inbox/IA), PR #279 e PR #280 (correções de contraste), mais checkpoint `b4673469` em `cooklily/canonical`. O release atual da aplicação na VPS é `b4673469`; a inbox em `/lilyacai/painel/whatsapp` foi revisada no navegador integrado em desktop (1365×900) e mobile (390×844), sem usar conversas de clientes. A fundação está implantada, mas a operação real do agente continua bloqueada pelos gates listados abaixo. O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior e `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra evidências e pendências. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
+**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (release `080eae62`), PR #278 (fundação de inbox/IA), PRs #279/#280 (contraste), PR #281 (guia de configuração e navegação global) e PR #282 (correção de rótulos mobile). O release atual da aplicação na VPS é `97f1dfb6953168f5de4feb399f28ff2268df1324`; o painel `/lilyacai/painel` foi homologado no navegador integrado do Codex em desktop (1365×900) e mobile (390×844). A barra lateral está concluída e seus rótulos permanecem visíveis quando a navegação mobile é aberta; a operação real do agente continua bloqueada pelos gates de configuração e segurança listados abaixo. O checkpoint `docs/execution-checkpoints/cooklily-admin-sidebar-mobile-fix-2026-10-30.md` registra a última correção e a homologação; `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` mantém as dependências do agente. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
 
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
@@ -65,7 +65,7 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [ ] Priorizar configuração da loja, catálogo, disponibilidade, pedidos, pagamentos e estados operacionais.
 - [ ] Preservar RBAC, MFA, CSRF, auditoria, minimização de dados e isolamento por domínio.
 - [ ] Evitar segunda fonte de verdade para produtos, preços, estoque, pedidos, pagamentos ou financeiro quando o ERP assumir esses domínios.
-- [*] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita. Primeira implementação em curso nesta entrega; precisa passar CI, integração, deploy e homologação mobile/desktop.
+- [x] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita. Links mobile/desktop foram homologados no domínio real após os PRs #281/#282; a navegação mobile aberta exibe os nomes mesmo quando a barra está recolhida no desktop.
 - [ ] Tornar a gestão do catálogo progressiva: listar produtos com os dados mínimos e carregar no popup/editor somente as configurações do produto selecionado; reaproveitar a apresentação do cardápio do cliente como base da lista.
 - [ ] Carregar sob demanda sabores, adicionais, mídia, combinações e outras dependências apenas quando a operação selecionada precisar delas; manter feedback de carregamento, erro e salvamento.
 - [ ] Auditar arquivos grandes e separar páginas, componentes, hooks, tipos e serviços por responsabilidade, extraindo somente lógica compartilhada comprovada.
@@ -229,7 +229,7 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Aplicar rate limits, idempotency keys, validação de entrada, auditoria append-only, paginação e mensagens de erro estáveis.
 - [ ] Incluir documentação OpenAPI, SDK/exemplos mínimos, ambiente de homologação e testes de segurança antes de emitir credenciais de produção.
 
-Ordem: avançar a navegação lateral do painel (sem dependência de credenciais); em paralelo, o proprietário pode seguir o guia de configuração de WhatsApp. Só depois dos gates Meta/OpenAI/privacidade o atendimento IA pode ser homologado. Na sequência, priorizar a confirmação financeira real e ERP conforme os gates da Fase 1. MCP e API administrativa ficam em entregas próprias, depois de definidos e aprovados os limites de autonomia.
+Ordem: a navegação lateral do painel foi concluída sem depender de credenciais; em paralelo, o proprietário pode seguir o guia de configuração de WhatsApp. Só depois dos gates Meta/OpenAI/privacidade o atendimento IA pode ser homologado. Na sequência, priorizar a confirmação financeira real e ERP conforme os gates da Fase 1. MCP e API administrativa ficam em entregas próprias, depois de definidos e aprovados os limites de autonomia.
 
 ## Fase 5 — Expansão técnica
 - [ ] Planejar novas unidades, marcas, canais ou aumento de volume somente após estabilizar a operação atual.
