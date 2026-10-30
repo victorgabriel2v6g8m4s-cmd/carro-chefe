@@ -1,13 +1,13 @@
 # CookLily: gráficos semanais/mensais e histórico de pontos no dashboard
 
-- status: candidate
+- status: in_progress
 - owner: AG-DEV
-- branch: `codex/lily-dashboard-progress-history`
+- branch: `codex/lily-dashboard-budget-fix`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `ea16f4a`
-- head_sha_verified: `6824540c6a131e4757dd9ad54db4efaff033f0a6`
-- pull_requests: PR #293 open against `cooklily/canonical`; all listed CI checks passed on this head
-- last_verified_at: 2026-10-30 19:45 America/Sao_Paulo
+- base_sha_verified: `2fae845472cc0bb2700957997324edce6c491a31`
+- head_sha_verified: `2fae845472cc0bb2700957997324edce6c491a31` (base; UI trim not committed)
+- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; budget-fix PR not yet opened
+- last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -16,24 +16,28 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Concluído e persistido
 
-- Roadmap canônico consultado em `ea16f4a`; o próximo item de fidelidade sem dependência de configuração externa é melhorar gráficos e histórico do dashboard.
-- Contrato existente fornece 6 meses de categorias; a série diária pode ser calculada com os eventos já consultados, sem migration.
+- PR #293 foi integrado por squash na branch canônica como `2fae845472cc0bb2700957997324edce6c491a31`.
+- A tentativa de deploy desse SHA falhou no gate Linux do budget: JS gzip `189,08/189 KiB` (+0,08 KiB); o deploy fez rollback automático para o release `54d8b3600273366d46d47ef682f0ba503eca3712` antes de executar migrations reais.
+- Rebuild local após simplificação do painel passou: JS gzip `188,87/189 KiB`, CSS gzip `35,32/36 KiB`, JS+CSS gzip `224,19/225 KiB`.
+- `npm run check` passou e `npm run test:lily-ui` passou (25 arquivos/109 testes).
+- `npm test` concluiu seus prechecks e ficou sem progresso ao entrar no Vitest completo; foi interrompido após inspeção do processo. A confirmação completa permanece pendente no CI.
 
 ## Em andamento
 
-- Exibir no dashboard um controle acessível Semanal/Mensal para os gráficos de desempenho.
-- Calcular sete buckets diários em UTC no backend e manter a série mensal existente, sem migration.
+- Reduzir o custo do componente dos gráficos para recuperar margem no budget e validar no CI Linux antes de nova publicação.
+- Abrir PR de correção de budget contra a base canônica atual.
+- Após merge e CI verde, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
 
 ## Gates e testes
 
-- Preflight AG-DEV frontend e API: passou em `ea16f4a`.
-- Teste direcionado API: 2 arquivos/11 testes passaram.
+- Preflight AG-DEV frontend: passou contra a base `2fae845`.
 - `npm run test:lily-ui`: 25 arquivos/109 testes passaram.
-- `npm test`: 82 arquivos, 422 passaram e 3 ignorados.
 - `npm run check`: passou.
-- `npm run build`: passou; JS gzip 188,89/189 KiB, JS+CSS gzip 224,21/225 KiB.
-- CI no PR #293: Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
-- Merge, deploy e homologação no navegador integrado desktop/mobile: pendentes.
+- `npm run build`: passou localmente; JS gzip 188,87/189 KiB, JS+CSS gzip 224,19/225 KiB.
+- PR #293: CI Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
+- Deploy de `2fae845`: rollback confirmado por violação de 0,08 KiB no budget JS gzip; release anterior preservado.
+- `npm test` nesta correção: prechecks passaram, Vitest completo não emitiu progresso e foi interrompido; CI completo da nova PR pendente.
+- Novo merge, deploy e homologação desktop/mobile: pendentes.
 
 ## Migrations
 
@@ -50,4 +54,4 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Próxima ação exata
 
-Integrar PR #293 por squash; publicar o SHA canônico pela CLI `cc`; homologar no navegador integrado desktop e mobile; então marcar o roadmap concluído ou corrigir os problemas encontrados.
+Revisar/commitar a redução de bundle, abrir PR de correção contra `cooklily/canonical`, aguardar CI completo; somente se o gate Linux confirmar folga no budget, integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.

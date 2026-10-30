@@ -76,7 +76,7 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [x] Aumentar a altura útil do header, redimensionar os controles e aumentar a espessura/reduzir o comprimento da barra de nível; remover a porcentagem do header. PR #277, release `080eae62`.
 - [x] Ajustar o fundo do saldo de LilyCoins no header para alto contraste com o fundo do header. PR #277, release `080eae62`.
 - [x] Fazer o saldo de LilyCoins abrir o dashboard já posicionado nas missões; fazer a barra de níveis abrir o dashboard. PR #277, release `080eae62`.
-- [*] Profissionalizar o dashboard com gráfico alternável entre visão semanal e mensal. PR #293 implementa a série diária de sete dias e preserva a visão mensal dos últimos seis meses; CI passou, mas merge, deploy e homologação desktop/mobile no navegador real ainda estão pendentes.
+- [*] Profissionalizar o dashboard com gráfico alternável entre visão semanal e mensal. PR #293 foi integrado em `2fae845`; a primeira tentativa de deploy foi revertida pelo gate de budget JS gzip (`189,08/189 KiB`) antes de migrations. Uma correção pequena de bundle está em validação; deploy e homologação desktop/mobile no navegador real continuam pendentes.
 - [ ] Mostrar histórico de pontos com missões concluídas, pesquisas respondidas, LilyCoins e pontos recebidos.
 - [x] Adicionar card do nível atual que abre uma timeline de níveis equidistantes; permitir selecionar o nível e consultar as recompensas configuradas. PR #277, release `080eae62`.
 - [ ] Exibir regra/data da próxima reinicialização da temporada; a funcionalidade de temporadas ainda não está implementada.
