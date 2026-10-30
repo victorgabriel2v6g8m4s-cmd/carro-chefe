@@ -41,6 +41,14 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".header-actions .menu-icon { order: 4; }");
   });
 
+  it("carrega índice leve do catálogo e busca configuração só ao expandir um produto", () => {
+    expect(adminSource).toContain('loadCatalog="index"');
+    expect(adminSource).toContain("getLilyAdminProductEditor(summary.id)");
+    expect(adminSource).toContain("getLilyAdminCatalogIndex()");
+    expect(adminSource).toContain("getLilyAdminCatalog()");
+    expect(adminSource).toContain("Buscar produto");
+  });
+
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
     expect(mainSource).toContain('className="header-coins"');
     expect(mainSource).toContain('className="header-loyalty-progress"');

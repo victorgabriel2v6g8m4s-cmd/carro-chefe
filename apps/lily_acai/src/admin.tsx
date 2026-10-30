@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { getLilyAdminCatalog, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
+import { getLilyAdminCatalog, getLilyAdminCatalogIndex, getLilyAdminProductEditor, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { AdminAutosaveStatus, useAdminAutosave } from "./features/admin/useAdminAutosave";
 import { ProductMediaEditor } from "./features/admin/ProductMediaEditor";
@@ -123,7 +123,7 @@ function ComponentAllergenEditor(props: {
   </details>;
 }
 
-function useAdminData(loadCatalog: boolean) {
+function useAdminData(loadCatalog: boolean | "index") {
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<Record<string, any> | null>(null);
   const [error, setError] = useState("");
@@ -135,7 +135,7 @@ function useAdminData(loadCatalog: boolean) {
       const current = await getLilySession();
       if (!["staff", "admin"].includes(current.user.role)) throw new Error("Sua conta não possui perfil staff CookLily.");
       setSession(current);
-      if (loadCatalog) setData(await getLilyAdminCatalog());
+      if (loadCatalog) setData(loadCatalog === "index" ? await getLilyAdminCatalogIndex() : await getLilyAdminCatalog());
     } catch (cause) {
       if (!data) {
         setSession(null);
@@ -153,7 +153,7 @@ function useAdminData(loadCatalog: boolean) {
 
 export function AdminGate({ children, loadCatalog = false }: {
   children: (state: ReturnType<typeof useAdminData>) => ReactNode;
-  loadCatalog?: boolean;
+  loadCatalog?: boolean | "index";
 }) {
   const state = useAdminData(loadCatalog);
   if (state.loading) return <section className="admin-state"><LilyLoadingSpinner size="lg" label="Carregando painel"/></section>;
@@ -248,7 +248,45 @@ function ProductVariantEditor({ variant, index, variants, csrf }: {
   </div>;
 }
 
-function ProductEditor({ product, data, csrf, refresh, setError }: {
+function ProductEditor({ product: summary, csrf, refresh, setError }: {
+  product: any;
+  csrf: string;
+  refresh: () => Promise<void>;
+  setError: (value: string) => void;
+}) {
+  const [editorData, setEditorData] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [open, setOpen] = useState(false);
+  async function loadEditor() {
+    if (editorData || loading) return;
+    setLoading(true);
+    setLoadError("");
+    try {
+      setEditorData(await getLilyAdminProductEditor(summary.id));
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : "Não foi possível carregar as configurações do produto.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  return <details className="admin-product admin-product-index" open={open} onToggle={(event) => {
+    const nextOpen = event.currentTarget.open;
+    setOpen(nextOpen);
+    if (nextOpen) void loadEditor();
+  }}>
+    <summary>
+      {summary.cover?.url && <img src={summary.cover.url} alt="" loading="lazy" width="48" height="48" style={{ borderRadius: 10, objectFit: "cover" }} />}
+      <span><strong>{summary.displayName}</strong><small>{summary.descriptiveName || summary.category.name} · {summary.variants.length} opção(ões)</small></span>
+      <span className={summary.isPurchasable ? "state-live" : "state-off"}>{summary.isPurchasable ? "Disponível" : "Esgotado/pausado"}</span>
+    </summary>
+    {loading && <p className="admin-inline-loading" role="status">Carregando configurações de {summary.displayName}…</p>}
+    {loadError && <p className="error" role="alert">{loadError} <button className="button ghost" type="button" onClick={(event) => { event.preventDefault(); void loadEditor(); }}>Tentar novamente</button></p>}
+    {editorData && <div className="admin-product-loaded"><ProductEditorForm product={editorData.product} data={editorData} csrf={csrf} refresh={refresh} setError={setError} /></div>}
+  </details>;
+}
+
+function ProductEditorForm({ product, data, csrf, refresh, setError }: {
   product: any;
   data: Record<string, any>;
   csrf: string;
@@ -1063,8 +1101,51 @@ function CommercialEditor({ data, csrf, refresh, setError }: any) {
   </details>;
 }
 
+function CatalogGlobalSettings({ csrf, refresh, setError }: { csrf: string; refresh: () => Promise<void>; setError: (value: string) => void }) {
+  const [settings, setSettings] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setErrorMessage] = useState("");
+  async function load() {
+    if (settings || loading) return;
+    setLoading(true);
+    setErrorMessage("");
+    try { setSettings(await getLilyAdminCatalog()); }
+    catch (cause) { setErrorMessage(cause instanceof Error ? cause.message : "Não foi possível carregar os cadastros globais."); }
+    finally { setLoading(false); }
+  }
+  return <details className="admin-create admin-catalog-settings" onToggle={(event) => { if (event.currentTarget.open) void load(); }}>
+    <summary>Cadastros globais · sabores, adicionais, combos e ofertas</summary>
+    {loading && <p className="admin-inline-loading" role="status">Carregando cadastros globais…</p>}
+    {error && <p className="error" role="alert">{error} <button className="button ghost" type="button" onClick={(event) => { event.preventDefault(); void load(); }}>Tentar novamente</button></p>}
+    {settings && <>
+      <FlavorAddonEditor data={settings} csrf={csrf} refresh={refresh} setError={setError} />
+      <CommercialEditor data={settings} csrf={csrf} refresh={refresh} setError={setError} />
+    </>}
+  </details>;
+}
+
+function ProductCatalogIndex({ products, csrf, refresh, setError }: { products: any[]; csrf: string; refresh: () => Promise<void>; setError: (value: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const categories = [...new Map(products.map((product) => [product.category.id, product.category])).values()];
+  const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+  const visibleProducts = products.filter((product) => (!categoryId || product.category.id === categoryId)
+    && (!normalizedQuery || `${product.displayName} ${product.descriptiveName ?? ""} ${product.category.name}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
+  return <>
+    <div className="admin-form-grid compact">
+      <label>Buscar produto<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nome ou categoria" /></label>
+      <label>Categoria<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Todas as categorias</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+      <small aria-live="polite">{visibleProducts.length} de {products.length} produtos</small>
+    </div>
+    <div className="admin-product-list" style={{ marginTop: 14 }}>
+      {visibleProducts.map((product) => <ProductEditor key={product.id} product={product} csrf={csrf} refresh={refresh} setError={setError} />)}
+      {visibleProducts.length === 0 && <p className="admin-empty-state">Nenhum produto corresponde à busca.</p>}
+    </div>
+  </>;
+}
+
 export function AdminCatalog() {
-  return <AdminGate loadCatalog>{({ data, session, error, refresh, setError }) => <section className="admin-page wide">
+  return <AdminGate loadCatalog="index">{({ data, session, error, refresh, setError }) => <section className="admin-page wide">
     <div className="admin-heading">
       <div><span className="eyebrow">Entrega 05</span><h1>Cardápio administrável</h1><p>Alterações publicadas refletem no cardápio sem rebuild.</p></div>
       <div className="admin-actions"><a className="button ghost" href={`${import.meta.env.BASE_URL}painel`}>Resumo</a><a className="button ghost" href={`${import.meta.env.BASE_URL}cardapio`} target="_blank" rel="noreferrer">Preview</a></div>
@@ -1072,11 +1153,8 @@ export function AdminCatalog() {
     {error && <p className="error" role="alert">{error}</p>}
     <CreateProduct data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
     <CategoryEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
-    <FlavorAddonEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
-    <CommercialEditor data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
-    <div className="admin-product-list">
-      {data!.products.map((product: any) => <ProductEditor key={product.id} product={product} data={data!} csrf={session!.csrfToken} refresh={refresh} setError={setError} />)}
-    </div>
+    <CatalogGlobalSettings csrf={session!.csrfToken} refresh={refresh} setError={setError} />
+    <ProductCatalogIndex products={data!.products} csrf={session!.csrfToken} refresh={refresh} setError={setError} />
   </section>}</AdminGate>;
 }
 

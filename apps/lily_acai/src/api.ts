@@ -320,6 +320,16 @@ export async function getLilyAdminCatalog() {
   return parseResponse<Record<string, any>>(response);
 }
 
+export async function getLilyAdminCatalogIndex() {
+  const response = await fetch("/api/v1/lily/admin/catalog/index", { credentials: "same-origin" });
+  return parseResponse<Record<string, any>>(response);
+}
+
+export async function getLilyAdminProductEditor(productId: string) {
+  const response = await fetch(`/api/v1/lily/admin/products/${encodeURIComponent(productId)}/editor`, { credentials: "same-origin" });
+  return parseResponse<Record<string, any>>(response);
+}
+
 export async function lilyAdminJson<T>(
   path: string,
   method: "POST" | "PATCH" | "PUT",

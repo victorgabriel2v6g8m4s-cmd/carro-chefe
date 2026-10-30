@@ -1,12 +1,12 @@
 # Performance e modularização CookLily
 
-- status: completed
+- status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-bundle-budget-50
+- branch: codex/cooklily-aggregate-gzip-20
 - base_branch: cooklily/canonical
-- base_sha_verified: 6140830db418a85777a24ce527a20ec1f2a0104c
-- head_sha_verified: 9192cd35c4fdf19b8e0bd1717e4a9e25405b0464
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a)
+- base_sha_verified: 4f1d09a5d5f5255bad8f2f816c285e34abdebafa
+- head_sha_verified: 72102e64957917fd5851cb34ae80139725d8f187
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (open draft; CI pending)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
@@ -61,6 +61,27 @@
 - PR integrado; SSH key fingerprint local conferido com a chave previamente autorizada pelo proprietário.
 - O catálogo administrativo continua sem o fluxo de índice leve/detalhe por produto; não foi implementado neste ciclo de budget. Nenhuma mudança de contrato/API faz parte dos PRs desta entrega.
 
-## Próxima ação exata
+## Retomada solicitada em 2026-10-29
 
-1. Nenhuma ação pendente para o critério medido da carga inicial; checkpoint publicado na canonical. Uma meta separada de redução agregada de 20% em todos os chunks exigiria novo ciclo, pois o agregado atual reduziu 18,7%.
+- O proprietário esclareceu que a redução de 20% precisa ser medida sobre a soma gzip dos 35 chunks, comparada ao baseline `219.72 KiB` (`224,993` bytes); o limite é estritamente menor que `179,995` bytes, ou no máximo `179,994` bytes inteiros. A medição anterior `178.57 KiB` (`182,855` bytes) não alcança a condição; é preciso reduzir pelo menos `2,861` bytes nesta medida.
+- Depois de alcançar o limite agregado, iniciar o próximo item técnico de roadmap pendente nesta área: catálogo administrativo progressivo, com lista leve e detalhe/configuração do produto carregados sob demanda. Integrar, implantar na VPS, homologar no domínio em desktop/mobile pelo IAB, corrigir e repetir até aceite.
+- Retomada começa em `cooklily/canonical` SHA `4f1d09a5d5f5255bad8f2f816c285e34abdebafa`; aplicação implantada continua `6bfcf79279998614454c72e462b87cbcc43a053f` até novo deploy.
+- Verificação desta retomada: uma variante experimental de chunking emitiu 33 chunks JS com 181,443 bytes gzip (177.19 KiB), redução de 19.36%, e foi descartada por não atingir a meta. A configuração original, no rebuild limpo, emite 35 chunks JS: soma gzip exata 182,855 bytes (178.57 KiB), redução de 18.73%; falta reduzir 2,861 bytes para chegar ao máximo 179,994. Grafo inicial 41,912 bytes, chunk maior 62,891 bytes. `npm run test:lily-ui` PASS: 21 arquivos, 96 testes.
+- Experimento Terser 5.51.2 com três passes, usando pacote local no `node_modules` ignorado, resultou em 181,999 bytes e foi descartado; configuração retornou ao minificador padrão. Reorganizar arquivos compartilhados de perfil/recorte e phone formatter não gerou economia relevante e foi revertido. Estratégia atual permanece com divisão por rotas e `shared-app minShareCount:2`; experimentos que tornavam o admin eager ou excediam chunk inicial/largest não foram aceitos.
+
+## Próximo item autorizado pelo proprietário
+
+- Em 2026-10-29, o proprietário autorizou iniciar o próximo item do roadmap antes de resolver a meta agregada de gzip. A meta continua pendente e não deve ser reportada como atingida.
+- Implementação do catálogo progressivo em andamento: `/admin/catalog/index` retorna categorias e resumos de produto, `/admin/products/:id/editor` exige staff e retorna configuração de um produto, e `/admin/catalog` legado continua disponível para resumo geral/mídias e para a área de cadastros globais carregada só quando expandida.
+- Interface com busca por nome/categoria, filtro de categoria, contagem de resultados e detalhe expansível; só dispara busca do editor ao abrir o produto. Nenhuma migration.
+- Gates do item: `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS após retirar estilos CSS que excediam o budget; budget Lily PASS: JS 566.82 KiB raw / 179.47 KiB gzip, inicial 40.99 KiB, maior chunk 61.42 KiB; CSS 170.75 KiB raw / 33.88 KiB gzip; JS+CSS 213.35 KiB gzip; `git diff --check` PASS.
+- Novos testes de contrato verificam dados reduzidos no índice, detalhe específico e bloqueio a clientes. `catalog.test.ts` PASS 16/16; UI PASS 21 arquivos, 97 testes.
+- PR, CI, merge, deploy VPS e homologação integrada desktop/mobile ainda pendentes nesta etapa.
+- PR #264 passou 7/7 checks no Actions run `40986990923` para o head `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe Ubuntu/Windows e Workbook Snapshot: PASS. PR pronta e mergeável; próximo passo é squash merge.
+
+### Próxima ação exata
+
+1. Abrir PR draft para `cooklily/canonical`, aguardar CI e integrar o catálogo progressivo após CI verde.
+2. Implantar SHA integrado com `sudo cc deploy <sha-completo>` e registrar os dados reais do deploy.
+3. Homologar o editor no domínio em desktop e mobile somente pelo Codex IAB; corrigir e repetir até aceite.
+4. Retomar a redução agregada de gzip até o limite `<=179,994` bytes, depois de fechar este item, e atualizar o status do checkpoint com ambos os resultados.
