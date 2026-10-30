@@ -5,7 +5,7 @@
 - branch: codex/cooklily-dashboard-ranking-profile
 - base_branch: cooklily/canonical
 - base_sha_verified: a9b59e7e0ffdd037317e9883a3382f092fe820e4
-- head_sha_verified: a9b59e7e0ffdd037317e9883a3382f092fe820e4 (alterações locais ainda não commitadas)
+- head_sha_verified: 8724a58 (feature commit)
 - pull_requests: nenhum
 - last_verified_at: 2026-10-30 12:17 America/Sao_Paulo
 - interruption_state: none
