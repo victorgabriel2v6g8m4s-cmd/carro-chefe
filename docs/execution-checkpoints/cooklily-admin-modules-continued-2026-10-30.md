@@ -1,13 +1,13 @@
 # CookLily: modularização das telas administrativas do catálogo
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: `codex/lily-admin-modules-continued`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `f3e83f8`
-- head_sha_verified: `3ec266de587069f3c011786f3fc2d7ef1f8dc74d`
+- head_sha_verified: `54d8b3600273366d46d47ef682f0ba503eca3712`
 - pull_requests: PR #291 merged by squash; CI passed on Node 20/24 and all required jobs
-- last_verified_at: 2026-10-30 19:10 America/Sao_Paulo
+- last_verified_at: 2026-10-30 19:17 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -21,6 +21,9 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 - Extraídos os componentes listados para módulos coesos sob `features/admin/catalog/`; utilitários de autosave e editor de alergênicos também foram isolados.
 - `admin.tsx` foi reduzido a 111 linhas e preserva o acesso lazy aos cadastros globais e ao detalhe por produto.
 - PR #291 integrou essa modularização em `cooklily/canonical` via squash commit `3ec266de587069f3c011786f3fc2d7ef1f8dc74d`.
+- Deploy concluído no SHA `54d8b3600273366d46d47ef682f0ba503eca3712`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261030-220838-54d8b3600273.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-220838-54d8b3600273.evidence`.
+- Backup core/Lily verificado, nenhuma migration pendente, readiness e smoke HTTPS externos aprovados.
+- Navegador integrado no domínio real: desktop 1365×900 e mobile 390×844; 35 cards em ambos, formulários de novo produto e categorias abertos sem envio, cadastros globais lazy carregados e editor LilyMix aberto com 114 labels. Modal mobile 337 px, largura do documento 375 px, nenhum erro de console; modal fechado sem salvar e viewport restaurado.
 - Auditoria dirigida encontrou outros arquivos grandes fora do painel (catálogo público, API, entrada principal e páginas); o item amplo do roadmap continua parcial.
 
 ## Em andamento
@@ -35,7 +38,7 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 - `npm test -- --maxWorkers=1`: passou, 81 arquivos/421 testes, 3 ignorados.
 - `npm run build`: passou; 188.59 KiB JS gzip e 223.91 KiB JS+CSS gzip, budgets OK.
 - `git diff --check`: passou.
-- CI e merge passaram; deploy e homologação ainda pendentes.
+- CI, merge, deploy e homologação passaram.
 
 ## Migrations
 
@@ -53,4 +56,4 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 
 ## Próxima ação exata
 
-Publicar este checkpoint no canonical e executar `sudo cc deploy canonical`; após o deploy, homologar criação, categorias, cadastros globais, busca/listagem e editor de produto em desktop e mobile.
+Publicar este checkpoint final no canonical. O item global de modularização continua parcial até auditar os arquivos grandes fora do painel administrativo, conforme roadmap.
