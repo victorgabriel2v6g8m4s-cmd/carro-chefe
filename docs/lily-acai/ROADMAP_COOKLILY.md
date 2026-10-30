@@ -212,7 +212,7 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Validar WABA, número, templates aprovados e segredos no ambiente protegido; comprovar handshake e entrega/recebimento em número de homologação consentido.
 - [*] Separar mensagens operacionais das promocionais, implementar controles de opt-in/opt-out e janela, com retries idempotentes; concluir a validação de consentimentos, textos e operação em ambiente real.
 - [x] Implementar inbox, processamento inbound durável e transferências humanas; restringir histórico à equipe autenticada e permitir resposta/expurgo. Atribuição/SLA, busca e rotina operacional permanecem parciais no item 3.
-- [x] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails, contexto mínimo, APIs internas e fallback humano; validar abuso/injeção e limites em ambiente seguro antes do piloto. O agente segue desativado.
+- [*] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails, contexto mínimo, APIs internas e fallback humano. A fundação e os testes de guardrail estão no código; avaliação offline ampliada de abuso/injeção, autorização e orçamento ainda precisa ser registrada antes do piloto. O agente segue desativado.
 - [x] Implementar base curada de conhecimento, embeddings de conteúdo público, cache e busca vetorial isolada. Embeddings de consultas do cliente dependem de autorização/consentimento explícito e continuam desativados.
 - [ ] Avaliar offline cenários benignos e adversariais, então testar ponta a ponta em número autorizado de homologação; liberar para clientes somente após revisão dos gates de privacidade, segurança, operação e custo.
 
