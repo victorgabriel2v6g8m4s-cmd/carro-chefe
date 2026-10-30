@@ -5,8 +5,8 @@
 - branch: codex/cooklily-aggregate-gzip-20
 - base_branch: cooklily/canonical
 - base_sha_verified: 4f1d09a5d5f5255bad8f2f816c285e34abdebafa
-- head_sha_verified: 72102e64957917fd5851cb34ae80139725d8f187
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (open draft; CI pending)
+- head_sha_verified: 043c93544da013c0081eab7fe146efafb1d20da7
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
@@ -76,12 +76,13 @@
 - Interface com busca por nome/categoria, filtro de categoria, contagem de resultados e detalhe expansível; só dispara busca do editor ao abrir o produto. Nenhuma migration.
 - Gates do item: `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS após retirar estilos CSS que excediam o budget; budget Lily PASS: JS 566.82 KiB raw / 179.47 KiB gzip, inicial 40.99 KiB, maior chunk 61.42 KiB; CSS 170.75 KiB raw / 33.88 KiB gzip; JS+CSS 213.35 KiB gzip; `git diff --check` PASS.
 - Novos testes de contrato verificam dados reduzidos no índice, detalhe específico e bloqueio a clientes. `catalog.test.ts` PASS 16/16; UI PASS 21 arquivos, 97 testes.
-- PR, CI, merge, deploy VPS e homologação integrada desktop/mobile ainda pendentes nesta etapa.
-- PR #264 passou 7/7 checks no Actions run `40986990923` para o head `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe Ubuntu/Windows e Workbook Snapshot: PASS. PR pronta e mergeável; próximo passo é squash merge.
+- PR #264 passou 7/7 checks no Actions run `40986990923` para o código `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; squash merge concluído em `043c93544da013c0081eab7fe146efafb1d20da7`.
+- SHA canonical confirmado após fetch: `043c93544da013c0081eab7fe146efafb1d20da7`. Deploy VPS pendente; estado consultado antes do deploy: current/canonical `6bfcf79279998614454c72e462b87cbcc43a053f`, serviço ativo, Nginx OK.
+- Chave SSH verificada sem revelar segredo: fingerprint pública bate com `SHA256:/Fl2E1ADG3RPCCNxS65PRbmN1f07jyCTYsPesSDd2B8` informado pelo proprietário. O comando `sudo cc status` mostrou um erro de `git rev-parse` fora de um repositório após reportar o status atual; deploy pelo SHA completo é o próximo passo autorizado.
 
 ### Próxima ação exata
 
-1. Abrir PR draft para `cooklily/canonical`, aguardar CI e integrar o catálogo progressivo após CI verde.
-2. Implantar SHA integrado com `sudo cc deploy <sha-completo>` e registrar os dados reais do deploy.
-3. Homologar o editor no domínio em desktop e mobile somente pelo Codex IAB; corrigir e repetir até aceite.
-4. Retomar a redução agregada de gzip até o limite `<=179,994` bytes, depois de fechar este item, e atualizar o status do checkpoint com ambos os resultados.
+1. Publicar SHA `043c93544da013c0081eab7fe146efafb1d20da7` via `sudo cc deploy 043c93544da013c0081eab7fe146efafb1d20da7`.
+2. Homologar o editor no domínio em desktop e mobile somente pelo Codex IAB; corrigir e repetir até aceite.
+3. Atualizar checkpoint com evidência de deploy e screenshots; abrir PR de documentação se necessário para persistir o resultado.
+4. Retomar a redução agregada de gzip até o limite `<=179,994` bytes e só então marcar todo o ciclo como concluído.
