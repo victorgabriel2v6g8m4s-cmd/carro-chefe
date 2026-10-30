@@ -4,7 +4,7 @@
 - owner: AG-DEV
 - branch: codex/cooklily-bundle-budget-50
 - base_branch: cooklily/canonical
-- base_sha_verified: 6bfcf79279998614454c72e462b87cbcc43a053f
+- base_sha_verified: 6140830db418a85777a24ce527a20ec1f2a0104c
 - head_sha_verified: 9192cd35c4fdf19b8e0bd1717e4a9e25405b0464
 - pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a)
 - last_verified_at: 2026-10-29
@@ -42,6 +42,7 @@
 - PR #262 squash-merged depois de todos os 7 checks passarem. SHA integrado: `dda8051e3f271c6e8cc4da8384d700c9867647de`.
 - CI: Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe Ubuntu/Windows e Workbook Snapshot: PASS.
 - Deploy final concluído em 2026-10-29 local / 2026-10-30 UTC, release SHA `6bfcf79279998614454c72e462b87cbcc43a053f`; previous SHA `e2fcb05ad426a0f3328321b1078be7bb3556e6ed`; readiness passou na tentativa 6 e external smoke passou na tentativa 1. Core e Lily tinham 12 e 38 migrations, sem pendências; backups foram verificados. Evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-001300-6bfcf7927999.evidence`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261030-001300-6bfcf7927999.log`.
+- Após a publicação deste registro, a canonical avançou somente o checkpoint para `6140830db418a85777a24ce527a20ec1f2a0104c`; o código implantado permanece `6bfcf79279998614454c72e462b87cbcc43a053f`.
 - Homologação no domínio real via exclusivamente Codex IAB: `/lilyacai/painel/fidelidade` carregou em 1365×900 e 390×844; console sem `error` ou `warn`. A primeira tentativa de reconectar às abas antigas falhou, mas a nova aba integrada carregou a tela e concluiu a validação visual. Não houve correções necessárias.
 - `npm run build:lily`: PASS após restaurar as experimentações, 35 assets JS, 563.47 KiB raw / 178.57 KiB gzip total, 40.93 KiB gzip inicial, chunk máximo 61.42 KiB; `npm run test:lily-budget`: 4/4 PASS; `git diff --check`: PASS. CI #263 7/7 PASS; deploy `6bfcf79` em produção.
 
