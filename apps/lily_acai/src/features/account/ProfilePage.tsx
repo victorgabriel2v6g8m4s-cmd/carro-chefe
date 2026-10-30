@@ -5,7 +5,6 @@ import {
   confirmLilyMfaSetup,
   getLilyMfaStatus,
   getLilyProfile,
-  getLilyProfileReels,
   getLilyRanking,
   getLilySession,
   getLilySessions,
@@ -24,13 +23,11 @@ import {
 import { formatBrazilianPhone } from "./phone-format";
 import { openImageCropper } from "../../image-crop-editor";
 import { LilyLoadingSpinner } from "../../loading-spinner";
-import { VipProfileSection } from "./VipProfileSection";
 
-function ProfileAvatar({ name, url, large = false, vip = false }: { name: string | null; url: string | null; large?: boolean; vip?: boolean }) {
+function ProfileAvatar({ name, url, large = false }: { name: string | null; url: string | null; large?: boolean }) {
   const initial = (name?.trim()[0] || "C").toUpperCase();
-  return <span className={`${large ? "profile-avatar large" : "profile-avatar"}${vip ? " is-vip" : ""}`}>
+  return <span className={large ? "profile-avatar large" : "profile-avatar"}>
     {url ? <img src={url} alt={name ? `Foto de perfil de ${name}` : "Foto de perfil"} /> : <span aria-hidden="true">{initial}</span>}
-    {vip && <span className="vip-avatar-crown" aria-label="Cliente VIP">♛</span>}
   </span>;
 }
 
@@ -57,8 +54,6 @@ export function ProfilePage() {
   const [mfaSetup, setMfaSetup] = useState<{ secret: string; otpauthUri: string } | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [sessions, setSessions] = useState<LilySessionRow[]>([]);
-  const [savedReels, setSavedReels] = useState<Array<{ id: string; slug: string; title: string; category: string; coverUrl: string | null; altText: string }>>([]);
-  const [likedReels, setLikedReels] = useState<typeof savedReels>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
@@ -90,9 +85,6 @@ export function ProfilePage() {
     const [nextProfile, sessionPayload] = await Promise.all([getLilyProfile(), getLilySessions()]);
     setProfile(nextProfile);
     setSessions(sessionPayload.sessions);
-    const [liked, saved] = await Promise.all([getLilyProfileReels("liked").catch(() => ({ reels: [] })), getLilyProfileReels("saved").catch(() => ({ reels: [] }))]);
-    setLikedReels(liked.reels);
-    setSavedReels(saved.reels);
     if (["staff", "courier", "admin"].includes(current.user.role)) {
       setMfaStatus(await getLilyMfaStatus());
     } else {
@@ -335,7 +327,7 @@ export function ProfilePage() {
 
     <div className="profile-heading">
       <button ref={avatarTriggerRef} className="profile-avatar-trigger" type="button" aria-label="Ampliar foto de perfil" onClick={() => { setError(""); setMessage(""); setAvatarPreviewOpen(true); }}>
-        <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large vip={profile.user.vipStatus === "active"} />
+        <ProfileAvatar name={profile.user.displayName} url={profile.user.avatarUrl} large />
       </button>
       <input ref={avatarInputRef} className="profile-avatar-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher nova foto de perfil" onChange={handleAvatarFileChange} />
       <div className="profile-heading-copy">
@@ -349,18 +341,6 @@ export function ProfilePage() {
         <p>{formatBrazilianPhone(profile.user.phone)}</p>
       </div>
     </div>
-
-    <div className="profile-stats">
-      <article><strong>{profile.loyalty.points}</strong><span>pontos</span></article>
-      <article><strong>{profile.loyalty.orderCount}</strong><span>pedidos pontuados</span></article>
-      <article><strong>{profile.loyalty.rank ? `#${profile.loyalty.rank}` : "—"}</strong><span>{profile.loyalty.rankScope === "internal" ? "posição interna" : "posição pública"}</span></article>
-    </div>
-
-    <VipProfileSection />
-
-    {(likedReels.length > 0 || savedReels.length > 0) && <section className="profile-reels-collections">
-      {[{ title: "Reels curtidos", reels: likedReels }, { title: "Reels salvos", reels: savedReels }].filter((group) => group.reels.length > 0).map((group) => <div className="checkout-section" key={group.title}><h2>{group.title}</h2><div className="profile-reels-grid">{group.reels.map((reel) => <Link to={`/reels?produto=${encodeURIComponent(reel.slug)}`} key={reel.id} aria-label={`Abrir Reel ${reel.title}`}>{reel.coverUrl && <img src={reel.coverUrl} alt={reel.altText || reel.title} />}<strong>{reel.title}</strong><small>{reel.category}</small></Link>)}</div></div>)}
-    </section>}
 
     <div className="profile-grid">
       <form ref={editFormRef} id="profile-edit-form" className="checkout-section profile-edit-form" onSubmit={submit}>
@@ -459,11 +439,6 @@ export function ProfilePage() {
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="success" role="status">{message}</p>}
 
-    <div className="account-link-grid">
-      <Link to="/pedidos"><strong>Meus pedidos</strong><span>Veja seu histórico</span></Link>
-      <Link to="/enderecos"><strong>Endereços</strong><span>Gerencie entrega</span></Link>
-      <Link to="/ranking"><strong>Ranking CookLily</strong><span>Veja os clientes com mais pontos</span></Link>
-    </div>
     <div id="profile-code-redemption" />
     <div className="profile-logout-footer">
       <button className="profile-logout-link" type="button" onClick={handleLogout} disabled={logoutBusy}>
@@ -535,12 +510,12 @@ export function RankingPage() {
     {ranking === null ? <p>Carregando ranking...</p> : ranking.length === 0
       ? <section className="empty-state"><h2>O ranking está começando.</h2><p>Os clientes aparecerão aqui quando optarem por participar e acumularem pontos.</p></section>
       : <div className="ranking-list">
-        {ranking.map((row) => <article key={`${row.rank}-${row.displayName}`}>
+        {ranking.map((row) => <Link className="ranking-user-card" to={`/ranking/${encodeURIComponent(row.userId)}`} key={row.userId} aria-label={`Ver estatísticas de ${row.displayName}`}>
           <strong className="ranking-position">#{row.rank}</strong>
           <ProfileAvatar name={row.displayName} url={row.avatarUrl} />
-          <div><strong>{row.displayName}</strong><small>{row.orderCount} pedidos pontuados · {row.campaignCount} campanhas</small></div>
-          <strong>{row.points} pts</strong>
-        </article>)}
+          <div className="ranking-user-identity"><strong>{row.displayName}</strong><small>{row.currentLevel?.name ?? "Sem nível"}</small></div>
+          <div className="ranking-kpis"><span><strong>{row.points.toLocaleString("pt-BR")}</strong><small>pontos</small></span><span><strong>{row.orderCount}</strong><small>pedidos</small></span><span><strong>{row.missionCount}</strong><small>missões</small></span><span><strong>{row.surveyCount}</strong><small>pesquisas</small></span><span><strong>{row.referralCount}</strong><small>indicações</small></span><span><strong>{row.activeDays}</strong><small>dias ativos</small></span></div>
+        </Link>)}
       </div>}
   </section>;
 }

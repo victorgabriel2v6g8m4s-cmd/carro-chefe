@@ -549,12 +549,29 @@ export async function postLilyVipAction(action: "redeem" | "claim" | "consent" |
 }
 
 export type LilyRankingRow = {
+  userId: string;
   rank: number;
   displayName: string;
   avatarUrl: string | null;
   points: number;
   orderCount: number;
   campaignCount: number;
+  missionCount: number;
+  surveyCount: number;
+  referralCount: number;
+  activeDays: number;
+  currentLevel: { id: string; name: string; requiredPoints: number; iconUrl: string | null } | null;
+};
+
+export type LilyPublicLevel = { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: Array<{ id: string; label: string; kind?: string }>; iconUrl: string | null };
+export type LilyCustomerStats = {
+  user: { displayName: string; avatarUrl: string | null };
+  points: number;
+  currentLevel: { id: string; name: string; requiredPoints: number; iconUrl: string | null } | null;
+  totals: { missions: number; activity: number; surveys: number; orders: number; referrals: number };
+  counts: { orders: number; surveys: number; referrals: number };
+  activeDays: number;
+  months: Array<{ key: string; label: string; missions: number; activity: number; surveys: number; orders: number; referrals: number }>;
 };
 
 export async function getLilyProfile() {
@@ -595,6 +612,17 @@ export async function getLilyRanking(limit = 20) {
     credentials: "same-origin"
   });
   return parseResponse<{ ranking: LilyRankingRow[] }>(response);
+}
+
+export async function getLilyCustomerStats(userId?: string) {
+  const query = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+  const response = await fetch(`/api/v1/lily/public/loyalty/stats${query}`, { credentials: "same-origin" });
+  return parseResponse<LilyCustomerStats>(response);
+}
+
+export async function getLilyPublicLevels() {
+  const response = await fetch("/api/v1/lily/public/loyalty/levels", { credentials: "same-origin" });
+  return parseResponse<{ points: number; levels: LilyPublicLevel[] }>(response);
 }
 
 

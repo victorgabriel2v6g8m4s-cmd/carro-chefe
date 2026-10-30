@@ -6,7 +6,7 @@ export function HeaderLilyCoins({ loyalty }: { loyalty: LilyLoyaltyPayload | nul
   const coinName = loyalty?.coinName ?? "LilyCoins";
   const coinBalance = loyalty?.lilyCoins ?? 0;
 
-  return <Link className="header-coins" to="/dashboard" aria-label={`${coinBalance.toLocaleString("pt-BR")} ${coinName}`} title={coinName}>
+  return <Link className="header-coins" to="/dashboard#missions" aria-label={`${coinBalance.toLocaleString("pt-BR")} ${coinName}`} title={coinName}>
     {loyalty?.coinIconUrl ? <img src={loyalty.coinIconUrl} alt="" /> : <Sparkles aria-hidden="true" />}
     <strong>{coinBalance.toLocaleString("pt-BR")}</strong><span className="header-coin-name">{coinName}</span>
   </Link>;

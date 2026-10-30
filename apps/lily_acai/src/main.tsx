@@ -42,6 +42,8 @@ import { surveyJson } from "./features/surveys/api";
 const AdminSurveyResponsesPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveyResponsesPage })));
 const AdminSurveysPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.AdminSurveysPage })));
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").then((module) => ({ default: module.DashboardPage })));
+const LoyaltyLevelsPage = lazy(() => import("./features/loyalty/LoyaltyLevelsPage").then((module) => ({ default: module.LoyaltyLevelsPage })));
+const CustomerStatsPage = lazy(() => import("./features/loyalty/CustomerStatsPage").then((module) => ({ default: module.CustomerStatsPage })));
 const NotificationsPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.NotificationsPage })));
 const ReelsPage = lazy(() => import("./features/reels/ReelsPage").then((module) => ({ default: module.ReelsPage })));
 const SurveyListPage = lazy(() => import("./features/surveys/SurveyPages").then((module) => ({ default: module.SurveyListPage })));
@@ -51,6 +53,13 @@ const AdminVipPage = lazy(() => import("./features/admin/AdminVipPage").then((mo
 const AdminLoyaltyPage = lazy(() => import("./features/admin/AdminLoyaltyPage").then((module) => ({ default: module.AdminLoyaltyPage })));
 const VipTermsPage = lazy(() => import("./features/account/VipTermsPage").then((module) => ({ default: module.VipTermsPage })));
 import "./styles.css";
+import loyaltyExperienceCss from "./features/loyalty/loyalty-experience.css?inline";
+if (typeof document !== "undefined" && !document.getElementById("cooklily-loyalty-experience-styles")) {
+  const style = document.createElement("style");
+  style.id = "cooklily-loyalty-experience-styles";
+  style.textContent = loyaltyExperienceCss;
+  document.head.append(style);
+}
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
 
@@ -571,6 +580,8 @@ function App() {
     <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
     <Route path="/vip/termos" element={<Shell><VipTermsPage /></Shell>} />
     <Route path="/ranking" element={<Shell><RankingPage /></Shell>} />
+    <Route path="/ranking/:userId" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando estatísticas" />}><Shell><CustomerStatsPage /></Shell></Suspense>} />
+    <Route path="/niveis" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando níveis" />}><Shell><LoyaltyLevelsPage /></Shell></Suspense>} />
     <Route path="/reels" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando Reels" />}><Shell><ReelsPage /></Shell></Suspense>} />
     <Route path="/dashboard" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando dashboard" />}><Shell><DashboardPage /></Shell></Suspense>} />
     <Route path="/notificacoes" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando notificações" />}><Shell><NotificationsPage /></Shell></Suspense>} />

@@ -8,6 +8,7 @@ import { ApiError } from "../../lib/errors";
 import { getOptionalLilySession, hashPassword, requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
 import { loyaltySnapshot } from "./loyalty/service";
+import { lilyProfileStatisticsRoutes } from "./profile-statistics";
 
 export const LILY_PROFILE_AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -49,6 +50,11 @@ type LoyaltyRow = {
   points: number;
   orderCount: number;
   campaignCount: number;
+  missionCount: number;
+  surveyCount: number;
+  referralCount: number;
+  activeDays: number;
+  currentLevel: { id: string; name: string; requiredPoints: number; iconUrl: string | null } | null;
 };
 
 async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[]; includeTestAccounts?: boolean; excludeTestAccounts?: boolean } = {}) {
@@ -73,7 +79,7 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
   if (!users.length) return [] as LoyaltyRow[];
 
   const ids = users.map((user) => user.id);
-  const [orders, events] = await Promise.all([
+  const [orders, events, surveys, referrals, levels] = await Promise.all([
     lilyPrisma.lilyOrder.findMany({
       where: {
         userId: { in: ids },
@@ -81,13 +87,17 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
       },
       select: {
         userId: true,
-        laCampaign: true
+        laCampaign: true,
+        createdAt: true
       }
     }),
     lilyPrisma.lilyLoyaltyEvent.findMany({
       where: { userId: { in: ids } },
-      select: { userId: true, points: true }
-    })
+      select: { userId: true, type: true, points: true, createdAt: true }
+    }),
+    lilyPrisma.lilySurveyParticipation.findMany({ where: { userId: { in: ids }, status: "completed" }, select: { userId: true, completedAt: true } }),
+    lilyPrisma.lilyReferralInvite.findMany({ where: { referrerUserId: { in: ids }, creditedAt: { not: null } }, select: { referrerUserId: true, creditedAt: true } }),
+    lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, requiredPoints: true, iconMediaId: true } })
   ]);
 
   const map = new Map<string, LoyaltyRow>();
@@ -103,22 +113,47 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
       createdAt: user.createdAt,
       points: 0,
       orderCount: 0,
-      campaignCount: 0
+      campaignCount: 0,
+      missionCount: 0,
+      surveyCount: 0,
+      referralCount: 0,
+      activeDays: 0,
+      currentLevel: null
     });
     campaigns.set(user.id, new Set());
   }
 
+  const activeDates = new Map<string, Set<string>>();
   for (const order of orders) {
     if (!order.userId) continue;
     const row = map.get(order.userId);
     if (!row) continue;
     row.orderCount += 1;
+    const days = activeDates.get(order.userId) ?? new Set<string>(); days.add(order.createdAt.toISOString().slice(0, 10)); activeDates.set(order.userId, days);
     if (order.laCampaign) campaigns.get(order.userId)?.add(order.laCampaign);
   }
 
   for (const event of events) {
     const row = map.get(event.userId);
-    if (row) row.points += event.points;
+    if (!row) continue;
+    row.points += event.points;
+    if (event.type === "mission_reward") row.missionCount += 1;
+    if (event.type === "survey_reward") row.surveyCount += 1;
+    const dates = activeDates.get(event.userId) ?? new Set<string>(); dates.add(event.createdAt.toISOString().slice(0, 10)); activeDates.set(event.userId, dates);
+  }
+  const surveyCounts = new Map<string, number>(); for (const survey of surveys) {
+    surveyCounts.set(survey.userId, (surveyCounts.get(survey.userId) ?? 0) + 1);
+    if (survey.completedAt) { const dates = activeDates.get(survey.userId) ?? new Set<string>(); dates.add(survey.completedAt.toISOString().slice(0, 10)); activeDates.set(survey.userId, dates); }
+  }
+  for (const [userId, count] of surveyCounts) { const row = map.get(userId); if (row) row.surveyCount = Math.max(row.surveyCount, count); }
+  for (const referral of referrals) {
+    const row = map.get(referral.referrerUserId); if (row) row.referralCount += 1;
+    if (referral.creditedAt) { const dates = activeDates.get(referral.referrerUserId) ?? new Set<string>(); dates.add(referral.creditedAt.toISOString().slice(0, 10)); activeDates.set(referral.referrerUserId, dates); }
+  }
+  for (const row of map.values()) {
+    row.activeDays = activeDates.get(row.userId)?.size ?? 0;
+    const current = [...levels].reverse().find((level) => row.points >= level.requiredPoints);
+    row.currentLevel = current ? { id: current.id, name: current.name, requiredPoints: current.requiredPoints, iconUrl: mediaUrl(current.iconMediaId) } : null;
   }
 
   for (const [userId, set] of campaigns) {
@@ -137,38 +172,44 @@ async function loyaltyRows(options: { onlyOptedIn?: boolean; userIds?: string[];
 
 function serializeRankingRow(row: LoyaltyRow, rank: number) {
   return {
+    userId: row.userId,
     rank,
     displayName: row.displayName ?? "Cliente CookLily",
     avatarUrl: mediaUrl(row.avatarMediaId),
     points: row.points,
     orderCount: row.orderCount,
-    campaignCount: row.campaignCount
+    campaignCount: row.campaignCount,
+    missionCount: row.missionCount,
+    surveyCount: row.surveyCount,
+    referralCount: row.referralCount,
+    activeDays: row.activeDays,
+    currentLevel: row.currentLevel
   };
 }
 
 function denseRanking(rows: LoyaltyRow[]) {
+  const output: ReturnType<typeof serializeRankingRow>[] = [];
   let rank = 0;
-  let previousPoints: number | undefined;
-  return rows.map((row) => {
-    if (row.points !== previousPoints) {
+  for (let index = 0; index < rows.length;) {
+    const points = rows[index]!.points;
+    const group: LoyaltyRow[] = [];
+    while (rows[index]?.points === points) group.push(rows[index++]!);
+    const real = group.filter((row) => !row.isTestAccount);
+    const tests = group.filter((row) => row.isTestAccount);
+    const pairedTests = new Set<string>();
+    for (const row of real) {
       rank += 1;
-      previousPoints = row.points;
+      output.push(serializeRankingRow(row, rank));
+      const test = tests.find((candidate) => !pairedTests.has(candidate.userId));
+      if (test) { pairedTests.add(test.userId); output.push(serializeRankingRow(test, rank)); }
     }
-    return serializeRankingRow(row, rank);
-  });
+    for (const test of tests) if (!pairedTests.has(test.userId)) { rank += 1; output.push(serializeRankingRow(test, rank)); }
+  }
+  return output;
 }
 
 function denseRankForUser(rows: LoyaltyRow[], userId: string) {
-  let rank = 0;
-  let previousPoints: number | undefined;
-  for (const row of rows) {
-    if (row.points !== previousPoints) {
-      rank += 1;
-      previousPoints = row.points;
-    }
-    if (row.userId === userId) return rank;
-  }
-  return null;
+  return denseRanking(rows).find((row) => row.userId === userId)?.rank ?? null;
 }
 
 async function profilePayload(userId: string) {
@@ -205,7 +246,7 @@ async function profilePayload(userId: string) {
   }
   const whatsappOffersOptIn = latestPreferences.get("whatsapp_offers") ?? false;
   const whatsappUpdatesOptIn = latestPreferences.get("whatsapp_order_updates") ?? true;
-  const internalRanking = user.isTestAccount || user.role === "admin";
+  const internalRanking = user.isTestAccount || ["admin", "staff"].includes(user.role);
   const publicRows = await loyaltyRows({ onlyOptedIn: true, includeTestAccounts: internalRanking, excludeTestAccounts: !internalRanking });
   const userRank = denseRankForUser(publicRows, userId);
 
@@ -238,10 +279,11 @@ async function profilePayload(userId: string) {
 }
 
 export async function lilyProfileRoutes(app: FastifyInstance) {
+  await lilyProfileStatisticsRoutes(app);
   app.get("/api/v1/lily/public/loyalty/ranking", async (request) => {
     const query = z.object({ limit: leaderboardLimitSchema.optional() }).parse(request.query);
     const viewer = await getOptionalLilySession(request);
-    const includeTestAccounts = Boolean(viewer && (viewer.user.role === "admin" || viewer.user.isTestAccount));
+    const includeTestAccounts = Boolean(viewer && (["admin", "staff"].includes(viewer.user.role) || viewer.user.isTestAccount));
     const rows = await loyaltyRows({ onlyOptedIn: true, includeTestAccounts, excludeTestAccounts: !includeTestAccounts });
     const limit = query.limit ?? 20;
     return {
