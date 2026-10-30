@@ -1,13 +1,13 @@
 # CookLily: editor progressivo do catálogo administrativo
 
-- status: awaiting_corrective_ci
+- status: corrective_fix_merged_awaiting_deploy_and_homologation
 - owner: AG-DEV
-- branch: `codex/cooklily-admin-catalog-budget`
+- branch: `codex/fix-admin-catalog-reveal`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `cc61c25d99ae48b8d38d42265ef65db5489f0e88`
-- head_sha_verified: `693835d85e50e0d2cec3a1a5b8a8790e1a0262fb`
-- pull_requests: PR #284 merged (`cc61c25`); PR #285 draft https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/285
-- last_verified_at: 2026-10-30 16:44 America/Sao_Paulo
+- head_sha_verified: `eb71d7afcc78c4a5385a1879b01d97ecbc29353f`
+- pull_requests: PR #284 merged (`cc61c25`); PR #285 merged (`7d6fa3d`); corrective PR #288 merged (`eb71d7a`)
+- last_verified_at: 2026-10-30 18:24 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -28,20 +28,22 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 - `npm run build`: concluído; budget CookLily: JS gzip 188.97/189 KiB, CSS bruto 178.99/179 KiB, JS+CSS gzip 224.29/225 KiB.
 - `git diff --check`: aprovado. Nenhuma migration.
 - PR #284 CI passou em todos os jobs do run `41114715751`; merged em `cc61c25d99ae48b8d38d42265ef65db5489f0e88`.
-- Deploy VPS iniciado em 30/10/2026; gate de build reprovou: JS gzip 189.16/189.00 KiB. Rollback automático confirmado para `97f1dfb6953168f5de4feb399f28ff2268df1324`; nenhum migration real foi iniciado e o domínio continua na versão anterior.
+- O primeiro deploy da implementação inicial reprovou o budget Linux (JS gzip 189.16/189.00 KiB) e fez rollback automático para `97f1dfb6953168f5de4feb399f28ff2268df1324`; nenhum migration real foi iniciado.
+- A correção de margem do bundle foi integrada por PR #285 no SHA `7d6fa3d36b8b74f6dc0529b5279d407d7aadb3dd`. Deploy full em 30/10 às 19:43 BRT terminou com backup verificado, health interno/CookLily/fulfillment e external smoke OK. Budget Linux: JS gzip 188.98/189.00 KiB; `build_budget=ok`; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-194345-7d6fa3d36b8b.evidence`.
+- Na homologação integrada mobile 390×844 do release `7d6fa3d`, o índice exibia 35 produtos e o modal do produto selecionado carregava seus campos, mas os cards tinham `opacity: 0` porque `CatalogProductCard` incluía `data-lily-reveal` sem o observador da página pública no painel. A falha foi reproduzida em DOM e screenshot.
+- Correção: removido `data-lily-reveal` somente do card administrativo; teste impede reintrodução do atributo. PR #288 foi integrado por squash em `eb71d7afcc78c4a5385a1879b01d97ecbc29353f` após todos os checks de CI passarem.
 
 ## Em andamento
 
-- Acompanhar CI do PR #285; integrar após verde.
-- Repetir deploy e homologar desktop/mobile exclusivamente pelo navegador integrado do Codex.
+- Implantar canonical contendo a correção de visibilidade.
+- Repetir homologação desktop e mobile exclusivamente pelo navegador integrado do Codex, confirmando cards visíveis, modal de produto e ausência de overflow/regressões.
 
 ## Gates e testes
 
-- CI: PR #284 aprovado (run `41114715751`), merged. PR #285 criado como draft; CI pendente.
-- Antes do ajuste corretivo: todos os gates locais passaram, budget Windows 188.97/189 KiB. Deploy Linux mostrou variação de +0.19 KiB; a implementação está sendo reduzida para ter margem cross-platform.
-- Ajuste corretivo local: simplificada abertura/fechamento do modal e card; `npm run test:lily-ui` (107), `npm run check`, `npm test -- --maxWorkers=1` (419 aprovados, 3 ignorados), `npm run build` e `git diff --check` passaram. Budget Windows: JS gzip 188.79/189 KiB, JS+CSS gzip 224.11/225 KiB.
-- Novo PR corretivo/CI e novo deploy Linux são necessários para confirmar margem multiplataforma.
-- Navegador desktop/mobile: pendente de um deploy bem-sucedido.
+- CI: PR #284 aprovado (run `41114715751`), PR #285 aprovado e integrado, PR #288 aprovado e integrado.
+- Build/deploy do SHA `7d6fa3d`: budget JS gzip 188.98/189.00 KiB no Linux, JS+CSS gzip 224.33/225.00 KiB; `build_budget=ok`.
+- Correção PR #288: `npm run test:lily-ui` (24 arquivos/107 testes), `npm run check`, `npm test -- --maxWorkers=1` (80 arquivos, 419 aprovados e 3 ignorados), `npm run build` (JS gzip 188.75/189 KiB e JS+CSS gzip 224.07/225 KiB), `git diff --check` e CI completo passaram.
+- Deploy do SHA `eb71d7a` e homologação retest desktop/mobile: pendentes.
 
 ## Migrations
 
@@ -55,8 +57,9 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 ## Homologação/dependências externas
 
 - Domínio de teste: `https://carrochefe.com/lilyacai/painel/cardapio`.
-- Usar exclusivamente o navegador integrado do Codex, em desktop e mobile, após deploy.
+- Observação pré-correção: desktop 1365×900 carregou lista e editor; em mobile 390×844 os cards ficaram invisíveis, embora o modal carregasse o produto selecionado. Homologação final corrigida permanece pendente.
+- Usar exclusivamente o navegador integrado do Codex, em desktop e mobile, após novo deploy.
 
 ## Próxima ação exata
 
-Aguardar todos os checks do PR #285; então marcar pronto, integrar, implantar, confirmar o budget Linux e homologar no navegador integrado do Codex em desktop e mobile.
+Executar deploy incremental do canonical atual (inclui PR #288), confirmar readiness/budget e homologar a lista e o modal no navegador integrado do Codex em desktop e mobile. Só então marcar o item do roadmap como homologado e começar a modularização incremental do grande `apps/lily_acai/src/admin.tsx`.
