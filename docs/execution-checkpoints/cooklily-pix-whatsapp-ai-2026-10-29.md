@@ -5,7 +5,7 @@
 - branch: codex/cooklily-pix-whatsapp-ai-plan
 - base_branch: cooklily/canonical
 - base_sha_verified: 29962ae5
-- head_sha_verified: 29962ae6f52fd4a6dbcc9af6ec2146de0666b83a (working tree changes pending commit)
+- head_sha_verified: 36ec776 (feature implementation and docs committed; checkpoint update pending)
 - pull_requests: none
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
@@ -31,7 +31,7 @@
 - `npm run check`: PASS.
 - `npm run build`: PASS; orçamento CookLily: JS gzip 180.65/185 KiB, CSS gzip 33.88/34 KiB, combinado 214.53/220 KiB.
 - `npm test`: gates anteriores PASS, mas a fase Vitest raiz permaneceu sem saída até interrupção; registrar como inconclusivo, não PASS.
-- `git diff --check`: PASS.
+- `git diff --check`: PASS after removing documentation whitespace.
 - Nenhuma operação Pix ou envio WhatsApp de produção executado.
 - Nenhum merge/deploy desta entrega.
 
@@ -54,7 +54,7 @@
 
 ## Próxima ação exata
 
-1. Revisar escopo, criar commit, push da branch e PR draft.
+1. Atualizar este checkpoint com o SHA completo e criar commit do marco; em seguida push da branch e PR draft.
 2. Aguardar CI e corrigir falhas; executar/repetir teste geral isolando o hang Vitest.
 3. Integrar por squash após gates verdes, atualizar checkpoint e implantar o SHA canônico autorizado.
 4. Verificar configuração de cifragem VPS; cadastrar Pix alternativo de forma inativa sem trocar o meio ativo.

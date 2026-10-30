@@ -1,6 +1,6 @@
 # WhatsApp, atendimento com IA e jornada CookLily
 
-**Auditoria técnica e fontes consultadas em:** 30/10/2026  
+**Auditoria técnica e fontes consultadas em:** 30/10/2026
 **Escopo:** CookLily (`/lilyacai/*`, `/api/v1/lily/*`), sem misturar dados do Carro Chefe.
 
 ## Estado da entrega
