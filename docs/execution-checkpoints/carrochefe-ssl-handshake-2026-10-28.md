@@ -1,6 +1,6 @@
 # Incidente — falhas intermitentes de handshake TLS
 
-- Estado: `mitigated_monitoring`; mitigação implantada, causa raiz específica dos clientes ainda não confirmada; janela de captura continua ativa.
+- Estado: `confirmed_for_adguard_user_monitoring_other_reports`; mitigação TLS/PMTU já implantada; bloqueio DNS da AdGuard confirmado para um usuário, demais relatos ainda sem provedor identificado.
 - Responsável: `AG-DEV`.
 - Branch: `codex/fix-intermittent-tls-mtu`.
 - Base branch: `cooklily/canonical`.
@@ -9,7 +9,7 @@
 - PR #236: merged por squash; merge SHA `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
 - Deploy VPS: concluído em 29/10/2026 00:01 UTC, release `b93445996dfd47ee2386644bbdba120cd0cc33d2`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.evidence`.
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
-- Última verificação: 29/10/2026 00:05 UTC.
+- Última verificação: 30/10/2026 17:58 America/Sao_Paulo.
 
 ## Sintoma e evidência
 
@@ -58,8 +58,55 @@
 - PR #236 merge/deploy: concluídos; `sudo cc deploy canonical` terminou com readiness e `external_smoke=ok`.
 - Pós-deploy: `sudo cc status` confirmou current/canonical SHA `b9344599...`; PMTU `1`; Nginx e aplicação ativos; `nginx -t` passou; 10/10 TLS 1.2, 10/10 TLS 1.3; cardápio HTTP `200` em HTTP/2. O browser integrado carregou novamente os 8 produtos e as imagens no domínio real; screenshot registrado na sessão.
 
+## Investigação de novo relato — 30/10/2026, 15:57 BRT
+
+- Evidência fornecida: captura de tela com `ERR_SSL_PROTOCOL_ERROR`, aparência de Chrome em Android. A imagem permite inferir Android/Chrome, mas não modelo, versão do Android nem versão do Chrome.
+- Correlação temporal: 15:57 BRT corresponde a 18:57 UTC. No log TLS dedicado há tentativas entre 18:57:44 e 18:57:59 UTC encerradas pelo cliente enquanto o Nginx aguardava concluir o handshake. Não houve registro de sessão TLS concluída nem requisição HTTP desse grupo. Os endereços de origem estavam no bloco Cloudflare `104.28.0.0/14`; isso é compatível com saída por WARP/proxy Cloudflare, mas não prova que o cliente usava WARP.
+- No mesmo minuto o log de sucesso TLS e o access log registram somente outras sessões normais; não há `SSL_do_handshake() failed`, `no shared cipher`, `unsupported protocol` ou `bad key share` associados ao horário do print. Portanto, para este cliente a evidência identifica a interrupção pelo lado cliente/proxy antes de completar TLS, mas não a causa inicial que levou o cliente a abortar.
+- Erros `no shared cipher`, `unsupported protocol` e `bad key share` encontrados em 19:50–19:55 UTC são tentativas de outros horários/origens e não devem ser atribuídos ao print. São negociações incompatíveis ou malformed probes que o Nginx recusou conforme esperado sob TLS 1.2/1.3.
+- DNS consultado no diagnóstico atual aponta A `carrochefe.com -> 2.25.182.185`, sem AAAA; SOA informa DNS da Hostinger. O domínio chega diretamente à VPS, sem proxy/CDN Cloudflare configurado no DNS do site.
+- Firewall Hostinger apresentado pelo proprietário aceita TCP 22, 80 e 443 de qualquer origem e descarta o restante. UFW local está ativo com `deny incoming` e libera somente essas mesmas portas em IPv4/IPv6. A tentativa do print chegou ao Nginx em 443, então o firewall não a descartou.
+- `nginx -T` e `nginx -t` confirmados na VPS. TLS ativo: `TLSv1.2 TLSv1.3`, certificado Let's Encrypt `fullchain.pem`, HTTP/2 por TCP; o certificado cobre raiz e `www`.
+- Qualys SSL Labs API concluiu scan em 30/10/2026 17:25 BRT: nota A, sem warnings, TLS 1.2/1.3, HTTP 200, cadeia confiável nos trust stores testados (incluindo Android). HSTS ausente e OCSP stapling desativado não explicam uma desconexão durante o handshake. Referência: https://www.ssllabs.com/ssltest/analyze.html?d=carrochefe.com&latest.
+- RBL Spamhaus ZEN: o checker web retornou HTTP 403 no ambiente de consulta. Consulta DNS pelo resolvedor da rede local não retornou listagem para `2.25.182.185`; controles válidos confirmaram que o resolvedor retorna os códigos esperados para um IP de teste listado e NXDOMAIN para um teste não listado. Resultado: não listado no ZEN nesta consulta. Referência: https://check.spamhaus.org/faqs/dnsbl-usage/.
+- MXToolbox Blacklist: consulta do IP `2.25.182.185` em 30/10/2026 encontrou 0 listagens e 0 timeouts entre 60 listas verificadas.
+- MultiRBL Valli: 255 testes consultados. Na categoria principal de 201 DNSBLs, a página marcou 5 listagens, 6 falhas e 190 sem listagem. Quatro marcações foram respostas explícitas `127.0.0.1 Query Refused` de URIBL (limite do serviço consultado por MultiRBL, não listagem do IP). A quinta, `rbl.rbldns.ru`, retornou somente um TXT genérico do servidor sem resposta A; a consulta independente expirou, então permanece inconclusiva. A categoria combinada retornou um registro Hostkarma classificado como `neutral` e quatro falhas. Listas RBL são voltadas principalmente à reputação de envio de e-mail e não bloqueiam o TLS do site por si sós.
+- Limitação importante do diagnóstico anterior: `deploy/scripts/diagnose-cooklily-access` lê `/var/log/nginx/error.log` por padrão, embora as falhas TLS estejam em `/var/log/nginx/carrochefe-tls-error.log`. Assim, a frase anterior “nenhum erro TLS na janela” não era válida; a leitura direta do log dedicado encontrou os eventos acima. Corrigir o caminho padrão do script e acrescentar teste de regressão.
+
+### Avaliação atual
+
+O Nginx e o certificado passam nos testes atuais; não há evidência para afrouxar TLS nem para alterar o firewall. O caso das 15:57 é compatível com interferência ou política em proxy/VPN do lado do cliente. Cloudflare WARP pode substituir o IP público do visitante por um IP Cloudflare mesmo ao acessar sites fora da rede Cloudflare; uma política HTTP do Gateway também pode apresentar `ERR_SSL_PROTOCOL_ERROR` quando a página de bloqueio usa certificado não confiável. Referências: https://developers.cloudflare.com/warp-client/known-issues-and-faq/ e https://developers.cloudflare.com/cloudflare-one/traffic-controls/troubleshoot-gateway/.
+
+## Próxima ação exata atualizada
+
+Corrigir `diagnose-cooklily-access` para ler o log TLS dedicado por padrão e cobrir essa seleção com teste. Para o usuário que confirmou `dns.adguard.com`, pedir revisão do falso positivo à AdGuard e orientar allowlist/resolvedor não filtrado enquanto aguarda; não houve envio externo nesta investigação. Para os outros dois relatos, identificar o DNS/VPN utilizado e comparar a resposta A antes de atribuir a causa. Não alterar TLS/cifras nem bloquear faixas Cloudflare sem evidência adicional.
+
+## Reprodução de bloqueio DNS com AdGuard — 30/10/2026
+
+- O proprietário confirmou que o usuário afetado utilizava `dns.adguard.com`. A documentação anterior não registrava esse nome; inicialmente reproduzi o comportamento sem assumir qual era o produto. Agora também consultei diretamente o hostname informado, sem instalar aplicativo nem alterar a configuração de rede local.
+- A consulta DoH para `https://dns.adguard.com/resolve?name=carrochefe.com&type=A` retornou `94.140.14.33`, igual ao endpoint atual `dns.adguard-dns.com`; o endpoint oficial não filtrado retornou `2.25.182.185`. Portanto a configuração usada pelo cliente está reproduzida no DNS, além da consulta ao endpoint atual.
+- `carrochefe.com` e `www.carrochefe.com` responderam `94.140.14.33` no DNS padrão filtrado da AdGuard e no perfil Family; o resolvedor não filtrado da AdGuard e Google/Cloudflare Security responderam o IP real `2.25.182.185`. Controles: `google.com` resolveu normalmente no filtro; `doubleclick.net` foi corretamente bloqueado como `0.0.0.0` pelo filtro AdGuard.
+- O endereço `94.140.14.33` é o host de bloqueio de navegação segura da AdGuard (`standard-block.dns.adguard.com`); a resposta é compatível com classificação de segurança/phishing/malware, não com detecção do site como anúncio. A lista pública `AdGuard DNS filter` não continha o texto literal `carrochefe` na consulta realizada, então o sinal aponta mais para a camada de browsing security do que para regra de anúncios, mas a categoria e a origem exatas precisam ser confirmadas pela AdGuard.
+- Reprodução TLS: acesso HTTPS normal ao domínio completou com HTTP 200, validação TLS válida e IP remoto `2.25.182.185`. Forçando o mesmo SNI `carrochefe.com` para o IP de bloqueio `94.140.14.33`, o Windows Schannel retornou `SEC_E_ILLEGAL_MESSAGE` durante o handshake. Isso reproduz a classe do `ERR_SSL_PROTOCOL_ERROR` da captura.
+- Conclusão revisada: há uma causa concreta que explica o usuário confirmado com `dns.adguard.com`: o domínio resolve para o IP de bloqueio da AdGuard, que rejeita o handshake TLS. Isso não prova que os outros dois telefones usavam o mesmo serviço; será preciso comparar a configuração DNS/VPN deles antes de generalizar. O relato de VPN desativada é consistente com um app que cria um túnel local para impor o DNS filtrado.
+- Resolução recomendada: pedir revisão/remoção de falso positivo à AdGuard e orientar temporariamente o usuário afetado a permitir `carrochefe.com` ou usar o resolvedor não filtrado. Para os outros relatos, registrar o provedor DNS/VPN usado e comparar a resposta A do domínio. Não mudar TLS, firewall ou conteúdo do site para contornar um sinkhole DNS.
+- Fontes técnicas: [servidores AdGuard DNS e endpoints filtrado/não filtrado](https://adguard-dns.io/kb/general/dns-providers/); [configuração upstream da página de bloqueio de navegação segura](https://github.com/AdguardTeam/AdGuardDNS/blob/master/configuration.md); [orientação oficial AdGuard para reportar bloqueio incorreto](https://adguard.com/en/support/adguard-mini-android/problems/websites_are_displayed_incorrectly.html).
+- Revisão solicitada por e-mail a `support@adguard.com` em 30/10/2026 17:58 BRT, assunto `False positive review request: carrochefe.com blocked by AdGuard DNS`. Mensagem enviada com reprodução e pedido para revisar/remover a classificação ou informar sua origem. Nenhum IP de cliente, dado pessoal ou captura foi anexado. ID Gmail da mensagem: `1a18e9b699e102d4`.
+
+## Verificação comparativa de filtros DNS e Cloudflare — 30/10/2026
+
+- Remetente verificado na mensagem enviada: `Victor Gabriel <victorgabriel2v6g8m4s@gmail.com>`; destinatário `support@adguard.com`.
+- Consultas DNS diretas para `carrochefe.com`: AdGuard Default (`94.140.14.14`) e Family (`94.140.14.15`) retornaram `94.140.14.33` (sinkhole); AdGuard Unfiltered (`94.140.14.140`) retornou `2.25.182.185`.
+- Os resolvedores Cloudflare Security (`1.1.1.2`), CleanBrowsing Security (`185.228.168.9`), ControlD Malware (`76.76.2.0`) e OpenDNS FamilyShield (`208.67.222.123`) retornaram o IP real `2.25.182.185`. A consulta direta a Quad9 não foi concluída neste ambiente e não é considerada evidência.
+- Busca literal do domínio em listas públicas comuns de publicidade/privacidade e malware/phishing não encontrou regra para `carrochefe.com`: EasyList, EasyPrivacy, OISD small, HaGeZi TIF, HaGeZi Pro, Blocklist Project Malware, Blocklist Project Phishing e StevenBlack hosts. A amostragem não cobre listas privadas, listas completas de apps VPN nem políticas particulares de conta; ausência de correspondência literal não garante que nenhum produto bloqueie o domínio.
+- Cloudflare Radar consultado em `https://radar.cloudflare.com/domains/domain/carrochefe.com` mostrou a categoria pública `uncategorized` e sem ranking disponível. O resolvedor Cloudflare Security também respondeu com o IP real. Isso não indica bloqueio pelo DNS público filtrado da Cloudflare na consulta feita.
+- A resolução autoritativa continua apontando diretamente para a VPS Hostinger (`2.25.182.185`), sem proxy/CDN Cloudflare no DNS do site. Portanto não há evidência de bloqueio por uma regra WAF/zone da conta Cloudflare do site. Ainda é possível uma política Cloudflare Gateway/WARP específica do usuário ou da organização; sem logs/configuração desse cliente não é possível verificar isso.
+- Conclusão comparativa: a única filtragem reproduzida entre os provedores testados foi a da AdGuard filtrada. Não há evidência atual de bloqueio geral do domínio por Cloudflare nem de correspondência nas listas públicas amostradas. Os outros relatos permanecem sem provedor identificado.
+- Fontes: [Cloudflare Radar — domínio](https://radar.cloudflare.com/domains/domain/carrochefe.com); [categorias de domínio do Cloudflare One](https://developers.cloudflare.com/cloudflare-one/traffic-controls/domain-categories/); [controles de tráfego Cloudflare Gateway](https://developers.cloudflare.com/cloudflare-one/traffic-controls/); [resolvedores e perfis 1.1.1.1](https://developers.cloudflare.com/1.1.1.1/setup/).
+- PR #287: `https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/287`, branch `codex/carrochefe-tls-investigation-2026-10-30`, HEAD `e24bcd1d13c5e92163eae9f28fee0835f68052cd`; verificado em 30/10/2026 18:05 BRT como aberto e draft, com os checks listados concluídos com sucesso. Esta atualização comparativa ainda precisa ser commitada e enviada ao PR.
+
 ## Limite e próxima ação
 
-O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; ainda não há prova de que a conexão dos clientes afetados tenha exatamente o mesmo problema. Não afirmar causa raiz nem resolução garantida até surgir uma falha real no log dedicado ou confirmação dos usuários.
+O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; não há prova de que os clientes tenham o mesmo problema de MTU. Para o usuário confirmado com `dns.adguard.com`, o falso positivo/blackhole TLS via sinkhole DNS foi reproduzido; isso não confirma a causa dos outros dois relatos nem garante que o fornecedor já removeu a classificação.
 
-Próxima ação exata: depois de 00:48:21 UTC, ler `/var/tmp/cooklily-tls-20261028-234821-GGz4Cd.txt` na VPS; classificar somente eventos de origem real, separando probes sintéticos e os `502` do restart. Se nenhum cliente falhar durante a janela, manter os helpers instalados para uma nova captura iniciada antes da próxima tentativa do cliente. Se surgir erro real, cruzar motivo/tempo com handshake e rede observados e ajustar somente com evidência.
+Próxima ação exata: corrigir e testar o caminho padrão de log em `diagnose-cooklily-access`; acompanhar a resposta ao e-mail enviado à AdGuard e identificar DNS/VPN dos outros dois usuários. Se surgir novo erro fora do DNS AdGuard, correlacionar horário com captura TLS dedicada antes de alterar a infraestrutura.
