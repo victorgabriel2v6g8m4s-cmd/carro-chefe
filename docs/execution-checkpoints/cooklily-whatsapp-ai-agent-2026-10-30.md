@@ -5,9 +5,9 @@
 - branch: codex/cooklily-whatsapp-ai-agent
 - base_branch: cooklily/canonical
 - base_sha_verified: a0cc107155f101ea6b0d835d2b9c103653b08cf9
-- head_sha_verified: 26a149f942cc57402a2aad2e94c2f3a9dabd68c4
-- pull_requests: pending draft PR
-- last_verified_at: 2026-10-30 13:52 America/Sao_Paulo
+- head_sha_verified: a9d8a25
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (draft)
+- last_verified_at: 2026-10-30 13:54 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -18,6 +18,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 - Confirmado que `origin/cooklily/canonical` continua no SHA `a0cc107155f101ea6b0d835d2b9c103653b08cf9` e a branch de entrega está 1 commit à frente.
 - Commit de implementação `26a149f` inclui webhook inbound idempotente, schema/migration, criptografia, inbox/API staff, fila/worker, guardrails, RAG público, embeddings e painel.
+- Commit `a9d8a25` reforça detecção de prompt injection e afirmações de pagamento/pedido no guardrail de saída; testes unitários após o ajuste passaram.
 - Roadmap reconciliado: entregas anteriores de dashboard/ranking/perfil marcadas concluídas com referência ao PR #277; backlog de temporada/missões/analytics continua aberto; WhatsApp atualizado para status parcial.
 - OpenAI Docs oficial consultada: Responses pode operar com `store:false`; embeddings retornam vetores que podem ser armazenados em vector store. Manter estado e histórico do lado CookLily, sem `previous_response_id`.
 - Sem credencial OpenAI disponível por ferramenta nesta sessão.
@@ -25,13 +26,15 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 ## Em andamento
 
-- Abrir PR rascunho e revisar CI; merge/deploy/homologação de staff no navegador integrado ainda pendentes.
+- PR rascunho #278 aberto e anexado; checks da revisão inicial estavam pendentes e serão reiniciados pelo push `a9d8a25`.
+- Merge/deploy/homologação de staff no navegador integrado ainda pendentes.
 - Aprovar retenção e transparência do envio de consultas à OpenAI antes de ativar flags em qualquer WABA.
 
 ## Gates e testes
 
 - `npm test`: passou; 80 arquivos, 417 testes passaram, 3 ignorados.
 - `npm run check`: passou (client Prisma gerado, dois schemas válidos, TypeScript sem erros).
+- Após o último ajuste de guardrails, `npm run check` e os 4 testes unitários de segurança passaram novamente.
 - `npm run build`: passou; JS total 185.95 KiB gzip/187 KiB, JS inicial 49.46/110 KiB; CSS gzip 34.78/35 KiB; combinado 220.74/222 KiB; chunk máximo 68.01 KiB/280 KiB.
 - `node --test deploy/scripts/survey-ops.test.mjs`: passou, incluindo migration AI em SQLite em memória.
 - `npm run db:deploy:lily` em cópia descartável do banco local migrado: migration AI aplicada. Banco original não foi usado nesse teste.
