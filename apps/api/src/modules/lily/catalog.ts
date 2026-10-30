@@ -652,24 +652,81 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       const rules = safeObject(combo.rulesJson);
       let resolvedPresetSelections: Awaited<ReturnType<typeof resolveLilyComboPresetSelections>> = null;
       if (lilyComboModeFromRules(rules) === "preset") {
-        try {
-          resolvedPresetSelections = await resolveLilyComboPresetSelections(combo);
-        } catch {
-          resolvedPresetSelections = [];
-        }
+        try { resolvedPresetSelections = await resolveLilyComboPresetSelections(combo); }
+        catch { resolvedPresetSelections = []; }
       }
-      return {
-        ...combo,
-        mode: lilyComboModeFromRules(rules),
-        rules,
-        resolvedPresetSelections: resolvedPresetSelections ?? []
-      };
+      return { ...combo, mode: lilyComboModeFromRules(rules), rules, resolvedPresetSelections: resolvedPresetSelections ?? [] };
     }));
-
     return {
       allergenCatalog: LILY_ALLERGEN_CATALOG,
       categories,
       products: products.map((product) => ({
+        ...serializeProduct(product),
+        rawStatus: product.status,
+        rawAllergens: { reviewStatus: product.allergenReviewStatus, contains: parseLilyAllergenJson(product.allergenContainsJson), mayContain: parseLilyAllergenJson(product.allergenMayContainJson) },
+        rawVariants: product.variants,
+        rawFlavorIds: product.flavorLinks.map((link) => link.flavorId),
+        rawAddonLinks: product.addonLinks.map((link) => ({ addonId: link.addonId, allowed: link.allowed, individualLimit: link.individualLimit, priceOverride: link.priceOverride, portion300: link.portion300, portion500: link.portion500 })),
+        minimumAddonUnits: product.minimumAddonUnits,
+        maximumAddonUnits: product.maximumAddonUnits
+      })),
+      flavors: flavors.map((flavor) => ({ ...flavor, tags: parseStringArray(flavor.tagsJson), allergens: { reviewStatus: flavor.allergenReviewStatus, contains: parseLilyAllergenJson(flavor.allergenContainsJson), mayContain: parseLilyAllergenJson(flavor.allergenMayContainJson) } })),
+      addons: addons.map((addon) => ({ ...addon, allergens: { reviewStatus: addon.allergenReviewStatus, contains: parseLilyAllergenJson(addon.allergenContainsJson), mayContain: parseLilyAllergenJson(addon.allergenMayContainJson) } })),
+      compatibilities,
+      combos: adminCombos,
+      offers,
+      media
+    };
+  });
+
+  app.get("/api/v1/lily/admin/catalog/index", async (request) => {
+    await requireLilyStaff(request);
+    const [categories, products] = await Promise.all([
+      lilyPrisma.lilyCategory.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
+      lilyPrisma.lilyProduct.findMany({
+        include: { category: true, coverMedia: true, variants: true },
+        orderBy: [{ sortOrder: "asc" }, { displayName: "asc" }]
+      })
+    ]);
+    return {
+      categories,
+      products: products.map((product) => {
+        const variants = product.variants.filter((variant) => variant.status === "published");
+        const isPurchasable = product.isAvailable && variants.some((variant) => variant.isAvailable);
+        return {
+          id: product.id,
+          slug: product.slug,
+          displayName: product.displayName,
+          descriptiveName: product.descriptiveName,
+          status: product.status,
+          isAvailable: product.isAvailable,
+          isPurchasable,
+          sortOrder: product.sortOrder,
+          configurationType: product.configurationType,
+          category: { id: product.category.id, name: product.category.name },
+          cover: product.coverMedia?.status === "active"
+            ? { id: product.coverMedia.id, url: mediaUrl(product.coverMedia.id), altText: product.coverMedia.altText }
+            : null,
+          variants: variants.map((variant) => ({ id: variant.id, name: variant.name, sizeMl: variant.sizeMl, priceCents: variant.priceCents }))
+        };
+      })
+    };
+  });
+
+  app.get("/api/v1/lily/admin/products/:id/editor", async (request) => {
+    await requireLilyStaff(request);
+    const { id } = z.object({ id: idSchema }).parse(request.params);
+    const [product, flavors, addons, media] = await Promise.all([
+      getProductById(id),
+      lilyPrisma.lilyFlavorComponent.findMany({ orderBy: { name: "asc" } }),
+      lilyPrisma.lilyAddon.findMany({ include: { flavor: true }, orderBy: { name: "asc" } }),
+      lilyPrisma.lilyMediaAsset.findMany({ orderBy: { createdAt: "desc" } })
+    ]);
+    if (!product) throw new ApiError(404, "Produto não encontrado.");
+    return {
+      allergenCatalog: LILY_ALLERGEN_CATALOG,
+      categories: await lilyPrisma.lilyCategory.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
+      product: {
         ...serializeProduct(product),
         rawStatus: product.status,
         rawAllergens: {
@@ -689,7 +746,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
         })),
         minimumAddonUnits: product.minimumAddonUnits,
         maximumAddonUnits: product.maximumAddonUnits
-      })),
+      },
       flavors: flavors.map((flavor) => ({
         ...flavor,
         tags: parseStringArray(flavor.tagsJson),
@@ -707,9 +764,6 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
           mayContain: parseLilyAllergenJson(addon.allergenMayContainJson)
         }
       })),
-      compatibilities,
-      combos: adminCombos,
-      offers,
       media
     };
   });

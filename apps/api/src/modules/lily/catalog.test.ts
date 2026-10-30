@@ -14,7 +14,7 @@ function cookieFrom(response: { headers: Record<string, unknown> }) {
 }
 
 async function register(role: "customer" | "staff" = "customer") {
-  const phone = role === "staff" ? "67999990001" : "67999990002";
+  const phone = `679${role === "staff" ? "99" : "98"}${String(crypto.randomInt(0, 1_000_000)).padStart(6, "0")}`;
   const response = await app.inject({
     method: "POST",
     url: "/api/v1/lily/auth/register",
@@ -29,7 +29,9 @@ async function register(role: "customer" | "staff" = "customer") {
     }
   });
   const cookie = cookieFrom(response);
-  const userId = response.json().user.id;
+  const body = response.json();
+  if (!body.user?.id) throw new Error(`Falha ao cadastrar usuário de teste: HTTP ${response.statusCode} ${JSON.stringify(body)}`);
+  const userId = body.user.id;
   if (role === "staff") {
     await lilyPrisma.lilyUser.update({
       where: { id: userId },
@@ -315,6 +317,10 @@ describe("CookLily catálogo", () => {
       headers: { cookie: customer.cookie }
     });
     expect(denied.statusCode).toBe(403);
+    const deniedIndex = await app.inject({ method: "GET", url: "/api/v1/lily/admin/catalog/index", headers: { cookie: customer.cookie } });
+    const deniedEditor = await app.inject({ method: "GET", url: "/api/v1/lily/admin/products/prod-lilymix/editor", headers: { cookie: customer.cookie } });
+    expect(deniedIndex.statusCode).toBe(403);
+    expect(deniedEditor.statusCode).toBe(403);
 
     await lilyPrisma.lilyConsentRecord.deleteMany();
     await lilyPrisma.lilySession.deleteMany();
@@ -341,6 +347,31 @@ describe("CookLily catálogo", () => {
     expect(catalog.statusCode).toBe(200);
     expect(catalog.json().soldOut).toBe(true);
     expect(await lilyPrisma.lilyAdminAudit.count()).toBeGreaterThan(0);
+  });
+
+  it("carrega o índice resumido e o detalhe de somente um produto sob demanda", async () => {
+    const staff = await register("staff");
+    const index = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/catalog/index",
+      headers: { cookie: staff.cookie }
+    });
+    expect(index.statusCode).toBe(200);
+    const summary = index.json().products.find((product: { id: string }) => product.id === "prod-lilymix");
+    expect(summary).toMatchObject({ id: "prod-lilymix", category: { id: expect.any(String) }, variants: expect.any(Array) });
+    expect(summary).not.toHaveProperty("rawVariants");
+    expect(index.json()).not.toHaveProperty("flavors");
+    expect(index.json()).not.toHaveProperty("media");
+
+    const detail = await app.inject({
+      method: "GET",
+      url: "/api/v1/lily/admin/products/prod-lilymix/editor",
+      headers: { cookie: staff.cookie }
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().product.id).toBe("prod-lilymix");
+    expect(detail.json().product.rawVariants.length).toBeGreaterThan(0);
+    expect(detail.json()).not.toHaveProperty("products");
   });
 
   it("permite staff revisar alergênicos e publica somente a forma minimizada", async () => {
