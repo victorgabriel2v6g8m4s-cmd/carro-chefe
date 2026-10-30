@@ -6,7 +6,7 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: 0869e749c3e87eaeecfedcee76efe702edf35a8d
 - head_sha_verified: 8c228f8e34b194ba877571148eed2043bc25f9d5
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged)
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (draft; CI pending)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
