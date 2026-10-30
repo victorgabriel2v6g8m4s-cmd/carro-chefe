@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-catalog-editor-one-click
+- branch: codex/cooklily-catalog-postdeploy-checkpoint
 - base_branch: cooklily/canonical
-- base_sha_verified: 6217c648f0a2be280dc01cd1345d9d45b7e97494
-- head_sha_verified: 6217c648f0a2be280dc01cd1345d9d45b7e97494
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/265 (merged; squash 5869468eff64f94d9b30706835e836527e16802b), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/266 (merged; squash 6217c648f0a2be280dc01cd1345d9d45b7e97494)
+- base_sha_verified: ba4626d933c1eff8a357c8f10866dfc65b1b2d5a
+- head_sha_verified: ba4626d933c1eff8a357c8f10866dfc65b1b2d5a
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/265 (merged; squash 5869468eff64f94d9b30706835e836527e16802b), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/266 (merged; squash 6217c648f0a2be280dc01cd1345d9d45b7e97494), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/267 (merged; squash ba4626d933c1eff8a357c8f10866dfc65b1b2d5a)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
@@ -88,17 +88,21 @@
 - Capturas de tela desktop foram feitas no Codex IAB durante a sessão. Não foi possível salvar essas capturas como arquivos do workspace através da API de UI disponível.
 - Checkpoint parcial integrado pela PR #265, CI run `40988138955` PASS (7/7); squash `5869468eff64f94d9b30706835e836527e16802b`.
 - Homologação mobile permanece pendente: o controle Codex IAB desta sessão não expõe ajuste de viewport, e a tecla de alternância de device mode não alterou a janela. Não usar navegador externo nem declarar aprovação mobile sem viewport estreito real.
-- O item do catálogo progressivo segue `in_progress` até validar o domínio em viewport mobile pelo Codex IAB e registrar evidência. A meta de redução agregada gzip permanece em 18,73% (faltam 2.861 bytes para o limite de 179.994 bytes).
+- O item do catálogo progressivo segue `in_progress` até validar o domínio em viewport mobile pelo Codex IAB e registrar evidência. A meta de redução agregada gzip permanece pendente; o último build dos 35 assets reportou 179.66 KiB gzip.
 
 ### Correção de UI encontrada na homologação desktop — em andamento
 
 - Ao abrir um item no domínio, a interação exigia dois disclosures sucessivos e repetia nome/status: resumo do índice e resumo do formulário. Removido o segundo `<details>` do formulário para que o primeiro clique expanda diretamente os controles do produto.
 - Guard estrutural adicionado a `apps/lily_acai/src/structure.test.ts` para garantir que o formulário carregado não introduza outro `<details>` nem `<summary>`.
 - Gates após a correção: `npm run test:lily-ui` PASS (21 arquivos, 97 testes); `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS. Budget reportou JS total 179.47 KiB gzip e CSS/JS+CSS dentro do limite.
-- Ainda não integrado, implantado nem homologado após esta correção; a validação mobile continua pendente pelo bloqueio de viewport do IAB.
+- PR #267 integrada por squash após CI 7/7 PASS no run `40989593012`; SHA `ba4626d933c1eff8a357c8f10866dfc65b1b2d5a`.
+- Deploy em 2026-10-29 22:09:22 America/Sao_Paulo: release `ba4626d933c1eff8a357c8f10866dfc65b1b2d5a`, anterior `043c93544da013c0081eab7fe146efafb1d20da7`; readiness passou na tentativa 6 e external smoke na tentativa 1. Evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-020922-ba4626d933c1.evidence`; backups verificados, sem migration pendente nas bases de produção.
+- Reteste desktop no domínio real pelo Codex IAB: após reload, expandir LilyMix uma vez carregou o formulário diretamente, incluindo nome, descrição, categoria, alergênicos, mídias e variações. O cabeçalho duplicado desapareceu; 35 produtos continuaram na lista. Nenhum campo foi editado/salvo; logs de console sem erros ou avisos.
+- Captura visual do formulário foi realizada na aba IAB 17, que foi marcada como entregável para revisão; a API desta sessão não permitiu salvar screenshot como arquivo local.
+- Homologação mobile segue pendente porque a API do Codex IAB disponível não expõe controle de viewport estreito. Item não pode ser marcado como concluído até essa validação.
 
 ### Próxima ação exata
 
-1. Integrar a correção do disclosure por PR com CI verde; implantar na VPS e repetir homologação desktop na aba Codex IAB.
-2. Obter pelo próprio Codex IAB um viewport mobile de 390×844 ou controle equivalente e homologar `/lilyacai/painel/cardapio`; não usar Chrome/Edge externos e não marcar o item aceito sem isso.
+1. Obter pelo próprio Codex IAB viewport mobile 390×844 ou controle equivalente e homologar `/lilyacai/painel/cardapio`; não usar Chrome/Edge externos e não marcar o item aceito sem isso.
+2. Corrigir qualquer falha mobile encontrada, integrar por PR, implantar e repetir homologação nos dois tamanhos.
 3. Retomar a redução agregada gzip dos 35 chunks até `<=179,994` bytes, conforme autorização original, mantendo separados os indicadores de carga inicial e agregado.
