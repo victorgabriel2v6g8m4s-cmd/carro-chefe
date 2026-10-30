@@ -1,19 +1,19 @@
 # Diagnóstico detalhado ao salvar níveis CookLily
 
-- status: PR aberta; aguardando CI e homologação após integração.
+- status: implementado e implantado; homologação da interação real bloqueada pela reconexão do Codex IAB.
 - owner: AG-DEV.
-- branch: `codex/lily-level-validation-errors`.
+- implementation_branch: `codex/lily-level-validation-errors`.
 - base_branch: `cooklily/canonical`.
 - base_sha_verified: `7d95339f6e4eb12f42234b12bbff0341ac126227`.
-- head_sha_verified: `65b24c88c833ec672e661b67ca9b03f50d1a4457` (checkpoint será anexado no próximo commit).
-- pull_requests: PR #270.
+- canonical_deploy_sha: `f974ad26d9db9f1435e3c21e7c102dcf6bb04b55`.
+- pull_requests: PR #270, squash merge concluído.
 - migrations: nenhuma.
-- deploy: pendente.
+- deploy: concluído em 2026-10-30; evidence `/srv/carro-chefe/data/deploy-logs/deploy-20261030-055243-f974ad26d9db.evidence`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261030-055243-f974ad26d9db.log`.
 - última verificação: 2026-10-30, America/Sao_Paulo.
 
 ## Entrega
 
-- O salvamento de níveis agora preserva detalhes de validação do backend e exibe o caminho do campo e a regra que falhou, sem ecoar valores enviados. Limita a exibição a cinco itens e mantém erros sem estrutura no texto original.
+- O salvamento de níveis preserva detalhes de validação do backend e exibe o caminho do campo e a regra que falhou, sem ecoar valores enviados. Limita a exibição a cinco itens e mantém erros sem estrutura no texto original.
 - O SVG `cooklily-level-badge-upload (3).svg` foi validado com `sanitizeLilySvg`: 465.241 bytes, aceito, sem filtros/metadados bloqueantes.
 
 ## Gates
@@ -23,17 +23,17 @@
 - `npm run check`: PASS.
 - `npm run build`: PASS; orçamento CookLily 214,95 KiB gzip combinado / 220 KiB.
 - `git diff --check`: PASS.
-- CI workflow run `41010512806`: queued na última consulta.
+- CI run `41010555997`: concluído com sucesso; todos os jobs verdes.
+- Deploy canônico: migrations existentes confirmadas, 77 arquivos/407 testes PASS, build PASS (215,14 KiB gzip combinado), tool health PASS, Nginx syntax PASS, health e external smoke PASS.
 
 ## Homologação e riscos
 
-- A API hoje retorna detalhes Zod em `details`; a interface antes descartava esse campo e mostrava apenas “Entrada inválida.”. A causa específica do payload atual ainda não é conhecida até que os detalhes sejam exibidos na tentativa seguinte.
-- O Codex IAB mostrou erro `browser.user is unavailable` nesta sessão, embora inventário liste a aba autenticada. Homologação de produção não concluída; não usar Chrome/Edge externos.
+- O Codex IAB continua mostrando `browser.user is unavailable` ao obter a aba autenticada, mesmo que o inventário do app liste o painel. Não foi feita homologação de UI/UX real e nenhum navegador externo foi usado.
 - Nenhum dado administrativo de produção foi alterado.
+- O motivo preciso da falha original ainda depende de uma nova tentativa de salvar níveis já com o build implantado; a UI deve então apresentar o caminho e a mensagem da validação.
 
 ## Próxima ação exata
 
-1. Confirmar que todos os jobs da CI da PR #270 passaram.
-2. Integrar por squash e implantar o SHA canônico resultante.
-3. Retentar salvar os níveis pela aba Codex IAB e verificar que o painel exibe caminho e motivo de qualquer validação; corrigir o campo apontado e repetir até salvar.
-4. Atualizar este checkpoint com SHA, deploy e evidência real do navegador.
+1. Na aba autenticada de `/lilyacai/painel/fidelidade`, salvar os níveis novamente.
+2. Se ainda houver erro, registrar o texto detalhado exibido e corrigir o campo indicado; se salvar, confirmar a mensagem de sucesso.
+3. Atualizar este checkpoint com o resultado observado no navegador integrado.
