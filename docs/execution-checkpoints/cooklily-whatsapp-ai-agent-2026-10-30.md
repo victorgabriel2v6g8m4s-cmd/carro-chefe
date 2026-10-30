@@ -2,69 +2,46 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-whatsapp-ai-empty-state (merged)
-- base_branch: cooklily/canonical
-- base_sha_verified: fa430c8e4700006dddb0b3e62359131812578358
-- head_sha_verified: f8e64ce0bcc357e5b51a7a648434d9dfe77b1fce
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/279 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/280 (merged)
-- last_verified_at: 2026-10-30 14:30 America/Sao_Paulo
+- branch: `cooklily/canonical` (fundação integrada; homologação visual concluída; piloto real pendente)
+- base_branch: `cooklily/canonical`
+- base_sha_verified: `b4673469cb75a96cd45c62ed3e46ad1c25f753ac`
+- head_sha_verified: `b4673469cb75a96cd45c62ed3e46ad1c25f753ac`
+- pull_requests: PR #278 merged; PR #279 merged; PR #280 merged; PR #281 aberto para reconciliação final do roadmap: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/281
+- last_verified_at: 2026-10-30 14:42 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
 
-Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendimento inbound pelo WhatsApp usando OpenAI Responses API, com processamento idempotente, histórico minimizado e protegido, handoff humano, APIs internas, conhecimento recuperável por embeddings/cache e controles de segurança. Atendimento real permanece desligado até segredos, retenção e configuração Meta serem preparados e verificados.
+Reconciliar o roadmap CookLily com a implementação canônica e implantar a fundação do atendimento inbound por WhatsApp com processamento idempotente, inbox humana e agente OpenAI stateless, contexto mínimo, segurança em camadas, busca de conhecimento e controles de custo. Atendimento a clientes permanece desligado até completar os gates de configuração, privacidade, avaliação e piloto controlado.
 
 ## Concluído e persistido
 
-- PR #278 integrado por squash em `cooklily/canonical` no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`; todos os checks GitHub passaram.
-- Release `c02ed62a89350053679a5b6ba2c59b88a99494e9` implantada em 30/10/2026. Migration `20261030160000_lily_whatsapp_ai_inbox` aplicada no banco real após backup verificado; health interno/externo, Nginx, gates e serviço passaram.
-- A verificação visual inicial encontrou texto de baixo contraste nos painéis escuros; PR #279 foi integrado em `cooklily/canonical` por squash no SHA `97170803b79430c8dc5d6df452b215d3dbe23225`, com correção CSS e roadmap reconciliado.
-- Release `fa430c8e4700006dddb0b3e62359131812578358` implantada após o PR #279; health, Nginx, migrations (sem pendências), suíte, build e gates passaram. A nova revisão desktop encontrou estado vazio ainda escuro por estilo `muted`; PR #280 prepara override explícito dos metadados/estados vazios.
-- PR #280 corrigiu estados vazios/metadados nos cartões escuros, passou todos os gates e foi integrado por squash no SHA `f8e64ce0bcc357e5b51a7a648434d9dfe77b1fce`; aguarda deploy e verificação final.
-- Antes da primeira implantação, VPS confirmou SHA `080eae62ae8615887b8e45f58038f6daad2de399`; canonical integrou PR #278 no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e publicou o checkpoint `c02ed62` antes do deploy.
-- Suíte na VPS: 80 arquivos, 420 testes passaram. Banco backup pré-release: Lily 2,674,688 bytes, SHA-256 registrado no log de deploy; backup verificado.
-- Ambiente da VPS verificado sem imprimir segredos: inbox, agente, consulta por embeddings e orçamento diário desligados/ausentes; credenciais Meta existentes; segredo OpenAI, chave de cifra e retenção não configurados.
-- Commit de implementação `26a149f` inclui webhook inbound idempotente, schema/migration, criptografia, inbox/API staff, fila/worker, guardrails, RAG público, embeddings e painel.
-- Commit `a9d8a25` reforça detecção de prompt injection e afirmações de pagamento/pedido no guardrail de saída; testes unitários após o ajuste passaram.
-- Roadmap reconciliado: entregas anteriores de dashboard/ranking/perfil marcadas concluídas com referência ao PR #277; backlog de temporada/missões/analytics continua aberto; WhatsApp atualizado para status parcial.
-- OpenAI Docs oficial consultada: Responses pode operar com `store:false`; embeddings retornam vetores que podem ser armazenados em vector store. Manter estado e histórico do lado CookLily, sem `previous_response_id`.
-- Sem credencial OpenAI disponível por ferramenta nesta sessão.
-- Configuração de consulta exige consentimento explícito para enviar texto do cliente ao endpoint de embeddings; IA, inbox e consultas continuam desligadas por padrão.
+- PR #278 integrado por squash em `cooklily/canonical` no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa`; todos os checks passaram.
+- Migration `20261030160000_lily_whatsapp_ai_inbox` aplicada na produção após backup verificado. Primeiro release do recurso: `c02ed62a89350053679a5b6ba2c59b88a99494e9`.
+- PR #279 (`97170803b79430c8dc5d6df452b215d3dbe23225`) e PR #280 (`f8e64ce0bcc357e5b51a7a648434d9dfe77b1fce`) integrados; ajustes corrigiram contraste dos metadados e estados vazios.
+- Release da aplicação confirmado em `b4673469cb75a96cd45c62ed3e46ad1c25f753ac`. Deploy passou health interno/externo, Nginx, build, testes e gates, serviço ativo; backups verificados. Sem migration adicional nos deploys CSS.
+- Inbox `/lilyacai/painel/whatsapp` homologada pelo navegador integrado do Codex: desktop 1365×900 e mobile 390×844. Painéis legíveis, responsivos e sem overflow horizontal na inbox. Nenhuma conversa de cliente ou mensagem externa foi usada. Melhoria de UX ainda possível: reduzir rolagem longa da página administrativa em mobile.
+- PR #281 atualiza o roadmap e diferencia fundações implementadas de ativação real. Alteração documental em `docs/lily-acai/ROADMAP_COOKLILY.md`; `git diff --check` passou. O CI do PR está enfileirado no GitHub e ainda não concluiu.
+- Suíte na VPS após release: 80 arquivos e 420 testes passaram. Backup pré-release do banco Lily: 2,674,688 bytes, SHA-256 no log do deploy.
+- `npm run check`, `npm test` (80 arquivos, 417 testes passaram, 3 ignorados), `npm run build` sequencial e `git diff --check` passaram durante as entregas. Build reportou JS 185.95 KiB gzip/187 KiB, inicial 49.46/110 KiB, CSS 34.78/35 KiB, combinado 220.74/222 KiB, maior chunk 68.01/280 KiB.
+- Todos os gates de PR #280 passaram: Quality Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux.
+- VPS verificada sem expor segredos: credenciais Meta presentes; inbox, IA, consulta por embeddings e orçamento diário desativados/ausentes; segredo OpenAI, chave de cifra e retenção não configurados.
 
-## Em andamento
+## Capacidades implantadas
 
-- Deploy do SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e migration real pendentes.
-- Inbox visualizado no domínio real com sessão de agente autenticada pelo navegador integrado. Desktop em 1365×900 confirmou layout de duas colunas; foi encontrado contraste baixo em estado vazio e metadados. PR #280 corrige e foi integrado; aguarda deploy e revalidação desktop/mobile.
-- Aprovar retenção e transparência do envio de consultas à OpenAI antes de ativar flags em qualquer WABA.
+- Webhook Meta com assinatura/handshake, validação de schema, idempotência/deduplicação, rate limits e processamento inbound durável por fila.
+- Inbox cifrada com APIs staff autenticadas, controles de sessão, handoff e resposta humana; conteúdo não deve ir para logs e há expurgo por retenção configurada.
+- Orquestrador para OpenAI Responses API stateless (`store:false`), prompt versionado, contexto limitado, guardrails, fallback humano e limites de custo/tokens; sem ferramentas transacionais para o modelo.
+- Conhecimento público curado, embeddings cacheados e busca vetorial local em SQLite. Texto de cliente só é enviado para embedding quando consentimento/configuração explícita permite; flag permanece desligada.
+- Rascunhos de templates Meta continuam dependendo de revisão/submissão e aprovação no WhatsApp Manager. A entrega não envia mensagens reais.
 
-## Gates e testes
+## Em andamento e bloqueios
 
-- `npm test`: passou; 80 arquivos, 417 testes passaram, 3 ignorados.
-- `npm run check`: passou (client Prisma gerado, dois schemas válidos, TypeScript sem erros).
-- Após o último ajuste de guardrails, `npm run check` e os 4 testes unitários de segurança passaram novamente.
-- `npm run build`: passou; JS total 185.95 KiB gzip/187 KiB, JS inicial 49.46/110 KiB; CSS gzip 34.78/35 KiB; combinado 220.74/222 KiB; chunk máximo 68.01 KiB/280 KiB.
-- `node --test deploy/scripts/survey-ops.test.mjs`: passou, incluindo migration AI em SQLite em memória.
-- `npm run db:deploy:lily` em cópia descartável do banco local migrado: migration AI aplicada. Banco original não foi usado nesse teste.
-- `git diff --check`: sem erros de whitespace.
-- Após o primeiro ajuste visual: `npm run check`, `npm test` (80 arquivos; 417 passaram, 3 ignorados), `npm run build` sequencial e `git diff --check` passaram. Build concorrente inicial falhou por disputa de geração dos clientes Prisma, foi repetido sequencialmente e passou.
-- Para o segundo ajuste visual: `npm run build` e `git diff --check` passaram; todos os gates do PR #280 passaram (Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux).
-- Para o segundo ajuste visual: `npm run build` e `git diff --check` passaram; PR #280 ainda aguarda gates completos.
-- PR #279: todos os gates passaram (Quality Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux).
-
-## Migrations
-
-- `20261030160000_lily_whatsapp_ai_inbox`: aplicada em cópia descartável e no banco de produção após backup verificado; adiciona tabelas de inbox, jobs, preferências, KB/vetores e uso, além de chave de idempotência. Correção CSS não altera schema.
-
-## Bloqueios/riscos
-
-- Não habilitar integração real até configuração de segredo Meta/OpenAI, chave de criptografia, retenção aprovada/configurada, templates aprovados e teste num número de homologação autorizado.
-- O banco Lily é SQLite; vetores persistidos são apenas de conhecimento público. O texto das consultas só será enviado ao endpoint de embeddings com a flag explícita, que permanece desligada.
-
-## Homologação/dependências externas
-
-- VPS está no release `fa430c8`; o SHA `f8e64ce` está integrado e aguarda deploy e homologação responsiva final.
-- Quando houver UI, homologação exclusivamente no navegador integrado do Codex.
+- PR #281: CI aguardando execução; integrar por squash após todos os gates passarem.
+- Operação humana avançada ainda parcial: atribuição/SLA, busca e rotina de operação devem ser fechadas.
+- Antes do piloto: provisionar segredo OpenAI e chave de cifra, definir retenção e transparência/consentimento, validar WABA/número/templates aprovados, definir teto financeiro e monitoramento, executar avaliações offline benignas e adversariais, e testar num número de homologação consentido.
+- Não habilitar flags de inbox, agente ou embeddings de consulta na VPS até que os gates de segurança, privacidade, operação e custo estejam documentados e aprovados.
 
 ## Próxima ação exata
 
-Publicar este checkpoint atualizado em `cooklily/canonical`, implantar o HEAD resultante com `sudo cc deploy canonical` e confirmar contraste/layout de `/lilyacai/painel/whatsapp` em desktop e mobile pelo navegador integrado, mantendo flags de IA desligadas.
+Aguardar conclusão dos checks do PR #281; corrigir falhas se houver e integrar por squash se todos passarem. Depois atualizar este checkpoint com o SHA do merge. Manter o agente desativado e iniciar avaliação offline dos guardrails antes de qualquer piloto Meta.
