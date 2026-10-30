@@ -9,7 +9,7 @@
 - PR #236: merged por squash; merge SHA `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
 - Deploy VPS: concluído em 29/10/2026 00:01 UTC, release `b93445996dfd47ee2386644bbdba120cd0cc33d2`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.evidence`.
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
-- Última verificação: 30/10/2026 17:52 America/Sao_Paulo.
+- Última verificação: 30/10/2026 17:58 America/Sao_Paulo.
 
 ## Sintoma e evidência
 
@@ -91,9 +91,10 @@ Corrigir `diagnose-cooklily-access` para ler o log TLS dedicado por padrão e co
 - Conclusão revisada: há uma causa concreta que explica o usuário confirmado com `dns.adguard.com`: o domínio resolve para o IP de bloqueio da AdGuard, que rejeita o handshake TLS. Isso não prova que os outros dois telefones usavam o mesmo serviço; será preciso comparar a configuração DNS/VPN deles antes de generalizar. O relato de VPN desativada é consistente com um app que cria um túnel local para impor o DNS filtrado.
 - Resolução recomendada: pedir revisão/remoção de falso positivo à AdGuard e orientar temporariamente o usuário afetado a permitir `carrochefe.com` ou usar o resolvedor não filtrado. Para os outros relatos, registrar o provedor DNS/VPN usado e comparar a resposta A do domínio. Não mudar TLS, firewall ou conteúdo do site para contornar um sinkhole DNS.
 - Fontes técnicas: [servidores AdGuard DNS e endpoints filtrado/não filtrado](https://adguard-dns.io/kb/general/dns-providers/); [configuração upstream da página de bloqueio de navegação segura](https://github.com/AdguardTeam/AdGuardDNS/blob/master/configuration.md); [orientação oficial AdGuard para reportar bloqueio incorreto](https://adguard.com/en/support/adguard-mini-android/problems/websites_are_displayed_incorrectly.html).
+- Revisão solicitada por e-mail a `support@adguard.com` em 30/10/2026 17:58 BRT, assunto `False positive review request: carrochefe.com blocked by AdGuard DNS`. Mensagem enviada com reprodução e pedido para revisar/remover a classificação ou informar sua origem. Nenhum IP de cliente, dado pessoal ou captura foi anexado. ID Gmail da mensagem: `1a18e9b699e102d4`.
 
 ## Limite e próxima ação
 
 O ajuste de PMTU é mitigação preventiva coerente com um caminho medido abaixo de MTU 1500; não há prova de que os clientes tenham o mesmo problema de MTU. Para o usuário confirmado com `dns.adguard.com`, o falso positivo/blackhole TLS via sinkhole DNS foi reproduzido; isso não confirma a causa dos outros dois relatos nem garante que o fornecedor já removeu a classificação.
 
-Próxima ação exata: corrigir e testar o caminho padrão de log em `diagnose-cooklily-access`; em paralelo, pedir revisão do falso positivo à AdGuard para o caso confirmado e identificar DNS/VPN dos outros dois usuários. Se surgir novo erro fora do DNS AdGuard, correlacionar horário com captura TLS dedicada antes de alterar a infraestrutura.
+Próxima ação exata: corrigir e testar o caminho padrão de log em `diagnose-cooklily-access`; acompanhar a resposta ao e-mail enviado à AdGuard e identificar DNS/VPN dos outros dois usuários. Se surgir novo erro fora do DNS AdGuard, correlacionar horário com captura TLS dedicada antes de alterar a infraestrutura.
