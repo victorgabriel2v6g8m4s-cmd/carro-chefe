@@ -5,8 +5,8 @@
 - branch: codex/cooklily-bundle-budget-50
 - base_branch: cooklily/canonical
 - base_sha_verified: 0869e749c3e87eaeecfedcee76efe702edf35a8d
-- head_sha_verified: 8c228f8e34b194ba877571148eed2043bc25f9d5
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (draft; CI pending)
+- head_sha_verified: 0da01989ee6a4cf6ae085d6ebc847467d37b592a
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (draft; CI pending for latest head)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
@@ -22,7 +22,7 @@
 - `AdminGate` agora autentica sem carregar o catálogo quando o módulo filho não pede `loadCatalog`.
 - Ainda falta transformar `/painel/cardapio` em índice leve com configuração sob demanda por produto; isso exige separar dados e editor e adicionar contrato/API de detalhe.
 - Nova iteração: rotas de página carregadas sob demanda, runtime React compatível do Lily substituído por Preact, React Router substituído por uma camada Wouter local e medição do grafo JS inicial adicionada ao budget.
-- Build pós-iteração: JS total 563.42 KiB raw / 178.57 KiB gzip; maior chunk 61.42 KiB; grafo JS inicial estático 40.90 KiB gzip. Em relação ao checkpoint anterior (790.11 KiB raw / 219.72 KiB gzip total; entrada 581.10 KiB raw / 138 KiB gzip), reduções aproximadas: total raw 28.7%, total gzip 18.7%, maior chunk raw 89.4% e JS inicial gzip 70.4%. A meta de 50% foi atingida no chunk de entrada; a meta de 20% foi atingida no grafo inicial gzip. O agregado de todos os chunks ainda está abaixo de 20% de redução e permanece explicitamente reportado.
+- Build pós-iteração: JS total 563.47 KiB raw / 178.57 KiB gzip; maior chunk 61.42 KiB; grafo JS inicial estático 40.93 KiB gzip. Em relação ao checkpoint anterior (790.11 KiB raw / 219.72 KiB gzip total; entrada 581.10 KiB raw / 138 KiB gzip), reduções aproximadas: total raw 28.7%, total gzip 18.7%, maior chunk raw 89.4% e JS inicial gzip 70.3%. A meta de 50% foi atingida no chunk de entrada; a meta de 20% foi atingida no grafo inicial gzip. O agregado de todos os chunks ainda está abaixo de 20% de redução e permanece explicitamente reportado.
 - Budget reforçado: mede assets totais, grafo inicial pelo manifest e maior chunk; limites de 600 KiB raw total, 185 KiB gzip total, 110 KiB gzip inicial e 280 KiB para o maior chunk.
 
 ## Gates e testes
@@ -33,6 +33,7 @@
 - `npm test`: PASS, 74 arquivos, 389 testes passaram e 3 foram ignorados; os testes de build budget também passaram.
 - `npm run build`: PASS; inclui builds Gestão, Site, QR, Lily, budget Lily e TypeScript da API.
 - Nova iteração `8c228f8e34b194ba877571148eed2043bc25f9d5`: `npm test` PASS (74 arquivos, 389 passaram, 3 ignorados); `npm run check` PASS; `npm run build` PASS; `git diff --check` PASS; preflight AG-DEV PASS.
+- Correção de navegação `0da01989ee6a4cf6ae085d6ebc847467d37b592a`: os links de raiz não ficam mais ativos fora da Home; `npm run test:lily-ui` PASS (21 arquivos, 96 testes); `npm run build:lily` PASS com 40.93 KiB gzip inicial; aguardando CI completo deste HEAD.
 - `git diff --check`: PASS.
 - Commit `40dfc8fd4b88869d3e5349600bda801f8f0114bf` publicado na branch da tarefa; PR #262 aberto em draft.
 - PR #262 squash-merged depois de todos os 7 checks passarem. SHA integrado: `dda8051e3f271c6e8cc4da8384d700c9867647de`.
