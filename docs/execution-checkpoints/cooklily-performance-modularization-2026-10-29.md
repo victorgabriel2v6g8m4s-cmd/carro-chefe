@@ -4,9 +4,9 @@
 - owner: AG-DEV
 - branch: codex/cooklily-bundle-budget-50
 - base_branch: cooklily/canonical
-- base_sha_verified: 0869e749c3e87eaeecfedcee76efe702edf35a8d
-- head_sha_verified: 0da01989ee6a4cf6ae085d6ebc847467d37b592a
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (draft; CI pending for latest head)
+- base_sha_verified: 5bda800b622bb69ab03b84f0ebc487a6a1663e3a
+- head_sha_verified: 5bda800b622bb69ab03b84f0ebc487a6a1663e3a
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a)
 - last_verified_at: 2026-10-29
 - interruption_state: none
 
@@ -34,6 +34,7 @@
 - `npm run build`: PASS; inclui builds Gestão, Site, QR, Lily, budget Lily e TypeScript da API.
 - Nova iteração `8c228f8e34b194ba877571148eed2043bc25f9d5`: `npm test` PASS (74 arquivos, 389 passaram, 3 ignorados); `npm run check` PASS; `npm run build` PASS; `git diff --check` PASS; preflight AG-DEV PASS.
 - Correção de navegação `0da01989ee6a4cf6ae085d6ebc847467d37b592a`: os links de raiz não ficam mais ativos fora da Home; `npm run test:lily-ui` PASS (21 arquivos, 96 testes); `npm run build:lily` PASS com 40.93 KiB gzip inicial; aguardando CI completo deste HEAD.
+- CI PR #263 após correção: 7/7 checks PASS em 2026-10-30; PR squash-merged na canonical em `5bda800b622bb69ab03b84f0ebc487a6a1663e3a`.
 - `git diff --check`: PASS.
 - Commit `40dfc8fd4b88869d3e5349600bda801f8f0114bf` publicado na branch da tarefa; PR #262 aberto em draft.
 - PR #262 squash-merged depois de todos os 7 checks passarem. SHA integrado: `dda8051e3f271c6e8cc4da8384d700c9867647de`.
@@ -59,6 +60,6 @@
 
 ## Próxima ação exata
 
-1. Criar PR draft da branch `codex/cooklily-bundle-budget-50`, aguardar todos os checks e integrar na `cooklily/canonical`.
-2. Atualizar este checkpoint após CI/merge, fazer deploy na VPS e validar o domínio real em desktop e mobile exclusivamente na aba integrada do Codex.
-3. Corrigir qualquer falha visual/funcional observada, repetir teste, build, merge/deploy e homologação. Só marcar `completed` após as metas permanecerem dentro do budget e a homologação visual passar.
+1. Fazer deploy do SHA canonical `5bda800b622bb69ab03b84f0ebc487a6a1663e3a` na VPS e registrar evidência.
+2. Validar rotas Lily em desktop e mobile exclusivamente na aba integrada do Codex, coletar falhas e corrigir.
+3. Repetir teste/build/CI/merge/deploy/homologação até a UI passar; então atualizar checkpoint para `completed`.
