@@ -24,7 +24,7 @@ describe("CookLily — pagamento e UX administrativa", () => {
   });
 
   it("permite preço fixo e opções de produto com nome, preço e padrão", () => {
-    const admin = source("apps/lily_acai/src/admin.tsx");
+    const admin = source("apps/lily_acai/src/admin.tsx") + source("apps/lily_acai/src/features/admin/catalog/ProductEditor.tsx");
     const catalog = source("apps/lily_acai/src/catalog.tsx");
     expect(admin).toContain("Preço fixo (sem variações)");
     expect(admin).toContain("Criar variações personalizadas");

@@ -30,6 +30,9 @@ const spinnerSource = readFileSync(resolve(sourceDirectory, "loading-spinner.tsx
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
 const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
+const adminProductEditorSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/ProductEditor.tsx"), "utf8");
+const adminProductMoneySource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/product-money.ts"), "utf8");
+const adminAllergenFieldsSource = readFileSync(resolve(sourceDirectory, "features/admin/AllergenAdminFields.tsx"), "utf8");
 const adminNavigationSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminNavigationLayout.tsx"), "utf8");
 const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-interaction-enhancements.ts"), "utf8");
 const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
@@ -61,26 +64,36 @@ describe("estrutura crítica de UX CookLily", () => {
 
   it("carrega índice leve do catálogo e busca configuração só ao expandir um produto", () => {
     expect(adminSource).toContain('loadCatalog="index"');
-    expect(adminSource).toContain("getLilyAdminProductEditor(summary.id)");
+    expect(adminProductEditorSource).toContain("getLilyAdminProductEditor(summary.id)");
     expect(adminSource).toContain("getLilyAdminCatalogIndex()");
     expect(adminSource).toContain("getLilyAdminCatalog()");
     expect(adminSource).toContain("Buscar produto");
-    const editorForm = adminSource.slice(adminSource.indexOf("function ProductEditorForm"), adminSource.indexOf("function CreateProduct"));
-    expect(editorForm).toContain('className="admin-product-editor-content"');
-    expect(editorForm).not.toContain("<summary>");
-    expect(editorForm).not.toContain("<details");
-    expect(adminSource).toContain("<CatalogProductCard");
-    expect(adminSource).toContain("dialogRef.current?.showModal()");
-    expect(adminSource).toContain("<dialog");
+    expect(adminProductEditorSource).toContain('className="admin-product-editor-content"');
+    expect(adminProductEditorSource).not.toContain("<summary>");
+    expect(adminProductEditorSource).not.toContain("<details");
+    expect(adminProductEditorSource).toContain("<CatalogProductCard");
+    expect(adminProductEditorSource).toContain("dialogRef.current?.showModal()");
+    expect(adminProductEditorSource).toContain("<dialog");
     expect(sharedCatalogCardSource).toContain('className="product-card-media"');
     expect(sharedCatalogCardSource).toContain('className="product-card-body"');
   });
 
   it("mantém no índice administrativo apenas dados resumidos e o detalhe progressivo por produto", () => {
     expect(adminSource).toContain('loadCatalog="index"');
-    expect(adminSource).toContain("getLilyAdminProductEditor(summary.id)");
-    expect(adminSource).toContain("Carregando configurações de");
-    expect(adminSource).toContain("Tentar novamente");
+    expect(adminProductEditorSource).toContain("getLilyAdminProductEditor(summary.id)");
+    expect(adminProductEditorSource).toContain("Carregando configurações de");
+    expect(adminProductEditorSource).toContain("Tentar novamente");
+  });
+
+  it("separa editor de catálogo, formatação de preços e campos de alergênicos em módulos focados", () => {
+    expect(adminSource).toContain('from "./features/admin/catalog/ProductEditor"');
+    expect(adminSource).not.toContain("function ProductEditorForm");
+    expect(adminProductEditorSource).toContain("function ProductEditorForm");
+    expect(adminProductEditorSource).toContain('from "./product-money"');
+    expect(adminProductMoneySource).toContain("export function moneyInput");
+    expect(adminProductMoneySource).toContain("export function parseMoney");
+    expect(adminAllergenFieldsSource).toContain("export function AllergenAdminFields");
+    expect(adminAllergenFieldsSource).toContain("export function normalizeAdminAllergens");
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
@@ -357,8 +370,8 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(allergenSource).toContain("CONTÉM:");
     expect(allergenSource).toContain("PODE CONTER:");
     expect(allergenSource).toContain("contato cruzado");
-    expect(adminSource).toContain("AllergenAdminFields");
-    expect(adminSource).toContain("Pendente de revisão");
+    expect(adminAllergenFieldsSource).toContain("AllergenAdminFields");
+    expect(adminAllergenFieldsSource).toContain("Pendente de revisão");
   });
 
   it("mantém fila da cozinha no painel e bloqueia montagem sem pagamento", () => {
