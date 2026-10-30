@@ -6,8 +6,8 @@
 - base_branch: cooklily/canonical
 - base_sha_verified: a9b59e7e0ffdd037317e9883a3382f092fe820e4
 - head_sha_verified: 8724a58 (feature commit)
-- pull_requests: nenhum
-- last_verified_at: 2026-10-30 12:17 America/Sao_Paulo
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/277 (ready for review, open)
+- last_verified_at: 2026-10-30 12:22 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -31,7 +31,9 @@ Ampliar header e controles de fidelidade; criar rota pública de níveis com tri
 - `npm run check`: passou (Prisma validate e TypeScript).
 - `npm run build`: passou para Gestão, site, QR, CookLily e TypeScript da API.
 - Build CookLily: JS gzip 183.74/185 KiB, CSS gzip 33.98/34 KiB, combinado 217.72/220 KiB.
-- CI/CodeQL: pendente.
+- Commit feature: `8724a58`; checkpoint pós-commit: `d03c5b014a7c5734e62e171f963ca9660f28bfa8`.
+- GitHub Actions CI run `41079870275`: Excel Recipe, Workbook Snapshot, Tool Health e Windows Supervisor passaram; Quality Node 24 em testes/build e Node 20 em dependências, em andamento.
+- CodeQL: aguardando estado no PR.
 
 ## Migrations
 
@@ -50,4 +52,4 @@ Ampliar header e controles de fidelidade; criar rota pública de níveis com tri
 
 ## Próxima ação exata
 
-Criar commit, publicar a branch, abrir PR draft, acompanhar CI/CodeQL e integrar por squash após gates verdes.
+Aguardar Quality Node 20/24 e CodeQL no PR #277; corrigir falhas se houver e integrar por squash quando os gates exigidos estiverem verdes.
