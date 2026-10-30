@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-catalog-checkpoint-merged
+- branch: codex/cooklily-catalog-editor-one-click
 - base_branch: cooklily/canonical
-- base_sha_verified: 5869468eff64f94d9b30706835e836527e16802b
-- head_sha_verified: 5869468eff64f94d9b30706835e836527e16802b
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/265 (merged; squash 5869468eff64f94d9b30706835e836527e16802b)
+- base_sha_verified: 6217c648f0a2be280dc01cd1345d9d45b7e97494
+- head_sha_verified: 6217c648f0a2be280dc01cd1345d9d45b7e97494
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/265 (merged; squash 5869468eff64f94d9b30706835e836527e16802b), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/266 (merged; squash 6217c648f0a2be280dc01cd1345d9d45b7e97494)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
@@ -90,8 +90,15 @@
 - Homologação mobile permanece pendente: o controle Codex IAB desta sessão não expõe ajuste de viewport, e a tecla de alternância de device mode não alterou a janela. Não usar navegador externo nem declarar aprovação mobile sem viewport estreito real.
 - O item do catálogo progressivo segue `in_progress` até validar o domínio em viewport mobile pelo Codex IAB e registrar evidência. A meta de redução agregada gzip permanece em 18,73% (faltam 2.861 bytes para o limite de 179.994 bytes).
 
+### Correção de UI encontrada na homologação desktop — em andamento
+
+- Ao abrir um item no domínio, a interação exigia dois disclosures sucessivos e repetia nome/status: resumo do índice e resumo do formulário. Removido o segundo `<details>` do formulário para que o primeiro clique expanda diretamente os controles do produto.
+- Guard estrutural adicionado a `apps/lily_acai/src/structure.test.ts` para garantir que o formulário carregado não introduza outro `<details>` nem `<summary>`.
+- Gates após a correção: `npm run test:lily-ui` PASS (21 arquivos, 97 testes); `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS. Budget reportou JS total 179.47 KiB gzip e CSS/JS+CSS dentro do limite.
+- Ainda não integrado, implantado nem homologado após esta correção; a validação mobile continua pendente pelo bloqueio de viewport do IAB.
+
 ### Próxima ação exata
 
-1. Obter pelo próprio Codex IAB um viewport mobile de 390×844 ou controle equivalente e homologar `/lilyacai/painel/cardapio` em desktop e mobile; corrigir, redeployar e repetir se necessário. Não usar Chrome/Edge externos.
-2. Persistir este checkpoint por PR de documentação após concluir a homologação mobile; não marcar o item como aceito até lá.
+1. Integrar a correção do disclosure por PR com CI verde; implantar na VPS e repetir homologação desktop na aba Codex IAB.
+2. Obter pelo próprio Codex IAB um viewport mobile de 390×844 ou controle equivalente e homologar `/lilyacai/painel/cardapio`; não usar Chrome/Edge externos e não marcar o item aceito sem isso.
 3. Retomar a redução agregada gzip dos 35 chunks até `<=179,994` bytes, conforme autorização original, mantendo separados os indicadores de carga inicial e agregado.

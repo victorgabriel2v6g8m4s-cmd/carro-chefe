@@ -434,11 +434,7 @@ function ProductEditorForm({ product, data, csrf, refresh, setError }: {
     }
   }
 
-  return <details className="admin-product" id={product.slug}>
-    <summary>
-      <span><strong>{product.displayName}</strong><small>{product.descriptiveName}</small></span>
-      <span className={product.isPurchasable ? "state-live" : "state-off"}>{product.isPurchasable ? "Disponível" : "Esgotado/pausado"}</span>
-    </summary>
+  return <div className="admin-product-editor-content" id={product.slug}>
     <div className="admin-product-grid">
       <div className="admin-span">
         <strong>Prévia pública do produto</strong>
@@ -543,7 +539,7 @@ function ProductEditorForm({ product, data, csrf, refresh, setError }: {
       </div>}
       <AdminAutosaveStatus {...relationsAutosave} />
     </div>
-  </details>;
+  </div>;
 }
 
 function CreateProduct({ data, csrf, refresh, setError }: any) {

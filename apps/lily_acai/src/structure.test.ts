@@ -47,6 +47,10 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(adminSource).toContain("getLilyAdminCatalogIndex()");
     expect(adminSource).toContain("getLilyAdminCatalog()");
     expect(adminSource).toContain("Buscar produto");
+    const editorForm = adminSource.slice(adminSource.indexOf("function ProductEditorForm"), adminSource.indexOf("function CreateProduct"));
+    expect(editorForm).toContain('className="admin-product-editor-content"');
+    expect(editorForm).not.toContain("<summary>");
+    expect(editorForm).not.toContain("<details");
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
