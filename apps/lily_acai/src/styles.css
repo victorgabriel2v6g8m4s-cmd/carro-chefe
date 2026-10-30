@@ -468,7 +468,7 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .admin-sidebar-mobile-toggle { display: inline-flex; margin: 4px 0 8px; }
   .admin-sidebar { display: none; position: static; max-height: 55vh; margin-bottom: 10px; }
   .admin-workspace.is-mobile-open .admin-sidebar { display: grid; }
-  .admin-workspace .admin-sidebar-title,.admin-workspace .admin-sidebar-link span,.admin-workspace .admin-sidebar-role { display: initial; }
+  .admin-workspace.is-mobile-open .admin-sidebar-title,.admin-workspace.is-mobile-open .admin-sidebar-link span,.admin-workspace.is-mobile-open .admin-sidebar-role { display: initial; }
   .admin-workspace .admin-sidebar-heading { justify-content: space-between; }
   .admin-workspace .admin-sidebar-link { justify-content: flex-start; }
   .admin-sidebar-collapse { display: none; }

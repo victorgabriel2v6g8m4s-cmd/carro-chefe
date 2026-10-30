@@ -44,6 +44,7 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(adminNavigationSource).toContain('localStorage.setItem(STORAGE_KEY, String(next))');
     expect(adminNavigationSource).toContain('aria-controls="cooklily-admin-navigation"');
     expect(css).toContain(".admin-workspace.is-mobile-open .admin-sidebar");
+    expect(css).toContain(".admin-workspace.is-mobile-open .admin-sidebar-link span");
     expect(css).toContain(".admin-workspace.is-collapsed .admin-sidebar-link");
   });
 
