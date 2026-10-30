@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-whatsapp-ai-empty-state
+- branch: codex/cooklily-whatsapp-ai-empty-state (merged)
 - base_branch: cooklily/canonical
 - base_sha_verified: fa430c8e4700006dddb0b3e62359131812578358
-- head_sha_verified: c9e0a1e
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/279 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/280 (draft)
+- head_sha_verified: f8e64ce0bcc357e5b51a7a648434d9dfe77b1fce
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/278 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/279 (merged); https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/280 (merged)
 - last_verified_at: 2026-10-30 14:30 America/Sao_Paulo
 - interruption_state: none
 
@@ -20,6 +20,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 - Release `c02ed62a89350053679a5b6ba2c59b88a99494e9` implantada em 30/10/2026. Migration `20261030160000_lily_whatsapp_ai_inbox` aplicada no banco real após backup verificado; health interno/externo, Nginx, gates e serviço passaram.
 - A verificação visual inicial encontrou texto de baixo contraste nos painéis escuros; PR #279 foi integrado em `cooklily/canonical` por squash no SHA `97170803b79430c8dc5d6df452b215d3dbe23225`, com correção CSS e roadmap reconciliado.
 - Release `fa430c8e4700006dddb0b3e62359131812578358` implantada após o PR #279; health, Nginx, migrations (sem pendências), suíte, build e gates passaram. A nova revisão desktop encontrou estado vazio ainda escuro por estilo `muted`; PR #280 prepara override explícito dos metadados/estados vazios.
+- PR #280 corrigiu estados vazios/metadados nos cartões escuros, passou todos os gates e foi integrado por squash no SHA `f8e64ce0bcc357e5b51a7a648434d9dfe77b1fce`; aguarda deploy e verificação final.
 - Antes da primeira implantação, VPS confirmou SHA `080eae62ae8615887b8e45f58038f6daad2de399`; canonical integrou PR #278 no SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e publicou o checkpoint `c02ed62` antes do deploy.
 - Suíte na VPS: 80 arquivos, 420 testes passaram. Banco backup pré-release: Lily 2,674,688 bytes, SHA-256 registrado no log de deploy; backup verificado.
 - Ambiente da VPS verificado sem imprimir segredos: inbox, agente, consulta por embeddings e orçamento diário desligados/ausentes; credenciais Meta existentes; segredo OpenAI, chave de cifra e retenção não configurados.
@@ -33,7 +34,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 ## Em andamento
 
 - Deploy do SHA `c589b7949226ff9269687e448903c9dbc3a9c5fa` e migration real pendentes.
-- Inbox visualizado no domínio real com sessão de agente autenticada pelo navegador integrado. Desktop em 1365×900 confirmou layout de duas colunas e revelou texto escuro no estado vazio; PR #280 corrige, aguardando CI/deploy para nova verificação desktop/mobile.
+- Inbox visualizado no domínio real com sessão de agente autenticada pelo navegador integrado. Desktop em 1365×900 confirmou layout de duas colunas; foi encontrado contraste baixo em estado vazio e metadados. PR #280 corrige e foi integrado; aguarda deploy e revalidação desktop/mobile.
 - Aprovar retenção e transparência do envio de consultas à OpenAI antes de ativar flags em qualquer WABA.
 
 ## Gates e testes
@@ -46,6 +47,7 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 - `npm run db:deploy:lily` em cópia descartável do banco local migrado: migration AI aplicada. Banco original não foi usado nesse teste.
 - `git diff --check`: sem erros de whitespace.
 - Após o primeiro ajuste visual: `npm run check`, `npm test` (80 arquivos; 417 passaram, 3 ignorados), `npm run build` sequencial e `git diff --check` passaram. Build concorrente inicial falhou por disputa de geração dos clientes Prisma, foi repetido sequencialmente e passou.
+- Para o segundo ajuste visual: `npm run build` e `git diff --check` passaram; todos os gates do PR #280 passaram (Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux).
 - Para o segundo ajuste visual: `npm run build` e `git diff --check` passaram; PR #280 ainda aguarda gates completos.
 - PR #279: todos os gates passaram (Quality Node 20/24, Tool Health, Windows Supervisor, Workbook Snapshot e Excel Recipe Windows/Linux).
 
@@ -60,9 +62,9 @@ Reconciliar o roadmap CookLily com a implementação canônica; iniciar o atendi
 
 ## Homologação/dependências externas
 
-- VPS está no release `fa430c8`; a correção do estado vazio foi aberta como PR #280 e aguarda CI, merge, deploy e homologação responsiva final.
+- VPS está no release `fa430c8`; o SHA `f8e64ce` está integrado e aguarda deploy e homologação responsiva final.
 - Quando houver UI, homologação exclusivamente no navegador integrado do Codex.
 
 ## Próxima ação exata
 
-Aguardar CI do PR #280; depois integrar por squash, publicar este checkpoint atualizado em `cooklily/canonical`, implantar o HEAD resultante com `sudo cc deploy canonical` e confirmar contraste/layout de `/lilyacai/painel/whatsapp` em desktop e mobile pelo navegador integrado, mantendo flags de IA desligadas.
+Publicar este checkpoint atualizado em `cooklily/canonical`, implantar o HEAD resultante com `sudo cc deploy canonical` e confirmar contraste/layout de `/lilyacai/painel/whatsapp` em desktop e mobile pelo navegador integrado, mantendo flags de IA desligadas.
