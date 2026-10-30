@@ -5,9 +5,9 @@
 - branch: `codex/lily-admin-modules-continued`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `f3e83f8`
-- head_sha_verified: `3c2e574`
-- pull_requests: PR #291 aberta; CI pendente
-- last_verified_at: 2026-10-30 19:06 America/Sao_Paulo
+- head_sha_verified: `3ec266de587069f3c011786f3fc2d7ef1f8dc74d`
+- pull_requests: PR #291 merged by squash; CI passed on Node 20/24 and all required jobs
+- last_verified_at: 2026-10-30 19:10 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -20,6 +20,7 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 - Inventário das responsabilidades administrativas restantes: criação de produtos, categorias, sabores/adicionais e compatibilidade, combos/ofertas, configurações globais e índice/filtros.
 - Extraídos os componentes listados para módulos coesos sob `features/admin/catalog/`; utilitários de autosave e editor de alergênicos também foram isolados.
 - `admin.tsx` foi reduzido a 111 linhas e preserva o acesso lazy aos cadastros globais e ao detalhe por produto.
+- PR #291 integrou essa modularização em `cooklily/canonical` via squash commit `3ec266de587069f3c011786f3fc2d7ef1f8dc74d`.
 - Auditoria dirigida encontrou outros arquivos grandes fora do painel (catálogo público, API, entrada principal e páginas); o item amplo do roadmap continua parcial.
 
 ## Em andamento
@@ -34,7 +35,7 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 - `npm test -- --maxWorkers=1`: passou, 81 arquivos/421 testes, 3 ignorados.
 - `npm run build`: passou; 188.59 KiB JS gzip e 223.91 KiB JS+CSS gzip, budgets OK.
 - `git diff --check`: passou.
-- CI, merge, deploy e homologação desta fatia ainda pendentes.
+- CI e merge passaram; deploy e homologação ainda pendentes.
 
 ## Migrations
 
@@ -52,4 +53,4 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 
 ## Próxima ação exata
 
-Acompanhar todos os checks da PR #291; após aprovação, integrar e implantar a canonical antes da homologação.
+Publicar este checkpoint no canonical e executar `sudo cc deploy canonical`; após o deploy, homologar criação, categorias, cadastros globais, busca/listagem e editor de produto em desktop e mobile.
