@@ -644,6 +644,10 @@ model LilyOperationalSettings {
   loyaltyCoinIconMedia     LilyMediaAsset? @relation("LilyCoinIcon", fields: [loyaltyCoinIconMediaId], references: [id], onDelete: SetNull)
   paymentsEnabled           Boolean  @default(false)
   paymentProvider           String   @default("manual")
+  activePixProvider         String   @default("cooklily_pix")
+  sicrediPixKeyEncrypted    String?
+  sicrediPixMerchantName    String?
+  sicrediPixMerchantCity    String?
   manualPixEnabled          Boolean  @default(false)
   manualPixInstructions     String?
   mercadoPagoPixEnabled     Boolean  @default(false)

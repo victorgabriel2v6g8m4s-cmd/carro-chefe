@@ -109,7 +109,7 @@ export function buildStaticPixPayload(input: {
   return crcInput + pixCrc16(crcInput);
 }
 
-function txidForPayment(paymentId: string) {
+export function txidForPayment(paymentId: string) {
   return `CL${crypto.createHash("sha256").update(paymentId).digest("hex").slice(0, 23)}`;
 }
 

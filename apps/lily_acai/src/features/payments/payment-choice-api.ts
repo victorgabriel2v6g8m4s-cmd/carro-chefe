@@ -1,7 +1,7 @@
 import { parseResponse, type AuthPayload } from "../../api";
 
 export type LilyCheckoutPaymentMethod = "pix" | "credit_card" | "debit_card";
-export type LilyPaymentProviderId = "cooklily_pix" | "mercado_pago" | "manual";
+export type LilyPaymentProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
 
 export type LilyPaymentMethodRule = {
   method: LilyCheckoutPaymentMethod;
@@ -156,6 +156,8 @@ export type AdminPaymentChoiceSettings = {
   manualPixInstructions: string | null;
   mercadoPagoPixEnabled: boolean;
   mercadoPagoCardEnabled: boolean;
+  activePixProvider: "cooklily_pix" | "sicredi_pix";
+  sicrediPix: { bank: "Sicredi"; keyConfigured: boolean; maskedKey: string; merchantName: string; merchantCity: string; merchantNameConfigured: boolean; merchantCityConfigured: boolean; ready: boolean };
   methods: LilyPaymentMethodRule[];
   readiness: {
     cookLilyPix: {
@@ -183,7 +185,7 @@ export async function getAdminPaymentChoiceSettings() {
 }
 
 export async function saveAdminPaymentChoiceSettings(
-  input: Omit<AdminPaymentChoiceSettings, "readiness">,
+  input: Omit<AdminPaymentChoiceSettings, "readiness" | "sicrediPix"> & { sicrediPixKey?: string; sicrediPixMerchantName?: string; sicrediPixMerchantCity?: string },
   csrfToken: string
 ) {
   const response = await fetch("/api/v1/lily/admin/payment-options/settings", {
@@ -193,4 +195,9 @@ export async function saveAdminPaymentChoiceSettings(
     body: JSON.stringify(input)
   });
   return parseResponse<AdminPaymentChoiceSettings>(response);
+}
+
+export async function getAdminPixQr(provider: "cooklily_pix" | "sicredi_pix") {
+  const response = await fetch(`/api/v1/lily/admin/payment-options/pix-qr?provider=${provider}`, { credentials: "same-origin", cache: "no-store" });
+  return parseResponse<{ provider: string; qrCode: string }>(response);
 }

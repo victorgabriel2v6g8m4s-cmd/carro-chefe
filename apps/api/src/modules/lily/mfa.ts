@@ -5,6 +5,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin } from "./admin-security";
 import { requireLilyCsrf, requireLilySession, verifyPassword } from "./auth";
+import { decryptLilySecret, encryptLilySecret } from "./secret-crypto";
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const MFA_ISSUER = "CookLily";
@@ -31,47 +32,12 @@ function requirePrivilegedRole(role: string) {
   }
 }
 
-function mfaEncryptionKey() {
-  const encoded = process.env.LILY_MFA_ENCRYPTION_KEY?.trim();
-  if (encoded) {
-    const key = Buffer.from(encoded, "base64url");
-    if (key.length !== 32) {
-      throw new Error("LILY_MFA_ENCRYPTION_KEY deve conter exatamente 32 bytes em base64url.");
-    }
-    return key;
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("LILY_MFA_ENCRYPTION_KEY é obrigatória em produção.");
-  }
-
-  // Chave determinística somente para desenvolvimento/teste. Produção falha fechada sem variável própria.
-  return crypto.createHash("sha256").update("cooklily-dev-only-mfa-key-v1").digest();
-}
-
 function encryptSecret(secret: string) {
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", mfaEncryptionKey(), iv);
-  const ciphertext = Buffer.concat([cipher.update(secret, "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return ["v1", iv.toString("base64url"), tag.toString("base64url"), ciphertext.toString("base64url")].join(".");
+  return encryptLilySecret(secret, "staff-mfa");
 }
 
 function decryptSecret(encoded: string) {
-  const [version, ivEncoded, tagEncoded, ciphertextEncoded] = encoded.split(".");
-  if (version !== "v1" || !ivEncoded || !tagEncoded || !ciphertextEncoded) {
-    throw new Error("Segredo MFA cifrado inválido.");
-  }
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    mfaEncryptionKey(),
-    Buffer.from(ivEncoded, "base64url")
-  );
-  decipher.setAuthTag(Buffer.from(tagEncoded, "base64url"));
-  return Buffer.concat([
-    decipher.update(Buffer.from(ciphertextEncoded, "base64url")),
-    decipher.final()
-  ]).toString("utf8");
+  return decryptLilySecret(encoded, "staff-mfa");
 }
 
 function base32Encode(buffer: Buffer) {

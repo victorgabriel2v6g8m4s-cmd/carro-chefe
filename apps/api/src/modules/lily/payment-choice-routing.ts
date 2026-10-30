@@ -1,5 +1,6 @@
 import { ApiError } from "../../lib/errors";
 import { createCookLilyPixPayment, cookLilyPixConfiguration } from "./cooklily-pix-provider";
+import { createSicrediPixPayment, sicrediPixConfiguration } from "./sicredi-pix-provider";
 import { getLilyOperationalSettings } from "./fulfillment";
 import { mercadoPagoConfiguration } from "./mercado-pago-provider";
 import { createMercadoPagoChoicePayment } from "./mercado-pago-choice-provider";
@@ -11,7 +12,7 @@ import {
   type LilyPaymentQuote
 } from "./payment-method-rules";
 
-export type LilyChoiceProviderId = "cooklily_pix" | "mercado_pago" | "manual";
+export type LilyChoiceProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
 
 export type LilyChoiceProviderResult = {
   providerPaymentId: string | null;
@@ -34,9 +35,16 @@ export function lilyPixProviderChain(
   settings: Awaited<ReturnType<typeof getLilyOperationalSettings>>
 ): LilyChoiceProviderId[] {
   const cookLily = cookLilyPixConfiguration();
+  const sicredi = sicrediPixConfiguration(settings);
   const mercadoPago = mercadoPagoConfiguration();
   const providers: LilyChoiceProviderId[] = [];
-  if (cookLily.ready) providers.push("cooklily_pix");
+  const pixProviders = settings.activePixProvider === "sicredi_pix"
+    ? ["sicredi_pix", "cooklily_pix"] as const
+    : ["cooklily_pix", "sicredi_pix"] as const;
+  for (const provider of pixProviders) {
+    if (provider === "cooklily_pix" && cookLily.ready) providers.push(provider);
+    if (provider === "sicredi_pix" && sicredi.ready) providers.push(provider);
+  }
   if (settings.mercadoPagoPixEnabled && mercadoPago.pixReady) providers.push("mercado_pago");
   if (settings.manualPixEnabled && settings.manualPixInstructions?.trim()) providers.push("manual");
   return providers;
@@ -147,6 +155,27 @@ export async function createLilyPixChoice(input: {
         lastLocalError = new Error("Pix CookLily não pôde ser gerado.");
       } catch (error) {
         // Geração de BR Code é local e não cria cobrança externa; fallback é seguro.
+        lastLocalError = error;
+      }
+      continue;
+    }
+
+    if (provider === "sicredi_pix") {
+      try {
+        const settings = await getLilyOperationalSettings();
+        const result = await createSicrediPixPayment({
+          paymentId: input.paymentId,
+          orderId: input.order.id,
+          orderNumber: input.order.orderNumber,
+          amountCents: input.quote.amountCents,
+          currency: "BRL",
+          method: "pix",
+          idempotencyKey: input.idempotencyKey,
+          settings
+        });
+        return { provider, result: result as LilyChoiceProviderResult, attemptedProviders };
+      } catch (error) {
+        // BR Code é local; não houve tentativa de cobrança externa.
         lastLocalError = error;
       }
       continue;

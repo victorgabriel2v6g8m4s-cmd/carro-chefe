@@ -5,6 +5,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { z } from "zod";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "./admin-security";
+import { LILY_WHATSAPP_STARTER_TEMPLATES } from "./whatsapp-template-presets";
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 
@@ -619,6 +620,41 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
         updatedAt: row.updatedAt
       }))
     };
+  });
+
+  app.post("/api/v1/lily/admin/whatsapp/templates/starter-pack", async (request) => {
+    const context = await requireLilyAdmin(request, true);
+    z.object({}).strict().parse(request.body ?? {});
+    let created = 0;
+    let existing = 0;
+    const createdKeys: string[] = [];
+    for (const preset of LILY_WHATSAPP_STARTER_TEMPLATES) {
+      const current = await lilyPrisma.lilyWhatsAppMessageTemplate.findUnique({ where: { key: preset.key }, select: { id: true } });
+      if (current) { existing += 1; continue; }
+      await lilyPrisma.lilyWhatsAppMessageTemplate.create({
+        data: {
+          key: preset.key,
+          displayName: preset.displayName,
+          category: preset.category,
+          language: "pt_BR",
+          bodyTemplate: preset.bodyTemplate,
+          variablesJson: JSON.stringify(preset.variables),
+          variableNamesJson: JSON.stringify(preset.variableNames),
+          flowJson: "[]",
+          componentsJson: JSON.stringify(preset.components),
+          status: "draft",
+          createdBy: context.user.id
+        }
+      });
+      created += 1;
+      createdKeys.push(preset.key);
+    }
+    await auditLilyAdmin(context.user.id, "whatsapp.template.starter_pack.install", "whatsapp-template-pack", "customer-journey-v1", {
+      created,
+      existing,
+      count: LILY_WHATSAPP_STARTER_TEMPLATES.length
+    });
+    return { created, existing, total: LILY_WHATSAPP_STARTER_TEMPLATES.length, createdKeys, templates: LILY_WHATSAPP_STARTER_TEMPLATES.map(({ key, displayName, category }) => ({ key, displayName, category, status: "draft" as const })) };
   });
 
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {

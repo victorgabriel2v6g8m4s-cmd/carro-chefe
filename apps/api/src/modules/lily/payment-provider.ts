@@ -1,4 +1,6 @@
 import { createCookLilyPixPayment } from "./cooklily-pix-provider";
+import { createSicrediPixPayment } from "./sicredi-pix-provider";
+import { lilyPrisma } from "@lily-acai/database";
 import {
   cancelMercadoPagoPayment,
   createMercadoPagoPayment,
@@ -105,6 +107,15 @@ const cookLilyPix: LilyPaymentProvider = {
   createPayment: createCookLilyPixPayment
 };
 
+const sicrediPix: LilyPaymentProvider = {
+  id: "sicredi_pix",
+  createPayment: async (input) => {
+    const settings = await lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" } });
+    if (!settings) throw new Error("Configuração operacional CookLily ausente.");
+    return createSicrediPixPayment({ ...input, settings });
+  }
+};
+
 const mercadoPago: LilyPaymentProvider = {
   id: "mercado_pago",
   createPayment: createMercadoPagoPayment,
@@ -116,6 +127,7 @@ const mercadoPago: LilyPaymentProvider = {
 export function lilyPaymentProvider(id: string): LilyPaymentProvider {
   if (id === "manual") return manual;
   if (id === "cooklily_pix") return cookLilyPix;
+  if (id === "sicredi_pix") return sicrediPix;
   if (id === "mercado_pago") return mercadoPago;
   throw new Error(`Provedor de pagamento não configurado/suportado: ${id}`);
 }

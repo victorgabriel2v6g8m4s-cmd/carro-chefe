@@ -1,6 +1,6 @@
 # Decisões e pendências — CookLily
 
-**Última auditoria:** 08/10/2026  
+**Última auditoria:** 30/10/2026
 **Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
 
 ## Atualização pontual — 08/10/2026
@@ -99,6 +99,10 @@
 | LILY-PEND-050 | UX de alergênicos | implementar sanfona fechada por padrão e revelar aviso/conteúdo somente após ação do usuário, preservando acessibilidade e snapshots | ADR-002 / Entrega 12 |
 | LILY-PEND-051 | Deploy da canonical | hotfix do deployer integrado no head `24bef161...`; executar novo deploy e comprovar health, backup, migrations e rollback antes de chamar a versão atual de homologada | deploy/homologação |
 | LILY-PEND-052 | UI definitiva do site | **próxima prioridade:** finalizar a experiência pública conforme kit de marca/ADR-002; revisar estrutura compartilhada, landing, catálogo, produto/carrinho, checkout/pagamento, acompanhamento, responsividade, acessibilidade e estados vazios/erro/carregamento. A leitura do QR está homologada; a liquidação do pagamento fica em etapa posterior | UI / QA real |
+| LILY-PEND-053 | Pix Sicredi alternativo | **implementado nesta branch:** chave cifrada, seleção de provider e QR/BR Code com valor e Copia e Cola; manter provider atual até seleção admin. QR estático não comprova liquidação. Falta integração autenticada/reconciliação bancária e homologação | pagamento / segurança |
+| LILY-PEND-054 | OTP no cadastro | template de autenticação preparado como rascunho; cadastro ainda não emite nem valida desafio telefônico. Implementar rate limit, expiração, uso único e recuperação segura | conta / segurança |
+| LILY-PEND-055 | Inbox e IA WhatsApp | templates preparados como rascunhos; webhook valida eventos, mas guarda apenas metadados/hash e não processa conversa inbound. Faltam inbox humana, opt-in conversacional, retenção, handoff e integração IA segura | atendimento / privacidade |
+| LILY-PEND-056 | Atribuição de origem | tracking atual suporta `la_qr`, `la_campaign`, `la_variant` e aliases `cc_*`; faltam UTM/referrer/click IDs com consentimento, minimização e retenção definida | analytics / LGPD |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 

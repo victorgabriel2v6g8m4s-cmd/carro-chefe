@@ -4,7 +4,7 @@
 **Wordmark oficial:** cookLily  
 **Branch canônica:** `cooklily/canonical`  
 **Site real:** `https://carrochefe.com/lilyacai/*`  
-**Documento atualizado:** 21/10/2026
+**Documento atualizado:** 30/10/2026
 
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
@@ -43,10 +43,13 @@ Fora do escopo: redação publicitária final, arte gráfica e decisão da data 
 
 ### 3. Integração com WhatsApp
 - [ ] Concluir as integrações de software aprovadas que ainda estiverem pendentes.
+- [x] Disponibilizar pacote idempotente de rascunhos de templates de conta, código de autenticação, pagamento e etapas do pedido; revisar/submeter manualmente no WhatsApp Manager.
 - [ ] Manter notificações operacionais separadas de mensagens promocionais.
 - [ ] Respeitar opt-in/opt-out, consentimentos e configuração do provider.
 - [ ] Manter segredos somente na configuração protegida da VPS.
 - [ ] Garantir que indisponibilidade do WhatsApp não bloqueie pedido, pagamento, cozinha ou entrega.
+- [ ] Implementar OTP no cadastro, inbox humana, processamento de mensagens inbound e trilha de opt-in/opt-out; webhook atual não processa conteúdo inbound.
+- [ ] Planejar e implementar IA somente após inbox e controles de segurança/privacidade definidos; ver `WHATSAPP_IA_SEGURA_E_JORNADA_2026-10-30.md`.
 
 As notificações operacionais já são descritas na Entrega 11H. Verificar gaps concretos antes de criar trabalho duplicado.
 

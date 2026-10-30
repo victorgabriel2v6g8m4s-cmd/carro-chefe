@@ -1,7 +1,7 @@
 import type { TemplateCategory } from "./template-types";
 
 export type PricingConfig = { usdToBrl: number; usd: Record<TemplateCategory | "service", number>; freeServiceMessages: number; effectiveDate: string; source: string };
-export const defaultPricing: PricingConfig = { usdToBrl: 5.3719, usd: { marketing: 0.0625, utility: 0.0068, authentication: 0.0068, service: 0.0068 }, freeServiceMessages: 1000, effectiveDate: "2026-10-01", source: "Meta rate card Brasil: https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing#rate-cards · USD/BRL em 29/10/2026: Investing.com. Confira valores e moeda da WABA." };
+export const defaultPricing: PricingConfig = { usdToBrl: 5.3744, usd: { marketing: 0.0625, utility: 0.0068, authentication: 0.0068, service: 0.0068 }, freeServiceMessages: 0, effectiveDate: "2026-10-01", source: "Tarifas de referência por mensagem/categoria: cartão vigente no WhatsApp Manager; consulte https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing#rate-cards · câmbio de venda PTAX de 29/10/2026: https://ptax.bcb.gov.br/ptax_internet/consultarUltimaCotacaoDolar.do" };
 
 export function quoteMessages(outbound: Array<{ category: string; windowOpen: boolean }>, config: PricingConfig) {
   let freeServiceUsed = 0;
@@ -13,7 +13,11 @@ export function quoteMessages(outbound: Array<{ category: string; windowOpen: bo
     const detail = byCategory[category];
     detail.count += 1;
     if (category === "service" && !message.windowOpen) { blockedService += 1; detail.blocked += 1; continue; }
-    if (category === "service" && freeServiceUsed < config.freeServiceMessages) { freeServiceUsed += 1; detail.free += 1; continue; }
+    if (message.windowOpen && (category === "service" || category === "utility")) {
+      freeServiceUsed += 1;
+      detail.free += 1;
+      continue;
+    }
     detail.usd += config.usd[category];
     usd += config.usd[category];
   }
