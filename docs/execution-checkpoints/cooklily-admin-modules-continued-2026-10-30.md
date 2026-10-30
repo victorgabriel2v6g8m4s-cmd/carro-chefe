@@ -5,9 +5,9 @@
 - branch: `codex/lily-admin-modules-continued`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `f3e83f8`
-- head_sha_verified: `f3e83f8` (mudanças locais ainda não commitadas)
-- pull_requests: nenhum aberto
-- last_verified_at: 2026-10-30 19:03 America/Sao_Paulo
+- head_sha_verified: `3c2e574`
+- pull_requests: PR #291 aberta; CI pendente
+- last_verified_at: 2026-10-30 19:06 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -52,4 +52,4 @@ Concluir a primeira reorganização focada do painel de catálogo, deixando `adm
 
 ## Próxima ação exata
 
-Revisar diff, registrar PR, aguardar todos os checks e integrar antes de executar deploy.
+Acompanhar todos os checks da PR #291; após aprovação, integrar e implantar a canonical antes da homologação.
