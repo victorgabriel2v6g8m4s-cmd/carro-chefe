@@ -9,7 +9,7 @@
 - PR #236: merged por squash; merge SHA `b93445996dfd47ee2386644bbdba120cd0cc33d2`.
 - Deploy VPS: concluído em 29/10/2026 00:01 UTC, release `b93445996dfd47ee2386644bbdba120cd0cc33d2`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261029-000132-b93445996dfd.evidence`.
 - Janela reportada: captura do celular mostra 19:13 local; o VPS usa UTC, então a janela pesquisada foi aproximadamente 22:00–23:00 UTC de 28/10. O arquivo foi enviado pouco depois.
-- Última verificação: 29/10/2026 00:05 UTC.
+- Última verificação: 30/10/2026 17:34 America/Sao_Paulo.
 
 ## Sintoma e evidência
 
@@ -57,6 +57,29 @@
 - PR #236 CI: passou nos jobs Node 20 e 24, Tool Health, Workbook Snapshot, Windows Supervisor e Excel Recipe.
 - PR #236 merge/deploy: concluídos; `sudo cc deploy canonical` terminou com readiness e `external_smoke=ok`.
 - Pós-deploy: `sudo cc status` confirmou current/canonical SHA `b9344599...`; PMTU `1`; Nginx e aplicação ativos; `nginx -t` passou; 10/10 TLS 1.2, 10/10 TLS 1.3; cardápio HTTP `200` em HTTP/2. O browser integrado carregou novamente os 8 produtos e as imagens no domínio real; screenshot registrado na sessão.
+
+## Investigação de novo relato — 30/10/2026, 15:57 BRT
+
+- Evidência fornecida: captura de tela com `ERR_SSL_PROTOCOL_ERROR`, aparência de Chrome em Android. A imagem permite inferir Android/Chrome, mas não modelo, versão do Android nem versão do Chrome.
+- Correlação temporal: 15:57 BRT corresponde a 18:57 UTC. No log TLS dedicado há tentativas entre 18:57:44 e 18:57:59 UTC encerradas pelo cliente enquanto o Nginx aguardava concluir o handshake. Não houve registro de sessão TLS concluída nem requisição HTTP desse grupo. Os endereços de origem estavam no bloco Cloudflare `104.28.0.0/14`; isso é compatível com saída por WARP/proxy Cloudflare, mas não prova que o cliente usava WARP.
+- No mesmo minuto o log de sucesso TLS e o access log registram somente outras sessões normais; não há `SSL_do_handshake() failed`, `no shared cipher`, `unsupported protocol` ou `bad key share` associados ao horário do print. Portanto, para este cliente a evidência identifica a interrupção pelo lado cliente/proxy antes de completar TLS, mas não a causa inicial que levou o cliente a abortar.
+- Erros `no shared cipher`, `unsupported protocol` e `bad key share` encontrados em 19:50–19:55 UTC são tentativas de outros horários/origens e não devem ser atribuídos ao print. São negociações incompatíveis ou malformed probes que o Nginx recusou conforme esperado sob TLS 1.2/1.3.
+- DNS consultado no diagnóstico atual aponta A `carrochefe.com -> 2.25.182.185`, sem AAAA; SOA informa DNS da Hostinger. O domínio chega diretamente à VPS, sem proxy/CDN Cloudflare configurado no DNS do site.
+- Firewall Hostinger apresentado pelo proprietário aceita TCP 22, 80 e 443 de qualquer origem e descarta o restante. UFW local está ativo com `deny incoming` e libera somente essas mesmas portas em IPv4/IPv6. A tentativa do print chegou ao Nginx em 443, então o firewall não a descartou.
+- `nginx -T` e `nginx -t` confirmados na VPS. TLS ativo: `TLSv1.2 TLSv1.3`, certificado Let's Encrypt `fullchain.pem`, HTTP/2 por TCP; o certificado cobre raiz e `www`.
+- Qualys SSL Labs API concluiu scan em 30/10/2026 17:25 BRT: nota A, sem warnings, TLS 1.2/1.3, HTTP 200, cadeia confiável nos trust stores testados (incluindo Android). HSTS ausente e OCSP stapling desativado não explicam uma desconexão durante o handshake. Referência: https://www.ssllabs.com/ssltest/analyze.html?d=carrochefe.com&latest.
+- RBL Spamhaus ZEN: o checker web retornou HTTP 403 no ambiente de consulta. Consulta DNS pelo resolvedor da rede local não retornou listagem para `2.25.182.185`; controles válidos confirmaram que o resolvedor retorna os códigos esperados para um IP de teste listado e NXDOMAIN para um teste não listado. Resultado: não listado no ZEN nesta consulta. Referência: https://check.spamhaus.org/faqs/dnsbl-usage/.
+- MXToolbox Blacklist: consulta do IP `2.25.182.185` em 30/10/2026 encontrou 0 listagens e 0 timeouts entre 60 listas verificadas.
+- MultiRBL Valli: 255 testes consultados. Na categoria principal de 201 DNSBLs, a página marcou 5 listagens, 6 falhas e 190 sem listagem. Quatro marcações foram respostas explícitas `127.0.0.1 Query Refused` de URIBL (limite do serviço consultado por MultiRBL, não listagem do IP). A quinta, `rbl.rbldns.ru`, retornou somente um TXT genérico do servidor sem resposta A; a consulta independente expirou, então permanece inconclusiva. A categoria combinada retornou um registro Hostkarma classificado como `neutral` e quatro falhas. Listas RBL são voltadas principalmente à reputação de envio de e-mail e não bloqueiam o TLS do site por si sós.
+- Limitação importante do diagnóstico anterior: `deploy/scripts/diagnose-cooklily-access` lê `/var/log/nginx/error.log` por padrão, embora as falhas TLS estejam em `/var/log/nginx/carrochefe-tls-error.log`. Assim, a frase anterior “nenhum erro TLS na janela” não era válida; a leitura direta do log dedicado encontrou os eventos acima. Corrigir o caminho padrão do script e acrescentar teste de regressão.
+
+### Avaliação atual
+
+O Nginx e o certificado passam nos testes atuais; não há evidência para afrouxar TLS nem para alterar o firewall. O caso das 15:57 é compatível com interferência ou política em proxy/VPN do lado do cliente. Cloudflare WARP pode substituir o IP público do visitante por um IP Cloudflare mesmo ao acessar sites fora da rede Cloudflare; uma política HTTP do Gateway também pode apresentar `ERR_SSL_PROTOCOL_ERROR` quando a página de bloqueio usa certificado não confiável. Referências: https://developers.cloudflare.com/warp-client/known-issues-and-faq/ e https://developers.cloudflare.com/cloudflare-one/traffic-controls/troubleshoot-gateway/.
+
+## Próxima ação exata atualizada
+
+Corrigir `diagnose-cooklily-access` para ler o log TLS dedicado por padrão e cobrir essa seleção com teste. Para o relato do cliente, perguntar se o dispositivo usava Cloudflare WARP/Cloudflare One; se sim, testar sem WARP e, em conta corporativa, pedir ao administrador allowlist de `carrochefe.com` e bypass de inspeção TLS. Para os demais relatos, correlacionar horário exato com uma captura curta iniciada antes da nova tentativa; não alterar TLS/cifras nem bloquear o bloco Cloudflare sem evidência adicional.
 
 ## Limite e próxima ação
 
