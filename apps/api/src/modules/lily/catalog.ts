@@ -704,6 +704,7 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
           slug: product.slug,
           displayName: product.displayName,
           descriptiveName: product.descriptiveName,
+          description: product.description,
           status: product.status,
           isAvailable: product.isAvailable,
           isPurchasable,
@@ -713,7 +714,14 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
           cover: product.coverMedia?.status === "active"
             ? { id: product.coverMedia.id, url: mediaUrl(product.coverMedia.id), altText: product.coverMedia.altText }
             : null,
-          variants: variants.map((variant) => ({ id: variant.id, name: variant.name, sizeMl: variant.sizeMl, priceCents: variant.priceCents }))
+          variants: variants.map((variant) => ({
+            id: variant.id,
+            name: variant.name,
+            sizeMl: variant.sizeMl,
+            priceCents: variant.priceCents,
+            compareAtPriceCents: variant.compareAtPriceCents,
+            isAvailable: variant.isAvailable
+          }))
         };
       })
     };

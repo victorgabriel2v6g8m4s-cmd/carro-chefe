@@ -415,6 +415,9 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
 .admin-workspace-content { min-width: 0; }
 .admin-workspace-content > .admin-page { padding-top: 20px; }
 .admin-sidebar-mobile-toggle { display: none; }
+.admin-product-dialog { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%,-50%); max-height: 92dvh; padding: 0; overflow: auto; border: 0; }
+.admin-product-dialog::backdrop { background: rgb(33 8 26 / 72%); }
+.admin-product-dialog .admin-product-grid { padding: 16px 0 0; }
 .admin-workspace.is-collapsed .admin-sidebar { padding-inline: 8px; }
 .admin-workspace.is-collapsed .admin-sidebar-heading { justify-content: center; padding: 0; }
 .admin-workspace.is-collapsed .admin-sidebar-title,.admin-workspace.is-collapsed .admin-sidebar-link span,.admin-workspace.is-collapsed .admin-sidebar-role { display: none; }
@@ -472,6 +475,7 @@ footer small { grid-column: 1/-1; max-width: 900px; line-height: 1.5; }
   .admin-workspace .admin-sidebar-heading { justify-content: space-between; }
   .admin-workspace .admin-sidebar-link { justify-content: flex-start; }
   .admin-sidebar-collapse { display: none; }
+  .admin-product-dialog { inset: 0; transform: none; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
   .admin-workspace-content > .admin-page { padding-top: 22px; }
   .catalog-toolbar { grid-template-columns: 1fr 1fr; }
   .search-field { grid-column: 1/-1; }

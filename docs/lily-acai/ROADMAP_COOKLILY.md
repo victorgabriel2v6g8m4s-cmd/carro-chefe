@@ -66,8 +66,8 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [ ] Preservar RBAC, MFA, CSRF, auditoria, minimização de dados e isolamento por domínio.
 - [ ] Evitar segunda fonte de verdade para produtos, preços, estoque, pedidos, pagamentos ou financeiro quando o ERP assumir esses domínios.
 - [x] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita. Links mobile/desktop foram homologados no domínio real após os PRs #281/#282; a navegação mobile aberta exibe os nomes mesmo quando a barra está recolhida no desktop.
-- [ ] Tornar a gestão do catálogo progressiva: listar produtos com os dados mínimos e carregar no popup/editor somente as configurações do produto selecionado; reaproveitar a apresentação do cardápio do cliente como base da lista.
-- [ ] Carregar sob demanda sabores, adicionais, mídia, combinações e outras dependências apenas quando a operação selecionada precisar delas; manter feedback de carregamento, erro e salvamento.
+- [x] Tornar a gestão do catálogo progressiva: listar produtos com dados mínimos em cards que reaproveitam a linguagem visual do cardápio público e carregar no modal/editor apenas as configurações do produto selecionado. O detalhe só é solicitado ao abrir um produto.
+- [x] Carregar sob demanda sabores, adicionais, mídia, combinações e outras dependências apenas quando a operação selecionada precisar delas; preservar estados de carregamento, erro/retry e salvamento do editor. PR pendente de CI e homologação em 30/10/2026.
 - [ ] Auditar arquivos grandes e separar páginas, componentes, hooks, tipos e serviços por responsabilidade, extraindo somente lógica compartilhada comprovada.
 - [ ] Definir budgets distintos para entrada inicial, rotas críticas e total de assets; acompanhar tamanho minificado e gzip e impedir regressões em CI.
 - [ ] Registrar gaps concretos e entregas incrementais antes de ampliar o painel; evitar uma reescrita ampla sem medição.

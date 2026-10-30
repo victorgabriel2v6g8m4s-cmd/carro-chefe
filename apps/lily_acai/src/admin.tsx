@@ -1,8 +1,25 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { getLilyAdminCatalog, getLilyAdminCatalogIndex, getLilyAdminProductEditor, getLilySession, lilyAdminJson, uploadLilyMedia, type AuthPayload } from "./api";
 import { LilyLoadingSpinner } from "./loading-spinner";
 import { AdminAutosaveStatus, useAdminAutosave } from "./features/admin/useAdminAutosave";
 import { ProductMediaEditor } from "./features/admin/ProductMediaEditor";
+import { CatalogProductCard } from "./features/catalog/CatalogProductCard";
+import { PriceDisplay } from "./features/pricing/PriceDisplay";
+
+type AdminProductSummary = {
+  id: string;
+  slug: string;
+  displayName: string;
+  descriptiveName: string | null;
+  description: string | null;
+  status: string;
+  isAvailable: boolean;
+  isPurchasable: boolean;
+  sortOrder: number;
+  category: { id: string; name: string };
+  cover: { id: string; url: string; altText: string } | null;
+  variants: Array<{ id: string; name: string; sizeMl: number; priceCents: number; compareAtPriceCents: number | null; isAvailable: boolean }>;
+};
 
 function moneyInput(cents: number | null | undefined) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -229,7 +246,7 @@ function ProductVariantEditor({ variant, index, variants, csrf }: {
 }
 
 function ProductEditor({ product: summary, csrf, refresh, setError }: {
-  product: any;
+  product: AdminProductSummary;
   csrf: string;
   refresh: () => Promise<void>;
   setError: (value: string) => void;
@@ -238,6 +255,14 @@ function ProductEditor({ product: summary, csrf, refresh, setError }: {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
   async function loadEditor() {
     if (editorData || loading) return;
     setLoading(true);
@@ -250,20 +275,46 @@ function ProductEditor({ product: summary, csrf, refresh, setError }: {
       setLoading(false);
     }
   }
-  return <details className="admin-product admin-product-index" open={open} onToggle={(event) => {
-    const nextOpen = event.currentTarget.open;
-    setOpen(nextOpen);
-    if (nextOpen) void loadEditor();
-  }}>
-    <summary>
-      {summary.cover?.url && <img src={summary.cover.url} alt="" loading="lazy" width="48" height="48" style={{ borderRadius: 10, objectFit: "cover" }} />}
-      <span><strong>{summary.displayName}</strong><small>{summary.descriptiveName || summary.category.name} · {summary.variants.length} opção(ões)</small></span>
-      <span className={summary.isPurchasable ? "state-live" : "state-off"}>{summary.isPurchasable ? "Disponível" : "Esgotado/pausado"}</span>
-    </summary>
-    {loading && <p className="admin-inline-loading" role="status">Carregando configurações de {summary.displayName}…</p>}
-    {loadError && <p className="error" role="alert">{loadError} <button className="button ghost" type="button" onClick={(event) => { event.preventDefault(); void loadEditor(); }}>Tentar novamente</button></p>}
-    {editorData && <div className="admin-product-loaded"><ProductEditorForm product={editorData.product} data={editorData} csrf={csrf} refresh={refresh} setError={setError} /></div>}
-  </details>;
+  function openEditor() {
+    setOpen(true);
+    void loadEditor();
+  }
+  const lowestPrice = summary.variants[0];
+  const statusBadge = summary.status === "published" ? (summary.isPurchasable ? "Disponível" : "Indisponível")
+    : summary.status === "paused" ? "Pausado" : "Rascunho";
+
+  return <>
+    <CatalogProductCard
+      product={{
+        displayName: summary.displayName,
+        categoryName: summary.category.name,
+        cover: summary.cover
+      }}
+      badges={[{ label: statusBadge, className: "offer-badge", visible: true }]}
+      actionLabel="Editar produto"
+      onOpen={openEditor}
+      price={lowestPrice
+        ? <><small>{summary.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={lowestPrice.priceCents} compareAtPriceCents={lowestPrice.compareAtPriceCents} density="compact" /></>
+        : <strong>Preço não definido</strong>}
+    />
+    <dialog
+      ref={dialogRef}
+      className="admin-product-dialog"
+      aria-label={`Editar ${summary.displayName}`}
+      onCancel={(event) => { event.preventDefault(); setOpen(false); }}
+      onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}
+    >
+      <section className="product-modal-content admin-product-dialog-content" aria-labelledby={`admin-product-title-${summary.id}`}>
+        <header className="section-heading">
+          <div><span className="eyebrow">{summary.category.name}</span><h2 id={`admin-product-title-${summary.id}`}>{summary.displayName}</h2></div>
+          <button className="modal-close" type="button" onClick={() => setOpen(false)} aria-label="Fechar editor">×</button>
+        </header>
+        {loading && <p className="admin-inline-loading" role="status">Carregando configurações de {summary.displayName}…</p>}
+        {loadError && <p className="error" role="alert">{loadError} <button className="button ghost" type="button" onClick={() => void loadEditor()}>Tentar novamente</button></p>}
+        {editorData && <ProductEditorForm product={editorData.product} data={editorData} csrf={csrf} refresh={refresh} setError={setError} />}
+      </section>
+    </dialog>
+  </>;
 }
 
 function ProductEditorForm({ product, data, csrf, refresh, setError }: {
@@ -1100,7 +1151,7 @@ function CatalogGlobalSettings({ csrf, refresh, setError }: { csrf: string; refr
   </details>;
 }
 
-function ProductCatalogIndex({ products, csrf, refresh, setError }: { products: any[]; csrf: string; refresh: () => Promise<void>; setError: (value: string) => void }) {
+function ProductCatalogIndex({ products, csrf, refresh, setError }: { products: AdminProductSummary[]; csrf: string; refresh: () => Promise<void>; setError: (value: string) => void }) {
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const categories = [...new Map(products.map((product) => [product.category.id, product.category])).values()];
@@ -1113,7 +1164,7 @@ function ProductCatalogIndex({ products, csrf, refresh, setError }: { products: 
       <label>Categoria<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Todas as categorias</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <small aria-live="polite">{visibleProducts.length} de {products.length} produtos</small>
     </div>
-    <div className="admin-product-list" style={{ marginTop: 14 }}>
+    <div className="catalog-grid admin-product-list">
       {visibleProducts.map((product) => <ProductEditor key={product.id} product={product} csrf={csrf} refresh={refresh} setError={setError} />)}
       {visibleProducts.length === 0 && <p className="admin-empty-state">Nenhum produto corresponde à busca.</p>}
     </div>
