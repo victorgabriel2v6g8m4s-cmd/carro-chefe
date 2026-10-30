@@ -5,9 +5,9 @@
 - branch: `codex/lily-dashboard-progress-history`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ea16f4a`
-- head_sha_verified: `eb993de`
-- pull_requests: pending creation
-- last_verified_at: 2026-10-30 19:40 America/Sao_Paulo
+- head_sha_verified: `6824540c6a131e4757dd9ad54db4efaff033f0a6`
+- pull_requests: PR #293 open against `cooklily/canonical`; all listed CI checks passed on this head
+- last_verified_at: 2026-10-30 19:45 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -32,7 +32,8 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 - `npm test`: 82 arquivos, 422 passaram e 3 ignorados.
 - `npm run check`: passou.
 - `npm run build`: passou; JS gzip 188,89/189 KiB, JS+CSS gzip 224,21/225 KiB.
-- PR/CI, merge, deploy e homologação no navegador integrado desktop/mobile: pendentes.
+- CI no PR #293: Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
+- Merge, deploy e homologação no navegador integrado desktop/mobile: pendentes.
 
 ## Migrations
 
@@ -49,4 +50,4 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Próxima ação exata
 
-Abrir PR com `eb993de` como código candidato; aguardar CI; então merge, deploy e homologação real desktop/mobile antes de atualizar o roadmap.
+Integrar PR #293 por squash; publicar o SHA canônico pela CLI `cc`; homologar no navegador integrado desktop e mobile; então marcar o roadmap concluído ou corrigir os problemas encontrados.
