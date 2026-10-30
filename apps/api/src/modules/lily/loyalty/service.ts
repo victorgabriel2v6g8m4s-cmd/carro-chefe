@@ -267,7 +267,10 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/admin/loyalty", async (request) => {
     await requireLilyStaff(request);
     const [levels, settings, rewards, missions, config, products, categories, offers, combos, coupons] = await Promise.all([
-      lilyPrisma.lilyLevel.findMany({ orderBy: { sortOrder: "asc" } }),
+      lilyPrisma.lilyLevel.findMany({
+        orderBy: { sortOrder: "asc" },
+        select: { id: true, name: true, sortOrder: true, requiredPoints: true, lilyCoins: true, benefitsJson: true, iconMediaId: true, active: true }
+      }),
       lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } }),
       lilyPrisma.lilyReward.findMany({ orderBy: { createdAt: "desc" } }),
       lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" }, select: { id: true, title: true, status: true, points: true, lilyCoins: true } }),

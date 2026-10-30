@@ -3,6 +3,7 @@ import { getLilySession, parseResponse, type AuthPayload, type LilyBenefit } fro
 import { LoyaltyBrandingEditor } from "./LoyaltyBrandingEditor";
 import { LoyaltyLevelEditor } from "./LoyaltyLevelEditor";
 import { readAdminApiError } from "./admin-api-error";
+import { toLoyaltyLevelInput } from "./loyalty-level-payload";
 import type { LoyaltyAdminPayload, LoyaltyLevel } from "./loyalty-types";
 
 type Reward = LoyaltyAdminPayload["rewards"][number];
@@ -75,7 +76,7 @@ export function AdminLoyaltyPage() {
     try {
       const response = await fetch("/api/v1/lily/admin/loyalty/levels", {
         method: "PUT", credentials: "same-origin", headers: { "X-Lily-CSRF": session.csrfToken, "Content-Type": "application/json" },
-        body: JSON.stringify({ levels: sortedLevels.map(({ iconUrl: _iconUrl, ...level }, sortOrder) => ({ ...level, sortOrder })), roundingMode: data.roundingMode })
+        body: JSON.stringify({ levels: sortedLevels.map(toLoyaltyLevelInput), roundingMode: data.roundingMode })
       });
       if (!response.ok) throw await readAdminApiError(response);
       const result = await response.json() as { configVersion: number };
