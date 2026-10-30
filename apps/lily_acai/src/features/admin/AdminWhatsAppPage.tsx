@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "../../router";
 import { getLilySession, type AuthPayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
-import { getWhatsAppNotifications, getWhatsAppSettings, getWhatsAppTemplates, mutateWhatsApp, type WhatsAppNotification, type WhatsAppSettings, type WhatsAppTemplate } from "./whatsapp-api";
+import { getWhatsAppNotifications, getWhatsAppSettings, getWhatsAppTemplates, installWhatsAppStarterTemplates, mutateWhatsApp, type WhatsAppNotification, type WhatsAppSettings, type WhatsAppTemplate } from "./whatsapp-api";
 import { TemplateStudio } from "./template-studio/TemplateStudio";
 import type { TemplateDraft } from "./template-studio/template-types";
 
@@ -64,6 +64,11 @@ export function AdminWhatsAppPage() {
     await run(async () => { await mutateWhatsApp(`templates/${encodeURIComponent(item.id)}`, "PATCH", session.csrfToken, { status }); }, `Template ${status === "active" ? "ativado" : status === "archived" ? "arquivado" : "salvo como rascunho"}.`);
   }
 
+  async function installStarterPack() {
+    if (!session) return;
+    await run(async () => { await installWhatsAppStarterTemplates(session.csrfToken); }, "Templates de boas-vindas, verificação e etapas do pedido foram adicionados como rascunhos.");
+  }
+
   async function retry(id?: string) {
     if (!session) return;
     await run(async () => { await mutateWhatsApp("retry", "POST", session.csrfToken, id ? { notificationId: id } : {}); }, "Fila de retry atualizada.");
@@ -90,7 +95,7 @@ export function AdminWhatsAppPage() {
     <div className="observability-status-row whatsapp-status-row"><article className={settings.ready ? "" : "warn"}><small>Envio</small><strong>{settings.ready ? "Configuração presente" : "Desativado · fail-closed"}</strong></article><article><small>Templates cadastrados</small><strong>{settings.templates.total}</strong></article><article><small>Consentimento transacional</small><strong>{settings.consentVersion}</strong></article></div>
     {!settings.ready && <p className="operation-warning">O envio está protegido e permanece desligado até a configuração Meta completa no ambiente seguro da VPS. Esta página não recebe nem exibe segredos.</p>}
 
-    <TemplateStudio templates={templates} operationalStages={settings.templates.operationalStages} isAdmin={isAdmin} busy={busy} csrfToken={session.csrfToken} onSave={saveTemplate} onStatusChange={changeTemplateStatus} />
+    <TemplateStudio templates={templates} operationalStages={settings.templates.operationalStages} isAdmin={isAdmin} busy={busy} csrfToken={session.csrfToken} onSave={saveTemplate} onStatusChange={changeTemplateStatus} onInstallStarterPack={() => void installStarterPack()} />
 
     <section className="analytics-panel whatsapp-config-panel"><div className="analytics-panel-heading"><div><span className="eyebrow">Configuração protegida</span><h2>Checklist de conexão</h2></div></div><ul className="whatsapp-checklist">{configuredItems.map(([name, ready]) => <li key={name}><span aria-hidden="true" className={ready ? "whatsapp-check good" : "whatsapp-check"}>{ready ? "✓" : "•"}</span><span>{name}</span><strong>{ready ? "Configurado" : "Pendente"}</strong></li>)}</ul><label>Callback HTTPS da CookLily para configurar no Meta<textarea readOnly rows={2} value={webhookUrl} onFocus={(event) => event.currentTarget.select()} /></label><small>Use esta URL somente no app Meta e no número/WABA da CookLily. O Carro Chefe tem callback e credenciais próprios, separados desta integração. Depois de configurar, confira o handshake e o recebimento de eventos antes de habilitar envio real.</small></section>
 

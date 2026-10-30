@@ -8,6 +8,7 @@ import { ApiError } from "../../lib/errors";
 import { getOptionalLilySession } from "./auth";
 import { isLilyVip, requireVipProductAccess } from "./vip";
 import { auditLilyAdmin, requireLilyStaff } from "./admin-security";
+import { sanitizeLilySvg } from "./safe-svg";
 import { LILY_ALLERGEN_CATALOG, allergenApiData, allergenStorageData, lilyAllergenInputSchema, parseLilyAllergenJson } from "./allergens";
 import { isActiveWindow, lilyComboConfigurationSchema, lilyComboModeFromRules, lilyConfigurationSchema, quoteLilyComboConfiguration, quoteLilyConfiguration, resolveLilyComboPresetSelections } from "./configuration";
 
@@ -615,6 +616,11 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       throw new ApiError(404, "Arquivo de mídia não encontrado.");
     }
     reply.header("Cache-Control", "public, max-age=3600");
+    reply.header("X-Content-Type-Options", "nosniff");
+    if (media.mime === "image/svg+xml") {
+      reply.header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+      reply.header("Content-Disposition", "inline");
+    }
     return reply.type(media.mime).send(createReadStream(fullPath));
   });
 
@@ -1128,13 +1134,21 @@ export async function lilyCatalogRoutes(app: FastifyInstance) {
       "image/jpeg": ".jpg",
       "image/png": ".png",
       "image/webp": ".webp",
+      "image/svg+xml": ".svg",
       "video/mp4": ".mp4",
       "video/webm": ".webm"
     };
     const extension = extensionByMime[part.mimetype];
     if (!extension) throw new ApiError(400, "Formato não permitido. Use JPEG, PNG, WebP, MP4 ou WebM.");
-    const buffer = await part.toBuffer();
-    if (!buffer.length || buffer.length > 50 * 1024 * 1024 || !matchesMediaSignature(part.mimetype, buffer)) throw new ApiError(400, "Arquivo vazio, incompatível com o formato declarado ou acima de 50 MB.");
+    const uploaded = await part.toBuffer();
+    if (!uploaded.length || uploaded.length > 50 * 1024 * 1024) throw new ApiError(400, "Arquivo vazio ou acima de 50 MB.");
+    let buffer = uploaded;
+    if (part.mimetype === "image/svg+xml") {
+      try { buffer = Buffer.from(sanitizeLilySvg(uploaded.toString("utf8")), "utf8"); }
+      catch (cause) { throw new ApiError(400, cause instanceof Error ? cause.message : "SVG inválido ou não seguro.", { code: "LILY_MEDIA_SVG_INVALID" }); }
+    } else if (!matchesMediaSignature(part.mimetype, uploaded)) {
+      throw new ApiError(400, "Arquivo incompatível com o formato declarado.");
+    }
     const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
     const storageName = `${crypto.randomUUID()}${extension}`;
     await fs.mkdir(uploadRoot(), { recursive: true });

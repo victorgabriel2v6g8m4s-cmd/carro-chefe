@@ -13,6 +13,7 @@ type Props = {
   busy: boolean;
   onSave: (draft: TemplateDraft, editingId: string | null) => Promise<boolean>;
   onStatusChange: (item: WhatsAppTemplate, status: WhatsAppTemplate["status"]) => Promise<void>;
+  onInstallStarterPack?: () => void;
 };
 
 function draftFromTemplate(item: WhatsAppTemplate): TemplateDraft {
@@ -52,7 +53,7 @@ function TemplateCard({ item, canEdit, operationalStages, busy, onEdit, onStatus
   </article>;
 }
 
-export function TemplateStudio({ templates, operationalStages, isAdmin, busy, csrfToken = "", onSave, onStatusChange }: Props & { csrfToken?: string }) {
+export function TemplateStudio({ templates, operationalStages, isAdmin, busy, csrfToken = "", onSave, onStatusChange, onInstallStarterPack }: Props & { csrfToken?: string }) {
   const [draft, setDraft] = useState<TemplateDraft>(emptyTemplate);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
@@ -78,7 +79,7 @@ export function TemplateStudio({ templates, operationalStages, isAdmin, busy, cs
   }
 
   return <section className="template-studio" aria-labelledby="template-studio-title">
-    <div className="template-studio-heading"><div><span className="eyebrow">Estúdio de templates</span><h2 id="template-studio-title">Crie, revise e simule</h2><p>Monte os componentes da Meta, veja a conversa de exemplo e prepare o JSON para cadastrar manualmente no WhatsApp Manager.</p></div><button type="button" className="button ghost" onClick={beginNew} disabled={!isAdmin || busy}>Novo template</button></div>
+    <div className="template-studio-heading"><div><span className="eyebrow">Estúdio de templates</span><h2 id="template-studio-title">Crie, revise e simule</h2><p>Monte os componentes da Meta, veja a conversa de exemplo e prepare o JSON para cadastrar manualmente no WhatsApp Manager.</p></div><div className="admin-actions">{onInstallStarterPack && <button type="button" className="button ghost" onClick={onInstallStarterPack} disabled={!isAdmin || busy}>Adicionar templates de atendimento</button>}<button type="button" className="button ghost" onClick={beginNew} disabled={!isAdmin || busy}>Novo template</button></div></div>
     <div className="template-studio-workspace whatsapp-template-layout">
       <form className="analytics-panel whatsapp-template-form template-editor-panel" onSubmit={save}>
         <div className="analytics-panel-heading"><div><span className="eyebrow">{editingId ? "Editando rascunho" : "Novo rascunho"}</span><h3>{editingId ? draft.displayName || "Editar template" : "Configurar template"}</h3></div></div>

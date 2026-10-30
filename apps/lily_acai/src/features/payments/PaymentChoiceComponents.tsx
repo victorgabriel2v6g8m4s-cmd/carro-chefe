@@ -10,13 +10,14 @@ export function paymentMoney(cents: number) {
 export function paymentMethodHint(option: LilyPaymentOption) {
   if (option.id === "pix") {
     const providers = option.providers;
-    if (providers[0] === "cooklily_pix") {
+    if (providers[0] === "cooklily_pix" || providers[0] === "sicredi_pix") {
+      const name = providers[0] === "sicredi_pix" ? "Pix Sicredi" : "Pix próprio CookLily";
       if (providers.includes("mercado_pago") && providers.includes("manual")) {
-        return "Pix próprio CookLily. Se necessário, o sistema tenta Mercado Pago e por último o Pix manual.";
+        return `${name}. Se necessário, o sistema tenta Mercado Pago e por último o Pix manual.`;
       }
-      if (providers.includes("mercado_pago")) return "Pix próprio CookLily, com Mercado Pago como fallback.";
-      if (providers.includes("manual")) return "Pix próprio CookLily, com contingência manual.";
-      return "BR Code e Pix Copia e Cola gerados pela própria CookLily.";
+      if (providers.includes("mercado_pago")) return `${name}, com Mercado Pago como fallback.`;
+      if (providers.includes("manual")) return `${name}, com contingência manual.`;
+      return "QR Code com valor do pedido e Pix Copia e Cola.";
     }
     if (providers[0] === "mercado_pago") return "Pix automático via Mercado Pago; contingência manual somente se configurada.";
     return "Pix de contingência com confirmação manual pela equipe.";
@@ -49,6 +50,7 @@ export function PaymentChoiceResult(props: {
   const pixText = typeof pixValue === "string" ? pixValue.trim() : "";
   const hasBrCode = payment.method === "pix" && pixText.startsWith("000201");
   const providerLabel = payment.provider === "cooklily_pix" ? "Pix CookLily"
+    : payment.provider === "sicredi_pix" ? "Pix Sicredi"
     : payment.provider === "mercado_pago" ? "Mercado Pago"
     : payment.provider === "manual" ? "Pix manual de contingência"
     : payment.provider;

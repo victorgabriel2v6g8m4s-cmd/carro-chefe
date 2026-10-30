@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "../../router";
 import { getLilySession, type AuthPayload } from "../../api";
 import {
+  getAdminPixQr,
   getAdminPaymentChoiceSettings,
   saveAdminPaymentChoiceSettings,
   type AdminPaymentChoiceSettings,
@@ -9,6 +10,7 @@ import {
   type LilyPaymentMethodRule
 } from "../payments/payment-choice-api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { CookLilyPixQrCode } from "../payments/CookLilyPixQrCode";
 
 function moneyInput(cents: number | null) {
   return cents == null ? "" : (cents / 100).toFixed(2).replace(".", ",");
@@ -37,6 +39,7 @@ function methodLabel(method: LilyCheckoutPaymentMethod) {
 
 function providerLabel(provider: string) {
   return provider === "cooklily_pix" ? "Pix CookLily"
+    : provider === "sicredi_pix" ? "Pix Sicredi"
     : provider === "mercado_pago" ? "Mercado Pago"
     : provider === "manual" ? "Pix manual"
     : provider;
@@ -83,6 +86,7 @@ export function AdminPaymentMethodsPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [pixPreview, setPixPreview] = useState<{ provider: string; qrCode: string } | null>(null);
 
   async function refresh() {
     const current = await getLilySession();
@@ -123,20 +127,36 @@ export function AdminPaymentMethodsPage() {
     setError("");
     setMessage("");
     try {
-      const updated = await saveAdminPaymentChoiceSettings({
+      const payload = {
         paymentsEnabled: form.get("paymentsEnabled") === "on",
         manualPixEnabled: form.get("manualPixEnabled") === "on",
         manualPixInstructions: String(form.get("manualPixInstructions") || "") || null,
         mercadoPagoPixEnabled: form.get("mercadoPagoPixEnabled") === "on",
         mercadoPagoCardEnabled: form.get("mercadoPagoCardEnabled") === "on",
+        activePixProvider: String(form.get("activePixProvider") || "cooklily_pix") as AdminPaymentChoiceSettings["activePixProvider"],
+        sicrediPixMerchantName: String(form.get("sicrediPixMerchantName") || "").trim(),
+        sicrediPixMerchantCity: String(form.get("sicrediPixMerchantCity") || "").trim(),
         methods
-      }, session.csrfToken);
+      };
+      const sicrediPixKey = String(form.get("sicrediPixKey") || "").trim();
+      const updated = await saveAdminPaymentChoiceSettings({ ...payload, ...(sicrediPixKey ? { sicrediPixKey } : {}) }, session.csrfToken);
       setSettings(updated);
       setMessage("Formas de pagamento e descontos atualizados.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível salvar a configuração.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function showPixQr(provider: "cooklily_pix" | "sicredi_pix") {
+    setError("");
+    setMessage("");
+    try {
+      setPixPreview(await getAdminPixQr(provider));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível gerar o QR da chave Pix.");
+      setPixPreview(null);
     }
   }
 
@@ -154,7 +174,7 @@ export function AdminPaymentMethodsPage() {
       <div>
         <span className="eyebrow">CookLily · motor de pagamento</span>
         <h1>Formas de pagamento e descontos</h1>
-        <p>O cliente escolhe Pix, crédito ou débito. O Pix segue a ordem CookLily → Mercado Pago → contingência manual.</p>
+        <p>O cliente escolhe Pix, crédito ou débito. Você configura qual chave Pix local tem prioridade; Mercado Pago e Pix manual podem ficar como contingência.</p>
       </div>
       <Link className="button ghost" to="/painel/pagamentos">Reconciliação</Link>
     </div>
@@ -183,7 +203,33 @@ export function AdminPaymentMethodsPage() {
 
       <fieldset className="checkout-section">
         <legend>Providers Pix</legend>
-        <p>Pix CookLily é usado automaticamente quando chave, nome e cidade estão configurados no servidor.</p>
+        <label>Pix prioritário
+          <select name="activePixProvider" defaultValue={settings.activePixProvider} disabled={!isAdmin}>
+            <option value="cooklily_pix">Chave Pix atual (CookLily)</option>
+            <option value="sicredi_pix">Chave Pix alternativa (Sicredi) {settings.sicrediPix.ready ? "· configurada" : "· pendente"}</option>
+          </select>
+          <small>A chave prioritária fica no início da cadeia. Se a geração local falhar, os fallbacks habilitados podem ser usados. A configuração inicial preserva o Pix CookLily.</small>
+        </label>
+        <details className="optional-box" open={settings.sicrediPix.keyConfigured}>
+          <summary>Configurar alternativa Sicredi</summary>
+          <p>Banco {settings.sicrediPix.bank}. A chave é cifrada no banco dedicado CookLily e nunca é devolvida pela API. Chave atualmente salva: {settings.sicrediPix.keyConfigured ? settings.sicrediPix.maskedKey : "nenhuma"}.</p>
+          <label>Chave Pix Sicredi
+            <input name="sicrediPixKey" type="password" inputMode="text" autoComplete="off" placeholder={settings.sicrediPix.keyConfigured ? "Deixe em branco para manter a chave salva" : "Digite a chave Pix"} disabled={!isAdmin} />
+          </label>
+          <label>Nome exato do recebedor
+            <input name="sicrediPixMerchantName" maxLength={80} defaultValue={settings.sicrediPix.merchantName} disabled={!isAdmin} />
+          </label>
+          <label>Cidade do recebedor
+            <input name="sicrediPixMerchantCity" maxLength={60} defaultValue={settings.sicrediPix.merchantCity} disabled={!isAdmin} />
+          </label>
+          <small>Para o QR deste cadastro, informe nome e cidade conforme registrados no Sicredi. O padrão BR Code limita o nome a 25 caracteres e a cidade a 15, então os campos longos são normalizados nesses limites ao gerar o QR. O QR de chave não tem valor; o checkout cria outro BR Code com o total do pedido. A confirmação deste provider é manual até integrar a conciliação Sicredi.</small>
+          <div className="admin-actions">
+            <button className="button ghost" type="button" onClick={() => void showPixQr("sicredi_pix")} disabled={!settings.sicrediPix.ready}>Gerar QR da chave</button>
+            {pixPreview?.provider === "sicredi_pix" && <button className="button ghost" type="button" onClick={() => void navigator.clipboard.writeText(pixPreview.qrCode)}>Copiar Pix Copia e Cola</button>}
+          </div>
+          {pixPreview?.provider === "sicredi_pix" && <div className="optional-box"><CookLilyPixQrCode payload={pixPreview.qrCode} fallbackBase64={null} /><label>Pix Copia e Cola<textarea readOnly rows={4} value={pixPreview.qrCode} onFocus={(event) => event.currentTarget.select()} /></label><small>QR estático de demonstração da chave, sem valor. Não comprova pagamento nem cria pedido.</small></div>}
+        </details>
+        <p>O Pix atual continua configurado pelo ambiente seguro do servidor. Ele permanece como opção prioritária até um admin selecionar outra rota.</p>
         <label className="check">
           <input name="mercadoPagoPixEnabled" type="checkbox" defaultChecked={settings.mercadoPagoPixEnabled} disabled={!isAdmin} />
           <span>Permitir Mercado Pago como fallback Pix {settings.readiness.mercadoPago.pixReady ? "· pronto" : "· aguardando credenciais"}</span>

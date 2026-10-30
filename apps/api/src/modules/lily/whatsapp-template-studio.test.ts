@@ -112,4 +112,19 @@ describe("CookLily WhatsApp template studio API", () => {
     });
     expect(response.statusCode).toBe(400);
   });
+
+  it("instala idempotentemente os rascunhos de atendimento sem submeter nada à Meta", async () => {
+    const auth = await registerAdmin();
+    const first = await app.inject({ method: "POST", url: "/api/v1/lily/admin/whatsapp/templates/starter-pack", headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf }, payload: {} });
+    expect(first.statusCode).toBe(200);
+    const pack = first.json();
+    createdTemplateKeys.push(...pack.createdKeys);
+    expect(pack).toMatchObject({ created: 15, existing: 0, total: 15 });
+    const listed = await app.inject({ method: "GET", url: "/api/v1/lily/admin/whatsapp/templates?limit=100", headers: { cookie: auth.cookie } });
+    const verification = listed.json().templates.find((item: { key: string }) => item.key === "account_verification_code");
+    expect(verification).toMatchObject({ category: "authentication", status: "draft" });
+    expect(verification.components.find((item: { type: string }) => item.type === "BUTTONS").buttons[0]).toMatchObject({ type: "OTP", otp_type: "COPY_CODE" });
+    const second = await app.inject({ method: "POST", url: "/api/v1/lily/admin/whatsapp/templates/starter-pack", headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf }, payload: {} });
+    expect(second.json()).toMatchObject({ created: 0, existing: 15, total: 15 });
+  });
 });

@@ -337,7 +337,7 @@ export function AdminPaymentsPage() {
             </strong></span>}
           </div>
 
-          {payment.status === "pending" && isAdmin && ["manual", "cooklily_pix"].includes(payment.provider) && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
+          {payment.status === "pending" && isAdmin && ["manual", "cooklily_pix", "sicredi_pix"].includes(payment.provider) && <form className="payment-finance-form" onSubmit={(event) => void confirm(event, payment)}>
             <h3>Confirmar entrada</h3>
             <label>Referência bancária<input name="providerReference" required placeholder="ID/identificador do comprovante no extrato" /></label>
             <label>Bruto<input name="reportedGross" defaultValue={moneyInput(payment.amountCents)} inputMode="decimal" required /></label>

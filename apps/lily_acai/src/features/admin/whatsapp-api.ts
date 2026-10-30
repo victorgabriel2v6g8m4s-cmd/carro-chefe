@@ -61,6 +61,12 @@ export async function getWhatsAppTemplates() {
   return parseResponse<{ templates: WhatsAppTemplate[] }>(await fetch("/api/v1/lily/admin/whatsapp/templates?limit=100", { credentials: "same-origin", cache: "no-store" }));
 }
 
+export async function installWhatsAppStarterTemplates(csrf: string) {
+  return parseResponse<{ created: number; existing: number; total: number }>(await fetch("/api/v1/lily/admin/whatsapp/templates/starter-pack", {
+    method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrf }, body: "{}"
+  }));
+}
+
 export async function getWhatsAppNotifications(status = "") {
   const query = new URLSearchParams({ limit: "100", ...(status ? { status } : {}) });
   return parseResponse<{ notifications: WhatsAppNotification[] }>(await fetch(`/api/v1/lily/admin/whatsapp/notifications?${query}`, { credentials: "same-origin", cache: "no-store" }));

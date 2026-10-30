@@ -53,7 +53,7 @@ async function createProviderPayment(input: {
   body: z.infer<typeof createChoicePaymentSchema>;
   quote: ReturnType<typeof calculateLilyPaymentQuote>;
   idempotencyKey: string;
-  providers: Array<"cooklily_pix" | "mercado_pago" | "manual">;
+  providers: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual">;
 }) {
   if (input.body.method === "pix") {
     return createLilyPixChoice({
@@ -83,10 +83,10 @@ async function persistChoicePayment(input: {
   body: z.infer<typeof createChoicePaymentSchema>;
   idempotencyKey: string;
   quote: ReturnType<typeof calculateLilyPaymentQuote>;
-  availability: { providers: Array<"cooklily_pix" | "mercado_pago" | "manual"> };
-  provider: "cooklily_pix" | "mercado_pago" | "manual";
+  availability: { providers: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual"> };
+  provider: "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
   providerResult: any;
-  attemptedProviders: Array<"cooklily_pix" | "mercado_pago" | "manual">;
+  attemptedProviders: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual">;
 }) {
   const exactApproval = input.providerResult.status === "approved"
     && input.providerResult.paidCents === input.quote.amountCents;

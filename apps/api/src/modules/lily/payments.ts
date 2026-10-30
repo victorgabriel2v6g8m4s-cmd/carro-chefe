@@ -53,7 +53,7 @@ const createPaymentSchema = z.discriminatedUnion("method", [
 
 const paymentSettingsSchema = z.object({
   paymentsEnabled: z.boolean().optional(),
-  paymentProvider: z.enum(["manual", "cooklily_pix", "mercado_pago"]).optional(),
+  paymentProvider: z.enum(["manual", "cooklily_pix", "sicredi_pix", "mercado_pago"]).optional(),
   manualPixEnabled: z.boolean().optional(),
   manualPixInstructions: z.string().trim().max(2000).nullable().optional(),
   mercadoPagoPixEnabled: z.boolean().optional(),
@@ -887,7 +887,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const input = confirmationSchema.parse(request.body);
     const existing = await lilyPrisma.lilyPayment.findUnique({ where: { id }, include: paymentInclude });
     if (!existing) throw new ApiError(404, "Pagamento não encontrado.");
-    if (!["manual", "cooklily_pix"].includes(existing.provider)) {
+    if (!["manual", "cooklily_pix", "sicredi_pix"].includes(existing.provider)) {
       throw new ApiError(409, "Pagamentos automáticos só podem ser confirmados pelo processador.", {
         code: "LILY_PAYMENT_PROVIDER_CONFIRMATION_REQUIRED"
       });

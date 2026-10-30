@@ -96,6 +96,10 @@ beforeEach(async () => {
       paymentsEnabled: false,
       manualPixEnabled: false,
       manualPixInstructions: null,
+      activePixProvider: "cooklily_pix",
+      sicrediPixKeyEncrypted: null,
+      sicrediPixMerchantName: null,
+      sicrediPixMerchantCity: null,
       mercadoPagoPixEnabled: false,
       mercadoPagoCardEnabled: false
     },
@@ -112,7 +116,8 @@ afterEach(() => {
     "MERCADO_PAGO_API_BASE_URL",
     "COOKLILY_PIX_KEY",
     "COOKLILY_PIX_MERCHANT_NAME",
-    "COOKLILY_PIX_MERCHANT_CITY"
+    "COOKLILY_PIX_MERCHANT_CITY",
+    "LILY_MFA_ENCRYPTION_KEY"
   ]) delete process.env[name];
 });
 
@@ -202,6 +207,50 @@ describe("CookLily — escolha de pagamento e descontos", () => {
     expect(created.json().amountCents).toBe(1900);
     expect(created.json().providerData.qrCode).toContain("br.gov.bcb.pix");
     expect(created.json().routing.fallbackChain).toEqual(["cooklily_pix", "manual"]);
+  });
+
+  it("guarda a chave Sicredi cifrada, gera QR/BR Code e permite priorizá-la sem trocar o padrão", async () => {
+    process.env.COOKLILY_PIX_KEY = "67999999999";
+    process.env.COOKLILY_PIX_MERCHANT_NAME = "COOKLILY";
+    process.env.COOKLILY_PIX_MERCHANT_CITY = "CAMPO GRANDE";
+    process.env.LILY_MFA_ENCRYPTION_KEY = Buffer.alloc(32, 8).toString("base64url");
+    const admin = await register("67999908122", "admin");
+    const customer = await register("67999908123");
+    const configured = await app.inject({
+      method: "PATCH", url: "/api/v1/lily/admin/payment-options/settings",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: {
+        sicrediPixKey: "11987654321",
+        sicrediPixMerchantName: "Victor Gabriel Martins de Sousa",
+        sicrediPixMerchantCity: "Peixoto de Azevedo"
+      }
+    });
+    expect(configured.statusCode).toBe(200);
+    expect(configured.json().activePixProvider).toBe("cooklily_pix");
+    expect(configured.json().sicrediPix.ready).toBe(true);
+    expect(configured.json().sicrediPix.maskedKey.endsWith("4321")).toBe(true);
+    expect(JSON.stringify(configured.json())).not.toContain("11987654321");
+
+    const preview = await app.inject({ method: "GET", url: "/api/v1/lily/admin/payment-options/pix-qr?provider=sicredi_pix", headers: { cookie: admin.cookie } });
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json().qrCode).toContain("br.gov.bcb.pix");
+
+    const activated = await app.inject({
+      method: "PATCH", url: "/api/v1/lily/admin/payment-options/settings",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf }, payload: { activePixProvider: "sicredi_pix" }
+    });
+    expect(activated.statusCode).toBe(200);
+    await lilyPrisma.lilyOperationalSettings.update({ where: { id: "default" }, data: { paymentsEnabled: true } });
+    const order = await createOrder(customer.user.id, customer.user.phone, 2740);
+    const created = await app.inject({
+      method: "POST", url: "/api/v1/lily/payment-options",
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf, "idempotency-key": "choice-sicredi-pix-00000001" },
+      payload: { orderId: order.id, method: "pix" }
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json()).toMatchObject({ provider: "sicredi_pix", amountCents: 2740, status: "pending" });
+    expect(created.json().providerData.qrCode).toContain("br.gov.bcb.pix");
+    expect(created.json().providerData.paymentMethodType).toBe("static_br_code");
   });
 
   it("trata Pix manual apenas como último fallback, mantendo method=Pix", async () => {
