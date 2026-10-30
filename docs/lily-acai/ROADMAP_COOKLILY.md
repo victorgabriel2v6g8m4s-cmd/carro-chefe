@@ -6,7 +6,7 @@
 **Site real:** `https://carrochefe.com/lilyacai/*`  
 **Documento atualizado:** 30/10/2026
 
-**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge `080eae62`, deploy verificado), revisão do código em `cooklily/canonical` (`a0cc107`) e execução de homologação documentada em `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md`. Esta reconciliação adicional considera a branch `codex/cooklily-whatsapp-ai-agent`; itens novos só viram concluídos após PR, integração e gates. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
+**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`) e PR #278 (merge `c589b794`, deploy `c02ed62a`). O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior; `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra o deploy e a verificação do inbox em desktop/mobile. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
 
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
@@ -53,8 +53,9 @@ Fora do escopo: redação publicitária final, arte gráfica e decisão da data 
 - [ ] Manter segredos somente na configuração protegida da VPS.
 - [ ] Garantir que indisponibilidade do WhatsApp não bloqueie pedido, pagamento, cozinha ou entrega.
 - [ ] Implementar OTP no cadastro; template de autenticação existe como rascunho, mas emissão/validação OTP ainda não está integrada ao cadastro.
-- [*] Implementar inbox humana, processamento inbound durável e opt-out com armazenamento cifrado, dedupe, fila e rate limit por contato; painel básico de handoff/reply e expurgo foram iniciados na branch `codex/cooklily-whatsapp-ai-agent`. Atribuição de responsável, busca/SLA, opt-in conversacional e homologação ainda pendentes.
-- [*] Implementar fundação do agente IA com Responses `store:false`, prompt versionado, guardrails, handoff e orquestrador/RAG de conteúdo público. Está desligado por padrão; requer consentimento de envio das consultas para embeddings, retenção aprovada, secrets e avaliação offline antes de qualquer piloto.
+- [x] Implantar a fundação do inbox humano e do processamento inbound durável: criptografia, dedupe, fila, rate limit por contato, opt-out, APIs internas e painel de handoff/reply/expurgo. PR #278, release `c02ed62a`; homologado em desktop e mobile, sem conversas de clientes em produção durante a verificação.
+- [*] Completar a operação humana com atribuição/SLA e busca; validar opt-in conversacional, rotina de operação e testes consentidos em número de homologação.
+- [x] Implantar a fundação do agente IA com Responses `store:false`, prompt versionado, guardrails, handoff e orquestrador/RAG de conteúdo público. PR #278, release `c02ed62a`. Runtime permanece desligado por padrão; falta preparar consentimento de consultas para embeddings, retenção aprovada, secrets, avaliação offline e piloto controlado.
 - [ ] Integrar e habilitar agente IA para clientes após gates técnicos, privacidade, configuração Meta/OpenAI e teste consentido em número de homologação, conforme `WHATSAPP_IA_ARQUITETURA_E_IMPLANTACAO.md`.
 
 As notificações operacionais já são descritas na Entrega 11H. Verificar gaps concretos antes de criar trabalho duplicado.
