@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { getLilySession, lilyAdminJson, parseResponse, type AuthPayload, type LilyPublicConfig } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 

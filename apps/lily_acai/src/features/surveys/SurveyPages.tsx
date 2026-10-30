@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "../../router";
 import { getLilyCatalog, getLilyProfile, getLilySession, type AuthPayload, type CatalogProduct, type LilyProfilePayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { getCustomerOrders } from "../orders/api";

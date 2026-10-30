@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import type { LilyChoicePayment, LilyPaymentOption } from "./payment-choice-api";
 import { CookLilyPixQrCode } from "./CookLilyPixQrCode";
 import { PriceDisplay } from "../pricing/PriceDisplay";

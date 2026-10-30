@@ -11,7 +11,7 @@ function source(relative: string) {
 describe("CookLily — painel de pagamentos", () => {
   it("expõe uma rota própria para métodos e descontos", () => {
     const main = source("apps/lily_acai/src/main.tsx");
-    expect(main).toContain('import { AdminPaymentMethodsPage } from "./features/admin/AdminPaymentMethodsPage";');
+    expect(main).toContain('const AdminPaymentMethodsPage = lazy(() => import("./features/admin/AdminPaymentMethodsPage")');
     expect(main).toContain('path="/painel/pagamentos/metodos"');
     expect(main).toContain("<AdminPaymentMethodsPage />");
   });

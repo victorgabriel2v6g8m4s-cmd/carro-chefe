@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { getLilySession, type AuthPayload } from "../../api";
 import { getLilyObservabilitySummary, type LilyObservabilitySummary } from "./observability-api";
 import { LilyLoadingSpinner } from "../../loading-spinner";

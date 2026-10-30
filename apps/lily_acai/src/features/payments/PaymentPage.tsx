@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "../../router";
 import { AdminPaymentMethodsPage } from "../admin/AdminPaymentMethodsPage";
 import { PaymentChoicePage } from "./PaymentChoicePage";
 

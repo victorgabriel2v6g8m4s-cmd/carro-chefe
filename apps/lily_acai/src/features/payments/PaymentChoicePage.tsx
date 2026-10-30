@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "../../router";
 import { getLilyAuthStatus, getLilySession, type AuthPayload } from "../../api";
 import { trackLilyAnalytics } from "../../analytics";
 import { readGuestOrderToken } from "../orders/guest-token";

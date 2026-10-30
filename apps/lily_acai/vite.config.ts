@@ -7,7 +7,30 @@ export default defineConfig({
   envDir: path.resolve(import.meta.dirname, "../.."),
   base: "/lilyacai/",
   plugins: [react()],
-  build: { outDir: "dist", emptyOutDir: true },
+  resolve: {
+    alias: [
+      { find: /^react$/, replacement: "preact/compat" },
+      { find: /^react\/jsx-runtime$/, replacement: "preact/jsx-runtime" },
+      { find: /^react\/jsx-dev-runtime$/, replacement: "preact/jsx-runtime" },
+      { find: /^react-dom\/client$/, replacement: "preact/compat/client" },
+      { find: /^react-dom$/, replacement: "preact/compat" }
+    ]
+  },
+  build: {
+    outDir: "dist",
+    manifest: true,
+    emptyOutDir: true,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: "vendor", test: /[\\/]node_modules[\\/]/, priority: 10 },
+            { name: "shared-app", test: /[\\/]apps[\\/]lily_acai[\\/]src[\\/]/, minShareCount: 2, priority: 1 }
+          ]
+        }
+      }
+    }
+  },
   server: {
     port: 5175,
     proxy: {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { claimLilyMission, getLilySession, getLilyLoyalty, getLilyProfile, redeemLilyReward, redeemLilyLevelBenefit, type AuthPayload, type LilyLoyaltyPayload, type LilyProfilePayload } from "../../api";
 import { getCustomerOrders } from "../orders/api";
 import { surveyJson } from "../surveys/api";

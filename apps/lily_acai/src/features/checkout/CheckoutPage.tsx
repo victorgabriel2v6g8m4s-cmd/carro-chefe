@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../../router";
 import { getLilySession, parseResponse, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { trackLilyAnalytics } from "../../analytics";

@@ -4,19 +4,23 @@ import { pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 
 export const LILY_BUILD_BASELINE = Object.freeze({
-  jsRawBytes: 633_940,
-  jsGzipBytes: 168_490,
+  jsRawBytes: 809_073,
+  jsGzipBytes: 224_993,
+  initialJsGzipBytes: 141_312,
+  largestJsChunkBytes: 595_046,
   cssRawBytes: 130_610,
   cssGzipBytes: 16_890
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
   // Margem para níveis, seletor de benefícios, curva interativa, Reels e WhatsApp local.
-  jsRawBytes: 819_200,
-  jsGzipBytes: 225_280,
+  jsRawBytes: 614_400,
+  jsGzipBytes: 189_440,
+  initialJsGzipBytes: 112_640,
+  largestJsChunkBytes: 286_720,
   cssRawBytes: 178_176,
   cssGzipBytes: 34_816,
-  combinedGzipBytes: 260_096
+  combinedGzipBytes: 225_280
 });
 
 function emptyBucket() {
@@ -52,8 +56,39 @@ export async function measureLilyBuildAssets(assetsDirectory) {
     throw new Error(`Nenhum asset CSS encontrado em ${assetsDirectory}.`);
   }
 
+  const manifestPath = resolve(assetsDirectory, "../.vite/manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const entry = Object.values(manifest).find((item) => item.isEntry && item.src === "index.html");
+  if (!entry) throw new Error(`Entry index.html não encontrado no manifest da Lily: ${manifestPath}`);
+
+  const visited = new Set();
+  async function visit(entryKey) {
+    if (visited.has(entryKey)) return;
+    visited.add(entryKey);
+    const item = manifest[entryKey];
+    if (!item) return;
+    for (const importedKey of item.imports ?? []) await visit(importedKey);
+  }
+  const entryKey = Object.keys(manifest).find((key) => manifest[key] === entry);
+  await visit(entryKey);
+
+  const initialJs = emptyBucket();
+  for (const key of visited) {
+    const file = manifest[key]?.file;
+    if (!file?.endsWith(".js")) continue;
+    const bytes = await readFile(resolve(assetsDirectory, "..", file));
+    initialJs.files += 1;
+    initialJs.rawBytes += bytes.byteLength;
+    initialJs.gzipBytes += gzipSync(bytes, { level: 9 }).byteLength;
+  }
+  const largestJsChunkBytes = Math.max(...await Promise.all(entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+    .map(async (entry) => (await readFile(resolve(assetsDirectory, entry.name))).byteLength)));
+
   return {
     ...result,
+    initialJs,
+    largestJsChunkBytes,
     combinedGzipBytes: result.js.gzipBytes + result.css.gzipBytes
   };
 }
@@ -65,6 +100,8 @@ export function evaluateLilyBuildBudget(
   const checks = [
     ["JS raw", measurement.js.rawBytes, budget.jsRawBytes],
     ["JS gzip", measurement.js.gzipBytes, budget.jsGzipBytes],
+    ["JS inicial gzip", measurement.initialJs.gzipBytes, budget.initialJsGzipBytes],
+    ["Maior chunk JS", measurement.largestJsChunkBytes, budget.largestJsChunkBytes],
     ["CSS raw", measurement.css.rawBytes, budget.cssRawBytes],
     ["CSS gzip", measurement.css.gzipBytes, budget.cssGzipBytes],
     ["JS + CSS gzip", measurement.combinedGzipBytes, budget.combinedGzipBytes]
@@ -88,6 +125,8 @@ export function formatLilyBuildBudgetReport(measurement, budget = LILY_BUILD_BUD
   const rows = [
     ["JS raw", measurement.js.rawBytes, budget.jsRawBytes, measurement.js.files],
     ["JS gzip", measurement.js.gzipBytes, budget.jsGzipBytes, measurement.js.files],
+    ["JS inicial gzip", measurement.initialJs.gzipBytes, budget.initialJsGzipBytes, measurement.initialJs.files],
+    ["Maior chunk JS", measurement.largestJsChunkBytes, budget.largestJsChunkBytes, 1],
     ["CSS raw", measurement.css.rawBytes, budget.cssRawBytes, measurement.css.files],
     ["CSS gzip", measurement.css.gzipBytes, budget.cssGzipBytes, measurement.css.files],
     ["JS + CSS gzip", measurement.combinedGzipBytes, budget.combinedGzipBytes, measurement.js.files + measurement.css.files]

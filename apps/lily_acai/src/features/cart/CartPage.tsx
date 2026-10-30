@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { useCart } from "./CartContext";
 
 function money(cents: number) {

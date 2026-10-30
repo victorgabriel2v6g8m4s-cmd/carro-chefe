@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "../../router";
 import { getLilySession, getLilyVip, postLilyVipAction, type AuthPayload, type LilyVipPayload } from "../../api";
 import { resolveVipConsentNavigation, vipTermsVersion } from "./vip-consent-navigation";
 import "./vip-program.css";

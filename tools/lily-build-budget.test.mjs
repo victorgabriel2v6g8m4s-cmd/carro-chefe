@@ -10,14 +10,13 @@ import {
   measureLilyBuildAssets
 } from "./lily-build-budget.mjs";
 
-test("budget mantém folga controlada acima da baseline real validada", () => {
-  assert.ok(LILY_BUILD_BUDGET.jsRawBytes > LILY_BUILD_BASELINE.jsRawBytes);
-  assert.ok(LILY_BUILD_BUDGET.jsGzipBytes > LILY_BUILD_BASELINE.jsGzipBytes);
+test("budget registra redução do entrypoint e limita regressão dos assets totais", () => {
+  assert.ok(LILY_BUILD_BUDGET.jsRawBytes < LILY_BUILD_BASELINE.jsRawBytes);
+  assert.ok(LILY_BUILD_BUDGET.jsGzipBytes < LILY_BUILD_BASELINE.jsGzipBytes);
+  assert.ok(LILY_BUILD_BUDGET.initialJsGzipBytes < LILY_BUILD_BASELINE.initialJsGzipBytes * 0.8);
+  assert.ok(LILY_BUILD_BUDGET.largestJsChunkBytes < LILY_BUILD_BASELINE.largestJsChunkBytes * 0.5);
   assert.ok(LILY_BUILD_BUDGET.cssRawBytes > LILY_BUILD_BASELINE.cssRawBytes);
   assert.ok(LILY_BUILD_BUDGET.cssGzipBytes > LILY_BUILD_BASELINE.cssGzipBytes);
-
-  assert.ok(LILY_BUILD_BUDGET.jsRawBytes < LILY_BUILD_BASELINE.jsRawBytes * 1.35);
-  assert.ok(LILY_BUILD_BUDGET.jsGzipBytes < LILY_BUILD_BASELINE.jsGzipBytes * 1.35);
   assert.ok(LILY_BUILD_BUDGET.cssRawBytes < LILY_BUILD_BASELINE.cssRawBytes * 1.45);
   assert.ok(LILY_BUILD_BUDGET.combinedGzipBytes < (LILY_BUILD_BASELINE.jsGzipBytes + LILY_BUILD_BASELINE.cssGzipBytes) * 1.41);
 });
@@ -25,6 +24,8 @@ test("budget mantém folga controlada acima da baseline real validada", () => {
 test("avalia build dentro e fora do budget", () => {
   const within = {
     js: { files: 1, rawBytes: 500_000, gzipBytes: 130_000 },
+    initialJs: { files: 1, rawBytes: 500_000, gzipBytes: 100_000 },
+    largestJsChunkBytes: 250_000,
     css: { files: 1, rawBytes: 95_000, gzipBytes: 18_000 },
     combinedGzipBytes: 148_000
   };
@@ -32,6 +33,8 @@ test("avalia build dentro e fora do budget", () => {
 
   const over = {
     js: { files: 1, rawBytes: 820_000, gzipBytes: 230_000 },
+    initialJs: { files: 1, rawBytes: 820_000, gzipBytes: 120_000 },
+    largestJsChunkBytes: 400_000,
     css: { files: 1, rawBytes: 180_000, gzipBytes: 35_500 },
     combinedGzipBytes: 270_000
   };
@@ -39,6 +42,8 @@ test("avalia build dentro e fora do budget", () => {
   assert.deepEqual(labels, [
     "JS raw",
     "JS gzip",
+    "JS inicial gzip",
+    "Maior chunk JS",
     "CSS raw",
     "CSS gzip",
     "JS + CSS gzip"
@@ -50,15 +55,21 @@ test("mede apenas JS/CSS existentes no diretório de assets", async () => {
   const assets = path.join(temp, "assets");
   try {
     await mkdir(assets);
+    await mkdir(path.join(temp, ".vite"));
     await writeFile(path.join(assets, "index.js"), "console.log('cooklily');".repeat(100));
     await writeFile(path.join(assets, "index.css"), ".x{display:block}".repeat(100));
     await writeFile(path.join(assets, "photo.webp"), Buffer.alloc(200_000, 1));
+    await writeFile(path.join(temp, ".vite", "manifest.json"), JSON.stringify({
+      "index.html": { file: "assets/index.js", src: "index.html", isEntry: true, imports: [] }
+    }));
 
     const measurement = await measureLilyBuildAssets(assets);
     assert.equal(measurement.js.files, 1);
     assert.equal(measurement.css.files, 1);
     assert.ok(measurement.js.rawBytes > 0);
     assert.ok(measurement.css.rawBytes > 0);
+    assert.equal(measurement.initialJs.rawBytes, measurement.js.rawBytes);
+    assert.equal(measurement.largestJsChunkBytes, measurement.js.rawBytes);
     assert.equal(
       measurement.combinedGzipBytes,
       measurement.js.gzipBytes + measurement.css.gzipBytes

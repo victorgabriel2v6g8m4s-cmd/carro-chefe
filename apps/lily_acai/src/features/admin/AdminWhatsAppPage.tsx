@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { getLilySession, type AuthPayload } from "../../api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { getWhatsAppNotifications, getWhatsAppSettings, getWhatsAppTemplates, mutateWhatsApp, type WhatsAppNotification, type WhatsAppSettings, type WhatsAppTemplate } from "./whatsapp-api";
