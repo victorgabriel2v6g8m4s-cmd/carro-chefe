@@ -15,7 +15,7 @@ export function CatalogProductCard({
   price: ReactNode;
   onOpen: () => void;
 }) {
-  return <article data-lily-reveal className="product-card">
+  return <article className="product-card">
     <div className="product-card-media">
       <button className="catalog-image-button" type="button" onClick={onOpen} aria-label={`Editar ${product.displayName}`}>
         <img src={product.cover?.url ?? `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`} alt={product.cover?.altText ?? product.displayName} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`; }} />
