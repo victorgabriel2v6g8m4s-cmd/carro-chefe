@@ -30,10 +30,23 @@ const spinnerSource = readFileSync(resolve(sourceDirectory, "loading-spinner.tsx
 const printSource = readFileSync(resolve(sourceDirectory, "features/operations/KitchenPrintPage.tsx"), "utf8");
 const allergenSource = readFileSync(resolve(sourceDirectory, "features/allergens/AllergenNotice.tsx"), "utf8");
 const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
+const adminNavigationSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminNavigationLayout.tsx"), "utf8");
 const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-interaction-enhancements.ts"), "utf8");
 const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
 
 describe("estrutura crítica de UX CookLily", () => {
+  it("oferece navegação administrativa global responsiva sem substituir RBAC dos módulos", () => {
+    expect(mainSource).toContain("function AdminWorkspace");
+    expect(mainSource).toContain('<Route path="/painel/whatsapp"');
+    expect(adminNavigationSource).toContain('"/painel/cardapio"');
+    expect(adminNavigationSource).toContain('"/painel/whatsapp"');
+    expect(adminNavigationSource).toContain('item.adminOnly || role === "admin"');
+    expect(adminNavigationSource).toContain('localStorage.setItem(STORAGE_KEY, String(next))');
+    expect(adminNavigationSource).toContain('aria-controls="cooklily-admin-navigation"');
+    expect(css).toContain(".admin-workspace.is-mobile-open .admin-sidebar");
+    expect(css).toContain(".admin-workspace.is-collapsed .admin-sidebar-link");
+  });
+
   it("usa Lucide na navegação, mantém ordem do header e substitui o carrinho do rodapé por Ranking", () => {
     expect(mainSource).toContain('from "lucide-react"');
     expect(mainSource).toContain('NavLink to="/ranking"><Trophy');

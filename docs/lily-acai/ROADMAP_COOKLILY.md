@@ -65,7 +65,7 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [ ] Priorizar configuração da loja, catálogo, disponibilidade, pedidos, pagamentos e estados operacionais.
 - [ ] Preservar RBAC, MFA, CSRF, auditoria, minimização de dados e isolamento por domínio.
 - [ ] Evitar segunda fonte de verdade para produtos, preços, estoque, pedidos, pagamentos ou financeiro quando o ERP assumir esses domínios.
-- [ ] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita.
+- [*] Reorganizar o painel em uma navegação lateral global recolhível, com ícones Lucide, foco/teclado e conteúdo do módulo selecionado à direita. Primeira implementação em curso nesta entrega; precisa passar CI, integração, deploy e homologação mobile/desktop.
 - [ ] Tornar a gestão do catálogo progressiva: listar produtos com os dados mínimos e carregar no popup/editor somente as configurações do produto selecionado; reaproveitar a apresentação do cardápio do cliente como base da lista.
 - [ ] Carregar sob demanda sabores, adicionais, mídia, combinações e outras dependências apenas quando a operação selecionada precisar delas; manter feedback de carregamento, erro e salvamento.
 - [ ] Auditar arquivos grandes e separar páginas, componentes, hooks, tipos e serviços por responsabilidade, extraindo somente lógica compartilhada comprovada.
@@ -215,6 +215,7 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [*] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails, contexto mínimo, APIs internas e fallback humano. A fundação e os testes de guardrail estão no código; avaliação offline ampliada de abuso/injeção, autorização e orçamento ainda precisa ser registrada antes do piloto. O agente segue desativado.
 - [x] Implementar base curada de conhecimento, embeddings de conteúdo público, cache e busca vetorial isolada. Embeddings de consultas do cliente dependem de autorização/consentimento explícito e continuam desativados.
 - [ ] Avaliar offline cenários benignos e adversariais, então testar ponta a ponta em número autorizado de homologação; liberar para clientes somente após revisão dos gates de privacidade, segurança, operação e custo.
+- [x] Documentar passo a passo do proprietário para Meta, OpenAI, privacidade, segredos VPS, validação, piloto, rollback e checklist, mantendo flags desligadas até aprovação: `WHATSAPP_IA_GUIA_DE_CONFIGURACAO.md`.
 
 ### Conector MCP administrativo para LLMs
 - [ ] Projetar ferramenta MCP para tarefas autorizadas de admin/staff (configuração, catálogo, cupons, pesquisas, diagnóstico e correções) via linguagem natural.
@@ -228,7 +229,7 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Aplicar rate limits, idempotency keys, validação de entrada, auditoria append-only, paginação e mensagens de erro estáveis.
 - [ ] Incluir documentação OpenAPI, SDK/exemplos mínimos, ambiente de homologação e testes de segurança antes de emitir credenciais de produção.
 
-Ordem: fechar primeiro a fundação segura de inbox/atendimento IA e homologar a operação no WhatsApp oficial; depois priorizar a confirmação financeira real e ERP conforme os gates da Fase 1. MCP e API administrativa ficam em entregas próprias, depois de definidos e aprovados os limites de autonomia.
+Ordem: avançar a navegação lateral do painel (sem dependência de credenciais); em paralelo, o proprietário pode seguir o guia de configuração de WhatsApp. Só depois dos gates Meta/OpenAI/privacidade o atendimento IA pode ser homologado. Na sequência, priorizar a confirmação financeira real e ERP conforme os gates da Fase 1. MCP e API administrativa ficam em entregas próprias, depois de definidos e aprovados os limites de autonomia.
 
 ## Fase 5 — Expansão técnica
 - [ ] Planejar novas unidades, marcas, canais ou aumento de volume somente após estabilizar a operação atual.

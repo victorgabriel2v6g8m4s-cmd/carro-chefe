@@ -13,16 +13,16 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  // A tela WhatsApp administrativa agora inclui inbox humana/IA e base de conhecimento.
-  // O ajuste de 2 KiB vale apenas para os totais: carregamento inicial e chunk máximo
-  // permanecem fixos, preservando os limites que afetam visitantes e navegação.
+  // A tela WhatsApp administrativa inclui inbox humana/IA; o painel agora usa
+  // navegação lateral com ícones Lucide. Os ajustes cobrem apenas os totais:
+  // carregamento inicial e chunk máximo permanecem fixos.
   jsRawBytes: 614_400,
-  jsGzipBytes: 191_488,
+  jsGzipBytes: 193_536,
   initialJsGzipBytes: 112_640,
   largestJsChunkBytes: 286_720,
-  cssRawBytes: 180_224,
-  cssGzipBytes: 35_840,
-  combinedGzipBytes: 227_328
+  cssRawBytes: 183_296,
+  cssGzipBytes: 36_864,
+  combinedGzipBytes: 230_400
 });
 
 function emptyBucket() {

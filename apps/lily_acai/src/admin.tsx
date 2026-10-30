@@ -179,26 +179,6 @@ export function AdminHome() {
       <article><strong>{data!.addons.length}</strong><span>adicionais</span></article>
       <article><strong>{data!.media.length}</strong><span>mídias</span></article>
     </div>
-    <div className="admin-actions">
-      <a className="button primary" href={`${import.meta.env.BASE_URL}painel/cardapio`}>Administrar cardápio</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pesquisas`}>Pesquisas</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cupons`}>Cupons e ofertas</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/vip`}>Programa VIP</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/fidelidade`}>Níveis e LilyCoins</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/midias`}>Mídias</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entrega`}>Entrega e retirada</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/configuracoes`}>Configurações da loja</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pagamentos/metodos`}>Métodos e descontos</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pagamentos`}>Pagamentos e reconciliação</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/pedidos`}>Pedidos</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/analytics`}>Analytics</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/saude`}>Saúde</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/whatsapp`}>WhatsApp Cloud API</a>
-      <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/cozinha`}>Cozinha</a>
-      {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/entregas`}>Gestão de entregas</a>}
-      {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}entregas`}>Visão do entregador</a>}
-      {session!.user.role === "admin" && <a className="button ghost" href={`${import.meta.env.BASE_URL}painel/equipe`}>Equipe</a>}
-    </div>
   </section>}</AdminGate>;
 }
 
