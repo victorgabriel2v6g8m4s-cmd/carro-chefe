@@ -70,9 +70,9 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(editorForm).not.toContain("<summary>");
     expect(editorForm).not.toContain("<details");
     expect(adminSource).toContain("<CatalogProductCard");
-    expect(adminSource).toContain("dialog.showModal()");
+    expect(adminSource).toContain("dialogRef.current?.showModal()");
     expect(adminSource).toContain("<dialog");
-    expect(sharedCatalogCardSource).toContain('className={`product-card-media${product.vipLocked ? " vip-locked-media" : ""}`}');
+    expect(sharedCatalogCardSource).toContain('className="product-card-media"');
     expect(sharedCatalogCardSource).toContain('className="product-card-body"');
   });
 

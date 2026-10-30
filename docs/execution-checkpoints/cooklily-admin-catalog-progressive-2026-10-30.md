@@ -1,13 +1,13 @@
 # CookLily: editor progressivo do catálogo administrativo
 
-- status: awaiting_ci_and_homologation
+- status: deployment_budget_fix_in_progress
 - owner: AG-DEV
-- branch: `codex/cooklily-admin-catalog-progressive`
+- branch: `codex/cooklily-admin-catalog-budget`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `10669b2c30d741573d6bb91873f3f6da64393c07`
-- head_sha_verified: `9f2295abbc5204f441a056d77abf57de58debd0b`
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/284 (draft; CI pendente)
-- last_verified_at: 2026-10-30 16:24 America/Sao_Paulo
+- base_sha_verified: `cc61c25d99ae48b8d38d42265ef65db5489f0e88`
+- head_sha_verified: alterações corretivas testadas em working tree; SHA será anotado após commit
+- pull_requests: PR #284 merged (`cc61c25`); PR corretivo ainda não aberto
+- last_verified_at: 2026-10-30 16:40 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -27,6 +27,8 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 - `npm test -- --maxWorkers=1`: 80 arquivos, 419 aprovados e 3 ignorados.
 - `npm run build`: concluído; budget CookLily: JS gzip 188.97/189 KiB, CSS bruto 178.99/179 KiB, JS+CSS gzip 224.29/225 KiB.
 - `git diff --check`: aprovado. Nenhuma migration.
+- PR #284 CI passou em todos os jobs do run `41114715751`; merged em `cc61c25d99ae48b8d38d42265ef65db5489f0e88`.
+- Deploy VPS iniciado em 30/10/2026; gate de build reprovou: JS gzip 189.16/189.00 KiB. Rollback automático confirmado para `97f1dfb6953168f5de4feb399f28ff2268df1324`; nenhum migration real foi iniciado e o domínio continua na versão anterior.
 
 ## Em andamento
 
@@ -35,9 +37,11 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 
 ## Gates e testes
 
-- CI: PR #284 aberto; checks iniciados e aguardando conclusão.
-- `npm run check`, `npm test -- --maxWorkers=1`, `npm run build`, `npm run test:lily-ui` passaram localmente.
-- Navegador desktop/mobile: pendente após deploy.
+- CI: PR #284 aprovado (run `41114715751`), merged; CI do PR corretivo pendente.
+- Antes do ajuste corretivo: todos os gates locais passaram, budget Windows 188.97/189 KiB. Deploy Linux mostrou variação de +0.19 KiB; a implementação está sendo reduzida para ter margem cross-platform.
+- Ajuste corretivo local: simplificada abertura/fechamento do modal e card; `npm run test:lily-ui` (107), `npm run check`, `npm test -- --maxWorkers=1` (419 aprovados, 3 ignorados), `npm run build` e `git diff --check` passaram. Budget Windows: JS gzip 188.79/189 KiB, JS+CSS gzip 224.11/225 KiB.
+- Novo PR corretivo/CI e novo deploy Linux são necessários para confirmar margem multiplataforma.
+- Navegador desktop/mobile: pendente de um deploy bem-sucedido.
 
 ## Migrations
 
@@ -55,4 +59,4 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 
 ## Próxima ação exata
 
-Fazer revisão final e commit da implementação; criar PR draft para `cooklily/canonical`, aguardar CI, integrar, implantar e homologar no navegador integrado do Codex em desktop e mobile.
+Fechar o ajuste de bundle, executar testes e build locais; atualizar este checkpoint, criar PR corretivo para `cooklily/canonical`, aguardar CI, integrar, implantar e homologar no navegador integrado do Codex em desktop e mobile.

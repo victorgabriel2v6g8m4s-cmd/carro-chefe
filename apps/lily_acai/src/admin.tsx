@@ -254,14 +254,7 @@ function ProductEditor({ product: summary, csrf, refresh, setError }: {
   const [editorData, setEditorData] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   async function loadEditor() {
     if (editorData || loading) return;
@@ -276,7 +269,7 @@ function ProductEditor({ product: summary, csrf, refresh, setError }: {
     }
   }
   function openEditor() {
-    setOpen(true);
+    dialogRef.current?.showModal();
     void loadEditor();
   }
   const lowestPrice = summary.variants[0];
@@ -290,24 +283,21 @@ function ProductEditor({ product: summary, csrf, refresh, setError }: {
         categoryName: summary.category.name,
         cover: summary.cover
       }}
-      badges={[{ label: statusBadge, className: "offer-badge", visible: true }]}
-      actionLabel="Editar produto"
       onOpen={openEditor}
       price={lowestPrice
-        ? <><small>{summary.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={lowestPrice.priceCents} compareAtPriceCents={lowestPrice.compareAtPriceCents} density="compact" /></>
-        : <strong>Preço não definido</strong>}
+        ? <><small>{statusBadge} · {summary.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={lowestPrice.priceCents} compareAtPriceCents={lowestPrice.compareAtPriceCents} density="compact" /></>
+        : <><small>{statusBadge}</small><strong>Preço não definido</strong></>}
     />
     <dialog
       ref={dialogRef}
       className="admin-product-dialog"
       aria-label={`Editar ${summary.displayName}`}
-      onCancel={(event) => { event.preventDefault(); setOpen(false); }}
-      onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}
+      onClick={(event) => { if (event.target === event.currentTarget) dialogRef.current?.close(); }}
     >
       <section className="product-modal-content admin-product-dialog-content" aria-labelledby={`admin-product-title-${summary.id}`}>
         <header className="section-heading">
           <div><span className="eyebrow">{summary.category.name}</span><h2 id={`admin-product-title-${summary.id}`}>{summary.displayName}</h2></div>
-          <button className="modal-close" type="button" onClick={() => setOpen(false)} aria-label="Fechar editor">×</button>
+          <button className="modal-close" type="button" onClick={() => dialogRef.current?.close()} aria-label="Fechar editor">×</button>
         </header>
         {loading && <p className="admin-inline-loading" role="status">Carregando configurações de {summary.displayName}…</p>}
         {loadError && <p className="error" role="alert">{loadError} <button className="button ghost" type="button" onClick={() => void loadEditor()}>Tentar novamente</button></p>}
