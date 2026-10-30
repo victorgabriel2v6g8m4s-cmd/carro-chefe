@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { getLilySession, parseResponse, type AuthPayload, type LilyBenefit } from "../../api";
 import { LoyaltyBrandingEditor } from "./LoyaltyBrandingEditor";
 import { LoyaltyLevelEditor } from "./LoyaltyLevelEditor";
+import { readAdminApiError } from "./admin-api-error";
 import type { LoyaltyAdminPayload, LoyaltyLevel } from "./loyalty-types";
 
 type Reward = LoyaltyAdminPayload["rewards"][number];
@@ -72,10 +73,12 @@ export function AdminLoyaltyPage() {
     if (!session || !data) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const result = await parseResponse<{ configVersion: number }>(await fetch("/api/v1/lily/admin/loyalty/levels", {
+      const response = await fetch("/api/v1/lily/admin/loyalty/levels", {
         method: "PUT", credentials: "same-origin", headers: { "X-Lily-CSRF": session.csrfToken, "Content-Type": "application/json" },
         body: JSON.stringify({ levels: sortedLevels.map(({ iconUrl: _iconUrl, ...level }, sortOrder) => ({ ...level, sortOrder })), roundingMode: data.roundingMode })
-      }));
+      });
+      if (!response.ok) throw await readAdminApiError(response);
+      const result = await response.json() as { configVersion: number };
       await load();
       setMessage(`Níveis salvos na versão ${result.configVersion}. A curva recalcula o nível atual a partir dos pontos existentes.`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível salvar os níveis."); }
