@@ -5,8 +5,8 @@
 - branch: codex/cooklily-pix-whatsapp-ai-plan
 - base_branch: cooklily/canonical
 - base_sha_verified: 29962ae5
-- head_sha_verified: abf203f2b37663d20bf8fd0217eeea4014e1a0c8 (SVG support changes pending commit)
-- pull_requests: PR #269 draft
+- head_sha_verified: e85599f508a20378579d25a9442b65e0fb13c2a7 (checkpoint refresh pending)
+- pull_requests: PR #269 draft; CI for SVG revision pending
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
@@ -23,7 +23,7 @@
 - Implementação do provider Sicredi e cadastro cifrado concluída localmente; configuração de produção ainda não persistida.
 - Pacote de 15 templates draft e ação idempotente do painel concluídos; WhatsApp Manager ainda requer revisão/submissão manual.
 - Arquitetura de IA, estimativas de custo, jornada e lacunas documentadas em `docs/lily-acai/WHATSAPP_IA_SEGURA_E_JORNADA_2026-10-30.md`.
-- Commits enviados: `36ec776` implementação, `abf203f` documentação e `3d09d85` checkpoint. SVG e atualização do checkpoint pendentes de commit/push. PR #269 em draft; CI inicial enfileirado.
+- Commits enviados: `36ec776` implementação, `abf203f` documentação, `3d09d85` checkpoint e `e85599f` suporte SVG seguro. PR #269 em draft.
 
 ## Gates e testes
 
@@ -56,7 +56,7 @@
 
 ## Próxima ação exata
 
-1. Comitar e enviar suporte SVG; atualizar PR #269 e aguardar CI da revisão atual.
+1. Registrar o resultado dos checks de CI para `e85599f` na PR #269.
 2. Aguardar CI e corrigir falhas; executar/repetir teste geral isolando o hang Vitest.
 3. Integrar por squash após gates verdes, atualizar checkpoint e então implantar o SHA canônico autorizado.
 4. Verificar configuração de cifragem VPS; cadastrar Pix alternativo de forma inativa sem trocar o meio ativo.
