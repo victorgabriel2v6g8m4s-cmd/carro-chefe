@@ -30,9 +30,14 @@ export function Link({ to, ...props }: LinkProps) {
   return <WouterLink {...props} to={to} />;
 }
 
+export function isNavLinkActive(pathname: string, to: string, end = false) {
+  const destination = to.replace(/\/$/, "") || "/";
+  return pathname === destination || (!end && destination !== "/" && pathname.startsWith(`${destination}/`));
+}
+
 export function NavLink({ to, end = false, className, ...props }: LinkProps & { end?: boolean }) {
   const [pathname] = useWouterLocation();
-  const active = end ? pathname === to : pathname === to || pathname.startsWith(`${to.replace(/\/$/, "")}/`);
+  const active = isNavLinkActive(pathname, to, end);
   const classes = [className, active ? "active" : ""].filter(Boolean).join(" ");
   return <WouterLink {...props} to={to} className={classes} aria-current={active ? "page" : undefined} />;
 }
