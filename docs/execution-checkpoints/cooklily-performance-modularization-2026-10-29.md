@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: codex/cooklily-catalog-deploy-checkpoint
+- branch: codex/cooklily-catalog-checkpoint-merged
 - base_branch: cooklily/canonical
-- base_sha_verified: 043c93544da013c0081eab7fe146efafb1d20da7
-- head_sha_verified: e0631d4e0c5fda6a900a1426b42d42bba5a08674
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7)
+- base_sha_verified: 5869468eff64f94d9b30706835e836527e16802b
+- head_sha_verified: 5869468eff64f94d9b30706835e836527e16802b
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/262 (merged), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/263 (merged; squash 5bda800b622bb69ab03b84f0ebc487a6a1663e3a), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/264 (merged; squash 043c93544da013c0081eab7fe146efafb1d20da7), https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/265 (merged; squash 5869468eff64f94d9b30706835e836527e16802b)
 - last_verified_at: 2026-10-29 America/Sao_Paulo
 - interruption_state: none
 
@@ -86,6 +86,7 @@
 - Homologação desktop no domínio real via Codex IAB, aba integrada 17, em `https://carrochefe.com/lilyacai/painel/cardapio`: lista carregou com 35/35 produtos, busca `Morango Nutt` filtrou para 2/35 e limpar a busca restaurou 35/35. Abrir LilyMix carregou o detalhe individual com dados de foto, descrição, variações, preços, sabores, adicionais e combinações. Nenhum dado foi alterado.
 - O detalhe mostrou estado transitório “Carregando configurações” antes de preencher o formulário. Depois carregou por completo; logs de console não retornaram erros nem avisos.
 - Capturas de tela desktop foram feitas no Codex IAB durante a sessão. Não foi possível salvar essas capturas como arquivos do workspace através da API de UI disponível.
+- Checkpoint parcial integrado pela PR #265, CI run `40988138955` PASS (7/7); squash `5869468eff64f94d9b30706835e836527e16802b`.
 - Homologação mobile permanece pendente: o controle Codex IAB desta sessão não expõe ajuste de viewport, e a tecla de alternância de device mode não alterou a janela. Não usar navegador externo nem declarar aprovação mobile sem viewport estreito real.
 - O item do catálogo progressivo segue `in_progress` até validar o domínio em viewport mobile pelo Codex IAB e registrar evidência. A meta de redução agregada gzip permanece em 18,73% (faltam 2.861 bytes para o limite de 179.994 bytes).
 
