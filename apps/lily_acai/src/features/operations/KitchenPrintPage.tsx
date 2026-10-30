@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "../../router";
 import { getKitchenPrintTicket, type KitchenPrintTicket } from "./api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";

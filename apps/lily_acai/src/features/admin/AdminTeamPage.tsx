@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../router";
 import { getLilySession, type AuthPayload } from "../../api";
 import { getLilyTeam, promoteLilyTeamMember, updateLilyTeamMember, type LilyTeamMember } from "./team-api";
 import { LilyLoadingSpinner } from "../../loading-spinner";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../router";
 import { ArrowLeft, Bookmark, Heart, ListOrdered, MessageCircle, Share2, ShoppingCart, Shuffle, Volume2, VolumeX, X } from "lucide-react";
 import { getLilyReelSocial, getLilySession, postLilyReelComment, postLilyVipAction, setLilyReelAction, type AuthPayload, type CatalogProduct, type LilyReelSocial } from "../../api";
 import { useCart } from "../cart/CartContext";
