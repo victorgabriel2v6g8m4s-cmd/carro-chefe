@@ -12,6 +12,7 @@ const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
 const dashboardSource = readFileSync(resolve(sourceDirectory, "features/dashboard/DashboardPage.tsx"), "utf8");
 const headerLoyaltySource = readFileSync(resolve(sourceDirectory, "features/loyalty/HeaderLoyaltyControls.tsx"), "utf8");
+const loyaltyAdminSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminLoyaltyPage.tsx"), "utf8");
 const paymentSource = [
   "features/payments/PaymentPage.tsx",
   "features/payments/PaymentChoicePage.tsx",
@@ -79,6 +80,11 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(dashboardSource).toContain('to="/entrar?next=%2Fdashboard"');
     expect(dashboardSource).toContain('to="/cadastro?next=%2Fdashboard"');
     expect(css).toContain(".loyalty-dashboard-auth-gate");
+  });
+
+  it("valida limiares duplicados antes de enviar níveis e evita erro genérico de salvamento", () => {
+    expect(loyaltyAdminSource).toContain("loyaltyLevelThresholdError(sortedLevels)");
+    expect(loyaltyAdminSource).toContain("if (thresholdError) { setError(thresholdError); return; }");
   });
 
   it("mantém os controles da curva em um painel amplo com zoom, pan, minimapa e suporte ao toque", () => {
