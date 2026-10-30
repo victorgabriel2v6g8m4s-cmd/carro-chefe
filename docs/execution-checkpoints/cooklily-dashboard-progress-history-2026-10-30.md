@@ -5,8 +5,8 @@
 - branch: `codex/lily-dashboard-budget-fix-round2`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `21d2549c3360d97e6abfa47927f7cb926c69779f`
-- head_sha_verified: `21d2549c3360d97e6abfa47927f7cb926c69779f` (base; second correction not committed)
-- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; PR #294 merged as `21d2549c3360d97e6abfa47927f7cb926c69779f`, but deploy failed its Linux gzip budget gate; PR #295 not yet opened
+- head_sha_verified: `e76a04d9963710e35de98d8a69a5d82d6a82a8f9`
+- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; PR #294 merged as `21d2549c3360d97e6abfa47927f7cb926c69779f`, but deploy failed its Linux gzip budget gate; PR #295 open, CI running
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
@@ -26,7 +26,7 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 ## Em andamento
 
 - Validar no CI com Node 22 em Linux, igual ao runtime da VPS, além de Node 20/24.
-- Abrir PR #295 contra `cooklily/canonical`; aguardar suites e orçamento gzip para todos os runtimes.
+- PR #295 aberta contra `cooklily/canonical`; após atualização final deste checkpoint, aguardar suites e orçamento gzip nos runtimes 20/22/24.
 - Após merge e CI verde com margem no Node 22, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
 
 ## Gates e testes
