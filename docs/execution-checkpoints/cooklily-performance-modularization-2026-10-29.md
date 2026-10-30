@@ -77,6 +77,7 @@
 - Gates do item: `npm test` PASS (75 arquivos, 393 passaram, 3 skipped); `npm run check` PASS; `npm run build` PASS após retirar estilos CSS que excediam o budget; budget Lily PASS: JS 566.82 KiB raw / 179.47 KiB gzip, inicial 40.99 KiB, maior chunk 61.42 KiB; CSS 170.75 KiB raw / 33.88 KiB gzip; JS+CSS 213.35 KiB gzip; `git diff --check` PASS.
 - Novos testes de contrato verificam dados reduzidos no índice, detalhe específico e bloqueio a clientes. `catalog.test.ts` PASS 16/16; UI PASS 21 arquivos, 97 testes.
 - PR, CI, merge, deploy VPS e homologação integrada desktop/mobile ainda pendentes nesta etapa.
+- PR #264 passou 7/7 checks no Actions run `40986990923` para o head `d1355e951b5f46d1bf6b62b5ff4c97cf4d536663`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Excel Recipe Ubuntu/Windows e Workbook Snapshot: PASS. PR pronta e mergeável; próximo passo é squash merge.
 
 ### Próxima ação exata
 
