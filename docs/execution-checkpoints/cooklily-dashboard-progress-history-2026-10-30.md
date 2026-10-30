@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: `codex/lily-dashboard-budget-fix`
+- branch: `codex/lily-dashboard-budget-fix-round2`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `2fae845472cc0bb2700957997324edce6c491a31`
-- head_sha_verified: `226bb4b0a8517304e09ea48b25ea544d40886f0f`
-- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; budget-fix PR #294 open, CI pending
+- base_sha_verified: `21d2549c3360d97e6abfa47927f7cb926c69779f`
+- head_sha_verified: `e76a04d9963710e35de98d8a69a5d82d6a82a8f9`
+- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; PR #294 merged as `21d2549c3360d97e6abfa47927f7cb926c69779f`, but deploy failed its Linux gzip budget gate; PR #295 open, CI running
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
@@ -17,27 +17,30 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 ## Concluído e persistido
 
 - PR #293 foi integrado por squash na branch canônica como `2fae845472cc0bb2700957997324edce6c491a31`.
-- A tentativa de deploy desse SHA falhou no gate Linux do budget: JS gzip `189,08/189 KiB` (+0,08 KiB); o deploy fez rollback automático para o release `54d8b3600273366d46d47ef682f0ba503eca3712` antes de executar migrations reais.
-- Rebuild local após simplificação do painel passou: JS gzip `188,87/189 KiB`, CSS gzip `35,32/36 KiB`, JS+CSS gzip `224,19/225 KiB`.
-- `npm run check` passou e `npm run test:lily-ui` passou (25 arquivos/109 testes).
-- `npm test` concluiu seus prechecks e ficou sem progresso ao entrar no Vitest completo; foi interrompido após inspeção do processo. A confirmação completa permanece pendente no CI.
+- PR #294 foi integrada por squash, mas o deploy de `21d2549c3360d97e6abfa47927f7cb926c69779f` falhou no gate Linux: JS gzip `189,07/189 KiB` (+0,07 KiB). Nenhuma migration real foi iniciada e o rollback preservou o release `54d8b3600273366d46d47ef682f0ba503eca3712`.
+- A VPS usa Node `22.22.1`/zlib `1.3.1`; CI antes só testava Node 20 e 24, que passaram. A diferença de compressão explica por que o gate de deploy continuou falhando.
+- A segunda correção elimina o cálculo repetido do máximo do radar, evita parse de coordenadas SVG e torna os valores dos gráficos legíveis individualmente por tecnologia assistiva.
+- `npm run build:lily` local em Node 22 Windows passou para a segunda correção; JS gzip `188,80/189 KiB`, JS+CSS gzip `224,12/225 KiB`. A reprodução precisa do Linux Node 22 será feita pelo CI.
+- `npm run check` passou após a correção de tipos do radar e `npm run test:lily-ui` passou (25 arquivos/109 testes). CI Node 20/24 e Vitest Linux na VPS passaram na correção anterior (82 arquivos/425 testes); a execução local Windows foi interrompida após o worker Vitest encerrar sem emitir resultado.
 
 ## Em andamento
 
-- Reduzir o custo do componente dos gráficos para recuperar margem no budget e validar no CI Linux antes de nova publicação.
-- PR #294 aberta contra `cooklily/canonical`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows aguardam conclusão.
-- Após merge e CI verde, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
+- Validar no CI com Node 22 em Linux, igual ao runtime da VPS, além de Node 20/24.
+- PR #295 aberta contra `cooklily/canonical`; após atualização final deste checkpoint, aguardar suites e orçamento gzip nos runtimes 20/22/24.
+- Após merge e CI verde com margem no Node 22, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
 
 ## Gates e testes
 
-- Preflight AG-DEV frontend: passou contra a base `2fae845`.
+- Preflight AG-DEV frontend e `.github/workflows/ci.yml`: passou contra a base `21d2549`.
 - `npm run test:lily-ui`: 25 arquivos/109 testes passaram.
 - `npm run check`: passou.
-- `npm run build`: passou localmente; JS gzip 188,87/189 KiB, JS+CSS gzip 224,19/225 KiB.
+- `npm run build:lily` com Node 22 em Windows: JS gzip 188,80/189 KiB, JS+CSS gzip 224,12/225 KiB.
 - PR #293: CI Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
 - Deploy de `2fae845`: rollback confirmado por violação de 0,08 KiB no budget JS gzip; release anterior preservado.
-- `npm test` nesta correção: prechecks passaram, Vitest completo não emitiu progresso e foi interrompido; CI completo da nova PR pendente.
-- CI e merge de PR #294, novo deploy e homologação desktop/mobile: pendentes.
+- CI da PR #294: todas as verificações Node 20/24, incluindo testes e builds, passaram; deploy Linux Node 22 excedeu o budget por 0,07 KiB.
+- Segunda correção local: `npm run check`, `npm run test:lily-ui` (25 arquivos/109 testes), `npm run build` em Node 24 e `npm run build:lily` em Node 22 Windows passaram. O `npm test` local foi interrompido após o worker Vitest encerrar sem emitir resultado; CI Linux deve confirmar a suíte completa.
+- CI Node 22 Linux para a segunda correção: pendente.
+- PR #295, novo deploy e homologação desktop/mobile: pendentes.
 
 ## Migrations
 
@@ -54,4 +57,4 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Próxima ação exata
 
-Aguardar CI completo da PR #294, conferir o resultado do build Linux e o budget gzip; somente com os gates verdes e margem confirmada, integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.
+Abrir a PR #295 com o segundo corte, cobertura CI Node 22 e checkpoint; aguardar Quality Node 20/22/24 e confirmar margem no build Linux Node 22. Só então integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.
