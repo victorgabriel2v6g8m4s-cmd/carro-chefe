@@ -5,8 +5,8 @@
 - branch: `codex/lily-dashboard-progress-history`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `ea16f4a`
-- head_sha_verified: `ea16f4a`
-- pull_requests: none
+- head_sha_verified: `eb993de`
+- pull_requests: pending creation
 - last_verified_at: 2026-10-30 19:40 America/Sao_Paulo
 - interruption_state: none
 
@@ -49,4 +49,4 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Próxima ação exata
 
-Commitar a versão candidata, abrir PR e seguir CI → merge → deploy → homologação real desktop/mobile; então reconciliar roadmap e checkpoint.
+Abrir PR com `eb993de` como código candidato; aguardar CI; então merge, deploy e homologação real desktop/mobile antes de atualizar o roadmap.
