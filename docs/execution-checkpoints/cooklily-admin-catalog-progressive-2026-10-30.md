@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-admin-catalog-progressive`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `10669b2c30d741573d6bb91873f3f6da64393c07`
-- head_sha_verified: `f482dbab41094cf60b116b1c4b9d55aab82b0956` (commit inicial; checkpoint será atualizado em cada marco durável)
-- pull_requests: nenhum
+- head_sha_verified: `9f2295abbc5204f441a056d77abf57de58debd0b`
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/284 (draft; CI pendente)
 - last_verified_at: 2026-10-30 16:24 America/Sao_Paulo
 - interruption_state: none
 
@@ -35,7 +35,7 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 
 ## Gates e testes
 
-- CI: não iniciado.
+- CI: PR #284 aberto; checks iniciados e aguardando conclusão.
 - `npm run check`, `npm test -- --maxWorkers=1`, `npm run build`, `npm run test:lily-ui` passaram localmente.
 - Navegador desktop/mobile: pendente após deploy.
 
