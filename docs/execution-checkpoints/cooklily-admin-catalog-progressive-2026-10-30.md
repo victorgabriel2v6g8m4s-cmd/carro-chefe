@@ -1,13 +1,13 @@
 # CookLily: editor progressivo do catálogo administrativo
 
-- status: corrective_fix_merged_awaiting_deploy_and_homologation
+- status: completed
 - owner: AG-DEV
 - branch: `codex/fix-admin-catalog-reveal`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `cc61c25d99ae48b8d38d42265ef65db5489f0e88`
 - head_sha_verified: `eb71d7afcc78c4a5385a1879b01d97ecbc29353f`
 - pull_requests: PR #284 merged (`cc61c25`); PR #285 merged (`7d6fa3d`); corrective PR #288 merged (`eb71d7a`)
-- last_verified_at: 2026-10-30 18:24 America/Sao_Paulo
+- last_verified_at: 2026-10-30 18:30 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -32,6 +32,8 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 - A correção de margem do bundle foi integrada por PR #285 no SHA `7d6fa3d36b8b74f6dc0529b5279d407d7aadb3dd`. Deploy full em 30/10 às 19:43 BRT terminou com backup verificado, health interno/CookLily/fulfillment e external smoke OK. Budget Linux: JS gzip 188.98/189.00 KiB; `build_budget=ok`; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-194345-7d6fa3d36b8b.evidence`.
 - Na homologação integrada mobile 390×844 do release `7d6fa3d`, o índice exibia 35 produtos e o modal do produto selecionado carregava seus campos, mas os cards tinham `opacity: 0` porque `CatalogProductCard` incluía `data-lily-reveal` sem o observador da página pública no painel. A falha foi reproduzida em DOM e screenshot.
 - Correção: removido `data-lily-reveal` somente do card administrativo; teste impede reintrodução do atributo. PR #288 foi integrado por squash em `eb71d7afcc78c4a5385a1879b01d97ecbc29353f` após todos os checks de CI passarem.
+- Deploy canônico `44e5250af91e205ca1c65e18c789d033d38681bf` concluído em 30/10/2026 18:24 BRT; backup verificado, sem migrations reais pendentes, readiness interno, saúde Lily/fulfillment e smoke HTTPS passaram. Budget Linux: JS gzip 188.95/189 KiB; JS+CSS gzip 224.29/225 KiB; `build_budget=ok`.
+- Homologação pós-correção exclusivamente no navegador integrado do Codex: desktop 1365×900 e mobile 390×844. Em ambos, 35 cards administrativos calcularam `opacity: 1`, sem `data-lily-reveal`; abriu-se o editor de LilyMix e o detalhe carregou (campos de nome, descrição, categoria, status, link de prévia, capa e configuração). No mobile o modal mediu 337 px dentro do viewport de 390 px; largura do documento 375 px, sem overflow horizontal. No desktop a largura do documento foi 1350 px para viewport de 1365 px, sem overflow. Nenhum erro de console foi registrado. O modal foi fechado sem salvar alterações e o viewport foi restaurado ao padrão.
 
 ## Em andamento
 
@@ -43,7 +45,7 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 - CI: PR #284 aprovado (run `41114715751`), PR #285 aprovado e integrado, PR #288 aprovado e integrado.
 - Build/deploy do SHA `7d6fa3d`: budget JS gzip 188.98/189.00 KiB no Linux, JS+CSS gzip 224.33/225.00 KiB; `build_budget=ok`.
 - Correção PR #288: `npm run test:lily-ui` (24 arquivos/107 testes), `npm run check`, `npm test -- --maxWorkers=1` (80 arquivos, 419 aprovados e 3 ignorados), `npm run build` (JS gzip 188.75/189 KiB e JS+CSS gzip 224.07/225 KiB), `git diff --check` e CI completo passaram.
-- Deploy do SHA `eb71d7a` e homologação retest desktop/mobile: pendentes.
+- Deploy e homologação desktop/mobile do SHA canônico `44e5250`: concluídos.
 
 ## Migrations
 
@@ -57,9 +59,9 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 ## Homologação/dependências externas
 
 - Domínio de teste: `https://carrochefe.com/lilyacai/painel/cardapio`.
-- Observação pré-correção: desktop 1365×900 carregou lista e editor; em mobile 390×844 os cards ficaram invisíveis, embora o modal carregasse o produto selecionado. Homologação final corrigida permanece pendente.
-- Usar exclusivamente o navegador integrado do Codex, em desktop e mobile, após novo deploy.
+- Observação pré-correção: desktop 1365×900 carregava lista e editor; mobile 390×844 tinha cards invisíveis apesar do detalhe funcionar. A falha foi corrigida e retestada após deploy.
+- Homologação final: navegador integrado do Codex, desktop 1365×900 e mobile 390×844; cards visíveis, editor do produto selecionado carregado, sem overflow horizontal nem erros de console.
 
 ## Próxima ação exata
 
-Executar deploy incremental do canonical atual (inclui PR #288), confirmar readiness/budget e homologar a lista e o modal no navegador integrado do Codex em desktop e mobile. Só então marcar o item do roadmap como homologado e começar a modularização incremental do grande `apps/lily_acai/src/admin.tsx`.
+Próximo item independente de credenciais: iniciar a modularização incremental de `apps/lily_acai/src/admin.tsx` (1.206 linhas), começando por extrair o formulário de edição do produto como módulo de catálogo coeso, com regressões cobertas e sem mudar comportamento.
