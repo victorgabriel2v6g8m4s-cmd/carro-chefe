@@ -5,8 +5,8 @@
 - branch: `codex/lily-dashboard-budget-fix`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `2fae845472cc0bb2700957997324edce6c491a31`
-- head_sha_verified: `2fae845472cc0bb2700957997324edce6c491a31` (base; UI trim not committed)
-- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; budget-fix PR not yet opened
+- head_sha_verified: `226bb4b0a8517304e09ea48b25ea544d40886f0f`
+- pull_requests: PR #293 merged as `2fae845472cc0bb2700957997324edce6c491a31`; budget-fix PR #294 open, CI pending
 - last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
@@ -25,7 +25,7 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 ## Em andamento
 
 - Reduzir o custo do componente dos gráficos para recuperar margem no budget e validar no CI Linux antes de nova publicação.
-- Abrir PR de correção de budget contra a base canônica atual.
+- PR #294 aberta contra `cooklily/canonical`; Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows aguardam conclusão.
 - Após merge e CI verde, publicar o SHA exato e homologar a alternância no navegador integrado do Codex em desktop e mobile.
 
 ## Gates e testes
@@ -37,7 +37,7 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 - PR #293: CI Quality Node 20/24, Tool Health Linux, Windows Supervisor, Workbook Snapshot e Excel Recipe Linux/Windows passaram.
 - Deploy de `2fae845`: rollback confirmado por violação de 0,08 KiB no budget JS gzip; release anterior preservado.
 - `npm test` nesta correção: prechecks passaram, Vitest completo não emitiu progresso e foi interrompido; CI completo da nova PR pendente.
-- Novo merge, deploy e homologação desktop/mobile: pendentes.
+- CI e merge de PR #294, novo deploy e homologação desktop/mobile: pendentes.
 
 ## Migrations
 
@@ -54,4 +54,4 @@ Implementar o próximo subitem desbloqueado de fidelidade: alternância dos grá
 
 ## Próxima ação exata
 
-Revisar/commitar a redução de bundle, abrir PR de correção contra `cooklily/canonical`, aguardar CI completo; somente se o gate Linux confirmar folga no budget, integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.
+Aguardar CI completo da PR #294, conferir o resultado do build Linux e o budget gzip; somente com os gates verdes e margem confirmada, integrar por squash, publicar o SHA canônico pela CLI `cc` e homologar no navegador integrado desktop e mobile.
