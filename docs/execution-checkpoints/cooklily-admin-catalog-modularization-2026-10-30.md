@@ -5,9 +5,9 @@
 - branch: `codex/lily-admin-catalog-modularization`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `8526d5d0e6ec18b7495e78b4c146aa1f25c68a3d`
-- head_sha_verified: `8526d5d0e6ec18b7495e78b4c146aa1f25c68a3d` (base; alterações locais ainda não commitadas)
-- pull_requests: nenhum aberto
-- last_verified_at: 2026-10-30 18:30 America/Sao_Paulo
+- head_sha_verified: `8e27988` (local implementation commit; checkpoint update follows)
+- pull_requests: PR #289 (draft; CI pending)
+- last_verified_at: 2026-10-30 18:42 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -37,7 +37,7 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 - `npm test -- --maxWorkers=1`: passou, 80 arquivos/420 testes, 3 ignorados.
 - `npm run build`: passou; bundle CookLily 188.70/189 KiB JS gzip, 224.02/225 KiB JS+CSS gzip, budget OK.
 - `git diff --check`: passou.
-- CI, revisão, merge, deploy e homologação dessa fatia ainda pendentes.
+- PR #289 foi aberta como draft; CI, revisão, merge, deploy e homologação dessa fatia ainda pendentes.
 
 ## Migrations
 
