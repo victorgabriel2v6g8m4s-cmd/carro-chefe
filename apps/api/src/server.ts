@@ -6,6 +6,7 @@ import { assertLoopbackBinding, config } from "./config";
 import { readStaticFile } from "./static-files";
 import { startLilyWhatsAppWorker } from "./modules/lily/whatsapp";
 import { startLilyPixReconciliationWorker } from "./modules/lily/pix-reconciliation";
+import { startLilyWhatsAppAIWorker } from "./modules/lily/whatsapp-ai/worker";
 
 assertLoopbackBinding(config.host);
 
@@ -16,9 +17,11 @@ const workerLog = {
 };
 const stopLilyWhatsAppWorker = startLilyWhatsAppWorker(workerLog);
 const stopLilyPixReconciliationWorker = startLilyPixReconciliationWorker(workerLog);
+const stopLilyWhatsAppAIWorker = startLilyWhatsAppAIWorker(workerLog);
 app.addHook("onClose", async () => {
   stopLilyWhatsAppWorker();
   stopLilyPixReconciliationWorker();
+  stopLilyWhatsAppAIWorker();
 });
 const siteDist = path.join(config.projectRoot, "apps", "site", "dist");
 const managementDist = path.join(config.projectRoot, "apps", "gestao", "dist");

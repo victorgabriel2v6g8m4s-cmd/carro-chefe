@@ -18,6 +18,7 @@ import { lilyPaymentRoutes } from "./payments";
 import { lilyTeamRoutes } from "./team";
 import { lilyMfaRoutes } from "./mfa";
 import { lilyWhatsAppRoutes } from "./whatsapp";
+import { lilyWhatsAppAIRoutes } from "./whatsapp-ai/routes";
 import { lilyPixReconciliationRoutes } from "./pix-reconciliation";
 import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
@@ -395,6 +396,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyMfaRoutes);
   await app.register(lilyAgentAuthRoutes);
   await app.register(lilyWhatsAppRoutes);
+  await app.register(lilyWhatsAppAIRoutes);
   await app.register(lilyPixReconciliationRoutes);
   await app.register(lilyAnalyticsRoutes);
   await app.register(lilyObservabilityRoutes);

@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
+import { lilyWhatsAppAIConfiguration, getWhatsAppAIProviderConfiguration } from "../lily/whatsapp-ai/config";
+import { persistInboundWhatsAppMessage } from "../lily/whatsapp-ai/inbox";
 
 declare module "fastify" {
   interface FastifyRequest { rawBody?: string }
@@ -53,24 +55,25 @@ const verificationQuery = z.object({
 }).passthrough();
 
 type MetaWebhookBody = {
-  entry?: Array<{ changes?: Array<{ value?: { messages?: unknown[]; statuses?: unknown[] } }> }>;
+  entry?: Array<{ changes?: Array<{ value?: { metadata?: { phone_number_id?: unknown }; messages?: unknown[]; statuses?: unknown[] } }> }>;
 };
 
 function getRecords(body: MetaWebhookBody) {
-  const records: Array<{ kind: string; item: Record<string, unknown> }> = [];
+  const records: Array<{ kind: string; item: Record<string, unknown>; phoneNumberId: string | null }> = [];
   for (const entry of body?.entry ?? []) {
     for (const change of entry.changes ?? []) {
       const value = change.value ?? {};
+      const phoneNumberId = typeof value.metadata?.phone_number_id === "string" ? value.metadata.phone_number_id.slice(0, 64) : null;
       for (const item of value.messages ?? []) {
         if (item && typeof item === "object" && !Array.isArray(item)) {
-          records.push({ kind: "message.received", item: item as Record<string, unknown> });
+          records.push({ kind: "message.received", item: item as Record<string, unknown>, phoneNumberId });
         }
       }
       for (const item of value.statuses ?? []) {
         if (item && typeof item === "object" && !Array.isArray(item)) {
           const statusItem = item as Record<string, unknown>;
           const status = typeof statusItem.status === "string" ? statusItem.status : "unknown";
-          records.push({ kind: `message.status.${status.slice(0, 40)}`, item: statusItem });
+          records.push({ kind: `message.status.${status.slice(0, 40)}`, item: statusItem, phoneNumberId });
         }
       }
     }
@@ -96,6 +99,7 @@ export async function integrationWhatsAppWebhookRoutes(app: FastifyInstance) {
     });
 
     app.post(path, {
+      bodyLimit: 256 * 1024,
       config: { rateLimit: { max: 300, timeWindow: "1 minute" } }
     }, async (request, reply) => {
       const appSecret = configurationFor(integration).appSecret;
@@ -111,8 +115,32 @@ export async function integrationWhatsAppWebhookRoutes(app: FastifyInstance) {
       const records = getRecords(request.body as MetaWebhookBody);
 
       if (integration === "cooklily") {
+        const inboxConfiguration = lilyWhatsAppAIConfiguration();
+        const aiConfiguration = getWhatsAppAIProviderConfiguration();
+        if (inboxConfiguration.inboxRequested && (!inboxConfiguration.inboxReady || !aiConfiguration.phoneNumberId)) {
+          return reply.code(503).send({ error: "Inbox CookLily ainda não está configurada com chave, retenção e número Meta." });
+        }
         const receivedAt = new Date();
         for (const record of records) {
+          let inboundMessage: { providerMessageId: string; from: string; timestamp: string; type: string; text?: string } | null = null;
+          if (inboxConfiguration.inboxRequested && record.kind === "message.received") {
+            if (record.phoneNumberId !== aiConfiguration.phoneNumberId) {
+              return reply.code(403).send({ error: "Evento recebido para outro número Meta." });
+            }
+            const providerMessageId = record.item.id;
+            const sender = record.item.from;
+            const timestamp = record.item.timestamp;
+            const type = record.item.type;
+            if (typeof providerMessageId !== "string" || typeof sender !== "string" || typeof timestamp !== "string" || typeof type !== "string") {
+              return reply.code(400).send({ error: "Evento de mensagem recebido em formato inválido." });
+            }
+            const textObject = record.item.text;
+            const text = textObject && typeof textObject === "object" && !Array.isArray(textObject)
+              && "body" in textObject && typeof textObject.body === "string"
+              ? textObject.body
+              : undefined;
+            inboundMessage = { providerMessageId, from: sender, timestamp, type, ...(text === undefined ? {} : { text }) };
+          }
           const serialized = JSON.stringify(record.item);
           const payloadHash = crypto.createHash("sha256").update(serialized).digest("hex");
           const dedupeKey = crypto.createHash("sha256").update(record.kind + ":" + serialized).digest("hex");
@@ -134,11 +162,13 @@ export async function integrationWhatsAppWebhookRoutes(app: FastifyInstance) {
               receivedAt
             }
           });
+          if (inboundMessage) await persistInboundWhatsAppMessage(inboundMessage);
         }
       }
 
       // Carro Chefe only acknowledges verified events until its event-processing
-      // workflow is implemented. Neither integration persists message text or raw payloads.
+      // workflow is implemented. CookLily stores inbound text only in its encrypted,
+      // retention-bound inbox when that feature is explicitly enabled.
       return reply.code(200).send({ received: true, events: records.length });
     });
   }
