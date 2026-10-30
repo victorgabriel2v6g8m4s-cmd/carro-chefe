@@ -5,9 +5,9 @@
 - branch: codex/cooklily-pix-whatsapp-ai-plan
 - base_branch: cooklily/canonical
 - base_sha_verified: 29962ae5
-- head_sha_verified: 36ec776 (feature implementation and docs committed; checkpoint update pending)
+- head_sha_verified: abf203f2b37663d20bf8fd0217eeea4014e1a0c8
 - pull_requests: none
-- last_verified_at: 2026-10-29 America/Sao_Paulo
+- last_verified_at: 2026-10-30 America/Sao_Paulo
 - interruption_state: none
 
 ## Concluído e persistido
@@ -20,9 +20,10 @@
 
 ## Em andamento
 
-- Implementar cadastro cifrado do segundo recebedor Pix Sicredi, prioridade selecionável e geração de BR Code/QR, mantendo CookLily atual como padrão.
-- Criar no painel um pacote de templates apenas como rascunhos/exportação manual, cobrindo criação/OTP, boas-vindas e ciclo do pedido.
-- Documentar arquitetura futura da IA conversacional, custos, controles, funil de compra completo e lacunas verificadas.
+- Implementação do provider Sicredi e cadastro cifrado concluída localmente; configuração de produção ainda não persistida.
+- Pacote de 15 templates draft e ação idempotente do painel concluídos; WhatsApp Manager ainda requer revisão/submissão manual.
+- Arquitetura de IA, estimativas de custo, jornada e lacunas documentadas em `docs/lily-acai/WHATSAPP_IA_SEGURA_E_JORNADA_2026-10-30.md`.
+- Commits locais: `36ec776` implementação e `abf203f` documentação/checkpoint; push/PR pendentes.
 
 ## Gates e testes
 
@@ -31,9 +32,9 @@
 - `npm run check`: PASS.
 - `npm run build`: PASS; orçamento CookLily: JS gzip 180.65/185 KiB, CSS gzip 33.88/34 KiB, combinado 214.53/220 KiB.
 - `npm test`: gates anteriores PASS, mas a fase Vitest raiz permaneceu sem saída até interrupção; registrar como inconclusivo, não PASS.
-- `git diff --check`: PASS after removing documentation whitespace.
+- `git diff --check`: PASS.
 - Nenhuma operação Pix ou envio WhatsApp de produção executado.
-- Nenhum merge/deploy desta entrega.
+- Nenhum merge/deploy desta entrega; CI remoto pendente.
 
 ## Migrations
 
@@ -54,7 +55,7 @@
 
 ## Próxima ação exata
 
-1. Atualizar este checkpoint com o SHA completo e criar commit do marco; em seguida push da branch e PR draft.
+1. Fazer push da branch e abrir PR draft.
 2. Aguardar CI e corrigir falhas; executar/repetir teste geral isolando o hang Vitest.
 3. Integrar por squash após gates verdes, atualizar checkpoint e implantar o SHA canônico autorizado.
 4. Verificar configuração de cifragem VPS; cadastrar Pix alternativo de forma inativa sem trocar o meio ativo.
