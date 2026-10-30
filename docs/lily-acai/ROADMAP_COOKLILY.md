@@ -6,7 +6,7 @@
 **Site real:** `https://carrochefe.com/lilyacai/*`  
 **Documento atualizado:** 30/10/2026
 
-**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`), PR #278 (merge `c589b794`, deploy `c02ed62a`) e PR #279 (correção visual, deploy `fa430c8`). O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior; `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra o deploy e os ajustes responsivos ainda em homologação. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
+**Reconciliação de implementação:** atualização em 30/10/2026 com base no PR #277 (merge/deploy `080eae62`), PR #278 (fundação de inbox/IA), PR #279 e PR #280 (correções de contraste), mais checkpoint `b4673469` em `cooklily/canonical`. O release atual da aplicação na VPS é `b4673469`; a inbox em `/lilyacai/painel/whatsapp` foi revisada no navegador integrado em desktop (1365×900) e mobile (390×844), sem usar conversas de clientes. A fundação está implantada, mas a operação real do agente continua bloqueada pelos gates listados abaixo. O checkpoint `docs/execution-checkpoints/cooklily-dashboard-ranking-profile-2026-10-30.md` registra a homologação anterior e `docs/execution-checkpoints/cooklily-whatsapp-ai-agent-2026-10-30.md` registra evidências e pendências. `[*]` significa parcialmente implementado; `[ ]` continua pendente.
 
 Este roadmap cobre apenas desenvolvimento de software, integrações, infraestrutura da aplicação e documentação técnica. Produção de artes, cadastro comercial em plataformas, campanhas/ads, chamadas de inauguração, execução da inauguração e contratação de terceiros ficam fora deste plano.
 
@@ -53,9 +53,9 @@ Fora do escopo: redação publicitária final, arte gráfica e decisão da data 
 - [ ] Manter segredos somente na configuração protegida da VPS.
 - [ ] Garantir que indisponibilidade do WhatsApp não bloqueie pedido, pagamento, cozinha ou entrega.
 - [ ] Implementar OTP no cadastro; template de autenticação existe como rascunho, mas emissão/validação OTP ainda não está integrada ao cadastro.
-- [x] Implantar a fundação do inbox humano e do processamento inbound durável: criptografia, dedupe, fila, rate limit por contato, opt-out, APIs internas e painel de handoff/reply/expurgo. PR #278, release `c02ed62a`; homologado em desktop e mobile, sem conversas de clientes em produção durante a verificação.
-- [*] Completar a operação humana com atribuição/SLA e busca; validar opt-in conversacional, rotina de operação e testes consentidos em número de homologação.
-- [x] Implantar a fundação do agente IA com Responses `store:false`, prompt versionado, guardrails, handoff e orquestrador/RAG de conteúdo público. PR #278, release `c02ed62a`. Runtime permanece desligado por padrão; falta preparar consentimento de consultas para embeddings, retenção aprovada, secrets, avaliação offline e piloto controlado.
+- [x] Implantar a fundação do inbox humano e do processamento inbound durável: criptografia, dedupe, fila, rate limit por contato, opt-out, APIs internas e painel de handoff/reply/expurgo. PR #278 e releases seguintes até `b4673469`; contraste e layout responsivo revisados no domínio real em desktop e mobile, sem conversas de clientes durante a verificação.
+- [*] Completar a operação humana com atribuição/SLA e busca; fechar política de opt-in conversacional e rotina operacional, e fazer testes consentidos em número de homologação. A inbox está disponível, mas não há validação operacional de atendimento real.
+- [x] Implantar a fundação do agente IA com Responses `store:false`, prompt versionado, guardrails, handoff e orquestrador/RAG de conteúdo público. PR #278, com ajustes visuais posteriores até o release `b4673469`. Runtime permanece desligado por padrão; não houve piloto com mensagens de clientes.
 - [ ] Integrar e habilitar agente IA para clientes após gates técnicos, privacidade, configuração Meta/OpenAI e teste consentido em número de homologação, conforme `WHATSAPP_IA_ARQUITETURA_E_IMPLANTACAO.md`.
 
 As notificações operacionais já são descritas na Entrega 11H. Verificar gaps concretos antes de criar trabalho duplicado.
@@ -208,13 +208,13 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - Não encaminhar token de indicação, conteúdo de respostas, telefone ou nome a analytics. Expiração/revogação manual de convites permanece decisão futura; pesquisa pode ser desativada pausando/cancelando.
 
 ### Em andamento: WhatsApp oficial e agente IA seguro
-- [*] Integração base WhatsApp Cloud API: envio/outbox e callback com assinatura estão no código; ainda não foram comprovados com WABA/número/templates e secrets de produção. A mudança atual inicia a inbox/IA em etapas, com flags desligadas até preparação de ambiente.
-- [ ] Validar conta Meta Business, número e templates aprovados; provisionar segredos no ambiente protegido da VPS e comprovar handshake/entrega no número de homologação consentido.
-- [ ] Separar mensagens operacionais de promocionais, comprovar opt-in/opt-out e política de janela; manter retries idempotentes.
-- [ ] Implementar inbox, processamento inbound durável e transferências humanas; disponibilizar histórico somente à equipe autorizada.
-- [ ] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails determinísticos, contexto mínimo e APIs internas read-only; validar injeção, autorização, rate/cost limits e fallback humano.
-- [ ] Implementar base de conhecimento curada com embeddings cacheados e busca vetorial isolada; não gerar embeddings de conversa do cliente.
-- [ ] Testar ponta a ponta em número de homologação antes de liberar fluxos para clientes.
+- [*] Integração base WhatsApp Cloud API: envio/outbox, callback assinado, inbox, processamento inbound durável e agente estão implantados. A VPS tem configuração Meta, mas inbox/IA e consulta de cliente por embeddings permanecem desligadas; OpenAI secret, chave de criptografia e retenção ainda precisam ser provisionados/aprovados. O checklist protegido do painel não substitui um teste real de entrega.
+- [ ] Validar WABA, número, templates aprovados e segredos no ambiente protegido; comprovar handshake e entrega/recebimento em número de homologação consentido.
+- [*] Separar mensagens operacionais das promocionais, implementar controles de opt-in/opt-out e janela, com retries idempotentes; concluir a validação de consentimentos, textos e operação em ambiente real.
+- [x] Implementar inbox, processamento inbound durável e transferências humanas; restringir histórico à equipe autenticada e permitir resposta/expurgo. Atribuição/SLA, busca e rotina operacional permanecem parciais no item 3.
+- [x] Implementar Responses API stateless (`store:false`), prompt versionado, guardrails, contexto mínimo, APIs internas e fallback humano; validar abuso/injeção e limites em ambiente seguro antes do piloto. O agente segue desativado.
+- [x] Implementar base curada de conhecimento, embeddings de conteúdo público, cache e busca vetorial isolada. Embeddings de consultas do cliente dependem de autorização/consentimento explícito e continuam desativados.
+- [ ] Avaliar offline cenários benignos e adversariais, então testar ponta a ponta em número autorizado de homologação; liberar para clientes somente após revisão dos gates de privacidade, segurança, operação e custo.
 
 ### Conector MCP administrativo para LLMs
 - [ ] Projetar ferramenta MCP para tarefas autorizadas de admin/staff (configuração, catálogo, cupons, pesquisas, diagnóstico e correções) via linguagem natural.
