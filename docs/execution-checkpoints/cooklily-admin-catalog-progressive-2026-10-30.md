@@ -1,13 +1,13 @@
 # CookLily: editor progressivo do catálogo administrativo
 
-- status: deployment_budget_fix_in_progress
+- status: awaiting_corrective_ci
 - owner: AG-DEV
 - branch: `codex/cooklily-admin-catalog-budget`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `cc61c25d99ae48b8d38d42265ef65db5489f0e88`
-- head_sha_verified: alterações corretivas testadas em working tree; SHA será anotado após commit
-- pull_requests: PR #284 merged (`cc61c25`); PR corretivo ainda não aberto
-- last_verified_at: 2026-10-30 16:40 America/Sao_Paulo
+- head_sha_verified: `693835d85e50e0d2cec3a1a5b8a8790e1a0262fb`
+- pull_requests: PR #284 merged (`cc61c25`); PR #285 draft https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/285
+- last_verified_at: 2026-10-30 16:44 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -32,12 +32,12 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 
 ## Em andamento
 
-- Revisar/commit, abrir PR draft e acompanhar CI.
-- Integrar a `cooklily/canonical`, fazer deploy e homologar desktop/mobile exclusivamente pelo navegador integrado do Codex.
+- Acompanhar CI do PR #285; integrar após verde.
+- Repetir deploy e homologar desktop/mobile exclusivamente pelo navegador integrado do Codex.
 
 ## Gates e testes
 
-- CI: PR #284 aprovado (run `41114715751`), merged; CI do PR corretivo pendente.
+- CI: PR #284 aprovado (run `41114715751`), merged. PR #285 criado como draft; CI pendente.
 - Antes do ajuste corretivo: todos os gates locais passaram, budget Windows 188.97/189 KiB. Deploy Linux mostrou variação de +0.19 KiB; a implementação está sendo reduzida para ter margem cross-platform.
 - Ajuste corretivo local: simplificada abertura/fechamento do modal e card; `npm run test:lily-ui` (107), `npm run check`, `npm test -- --maxWorkers=1` (419 aprovados, 3 ignorados), `npm run build` e `git diff --check` passaram. Budget Windows: JS gzip 188.79/189 KiB, JS+CSS gzip 224.11/225 KiB.
 - Novo PR corretivo/CI e novo deploy Linux são necessários para confirmar margem multiplataforma.
@@ -59,4 +59,4 @@ Concluir o próximo item do roadmap CookLily que não exige configuração Meta/
 
 ## Próxima ação exata
 
-Fechar o ajuste de bundle, executar testes e build locais; atualizar este checkpoint, criar PR corretivo para `cooklily/canonical`, aguardar CI, integrar, implantar e homologar no navegador integrado do Codex em desktop e mobile.
+Aguardar todos os checks do PR #285; então marcar pronto, integrar, implantar, confirmar o budget Linux e homologar no navegador integrado do Codex em desktop e mobile.
