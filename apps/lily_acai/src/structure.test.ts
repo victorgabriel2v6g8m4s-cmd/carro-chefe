@@ -33,6 +33,13 @@ const adminSource = readFileSync(resolve(sourceDirectory, "admin.tsx"), "utf8");
 const adminProductEditorSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/ProductEditor.tsx"), "utf8");
 const adminProductMoneySource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/product-money.ts"), "utf8");
 const adminAllergenFieldsSource = readFileSync(resolve(sourceDirectory, "features/admin/AllergenAdminFields.tsx"), "utf8");
+const adminProductCreationSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/ProductCreationForm.tsx"), "utf8");
+const adminCatalogIndexSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/ProductCatalogIndex.tsx"), "utf8");
+const adminCommercialSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/CommercialEditor.tsx"), "utf8");
+const adminFlavorAddonSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/FlavorAddonEditor.tsx"), "utf8");
+const adminCategorySource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/CategoryEditor.tsx"), "utf8");
+const adminGlobalSettingsSource = readFileSync(resolve(sourceDirectory, "features/admin/catalog/CatalogGlobalSettings.tsx"), "utf8");
+const adminComponentAllergenSource = readFileSync(resolve(sourceDirectory, "features/admin/ComponentAllergenEditor.tsx"), "utf8");
 const adminNavigationSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminNavigationLayout.tsx"), "utf8");
 const adminEnhancementsSource = readFileSync(resolve(sourceDirectory, "admin-interaction-enhancements.ts"), "utf8");
 const cropEditorSource = readFileSync(resolve(sourceDirectory, "image-crop-editor.ts"), "utf8");
@@ -67,7 +74,7 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(adminProductEditorSource).toContain("getLilyAdminProductEditor(summary.id)");
     expect(adminSource).toContain("getLilyAdminCatalogIndex()");
     expect(adminSource).toContain("getLilyAdminCatalog()");
-    expect(adminSource).toContain("Buscar produto");
+    expect(adminCatalogIndexSource).toContain("Buscar produto");
     expect(adminProductEditorSource).toContain('className="admin-product-editor-content"');
     expect(adminProductEditorSource).not.toContain("<summary>");
     expect(adminProductEditorSource).not.toContain("<details");
@@ -86,7 +93,7 @@ describe("estrutura crítica de UX CookLily", () => {
   });
 
   it("separa editor de catálogo, formatação de preços e campos de alergênicos em módulos focados", () => {
-    expect(adminSource).toContain('from "./features/admin/catalog/ProductEditor"');
+    expect(adminSource).toContain('from "./features/admin/catalog/ProductCatalogIndex"');
     expect(adminSource).not.toContain("function ProductEditorForm");
     expect(adminProductEditorSource).toContain("function ProductEditorForm");
     expect(adminProductEditorSource).toContain('from "./product-money"');
@@ -94,6 +101,13 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(adminProductMoneySource).toContain("export function parseMoney");
     expect(adminAllergenFieldsSource).toContain("export function AllergenAdminFields");
     expect(adminAllergenFieldsSource).toContain("export function normalizeAdminAllergens");
+    expect(adminProductCreationSource).toContain("export function CreateProduct");
+    expect(adminCategorySource).toContain("export function CategoryEditor");
+    expect(adminFlavorAddonSource).toContain("export function FlavorAddonEditor");
+    expect(adminCommercialSource).toContain("export function CommercialEditor");
+    expect(adminGlobalSettingsSource).toContain("export function CatalogGlobalSettings");
+    expect(adminComponentAllergenSource).toContain("export function ComponentAllergenEditor");
+    expect(adminSource.length).toBeLessThan(12_000);
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
