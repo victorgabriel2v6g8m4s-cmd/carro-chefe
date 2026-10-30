@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { getOptionalLilySession, requireLilySession } from "./auth";
 import { parseLoyaltyBenefits } from "./loyalty/benefits";
+import { buildWeeklyLoyaltyStats } from "./profile-statistics-periods";
 
 const mediaUrl = (id: string | null) => id ? `/api/v1/lily/public/media/${encodeURIComponent(id)}` : null;
 const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -64,6 +65,7 @@ export async function lilyProfileStatisticsRoutes(app: FastifyInstance) {
     const points = allEvents.reduce((sum, event) => sum + event.points, 0);
     const currentLevel = [...levels].reverse().find((level) => points >= level.requiredPoints);
     const iconIsActive = currentLevel?.iconMediaId ? await lilyPrisma.lilyMediaAsset.findFirst({ where: { id: currentLevel.iconMediaId, status: "active" }, select: { id: true } }) : null;
-    return { user: { displayName: target.displayName ?? "Cliente CookLily", avatarUrl: mediaUrl(target.avatarMediaId) }, points, currentLevel: currentLevel ? { id: currentLevel.id, name: currentLevel.name, requiredPoints: currentLevel.requiredPoints, iconUrl: iconIsActive ? mediaUrl(currentLevel.iconMediaId) : null } : null, totals: { ...totals, orders: totals.orders || 0, surveys: totals.surveys || allSurveys.reduce((sum, item) => sum + item.pointsAwarded, 0), referrals: totals.referrals || allReferrals.reduce((sum, item) => sum + item.creditedPoints, 0) }, counts: { orders: allOrders, surveys: allSurveys.length, referrals: allReferrals.length }, activeDays: activeDays.size, months };
+    const days = buildWeeklyLoyaltyStats({ now, events, orders, surveys, referrals });
+    return { user: { displayName: target.displayName ?? "Cliente CookLily", avatarUrl: mediaUrl(target.avatarMediaId) }, points, currentLevel: currentLevel ? { id: currentLevel.id, name: currentLevel.name, requiredPoints: currentLevel.requiredPoints, iconUrl: iconIsActive ? mediaUrl(currentLevel.iconMediaId) : null } : null, totals: { ...totals, orders: totals.orders || 0, surveys: totals.surveys || allSurveys.reduce((sum, item) => sum + item.pointsAwarded, 0), referrals: totals.referrals || allReferrals.reduce((sum, item) => sum + item.creditedPoints, 0) }, counts: { orders: allOrders, surveys: allSurveys.length, referrals: allReferrals.length }, activeDays: activeDays.size, months, days };
   });
 }

@@ -24,22 +24,32 @@ function RadarChart({ stats }: { stats: LilyCustomerStats }) {
   </svg>;
 }
 
-function MonthlyChart({ stats, metric }: { stats: LilyCustomerStats; metric: typeof categories[number] }) {
-  const max = Math.max(1, ...stats.months.map((month) => month[metric.key]));
-  return <div className="customer-monthly-chart" role="img" aria-label={`${metric.label} nos últimos seis meses`}>
-    {stats.months.map((month) => <div className="customer-month-column" key={month.key} title={`${month.label}: ${month[metric.key]}`}><span style={{ height: `${Math.max(4, month[metric.key] / max * 100)}%`, background: metric.color }} /><small>{month.label}</small><b>{month[metric.key]}</b></div>)}
+type ActivityBucket = LilyCustomerStats["months"][number];
+
+function ActivityChart({ values, metric, label }: { values: ActivityBucket[]; metric: typeof categories[number]; label: string }) {
+  const max = Math.max(1, ...values.map((item) => item[metric.key]));
+  return <div className="customer-monthly-chart" role="img" aria-label={label}>
+    {values.map((item) => <div className="customer-month-column" key={item.key}><span style={{ height: `${Math.max(4, item[metric.key] / max * 100)}%`, background: metric.color }} /><small>{item.label}</small><b>{item[metric.key]}</b></div>)}
   </div>;
 }
 
 export function CustomerStatsPanel({ userId, compact = false }: { userId?: string; compact?: boolean }) {
   const [stats, setStats] = useState<LilyCustomerStats | null>(null);
   const [error, setError] = useState("");
-  useEffect(() => { let active = true; getLilyCustomerStats(userId).then((value) => { if (active) setStats(value); }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Não foi possível carregar as estatísticas."); }); return () => { active = false; }; }, [userId]);
+  const [period, setPeriod] = useState<"week" | "month">("month");
+  useEffect(() => {
+    let active = true;
+    void getLilyCustomerStats(userId).then((value) => { if (active) setStats(value); }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Não foi possível carregar as estatísticas."); });
+    return () => { active = false; };
+  }, [userId]);
   if (error) return <p className="error" role="alert">{error}</p>;
   if (!stats) return <section className="customer-stats-panel" aria-live="polite"><p>Carregando estatísticas…</p></section>;
+  const values = compact && period === "week" ? stats.days : stats.months;
+  const periodLabel = period === "week" ? "Últimos 7 dias" : "Últimos 6 meses";
   return <section className={`customer-stats-panel${compact ? " is-compact" : ""}`} aria-label="Estatísticas de desempenho">
+    {compact && <header className="customer-stats-toolbar"><div><span className="eyebrow">Seu desempenho</span><h2>Progresso</h2><small>{periodLabel}</small></div><div className="customer-stats-period" role="group" aria-label="Período dos gráficos"><button type="button" aria-pressed={period === "week"} onClick={() => setPeriod("week")}>Semanal</button><button type="button" aria-pressed={period === "month"} onClick={() => setPeriod("month")}>Mensal</button></div></header>}
     {!compact && <header className="customer-stats-heading"><div><span className="eyebrow">Desempenho CookLily</span><h2>{stats.user.displayName}</h2><p>{stats.points.toLocaleString("pt-BR")} pontos acumulados · {stats.currentLevel?.name ?? "Sem nível"}</p></div></header>}
-    <div className="customer-stats-overview"><article className="customer-radar-card"><h3>Habilidades</h3><RadarChart stats={stats} /></article><article className="customer-activity-card"><h3>Frequência de atividade</h3><MonthlyChart stats={stats} metric={categories[1]} /><strong>{stats.activeDays} dias ativos neste período</strong><small>Nos últimos seis meses</small></article></div>
-    <div className="customer-stat-grid">{categories.map((item) => <article className="customer-stat-card" key={item.key}><div><h3>{item.label}</h3><strong>{item.key === "orders" ? stats.counts.orders : item.key === "surveys" ? stats.counts.surveys : item.key === "referrals" ? stats.counts.referrals : stats.months.reduce((sum, month) => sum + month[item.key], 0)}</strong></div><MonthlyChart stats={stats} metric={item} /><p>{stats.totals[item.key].toLocaleString("pt-BR")} pontos nesta categoria</p></article>)}</div>
+    <div className="customer-stats-overview"><article className="customer-radar-card"><h3>Habilidades</h3><RadarChart stats={stats} /></article><article className="customer-activity-card"><h3>Frequência de atividade</h3><ActivityChart values={values} metric={categories[1]} label={`Atividade ${periodLabel}`} /><strong>{compact && period === "week" ? values.filter((day) => day.activity > 0).length : stats.activeDays} dias ativos</strong><small>{periodLabel}</small></article></div>
+    <div className="customer-stat-grid">{categories.map((category) => <article className="customer-stat-card" key={category.key}><div><h3>{category.label}</h3><strong>{values.reduce((sum, bucket) => sum + bucket[category.key], 0)}</strong></div><ActivityChart values={values} metric={category} label={`${category.label} ${periodLabel}`} /><p>{stats.totals[category.key].toLocaleString("pt-BR")} pontos nesta categoria</p></article>)}</div>
   </section>;
 }
