@@ -84,6 +84,35 @@ describe("progressão de níveis e LilyCoins", () => {
     expect(duplicated.json().error).toContain("“Sem Nível” e “Bronze I”");
   });
 
+  it("insere um novo nível no início sem colidir IDs nem perder os níveis existentes", async () => {
+    const { server, cookie, csrf } = await registerAdmin();
+    const headers = { cookie, origin, "x-lily-csrf": csrf };
+    const current = await server.inject({ method: "GET", url: "/api/v1/lily/admin/loyalty", headers: { cookie } });
+    const original = (current.json().levels as Array<{ id: string; name: string; sortOrder: number; requiredPoints: number; lilyCoins: number; benefits: unknown[]; iconMediaId: string | null; active: boolean }>).map(({ id, name, sortOrder, requiredPoints, lilyCoins, benefits, iconMediaId, active }) => ({ id, name, sortOrder, requiredPoints, lilyCoins, benefits, iconMediaId, active }));
+    const baseline = original.length >= 2 ? original.map((level) => ({ ...level, lilyCoins: 0 })) : [
+      { id: crypto.randomUUID(), name: `Bronze teste ${suffix}`, sortOrder: 0, requiredPoints: 100, lilyCoins: 0, benefits: [], iconMediaId: null, active: true },
+      { id: crypto.randomUUID(), name: `Prata teste ${suffix}`, sortOrder: 1, requiredPoints: 200, lilyCoins: 0, benefits: [], iconMediaId: null, active: true }
+    ];
+    const orderedBaseline = [...baseline].sort((a, b) => a.sortOrder - b.sortOrder).map((level, index) => ({ ...level, sortOrder: index, requiredPoints: Math.max(level.requiredPoints, index + 1) }));
+    const trialLevels = [
+      { id: crypto.randomUUID(), name: `Sem Nível teste ${suffix}`, sortOrder: 0, requiredPoints: 0, lilyCoins: 0, benefits: [], iconMediaId: null, active: true },
+      ...orderedBaseline.map((level, index) => ({ ...level, sortOrder: index + 1 }))
+    ];
+
+    try {
+      const baselineSave = await server.inject({ method: "PUT", url: "/api/v1/lily/admin/loyalty/levels", headers, payload: { levels: orderedBaseline, roundingMode: "floor" } });
+      expect(baselineSave.statusCode, JSON.stringify(baselineSave.json())).toBe(200);
+      const inserted = await server.inject({ method: "PUT", url: "/api/v1/lily/admin/loyalty/levels", headers, payload: { levels: trialLevels, roundingMode: "floor" } });
+      expect(inserted.statusCode, JSON.stringify(inserted.json())).toBe(200);
+      const afterInsert = await server.inject({ method: "GET", url: "/api/v1/lily/admin/loyalty", headers: { cookie } });
+      expect(afterInsert.json().levels).toHaveLength(trialLevels.length);
+      expect(afterInsert.json().levels[0]).toMatchObject({ name: trialLevels[0].name, requiredPoints: 0 });
+      expect(afterInsert.json().levels.slice(1).map((level: { id: string }) => level.id)).toEqual(orderedBaseline.map((level) => level.id));
+    } finally {
+      await server.inject({ method: "PUT", url: "/api/v1/lily/admin/loyalty/levels", headers, payload: { levels: original, roundingMode: "floor" } });
+    }
+  });
+
   it("soma pontos, reconhece o nível alcançado e registra LilyCoins de nível sem duplicar", async () => {
     const user = await lilyPrisma.lilyUser.create({ data: { phoneNormalized, passwordHash: "test-only", displayName: "Conta teste de fidelidade" } });
     userId = user.id;

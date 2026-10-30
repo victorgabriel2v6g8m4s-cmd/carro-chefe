@@ -413,6 +413,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const actor = await requireLilyStaff(request, true);
     const input = levelsSchema.parse(request.body);
     if (new Set(input.levels.map((level) => level.sortOrder)).size !== input.levels.length) throw new ApiError(400, "A ordem dos níveis não pode se repetir.");
+    if (new Set(input.levels.map((level) => level.id).filter((id): id is string => Boolean(id))).size !== input.levels.filter((level) => level.id).length) throw new ApiError(400, "Um nível não pode repetir o identificador de outro nível.");
     if (new Set(input.levels.map((level) => level.name.trim().toLocaleLowerCase("pt-BR"))).size !== input.levels.length) throw new ApiError(400, "Os nomes dos níveis não podem se repetir.");
     const sorted = [...input.levels].sort((a, b) => a.sortOrder - b.sortOrder);
     const duplicateThreshold = sorted.findIndex((level, index) => index > 0 && level.requiredPoints === sorted[index - 1].requiredPoints);
@@ -425,16 +426,26 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const validIcons = iconIds.length ? await lilyPrisma.lilyMediaAsset.findMany({ where: { id: { in: iconIds }, status: "active", mime: { startsWith: "image/" } }, select: { id: true } }) : [];
     if (validIcons.length !== iconIds.length) throw new ApiError(400, "Cada nível precisa usar uma arte de imagem ativa da biblioteca CookLily.");
     const before = await lilyPrisma.lilyLevel.findMany({ select: { sortOrder: true, id: true, requiredPoints: true, lilyCoins: true } });
-    const version = await lilyPrisma.$transaction(async (tx) => {
+    const existingIds = new Set(before.map(({ id }) => id));
+    const saved = await lilyPrisma.$transaction(async (tx) => {
+      const offset = Math.max(1000, before.reduce((max, level) => Math.max(max, level.sortOrder), -1) + sorted.length + 100);
+      for (const level of before) await tx.lilyLevel.update({ where: { id: level.id }, data: { sortOrder: offset + level.sortOrder } });
+      const persistedLevels: Array<{ id: string; sortOrder: number; requiredPoints: number; lilyCoins: number }> = [];
       for (const [index, level] of sorted.entries()) {
+        const id = level.id && existingIds.has(level.id) ? level.id : crypto.randomUUID();
         const data = { name: level.name, sortOrder: index, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins, benefitsJson: JSON.stringify(level.benefits), iconMediaId: level.iconMediaId, active: level.active };
-        await tx.lilyLevel.upsert({ where: { sortOrder: index }, create: { id: level.id ?? crypto.randomUUID(), ...data }, update: data });
+        if (existingIds.has(id)) await tx.lilyLevel.update({ where: { id }, data });
+        else await tx.lilyLevel.create({ data: { id, ...data } });
+        persistedLevels.push({ id, sortOrder: index, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins });
       }
-      await tx.lilyLevel.deleteMany({ where: { sortOrder: { gte: sorted.length } } });
+      const retainedIds = persistedLevels.map(({ id }) => id);
+      if (retainedIds.length) await tx.lilyLevel.deleteMany({ where: { id: { notIn: retainedIds } } });
+      else await tx.lilyLevel.deleteMany();
       await tx.lilyOperationalSettings.update({ where: { id: "default" }, data: { loyaltyRoundingMode: input.roundingMode } });
-      return createLoyaltyConfigVersion(actor.user.id, tx);
+      const version = await createLoyaltyConfigVersion(actor.user.id, tx);
+      return { version, levels: persistedLevels };
     });
-    const changed = sorted.filter((level, index) => level.lilyCoins > 0 && !before.some((old) => old.sortOrder === index && old.requiredPoints === level.requiredPoints && old.lilyCoins === level.lilyCoins));
+    const changed = saved.levels.filter((level) => level.lilyCoins > 0 && !before.some((old) => old.id === level.id && old.requiredPoints === level.requiredPoints && old.lilyCoins === level.lilyCoins));
     if (changed.length) {
       const users = await lilyPrisma.lilyUser.findMany({ where: { status: "active", role: "customer" }, select: { id: true } });
       for (const user of users) {
@@ -442,8 +453,8 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
         for (const level of changed) if (snapshot.points >= level.requiredPoints) await lilyPrisma.lilyCoinEvent.upsert({ where: { sourceKey: `level:${level.id}:user:${user.id}` }, update: {}, create: { id: crypto.randomUUID(), userId: user.id, amount: level.lilyCoins, kind: "level", sourceKey: `level:${level.id}:user:${user.id}`, metadataJson: JSON.stringify({ levelId: level.id, awardedAfterConfig: true }) } });
       }
     }
-    await auditLilyAdmin(actor.user.id, "configure", "loyalty-levels", "default", { count: sorted.length, roundingMode: input.roundingMode, configVersion: version.version });
-    return { levels: sorted.length, roundingMode: input.roundingMode, configVersion: version.version };
+    await auditLilyAdmin(actor.user.id, "configure", "loyalty-levels", "default", { count: saved.levels.length, roundingMode: input.roundingMode, configVersion: saved.version.version });
+    return { levels: saved.levels.length, roundingMode: input.roundingMode, configVersion: saved.version.version };
   });
   app.post("/api/v1/lily/admin/loyalty/levels/seed", async (request) => {
     await requireLilyStaff(request, true);
