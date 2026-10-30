@@ -1,13 +1,13 @@
 # CookLily: modularização do editor do catálogo administrativo
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: `codex/lily-admin-catalog-modularization`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `8526d5d0e6ec18b7495e78b4c146aa1f25c68a3d`
 - head_sha_verified: `cec18f8ea63f43696b8c6b2d34208ca3d7c8d0c0`
 - pull_requests: PR #289 merged by squash; CI passed on Node 20/24 and all required jobs
-- last_verified_at: 2026-10-30 18:46 America/Sao_Paulo
+- last_verified_at: 2026-10-30 18:53 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
@@ -24,6 +24,9 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 - `admin.tsx` agora compõe e usa esses módulos; as outras telas administrativas permanecem inalteradas.
 - Roadmap atualizado com a homologação de #284/#285/#288 e marca a auditoria modular como parcial, sem declarar concluída a reestruturação ampla.
 - Commit `cec18f8ea63f43696b8c6b2d34208ca3d7c8d0c0` integrou a primeira fatia modular em `cooklily/canonical` via PR #289.
+- Deploy da aplicação concluído no SHA `3cc98690747310a9cd77ffa4b6ff3ef128961e8b`; log `/srv/carro-chefe/data/deploy-logs/deploy-20261030-214637-3cc986907473.log`, evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261030-214637-3cc986907473.evidence`.
+- Backup core/Lily verificado, nenhuma migration pendente, readiness e smoke HTTPS externos aprovados.
+- Homologação pelo navegador integrado no domínio real: editor LilyMix abriu com os dados do produto, 114 campos visíveis, modal em desktop 675×828 para viewport 1365×900 e mobile 337 px de largura em viewport 390×844; `documentElement.scrollWidth` 375 em mobile. Modal fechado sem salvar alterações; os 35 cards continuaram na listagem e o console não registrou erros.
 
 ## Em andamento
 
@@ -38,7 +41,7 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 - `npm test -- --maxWorkers=1`: passou, 80 arquivos/420 testes, 3 ignorados.
 - `npm run build`: passou; bundle CookLily 188.70/189 KiB JS gzip, 224.02/225 KiB JS+CSS gzip, budget OK.
 - `git diff --check`: passou.
-- CI e merge do PR #289 passaram; deploy e homologação dessa fatia ainda pendentes.
+- CI passou, PR #289 integrada, deploy concluído e homologação desktop/mobile aprovada.
 
 ## Migrations
 
@@ -56,4 +59,4 @@ Iniciar a modularização incremental prevista no roadmap para `apps/lily_acai/s
 
 ## Próxima ação exata
 
-Publicar este checkpoint no canonical e executar `sudo cc deploy canonical`; depois homologar o modal de edição em desktop e mobile pelo navegador integrado.
+Publicar este checkpoint atualizado no canonical. A auditoria de modularização segue parcial no roadmap; a próxima fatia deve avaliar e separar as telas restantes do painel administrativo.
