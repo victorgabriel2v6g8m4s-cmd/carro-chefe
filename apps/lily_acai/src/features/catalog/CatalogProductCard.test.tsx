@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { CatalogProductCard } from "./CatalogProductCard";
 
 describe("CatalogProductCard", () => {
-  it("reuses the same card structure for public and admin product previews", () => {
+  it("renders the admin card independently from the public reveal observer", () => {
     const markup = renderToStaticMarkup(createElement(CatalogProductCard, {
       product: {
         displayName: "Lily Mix",
@@ -15,7 +15,8 @@ describe("CatalogProductCard", () => {
       onOpen: () => undefined
     }));
 
-    expect(markup).toContain('class="product-card "');
+    expect(markup).toContain('class="product-card"');
+    expect(markup).not.toContain("data-lily-reveal");
     expect(markup).toContain('class="product-card-media"');
     expect(markup).toContain("Lily Mix");
     expect(markup).toContain("Editar produto");
