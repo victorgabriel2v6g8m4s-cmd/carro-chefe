@@ -7,7 +7,7 @@
 - base_sha_verified: `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb`
 - head_sha_verified: `1040ee8dacc215d29e64161dc8b0f7b95866d06a` (deploy em produção)
 - pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) merged; [#306](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/306) merged; [#307](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/307) merged; [#308](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/308) merged em `1040ee8dacc215d29e64161dc8b0f7b95866d06a`, CI passou
-- last_verified_at: 2026-10-31 08:20 UTC (preencher horário de publicação)
+- last_verified_at: 2026-10-31 07:53 UTC (preencher horário de publicação)
 - interruption_state: nenhuma; deploy e homologação concluídos
 
 ## Concluído e persistido
@@ -55,3 +55,4 @@ Objetivo: homologar despacho de couriers de teste com localização sintética r
 ## Próxima ação exata
 
 Nenhuma para esta homologação. A versão está concluída em produção; seguir para o próximo item priorizado no roadmap.
+
