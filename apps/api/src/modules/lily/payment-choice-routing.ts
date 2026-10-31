@@ -12,7 +12,7 @@ import {
   type LilyPaymentQuote
 } from "./payment-method-rules";
 
-export type LilyChoiceProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
+export type LilyChoiceProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual" | "homologation_mock";
 
 export type LilyChoiceProviderResult = {
   providerPaymentId: string | null;

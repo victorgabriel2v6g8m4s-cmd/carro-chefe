@@ -255,6 +255,10 @@ describe("CookLily Entrega 06", () => {
     });
     expect(quote.statusCode).toBe(200);
 
+    const orderPayload = {
+      ...await createPayloadFromQuote(quote.json(), staff.user.phone),
+      whatsappUpdatesOptIn: true
+    };
     const created = await app.inject({
       method: "POST",
       url: "/api/v1/lily/orders",
@@ -266,13 +270,14 @@ describe("CookLily Entrega 06", () => {
         "x-lily-homologation": "1",
         "idempotency-key": "homologation-order-test-0001"
       },
-      payload: await createPayloadFromQuote(quote.json(), staff.user.phone)
+      payload: orderPayload
     });
     expect(created.statusCode).toBe(201);
     expect(created.json().isHomologation).toBe(true);
 
     const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: created.json().id } });
     expect(stored?.isHomologation).toBe(true);
+    expect(await lilyPrisma.lilyWhatsAppNotification.count({ where: { orderId: created.json().id } })).toBe(0);
     expect(await lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" } }))
       .toMatchObject({ ordersEnabled: false });
   });

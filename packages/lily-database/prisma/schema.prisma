@@ -43,6 +43,7 @@ model LilyUser {
   courierLatitude Float?
   courierLongitude Float?
   courierLocationUpdatedAt DateTime?
+  courierLocationSource String?
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)

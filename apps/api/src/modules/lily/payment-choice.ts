@@ -16,7 +16,8 @@ import {
   buildLilyPaymentMethodOptions,
   createLilyCardChoice,
   createLilyPixChoice,
-  lilyPaymentMethodAvailability
+  lilyPaymentMethodAvailability,
+  type LilyChoiceProviderId
 } from "./payment-choice-routing";
 import {
   lilyPaymentChoiceInclude,
@@ -53,7 +54,7 @@ async function createProviderPayment(input: {
   body: z.infer<typeof createChoicePaymentSchema>;
   quote: ReturnType<typeof calculateLilyPaymentQuote>;
   idempotencyKey: string;
-  providers: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual">;
+  providers: LilyChoiceProviderId[];
 }) {
   if (input.body.method === "pix") {
     return createLilyPixChoice({
@@ -76,6 +77,30 @@ async function createProviderPayment(input: {
   });
 }
 
+async function homologationMethods(order: { grandTotalCents: number; deliveryFeeCents: number; couponShippingDiscountCents?: number; subtotalCents?: number; couponDiscountCents?: number }) {
+  const rule = (await getLilyPaymentMethodSettings()).find((row) => row.method === "pix");
+  if (!rule) throw new ApiError(503, "Método Pix indisponível para homologação.", { code: "LILY_HOMOLOGATION_PIX_UNAVAILABLE" });
+  const pricing = calculateLilyPaymentQuote({
+    method: "pix",
+    grandTotalCents: order.grandTotalCents,
+    deliveryFeeCents: Math.max(0, order.deliveryFeeCents - (order.couponShippingDiscountCents ?? 0)),
+    setting: rule
+  });
+  return [{
+    id: "pix" as const,
+    label: "Simular pagamento (sem cobrança)",
+    available: true,
+    providers: ["homologation_mock" as const],
+    preferredProvider: "homologation_mock" as const,
+    requiresPayerEmail: false,
+    fallbackMayUsePayerEmail: false,
+    discountLabel: null,
+    originalAmountCents: (order.subtotalCents ?? order.grandTotalCents) + order.deliveryFeeCents,
+    couponDiscountCents: order.couponDiscountCents ?? 0,
+    pricing
+  }];
+}
+
 async function persistChoicePayment(input: {
   paymentId: string;
   order: any;
@@ -83,10 +108,10 @@ async function persistChoicePayment(input: {
   body: z.infer<typeof createChoicePaymentSchema>;
   idempotencyKey: string;
   quote: ReturnType<typeof calculateLilyPaymentQuote>;
-  availability: { providers: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual"> };
-  provider: "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
+  availability: { providers: LilyChoiceProviderId[] };
+  provider: LilyChoiceProviderId;
   providerResult: any;
-  attemptedProviders: Array<"cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual">;
+  attemptedProviders: LilyChoiceProviderId[];
 }) {
   const exactApproval = input.providerResult.status === "approved"
     && input.providerResult.paidCents === input.quote.amountCents;
@@ -190,12 +215,14 @@ async function persistChoicePayment(input: {
           actor: `provider:${input.provider}`
         }
       });
-      await enqueueLilyWhatsAppStage(tx, {
-        orderId: input.order.id,
-        optedIn: input.order.whatsappUpdatesOptIn,
-        stage: "payment_confirmed",
-        at: now
-      });
+      if (!input.order.isHomologation) {
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: input.order.id,
+          optedIn: input.order.whatsappUpdatesOptIn,
+          stage: "payment_confirmed",
+          at: now
+        });
+      }
     }
     return tx.lilyPayment.findUnique({ where: { id: row.id }, include: lilyPaymentChoiceInclude() });
   });
@@ -209,8 +236,17 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
     return {
       enabled: settings.paymentsEnabled || homologation,
       homologation,
-      publicKey: mercadoPagoConfiguration().publicKey,
-      methods: await Promise.all(rules.map(async (rule) => {
+      publicKey: homologation ? null : mercadoPagoConfiguration().publicKey,
+      methods: homologation
+        ? rules.filter((rule) => rule.method === "pix").map((rule) => ({
+            id: rule.method,
+            label: "Simular pagamento (sem cobrança)",
+            confirmation: "automatic",
+            enabled: true,
+            available: true,
+            providers: ["homologation_mock"]
+          }))
+        : await Promise.all(rules.map(async (rule) => {
         const availability = lilyPaymentMethodAvailability(settings, rule);
         const option = (await buildLilyPaymentMethodOptions({ grandTotalCents: 0, deliveryFeeCents: 0 }))
           .find((item) => item.id === rule.method)!;
@@ -229,6 +265,11 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
       include: lilyPaymentChoiceInclude(),
       orderBy: { createdAt: "desc" }
     });
+    if (homologation && active && active.provider !== "homologation_mock") {
+      throw new ApiError(409, "Este pedido já possui uma tentativa de pagamento real; não será convertida em homologação.", {
+        code: "LILY_HOMOLOGATION_REAL_PAYMENT_EXISTS"
+      });
+    }
     return {
       enabled: settings.paymentsEnabled || homologation,
       homologation,
@@ -242,8 +283,8 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
         couponShippingDiscountCents: access.order.couponShippingDiscountCents,
         currency: "BRL"
       },
-      publicKey: mercadoPagoConfiguration().publicKey,
-      methods: await buildLilyPaymentMethodOptions(access.order),
+      publicKey: homologation ? null : mercadoPagoConfiguration().publicKey,
+      methods: homologation ? await homologationMethods(access.order) : await buildLilyPaymentMethodOptions(access.order),
       activePayment: active ? serializeLilyChoicePayment(active) : null
     };
   });
@@ -265,9 +306,17 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
       });
     }
 
-    const rule = (await getLilyPaymentMethodSettings()).find((row) => row.method === body.method)!;
-    const availability = lilyPaymentMethodAvailability(settings, rule);
-    if (!rule.enabled || !availability.available) {
+    if (homologation && body.method !== "pix") {
+      throw new ApiError(400, "A homologação usa somente o Pix simulado, sem cobrança.", {
+        code: "LILY_HOMOLOGATION_METHOD_UNSUPPORTED"
+      });
+    }
+    const rule = (await getLilyPaymentMethodSettings()).find((row) => row.method === body.method);
+    if (!rule) throw new ApiError(400, "Método de pagamento indisponível.", { code: "LILY_PAYMENT_METHOD_UNAVAILABLE" });
+    const availability = homologation
+      ? { available: true, providers: ["homologation_mock" as const] }
+      : lilyPaymentMethodAvailability(settings, rule);
+    if (!homologation && (!rule.enabled || !availability.available)) {
       throw new ApiError(503, "Meio de pagamento indisponível no momento.", {
         code: "LILY_PAYMENT_METHOD_UNAVAILABLE",
         method: body.method
@@ -282,6 +331,11 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
 
     const byKey = await lilyPrisma.lilyPayment.findUnique({ where: { idempotencyKey }, include: lilyPaymentChoiceInclude() });
     if (byKey) {
+      if (homologation && byKey.provider !== "homologation_mock") {
+        throw new ApiError(409, "A chave de idempotência está vinculada a um pagamento real.", {
+          code: "LILY_HOMOLOGATION_REAL_PAYMENT_EXISTS"
+        });
+      }
       if (byKey.orderId !== body.orderId || byKey.method !== body.method || byKey.amountCents !== quote.amountCents) {
         throw new ApiError(409, "Idempotency-Key já foi usado em outro pagamento.", { code: "LILY_PAYMENT_IDEMPOTENCY_CONFLICT" });
       }
@@ -294,6 +348,11 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
       orderBy: { createdAt: "desc" }
     });
     if (active) {
+      if (homologation && active.provider !== "homologation_mock") {
+        throw new ApiError(409, "Este pedido já possui uma tentativa de pagamento real; não será convertida em homologação.", {
+          code: "LILY_HOMOLOGATION_REAL_PAYMENT_EXISTS"
+        });
+      }
       if (active.method !== body.method) {
         throw new ApiError(409, "Já existe um pagamento ativo para este pedido.", {
           code: "LILY_PAYMENT_ACTIVE_EXISTS",
@@ -311,14 +370,28 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
     }
 
     const paymentId = crypto.randomUUID();
-    const providerPayment = await createProviderPayment({
-      paymentId,
-      order: access.order,
-      body,
-      quote,
-      idempotencyKey,
-      providers: availability.providers
-    });
+    const providerPayment = homologation
+      ? {
+          provider: "homologation_mock" as const,
+          attemptedProviders: ["homologation_mock" as const],
+          result: {
+            providerPaymentId: null,
+            providerReference: `HOMOLOGATION-${access.order.orderNumber}`,
+            status: "approved" as const,
+            paidCents: quote.amountCents,
+            instructions: "Pagamento simulado para homologação. Nenhuma transação financeira foi criada.",
+            expiresAt: null,
+            providerData: { paymentMethodId: "homologation_mock", paymentMethodType: "simulation" }
+          }
+        }
+      : await createProviderPayment({
+          paymentId,
+          order: access.order,
+          body,
+          quote,
+          idempotencyKey,
+          providers: availability.providers
+        });
     const created = await persistChoicePayment({
       paymentId,
       order: access.order,

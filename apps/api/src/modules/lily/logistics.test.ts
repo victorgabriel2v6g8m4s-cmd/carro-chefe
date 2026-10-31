@@ -252,6 +252,18 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(stored.courierLocationUpdatedAt).toBeNull();
   });
 
+  it("nega localização simulada para courier sem identidade de agente de teste", async () => {
+    const courier = await register("67999908236", "courier", "127.0.0.250");
+    const response = await app.inject({
+      method: "PUT",
+      url: "/api/v1/lily/courier/availability",
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { available: true, simulateAtPickup: true }
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.json().details.code).toBe("LILY_COURIER_TEST_LOCATION_REQUIRED");
+  });
+
   it("oferece primeiro ao courier disponível mais próximo e segue ao próximo após recusa", async () => {
     const farther = await register("67999908217", "courier", "127.0.0.248");
     const nearer = await register("67999908218", "courier", "127.0.0.249");
