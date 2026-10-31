@@ -5,14 +5,14 @@
 - branch: `codex/cooklily-test-courier-agent-auth`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `9ef141c64fee68d774a69b8643dd483697608f3c`
-- head_sha_verified: `9ef141c64fee68d774a69b8643dd483697608f3c` (alterações locais ainda não commitadas)
+- head_sha_verified: `398a31ea` (commit local; branch ainda não publicada)
 - pull_requests: nenhum
 - last_verified_at: 2026-10-31 05:16 UTC
 - interruption_state: retomada da correção solicitada pelo proprietário; estado Git e testes reconferidos
 
 ## Concluído e persistido
 
-- Nenhuma alteração desta entrega foi commitada ainda.
+- Commit `398a31ea` contém implementação, testes, documentação e checkpoint desta entrega; branch ainda não publicada.
 - Implementação local permite identidade de agente para admin e, de forma restrita, courier com `isTestAccount=true`.
 - A flag de teste sozinha não altera autenticação. Contas de teste sem identidade de agente mantêm login por senha e MFA exigido pelo papel; somente identidade dedicada com chave provisionada reporta `authenticationMethod=agent-key`, sem solicitar senha/MFA e sem gravar TOTP como verificado.
 - Sessões courier de agente só são aceitas enquanto a conta estiver ativa, for `courier`, estiver marcada como teste e possuir chave ativa; remoção da flag/papel invalida sessão e credenciais.
@@ -54,4 +54,4 @@
 
 ## Próxima ação exata
 
-Revisar os diffs finais e commitar somente os arquivos desta entrega na branch `codex/cooklily-test-courier-agent-auth`; abrir PR contra `cooklily/canonical` e aguardar CI antes de integrar/deploy. Depois do deploy, marcar explicitamente as duas contas como courier de teste, provisionar chaves públicas distintas e autenticar pelo fluxo Codex integrado. Não registrar nem acessar chave privada, senha ou MFA.
+Publicar a branch `codex/cooklily-test-courier-agent-auth`, abrir PR contra `cooklily/canonical` e aguardar CI antes de integrar/deploy. Depois do deploy, marcar explicitamente as duas contas como courier de teste, provisionar chaves públicas distintas e autenticar pelo fluxo Codex integrado. Não registrar nem acessar chave privada, senha ou MFA.
