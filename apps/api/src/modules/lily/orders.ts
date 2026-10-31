@@ -581,7 +581,7 @@ export async function lilyOrderRoutes(app: FastifyInstance) {
               actor: "system:order_created"
             }
           },
-          ...(input.whatsappUpdatesOptIn
+          ...(input.whatsappUpdatesOptIn && !isHomologation
             ? {
                 whatsappNotifications: {
                   create: {

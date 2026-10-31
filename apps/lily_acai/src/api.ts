@@ -8,6 +8,7 @@ export type AuthPayload = {
     rankingOptIn: boolean;
     staffPasswordUpgradeRequired: boolean;
     mfaEnabled: boolean;
+    testCourierSimulationEnabled?: boolean;
   };
   csrfToken: string;
   sessionExpiresAt: string;

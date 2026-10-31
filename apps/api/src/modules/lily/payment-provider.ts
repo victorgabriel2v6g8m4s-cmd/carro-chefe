@@ -84,6 +84,28 @@ export interface LilyPaymentProvider {
   refundPayment?(input: LilyPaymentProviderRefundInput): Promise<LilyPaymentProviderRemoteState>;
 }
 
+export const lilyHomologationPaymentProvider: LilyPaymentProvider = {
+  id: "homologation_mock",
+  async createPayment(input) {
+    return {
+      providerPaymentId: null,
+      providerReference: `HOMOLOGATION-${input.orderNumber}`,
+      status: "approved",
+      paidCents: input.amountCents,
+      instructions: "Pagamento simulado para homologação. Nenhuma transação financeira foi criada.",
+      expiresAt: null,
+      providerData: {
+        ticketUrl: null,
+        qrCode: null,
+        qrCodeBase64: null,
+        paymentMethodId: "homologation_mock",
+        paymentMethodType: "simulation",
+        installments: null
+      }
+    };
+  }
+};
+
 class ManualPaymentProvider implements LilyPaymentProvider {
   readonly id = "manual";
 

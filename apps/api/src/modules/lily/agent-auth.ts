@@ -137,7 +137,7 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
         staffPasswordUpgradeRequired: false,
         mfaEnabled: handoff.agentKey.user.mfaEnabled,
         agentIdentity: true
-      }),
+      }, true),
       csrfToken: session.csrfToken,
       sessionExpiresAt: session.expiresAt,
       consents: await getConsentSnapshot(handoff.agentKey.userId),

@@ -11,10 +11,14 @@ const DISPATCH_RECHECK_INTERVAL_MS = 5_000;
 export const courierAvailabilitySchema = z.object({
   available: z.boolean(),
   latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional()
+  longitude: z.number().min(-180).max(180).optional(),
+  simulateAtPickup: z.boolean().optional()
 }).strict().superRefine((value, context) => {
-  if (value.available && (value.latitude === undefined || value.longitude === undefined)) {
+  if (value.available && !value.simulateAtPickup && (value.latitude === undefined || value.longitude === undefined)) {
     context.addIssue({ code: "custom", message: "Ative a localização para ficar disponível." });
+  }
+  if (value.simulateAtPickup && (value.latitude !== undefined || value.longitude !== undefined)) {
+    context.addIssue({ code: "custom", message: "Não misture localização simulada com coordenadas do dispositivo." });
   }
 });
 
@@ -235,7 +239,8 @@ async function expireStaleCourierLocations() {
         courierAvailable: false,
         courierLatitude: null,
         courierLongitude: null,
-        courierLocationUpdatedAt: null
+        courierLocationUpdatedAt: null,
+        courierLocationSource: null
       }
     });
     await releaseCourierOffers(courier.id);
@@ -250,11 +255,12 @@ export async function lilyCourierAvailabilityRoutes(app: FastifyInstance) {
     });
     const user = await lilyPrisma.lilyUser.findUniqueOrThrow({
       where: { id: context.user.id },
-      select: { courierAvailable: true, courierLocationUpdatedAt: true }
+      select: { courierAvailable: true, courierLocationUpdatedAt: true, courierLocationSource: true }
     });
     return {
       available: user.courierAvailable && Boolean(user.courierLocationUpdatedAt
-        && Date.now() - user.courierLocationUpdatedAt.getTime() <= COURIER_LOCATION_MAX_AGE_MS)
+        && Date.now() - user.courierLocationUpdatedAt.getTime() <= COURIER_LOCATION_MAX_AGE_MS),
+      simulatedAtPickup: user.courierLocationSource === "test-pickup"
     };
   });
 
@@ -266,20 +272,36 @@ export async function lilyCourierAvailabilityRoutes(app: FastifyInstance) {
       code: "LILY_COURIER_AVAILABILITY_ROLE_REQUIRED"
     });
     const input = courierAvailabilitySchema.parse(request.body);
+    if (input.simulateAtPickup && (context.user.role !== "courier" || !context.user.isTestAccount
+      || !context.user.agentIdentity || !context.session.agentKeyId)) {
+      throw new ApiError(403, "A localização simulada é exclusiva de courier de teste autenticado por chave.", {
+        code: "LILY_COURIER_TEST_LOCATION_REQUIRED"
+      });
+    }
+    const pickup = input.simulateAtPickup
+      ? await lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { pickupLatitude: true, pickupLongitude: true } })
+      : null;
+    if (input.simulateAtPickup && (pickup?.pickupLatitude == null || pickup.pickupLongitude == null)) {
+      throw new ApiError(409, "Configure o ponto de coleta antes de simular a localização.", {
+        code: "LILY_PICKUP_COORDINATES_REQUIRED"
+      });
+    }
     const updated = await lilyPrisma.lilyUser.update({
       where: { id: context.user.id },
       data: input.available
         ? {
             courierAvailable: true,
-            courierLatitude: input.latitude,
-            courierLongitude: input.longitude,
-            courierLocationUpdatedAt: new Date()
+            courierLatitude: input.simulateAtPickup ? pickup!.pickupLatitude : input.latitude,
+            courierLongitude: input.simulateAtPickup ? pickup!.pickupLongitude : input.longitude,
+            courierLocationUpdatedAt: new Date(),
+            courierLocationSource: input.simulateAtPickup ? "test-pickup" : "device"
           }
         : {
             courierAvailable: false,
             courierLatitude: null,
             courierLongitude: null,
-            courierLocationUpdatedAt: null
+            courierLocationUpdatedAt: null,
+            courierLocationSource: null
           },
       select: { courierAvailable: true }
     });

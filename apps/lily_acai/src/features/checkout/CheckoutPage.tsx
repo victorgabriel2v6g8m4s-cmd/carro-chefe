@@ -88,7 +88,7 @@ export function CheckoutPage() {
   const canHomologate = Boolean(
     session
     && ["staff", "admin"].includes(session.user.role)
-    && session.mfa?.verified
+    && (session.mfa?.verified || session.authenticationMethod === "agent-key")
     && !session.user.staffPasswordUpgradeRequired
   );
 
@@ -247,7 +247,7 @@ export function CheckoutPage() {
         <span><strong>Modo de homologação</strong> — testar pedido e pagamento sem abrir a loja ao público.</span>
       </label>}
       {session && ["staff", "admin"].includes(session.user.role) && !canHomologate && <small>
-        Para usar a homologação, conclua a troca de senha exigida e valide o MFA desta sessão.
+        Para usar a homologação, conclua a troca de senha exigida e valide o MFA ou use uma sessão autenticada por chave de agente.
       </small>}
     </div>}
 

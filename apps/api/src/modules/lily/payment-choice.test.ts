@@ -43,7 +43,7 @@ async function register(phone: string, role: "customer" | "admin" = "customer") 
   return { cookie, csrf: me.json().csrfToken, user: me.json().user };
 }
 
-async function createOrder(userId: string, phone: string, total = 2500, deliveryFee = 0) {
+async function createOrder(userId: string, phone: string, total = 2500, deliveryFee = 0, options: { isHomologation?: boolean; whatsappUpdatesOptIn?: boolean } = {}) {
   const suffix = crypto.randomBytes(6).toString("hex");
   return lilyPrisma.lilyOrder.create({
     data: {
@@ -54,6 +54,8 @@ async function createOrder(userId: string, phone: string, total = 2500, delivery
       phoneNormalized: phone,
       fulfillmentType: deliveryFee ? "delivery" : "pickup",
       status: "awaiting_payment",
+      isHomologation: options.isHomologation ?? false,
+      whatsappUpdatesOptIn: options.whatsappUpdatesOptIn ?? false,
       subtotalCents: total - deliveryFee,
       deliveryFeeCents: deliveryFee,
       discountTotalCents: 0,
@@ -127,6 +129,53 @@ afterAll(async () => {
 });
 
 describe("CookLily — escolha de pagamento e descontos", () => {
+  it("usa mock sem provedor externo e suprime WhatsApp no pedido de homologação", async () => {
+    const admin = await register("67999908100", "admin");
+    const order = await createOrder(admin.user.id, admin.user.phone, 3250, 500, {
+      isHomologation: true,
+      whatsappUpdatesOptIn: true
+    });
+    const externalFetch = vi.fn(() => { throw new Error("Homologação não pode contactar serviço externo."); });
+    vi.stubGlobal("fetch", externalFetch);
+
+    const options = await app.inject({
+      method: "GET",
+      url: `/api/v1/lily/orders/${order.id}/payment-options`,
+      headers: { cookie: admin.cookie, "x-lily-homologation": "1" }
+    });
+    expect(options.statusCode).toBe(200);
+    expect(options.json().methods).toMatchObject([{
+      id: "pix",
+      label: "Simular pagamento (sem cobrança)",
+      providers: ["homologation_mock"],
+      available: true
+    }]);
+    expect(options.json().publicKey).toBeNull();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/v1/lily/payment-options",
+      headers: {
+        origin,
+        cookie: admin.cookie,
+        "x-lily-csrf": admin.csrf,
+        "x-lily-homologation": "1",
+        "idempotency-key": "homologation-choice-payment-0001"
+      },
+      payload: { orderId: order.id, method: "pix" }
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json()).toMatchObject({
+      provider: "homologation_mock",
+      status: "approved",
+      instructions: "Pagamento simulado para homologação. Nenhuma transação financeira foi criada."
+    });
+    expect(externalFetch).not.toHaveBeenCalled();
+    expect(await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id }, select: { status: true } }))
+      .toEqual({ status: "paid" });
+    expect(await lilyPrisma.lilyWhatsAppNotification.count({ where: { orderId: order.id } })).toBe(0);
+  });
+
   it("publica Pix + crédito + débito simultaneamente e calcula desconto sem atingir frete", async () => {
     process.env.COOKLILY_PIX_KEY = "67999999999";
     process.env.COOKLILY_PIX_MERCHANT_NAME = "COOKLILY";

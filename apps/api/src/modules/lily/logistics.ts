@@ -382,7 +382,8 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           courierAvailable: false,
           courierLatitude: null,
           courierLongitude: null,
-          courierLocationUpdatedAt: null
+          courierLocationUpdatedAt: null,
+          courierLocationSource: null
         }
       });
 

@@ -8,6 +8,7 @@ import { getOptionalLilySession, requireLilyCsrf } from "./auth";
 import { getLilyOperationalSettings } from "./fulfillment";
 import {
   lilyPaymentProvider,
+  lilyHomologationPaymentProvider,
   type LilyPaymentProviderRemoteState
 } from "./payment-provider";
 import {
@@ -350,12 +351,14 @@ async function applyRemotePaymentState(
           actor: source
         }
       });
-      await enqueueLilyWhatsAppStage(tx, {
-        orderId: current.orderId,
-        optedIn: current.order.whatsappUpdatesOptIn,
-        stage: "payment_confirmed",
-        at: now
-      });
+      if (!current.order.isHomologation) {
+        await enqueueLilyWhatsAppStage(tx, {
+          orderId: current.orderId,
+          optedIn: current.order.whatsappUpdatesOptIn,
+          stage: "payment_confirmed",
+          at: now
+        });
+      }
     } else if (nextStatus === "refunded" && ["awaiting_payment", "paid"].includes(current.order.status)) {
       await tx.lilyOrder.update({
         where: { id: current.orderId },
@@ -427,13 +430,15 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     const settings = await getLilyOperationalSettings();
     const mercadoPago = mercadoPagoConfiguration();
     const cookLilyPix = cookLilyPixConfiguration();
-    const methods = paymentMethods(settings, { allowDisabled: isHomologation });
+    const methods = isHomologation
+      ? [{ id: "manual_pix" as const, label: "Pagamento simulado (sem cobrança)", confirmation: "automatic" as const }]
+      : paymentMethods(settings);
     return {
       enabled: settings.paymentsEnabled || isHomologation,
       homologation: isHomologation,
-      provider: settings.paymentProvider,
-      providerConfigured: methods.length > 0,
-      publicKey: settings.paymentProvider === "mercado_pago" ? mercadoPago.publicKey : null,
+      provider: isHomologation ? lilyHomologationPaymentProvider.id : settings.paymentProvider,
+      providerConfigured: isHomologation || methods.length > 0,
+      publicKey: !isHomologation && settings.paymentProvider === "mercado_pago" ? mercadoPago.publicKey : null,
       cookLilyPixConfigured: cookLilyPix.ready,
       methods
     };
@@ -472,7 +477,13 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
       throw new ApiError(503, "Pagamentos online ainda não estão habilitados.", { code: "LILY_PAYMENTS_DISABLED" });
     }
 
-    if (settings.paymentProvider === "manual") {
+    if (isHomologation) {
+      if (input.method !== "manual_pix") {
+        throw new ApiError(400, "A homologação usa somente o método de pagamento simulado.", {
+          code: "LILY_HOMOLOGATION_METHOD_UNSUPPORTED"
+        });
+      }
+    } else if (settings.paymentProvider === "manual") {
       if (input.method !== "manual_pix" || !settings.manualPixEnabled || !settings.manualPixInstructions?.trim()) {
         throw new ApiError(503, "Pix manual ainda não está configurado.", { code: "LILY_PIX_DISABLED" });
       }
@@ -545,7 +556,7 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
     }
 
     const paymentId = crypto.randomUUID();
-    const provider = lilyPaymentProvider(settings.paymentProvider);
+    const provider = isHomologation ? lilyHomologationPaymentProvider : lilyPaymentProvider(settings.paymentProvider);
     const providerResult = await provider.createPayment({
       paymentId,
       orderId: access.order.id,
@@ -653,12 +664,14 @@ export async function lilyPaymentRoutes(app: FastifyInstance) {
             actor: `provider:${provider.id}`
           }
         });
+      if (!access.order.isHomologation) {
         await enqueueLilyWhatsAppStage(tx, {
           orderId: access.order.id,
           optedIn: access.order.whatsappUpdatesOptIn,
           stage: "payment_confirmed",
           at: now
         });
+      }
       }
 
       return tx.lilyPayment.findUnique({ where: { id: row.id }, include: paymentInclude });

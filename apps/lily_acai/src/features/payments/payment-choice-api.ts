@@ -1,7 +1,7 @@
 import { parseResponse, type AuthPayload } from "../../api";
 
 export type LilyCheckoutPaymentMethod = "pix" | "credit_card" | "debit_card";
-export type LilyPaymentProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual";
+export type LilyPaymentProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual" | "homologation_mock";
 
 export type LilyPaymentMethodRule = {
   method: LilyCheckoutPaymentMethod;

@@ -355,7 +355,10 @@ export function CourierPage() {
         <h1>Entregas</h1>
         <p>Uma entrega só aparece aqui depois de paga e liberada pela cozinha.</p>
       </div>
-      {session && <CourierAvailabilityToggle csrfToken={session.csrfToken} />}
+      {session && <CourierAvailabilityToggle
+        csrfToken={session.csrfToken}
+        allowSimulation={session.authenticationMethod === "agent-key" && session.user.testCourierSimulationEnabled === true}
+      />}
       <Link className="button ghost" to="/perfil">Minha conta</Link>
     </div>
 

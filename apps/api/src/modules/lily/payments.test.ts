@@ -194,11 +194,16 @@ describe("CookLily Entrega 07 — pagamentos", () => {
       where: { id: "default" },
       data: {
         paymentsEnabled: false,
-        paymentProvider: "manual",
+        paymentProvider: "mercado_pago",
         manualPixEnabled: true,
-        manualPixInstructions: "PIX HOMOLOGAÇÃO"
+        manualPixInstructions: "PIX HOMOLOGAÇÃO",
+        mercadoPagoPixEnabled: true
       }
     });
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "test-access-token";
+    process.env.MERCADO_PAGO_PUBLIC_KEY = "test-public-key";
+    const externalFetch = vi.fn(() => { throw new Error("Homologation must not contact an external payment provider."); });
+    vi.stubGlobal("fetch", externalFetch);
     const order = await createOrder({
       userId: admin.user.id,
       phone: admin.user.phone,
@@ -218,8 +223,9 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     expect(homologationConfig.statusCode).toBe(200);
     expect(homologationConfig.json().enabled).toBe(true);
     expect(homologationConfig.json().homologation).toBe(true);
+    expect(homologationConfig.json()).toMatchObject({ provider: "homologation_mock", providerConfigured: true });
     expect(homologationConfig.json().methods).toEqual([
-      { id: "manual_pix", label: "Pix", confirmation: "manual" }
+      { id: "manual_pix", label: "Pagamento simulado (sem cobrança)", confirmation: "automatic" }
     ]);
 
     const created = await app.inject({
@@ -236,7 +242,13 @@ describe("CookLily Entrega 07 — pagamentos", () => {
     });
     expect(created.statusCode).toBe(201);
     expect(created.json().isHomologation).toBe(true);
-    expect(created.json().status).toBe("pending");
+    expect(created.json()).toMatchObject({
+      provider: "homologation_mock",
+      status: "approved",
+      instructions: "Pagamento simulado para homologação. Nenhuma transação financeira foi criada."
+    });
+    expect(created.json().providerData).toMatchObject({ paymentMethodType: "simulation", qrCode: null });
+    expect(externalFetch).not.toHaveBeenCalled();
 
     const publicStillClosed = await app.inject({
       method: "POST",

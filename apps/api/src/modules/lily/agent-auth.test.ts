@@ -102,13 +102,36 @@ describe("autenticação administrativa por chave de agente", () => {
     });
     expect(exchanged.statusCode).toBe(200);
     expect(exchanged.json()).toMatchObject({
-      user: { id: userId, role: "courier", staffPasswordUpgradeRequired: false, mfaEnabled: false },
+      user: { id: userId, role: "courier", staffPasswordUpgradeRequired: false, mfaEnabled: false, testCourierSimulationEnabled: true },
       mfa: { required: false, enabled: false, verified: false, setupRequired: false },
       authenticationMethod: "agent-key"
     });
     const cookie = cookieFrom(exchanged);
     const deliveries = await app.inject({ method: "GET", url: "/api/v1/lily/courier/deliveries", headers: { cookie } });
     expect(deliveries.statusCode).toBe(200);
+    const settings = await lilyPrisma.lilyOperationalSettings.upsert({
+      where: { id: "default" },
+      update: { pickupLatitude: -20.401107, pickupLongitude: -54.585945 },
+      create: { id: "default", pickupLatitude: -20.401107, pickupLongitude: -54.585945 }
+    });
+    expect(settings.pickupLatitude).toBe(-20.401107);
+    const simulated = await app.inject({
+      method: "PUT", url: "/api/v1/lily/courier/availability",
+      headers: { origin, cookie, "x-lily-csrf": exchanged.json().csrfToken },
+      payload: { available: true, simulateAtPickup: true }
+    });
+    expect(simulated.statusCode).toBe(200);
+    expect(simulated.json()).toEqual({ available: true });
+    const simulationState = await app.inject({ method: "GET", url: "/api/v1/lily/courier/availability", headers: { cookie } });
+    expect(simulationState.json()).toEqual({ available: true, simulatedAtPickup: true });
+    const offline = await app.inject({
+      method: "PUT", url: "/api/v1/lily/courier/availability",
+      headers: { origin, cookie, "x-lily-csrf": exchanged.json().csrfToken },
+      payload: { available: false }
+    });
+    expect(offline.statusCode).toBe(200);
+    expect(await lilyPrisma.lilyUser.findUniqueOrThrow({ where: { id: userId }, select: { courierLocationSource: true } }))
+      .toEqual({ courierLocationSource: null });
     const mfaStatus = await app.inject({ method: "GET", url: "/api/v1/lily/customer/security/mfa/status", headers: { cookie } });
     expect(mfaStatus.json()).toMatchObject({ required: false, enabled: false, verified: false, setupRequired: false, authenticationMethod: "agent-key" });
     const adminAccess = await app.inject({ method: "GET", url: "/api/v1/lily/admin/team", headers: { cookie } });

@@ -266,7 +266,8 @@ export function publicLilyUser(user: LilySessionContext["user"], agentSession = 
     avatarUrl: user.avatarMediaId ? `/api/v1/lily/public/media/${encodeURIComponent(user.avatarMediaId)}` : null,
     rankingOptIn: user.rankingOptIn,
     staffPasswordUpgradeRequired: agentSession ? false : user.staffPasswordUpgradeRequired,
-    mfaEnabled: user.mfaEnabled
+    mfaEnabled: user.mfaEnabled,
+    testCourierSimulationEnabled: agentSession && user.role === "courier" && user.isTestAccount && user.agentIdentity
   };
 }
 
