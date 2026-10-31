@@ -5,9 +5,9 @@
 - branch: `codex/cooklily-courier-homologation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `dbab273eda00de6dfe203e58448faa225bd07274`
-- head_sha_verified: `650fa04d995cdbc93ec7b5a03771380f5731ce53`
-- pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) — draft aberto contra `cooklily/canonical`; CI run `41176718321` enfileirado
-- last_verified_at: 2026-10-31 06:25 UTC
+- head_sha_verified: `7ec115b5d48e0b1fae07801f31e910c6d4096cb5`
+- pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) — draft aberto contra `cooklily/canonical`; CI run `41177248118` passou em todos os 8 jobs
+- last_verified_at: 2026-10-31 06:39 UTC
 - interruption_state: retomada após bloqueio do IAB; implementação local concluída, homologação de produção pendente
 
 ## Entrega e estado
@@ -31,8 +31,9 @@ Objetivo: permitir homologar o despacho de couriers de teste com localização s
 - Suíte completa: 84 arquivos, 440 testes passaram e 3 foram ignorados (443 total), usando pool de threads com 2 workers.
 - Uma execução inicial do Vitest com o pool padrão ficou sem resposta; a tentativa com pool de threads concluiu a suíte acima.
 - PR #305 CI run `41176741362` falhou inicialmente no build CookLily em Vite 8.2.1 (JS raw 608.03/608.00 KiB, gzip 193.05/193.00 KiB); os testes passaram em Node 20/22/24. O job Tool Health refletiu a mesma falha do build.
-- O texto do controle de homologação foi reduzido para respeitar o limite. Build local com dependências travadas (Vite 8.2.1) passou em JS raw 607.82/608.00 KiB e gzip 192.96/193.00 KiB; CI da correção ainda pendente.
-- Revisão, merge, deploy e homologação real ainda pendentes.
+- O texto do controle de homologação foi reduzido para respeitar o limite. Build local com dependências travadas (Vite 8.2.1) passou em JS raw 607.82/608.00 KiB e gzip 192.96/193.00 KiB.
+- Correção CI run `41177248118` passou em todos os 8 jobs, incluindo testes e build em Node 20/22/24 e Tool Health Linux.
+- Revisão final, merge, deploy e homologação real ainda pendentes.
 
 ## Migrations
 
@@ -49,4 +50,4 @@ Objetivo: permitir homologar o despacho de couriers de teste com localização s
 
 ## Próxima ação exata
 
-Concluir a execução integral de testes; revisar o diff; registrar o resultado; commitar e enviar a branch, abrir PR draft contra `cooklily/canonical`, aguardar CI/revisão e integrar por squash. Em seguida executar o deploy pelo procedimento canônico, homologar no IAB em desktop e mobile e manter ambos os couriers offline ao terminar.
+Fazer a revisão final do PR #305, marcar como pronto e integrar por squash. Em seguida executar o deploy pelo procedimento canônico, homologar no IAB em desktop e mobile e manter ambos os couriers offline ao terminar.
