@@ -67,6 +67,15 @@ describe("CookLily — pagamento e UX administrativa", () => {
     expect(styles).toContain(".payment-pix-code textarea");
   });
 
+  it("deixa explícito que homologação não gera Pix nem aciona provedor", () => {
+    const page = source("apps/lily_acai/src/features/payments/PaymentChoicePage.tsx");
+    const components = source("apps/lily_acai/src/features/payments/PaymentChoiceComponents.tsx");
+    expect(page).toContain('homologation ? "Simular" : "Gerar Pix"');
+    expect(page).toContain("paymentMethodHint(option)");
+    expect(components).toContain('option.preferredProvider === "homologation_mock"');
+    expect(components).toContain("sem cobrança, QR ou provedor externo");
+  });
+
   it("oferece upload direto de capa por produto e feedback discreto", () => {
     const enhancement = source("apps/lily_acai/src/admin-interaction-enhancements.ts");
     expect(enhancement).toContain("Enviar foto de capa");
