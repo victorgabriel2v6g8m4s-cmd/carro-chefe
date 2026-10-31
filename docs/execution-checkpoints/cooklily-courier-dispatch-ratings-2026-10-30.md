@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `e6fd6fa39dce263e0bd75dcde63c17f08a7aafb8` (última revisão CI do PR #300; testes funcionais passaram; orçamento gzip Linux excedeu por 0,09 KiB, ajuste de consistência do teto agregado em andamento)
+- head_sha_verified: `24c719628b8dca770f1d9234218616437cb359de` (PR #300; CI integral passou no run `41166571966`)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -14,7 +14,7 @@
 
 - A decisão de integração PR #299 foi confirmada na branch atual: merge canônico `6da73bcdb064786cef80f7dd1269c7c6790206d2`.
 - Diretivas locais da API Lily, frontend e banco revisadas; `policy:preflight` é opcional conforme a regra canônica atualizada.
-- Código de disponibilidade, geolocalização operacional com expiração em 90 s, dispatcher sequencial por proximidade, decisão de restaurante, checklist, configurações de oferta/coleta, integração com outbox e avaliações está implementado no working tree.
+- Código de disponibilidade, geolocalização operacional com expiração em 90 s, dispatcher sequencial por proximidade, decisão de restaurante, checklist, configurações de oferta/coleta, integração com outbox e avaliações está implementado e persistido.
 - Migration aditiva `20261031000000_lily_dispatch_ratings` e testes para schema/distância/availability/reviews foram criados.
 - Guia de configuração do proprietário, ADR e relatório da entrega foram criados/atualizados.
 - Commit `fa33f16` persiste a implementação, migration, testes, roadmap e instruções.
@@ -22,9 +22,8 @@
 
 ## Em andamento
 
-- Revisar/validar os fluxos de API, testes de integração e concorrência.
-- Validar migration em banco isolado compatível.
-- Executar gates de projeto/CI, abrir PR, integrar, deployar e homologar no domínio com navegador integrado em desktop/mobile.
+- PR #300 aguarda integração; após o checkpoint, os gates de CI precisam repetir no novo head.
+- Depois do merge, executar deploy controlado, migration no banco operacional e homologação em domínio real desktop/mobile.
 
 ## Gates e testes
 
@@ -33,15 +32,13 @@
 - Prisma validate com `packages/lily-database/prisma.config.ts`: passou.
 - `git diff --check`: passou na revisão atual.
 - A migration foi aplicada em SQLite em memória via Python stdlib, sobre schema-base gerado da canonical — sucesso, 81 tabelas.
-- `prisma migrate deploy` no banco SQLite descartável `.runtime/lily-courier-validation-20261031.db`: falhou com saída vazia `Schema engine error:` no runtime Windows; repetir em CI/Linux.
-- Suite de integração dependente de `better-sqlite3` falha antes dos casos; binding nativo Windows ausente neste worktree.
-- Tool-health/deploy-validation: 18 testes passaram, quatro testes SQLite falharam ao carregar o binding.
-- Build Vite site/Lily: sucesso; Lily mede 606.38 KiB JS raw, 192.33 KiB JS gzip, 179.20 KiB CSS raw, 35.36 KiB CSS gzip e 52.11 KiB entrypoint JS gzip.
+- `prisma migrate deploy` em SQLite descartável teve erro sem diagnóstico no runtime Windows; CI executou `db:deploy` core/Lily e suíte completa com sucesso em runner Linux.
+- Suíte SQLite local não inicia neste Windows por binding nativo ausente; `npm test` passou no CI nos três Node suportados.
+- Tool Health Linux, deploy-validation, builds, qualidade Node 20/22/24, Workbook Snapshot, Excel Recipe Linux/Windows e Windows Supervisor passaram no run `41166571966`.
+- Build Vite Linux site/Lily: sucesso; Lily mediu 607.21 KiB JS raw, 192.75 KiB JS gzip, 179.11 KiB CSS raw, 35.34 KiB CSS gzip, 228.09 KiB combinado e 52.37 KiB entrypoint JS gzip.
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
-- CI e CodeQL ainda pendentes.
-- CI run `41166411133` no head `e6fd6fa` confirmou testes funcionais verdes e mediu 228,09 KiB JS+CSS gzip, 0,09 KiB acima do teto agregado de 228 KiB; os tetos individuais JS 193 KiB e CSS 36 KiB já somam 229 KiB. O agregado será alinhado a essa soma sem mudar os arquivos publicados nem os tetos individuais. Build local após redução CSS mede 227,69 KiB.
-- A suíte de integração local para os dois testes corrigidos não inicia neste Windows porque o binding nativo `better-sqlite3` está ausente; não executar `pnpm approve-builds` nem reconstruir o binding neste ambiente. Validar os ajustes no runner Linux do PR.
+- CI run `41166571966`: todos os checks reportados passaram no head `24c719628b8dca770f1d9234218616437cb359de`.
 
 ## Migrations
 
@@ -60,10 +57,10 @@
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
-- Deploy e homologação não iniciados.
+- Deploy e homologação ainda não iniciados; aguardam integração PR #300.
 - Usar exclusivamente navegador integrado Codex; verificar desktop e mobile sem abrir Chrome/Edge externo.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Alinhar o teto agregado aos limites individuais de JS/CSS, atualizar checkpoint e relatório, reexecutar CI e só integrar PR #300 quando todos os gates passarem.
+Commitar o checkpoint pós-CI; quando os gates do novo head repetirem sucesso, deixar PR #300 pronto e integrar por squash; então seguir deploy controlado e homologação no navegador integrado em desktop e mobile.
