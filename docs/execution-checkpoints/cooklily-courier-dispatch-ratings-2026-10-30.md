@@ -7,7 +7,7 @@
 - base_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (release-base da branch de checkpoint; PR #302 avançou a canonical depois)
 - head_sha_verified: `d61b32815d3a32aa1b468a42d3afeaa2fe5fb53b`
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — merged; [#302](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/302) — merged; [#301](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/301) — closed
-- last_verified_at: 2026-10-31 04:37 UTC
+- last_verified_at: 2026-10-31 04:45 UTC
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
 
 ## Concluído e persistido
@@ -29,8 +29,9 @@
 - Homologação visual feita na aba integrada do Codex em largura móvel: `/lilyacai/entregas` e `/lilyacai/painel/entrega` carregaram; a área de courier mostrou disponibilidade, fila e histórico vazios sem erro após a sessão terminar de carregar; a tela admin apresentou o timeout configurável e os campos do ponto de coleta.
 - A homologação responsiva agora foi concluída no navegador integrado do Codex com viewport emulado: desktop 1365×900 e mobile 390×844. `/lilyacai/entregas`, `/lilyacai/painel/entrega` e `/lilyacai/painel/entregas` carregaram; as três rotas não apresentaram overflow horizontal nem erros de console. O formulário administrativo mostrou timeout padrão de 60 s e coordenadas de coleta vazias.
 - A tela de gestão de entregas exibiu os estados vazios esperados (zero pedidos e zero vínculos auditados) em ambos os tamanhos.
-- O endereço e CEP de coleta informados pelo proprietário foram pesquisados por geocodificação. Os resultados identificam a rua, mas não retornam uma coordenada de imóvel; as fontes divergem sobre o bairro/CEP do trecho. As coordenadas não foram gravadas. O proprietário ainda precisa confirmar um pin/latitude-longitude exato.
-- A equipe não encontrou contas para os dois identificadores telefônicos de teste informados pelo proprietário. O cadastro normal exige senha e aceite dos Termos Operacionais/Aviso de Privacidade; a confirmação para aceitar esses documentos em ambas as contas foi solicitada e está pendente. A promoção para courier exige atualização de senha e MFA; não contornar esses gates.
+- O proprietário forneceu e validou um pin do Google Maps para o ponto de coleta. A configuração foi salva pelo painel `/lilyacai/painel/entrega` e persistiu após recarregar a página. Endereço e coordenadas exatas foram omitidos deste checkpoint por serem localização precisa.
+- Duas contas dedicadas de teste foram criadas pelo fluxo normal, com aceite autorizado dos Termos Operacionais/Aviso de Privacidade e sem consentimentos opcionais. Foram marcadas para teste e promovidas pelo painel para o papel `courier`; a UI confirmou `COURIER active` para ambas.
+- As duas contas aparecem com senha pendente e MFA pendente. O proprietário autorizou a promoção. Cada titular ainda precisa completar a troca da própria senha e configurar MFA; não inserir nem submeter credenciais em nome deles.
 
 ## Gates e testes
 
@@ -47,7 +48,7 @@
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI run `41166571966`: todos os checks reportados passaram no head `24c719628b8dca770f1d9234218616437cb359de`.
 - Deploy VPS via `sudo carro-chefe-deploy f0393930e45e03e18c2a8305cae1000e80172b4d`: concluído em 2026-10-31. Backups verificados (core 643072 bytes; Lily 2842624 bytes); migration Lily `20261031000000_lily_dispatch_ratings` aplicada; Nginx validado; serviço ativo; readiness e smoke externo passaram. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261031-040740-f0393930e45e.evidence`; log correspondente `.log`.
-- A configuração `pickupLatitude`/`pickupLongitude` foi verificada após migration e está ausente no registro operacional; nenhum valor foi inventado ou gravado. A rota de logística no navegador inicialmente exibiu erro transitório durante carregamento/sessão, mas recarregada após estabilização carregou os estados vazios sem erro.
+- O pin de coleta foi persistido pelo painel e confirmado após recarregar a página. A rota de logística no navegador inicialmente exibiu erro transitório durante carregamento/sessão, mas recarregada após estabilização carregou os estados vazios sem erro.
 - Em 2026-10-31, viewport desktop (1365×900) e mobile (390×844) foram efetivamente emulados pelo recurso de viewport do navegador integrado. Nas rotas testadas, `scrollWidth` foi 1350 px no desktop e 375 px no mobile; sem overflow horizontal e sem erros no console.
 
 ## Migrations
@@ -58,21 +59,20 @@
 
 ## Bloqueios/riscos
 
-- Coordenadas exatas de produção ainda precisam ser verificadas e preenchidas em `/lilyacai/painel/entrega` antes do despacho; o resultado de geocodificação disponível é somente do trecho da rua.
 - ETA externo é opcional para operação; precisa da configuração existente de provider para ser mostrado.
 - Rejeição de pedido pago marca reembolso pendente, mas a equipe financeira ainda confirma o estorno no provedor.
 - Ainda falta o procedimento operacional completo para cliente ausente, devolução e reclamações; ver guia.
-- Homologação de UI desktop/mobile está concluída no navegador integrado. O teste real de despacho ainda depende de pin exato, aceite dos termos para as duas contas e conclusão de senha/MFA antes de promovê-las a courier.
+- Homologação de UI desktop/mobile está concluída no navegador integrado. O teste real de despacho depende de os titulares concluírem a troca de senha e MFA para as duas contas courier e da criação de um pedido de teste sem cobrança real.
 
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
 - Produção está no release `f0393930e45e03e18c2a8305cae1000e80172b4d`; migration confirmada, serviço ativo e smoke externo passou.
-- Coordenadas de coleta estão ausentes na produção; validar o pin e cadastrar pelo painel antes de dispatch. Ainda são necessárias duas contas courier de teste para comprovar prioridade, recusa e expiração em sequência. Não iniciar pedido/cobrança real.
+- O pin validado está configurado em produção. Duas contas courier de teste já estão ativas, mas ambas exigem atualização de senha e MFA. Após a conclusão pelos titulares, comprovar prioridade, recusa e expiração em sequência com pedido de teste sem cobrança real.
 - Usar exclusivamente navegador integrado Codex. As rotas de entrega foram observadas em desktop 1365×900 e mobile 390×844; não houve overflow horizontal nem erro no console.
-- Antes do cadastro, aguardar a confirmação já solicitada para aceite dos Termos Operacionais/Aviso de Privacidade das duas contas. Após a promoção, a atualização de senha e configuração de MFA continuam necessárias e não devem ser contornadas.
+- Os termos e aviso de privacidade foram aceitos no cadastro conforme autorização do proprietário, sem consentimentos opcionais. Os titulares devem concluir troca de senha e MFA; não contornar esses gates nem inserir credenciais por eles.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Concluir a geocodificação com pin/latitude-longitude validado e obter a confirmação pendente do proprietário para aceitar os termos das contas de teste; criar as contas, marcá-las como teste, concluir atualização de senha/MFA com a participação do proprietário e promovê-las a courier. Só então configurar coordenadas pelo painel e homologar o despacho sequencial com dados de teste, sem pedido ou pagamento real. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
+Solicitar que os titulares das duas contas courier de teste concluam a atualização de senha e configurem MFA. Depois, retomar a homologação no navegador integrado usando as duas contas e um pedido de teste sem cobrança real para verificar disponibilidade, oferta sequencial, aceite, recusa, expiração, coleta, status/ETA e avaliação. O pin de coleta está validado e configurado. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
