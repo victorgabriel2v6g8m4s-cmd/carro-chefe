@@ -42,8 +42,8 @@ export function AdminTeamPage() {
       }, session.csrfToken);
       form.reset();
       setMessage(member.role === "courier" && member.isTestAccount
-        ? `Courier de teste ${member.phone}: login normal até provisionar chave de agente.`
-        : `${member.phone} promovido. Atualize senha e MFA para usar funções operacionais.`);
+        ? `Courier teste ${member.phone}: login normal; chave IA opcional.`
+        : `${member.phone} promovido; atualize senha e MFA.`);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível promover a conta.");
@@ -83,7 +83,7 @@ export function AdminTeamPage() {
       <div>
         <span className="eyebrow">Segurança e permissões</span>
         <h1>Equipe CookLily</h1>
-        <p>Conta de teste mantém login normal. Só identidade com chave provisionada usa agent-key; courier agente exige flag de teste e acessa apenas rotas courier.</p>
+        <p>Teste comum: senha/MFA. Courier IA: chave provisionada.</p>
       </div>
       <Link className="button ghost" to="/painel">Painel</Link>
     </div>
