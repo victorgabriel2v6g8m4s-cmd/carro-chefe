@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: alterações ainda não commitadas; HEAD base `6da73bcdb064786cef80f7dd1269c7c6790206d2`
+- head_sha_verified: `fa33f16d9557a2f9d8891ee78820e421498dcdec`
 - pull_requests: nenhum
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -17,6 +17,7 @@
 - Código de disponibilidade, geolocalização operacional com expiração em 90 s, dispatcher sequencial por proximidade, decisão de restaurante, checklist, configurações de oferta/coleta, integração com outbox e avaliações está implementado no working tree.
 - Migration aditiva `20261031000000_lily_dispatch_ratings` e testes para schema/distância/availability/reviews foram criados.
 - Guia de configuração do proprietário, ADR e relatório da entrega foram criados/atualizados.
+- Commit `fa33f16` persiste a implementação, migration, testes, roadmap e instruções.
 
 ## Em andamento
 
@@ -62,4 +63,4 @@
 
 ## Próxima ação exata
 
-Commitar as mudanças revisadas, publicar a branch e abrir PR draft para executar a suite de integração/CI em Linux; corrigir todos os achados antes da integração.
+Enviar a branch `codex/cooklily-courier-dispatch-ratings` e abrir PR draft contra `cooklily/canonical` para CI Linux validar a suíte de integração e a migration.
