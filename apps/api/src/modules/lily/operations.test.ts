@@ -468,6 +468,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     });
     expect(notifications.map((row) => row.stage).sort()).toEqual([
       "preparing",
+      "restaurant_accepted",
       "waiting_courier"
     ]);
     expect(notifications.every((row) => row.status === "pending")).toBe(true);

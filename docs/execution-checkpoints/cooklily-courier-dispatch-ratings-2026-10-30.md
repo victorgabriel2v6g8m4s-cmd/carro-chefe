@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `5ce39283b2e7cbb74603c0b36d7244c3538a9fa9` (última revisão CI do PR #300; uma expectativa de auditoria ainda falhou e foi corrigida no working tree)
+- head_sha_verified: `1de11c66aad0762688479614b84d5c2df9e32efb` (última revisão CI do PR #300; uma expectativa do outbox após aceite ainda falhou e foi corrigida no working tree)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -40,7 +40,7 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI e CodeQL ainda pendentes.
-- CI run `41165306551` no head `1e75ed4`: static checks passaram; Windows Supervisor e Excel Recipe em Linux/Windows passaram; qualidade Node 20/22/24 falhou em dois testes antigos (contagem do starter pack WhatsApp e aceite explícito do restaurante). O run `41165820535` no head `5ce3928` confirmou as correções de cenário, mas revelou uma terceira expectativa: o aceite cria um evento de auditoria `received` adicional; corrigida no working tree. Tool Health Linux continua falhando em `app-lily`; Vite e orçamento passaram localmente, causa Linux ainda precisa de nova evidência.
+- CI run `41165951634` no head `1de11c6`: as expectativas de quantidade de templates, decisão e sequência de auditoria passaram; restou corrigir a expectativa do outbox para incluir a notificação `restaurant_accepted`, já ajustada no working tree. Tool Health Linux segue falhando em `app-lily`; build Vite e orçamento passam localmente, diferença Linux ainda requer investigação.
 - A suíte de integração local para os dois testes corrigidos não inicia neste Windows porque o binding nativo `better-sqlite3` está ausente; não executar `pnpm approve-builds` nem reconstruir o binding neste ambiente. Validar os ajustes no runner Linux do PR.
 
 ## Migrations
@@ -66,4 +66,4 @@
 
 ## Próxima ação exata
 
-Commitar e enviar a correção da sequência auditável; então reexecutar CI, obter detalhe suficiente da falha Linux de `app-lily`, e só integrar PR #300 quando todos os gates obrigatórios passarem.
+Commitar e enviar a expectativa do outbox; então reexecutar CI, obter detalhe suficiente da falha Linux de `app-lily`, e só integrar PR #300 quando todos os gates obrigatórios passarem.
