@@ -304,6 +304,7 @@ export function ProfilePage() {
 
   const passwordMinimum = ["staff", "courier", "admin"].includes(session.user.role) ? 12 : 8;
   const privileged = ["staff", "courier", "admin"].includes(session.user.role);
+  const agentAuthenticated = session.authenticationMethod === "agent-key";
   const nextPathRaw = new URLSearchParams(window.location.search).get("next");
   const nextPath = nextPathRaw
     && (nextPathRaw.startsWith("/painel") || nextPathRaw.startsWith("/entregas"))
@@ -316,11 +317,11 @@ export function ProfilePage() {
       <strong>Atualização de senha obrigatória.</strong>
       <p>Sua conta foi promovida para a equipe. Defina abaixo uma nova senha com pelo menos 12 caracteres antes de configurar o segundo fator.</p>
     </div>}
-    {privileged && mfaStatus?.setupRequired && !session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
+    {privileged && !agentAuthenticated && mfaStatus?.setupRequired && !session.user.staffPasswordUpgradeRequired && <div className="operation-warning security-upgrade-warning">
       <strong>MFA obrigatória para a equipe.</strong>
       <p>Configure um autenticador TOTP antes de acessar o área operacional.</p>
     </div>}
-    {privileged && mfaStatus?.enabled && !mfaStatus.verified && <div className="operation-warning security-upgrade-warning">
+    {privileged && !agentAuthenticated && mfaStatus?.enabled && !mfaStatus.verified && <div className="operation-warning security-upgrade-warning">
       <strong>Confirme o segundo fator.</strong>
       <p>Digite o código do autenticador ou um código de recuperação para liberar funções administrativas nesta sessão.</p>
     </div>}
@@ -364,8 +365,10 @@ export function ProfilePage() {
       </form>
 
       {privileged && <section className="checkout-section security-mfa-section">
-        <h2>Autenticação em dois fatores</h2>
-        {mfaStatus?.enabled
+        <h2>{agentAuthenticated ? "Autenticação do agente" : "Autenticação em dois fatores"}</h2>
+        {agentAuthenticated
+          ? <p>Esta identidade usa chave Ed25519 de agente, sem senha ou MFA/TOTP. A chave privada permanece protegida no ssh-agent; o acesso fica restrito ao papel {session.user.role}.</p>
+          : mfaStatus?.enabled
           ? <>
               <p>MFA está ativa. {mfaStatus.verified ? "Esta sessão já confirmou o segundo fator." : "Confirme o código para liberar o painel."}</p>
               {!mfaStatus.verified && <form onSubmit={verifyMfa}>
@@ -405,7 +408,7 @@ export function ProfilePage() {
           <p>Cada código funciona uma única vez.</p>
           <div>{recoveryCodes.map((code) => <code key={code}>{code}</code>)}</div>
         </div>}
-        {nextPath && mfaStatus?.verified && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
+        {nextPath && (agentAuthenticated || mfaStatus?.verified) && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
       </section>}
 
       <section className="checkout-section account-sessions-section">
@@ -418,7 +421,9 @@ export function ProfilePage() {
               <small>Última atividade: {new Date(item.lastSeenAt).toLocaleString("pt-BR")}</small>
               <small>Expira: {new Date(item.expiresAt).toLocaleString("pt-BR")}</small>
             </div>
-            {privileged && <span className={item.mfaVerified ? "state-live" : "state-off"}>{item.mfaVerified ? "MFA confirmada" : "MFA pendente"}</span>}
+            {item.authenticationMethod === "agent-key"
+              ? <span className="state-live">Chave de agente</span>
+              : privileged && <span className={item.mfaVerified ? "state-live" : "state-off"}>{item.mfaVerified ? "MFA confirmada" : "MFA pendente"}</span>}
           </article>)}
         </div>
         <button className="button ghost" type="button" onClick={() => void revokeOtherSessions()} disabled={busy || sessions.filter((item) => !item.current).length === 0}>
@@ -426,14 +431,16 @@ export function ProfilePage() {
         </button>
       </section>
 
-      <form className="checkout-section" onSubmit={changePassword}>
+      {agentAuthenticated
+        ? <section className="checkout-section"><h2>Senha</h2><p>Esta identidade não aceita login por senha. Acesso por chave pode ser revogado pelo operador CookLily.</p></section>
+        : <form className="checkout-section" onSubmit={changePassword}>
         <h2>Segurança</h2>
         <p>Troque sua senha informando a atual. {passwordMinimum === 12 ? "Contas da equipe exigem pelo menos 12 caracteres." : "Clientes exigem pelo menos 8 caracteres."} Outras sessões serão encerradas.</p>
         <label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" required /></label>
         <label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
         <label>Confirmar nova senha<input name="confirmPassword" type="password" autoComplete="new-password" minLength={passwordMinimum} maxLength={128} required /></label>
         <button className="button ghost" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Atualizando senha" /> : "Trocar senha"}</button>
-      </form>
+      </form>}
     </div>
 
     {error && <p className="error" role="alert">{error}</p>}

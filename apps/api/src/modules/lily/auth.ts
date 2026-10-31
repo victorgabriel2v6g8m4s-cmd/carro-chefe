@@ -40,6 +40,16 @@ export type LilySessionContext = {
   };
 };
 
+export function isAllowedLilyAgentIdentity(user: {
+  agentIdentity: boolean;
+  isTestAccount: boolean;
+  role: string;
+  status: string;
+}) {
+  return user.agentIdentity && user.status === "active"
+    && (user.role === "admin" || (user.role === "courier" && user.isTestAccount));
+}
+
 export function normalizeLilyPhone(input: string): string | null {
   const digits = input.replace(/\D/g, "");
   const national = digits.startsWith("55") && (digits.length === 12 || digits.length === 13)
@@ -152,7 +162,7 @@ export async function createLilySession(
       tokenHash: hashToken(token),
       csrfTokenHash: hashToken(csrfToken),
       expiresAt,
-      ...(options.agentKeyId ? { agentKeyId: options.agentKeyId, mfaVerifiedAt: new Date() } : {})
+      ...(options.agentKeyId ? { agentKeyId: options.agentKeyId } : {})
     }
   });
   reply.header("Set-Cookie", sessionCookie(token, Math.floor(ttlMs / 1000), requestUsesHttps(request)));
@@ -167,7 +177,7 @@ async function loadLilySession(token: string): Promise<LilySessionContext | null
   });
   if (!record || record.revokedAt || record.expiresAt <= now || record.user.status !== "active") return null;
   if (record.agentKeyId && (!record.agentKey || record.agentKey.status !== "active" || record.agentKey.revokedAt
-    || record.agentKey.userId !== record.userId || !record.user.agentIdentity)) return null;
+    || record.agentKey.userId !== record.userId || !isAllowedLilyAgentIdentity(record.user))) return null;
   await lilyPrisma.lilySession.update({
     where: { id: record.id },
     data: { lastSeenAt: now }
@@ -256,7 +266,7 @@ export function publicLilyUser(user: LilySessionContext["user"], agentSession = 
     avatarUrl: user.avatarMediaId ? `/api/v1/lily/public/media/${encodeURIComponent(user.avatarMediaId)}` : null,
     rankingOptIn: user.rankingOptIn,
     staffPasswordUpgradeRequired: agentSession ? false : user.staffPasswordUpgradeRequired,
-    mfaEnabled: agentSession || user.mfaEnabled
+    mfaEnabled: user.mfaEnabled
   };
 }
 

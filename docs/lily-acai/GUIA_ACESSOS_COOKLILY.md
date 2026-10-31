@@ -38,7 +38,7 @@ Se o agente não puder alterar o ambiente local, forneça ao humano esse bloco c
 
 ## 2. Entrar no painel com uma identidade de agente/LLM
 
-O agente usa uma conta administrativa CookLily dedicada, identificada como agente. Isso concede os mesmos recursos de painel daquele papel, mas não concede shell na VPS. O login de agente usa desafio OpenSSH e sessão curta; não usa a senha ou o MFA de um humano.
+O agente usa uma conta dedicada CookLily identificada como agente. A conta admin permite tarefas administrativas; courier marcada como teste permite homologar apenas as rotas de entregador. Isso não concede shell na VPS. O login usa desafio OpenSSH e sessão curta, sem senha ou MFA/TOTP; a API registra `authenticationMethod=agent-key` e não marca TOTP como verificado.
 
 ### Preparação local, uma única vez
 
@@ -93,10 +93,10 @@ Abra `https://carrochefe.com/lilyacai/entrar` e autentique com a conta humana pr
 1. Crie a conta normalmente em `https://carrochefe.com/lilyacai/cadastro` e confirme o acesso ao número conforme o fluxo de cadastro disponível.
 2. Entre no painel com uma conta admin CookLily.
 3. Abra **Painel → Equipe** (`/lilyacai/painel/equipe`) e localize a conta pelo telefone/nome.
-4. Marque **Conta de teste**. A ação só é aceita para papel `customer`; confirme que a etiqueta aparece na linha da conta.
+4. Marque **Conta de teste** para customer. Para um courier de homologação, use **Courier de teste**; isso não concede privilégios adicionais, mas permite provisionar identidade de agente por chave restrita às rotas courier.
 5. Para removê-la do modo de teste, desmarque a mesma opção.
 
-Contas de teste seguem o nível de acesso do papel da conta. A flag não concede acesso staff/admin. Elas ficam fora do ranking público e de interações de usuários comuns; admins e a própria conta de teste podem ver o ranking interno, com posições recalculadas sem lacunas para o público.
+Contas de teste seguem o nível de acesso do papel da conta. A flag não concede acesso staff/admin nem muda a autenticação. Clientes e couriers de teste sem identidade de agente continuam usando senha e MFA exigido pelo papel; somente após o provisionamento explícito de chave Ed25519 a conta dedicada de IA usa login `agent-key` sem senha/MFA. Clientes de teste ficam fora do ranking público e de interações de usuários comuns; admins e a própria conta de teste podem ver o ranking interno, com posições recalculadas sem lacunas para o público. Um `courier` agente ainda exige a flag de teste e permanece limitado às rotas courier.
 
 ## 5. Configurar o nível de acesso
 
@@ -106,7 +106,7 @@ O papel de acesso e a flag de teste são controles separados:
 |---|---|---|
 | `customer` | Cliente; pode ser marcado como conta de teste | Cadastro normal; flag de teste em Painel → Equipe |
 | `staff` | Operação do painel conforme permissões da equipe | Admin em Painel → Equipe ou CLI na VPS |
-| `courier` | Fluxos de entregador | Admin em Painel → Equipe ou CLI na VPS |
+| `courier` | Fluxos de entregador | Admin em Painel → Equipe ou CLI na VPS; senha/MFA para couriers reais e couriers de teste não dedicados; courier de teste com identidade de agente provisionada pode usar chave restrita |
 | `admin` | Administração completa CookLily | Operador autorizado pela CLI na VPS; não atribuir a contas de teste de cliente |
 
 Para promover uma conta existente pela VPS, use o telefone em formato nacional ou internacional; o script normaliza o valor, exige conta ativa, não cria usuários e não faz downgrade de admin:
@@ -118,6 +118,8 @@ sudo lily-promote-user <telefone> admin
 ```
 
 Sem papel explícito, o script promove para `staff`. A promoção revoga as sessões existentes, audita a mudança e pode exigir atualização de senha/MFA. A administração da equipe também pode alterar papéis permitidos no painel; backend valida papel, estado, auto-bloqueio e existência de outro admin ativo.
+
+Para homologação automatizada, marque o courier como **Courier de teste** em Painel → Equipe e registre uma chave Ed25519 dedicada com `sudo lily-agent-key register <telefone> <chave-publica> "Courier de teste"`. Cada conta exige sua própria chave. O login ocorre com `node tools/lily-agent-auth.mjs login --key <caminho-da-chave>` usando `ssh-agent`; não compartilhe chave privada, senha ou TOTP com agentes. A chave de courier não pode acessar rotas de staff/admin. Ao remover a flag de teste ou trocar o papel, a identidade e as sessões por chave são revogadas.
 
 ## 6. Banco e ambiente da VPS
 

@@ -6,13 +6,13 @@ ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
 usage() {
   cat <<'EOF'
 Uso:
-  sudo lily-agent-key register <telefone-admin> <chave-publica-ed25519> [nome]
-  sudo lily-agent-key revoke <telefone-admin>
-  sudo lily-agent-key status <telefone-admin>
+  sudo lily-agent-key register <telefone-admin-ou-courier-teste> <chave-publica-ed25519> [nome]
+  sudo lily-agent-key revoke <telefone-admin-ou-courier-teste>
+  sudo lily-agent-key status <telefone-admin-ou-courier-teste>
 
-O cadastro exige uma conta CookLily existente, ativa e com papel admin.
+Admin agente exige papel admin. Courier agente exige papel courier e a flag Conta de teste.
 Somente a chave pública é armazenada; a chave privada permanece no computador do agente.
-O cadastro bloqueia o login por senha dessa conta e revoga sessões/tickets anteriores.
+O cadastro bloqueia o login por senha dessa conta e revoga sessões/tickets anteriores. Courier agente só acessa rotas courier.
 EOF
 }
 
@@ -42,11 +42,12 @@ set +a
 DB="${LILY_DATABASE_URL#file:}"
 [[ -f "${DB}" ]] || die "banco Lily não encontrado: ${DB}"
 
-USER_ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, role, status FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
+USER_ROW="$(sqlite3 -separator '|' "${DB}" "SELECT id, role, status, isTestAccount FROM LilyUser WHERE phoneNormalized='${PHONE}' LIMIT 2;")"
 [[ -n "${USER_ROW}" ]] || die "nenhuma conta CookLily encontrada"
 [[ "$(printf '%s\n' "${USER_ROW}" | wc -l)" -eq 1 ]] || die "mais de uma conta encontrada; operação abortada"
-IFS='|' read -r USER_ID USER_ROLE USER_STATUS <<< "${USER_ROW}"
-[[ "${USER_ROLE}" == "admin" ]] || die "a conta precisa ter papel admin"
+IFS='|' read -r USER_ID USER_ROLE USER_STATUS USER_IS_TEST <<< "${USER_ROW}"
+[[ "${USER_ROLE}" == "admin" || ( "${USER_ROLE}" == "courier" && "${USER_IS_TEST}" == "1" ) ]] \
+  || die "a conta precisa ser admin ou courier marcada como Conta de teste"
 [[ "${USER_STATUS}" == "active" ]] || die "a conta precisa estar ativa"
 
 sql_quote() { local value="$1"; value="${value//\'/\'\'}"; printf "'%s'" "${value}"; }
@@ -87,14 +88,14 @@ ON CONFLICT(userId) DO UPDATE SET
 UPDATE LilySession SET revokedAt=CURRENT_TIMESTAMP WHERE userId=${SQL_USER_ID} AND revokedAt IS NULL;
 DELETE FROM LilyAgentAuthChallenge WHERE agentKeyId=(SELECT id FROM LilyAgentKey WHERE userId=${SQL_USER_ID});
 DELETE FROM LilyAgentAuthHandoff WHERE agentKeyId=(SELECT id FROM LilyAgentKey WHERE userId=${SQL_USER_ID});
-UPDATE LilyUser SET agentIdentity=1, updatedAt=CURRENT_TIMESTAMP WHERE id=${SQL_USER_ID};
+UPDATE LilyUser SET agentIdentity=1, staffPasswordUpgradeRequired=0, updatedAt=CURRENT_TIMESTAMP WHERE id=${SQL_USER_ID};
 INSERT INTO LilyAdminAudit (id, actorUserId, actorType, agentKeyId, agentKeyFingerprint, action, entityType, entityId, payloadJson, createdAt)
 SELECT lower(hex(randomblob(16))), 'ops:cli', 'operator', id, ${FINGERPRINT_SQL}, 'security.agent_key.registered', 'LilyUser', ${SQL_USER_ID},
   json_object('source','lily-agent-key','label',${LABEL_SQL},'fingerprint',${FINGERPRINT_SQL}), CURRENT_TIMESTAMP
 FROM LilyAgentKey WHERE userId=${SQL_USER_ID};
 COMMIT;
 SQL
-    printf 'Cadastro concluído.\npapel=admin\nstatus=active\nfingerprint=%s\n' "${FINGERPRINT}"
+    printf 'Cadastro concluído.\npapel=%s\nstatus=active\nfingerprint=%s\n' "${USER_ROLE}" "${FINGERPRINT}"
     echo "Agora a conta autentica por chave; o login por senha foi bloqueado e as sessões/tickets anteriores foram encerrados."
     ;;
   revoke)
@@ -120,7 +121,7 @@ SQL
     ;;
   status)
     [[ $# -eq 2 ]] || { usage; exit 64; }
-    sqlite3 -header -column "${DB}" "SELECT u.role, u.status AS account_status, CASE WHEN u.agentIdentity=1 THEN 'agent' ELSE 'human' END AS identity, k.status AS key_status, k.fingerprint, k.lastUsedAt FROM LilyUser u LEFT JOIN LilyAgentKey k ON k.userId=u.id WHERE u.id=${SQL_USER_ID};"
+    sqlite3 -header -column "${DB}" "SELECT u.role, u.status AS account_status, u.isTestAccount, CASE WHEN u.agentIdentity=1 THEN 'agent' ELSE 'human' END AS identity, k.status AS key_status, k.fingerprint, k.lastUsedAt FROM LilyUser u LEFT JOIN LilyAgentKey k ON k.userId=u.id WHERE u.id=${SQL_USER_ID};"
     ;;
   *) usage; exit 64 ;;
 esac

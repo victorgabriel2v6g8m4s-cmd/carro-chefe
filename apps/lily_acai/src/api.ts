@@ -23,6 +23,7 @@ export type AuthPayload = {
     verified: boolean;
     setupRequired: boolean;
   };
+  authenticationMethod?: "agent-key" | "password";
 };
 
 export type LilyAllergenDescriptor = {
@@ -651,6 +652,7 @@ export type LilyMfaStatus = {
   verified: boolean;
   setupRequired: boolean;
   recoveryCodesRemaining: number;
+  authenticationMethod?: "agent-key" | "password";
 };
 
 export async function getLilyMfaStatus() {
@@ -707,6 +709,7 @@ export type LilySessionRow = {
   lastSeenAt: string;
   expiresAt: string;
   mfaVerified: boolean;
+  authenticationMethod: "agent-key" | "password";
 };
 
 export async function getLilySessions() {

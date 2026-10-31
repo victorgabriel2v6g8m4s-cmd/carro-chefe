@@ -7,6 +7,7 @@ import path from "node:path";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_AGENT_SIGNATURE_NAMESPACE, parseLilyAgentPublicKey } from "./agent-auth-crypto";
+import { hashPassword } from "./auth";
 
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
@@ -59,6 +60,120 @@ afterAll(async () => {
 });
 
 describe("autenticação administrativa por chave de agente", () => {
+  it("autentica courier marcado como teste por chave, sem senha/MFA e com escopo courier", async () => {
+    const user = await lilyPrisma.lilyUser.create({ data: {
+      phoneNormalized: phone,
+      passwordHash: "disabled-test-courier-password-login",
+      displayName: "Courier agente de teste",
+      role: "courier",
+      status: "active",
+      isTestAccount: true,
+      agentIdentity: true,
+      staffPasswordUpgradeRequired: true
+    } });
+    userId = user.id;
+    await lilyPrisma.lilyAgentKey.create({ data: {
+      userId,
+      label: "Teste de courier agente",
+      publicKey: parsedKey.publicKey,
+      fingerprint: parsedKey.fingerprint
+    } });
+
+    const passwordLogin = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/login", headers: { origin },
+      payload: { phone, password: "any-test-password" }
+    });
+    expect(passwordLogin.statusCode).toBe(401);
+
+    const challengeResponse = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/agent/challenges", headers: { origin },
+      payload: { fingerprint: parsedKey.fingerprint }
+    });
+    expect(challengeResponse.statusCode).toBe(200);
+    const challenge = challengeResponse.json() as { challengeId: string; challenge: string };
+    const verified = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/agent/verify", headers: { origin },
+      payload: { challengeId: challenge.challengeId, signature: signChallenge(challenge.challenge) }
+    });
+    expect(verified.statusCode).toBe(200);
+    const exchanged = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/agent/exchange", headers: { origin },
+      payload: { ticket: verified.json().ticket }
+    });
+    expect(exchanged.statusCode).toBe(200);
+    expect(exchanged.json()).toMatchObject({
+      user: { id: userId, role: "courier", staffPasswordUpgradeRequired: false, mfaEnabled: false },
+      mfa: { required: false, enabled: false, verified: false, setupRequired: false },
+      authenticationMethod: "agent-key"
+    });
+    const cookie = cookieFrom(exchanged);
+    const deliveries = await app.inject({ method: "GET", url: "/api/v1/lily/courier/deliveries", headers: { cookie } });
+    expect(deliveries.statusCode).toBe(200);
+    const mfaStatus = await app.inject({ method: "GET", url: "/api/v1/lily/customer/security/mfa/status", headers: { cookie } });
+    expect(mfaStatus.json()).toMatchObject({ required: false, enabled: false, verified: false, setupRequired: false, authenticationMethod: "agent-key" });
+    const adminAccess = await app.inject({ method: "GET", url: "/api/v1/lily/admin/team", headers: { cookie } });
+    expect(adminAccess.statusCode).toBe(403);
+
+    await lilyPrisma.lilyUser.update({ where: { id: userId }, data: { isTestAccount: false } });
+    const staleSession = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
+    expect(staleSession.statusCode).toBe(401);
+  });
+
+  it("nega chave de agente para courier não marcado como teste", async () => {
+    const user = await lilyPrisma.lilyUser.create({ data: {
+      phoneNormalized: phone,
+      passwordHash: "disabled-test-courier-password-login",
+      displayName: "Courier sem flag teste",
+      role: "courier",
+      status: "active",
+      isTestAccount: false,
+      agentIdentity: true
+    } });
+    userId = user.id;
+    await lilyPrisma.lilyAgentKey.create({ data: {
+      userId,
+      label: "Chave deve ser recusada",
+      publicKey: parsedKey.publicKey,
+      fingerprint: parsedKey.fingerprint
+    } });
+    const response = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/agent/challenges", headers: { origin },
+      payload: { fingerprint: parsedKey.fingerprint }
+    });
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("mantém senha e MFA para conta courier de teste sem identidade de agente", async () => {
+    const password = "senha-courier-teste-2026";
+    const user = await lilyPrisma.lilyUser.create({ data: {
+      phoneNormalized: phone,
+      passwordHash: await hashPassword(password),
+      displayName: "Courier teste humano",
+      role: "courier",
+      status: "active",
+      isTestAccount: true,
+      agentIdentity: false,
+      staffPasswordUpgradeRequired: false,
+      mfaEnabled: false
+    } });
+    userId = user.id;
+
+    const login = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/login", headers: { origin },
+      payload: { phone, password }
+    });
+    expect(login.statusCode).toBe(200);
+    expect(login.json()).toMatchObject({
+      authenticationMethod: "password",
+      mfa: { required: true, enabled: false, setupRequired: true }
+    });
+    const agentChallenge = await app.inject({
+      method: "POST", url: "/api/v1/lily/auth/agent/challenges", headers: { origin },
+      payload: { fingerprint: parsedKey.fingerprint }
+    });
+    expect(agentChallenge.statusCode).toBe(401);
+  });
+
   it("troca prova Ed25519 por sessão admin curta, audita ações e revoga acesso imediatamente", async () => {
     const user = await lilyPrisma.lilyUser.create({ data: {
       phoneNormalized: phone,
@@ -150,14 +265,14 @@ describe("autenticação administrativa por chave de agente", () => {
     expect(exchanged.headers["set-cookie"]).toContain("SameSite=Lax");
     expect(exchanged.json()).toMatchObject({
       authenticated: true,
-      user: { id: userId, role: "admin", staffPasswordUpgradeRequired: false, mfaEnabled: true },
-      mfa: { required: true, enabled: true, verified: true, setupRequired: false },
+      user: { id: userId, role: "admin", staffPasswordUpgradeRequired: false, mfaEnabled: false },
+      mfa: { required: false, enabled: false, verified: false, setupRequired: false },
       authenticationMethod: "agent-key"
     });
     const cookie = cookieFrom(exchanged);
     const csrf = exchanged.json().csrfToken as string;
     const status = await app.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie } });
-    expect(status.json().mfa).toMatchObject({ required: true, enabled: true, verified: true, setupRequired: false });
+    expect(status.json()).toMatchObject({ authenticationMethod: "agent-key", mfa: { required: false, enabled: false, verified: false, setupRequired: false } });
 
     const adminAction = await app.inject({
       method: "POST", url: "/api/v1/lily/admin/vip/codes",

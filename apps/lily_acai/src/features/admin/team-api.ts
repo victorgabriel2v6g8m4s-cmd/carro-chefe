@@ -9,6 +9,8 @@ export type LilyTeamMember = {
   isTestAccount: boolean;
   staffPasswordUpgradeRequired: boolean;
   mfaEnabled: boolean;
+  agentIdentity: boolean;
+  agentKeyActive: boolean;
   createdAt: string;
   updatedAt: string;
   activeSessions: number;

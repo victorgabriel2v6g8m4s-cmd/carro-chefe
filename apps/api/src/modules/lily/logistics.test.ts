@@ -276,6 +276,31 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(nextOffer.offeredCourierUserId).toBe(farther.user.id);
   });
 
+  it("inclui courier agente de teste sem senha/MFA e exclui courier agente fora do modo de teste", async () => {
+    const testCourier = await register("67999908231", "courier", "127.0.0.254");
+    const unmarkedAgent = await register("67999908232", "courier", "127.0.0.255");
+    const order = await createDelivery();
+    await lilyPrisma.lilyUser.update({ where: { id: testCourier.user.id }, data: {
+      agentIdentity: true,
+      isTestAccount: true,
+      staffPasswordUpgradeRequired: true,
+      mfaEnabled: false
+    } });
+    await lilyPrisma.lilyUser.update({ where: { id: unmarkedAgent.user.id }, data: {
+      agentIdentity: true,
+      isTestAccount: false,
+      staffPasswordUpgradeRequired: true,
+      mfaEnabled: false
+    } });
+    await makeCourierAvailable(testCourier.user.id, 0.02);
+    await makeCourierAvailable(unmarkedAgent.user.id, 0.001);
+
+    await offerCourierForOrder(order.id);
+
+    const offer = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id } });
+    expect(offer.offeredCourierUserId).toBe(testCourier.user.id);
+  });
+
   it("expira a tentativa no prazo e entrega a oferta seguinte ao próximo courier", async () => {
     const nearer = await register("67999908221", "courier", "127.0.0.252");
     const farther = await register("67999908222", "courier", "127.0.0.253");

@@ -309,7 +309,8 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
         createdAt: true,
         lastSeenAt: true,
         expiresAt: true,
-        mfaVerifiedAt: true
+        mfaVerifiedAt: true,
+        agentKeyId: true
       },
       orderBy: { lastSeenAt: "desc" }
     });
@@ -320,7 +321,8 @@ export async function lilyProfileRoutes(app: FastifyInstance) {
         createdAt: session.createdAt,
         lastSeenAt: session.lastSeenAt,
         expiresAt: session.expiresAt,
-        mfaVerified: Boolean(session.mfaVerifiedAt)
+        mfaVerified: Boolean(session.mfaVerifiedAt),
+        authenticationMethod: session.agentKeyId ? "agent-key" : "password"
       }))
     };
   });

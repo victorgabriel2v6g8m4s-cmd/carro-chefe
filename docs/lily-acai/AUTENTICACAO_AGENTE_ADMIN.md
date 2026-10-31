@@ -1,12 +1,12 @@
-# Acesso administrativo de agente por chave
+# Acesso de agente CookLily por chave
 
 Status: implementação nesta entrega; provisionamento de produção fica sujeito à integração e deploy desta versão.
 
 ## Objetivo e decisão
 
-O agente opera a CookLily com o papel administrativo completo, em uma conta dedicada e separada de qualquer conta humana. A senha e o TOTP humanos não são usados pelo agente. A autenticação usa uma chave Ed25519 OpenSSH local, uma prova de posse assinada e uma sessão curta de navegador.
+O agente autentica por chave Ed25519 OpenSSH local, prova de posse assinada e sessão curta de navegador. Há dois usos separados: uma conta admin dedicada para tarefas administrativas e contas `courier` explicitamente marcadas como teste para homologar logística. Nenhum login de agente usa senha humana ou TOTP. A API identifica a sessão como `agent-key`, deixa `mfa.required=false` e não grava `mfaVerifiedAt`; a chave de agente não aparece como TOTP/MFA ativa.
 
-O acesso cobre somente `/lilyacai/*` e `/api/v1/lily/*`. Não concede acesso ao Carro Chefe, ao banco da Central ou à VPS. Para administrar a VPS, continuam valendo as permissões SSH próprias do operador.
+O acesso cobre somente `/lilyacai/*` e `/api/v1/lily/*`. A identidade `admin` recebe o escopo admin; a identidade `courier` marcada como teste só pode usar os fluxos de entregador e não recebe administração. Nenhuma delas concede acesso ao Carro Chefe, ao banco da Central ou à VPS. Para administrar a VPS, continuam valendo as permissões SSH próprias do operador.
 
 ## Como o login funciona
 
@@ -27,9 +27,9 @@ sequenceDiagram
     Web->>API: Ações de admin com CSRF
 ```
 
-O ticket fica no fragmento da URL (não é enviado em requisições HTTP ou cabeçalho Referer) e a página o remove do histórico antes da troca. O servidor guarda somente hashes dos tickets. A sessão expira em duas horas; cada requisição privilegiada valida novamente que a chave continua ativa. Revogar a chave encerra as sessões e apaga desafios/tickets pendentes.
+O ticket fica no fragmento da URL (não é enviado em requisições HTTP ou cabeçalho Referer) e a página o remove do histórico antes da troca. O servidor guarda somente hashes dos tickets. A sessão expira em duas horas; cada requisição privilegiada valida novamente que a chave continua ativa. A autorização usa a identidade e o escopo do papel, sem solicitar senha ou TOTP. Revogar a chave encerra as sessões e apaga desafios/tickets pendentes.
 
-Cada conta de agente pode ter uma chave ativa. O provisionamento exige uma conta CookLily já existente, ativa e com papel `admin`; ele vincula/rotaciona a chave, bloqueia login por senha daquela conta e encerra as sessões anteriores. Demais admins humanos preservam login e MFA normais.
+Cada conta de agente pode ter uma chave ativa. Para escopo admin, o provisionamento exige conta ativa com papel `admin`. Para escopo courier de teste, exige papel `courier` e `isTestAccount=true`. A flag de teste sozinha não muda a autenticação: somente o provisionamento da chave converte a identidade para login `agent-key` sem senha/TOTP e bloqueia senha naquela identidade. Contas de teste sem identidade de agente preservam senha e MFA exigido pelo papel. Couriers reais, staff e admins humanos preservam login e MFA normais. Se um courier agente perder a flag de teste ou mudar de papel, a chave e as sessões são revogadas automaticamente.
 
 As operações administrativas continuam exigindo CSRF. As linhas de `LilyAdminAudit` registram `actorType=agent`, o ID estável da chave e o fingerprint usado. O cadastro e a revogação por operador também deixam auditoria.
 
@@ -50,16 +50,16 @@ Defina uma frase secreta para a chave quando `ssh-keygen` solicitar e mantenha a
 Depois que esta versão estiver implantada e `/usr/local/sbin/lily-agent-key` instalado, cadastre a chave pública copiada:
 
 ```bash
-sudo lily-agent-key register <telefone-da-conta-admin-dedicada> "ssh-ed25519 AAAA..." "CookLily Codex"
-sudo lily-agent-key status <telefone-da-conta-admin-dedicada>
+sudo lily-agent-key register <telefone-da-conta-admin-ou-courier-teste> "ssh-ed25519 AAAA..." "CookLily Codex"
+sudo lily-agent-key status <telefone-da-conta-admin-ou-courier-teste>
 ```
 
-O comando recebe somente a chave pública. Não passe chave privada, senha ou TOTP. A conta deve ser a conta administrativa dedicada ao agente, não a conta de cliente de teste.
+O comando recebe somente a chave pública. Não passe chave privada, senha ou TOTP. Para courier, marque a conta como teste em Painel → Equipe antes de registrar a chave. Use uma chave Ed25519 diferente para cada courier; o agente assina o desafio via `ssh-agent` e não lê a chave privada.
 
 Para encerrar o acesso:
 
 ```bash
-sudo lily-agent-key revoke <telefone-da-conta-admin-dedicada>
+sudo lily-agent-key revoke <telefone-da-conta-admin-ou-courier-teste>
 ```
 
 Uma nova chave pode ser cadastrada depois com `register`; esse comando substitui a chave anterior e invalida as sessões existentes.
