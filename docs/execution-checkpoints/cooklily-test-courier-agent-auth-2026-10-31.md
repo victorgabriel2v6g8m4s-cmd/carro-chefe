@@ -1,51 +1,57 @@
 # Homologação CookLily com courier de teste e pagamentos simulados
 
-- status: in_progress
+- status: completed
 - owner: AG-DEV
 - branch: `cooklily/canonical`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `263ba8163dedb8d6e67bd01b268c11f9d60fef50`
-- head_sha_verified: `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb` (deploy em produção)
-- pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) merged `5f40850f7350ec09c4638e30c87068b44e069d74`, CI `41177528187`; [#306](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/306) merged `b1589083c60c6251726b44112dcf36f8f2a68804`, CI `41178440493`; [#307](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/307) merged `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb`, CI `41180053324` (8/8 passou)
-- last_verified_at: 2026-10-31 07:27 UTC
-- interruption_state: deploy #307 concluído; homologação restante deve continuar no IAB
+- base_sha_verified: `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb`
+- head_sha_verified: `1040ee8dacc215d29e64161dc8b0f7b95866d06a` (deploy em produção)
+- pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) merged; [#306](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/306) merged; [#307](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/307) merged; [#308](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/308) merged em `1040ee8dacc215d29e64161dc8b0f7b95866d06a`, CI passou
+- last_verified_at: 2026-10-31 08:20 UTC (preencher horário de publicação)
+- interruption_state: nenhuma; deploy e homologação concluídos
 
-## Entrega e estado
+## Concluído e persistido
 
 Objetivo: homologar despacho de couriers de teste com localização sintética restrita e pedido/pagamento sem efeitos externos.
 
-- A canonical contém autenticação por chave para couriers de teste (PRs #303 e #304).
-- PR #305 implementou localização sintética de teste no ponto de coleta apenas para courier de teste autenticado por chave; API usa coordenadas configuradas e remove localização ao ficar offline ou expirar; courier normal não pode simular localização.
-- PR #305 implementou pagamento mock aprovado pelo total calculado no servidor, sem rede, QR ou cobrança. Pedidos de homologação não enfileiram WhatsApp.
-- Checkout de homologação permitido para staff/admin autorizados.
-- Migration `20261031120000_lily_courier_location_source` aplicada em produção.
-- Pedidos mock de retirada `CL-2CCD986DEF0B` e entrega `CL-959F09B70771` criados; sem provedor, QR, cobrança ou WhatsApp. O pedido de entrega anterior foi até pronto e checklist, mas ofertas sequenciais expiraram porque localizações venceram o TTL de 90 s; couriers tentados não podem ser reofertados nesse pedido.
-- PR #307 corrige o hint do provedor mock e muda o CTA para “Simular”/“Processando...”.
-- Courier teste 2 foi explicitamente posto offline e confirmado na UI mobile; verificar ambos de novo ao final.
+- Autenticação por chave para couriers de teste e localização sintética no ponto de coleta, restrita a courier de teste autenticado por chave; localização é removida ao ficar offline ou expirar.
+- Pagamento mock aprovado pelo total calculado no servidor, sem chamada de rede, QR, cobrança, provedor ou envio de WhatsApp.
+- Checkout de homologação disponível apenas a staff/admin autorizados.
+- PR #305 implementou autenticação/ localização de teste e pagamento mock; #306 corrigiu fluxo de login agente; #307 ajustou orientação/CTA do pagamento mock; #308 removeu reset de formulário após transição que desmonta o elemento.
+- Homologação real no IAB: pedido de entrega mock `CL-3534E66B30C2` percorreu aceite/preparo, checklist de liberação, oferta sequencial, recusa do courier 1, aceite do courier 2, chegada à coleta, confirmação da retirada, trajeto, chegada ao cliente, confirmação por código e encerramento da rota. Tracking do cliente mostrou a sequência de estados até entrega concluída.
+- A tela de avaliação permitiu selecionar loja, entrega e plataforma ao mesmo tempo. Não foi enviada avaliação para evitar gravar opinião fictícia de teste como avaliação real.
+- Couriers 1 e 2 foram confirmados indisponíveis após o fluxo. Courier 1 registra recusa da oferta; courier 2 sem rota ativa.
+- PR #308 corrigiu erro de submit causado por `event.currentTarget.reset()` após rerender/unmount. Regressão coberta pelos testes do módulo e pela passagem ponta a ponta com estados subsequentes após atualização.
 
-## Testes e gates
+## Gates e testes
 
-- Preflight `lily-courier-homologation` e `lily-payment-choice-ux`: passaram.
-- Testes CookLily: 25 arquivos/110 testes; typecheck e `git diff --check` passaram.
-- Build local e budget: JS bruto 607.94/608 KiB; JS gzip 193.01/193.50; inicial 52.36/110; chunk máximo 71.97/280; CSS gzip 35.34/36; combinado 228.36/229.
-- CI PR #305 `41177528187`: 8/8; PR #306 `41178440493`: 8/8; PR #307 `41180053324`: 8/8.
-- CI #307: [run](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/actions/runs/41180053324).
-- Deploy `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb`: migrations temporárias e operacionais sem pendências; check/types e testes runtime passaram; build remoto JS raw 607.94/608 KiB, JS gzip 193.22/193.50, CSS gzip 35.37/36, agregado 228.59/229; health Carro Chefe/Lily e smoke externo passaram na primeira tentativa.
+- `npm run policy:preflight -- --agent AG-DEV --scope lily-courier-form-submit`: passou.
+- `npm run test:lily-ui`: 25 arquivos, 110 testes passaram.
+- `npm run check`: passou.
+- `npm run build:lily`: passou; limites JS/CSS e gzip ficaram dentro do orçamento configurado.
+- `npm test`: 84 arquivos, 441 passaram, 3 ignorados.
+- `npm run build`: passou.
+- `git diff --check`: passou.
+- CI dos PRs #305, #306, #307 e #308 passou; PR #308 incluído em canonical como `1040ee8dacc215d29e64161dc8b0f7b95866d06a`.
 
 ## Migrations e deploy
 
-- Deploy `8ff663cebdd905a551ac4dd68f569cf69ba3d8eb` concluído às 2026-10-31 07:26 UTC. Log `/srv/carro-chefe/data/deploy-logs/deploy-20261031-072234-8ff663cebdd9.log`; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261031-072234-8ff663cebdd9.evidence`.
-- Backups pré-deploy verificados: core `/srv/carro-chefe/data/backups/carro-chefe-pre-8ff663cebdd9-20261031-072234.db`; Lily `/srv/carro-chefe/data/backups/lily-acai-pre-8ff663cebdd9-20261031-072234.db`.
+- Migration de origem de localização sintética aplicada no deploy #305; deploy #308 sem migrations pendentes.
+- Deploy de `1040ee8dacc215d29e64161dc8b0f7b95866d06a` concluído às 2026-10-31 07:45 UTC. Log `/srv/carro-chefe/data/deploy-logs/deploy-20261031-074521-1040ee8dacc2.log`; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261031-074521-1040ee8dacc2.evidence`.
+- Verificações de runtime, build, health e smoke do deploy passaram.
 
-## Homologação e riscos
+## Bloqueios/riscos
 
-- Ponto de coleta validado pelo proprietário e salvo no painel. Usar somente localização sintética.
-- Nenhuma cobrança, QR, WhatsApp ou chamada de provedor em pedidos mock.
-- IAB desktop 1280×720: console courier sem erros. IAB mobile 390×844: página courier sem overflow horizontal, console sem erros; viewport precisa reset ao concluir. Capturas da UI ficaram nas abas temporárias, não são arquivos versionados.
-- Confirmar após deploy CTA “Simular” e hint do pagamento mock, desktop e mobile.
-- Criar pedido novo de entrega mock; atualizar localização de ambos imediatamente antes do checklist; testar oferta sequencial, recusa/aceite, check-in, confirmação de coleta, status/ETA, chegada, entrega e avaliação. Não criar integração externa. Deixar couriers offline no final.
-- Homologação real exclusivamente no navegador integrado Codex; viewport resetado depois das medidas móveis.
+- Pedido, pagamento, localização de courier e entrega usados foram simulados. Nenhuma cobrança ou notificação externa ocorreu.
+- A submissão de avaliação ficou intencionalmente pendente para não contaminar os dados com nota/review fictícia; UX e seleção das três categorias foram homologadas.
+- Fluxo validado com localização sintética e método ETA/status; GPS ao vivo segue fora do escopo desta versão.
+
+## Homologação/dependências externas
+
+- IAB Codex em desktop 1280×720 e mobile 390×844. Tela courier conferida visualmente nos dois tamanhos. Em mobile, `innerWidth=390`, `documentElement.scrollWidth=375`, `body.scrollWidth=375`, sem overflow horizontal. Viewport foi restaurado ao final.
+- Conta courier 1 mostrou “Ficar disponível”, sem rota; courier 2 também confirmado offline após entrega.
+- Capturas e páginas de confirmação permanecem nas abas temporárias do IAB, não versionadas.
 
 ## Próxima ação exata
 
-No IAB, confirmar CTA/hint em desktop e mobile, criar pedido novo mock, percorrer cozinha, dispatch sequencial com localizações frescas, recusa/aceite, coleta, atualização ETA/status, entrega e avaliação. Corrigir/reimplantar/repetir se houver falha. Desativar ambos couriers e verificar offline, resetar viewport e atualizar este checkpoint como completed com evidências.
+Nenhuma para esta homologação. A versão está concluída em produção; seguir para o próximo item priorizado no roadmap.
