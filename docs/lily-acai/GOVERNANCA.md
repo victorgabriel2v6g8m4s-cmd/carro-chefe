@@ -16,8 +16,8 @@ A CookLily, porém, foi aprovada pelo proprietário como operação temporária 
    - nenhum dado Lily pode ser tratado como dado transacional do Carro Chefe.
 2. Criar `apps/lily_acai/AGENTS.md` com regras locais de identidade, privacidade, checkout e acessibilidade.
 3. Criar regra local equivalente no módulo API Lily e no banco Lily.
-4. Recompilar/verificar o manifesto de política da branch com `npm run policy:build` e `npm run policy:check`.
-5. Rodar `npm run policy:preflight -- --agent AG-DEV --scope <escopo>` antes de cada frente de implementação.
+4. O preflight de política é ferramenta local opcional, sem caráter de gate obrigatório.
+5. Executar check, testes e build proporcionais ao risco e aos gates obrigatórios de CI/deploy.
 
 ## Regra de merge
 

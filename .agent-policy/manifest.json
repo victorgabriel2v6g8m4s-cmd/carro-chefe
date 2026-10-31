@@ -26,7 +26,7 @@
     {
       "path": "AGENTS.md",
       "kind": "agents",
-      "sha256": "413284d811935ec69d562b61f58a087a353fa06f2d9cc54ffe803e369cc17bbf"
+      "sha256": "79f6f68a9bb74f8152a1e4b9ff6c37c0c9687162419ff54821846e0626dbe546"
     },
     {
       "path": "REGRAS.md",
@@ -36,7 +36,7 @@
     {
       "path": "apps/AGENTS.md",
       "kind": "agents",
-      "sha256": "10c355b7e6460264267725bf557d9ba7bba6eef920752a4481e40c7d9643a31f"
+      "sha256": "09f6a7bb9aeee0c6b0d787c37f92d36cb77dcea1e9a0745ccb3deb5f64abbfad"
     },
     {
       "path": "apps/api/AGENTS.md",
@@ -61,7 +61,7 @@
     {
       "path": "apps/lily_acai/AGENTS.md",
       "kind": "agents",
-      "sha256": "509e9b323c3666df582d9e956848fe44b7fd9a20442ec605f89a1bf66a82e901"
+      "sha256": "ec2d3278180c9e2e3bd3df1c27ceb55123690912f95eaf318ae8fce02ec5e2d9"
     },
     {
       "path": "apps/qr_manipulator/AGENTS.md",
@@ -714,5 +714,5 @@
       ]
     }
   },
-  "manifestHash": "24d8c85aea46ed391826fb0e89daad9df54cce974cadfd30f1bc6008f8d1e7a5"
+  "manifestHash": "b61512685057d39ff04cc5f0cf45af80d327579368981b13d25928a1d26cb336"
 }

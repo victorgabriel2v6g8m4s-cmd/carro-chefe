@@ -3,7 +3,7 @@
 **Data da consolidação:** 27/09/2026  
 **Branch canônica de integração:** `cooklily/canonical`  
 **Origem:** QA/homologação manual + revisão do código candidato das Entregas 05–07.  
-**Auditoria posterior:** 30/09/2026 — Entregas 08–12 e 11A–11K já avançaram tecnicamente; este arquivo preserva os achados de UX e só fecha itens visuais após QA real, conforme sua própria regra de fechamento.
+**Auditoria posterior:** 30/10/2026 — reconciliado com ADR-002 e atualizações do proprietário; este arquivo preserva os achados de UX e só fecha itens visuais após QA real, conforme sua própria regra de fechamento.
 
 ## Regra de fechamento
 
@@ -51,7 +51,7 @@ Status usados:
 | ADM-003 | Não há gerenciamento de equipe. | **CANDIDATO / REVALIDAR.** Existe `/painel/equipe` admin-only para promoção, papel, suspensão e sessões. | Admin gerencia equipe sem editar SQLite e toda mutação gera auditoria. |
 | SEC-003 | `staff` e `admin` sem distinção real. | **CANDIDATO / REVALIDAR.** Entrega 07 separa leitura/operação de mutações financeiras/equipe. | Testes provam menor privilégio: staff não executa ações exclusivas de admin. |
 | AUTH-002 | Cadastro não confirma senha. | **CANDIDATO / REVALIDAR.** Campo de confirmação existe. | Cadastro bloqueia senhas divergentes antes do envio. |
-| AUTH-003 | Não existe “Esqueci minha senha”. | **ABERTA.** | Definir canal de verificação confiável e implementar recuperação sem permitir takeover por mero conhecimento do telefone. |
+| AUTH-003 | Não existe “Esqueci minha senha”. | **CANAL DECIDIDO / IMPLEMENTAÇÃO ABERTA.** Código de verificação via WhatsApp ao número vinculado, conforme decisão do proprietário em 30/10/2026. | Código aleatório de uso único, com expiração, limite de tentativas/reenvios, resposta que não enumera contas e invalidação após troca de senha. |
 | AUTH-004 | Não existe alterar senha. | **CANDIDATO / REVALIDAR.** Perfil oferece troca autenticada de senha. | Cliente e equipe conseguem trocar senha; política de 8/12 caracteres aplicada. |
 | SEC-004 | Não existe encerrar outras sessões. | **RESOLVIDA TECNICAMENTE.** Perfil lista somente sessões da própria conta e possui ação explícita “Encerrar outras sessões”; a sessão atual é preservada e a mutação exige CSRF. | Criar ação explícita “Encerrar outras sessões” e, idealmente, listar/revogar sessões privilegiadas individualmente. |
 
@@ -65,7 +65,7 @@ Status usados:
 | CAT-003 | “N opções encontradas” aparece depois dos combos. | **CANDIDATO / REVALIDAR.** No canônico o contador está imediatamente antes do grid. | Contador fica colado ao resultado que descreve. |
 | CAT-004 | Combos sem seção visual nomeada. | **CANDIDATO / REVALIDAR.** Carrossel tem “Economize combinando” + “Combos”. | Hierarquia comunica claramente que é uma seção comercial de combos. |
 | CAT-005 | Cards de combo pesados e sem foto. | **CANDIDATO / REVALIDAR.** `ComboCarousel` usa capa de produto/combinação. | Cards compactos, com fotografia real quando disponível, sem três blocos vinho dominando a página. |
-| MIDIA-001 | Capas repetidas/placeholder reduzem apetite. | **CONTEÚDO / OPERAÇÃO — ABERTA.** | Priorizar fotografia real por produto; placeholder deve ser transitório e não dominar a grade. |
+| MIDIA-001 | Capas repetidas/placeholder reduzem apetite. | **FORA DO BACKLOG POR DECISÃO DO PROPRIETÁRIO EM 30/10/2026.** Produção de fotografias adicionais foi suspensa por enquanto. | Reabrir somente mediante nova priorização explícita. |
 | CAT-006 | CTA de combo desproporcionalmente grande. | **CANDIDATO / REVALIDAR.** CTA foi compactado, porém alguns alvos ainda precisam cumprir 44 px. | CTA visualmente proporcional ao conteúdo e com alvo de toque adequado. |
 | CAT-007 | Busca + filtros ocupam espaço vertical excessivo. | **CANDIDATO / REVALIDAR.** Barra sticky + filtros recolhíveis implementados. | Busca fica compacta/sticky; filtros expandem somente sob demanda. |
 | CAT-008 | Grid em duas colunas fica enterrado atrás dos combos. | **CANDIDATO / REVALIDAR.** Ordem atual coloca grid antes do carrossel. | Em mobile, produtos aparecem antes da seção de combos e duas colunas permanecem utilizáveis. |
@@ -77,11 +77,11 @@ Além dos achados de UX acima:
 
 1. **Entregas 08, 09, 10A, 10B e 12 estão tecnicamente integradas**; não permanecem como pendência de desenvolvimento, apenas homologações reais específicas;
 2. Pix próprio, tracking guest, ETA, WhatsApp, reatribuição, SLA e impressão também estão tecnicamente integrados nas subfases 11;
-3. a nova decisão ADR-002 exige sanfona fechada de alergênicos — ainda não implementada;
-4. a nova decisão ADR-002 exige Pix próprio + crédito/débito Mercado Pago simultâneos — débito e roteamento multi-provider ainda não implementados;
+3. sanfona fechada de alergênicos conforme ADR-002 foi implementada tecnicamente; QA visual/teclado real e revisão dos dados/contato cruzado continuam pendentes;
+4. roteamento por método Pix próprio + crédito/débito Mercado Pago foi implementado tecnicamente; credenciais e homologação financeira real continuam pendentes;
 5. publicar/homologar a linha canônica na VPS após o hotfix do deployer continua pendente;
-6. recuperação de senha continua bloqueada até definir canal seguro de verificação;
-7. workbook financeiro, dados reais de alergênicos/contato cruzado e fotografias restantes continuam pendentes de operação/conteúdo;
+6. canal de recuperação foi decidido como código por WhatsApp; implementação segura e homologação do envio continuam pendentes;
+7. workbook financeiro e dados reais de alergênicos/contato cruzado continuam pendentes. Fotografias adicionais foram retiradas do backlog por decisão de 30/10/2026;
 8. credenciais/contas reais de Mercado Pago, banco Pix, ORS e Meta ainda precisam de homologação externa.
 
 ## Ordem recomendada de execução — 30/09/2026

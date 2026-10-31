@@ -241,16 +241,6 @@ NODE_DEPS_FORCE=0
 [[ -f node_modules/.package-lock.json ]] || NODE_DEPS_FORCE=1
 run_cached_gate node-dependencies "${NODE_DEPS_FORCE}" npm ci --include=dev
 
-PHASE="python-tooling"
-PYTHON_FORCE=0
-if [[ ! -x .runtime/tool-health-venv/bin/python ]] || ! .runtime/tool-health-venv/bin/python -c 'import openpyxl, oletools' >/dev/null 2>&1; then
-  PYTHON_FORCE=1
-fi
-run_cached_gate python-tooling "${PYTHON_FORCE}" bash -c 'mkdir -p .runtime && rm -rf .runtime/tool-health-venv && python3 -m venv .runtime/tool-health-venv && .runtime/tool-health-venv/bin/python -m pip install --disable-pip-version-check --requirement tools/excel_snapshot/requirements.txt'
-export PATH="${APP_DIR}/.runtime/tool-health-venv/bin:${PATH}"
-hash -r
-python3 -c "import openpyxl, oletools; print('python_tooling=ok')"
-
 PROD_DATABASE_URL="${DATABASE_URL}"
 PROD_LILY_DATABASE_URL="${LILY_DATABASE_URL}"
 PRE_CORE="${APP_DIR}/.runtime/deploy-preflight-core.db"
@@ -263,32 +253,23 @@ export LILY_DATABASE_URL="file:${PRE_LILY}"
 PHASE="preflight-migrations"
 run_cached_gate preflight-migrations 0 npm run db:deploy
 
-PHASE="policy"
-run_cached_gate policy 0 npm run policy:check
-
 PHASE="static-checks"
 run_cached_gate static-checks 0 npm run check
 
 PHASE="tests"
-run_cached_gate tests 0 env NODE_ENV=test npm test
+run_cached_gate tests 0 env NODE_ENV=test npm run test:runtime
 
 PHASE="build"
 BUILD_FORCE=0
-for artifact in apps/gestao/dist/index.html apps/site/dist/index.html apps/qr_manipulator/dist/index.html apps/lily_acai/dist/index.html dist/api; do
+for artifact in apps/site/dist/index.html apps/lily_acai/dist/index.html dist/api; do
   [[ -e "${artifact}" ]] || BUILD_FORCE=1
 done
 run_cached_gate build "${BUILD_FORCE}" npm run build
-
-PHASE="tool-health"
-run_cached_gate tool-health 0 npm run tools:status:check
 
 export DATABASE_URL="${PROD_DATABASE_URL}"
 export LILY_DATABASE_URL="${PROD_LILY_DATABASE_URL}"
 
 PHASE="post-gates-cleanliness"
-find tools -type d -name '__pycache__' -prune -exec rm -rf {} +
-find tools -type f -name '*.pyc' -delete
-
 if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
   fail "gates alteraram arquivos versionados/não ignorados"

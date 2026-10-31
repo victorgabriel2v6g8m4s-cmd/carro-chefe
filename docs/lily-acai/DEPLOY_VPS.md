@@ -4,6 +4,13 @@ Este runbook adapta o procedimento já usado pelo Carro Chefe para a branch `lil
 
 **Não autoriza deploy automaticamente.** Cada publicação exige aprovação explícita do proprietário para o SHA exato.
 
+## Conteúdo permitido no deploy
+
+- Publicar somente artefatos/runtime necessários ao site institucional e CookLily.
+- A Central Operacional está descontinuada. Não compilar/copiar seus artefatos (`apps/gestao`) nem servir rotas `/gestao` na VPS. Código de backend exclusivo da Central deve ser removido do runtime por etapas, após mapear dependências compartilhadas.
+- Ferramentas locais de agentes e repositório (`tools/`, tooling de planilhas, policy, tool health, build budgets e utilitários) não fazem parte do release nem devem ser instaladas ou copiadas para a VPS. `deploy/` contém infraestrutura do processo de publicação; helpers necessários podem ser instalados explicitamente pelo próprio deploy, mas não integram o runtime da aplicação.
+- O bundle do deploy deve conter apenas builds autorizados; verificar manifest/lista de artefatos contra estes limites antes da publicação.
+
 ## Arquitetura
 
 ```text
@@ -132,14 +139,14 @@ set -a
 set +a
 
 npm ci
-npm run policy:check
 npm run check
-npm test
+npm run test:runtime
 npm run build
-npm run tools:status:check
 ```
 
-Falhou qualquer gate: não migrar nem reiniciar.
+Falhou qualquer gate: não migrar nem reiniciar. Tool Health, política de agentes e utilitários de workbook/bundle são verificações locais e não devem ser executadas na VPS.
+
+Este deploy opera sobre um checkout Git para build e migrations, portanto o checkout pode conter fontes versionadas de desenvolvimento. Isso não autoriza ferramentas locais no runtime: não instalar ambientes/ferramentas auxiliares, não copiá-las para diretórios de serviço e não carregá-las pela aplicação. Uma futura distribuição por artefato mínimo substituirá o checkout integral; até lá, o runtime e os builds não podem depender dessas ferramentas.
 
 ## Migrações
 
@@ -214,7 +221,7 @@ curl --fail http://127.0.0.1:4173/api/v1/lily/public/health
 - WhatsApp abre número oficial;
 - `la_*` não contém PII;
 - `/` Carro Chefe continua funcionando;
-- `/gestao` permanece protegido.
+- `/gestao` retorna HTTP 410 porque a Central Operacional foi descontinuada.
 
 ## Smoke da Entrega 05
 
@@ -307,17 +314,15 @@ O script automatiza:
 4. precheck das rotas Nginx necessárias;
 5. checkout detached;
 6. `npm ci --include=dev` — necessário enquanto `npm start` depender de `tsx`;
-7. venv Python isolado para Excel Snapshot/Tool Health;
-8. migrations em bancos temporários;
-9. policy/check/tests/build/tool-health contra bancos temporários;
-10. backup consistente dos bancos reais;
-11. parada controlada do serviço para evitar lock SQLite;
-12. migrations core + Lily reais;
-13. correção de permissões;
-14. `nginx -t` e reload;
-15. start do serviço;
-16. health checks internos e HTTPS;
-17. log e arquivo de evidência em `/srv/carro-chefe/data/deploy-logs/`.
+7. migrations em bancos temporários;
+8. check/testes de runtime e builds autorizados contra bancos temporários;
+9. backup consistente dos bancos reais;
+10. parada controlada do serviço para evitar lock SQLite;
+11. migrations core + Lily reais;
+12. correção de permissões;
+13. `nginx -t` e reload;
+14. start do serviço;
+15. health checks internos e HTTPS;`r`n16. log e arquivo de evidência em `/srv/carro-chefe/data/deploy-logs/`.
 
 ### Fail-closed
 

@@ -15,7 +15,7 @@ Estado: implementação técnica nesta entrega; ativação de cupons, política 
 - Até cinco códigos podem ser adicionados e removidos antes do pedido. O servidor recalcula os valores no checkout e novamente ao criar o pedido.
 - O desconto de mercadoria e o desconto de frete ficam separados. O desconto da forma de pagamento incide sobre o valor de mercadoria que restou após o cupom e nunca sobre a taxa de entrega ainda cobrada.
 - Cupons de frete grátis só qualificam pedidos de entrega. Limites e disponibilidade são validados outra vez na criação do pedido, para evitar usar uma cotação antiga.
-- O resgate é contabilizado quando o pedido é criado e reservado. Cancelamentos posteriores não devolvem automaticamente a unidade nesta primeira versão; definir expiração e liberação de reservas antes de campanhas com limite muito baixo.
+- O resgate é contabilizado quando o pedido é criado e reservado. Pela decisão do proprietário de 30/10/2026, no cancelamento de pedido com cupom/promoção/oferta aplicada, solicitar confirmação explícita de ciência de que o benefício já apurado não volta a ficar disponível. Registrar a confirmação e a regra aplicada na auditoria. Não liberar o benefício automaticamente.
 
 ## Preço antigo e apresentação
 
@@ -31,11 +31,12 @@ Estado: implementação técnica nesta entrega; ativação de cupons, política 
 
 ## Sugestões e decisões pendentes
 
-1. Definir se pedidos não pagos devem reservar o limite até o cancelamento/expiração e qual é a janela de expiração. A implementação atual reserva no pedido para impedir ultrapassar o limite sob concorrência.
-2. Definir se limites de uso devem contar pedidos criados, pagos ou concluídos. A versão atual conta pedidos criados.
-3. Antes de campanhas com desconto profundo, ligar o teto do cupom às margens/custos cadastrados por variante e adicional. O atual motor limita valor, subtotal e escopo, mas não projeta CMV por configuração do carrinho; por isso a regra operacional existente de margem mínima de 10% continua exigindo revisão da equipe ao ativar uma campanha.
-4. Futuramente, registrar eventos de visualização/aplicação/remoção e conversão sem armazenar o código em plataformas de anúncios; restringir relatórios com dados identificáveis a staff autorizado.
-5. Considerar códigos de uso único individualizados, exclusões por campanha e janelas recorrentes de campanha separadas do limite por cliente.
+1. Implementar UX/auditoria da confirmação de ciência de não restituição no cancelamento; definir comportamento quando a pessoa não confirmar.
+2. Definir expiração de pedidos não pagos e sua interação com reserva de cupom, preservando a decisão de não devolver benefício já apurado após cancelamento.
+3. Revisar se métricas de limites devem contar pedidos criados, pagos ou concluídos. A versão atual conta pedidos criados; alinhar campanhas futuras à regra aprovada.
+4. Antes de campanhas com desconto profundo, ligar o teto do cupom às margens/custos cadastrados por variante e adicional. O motor atual não projeta CMV por configuração; a margem mínima de 10% continua exigindo revisão da equipe ao ativar campanha.
+5. Registrar eventos de visualização/aplicação/remoção e conversão sem enviar códigos ou PII a plataformas externas; restringir relatórios identificáveis a staff autorizado.
+6. Considerar códigos de uso único, exclusões por campanha e janelas recorrentes separadas do limite por cliente.
 
 ## Aceite técnico
 

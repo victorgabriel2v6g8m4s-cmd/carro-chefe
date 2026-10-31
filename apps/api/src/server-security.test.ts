@@ -23,8 +23,8 @@ describe("fronteira do servidor local", () => {
     expect(() => resolveStaticFile(root, path.resolve(path.dirname(root), `${path.basename(root)}-evil`, "segredo.js"))).toThrow();
   });
 
-  it("serve apenas extensões estáticas explicitamente permitidas", () => {
-    const root = path.resolve("apps", "gestao", "dist");
+  it("usa raiz estática limitada e não publica a Central descontinuada", () => {
+    const root = path.resolve("apps", "site", "dist");
     expect(resolveStaticFile(root, "index.html").mimeType).toBe("text/html; charset=utf-8");
     expect(() => resolveStaticFile(root, "../dist-evil/config.env")).toThrow();
     expect(() => resolveStaticFile(root, "dump.sqlite")).toThrow();
