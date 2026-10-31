@@ -35,7 +35,7 @@ export const landingCopy = {
   reelsEmpty: "Ainda não há Reels publicados para mostrar.",
   locationTitle: "Onde estamos",
   mapAction: "Abrir no mapa",
-  locationUnavailable: "O endereço será divulgado em breve.",
+  locationUnavailable: "Endereço público ainda não configurado.",
   leadTitle: "Novidades da CookLily",
   leadText: "Quer receber cupons e promoções? Cadastre seu WhatsApp com autorização. Esta inscrição é opcional.",
   leadPhone: "WhatsApp",

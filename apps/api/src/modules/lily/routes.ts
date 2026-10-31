@@ -157,7 +157,7 @@ export async function lilyRoutes(app: FastifyInstance) {
         whatsappUrl: whatsappDigits ? `https://wa.me/${whatsappDigits}` : null
       },
       store: {
-        address: settings.publicAddressText ?? settings.pickupAddressText ?? null
+        address: settings.publicAddressText ?? null
       },
       loyalty: {
         orderCentsPerPoint: settings.loyaltyOrderCentsPerPoint,

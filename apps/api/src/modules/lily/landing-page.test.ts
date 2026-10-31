@@ -16,7 +16,9 @@ describe("landing page CookLily", () => {
   it("serve a configuração pública sem revelar IDs de mídia e mantém ações em whitelist", async () => {
     const app = await appPromise;
     const response = await app.inject({ method: "GET", url: "/api/v1/lily/public/landing" });
+    const publicConfig = await app.inject({ method: "GET", url: "/api/v1/lily/public/config" });
     expect(response.statusCode).toBe(200);
+    expect(publicConfig.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       version: 1,
       brand: { tagline: expect.any(String), description: expect.any(String) },
@@ -26,6 +28,7 @@ describe("landing page CookLily", () => {
     expect(response.json().banner.desktopMediaId).toBeUndefined();
     expect(response.json().banner.mobileMediaId).toBeUndefined();
     expect(response.json().banner.productTarget).toBeNull();
+    expect(response.json().address).toBe(publicConfig.json().store.address);
   });
 
   it("exige staff para editar configurações e consultar opções", async () => {
