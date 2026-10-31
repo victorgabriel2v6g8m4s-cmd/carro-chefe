@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-homologation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `dbab273eda00de6dfe203e58448faa225bd07274`
-- head_sha_verified: alterações locais ainda não commitadas
+- head_sha_verified: `8e0674201307794fe989bdb00366df52166765ed`
 - pull_requests: nenhuma
 - last_verified_at: 2026-10-31 06:25 UTC
 - interruption_state: retomada após bloqueio do IAB; implementação local concluída, homologação de produção pendente
@@ -24,10 +24,10 @@ Objetivo: permitir homologar o despacho de couriers de teste com localização s
 ## Testes e gates
 
 - `npm run policy:preflight -- --agent AG-DEV --scope lily-courier-homologation`: passou em 2026-10-31.
-- `npm run check`: passou (schema core/Lily válidos e TypeScript sem erros).
+- `npm run check`: passou antes do commit `8e06742` (schema core/Lily válidos e TypeScript sem erros).
 - Testes focados: 5 arquivos, 51 testes passaram (`agent-auth`, `logistics`, `payments`, `payment-choice`, `orders`).
 - `npm run build`: passou; orçamento CookLily: JS bruto 607.20/608 KiB, JS gzip 192.64/193 KiB, CSS gzip 35.34/36 KiB, JS+CSS gzip 227.98/229 KiB.
-- `git diff --check`: passou.
+- `git diff --check`: passou antes do commit `8e06742`.
 - Suíte completa: 84 arquivos, 440 testes passaram e 3 foram ignorados (443 total), usando pool de threads com 2 workers.
 - Uma execução inicial do Vitest com o pool padrão ficou sem resposta; a tentativa com pool de threads concluiu a suíte acima.
 - CI do PR, revisão, merge, deploy e homologação real ainda pendentes.
