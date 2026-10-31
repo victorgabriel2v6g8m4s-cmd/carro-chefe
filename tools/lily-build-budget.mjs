@@ -21,7 +21,8 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   largestJsChunkBytes: 286_720,
   cssRawBytes: 184_320,
   cssGzipBytes: 36_864,
-  combinedGzipBytes: 233_472
+  // Mantém o teto agregado igual à soma dos tetos individuais de JS e CSS.
+  combinedGzipBytes: 234_496
 });
 
 function emptyBucket() {

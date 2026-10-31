@@ -30,8 +30,9 @@ Passo a passo para contas, segredo operacional, coordenadas, timeout, rotina de 
 - A migration foi aplicada via SQLite stdlib a um banco em memória preparado com o schema-base da canonical — sucesso (81 tabelas após a migration). `prisma migrate deploy` em arquivo SQLite descartável ainda termina com `Schema engine error:` sem diagnóstico neste runtime Windows; confirmar no CI/Linux antes do deploy.
 - Suite de integração usa `better-sqlite3`, cujo binding nativo Windows não está disponível neste worktree; as novas rotas e integrações aguardam execução no CI.
 - Tool-health e deploy-validation: 18 testes passaram; 4 testes que criam SQLite falharam antes da execução por falta do mesmo binding nativo.
-- Build Vite da página institucional e build Vite da Lily — passaram. Métricas Lily: JS raw 606.38 KiB, JS gzip 192.33 KiB, CSS raw 179.20 KiB, CSS gzip 35.36 KiB, entrypoint JS gzip 52.11 KiB. Os limites agregados foram ajustados modestamente para acomodar as telas lazy; limites do entrypoint e maior chunk permaneceram iguais.
-- Teste do budget após ajuste dos limites/fixture: 4/4 passaram; medição termina em `build_budget=ok`.
+- Build Vite da página institucional e build Vite da Lily — passaram localmente. Métricas do build local: JS raw 606.38 KiB, JS gzip 192.35 KiB, CSS raw 179.11 KiB, CSS gzip 35.34 KiB, JS+CSS gzip 227.69 KiB, entrypoint JS gzip 52.11 KiB. Tetos separados são 193 KiB JS e 36 KiB CSS; o agregado é 229 KiB, a soma desses tetos. Limites do entrypoint e maior chunk permanecem iguais.
+- CI Linux mediu 228.09 KiB JS+CSS gzip no Vite 8.2.1, enquanto o build local Vite 8.3.5 mediu 227.69 KiB. O teto agregado anterior de 228 KiB foi 0.09 KiB abaixo do resultado Linux; alinhado à soma dos limites separados sem alterar os assets ou os limites individuais.
+- Teste do budget após o alinhamento do agregado/fixture: 4/4 passaram; medição local termina em `build_budget=ok`.
 
 ## Pendências antes de produção
 

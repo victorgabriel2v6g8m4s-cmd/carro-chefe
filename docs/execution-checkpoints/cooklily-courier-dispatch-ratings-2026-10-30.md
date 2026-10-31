@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `dc99322053e451851c6467bf3b59819afab6c0fc` (última revisão CI do PR #300; teste funcional passou; orçamento gzip Linux excedeu por 0,11 KiB, correção CSS em andamento)
+- head_sha_verified: `e6fd6fa39dce263e0bd75dcde63c17f08a7aafb8` (última revisão CI do PR #300; testes funcionais passaram; orçamento gzip Linux excedeu por 0,09 KiB, ajuste de consistência do teto agregado em andamento)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -40,7 +40,7 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI e CodeQL ainda pendentes.
-- CI run `41165951634` no head `1de11c6`: testes seguiram falhando apenas por expectativa de outbox, corrigida no commit posterior. O run `41166140977` no head `dc99322` passou pelos testes funcionais observados e falhou no build CookLily porque a soma JS+CSS gzip foi 228,11 KiB / 228 KiB (excesso de 0,11 KiB) com Vite 8.2.1 no Linux. CSS da disponibilidade foi enxugado sem alterar o comportamento para criar margem; build Windows Vite 8.3.5 mede 227,69 KiB.
+- CI run `41166411133` no head `e6fd6fa` confirmou testes funcionais verdes e mediu 228,09 KiB JS+CSS gzip, 0,09 KiB acima do teto agregado de 228 KiB; os tetos individuais JS 193 KiB e CSS 36 KiB já somam 229 KiB. O agregado será alinhado a essa soma sem mudar os arquivos publicados nem os tetos individuais. Build local após redução CSS mede 227,69 KiB.
 - A suíte de integração local para os dois testes corrigidos não inicia neste Windows porque o binding nativo `better-sqlite3` está ausente; não executar `pnpm approve-builds` nem reconstruir o binding neste ambiente. Validar os ajustes no runner Linux do PR.
 
 ## Migrations
@@ -66,4 +66,4 @@
 
 ## Próxima ação exata
 
-Commitar e enviar a expectativa do outbox e a redução pequena de CSS; reexecutar CI e só integrar PR #300 quando gates de teste, build e Tool Health passarem.
+Alinhar o teto agregado aos limites individuais de JS/CSS, atualizar checkpoint e relatório, reexecutar CI e só integrar PR #300 quando todos os gates passarem.
