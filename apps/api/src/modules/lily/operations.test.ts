@@ -368,6 +368,19 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     const staff = await register("67999908104", "staff", "127.0.0.224");
     const order = await createOrder({ whatsappUpdatesOptIn: true });
 
+    const decision = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/decision`,
+      headers: {
+        origin,
+        cookie: staff.cookie,
+        "x-lily-csrf": staff.csrf
+      },
+      payload: { action: "accept", prepEstimateMinutes: 25 }
+    });
+    expect(decision.statusCode).toBe(200);
+    expect(decision.json().order.restaurantDecisionStatus).toBe("accepted");
+
     const receive = await app.inject({
       method: "POST",
       url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,

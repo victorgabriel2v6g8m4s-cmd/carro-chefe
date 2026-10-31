@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `1bba4ac0fd3b4e05612dbf238102cd31c7dd2bad` (revision aberta do PR #300)
+- head_sha_verified: `1e75ed4aea972f5d4d24b19edb43df75d098523f` (última revisão CI do PR #300; duas correções de teste locais aguardam commit)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -40,7 +40,8 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI e CodeQL ainda pendentes.
-- CI run `41165261373`: Node 20, 22, 24, Linux/Windows e qualidade em andamento no último snapshot.
+- CI run `41165306551` no head `1e75ed4`: static checks passaram; Windows Supervisor e Excel Recipe em Linux/Windows passaram; qualidade Node 20/22/24 falhou em dois testes antigos (contagem do starter pack WhatsApp e aceite explícito do restaurante), já corrigidos no working tree e aguardando novo CI. Tool Health Linux também falhou em `app-lily`; o build Vite e orçamento executados localmente passaram, causa Linux ainda precisa de nova evidência no CI.
+- A suíte de integração local para os dois testes corrigidos não inicia neste Windows porque o binding nativo `better-sqlite3` está ausente; não executar `pnpm approve-builds` nem reconstruir o binding neste ambiente. Validar os ajustes no runner Linux do PR.
 
 ## Migrations
 
@@ -65,4 +66,4 @@
 
 ## Próxima ação exata
 
-Esperar o CI do PR #300, inspecionar diagnósticos das integrações/migration e corrigir falhas antes de pedir integração.
+Commitar e enviar as duas correções de teste; então reexecutar CI, obter o detalhe da falha Linux de `app-lily`, e só integrar PR #300 quando todos os gates obrigatórios passarem.
