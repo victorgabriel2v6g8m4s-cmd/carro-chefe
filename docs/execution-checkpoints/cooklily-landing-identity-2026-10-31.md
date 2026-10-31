@@ -5,8 +5,8 @@
 - branch: codex/cooklily-landing-identity
 - base_branch: cooklily/canonical
 - base_sha_verified: b0fa6b1d23836b29ba3bd54347abb2861d36c83e
-- head_sha_verified: b0fa6b1d23836b29ba3bd54347abb2861d36c83e (alterações locais ainda não commitadas)
-- pull_requests: none
+- head_sha_verified: a50d235b8d1b35b8209638f843da448eadb8b6a7
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/311 (draft, CI queued)
 - last_verified_at: 2026-10-31
 - interruption_state: none
 
@@ -14,12 +14,12 @@
 
 Transformar a landing da CookLily em uma experiência de marca configurável e orientada ao catálogo/comunidade: banner responsivo configurável, identidade textual editável com o editor/renderizador WhatsApp compartilhado, produto da semana ou carrossel, conteúdo editorial, Reels e localização opcionais e ranking progressivo com acesso à página completa. Dar caminho de login/cadastro a clientes existentes sem obrigá-los a fornecer WhatsApp para ver a página.
 
-## Evidência local (alterações ainda não commitadas)
+## Evidência local commitada
 
 - Base canonical verificada no SHA indicado; PR #310 está integrado e deploy final anterior confirmou este SHA.
 - Roadmap consultado: UI pública continua prioridade; o item 5 do roadmap marca landing/UI como aberto.
 - Regras de marca CookLily consultadas em `docs/lily-acai/marca/KIT_DE_MARCA.md`.
-- Implementado localmente: contrato Zod/DB, editor em `/painel/landing`, componentes públicos, ranking por offset e migration `20261031130000_lily_landing_page`. Ainda não é entrega persistida até o commit.
+- Commit `a50d235b` publicado na branch `codex/cooklily-landing-identity`: contrato Zod/DB, editor em `/painel/landing`, componentes públicos, ranking por offset e migration `20261031130000_lily_landing_page`.
 - Migration aplicada com sucesso ao banco isolado `.runtime/lily-acai.db` da suíte local. API pública omite IDs internos de mídia e somente usa `publicAddressText` para o mapa.
 - Testes focais: `landing-page.test.ts` e `profile.test.ts`, 13 aprovados.
 - Comparação do build base sem alterações: budget passou em JS gzip 193.04/193.50 KiB, CSS gzip 35.38/36 KiB e combinado 228.42/229 KiB.
@@ -27,8 +27,8 @@ Transformar a landing da CookLily em uma experiência de marca configurável e o
 
 ## Em andamento
 
-- Código e documentação ainda não commitados no Git; branch permanece no SHA base e não há PR.
-- Build integral `npm run build`: passou após adequar os limites do budget aos módulos da landing.
+- PR draft #311 aberto contra `cooklily/canonical`; CI está queued.
+- Build integral `npm run build`: passou.
 
 ## Gates e testes
 
@@ -37,7 +37,7 @@ Transformar a landing da CookLily em uma experiência de marca configurável e o
 - `npm run build`: passou; o budget atualizado passou no build CookLily.
 - `npm test`: 85 arquivos, 444 testes passaram, 3 ignorados; inclui suíte focal da landing e ranking (13 testes entre os dois arquivos).
 - `npm run policy:check` e `git diff --check`: passaram.
-- CI/PR, deploy e navegador: pendentes.
+- CI do PR, merge, deploy e navegador: pendentes.
 
 ## Migrations
 
@@ -54,4 +54,4 @@ Transformar a landing da CookLily em uma experiência de marca configurável e o
 
 ## Próxima ação exata
 
-- Commitar o escopo revisado, publicar branch e abrir PR draft para `cooklily/canonical`; após CI verde, integrar, implantar e homologar `/lilyacai/` e `/lilyacai/painel/landing` em desktop e celular no navegador integrado. Registrar falhas, corrigir, reimplantar e repetir.
+- Aguardar e verificar CI do PR #311; corrigir falhas se houver. Com CI verde, fazer squash merge, implantar o canonical e homologar `/lilyacai/` e `/lilyacai/painel/landing` em desktop e celular no navegador integrado. Registrar falhas, corrigir, reimplantar e repetir.
