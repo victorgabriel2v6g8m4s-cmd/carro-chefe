@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `24c719628b8dca770f1d9234218616437cb359de` (PR #300; CI integral passou no run `41166571966`)
-- pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
+- head_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (squash merge de PR #300 na `cooklily/canonical`)
+- pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — merged
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
 
@@ -19,11 +19,11 @@
 - Guia de configuração do proprietário, ADR e relatório da entrega foram criados/atualizados.
 - Commit `fa33f16` persiste a implementação, migration, testes, roadmap e instruções.
 - Commit `1bba4ac` registra o checkpoint pós-commit; branch foi publicada e PR #300 draft aberto contra a base canônica verificada.
+- PR #300 foi integrado por squash na canonical como `f0393930e45e03e18c2a8305cae1000e80172b4d` após todos os gates do CI run `41166949257` passarem no head `359cc804940192e5ed94685d5e39e404c1f97edf`.
 
 ## Em andamento
 
-- PR #300 aguarda integração; após o checkpoint, os gates de CI precisam repetir no novo head.
-- Depois do merge, executar deploy controlado, migration no banco operacional e homologação em domínio real desktop/mobile.
+- Deploy controlado com backup e migration no banco operacional; depois homologar no domínio em desktop/mobile.
 
 ## Gates e testes
 
@@ -57,10 +57,11 @@
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
-- Deploy e homologação ainda não iniciados; aguardam integração PR #300.
+- Deploy ainda não iniciado. VPS verificada: serviço ativo no release `73721de`; deploy helper, backup verifier, `COOKLILY_LOGISTICS_CODE_KEY` e rota Nginx `/api/v1/lily/courier/` presentes. A consulta não pôde ler as coordenadas porque a migration ainda não está aplicada; não iniciar dispatch sem coordenadas reais configuradas.
+- Após deploy, coordenadas do ponto de coleta e usuário courier de teste precisam ser confirmados no painel antes do teste de oferta sequencial.
 - Usar exclusivamente navegador integrado Codex; verificar desktop e mobile sem abrir Chrome/Edge externo.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Commitar o checkpoint pós-CI; quando os gates do novo head repetirem sucesso, deixar PR #300 pronto e integrar por squash; então seguir deploy controlado e homologação no navegador integrado em desktop e mobile.
+Commitar este checkpoint pós-merge na branch de execução e executar `sudo carro-chefe-deploy f0393930e45e03e18c2a8305cae1000e80172b4d`; revisar a evidência de backup/migration/health, então iniciar homologação pelo navegador integrado Codex em desktop e mobile.
