@@ -1,6 +1,6 @@
 # Disponibilidade, despacho sequencial e avaliações CookLily
 
-- status: partially_completed_deployed
+- status: in_progress
 - owner: AG-DEV
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`

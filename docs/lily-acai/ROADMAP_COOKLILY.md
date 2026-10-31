@@ -147,7 +147,7 @@ Produção externa de modelos/arte 3D não é desenvolvimento de software e fica
 #### Prioridade P0 — despacho interno e prontidão operacional
 - [x] Registrar que a logística é própria; não planejar adapter, contrato ou integração de operador externo.
 - [*] Implementar disponibilidade online/offline do courier, com coleta mínima de localização durante disponibilidade, frescor máximo de 90 segundos, exclusão ao ficar offline e fallback seguro quando geolocalização ou coordenada do ponto de coleta estiver indisponível. Homologação real ainda pendente.
-- [*] Implementar despacho de oferta única por vez, ordenada por distância crescente até o ponto de coleta, usando distância geodésica; configurar tempo de aceite no painel. Recusa e expiração avançam sem repetir tentativa. Teste de integração e concorrência ficam pendentes de CI.
+- [*] Implementar despacho de oferta única por vez, ordenada por distância crescente até o ponto de coleta, usando distância geodésica; configurar tempo de aceite no painel. Recusa e expiração avançam sem repetir tentativa. Testes de integração passaram no CI do PR #300; ainda falta homologar a concorrência e o despacho real na VPS.
 - [*] Configurar coordenadas do ponto de coleta no painel e bloquear despacho sem configuração válida. Não aplicar raio de corte. Falta preencher e homologar as coordenadas de produção.
 - [*] Implementar aceite/rejeição explícitos do restaurante separado do início do preparo e registrar previsão inicial de preparo. Pedido pago recusado fica com cancelamento e estorno pendente, sem afirmar conclusão; confirmação financeira continua manual no provedor. Prazo de aceite do restaurante não é configurado nesta versão.
 - [*] Implementar checklist de expedição antes de abrir ofertas: conferência dos itens, volumes, embalagem/lacre e bag térmica; registrar responsável e horário. Homologação ainda pendente.
@@ -162,7 +162,7 @@ Produção externa de modelos/arte 3D não é desenvolvimento de software e fica
 - [ ] Homologar experiência móvel do cliente, cozinha, expedição e courier, incluindo acessibilidade, rede instável e estados vazios/erro.
 
 #### Prioridade P2 — avaliações pós-entrega
-- [*] Criar página de avaliação disponível após entrega confirmada, vinculada ao pedido e submetida uma única vez. Código e validação do schema implementados; testes de rota e homologação real pendentes.
+- [*] Criar página de avaliação disponível após entrega confirmada, vinculada ao pedido e submetida uma única vez. Código, schema e testes de rota passaram no CI do PR #300; homologação real após entrega está pendente.
 - [*] Permitir selecionar qualquer combinação de loja, entrega e plataforma; cada dimensão selecionada recebe avaliação independente e comentário opcional. A experiência técnica foi implementada; retenção/moderação e homologação pendentes.
 - [ ] Definir escala, moderação, retenção, prevenção de abuso e encaminhamento de reclamações; restringir acesso conforme papel e não publicar comentários automaticamente sem política definida.
 
