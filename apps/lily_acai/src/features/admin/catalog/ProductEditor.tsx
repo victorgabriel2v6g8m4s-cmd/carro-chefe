@@ -92,6 +92,7 @@ export function ProductEditor({ product: summary, csrf, refresh, setError }: {
         categoryName: summary.category.name,
         cover: summary.cover
       }}
+      isSoldOut={summary.status === "published" && !summary.isPurchasable}
       onOpen={openEditor}
       price={lowestPrice
         ? <><small>{statusBadge} · {summary.variants.length > 1 ? "A partir de" : "Preço"}</small><PriceDisplay currentPriceCents={lowestPrice.priceCents} compareAtPriceCents={lowestPrice.compareAtPriceCents} density="compact" /></>
