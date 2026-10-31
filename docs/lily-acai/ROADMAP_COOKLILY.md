@@ -87,8 +87,8 @@ As notificações operacionais já são descritas na Entrega 11H. Verificar gaps
 - [x] Manter no perfil configurações da conta e segurança, removendo conteúdo de dashboard/fidelidade que foi transferido para o dashboard. PR #277, release `080eae62`.
 
 ### 5. Finalizar landing page e UI pública
-- [*] Reconstruir landing da CookLily com banner configurável por desktop/mobile, preview/recorte/zoom e destinos validados; identidade textual com editor/renderizador compartilhado; produto da semana ou carrossel; história editorial; Reels e mapa opcionais; ranking progressivo e página completa paginada. O editor não pede WhatsApp de novo a clientes autenticados e não pede cadastro na primeira dobra. Implementação e testes locais em `codex/cooklily-landing-identity`; deploy e homologação real ainda pendentes.
-- [ ] Fechar itens abertos de UI/UX conforme U1–U6 da especificação detalhada e homologar landing/admin em desktop e celular no navegador integrado.
+- [*] Reconstruir landing da CookLily com banner configurável por desktop/mobile, preview/recorte/zoom e destinos validados; identidade textual com editor/renderizador compartilhado; produto da semana ou carrossel; história editorial; Reels e mapa opcionais; ranking progressivo e página completa paginada. O editor não pede WhatsApp de novo a clientes autenticados e não pede cadastro na primeira dobra. PR #311 integrado e release `126f070d`; landing pública e editor inspecionados no navegador integrado em desktop/mobile. PR #312 corrigiu fallback público de endereço e foi integrado em `7e174f3`; deploy e homologação final da correção ainda pendentes.
+- [ ] Fechar itens abertos de UI/UX conforme U1–U6 da especificação detalhada e repetir homologação final da landing/admin em desktop e celular no navegador integrado.
 - [ ] Revisar visual, teclado, conteúdo final e acessibilidade após homologação; a arte do banner segue pendente do proprietário e o fallback identifica claramente a ausência de arte.
 - [x] Implementar a apresentação de alergênicos em sanfona fechada por padrão, conforme ADR-002 (PR #169 integrado).
 - [ ] Validar visualmente e por teclado a sanfona em navegador/dispositivos reais.
