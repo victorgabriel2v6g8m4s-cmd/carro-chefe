@@ -32,8 +32,19 @@ const settingsPatchSchema = z.object({
   pickupInstructions: z.string().trim().max(1000).nullable().optional(),
   businessHours: businessHoursSchema.optional(),
   timezone: z.literal("America/Campo_Grande").optional(),
-  kitchenPreparationSlaMinutes: z.number().int().min(1).max(720).nullable().optional()
-}).strict();
+  kitchenPreparationSlaMinutes: z.number().int().min(1).max(720).nullable().optional(),
+  courierOfferTimeoutSeconds: z.number().int().min(15).max(300).optional(),
+  pickupLatitude: z.number().min(-90).max(90).nullable().optional(),
+  pickupLongitude: z.number().min(-180).max(180).nullable().optional()
+}).strict().superRefine((value, context) => {
+  if ((value.pickupLatitude === null) !== (value.pickupLongitude === null)) {
+    context.addIssue({ code: "custom", path: ["pickupLongitude"], message: "Informe latitude e longitude do ponto de coleta juntas." });
+  }
+  if (value.pickupLatitude !== undefined && value.pickupLongitude === undefined
+    || value.pickupLongitude !== undefined && value.pickupLatitude === undefined) {
+    context.addIssue({ code: "custom", path: ["pickupLatitude"], message: "Informe latitude e longitude do ponto de coleta juntas." });
+  }
+});
 
 const storeSettingsPatchSchema = z.object({
   instagramHandle: z.string().trim().max(30).regex(/^@?[A-Za-z0-9._]*$/).optional(),
@@ -150,7 +161,10 @@ function serializeFulfillmentSettings(settings: Awaited<ReturnType<typeof getLil
     pickupInstructions: settings.pickupInstructions,
     businessHours: parseBusinessHours(settings.businessHoursJson),
     timezone: settings.timezone,
-    kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes
+    kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes,
+    courierOfferTimeoutSeconds: settings.courierOfferTimeoutSeconds,
+    pickupLatitude: settings.pickupLatitude,
+    pickupLongitude: settings.pickupLongitude
   };
 }
 
@@ -339,7 +353,10 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
         ...(input.timezone === undefined ? {} : { timezone: input.timezone }),
         ...(input.kitchenPreparationSlaMinutes === undefined
           ? {}
-          : { kitchenPreparationSlaMinutes: input.kitchenPreparationSlaMinutes })
+          : { kitchenPreparationSlaMinutes: input.kitchenPreparationSlaMinutes }),
+        ...(input.courierOfferTimeoutSeconds === undefined ? {} : { courierOfferTimeoutSeconds: input.courierOfferTimeoutSeconds }),
+        ...(input.pickupLatitude === undefined ? {} : { pickupLatitude: input.pickupLatitude }),
+        ...(input.pickupLongitude === undefined ? {} : { pickupLongitude: input.pickupLongitude })
       }
     });
     await auditLilyAdmin(context.user.id, "update", "fulfillment-settings", SETTINGS_ID, input);

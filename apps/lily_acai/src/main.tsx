@@ -17,6 +17,7 @@ const AddressesPage = lazy(() => import("./features/account/AccountPages").then(
 const OrderDetailPage = lazy(() => import("./features/account/AccountPages").then((module) => ({ default: module.OrderDetailPage })));
 const OrdersPage = lazy(() => import("./features/account/AccountPages").then((module) => ({ default: module.OrdersPage })));
 const GuestOrderTrackingPage = lazy(() => import("./features/orders/GuestOrderTrackingPage").then((module) => ({ default: module.GuestOrderTrackingPage })));
+const OrderReviewPage = lazy(() => import("./features/orders/OrderReviewPage").then((module) => ({ default: module.OrderReviewPage })));
 const ProfilePage = lazy(() => import("./features/account/ProfilePage").then((module) => ({ default: module.ProfilePage })));
 const RankingPage = lazy(() => import("./features/account/ProfilePage").then((module) => ({ default: module.RankingPage })));
 const AdminFulfillmentPage = lazy(() => import("./features/admin/AdminFulfillmentPage").then((module) => ({ default: module.AdminFulfillmentPage })));
@@ -581,6 +582,7 @@ function App() {
     <Route path="/enderecos" element={<Shell><AddressesPage /></Shell>} />
     <Route path="/pedidos" element={<Shell><OrdersPage /></Shell>} />
     <Route path="/pedidos/:id" element={<Shell><OrderDetailPage /></Shell>} />
+    <Route path="/pedidos/:id/avaliar" element={<Shell><OrderReviewPage /></Shell>} />
     <Route path="/acompanhar/:id" element={<Shell><GuestOrderTrackingPage /></Shell>} />
     <Route path="/perfil" element={<Shell><ProfilePage /></Shell>} />
     <Route path="/vip/termos" element={<Shell><VipTermsPage /></Shell>} />

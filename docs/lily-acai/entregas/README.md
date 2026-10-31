@@ -29,6 +29,8 @@ Planos e relatórios:
 - `ENTREGA_10A_OBSERVABILIDADE_BACKUP_2026-09-29.md`;
 - `ENTREGA_10B_A11Y_PERFORMANCE_2026-09-29.md`;
 - `ENTREGA_12_ALERGENICOS_2026-09-30.md`;
+- `ENTREGA_DISPATCH_AVALIACOES_2026-10-31.md` — despacho sequencial próprio e avaliações pós-pedido (candidata; CI/deploy/homologação pendentes);
+- `GUIA_CONFIGURACAO_DISPATCH_COOKLILY_2026-10-31.md` — configuração de coordenadas, timeout, contas e roteiro de homologação;
 - `P0_UX_SEGURANCA_2026-09-27.md`;
 - `P1_UX_CONTA_ADMIN_2026-09-27.md`.
 

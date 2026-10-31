@@ -38,6 +38,11 @@ model LilyUser {
   reelLikes       LilyReelLike[]
   reelSaves       LilyReelSave[]
   reelComments    LilyReelComment[]
+  orderReviews    LilyOrderReview[]
+  courierAvailable Boolean @default(false)
+  courierLatitude Float?
+  courierLongitude Float?
+  courierLocationUpdatedAt DateTime?
 
   avatarMediaId   String?
   rankingOptIn    Boolean             @default(false)
@@ -51,6 +56,7 @@ model LilyUser {
   agentKey                    LilyAgentKey?
 
   @@index([status, createdAt])
+  @@index([courierAvailable, courierLocationUpdatedAt])
 }
 
 model LilyOrderOperationEvent {
@@ -296,6 +302,25 @@ model LilyDeliveryAssignment {
   @@index([orderId, assignedAt])
   @@index([courierUserId, assignedAt])
   @@index([status, assignedAt])
+}
+
+model LilyOrderReview {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  userId          String
+  storeRating     Int?
+  storeComment    String?
+  deliveryRating  Int?
+  deliveryComment String?
+  platformRating  Int?
+  platformComment String?
+  submittedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           LilyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user            LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, submittedAt])
 }
 
 model LilySession {
@@ -777,6 +802,9 @@ model LilyOperationalSettings {
   mercadoPagoPixEnabled     Boolean  @default(false)
   mercadoPagoCardEnabled    Boolean  @default(false)
   kitchenPreparationSlaMinutes Int?
+  courierOfferTimeoutSeconds Int @default(60)
+  pickupLatitude Float?
+  pickupLongitude Float?
   createdAt                 DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -811,6 +839,16 @@ model LilyOrder {
   deliveryStatus      String                 @default("not_applicable")
   deliveryUpdatedAt   DateTime?
   courierUserId       String?
+  offeredCourierUserId String?
+  courierOfferExpiresAt DateTime?
+  restaurantDecisionStatus String @default("pending")
+  restaurantDecisionAt DateTime?
+  restaurantDecisionReason String?
+  restaurantPrepEstimateMinutes Int?
+  refundStatus String @default("not_required")
+  dispatchChecklistJson String @default("{}")
+  dispatchCheckedAt DateTime?
+  dispatchCheckedBy String?
   isHomologation      Boolean                @default(false)
   subtotalCents       Int
   deliveryFeeCents    Int
@@ -842,9 +880,11 @@ model LilyOrder {
   whatsappNotifications LilyWhatsAppNotification[]
   payments            LilyPayment[]
   couponRedemptions   LilyCouponRedemption[]
+  review              LilyOrderReview?
 
   @@index([userId, createdAt])
   @@index([phoneNormalized, createdAt])
+  @@index([offeredCourierUserId, courierOfferExpiresAt])
   @@index([status, createdAt])
   @@index([operationStatus, operationUpdatedAt])
   @@index([deliveryStatus, deliveryUpdatedAt])

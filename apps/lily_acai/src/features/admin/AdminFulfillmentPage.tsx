@@ -27,6 +27,9 @@ type AdminFulfillmentPayload = {
     timezone: string;
     businessHours: BusinessHour[];
     kitchenPreparationSlaMinutes: number | null;
+    courierOfferTimeoutSeconds: number;
+    pickupLatitude: number | null;
+    pickupLongitude: number | null;
   };
   zones: Zone[];
 };
@@ -48,7 +51,7 @@ function parseMoney(value: string) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed * 100)) : 0;
 }
 
-function parseOptionalMinutes(value: unknown) {
+function parseOptionalNumber(value: unknown) {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
   const parsed = Number(raw);
@@ -113,7 +116,10 @@ export function AdminFulfillmentPage() {
         pickupInstructions: String(form.get("pickupInstructions") || "") || null,
         businessHours,
         timezone: "America/Campo_Grande",
-        kitchenPreparationSlaMinutes: parseOptionalMinutes(form.get("kitchenPreparationSlaMinutes"))
+        kitchenPreparationSlaMinutes: parseOptionalNumber(form.get("kitchenPreparationSlaMinutes")),
+        courierOfferTimeoutSeconds: Number(form.get("courierOfferTimeoutSeconds")),
+        pickupLatitude: parseOptionalNumber(form.get("pickupLatitude")),
+        pickupLongitude: parseOptionalNumber(form.get("pickupLongitude"))
       });
       setSaved("Configurações salvas.");
       await refresh();
@@ -179,6 +185,16 @@ export function AdminFulfillmentPage() {
             />
             <small>Campo vazio desativa alertas. Defina o tempo somente após aprovação operacional.</small>
           </label>
+          <label>Prazo para entregador aceitar ou recusar (segundos)
+            <input name="courierOfferTimeoutSeconds" type="number" min="15" max="300" required defaultValue={settings.courierOfferTimeoutSeconds} />
+          </label>
+          <label>Latitude do ponto de coleta
+            <input name="pickupLatitude" type="number" min="-90" max="90" step="any" defaultValue={settings.pickupLatitude ?? ""} />
+          </label>
+          <label>Longitude do ponto de coleta
+            <input name="pickupLongitude" type="number" min="-180" max="180" step="any" defaultValue={settings.pickupLongitude ?? ""} />
+          </label>
+          <p className="admin-span">O despacho próprio não usa raio fixo. Informe as coordenadas do ponto de coleta; entregadores disponíveis serão chamados um por vez, da menor distância para a maior.</p>
         </div>
       </section>
 

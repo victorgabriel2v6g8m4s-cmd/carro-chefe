@@ -16,6 +16,12 @@ export type KitchenOrder = {
   operationUpdatedAt: string;
   deliveryStatus: string;
   deliveryUpdatedAt: string | null;
+  restaurantDecisionStatus: "pending" | "accepted" | "rejected";
+  restaurantDecisionAt: string | null;
+  restaurantDecisionReason: string | null;
+  restaurantPrepEstimateMinutes: number | null;
+  dispatchChecklist: { itemsVerified?: boolean; volumeCount?: number; packageSealed?: boolean; thermalBag?: boolean };
+  dispatchCheckedAt: string | null;
   fulfillmentType: "pickup" | "delivery";
   isHomologation: boolean;
   grandTotalCents: number;
@@ -64,6 +70,35 @@ export async function getKitchenOrders() {
       overdue: number;
     };
   }>(response);
+}
+
+export async function decideRestaurantOrder(
+  id: string,
+  csrfToken: string,
+  input: { action: "accept"; prepEstimateMinutes: number } | { action: "reject"; reason: string }
+) {
+  const response = await fetch(`/api/v1/lily/admin/kitchen/orders/${encodeURIComponent(id)}/decision`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken },
+    body: JSON.stringify(input)
+  });
+  return parseResponse<{ refundRequired: boolean; message?: string }>(response);
+}
+
+export async function saveDispatchChecklist(id: string, csrfToken: string, input: {
+  itemsVerified: boolean;
+  volumeCount: number;
+  packageSealed: boolean;
+  thermalBag: boolean;
+}) {
+  const response = await fetch(`/api/v1/lily/admin/kitchen/orders/${encodeURIComponent(id)}/dispatch-checklist`, {
+    method: "PUT",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken },
+    body: JSON.stringify(input)
+  });
+  return parseResponse<{ complete: boolean; offered: boolean }>(response);
 }
 
 export async function advanceKitchenOrder(

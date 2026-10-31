@@ -136,32 +136,39 @@ Produção externa de modelos/arte 3D não é desenvolvimento de software e fica
 - [x] Cliente autenticado/guest acompanha eventos por status e polling; há estimativa de rota e ETA após a saída da coleta, explicitamente sem GPS ao vivo. O mapa é auxiliar e indisponibilidade externa não deve bloquear a entrega.
 - [x] Há fundação de notificações transacionais pelo WhatsApp com outbox, consentimento e etapas do pedido; envio real permanece condicionado à configuração Meta, template aprovado e validação consentida descritas no item 3 e na Entrega 11H.
 
-#### Prioridade P0 — fechar antes de declarar a operação de entrega pronta
-- [ ] Definir e documentar o modelo operacional inicial: frota própria, operador contratado ou integração de logística externa; delimitar áreas atendidas, disponibilidade, contingência e responsável por cada transição. Não assumir algoritmo, raio fixo de 5 km, cobertura ou API de terceiros com base somente no exemplo do iFood.
-- [ ] Implementar aceite explícito do restaurante (aceitar/recusar) separado do início do preparo, com timeout, motivo auditável, capacidade de definir/confirmar previsão de preparo e comunicação ao cliente. Evitar que “começar preparo” seja o único sinal de aceite.
-- [ ] Criar conferência de expedição antes da retirada: pedido/itens/quantidades, quantidade de volumes, embalagem lacrada quando aplicável e entrega da bag térmica. Registrar quem conferiu e quando; não incluir dados pessoais desnecessários na comanda.
-- [ ] Especificar cenários de exceção ponta a ponta: falta de entregador, entregador ausente, endereço incorreto, cliente não localizado/ausente, recusa do pedido, falha de contato, cancelamento, retorno ao estabelecimento e reembolso; definir estados permitidos, responsável, prazo, comunicação e trilha de auditoria, sobretudo após a retirada.
-- [ ] Confirmar a política de pagamento. O código disponível lista Pix e cartão online; não foi localizada opção de dinheiro ou pagamento na entrega. Não anunciar nem habilitar pagamento na entrega antes de definir cobrança, conciliação, comprovante, fraude, cancelamento e autorização operacional.
-- [ ] Validar uma jornada autorizada de ponta a ponta (pedido pago → aceite → preparo → conferência → atribuição → coleta → confirmação de entrega) e registrar evidência/limites antes de marcar a operação pronta.
+#### Decisões operacionais confirmadas pelo proprietário — 30/10/2026
+- A logística será própria e utilizará somente entregadores cadastrados com papel `courier` na CookLily. Não haverá integração com iFood ou outro operador nesta operação.
+- Não haverá raio fixo de atendimento/despacho. As entregas elegíveis serão oferecidas a todos os entregadores disponíveis, um por vez, do mais próximo ao mais distante do ponto de coleta.
+- Cada entregador controla a disponibilidade por um botão no painel. Ao ficar disponível, autoriza o uso temporário da localização para ordenar ofertas; ao ficar indisponível, a posição armazenada é apagada.
+- O tempo para aceitar ou recusar uma oferta é configurável no painel administrativo. Recusa ou expiração avança ao próximo entregador elegível; não repetir o mesmo entregador para a mesma oferta.
+- Versão 1 do tracking usa etapas e ETA. GPS ao vivo para o cliente fica como evolução periódica, só após homologação integral e revisão de privacidade.
+- Após uma entrega concluída, o cliente poderá selecionar uma ou mais dimensões para avaliar: loja, entrega e plataforma.
 
-#### Prioridade P1 — previsibilidade e experiência do cliente
-- [ ] Tornar clara a previsão para cada etapa: confirmação/recusa, tempo estimado de preparo, espera por entregador e ETA após saída. Informar quando um horário for estimativa e oferecer atualização em caso de atraso; não prometer minuto exato sem base operacional.
-- [ ] Configurar e homologar notificações de pagamento, aceite, preparo, atraso, pronto, atribuição/coleta, saída, chegada e entrega. Reutilizar a outbox/consentimento do item 3 e manter o fluxo funcional se WhatsApp estiver indisponível.
-- [ ] Decidir se status + ETA atendem ao lançamento ou se há necessidade real de localização ao vivo. Se aprovada, exigir finalidade/consentimento e acesso restrito, transmitir somente durante entrega ativa, não manter histórico de coordenadas, encerrar após conclusão e oferecer fallback sem localização. Não bloquear a entrega se geolocalização/provedor falhar.
-- [ ] Revisar a experiência móvel do cliente, cozinha, expedição e courier, incluindo acessibilidade, rede instável, atualização stale, estados vazios/erro e privacidade por papel.
+#### Prioridade P0 — despacho interno e prontidão operacional
+- [x] Registrar que a logística é própria; não planejar adapter, contrato ou integração de operador externo.
+- [*] Implementar disponibilidade online/offline do courier, com coleta mínima de localização durante disponibilidade, frescor máximo de 90 segundos, exclusão ao ficar offline e fallback seguro quando geolocalização ou coordenada do ponto de coleta estiver indisponível. Homologação real ainda pendente.
+- [*] Implementar despacho de oferta única por vez, ordenada por distância crescente até o ponto de coleta, usando distância geodésica; configurar tempo de aceite no painel. Recusa e expiração avançam sem repetir tentativa. Teste de integração e concorrência ficam pendentes de CI.
+- [*] Configurar coordenadas do ponto de coleta no painel e bloquear despacho sem configuração válida. Não aplicar raio de corte. Falta preencher e homologar as coordenadas de produção.
+- [*] Implementar aceite/rejeição explícitos do restaurante separado do início do preparo e registrar previsão inicial de preparo. Pedido pago recusado fica com cancelamento e estorno pendente, sem afirmar conclusão; confirmação financeira continua manual no provedor. Prazo de aceite do restaurante não é configurado nesta versão.
+- [*] Implementar checklist de expedição antes de abrir ofertas: conferência dos itens, volumes, embalagem/lacre e bag térmica; registrar responsável e horário. Homologação ainda pendente.
+- [ ] Documentar e suportar exceções: ausência de courier, cliente ausente/não localizado, endereço incorreto, falha de contato, cancelamento, devolução e reembolso, com responsável e trilha de auditoria, preservando bloqueio de reatribuição automática após coleta.
+- [ ] Homologar a jornada autorizada de ponta a ponta antes de declarar P0 pronto.
 
-#### Prioridade P2 — qualidade após a entrega
-- [ ] Criar avaliação do cliente após entrega confirmada, vinculada ao pedido e disponível uma única vez; separar qualidade do produto, embalagem e entrega e coletar somente dados necessários.
-- [ ] Definir moderação, retenção, prevenção de abuso e tratamento de reclamações; não publicar avaliações automaticamente sem política definida.
-- [ ] Avaliar feedback recíproco do courier sobre o restaurante como recurso opcional, com acesso e retenção delimitados. Não confundir essa avaliação com a avaliação do cliente.
+#### Prioridade P1 — tracking versão 1 e comunicação
+- [x] Versão 1 usa timeline de status e ETA de rota; interface declara que não é GPS ao vivo, e a estimativa só vira horário previsto após saída da coleta. Não bloquear o pedido se o mapa estiver indisponível.
+- [*] Tornar claros os estados da decisão do restaurante, a previsão inicial de preparo, espera por courier e ETA; a tela do pedido já informa o preparo estimado após aceite e o tracking existente informa ETA estimado. Mensagens de atraso e homologação dos estados continuam pendentes.
+- [ ] Configurar e homologar notificações de aceite/rejeição, preparo, pronto, oferta/atribuição, coleta, saída, chegada e entrega. Reutilizar outbox/consentimento do item 3 e manter o fluxo funcional quando WhatsApp estiver indisponível.
+- [ ] Manter GPS ao vivo do cliente no roadmap futuro; implementar somente após homologação integral dedicada, consentimento/finalidade, acesso restrito, retenção mínima, encerramento após a entrega e fallback sem GPS.
+- [ ] Homologar experiência móvel do cliente, cozinha, expedição e courier, incluindo acessibilidade, rede instável e estados vazios/erro.
 
-#### Integração externa — condicional a contrato e acesso confirmados
-- [ ] Antes de integrar logística iFood ou outro operador, confirmar elegibilidade/contrato, documentação oficial, APIs, eventos, cobertura, tarifas, cancelamento, SLA, suporte e responsabilidades por incidente.
-- [ ] Projetar adapter isolado com idempotência, reconciliação de estados, observabilidade, timeout e fallback operacional; não duplicar status nem assumir disponibilidade/radius descritos em materiais de terceiros.
+#### Prioridade P2 — avaliações pós-entrega
+- [*] Criar página de avaliação disponível após entrega confirmada, vinculada ao pedido e submetida uma única vez. Código e validação do schema implementados; testes de rota e homologação real pendentes.
+- [*] Permitir selecionar qualquer combinação de loja, entrega e plataforma; cada dimensão selecionada recebe avaliação independente e comentário opcional. A experiência técnica foi implementada; retenção/moderação e homologação pendentes.
+- [ ] Definir escala, moderação, retenção, prevenção de abuso e encaminhamento de reclamações; restringir acesso conforme papel e não publicar comentários automaticamente sem política definida.
 
-**Ordem de execução:** P0 primeiro; P1 pode avançar em paralelo após decisões operacionais e sem bloquear fallback; P2 após primeira operação estável; integração externa somente após os gates contratuais. O exemplo de fluxo do iFood serve como referência de experiência, não como especificação de API ou garantia de comportamento para a CookLily.
+**Ordem de execução:** decisões estão confirmadas. Implementar P0, concluir P1 versão 1 com status/ETA e implementar P2; manter GPS ao vivo como evolução pós-homologação integral. Não integrar operador externo.
 
-Referências: `docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md` e documentos das entregas 11A–11K.
+Referências: `docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md`, documentos das entregas 11A–11K e [`GUIA_CONFIGURACAO_DISPATCH_COOKLILY_2026-10-31.md`](entregas/GUIA_CONFIGURACAO_DISPATCH_COOKLILY_2026-10-31.md).
 
 ### 10. Corrigir pendências bloqueadoras
 - [ ] Consolidar gaps comprovados na branch canônica, deploy ou testes solicitados.

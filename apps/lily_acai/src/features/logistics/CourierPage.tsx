@@ -15,6 +15,7 @@ import {
   type CourierDeliveryAction
 } from "./api";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { CourierAvailabilityToggle } from "./CourierAvailabilityToggle";
 
 const STATUS_LABELS: Record<string, string> = {
   waiting_courier: "Disponível",
@@ -354,6 +355,7 @@ export function CourierPage() {
         <h1>Entregas</h1>
         <p>Uma entrega só aparece aqui depois de paga e liberada pela cozinha.</p>
       </div>
+      {session && <CourierAvailabilityToggle csrfToken={session.csrfToken} />}
       <Link className="button ghost" to="/perfil">Minha conta</Link>
     </div>
 
@@ -390,6 +392,7 @@ export function CourierPage() {
             {payload.available.map((delivery) => <article className="courier-available-card" key={delivery.id}>
               <div>
                 <span className="eyebrow">{delivery.orderNumber}</span>
+                {delivery.offerExpiresAt && <small>Responda até {new Date(delivery.offerExpiresAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</small>}
                 <strong>{delivery.itemCount} item(ns)</strong>
                 <p>{destinationText(delivery)}</p>
               </div>
@@ -440,6 +443,9 @@ export function CourierPage() {
                     : assignment.status === "completed" ? "Concluída"
                     : assignment.status === "abandoned" ? "Desistência"
                     : assignment.status === "reassigned" ? "Reatribuída"
+                    : assignment.status === "declined" ? "Recusada"
+                    : assignment.status === "expired" ? "Expirada"
+                    : assignment.status === "unavailable" ? "Ficou indisponível"
                     : "Cancelada"}
                 </span>
                 <small>{destinationText(delivery)}</small>

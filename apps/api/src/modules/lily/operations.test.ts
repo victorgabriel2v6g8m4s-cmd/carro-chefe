@@ -368,6 +368,19 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     const staff = await register("67999908104", "staff", "127.0.0.224");
     const order = await createOrder({ whatsappUpdatesOptIn: true });
 
+    const decision = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/decision`,
+      headers: {
+        origin,
+        cookie: staff.cookie,
+        "x-lily-csrf": staff.csrf
+      },
+      payload: { action: "accept", prepEstimateMinutes: 25 }
+    });
+    expect(decision.statusCode).toBe(200);
+    expect(decision.json().order.restaurantDecisionStatus).toBe("accepted");
+
     const receive = await app.inject({
       method: "POST",
       url: `/api/v1/lily/admin/kitchen/orders/${order.id}/advance`,
@@ -441,6 +454,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(stored?.deliveryStatus).toBe("waiting_courier");
     expect(stored?.operationEvents.map((event) => event.toStatus)).toEqual([
       "received",
+      "received",
       "waiting_payment",
       "preparing",
       "ready_for_dispatch"
@@ -454,6 +468,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     });
     expect(notifications.map((row) => row.stage).sort()).toEqual([
       "preparing",
+      "restaurant_accepted",
       "waiting_courier"
     ]);
     expect(notifications.every((row) => row.status === "pending")).toBe(true);

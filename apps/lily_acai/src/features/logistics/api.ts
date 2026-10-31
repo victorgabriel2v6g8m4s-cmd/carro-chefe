@@ -44,6 +44,7 @@ export type CourierDelivery = {
   deliveryUpdatedAt: string | null;
   courierUserId: string | null;
   assignedToMe: boolean;
+  offerExpiresAt?: string | null;
   isHomologation: boolean;
   itemCount: number;
   createdAt: string;
@@ -130,7 +131,10 @@ export type DeliveryAssignmentStatus =
   | "completed"
   | "abandoned"
   | "reassigned"
-  | "cancelled";
+  | "cancelled"
+  | "declined"
+  | "expired"
+  | "unavailable";
 
 export type DeliveryAssignment = {
   id: string;
