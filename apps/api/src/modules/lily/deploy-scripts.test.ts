@@ -102,13 +102,14 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer).toContain("VALIDATION_CACHE_DIR");
     expect(deployer).toContain("--full-validation");
     expect(deployer).toContain("run_cached_gate node-dependencies");
-    expect(deployer).toContain("run_cached_gate python-tooling");
     expect(deployer).toContain("run_cached_gate preflight-migrations");
-    expect(deployer).toContain("run_cached_gate policy");
     expect(deployer).toContain("run_cached_gate static-checks");
     expect(deployer).toContain("run_cached_gate tests");
+    expect(deployer).toContain("npm run test:runtime");
     expect(deployer).toContain("run_cached_gate build");
-    expect(deployer).toContain("run_cached_gate tool-health");
+    expect(deployer).not.toContain("python-tooling");
+    expect(deployer).not.toContain("run_cached_gate policy");
+    expect(deployer).not.toContain("tool-health");
     expect(deployer).not.toContain("run_cached_gate backup");
     expect(deployer).not.toContain("run_cached_gate production-migrations");
     expect(deployer).not.toContain("run_cached_gate health");
@@ -145,9 +146,9 @@ describe("scripts operacionais CookLily", () => {
     expect(deployer.indexOf('deployer_update=reexec')).toBeLessThan(deployer.indexOf('PHASE="backup"'));
   });
 
-  it("força NODE_ENV=test somente durante a suíte de preflight", () => {
+  it("executa a suíte de runtime isolada com NODE_ENV=test", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
-    expect(deployer).toContain('run_cached_gate tests 0 env NODE_ENV=test npm test');
+    expect(deployer).toContain('run_cached_gate tests 0 env NODE_ENV=test npm run test:runtime');
   });
 
   it("faz deploy falhar fechado sem chaves de segurança de produção", () => {
