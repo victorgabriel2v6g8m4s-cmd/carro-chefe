@@ -235,7 +235,7 @@ export function PaymentChoicePage() {
                 />
               </label>}
               <button className="button primary" type="button" disabled={busy} onClick={() => void createPixPayment()}>
-                {busy ? "Gerando..." : `Gerar Pix · ${paymentMoney(option.pricing.amountCents)}`}
+                {busy ? "Processando..." : `${homologation ? "Simular" : "Gerar Pix"} · ${paymentMoney(option.pricing.amountCents)}`}
               </button>
             </>}
 

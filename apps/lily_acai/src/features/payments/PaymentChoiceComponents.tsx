@@ -8,6 +8,9 @@ export function paymentMoney(cents: number) {
 }
 
 export function paymentMethodHint(option: LilyPaymentOption) {
+  if (option.preferredProvider === "homologation_mock") {
+    return "Simulação; sem cobrança, QR ou provedor externo.";
+  }
   if (option.id === "pix") {
     const providers = option.providers;
     if (providers[0] === "cooklily_pix" || providers[0] === "sicredi_pix") {
