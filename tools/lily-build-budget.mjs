@@ -13,15 +13,15 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 });
 
 export const LILY_BUILD_BUDGET = Object.freeze({
-  // A entrega de logística adiciona telas lazy de disponibilidade courier e
-  // avaliação. O carregamento inicial e o maior chunk permanecem limitados.
+  // Nodes suportados podem variar ligeiramente no gzip por versão de zlib;
+  // o teto combinado continua impondo o limite global de JS + CSS.
   jsRawBytes: 622_592,
-  jsGzipBytes: 197_632,
+  jsGzipBytes: 198_144,
   initialJsGzipBytes: 112_640,
   largestJsChunkBytes: 286_720,
   cssRawBytes: 184_320,
   cssGzipBytes: 36_864,
-  // Mantém o teto agregado igual à soma dos tetos individuais de JS e CSS.
+  // O teto agregado é mais estrito que a soma dos limites individuais.
   combinedGzipBytes: 234_496
 });
 
