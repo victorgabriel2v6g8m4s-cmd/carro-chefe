@@ -491,11 +491,13 @@ export function ProfilePage() {
 
 export function RankingPage() {
   const [ranking, setRanking] = useState<LilyRankingRow[] | null>(null);
+  const [nextOffset, setNextOffset] = useState<number | null>(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getLilyRanking(30)
-      .then((value) => setRanking(value.ranking))
+    getLilyRanking(30, 0)
+      .then((value) => { setRanking(value.ranking); setNextOffset(value.nextOffset); })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar o ranking."));
   }, []);
 
@@ -512,13 +514,17 @@ export function RankingPage() {
     {error && <p className="error" role="alert">{error}</p>}
     {ranking === null ? <p>Carregando ranking...</p> : ranking.length === 0
       ? <section className="empty-state"><h2>O ranking está começando.</h2><p>Os clientes aparecerão aqui quando optarem por participar e acumularem pontos.</p></section>
-      : <div className="ranking-list">
+      : <><div className="ranking-list">
         {ranking.map((row) => <Link className="ranking-user-card" to={`/ranking/${encodeURIComponent(row.userId)}`} key={row.userId} aria-label={`Ver estatísticas de ${row.displayName}`}>
           <strong className="ranking-position">#{row.rank}</strong>
           <ProfileAvatar name={row.displayName} url={row.avatarUrl} />
           <div className="ranking-user-identity"><strong>{row.displayName}</strong><small>{row.currentLevel?.name ?? "Sem nível"}</small></div>
           <div className="ranking-kpis"><span><strong>{row.points.toLocaleString("pt-BR")}</strong><small>pontos</small></span><span><strong>{row.orderCount}</strong><small>pedidos</small></span><span><strong>{row.missionCount}</strong><small>missões</small></span><span><strong>{row.surveyCount}</strong><small>pesquisas</small></span><span><strong>{row.referralCount}</strong><small>indicações</small></span><span><strong>{row.activeDays}</strong><small>dias ativos</small></span></div>
         </Link>)}
-      </div>}
+        </div>{nextOffset !== null && <button className="button ghost" type="button" disabled={loadingMore} onClick={() => {
+          if (nextOffset === null || loadingMore) return;
+          setLoadingMore(true);
+          void getLilyRanking(30, nextOffset).then((value) => { setRanking((current) => [...(current ?? []), ...value.ranking]); setNextOffset(value.nextOffset); }).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar mais clientes.")).finally(() => setLoadingMore(false));
+        }}>{loadingMore ? "Carregando…" : "Carregar mais clientes"}</button>}</>}
   </section>;
 }

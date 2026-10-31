@@ -15,14 +15,16 @@ export const LILY_BUILD_BASELINE = Object.freeze({
 export const LILY_BUILD_BUDGET = Object.freeze({
   // Nodes suportados podem variar ligeiramente no gzip por versão de zlib;
   // o teto combinado continua impondo o limite global de JS + CSS.
-  jsRawBytes: 622_592,
-  jsGzipBytes: 198_144,
+  // A folga adicional cobre os novos chunks públicos/admin da Landing CookLily;
+  // os limites de entrypoint e chunk máximo permanecem inalterados.
+  jsRawBytes: 663_552,
+  jsGzipBytes: 208_896,
   initialJsGzipBytes: 112_640,
   largestJsChunkBytes: 286_720,
-  cssRawBytes: 184_320,
-  cssGzipBytes: 36_864,
+  cssRawBytes: 204_800,
+  cssGzipBytes: 41_984,
   // O teto agregado é mais estrito que a soma dos limites individuais.
-  combinedGzipBytes: 234_496
+  combinedGzipBytes: 250_880
 });
 
 function emptyBucket() {

@@ -782,6 +782,7 @@ model LilyOperationalSettings {
   whatsappPhone             String   @default("+5567999289187")
   socialLinksJson           String   @default("[]")
   publicAddressText         String?
+  landingPageJson           String   @default("{}")
   loyaltyOrderCentsPerPoint Int      @default(100)
   loyaltyCampaignBonusPoints Int     @default(10)
   loyaltyCouponBonusPoints Int       @default(10)

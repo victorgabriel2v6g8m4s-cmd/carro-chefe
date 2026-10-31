@@ -611,11 +611,11 @@ export async function uploadLilyProfileAvatar(file: File, csrfToken: string) {
   return parseResponse<LilyProfilePayload>(response);
 }
 
-export async function getLilyRanking(limit = 20) {
-  const response = await fetch(`/api/v1/lily/public/loyalty/ranking?limit=${encodeURIComponent(limit)}`, {
+export async function getLilyRanking(limit = 20, offset = 0) {
+  const response = await fetch(`/api/v1/lily/public/loyalty/ranking?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`, {
     credentials: "same-origin"
   });
-  return parseResponse<{ ranking: LilyRankingRow[] }>(response);
+  return parseResponse<{ ranking: LilyRankingRow[]; nextOffset: number | null }>(response);
 }
 
 export async function getLilyCustomerStats(userId?: string) {

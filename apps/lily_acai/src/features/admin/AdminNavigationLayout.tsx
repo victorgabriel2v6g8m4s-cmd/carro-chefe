@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "../../router";
-import { Activity, BarChart3, ChefHat, ClipboardList, Coins, CreditCard, Gift, LayoutDashboard, Menu, MessageCircle, Package, PanelLeftClose, PanelLeftOpen, Percent, Settings, Shield, Store, Truck, Users, Video, type LucideIcon } from "lucide-react";
+import { Activity, BarChart3, ChefHat, ClipboardList, Coins, CreditCard, Gift, LayoutDashboard, Menu, MessageCircle, Package, PanelLeftClose, PanelLeftOpen, PanelsTopLeft, Percent, Settings, Shield, Store, Truck, Users, Video, type LucideIcon } from "lucide-react";
 import { getLilySession, type AuthPayload } from "../../api";
 
 type AdminLink = { label: string; to: string; icon: LucideIcon; adminOnly?: boolean };
@@ -8,6 +8,7 @@ type AdminLink = { label: string; to: string; icon: LucideIcon; adminOnly?: bool
 const adminLinks: AdminLink[] = [
   { label: "Visão geral", to: "/painel", icon: LayoutDashboard },
   { label: "Cardápio", to: "/painel/cardapio", icon: Store },
+  { label: "Landing Page", to: "/painel/landing", icon: PanelsTopLeft },
   { label: "Pesquisas", to: "/painel/pesquisas", icon: ClipboardList },
   { label: "Cupons e ofertas", to: "/painel/cupons", icon: Percent },
   { label: "Programa VIP", to: "/painel/vip", icon: Gift },

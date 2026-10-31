@@ -284,6 +284,13 @@ describe("CookLily perfil e fidelidade", () => {
     expect(publicRows.find((row) => row.displayName === "Ranking Comum A")?.rank).toBe(1);
     expect(publicRows.find((row) => row.displayName === "Ranking Comum B")?.rank).toBe(2);
     expect(publicRows.find((row) => row.displayName === "Ranking Comum C")?.rank).toBe(3);
+    const firstPage = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/ranking?limit=2&offset=0" });
+    const secondPage = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/ranking?limit=2&offset=2" });
+    expect(firstPage.json().nextOffset).toBe(2);
+    expect(secondPage.json().nextOffset).toBeNull();
+    const paginatedNames = [...(firstPage.json().ranking as Array<{ displayName: string }>), ...(secondPage.json().ranking as Array<{ displayName: string }>)].map((row) => row.displayName);
+    expect(paginatedNames).toHaveLength(3);
+    expect(paginatedNames).toEqual(expect.arrayContaining(["Ranking Comum A", "Ranking Comum B", "Ranking Comum C"]));
 
     const privateRanking = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/ranking?limit=50", headers: { cookie: tester.cookie } });
     const privateRows = privateRanking.json().ranking as Array<{ displayName: string; rank: number }>;

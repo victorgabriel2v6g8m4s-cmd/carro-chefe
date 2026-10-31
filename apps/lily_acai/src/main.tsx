@@ -1,12 +1,12 @@
-import { StrictMode, lazy, Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { StrictMode, createContext, lazy, Suspense, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "./router";
 import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Trophy, UserRound } from "lucide-react";
-import { getLilyAuthStatus, getLilyCatalog, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, submitCookLilyLead, type AuthPayload, type CatalogProduct, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, type AuthPayload, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { HeaderLilyCoins, HeaderLoyaltyProgress } from "./features/loyalty/HeaderLoyaltyControls";
 const CatalogPage = lazy(() => import("./catalog").then((module) => ({ default: module.CatalogPage })));
-const WeeklyProductBanner = lazy(() => import("./catalog").then((module) => ({ default: module.WeeklyProductBanner })));
+const LandingExperience = lazy(() => import("./features/landing/LandingExperience").then((module) => ({ default: module.LandingExperience })));
 const AdminHome = lazy(() => import("./admin").then((module) => ({ default: module.AdminHome })));
 const AdminCatalog = lazy(() => import("./admin").then((module) => ({ default: module.AdminCatalog })));
 const AdminMedia = lazy(() => import("./admin").then((module) => ({ default: module.AdminMedia })));
@@ -26,6 +26,7 @@ const AdminPaymentsPage = lazy(() => import("./features/admin/AdminPaymentsPage"
 const AdminPaymentMethodsPage = lazy(() => import("./features/admin/AdminPaymentMethodsPage").then((module) => ({ default: module.AdminPaymentMethodsPage })));
 const AdminTeamPage = lazy(() => import("./features/admin/AdminTeamPage").then((module) => ({ default: module.AdminTeamPage })));
 const AdminStoreSettingsPage = lazy(() => import("./features/admin/AdminStoreSettingsPage").then((module) => ({ default: module.AdminStoreSettingsPage })));
+const AdminLandingPage = lazy(() => import("./features/admin/landing/AdminLandingPage").then((module) => ({ default: module.AdminLandingPage })));
 const AdminObservabilityPage = lazy(() => import("./features/admin/AdminObservabilityPage").then((module) => ({ default: module.AdminObservabilityPage })));
 const AdminWhatsAppPage = lazy(() => import("./features/admin/AdminWhatsAppPage").then((module) => ({ default: module.AdminWhatsAppPage })));
 const AdminAnalyticsPage = lazy(() => import("./features/analytics/AdminAnalyticsPage").then((module) => ({ default: module.AdminAnalyticsPage })));
@@ -34,7 +35,7 @@ const KitchenPrintPage = lazy(() => import("./features/operations/KitchenPrintPa
 const OrderControlPage = lazy(() => import("./features/operations/OrderControlPage").then((module) => ({ default: module.OrderControlPage })));
 const CourierPage = lazy(() => import("./features/logistics/CourierPage").then((module) => ({ default: module.CourierPage })));
 const PaymentPage = lazy(() => import("./features/payments/PaymentPage").then((module) => ({ default: module.PaymentPage })));
-import { attributionForApi, hasCookLilyAttribution, readCookLilyAttribution, readStoredCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
+import { hasCookLilyAttribution, readCookLilyAttribution, storeCookLilyAttribution } from "./tracking";
 import { denyLilyAnalytics, grantLilyAnalytics, trackLilyAnalytics, type LilyAnalyticsSurface } from "./analytics";
 import { LilyAnalyticsConsentBanner, LilyAnalyticsPreferencesButton } from "./features/analytics/AnalyticsConsent";
 import { LilyLoadingSpinner } from "./loading-spinner";
@@ -64,6 +65,7 @@ if (typeof document !== "undefined" && !document.getElementById("cooklily-loyalt
 }
 
 const brandLogo = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`;
+const LilyShellContext = createContext<{ user: AuthPayload["user"] | null; config: LilyPublicConfig | null; authLoaded: boolean }>({ user: null, config: null, authLoaded: false });
 
 function PasswordInput(props: { name: string; autoComplete: string; required?: boolean; minLength?: number; maxLength?: number }) {
   const [visible, setVisible] = useState(false);
@@ -154,6 +156,7 @@ function Shell({ children }: { children: ReactNode }) {
   const cart = useCart();
   const [config, setConfig] = useState<LilyPublicConfig | null>(null);
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
   const [loyalty, setLoyalty] = useState<LilyLoyaltyPayload | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -162,8 +165,8 @@ function Shell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     getLilyConfig().then(setConfig).catch(() => setConfig(null));
-    getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => setUser(null));
-    const onProfileUpdated = () => { void getLilyAuthStatus().then((value) => setUser(value.user)).catch(() => undefined); };
+    getLilyAuthStatus().then((value) => { setUser(value.user); setAuthLoaded(true); }).catch(() => { setUser(null); setAuthLoaded(true); });
+    const onProfileUpdated = () => { void getLilyAuthStatus().then((value) => { setUser(value.user); setAuthLoaded(true); }).catch(() => undefined); };
     window.addEventListener("cooklily:profile-updated", onProfileUpdated);
     return () => window.removeEventListener("cooklily:profile-updated", onProfileUpdated);
   }, []);
@@ -298,7 +301,7 @@ function Shell({ children }: { children: ReactNode }) {
       </>}
     </header>
 
-    <main id="lily-main-content" tabIndex={-1}>{children}</main>
+    <main id="lily-main-content" tabIndex={-1}><LilyShellContext.Provider value={{ user, config, authLoaded }}>{children}</LilyShellContext.Provider></main>
 
     <nav className="mobile-footer-nav" aria-label="Navegação principal mobile">
       <NavLink to="/" end><House size={22} strokeWidth={1.8} aria-hidden="true" /><small>Início</small></NavLink>
@@ -326,113 +329,8 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function Landing() {
-  const [config, setConfig] = useState<LilyPublicConfig | null>(null);
-  const [weeklyProduct, setWeeklyProduct] = useState<CatalogProduct | null>(null);
-  const [state, setState] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    getLilyConfig()
-      .then((value) => setConfig(value))
-      .catch(() => {
-        setState("error");
-        setMessage("Não foi possível carregar o cadastro agora. Você ainda pode falar com a CookLily pelo WhatsApp.");
-      });
-
-    getLilyCatalog({ limit: 1 })
-      .then((payload) => {
-        setWeeklyProduct(payload.weeklyProduct);
-      })
-      .catch(() => {
-        setWeeklyProduct(null);
-      });
-  }, []);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!config) return;
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const accepted = data.get("marketingConsent") === "on";
-    if (!accepted) {
-      setState("error");
-      setMessage("Marque a autorização para receber cupons e promoções antes de entrar na lista.");
-      return;
-    }
-
-    setState("submitting");
-    setMessage("");
-    trackLilyAnalytics("lead_submit", { surface: "landing" });
-    try {
-      const current = readCookLilyAttribution(window.location.search);
-      const stored = readStoredCookLilyAttribution();
-      const attribution = hasCookLilyAttribution(current) ? current : stored;
-      await submitCookLilyLead({
-        phone: String(data.get("phone") ?? ""),
-        marketingConsent: true,
-        consentVersion: config.consentVersions.lilyMarketing,
-        privacyPolicyVersion: config.privacyPolicyVersion,
-        attribution: attributionForApi(attribution),
-        website: String(data.get("website") ?? "")
-      });
-      form.reset();
-      setState("success");
-      trackLilyAnalytics("lead_success", { surface: "landing" });
-      setMessage("Cadastro recebido. Quando houver cupons e promoções CookLily, este WhatsApp poderá receber as novidades.");
-    } catch (cause) {
-      setState("error");
-      trackLilyAnalytics("lead_error", { surface: "landing" });
-      setMessage(cause instanceof Error ? cause.message : "Não foi possível cadastrar agora.");
-    }
-  }
-
-  const trackingText = encodeURIComponent("Olá! Vim pelo site da CookLily e gostaria de acompanhar meu pedido.");
-  const trackingWhatsapp = config?.social.links.find((link) => link.platform === "whatsapp")?.url ?? null;
-  return <Shell>
-    <WeeklyProductBanner product={weeklyProduct} />
-
-    <section className="landing-hero">
-      <div className="landing-copy">
-        <span className="eyebrow">CookLily · novidades no seu WhatsApp</span>
-        <h1>Entre na lista da CookLily.</h1>
-        <p>Cadastre seu número para receber cupons, promoções e novidades quando estiverem disponíveis. Sem precisar criar senha.</p>
-        <div className="landing-points" aria-label="Benefícios da lista">
-          <span>Cupons quando houver campanha</span>
-          <span>Promoções CookLily</span>
-          <span>Contato direto pelo WhatsApp</span>
-        </div>
-        <Link className="button primary combo-slide-cta landing-menu-cta" to="/cardapio">
-          Ver cardápio completo
-        </Link>
-      </div>
-      <form className="lead-card" onSubmit={submit}>
-        <span className="eyebrow">Quero receber novidades</span>
-        <h2>Seu WhatsApp é suficiente.</h2>
-        <label>WhatsApp
-          <input name="phone" inputMode="tel" autoComplete="tel" placeholder="(67) 99999-9999" required />
-        </label>
-        <label className="check lead-consent">
-          <input name="marketingConsent" type="checkbox" />
-          <span>Quero receber cupons, promoções e novidades da CookLily neste número. Posso pedir para sair da lista depois.</span>
-        </label>
-        <label className="trap-field" aria-hidden="true">Site
-          <input name="website" tabIndex={-1} autoComplete="off" />
-        </label>
-        <p className="privacy-note">Ao enviar, você concorda com o uso do telefone para esta finalidade. <Link to="/privacidade">Veja como tratamos os dados.</Link></p>
-        {message && <p className={state === "success" ? "success" : "error"} role="status">{message}</p>}
-        <button className="button primary" disabled={state === "submitting" || !config}>
-          {state === "submitting" ? <LilyLoadingSpinner size="sm" label="Cadastrando" /> : "Entrar na lista"}
-        </button>
-      </form>
-    </section>
-    <section className="whatsapp-card">
-      <div><span className="eyebrow">Acompanhamento P0</span><h2>Já fez um pedido?</h2><p>O acompanhamento inicial é humano pelo WhatsApp oficial da CookLily. Não colocamos nome, endereço ou telefone na URL.</p></div>
-      {trackingWhatsapp
-        ? <a className="button primary" href={`${trackingWhatsapp}?text=${trackingText}`} target="_blank" rel="noreferrer" onClick={() => trackLilyAnalytics("whatsapp_click", { surface: "landing" })}>Acompanhar pelo WhatsApp</a>
-        : <Link className="button primary" to="/cardapio">Ver cardápio</Link>}
-    </section>
-    <section className="survey-home-card"><div><span className="eyebrow">CookLily · participe</span><h2>Responda uma pesquisa rápida para ganhar pontos.</h2><p>Sua opinião pode desbloquear novas missões.</p></div><Link className="button primary" to="/pesquisas">Ver pesquisas</Link></section>
-  </Shell>;
+  const { user, config, authLoaded } = useContext(LilyShellContext);
+  return <Shell><Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando a CookLily" />}><LandingExperience user={user} publicConfig={config} authLoaded={authLoaded} /></Suspense></Shell>;
 }
 
 function Cardapio() {
@@ -596,6 +494,7 @@ function App() {
     <Route path="/pesquisas/:id" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando pesquisa" />}><Shell><SurveyRespondPage /></Shell></Suspense>} />
     <Route path="/painel" element={<AdminWorkspace><AdminHome /></AdminWorkspace>} />
     <Route path="/painel/cardapio" element={<AdminWorkspace><AdminCatalog /></AdminWorkspace>} />
+    <Route path="/painel/landing" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando Landing Page" />}><AdminWorkspace><AdminGate>{({ session }) => <AdminLandingPage session={session!} />}</AdminGate></AdminWorkspace></Suspense>} />
     <Route path="/painel/cupons" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando cupons" />}><AdminWorkspace><AdminCouponsPage /></AdminWorkspace></Suspense>} />
     <Route path="/painel/vip" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando programa VIP" />}><AdminWorkspace><AdminVipPage /></AdminWorkspace></Suspense>} />
     <Route path="/painel/fidelidade" element={<Suspense fallback={<LilyLoadingSpinner size="lg" label="Carregando níveis e recompensas" />}><AdminWorkspace><AdminGate>{() => <AdminLoyaltyPage />}</AdminGate></AdminWorkspace></Suspense>} />
