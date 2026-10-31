@@ -244,11 +244,8 @@ export function CheckoutPage() {
             setIdempotencyKey(null);
           }}
         />
-        <span><strong>Modo de homologação</strong> — testar pedido e pagamento sem abrir a loja ao público.</span>
+        <span><strong>Homologação</strong> — pedido e pagamento simulados, sem cobrança.</span>
       </label>}
-      {session && ["staff", "admin"].includes(session.user.role) && !canHomologate && <small>
-        Para usar a homologação, conclua a troca de senha exigida e valide o MFA ou use uma sessão autenticada por chave de agente.
-      </small>}
     </div>}
 
     <form className="checkout-layout" onSubmit={submit}>

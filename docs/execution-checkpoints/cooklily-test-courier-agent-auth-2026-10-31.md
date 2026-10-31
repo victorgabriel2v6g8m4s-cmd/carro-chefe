@@ -30,7 +30,9 @@ Objetivo: permitir homologar o despacho de couriers de teste com localização s
 - `git diff --check`: passou antes do commit `8e06742`.
 - Suíte completa: 84 arquivos, 440 testes passaram e 3 foram ignorados (443 total), usando pool de threads com 2 workers.
 - Uma execução inicial do Vitest com o pool padrão ficou sem resposta; a tentativa com pool de threads concluiu a suíte acima.
-- CI do PR, revisão, merge, deploy e homologação real ainda pendentes.
+- PR #305 CI run `41176741362` falhou inicialmente no build CookLily em Vite 8.2.1 (JS raw 608.03/608.00 KiB, gzip 193.05/193.00 KiB); os testes passaram em Node 20/22/24. O job Tool Health refletiu a mesma falha do build.
+- O texto do controle de homologação foi reduzido para respeitar o limite. Build local com dependências travadas (Vite 8.2.1) passou em JS raw 607.82/608.00 KiB e gzip 192.96/193.00 KiB; CI da correção ainda pendente.
+- Revisão, merge, deploy e homologação real ainda pendentes.
 
 ## Migrations
 
