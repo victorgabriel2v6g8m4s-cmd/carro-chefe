@@ -17,6 +17,7 @@ import { lilyCourierAvailabilityRoutes } from "./courier-dispatch";
 import { lilyDispatchAdminRoutes } from "./dispatch-admin";
 import { lilyProfileRoutes } from "./profile";
 import { lilyReelRoutes } from "./reels";
+import { lilyLandingPageRoutes } from "./landing-page";
 import { lilyPaymentRoutes } from "./payments";
 import { lilyTeamRoutes } from "./team";
 import { lilyMfaRoutes } from "./mfa";
@@ -402,6 +403,7 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyTeamRoutes);
   await app.register(lilyProfileRoutes);
   await app.register(lilyReelRoutes);
+  await app.register(lilyLandingPageRoutes);
   await app.register(lilyMfaRoutes);
   await app.register(lilyAgentAuthRoutes);
   await app.register(lilyWhatsAppRoutes);

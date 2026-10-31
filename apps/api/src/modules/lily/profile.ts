@@ -20,6 +20,7 @@ const profilePatchSchema = z.object({
 }).strict();
 
 const leaderboardLimitSchema = z.coerce.number().int().min(1).max(50).default(20);
+const leaderboardOffsetSchema = z.coerce.number().int().min(0).max(100_000).default(0);
 
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128),
@@ -281,13 +282,16 @@ async function profilePayload(userId: string) {
 export async function lilyProfileRoutes(app: FastifyInstance) {
   await lilyProfileStatisticsRoutes(app);
   app.get("/api/v1/lily/public/loyalty/ranking", async (request) => {
-    const query = z.object({ limit: leaderboardLimitSchema.optional() }).parse(request.query);
+    const query = z.object({ limit: leaderboardLimitSchema.optional(), offset: leaderboardOffsetSchema.optional() }).parse(request.query);
     const viewer = await getOptionalLilySession(request);
     const includeTestAccounts = Boolean(viewer && (["admin", "staff"].includes(viewer.user.role) || viewer.user.isTestAccount));
     const rows = await loyaltyRows({ onlyOptedIn: true, includeTestAccounts, excludeTestAccounts: !includeTestAccounts });
     const limit = query.limit ?? 20;
+    const offset = query.offset ?? 0;
+    const ranked = denseRanking(rows);
     return {
-      ranking: denseRanking(rows).slice(0, limit)
+      ranking: ranked.slice(offset, offset + limit),
+      nextOffset: offset + limit < ranked.length ? offset + limit : null
     };
   });
 

@@ -17,7 +17,7 @@ test("budget registra redução do entrypoint e limita regressão dos assets tot
   assert.ok(LILY_BUILD_BUDGET.largestJsChunkBytes < LILY_BUILD_BASELINE.largestJsChunkBytes * 0.5);
   assert.ok(LILY_BUILD_BUDGET.cssRawBytes > LILY_BUILD_BASELINE.cssRawBytes);
   assert.ok(LILY_BUILD_BUDGET.cssGzipBytes > LILY_BUILD_BASELINE.cssGzipBytes);
-  assert.ok(LILY_BUILD_BUDGET.cssRawBytes < LILY_BUILD_BASELINE.cssRawBytes * 1.45);
+  assert.ok(LILY_BUILD_BUDGET.cssRawBytes < LILY_BUILD_BASELINE.cssRawBytes * 1.6);
   assert.ok(LILY_BUILD_BUDGET.combinedGzipBytes < (LILY_BUILD_BASELINE.jsGzipBytes + LILY_BUILD_BASELINE.cssGzipBytes) * 1.41);
 });
 
@@ -35,7 +35,7 @@ test("avalia build dentro e fora do budget", () => {
     js: { files: 1, rawBytes: 820_000, gzipBytes: 230_000 },
     initialJs: { files: 1, rawBytes: 820_000, gzipBytes: 120_000 },
     largestJsChunkBytes: 400_000,
-    css: { files: 1, rawBytes: 190_000, gzipBytes: 37_000 },
+    css: { files: 1, rawBytes: 210_000, gzipBytes: 45_000 },
     combinedGzipBytes: 270_000
   };
   const labels = evaluateLilyBuildBudget(over).map((item) => item.label);

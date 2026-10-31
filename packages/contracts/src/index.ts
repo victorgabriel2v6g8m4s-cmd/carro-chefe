@@ -1,4 +1,6 @@
 import { z } from "zod";
+export { defaultLilyLandingPageConfig, lilyLandingPageConfigSchema, lilyLandingPageIds, lilyLandingSocialIds } from "./lily-landing-page";
+export type { LilyLandingPageConfig, LilyLandingPageId, LilyLandingSocialId } from "./lily-landing-page";
 
 export const taskStatuses = ["backlog", "ready", "in_progress", "blocked", "review", "done", "cancelled"] as const;
 export const agentRunStatuses = ["queued", "running", "waiting_input", "waiting_dependency", "succeeded", "failed", "cancelled"] as const;
