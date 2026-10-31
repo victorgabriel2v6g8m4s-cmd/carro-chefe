@@ -2,12 +2,12 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: `codex/cooklily-courier-dispatch-ratings`
+- branch: `codex/cooklily-courier-deploy-checkpoint`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (release canônica em produção; squash merge de PR #300)
-- pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — merged
-- last_verified_at: 2026-10-31 04:12 UTC
+- base_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (release-base da branch de checkpoint; PR #302 avançou a canonical depois)
+- head_sha_verified: `d61b32815d3a32aa1b468a42d3afeaa2fe5fb53b`
+- pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — merged; [#302](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/302) — merged; [#301](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/301) — closed
+- last_verified_at: 2026-10-31 04:37 UTC
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
 
 ## Concluído e persistido
@@ -20,12 +20,17 @@
 - Commit `fa33f16` persiste a implementação, migration, testes, roadmap e instruções.
 - Commit `1bba4ac` registra o checkpoint pós-commit; branch foi publicada e PR #300 draft aberto contra a base canônica verificada.
 - PR #300 foi integrado por squash na canonical como `f0393930e45e03e18c2a8305cae1000e80172b4d` após todos os gates do CI run `41166949257` passarem no head `359cc804940192e5ed94685d5e39e404c1f97edf`.
+- O checkpoint e o roadmap parcial foram publicados na canonical pelo PR #302, merge `6f177f5507e128b0febe1b81fc28c9a703e4bede`.
+- Node.js LTS `v26.13.0` e npm `11.20.0` foram reinstalados pelo instalador oficial do Node via WinGet. O PATH do usuário agora prioriza `C:\Program Files\nodejs` e não contém mais o caminho NVM inválido; ambos foram verificados no ambiente atual.
 
 ## Em andamento
 
 - Deploy em produção concluído no release `f0393930e45e03e18c2a8305cae1000e80172b4d`.
 - Homologação visual feita na aba integrada do Codex em largura móvel: `/lilyacai/entregas` e `/lilyacai/painel/entrega` carregaram; a área de courier mostrou disponibilidade, fila e histórico vazios sem erro após a sessão terminar de carregar; a tela admin apresentou o timeout configurável e os campos do ponto de coleta.
-- Homologação desktop e teste real de despacho continuam pendentes. O painel integrado disponível nesta execução está com largura móvel; não foi possível configurar viewport desktop por essa interface.
+- A homologação responsiva agora foi concluída no navegador integrado do Codex com viewport emulado: desktop 1365×900 e mobile 390×844. `/lilyacai/entregas`, `/lilyacai/painel/entrega` e `/lilyacai/painel/entregas` carregaram; as três rotas não apresentaram overflow horizontal nem erros de console. O formulário administrativo mostrou timeout padrão de 60 s e coordenadas de coleta vazias.
+- A tela de gestão de entregas exibiu os estados vazios esperados (zero pedidos e zero vínculos auditados) em ambos os tamanhos.
+- O endereço e CEP de coleta informados pelo proprietário foram pesquisados por geocodificação. Os resultados identificam a rua, mas não retornam uma coordenada de imóvel; as fontes divergem sobre o bairro/CEP do trecho. As coordenadas não foram gravadas. O proprietário ainda precisa confirmar um pin/latitude-longitude exato.
+- A equipe não encontrou contas para os dois identificadores telefônicos de teste informados pelo proprietário. O cadastro normal exige senha e aceite dos Termos Operacionais/Aviso de Privacidade; a confirmação para aceitar esses documentos em ambas as contas foi solicitada e está pendente. A promoção para courier exige atualização de senha e MFA; não contornar esses gates.
 
 ## Gates e testes
 
@@ -43,6 +48,7 @@
 - CI run `41166571966`: todos os checks reportados passaram no head `24c719628b8dca770f1d9234218616437cb359de`.
 - Deploy VPS via `sudo carro-chefe-deploy f0393930e45e03e18c2a8305cae1000e80172b4d`: concluído em 2026-10-31. Backups verificados (core 643072 bytes; Lily 2842624 bytes); migration Lily `20261031000000_lily_dispatch_ratings` aplicada; Nginx validado; serviço ativo; readiness e smoke externo passaram. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261031-040740-f0393930e45e.evidence`; log correspondente `.log`.
 - A configuração `pickupLatitude`/`pickupLongitude` foi verificada após migration e está ausente no registro operacional; nenhum valor foi inventado ou gravado. A rota de logística no navegador inicialmente exibiu erro transitório durante carregamento/sessão, mas recarregada após estabilização carregou os estados vazios sem erro.
+- Em 2026-10-31, viewport desktop (1365×900) e mobile (390×844) foram efetivamente emulados pelo recurso de viewport do navegador integrado. Nas rotas testadas, `scrollWidth` foi 1350 px no desktop e 375 px no mobile; sem overflow horizontal e sem erros no console.
 
 ## Migrations
 
@@ -52,20 +58,21 @@
 
 ## Bloqueios/riscos
 
-- Coordenadas de produção precisam ser preenchidas pelo proprietário/staff em `/lilyacai/painel/entrega` antes do despacho.
+- Coordenadas exatas de produção ainda precisam ser verificadas e preenchidas em `/lilyacai/painel/entrega` antes do despacho; o resultado de geocodificação disponível é somente do trecho da rua.
 - ETA externo é opcional para operação; precisa da configuração existente de provider para ser mostrado.
 - Rejeição de pedido pago marca reembolso pendente, mas a equipe financeira ainda confirma o estorno no provedor.
 - Ainda falta o procedimento operacional completo para cliente ausente, devolução e reclamações; ver guia.
-- Homologação depende do navegador integrado disponível e contas de teste apropriadas.
+- Homologação de UI desktop/mobile está concluída no navegador integrado. O teste real de despacho ainda depende de pin exato, aceite dos termos para as duas contas e conclusão de senha/MFA antes de promovê-las a courier.
 
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
 - Produção está no release `f0393930e45e03e18c2a8305cae1000e80172b4d`; migration confirmada, serviço ativo e smoke externo passou.
-- Coordenadas de coleta estão ausentes na produção; cadastrar/validar no painel antes de dispatch. Ainda é necessário um segundo courier de teste para comprovar priorização, recusa e expiração em sequência. Não iniciar pedido/cobrança real.
-- Usar exclusivamente navegador integrado Codex; mobile foi observado. Desktop ainda precisa homologação em viewport amplo, sem abrir Chrome/Edge externo.
+- Coordenadas de coleta estão ausentes na produção; validar o pin e cadastrar pelo painel antes de dispatch. Ainda são necessárias duas contas courier de teste para comprovar prioridade, recusa e expiração em sequência. Não iniciar pedido/cobrança real.
+- Usar exclusivamente navegador integrado Codex. As rotas de entrega foram observadas em desktop 1365×900 e mobile 390×844; não houve overflow horizontal nem erro no console.
+- Antes do cadastro, aguardar a confirmação já solicitada para aceite dos Termos Operacionais/Aviso de Privacidade das duas contas. Após a promoção, a atualização de senha e configuração de MFA continuam necessárias e não devem ser contornadas.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Registrar o resultado do deploy e mobile na canonical por PR de documentação; obter coordenadas reais e duas contas courier de teste autorizadas, configurar as coordenadas no painel, então homologar o despacho sequencial de ponta a ponta e a visualização desktop em navegador integrado Codex. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
+Concluir a geocodificação com pin/latitude-longitude validado e obter a confirmação pendente do proprietário para aceitar os termos das contas de teste; criar as contas, marcá-las como teste, concluir atualização de senha/MFA com a participação do proprietário e promovê-las a courier. Só então configurar coordenadas pelo painel e homologar o despacho sequencial com dados de teste, sem pedido ou pagamento real. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
