@@ -13,6 +13,7 @@ export const LILY_WHATSAPP_CONSENT_VERSION = "2026-09-29";
 
 export const LILY_WHATSAPP_STAGES = [
   "awaiting_payment",
+  "restaurant_accepted",
   "payment_confirmed",
   "preparing",
   "ready_for_pickup",
@@ -30,6 +31,7 @@ export type LilyWhatsAppStage = typeof LILY_WHATSAPP_STAGES[number];
 
 const STAGE_LABELS: Record<LilyWhatsAppStage, string> = {
   awaiting_payment: "pedido recebido — aguardando pagamento",
+  restaurant_accepted: "pedido aceito pelo restaurante",
   payment_confirmed: "pagamento confirmado",
   preparing: "pedido em preparo",
   ready_for_pickup: "pedido pronto para retirada",

@@ -36,8 +36,15 @@ const operationInclude = {
 function nextOperationStatus(order: {
   status: string;
   operationStatus: string;
+  fulfillmentType: string;
+  restaurantDecisionStatus: string;
 }): OperationStatus {
   if (order.operationStatus === "received") {
+    if (order.fulfillmentType === "delivery" && order.restaurantDecisionStatus !== "accepted") {
+      throw new ApiError(409, "O restaurante precisa aceitar a entrega antes de iniciar o preparo.", {
+        code: "LILY_RESTAURANT_ACCEPTANCE_REQUIRED"
+      });
+    }
     return order.status === "paid" ? "preparing" : "waiting_payment";
   }
   if (order.operationStatus === "waiting_payment") {
@@ -92,6 +99,15 @@ function serializeKitchenOrder(order: any, kitchenPreparationSlaMinutes: number 
     operationUpdatedAt: order.operationUpdatedAt,
     deliveryStatus: order.deliveryStatus,
     deliveryUpdatedAt: order.deliveryUpdatedAt,
+    restaurantDecisionStatus: order.restaurantDecisionStatus,
+    restaurantDecisionAt: order.restaurantDecisionAt,
+    restaurantDecisionReason: order.restaurantDecisionReason,
+    restaurantPrepEstimateMinutes: order.restaurantPrepEstimateMinutes,
+    dispatchChecklist: (() => {
+      try { return JSON.parse(order.dispatchChecklistJson); } catch { return {}; }
+    })(),
+    dispatchCheckedAt: order.dispatchCheckedAt,
+    dispatchCheckedBy: order.dispatchCheckedBy,
     fulfillmentType: order.fulfillmentType,
     isHomologation: order.isHomologation,
     grandTotalCents: order.grandTotalCents,

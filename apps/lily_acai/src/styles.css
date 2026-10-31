@@ -3111,6 +3111,24 @@ img, svg { max-width: 100%; }
   margin: 4px 0 0;
 }
 
+.courier-availability {
+  display: grid;
+  gap: 6px;
+  min-width: min(300px, 100%);
+}
+
+.courier-availability small {
+  color: var(--cl-color-muted);
+  line-height: 1.4;
+}
+
+.courier-online {
+  background: #216b45;
+  color: white;
+}
+
+.review-fields { grid-column: 1 / -1; }
+
 .courier-section {
   display: grid;
   gap: 16px;

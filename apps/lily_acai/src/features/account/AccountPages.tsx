@@ -227,6 +227,16 @@ export function OrderDetailPage() {
     <div className="checkout-heading"><div><span className="eyebrow">Pedido</span><h1>{order.orderNumber}</h1><p>{order.fulfillmentType === "delivery" ? "Entrega" : "Retirada"} · {orderStatusLabel(customerOrderStatus(order))}</p></div><Link className="button ghost" to="/pedidos">Voltar</Link></div>
     <OrderTimeline order={order} />
 
+    {order.fulfillmentType === "delivery" && order.restaurantDecisionStatus === "accepted" && <section className="payment-approved-card">
+      <strong>O restaurante aceitou seu pedido</strong>
+      {order.restaurantPrepEstimateMinutes && <p>Previsão inicial de preparo: cerca de {order.restaurantPrepEstimateMinutes} minutos.</p>}
+      <small>O prazo é estimado e pode mudar conforme a operação.</small>
+    </section>}
+
+    {((order.fulfillmentType === "delivery" && ["delivered", "left_delivery"].includes(order.deliveryStatus))
+      || (order.fulfillmentType === "pickup" && order.operationStatus === "completed"))
+      && <Link className="button primary" to={`/pedidos/${order.id}/avaliar`}>Avaliar pedido</Link>}
+
     {order.fulfillmentType === "delivery" && order.routeEstimate && <section className="route-estimate-card">
       <span className="eyebrow">Previsão de rota</span>
       <strong>{(order.routeEstimate.distanceMeters / 1000).toFixed(1)} km · {Math.max(1, Math.round(order.routeEstimate.durationSeconds / 60))} min</strong>
@@ -270,5 +280,6 @@ export function OrderDetailPage() {
     </div>}
         {order.status === "paid" && <div className="payment-approved-card"><strong>Pagamento confirmado</strong><p>O pedido já pode seguir para produção.</p></div>}
     {order.status === "refunded" && <div className="payment-refunded-card"><strong>Pagamento estornado</strong><p>O pagamento deste pedido foi estornado.</p></div>}
+    {order.refundStatus === "pending_confirmation" && <div className="payment-pending-card"><strong>Reembolso em processamento</strong><p>A loja recusou este pedido. A confirmação depende do meio de pagamento e ainda não foi concluída.</p></div>}
   </section>;
 }

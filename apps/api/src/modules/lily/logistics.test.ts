@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
 import { lilyOrderSecurityCode } from "./logistics-codes";
+import { expireCourierOffers, offerCourierForOrder } from "./courier-dispatch";
 
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
@@ -77,6 +78,9 @@ async function createDelivery(input: {
   operationStatus?: string;
   deliveryStatus?: string;
   courierUserId?: string | null;
+  userId?: string | null;
+  restaurantDecisionStatus?: string;
+  dispatchChecked?: boolean;
   whatsappUpdatesOptIn?: boolean;
 } = {}) {
   const suffix = crypto.randomBytes(5).toString("hex");
@@ -86,6 +90,7 @@ async function createDelivery(input: {
       idempotencyKey: `delivery-${suffix}`,
       requestFingerprint: `delivery-fingerprint-${suffix}`,
       phoneNormalized: "+5567999910101",
+      userId: input.userId ?? null,
       fulfillmentType: "delivery",
       status: input.status ?? "paid",
       operationStatus: input.operationStatus ?? "ready_for_dispatch",
@@ -93,6 +98,9 @@ async function createDelivery(input: {
       deliveryStatus: input.deliveryStatus ?? "waiting_courier",
       deliveryUpdatedAt: new Date(),
       courierUserId: input.courierUserId ?? null,
+      restaurantDecisionStatus: input.restaurantDecisionStatus ?? "accepted",
+      dispatchCheckedAt: input.dispatchChecked === false ? null : new Date(),
+      dispatchChecklistJson: input.dispatchChecked === false ? "{}" : JSON.stringify({ itemsVerified: true, volumeCount: 1, packageSealed: true, thermalBag: true }),
       subtotalCents: 2800,
       deliveryFeeCents: 500,
       discountTotalCents: 0,
@@ -136,6 +144,29 @@ async function createDelivery(input: {
   });
 }
 
+async function makeCourierAvailable(userId: string, offset = 0) {
+  await lilyPrisma.lilyUser.update({
+    where: { id: userId },
+    data: {
+      courierAvailable: true,
+      courierLatitude: -20.45 + offset,
+      courierLongitude: -54.62,
+      courierLocationUpdatedAt: new Date()
+    }
+  });
+}
+
+async function offerTo(orderId: string, userId: string) {
+  await makeCourierAvailable(userId);
+  await lilyPrisma.lilyOrder.update({
+    where: { id: orderId },
+    data: {
+      offeredCourierUserId: userId,
+      courierOfferExpiresAt: new Date(Date.now() + 60_000)
+    }
+  });
+}
+
 async function cleanup() {
   await lilyPrisma.lilyPaymentReconciliation.deleteMany();
   await lilyPrisma.lilyPaymentEvent.deleteMany();
@@ -159,11 +190,15 @@ beforeEach(async () => {
   await lilyPrisma.lilyOperationalSettings.upsert({
     where: { id: "default" },
     update: {
-      pickupAddressText: "Av. Teste, 100 · Campo Grande/MS"
+      pickupAddressText: "Av. Teste, 100 · Campo Grande/MS",
+      pickupLatitude: -20.45,
+      pickupLongitude: -54.62
     },
     create: {
       id: "default",
-      pickupAddressText: "Av. Teste, 100 · Campo Grande/MS"
+      pickupAddressText: "Av. Teste, 100 · Campo Grande/MS",
+      pickupLatitude: -20.45,
+      pickupLongitude: -54.62
     }
   });
 });
@@ -191,9 +226,163 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     expect(response.json().details.code).toBe("LILY_COURIER_REQUIRED");
   });
 
+  it("mantém disponibilidade privada e apaga a localização ao ficar indisponível", async () => {
+    const courier = await register("67999908216", "courier", "127.0.0.247");
+    const online = await app.inject({
+      method: "PUT",
+      url: "/api/v1/lily/courier/availability",
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { available: true, latitude: -20.45, longitude: -54.62 }
+    });
+    expect(online.statusCode).toBe(200);
+    expect(online.json()).toEqual({ available: true });
+
+    const offline = await app.inject({
+      method: "PUT",
+      url: "/api/v1/lily/courier/availability",
+      headers: { origin, cookie: courier.cookie, "x-lily-csrf": courier.csrf },
+      payload: { available: false }
+    });
+    expect(offline.statusCode).toBe(200);
+
+    const stored = await lilyPrisma.lilyUser.findUniqueOrThrow({ where: { id: courier.user.id } });
+    expect(stored.courierAvailable).toBe(false);
+    expect(stored.courierLatitude).toBeNull();
+    expect(stored.courierLongitude).toBeNull();
+    expect(stored.courierLocationUpdatedAt).toBeNull();
+  });
+
+  it("oferece primeiro ao courier disponível mais próximo e segue ao próximo após recusa", async () => {
+    const farther = await register("67999908217", "courier", "127.0.0.248");
+    const nearer = await register("67999908218", "courier", "127.0.0.249");
+    const order = await createDelivery();
+    await makeCourierAvailable(farther.user.id, 0.02);
+    await makeCourierAvailable(nearer.user.id, 0.01);
+
+    await offerCourierForOrder(order.id);
+    const firstOffer = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id } });
+    expect(firstOffer.offeredCourierUserId).toBe(nearer.user.id);
+    expect(firstOffer.courierOfferExpiresAt?.getTime()).toBeGreaterThan(Date.now());
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/courier/deliveries/${order.id}/reject`,
+      headers: { origin, cookie: nearer.cookie, "x-lily-csrf": nearer.csrf },
+      payload: { reason: "route_not_viable", note: "indisponível neste momento" }
+    });
+    expect(rejected.statusCode).toBe(200);
+
+    const nextOffer = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id } });
+    expect(nextOffer.offeredCourierUserId).toBe(farther.user.id);
+  });
+
+  it("expira a tentativa no prazo e entrega a oferta seguinte ao próximo courier", async () => {
+    const nearer = await register("67999908221", "courier", "127.0.0.252");
+    const farther = await register("67999908222", "courier", "127.0.0.253");
+    const order = await createDelivery();
+    await makeCourierAvailable(nearer.user.id, 0.005);
+    await makeCourierAvailable(farther.user.id, 0.02);
+
+    await offerCourierForOrder(order.id);
+    await lilyPrisma.lilyOrder.update({
+      where: { id: order.id },
+      data: { courierOfferExpiresAt: new Date(Date.now() - 1) }
+    });
+    await expireCourierOffers();
+
+    const updated = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id } });
+    expect(updated.offeredCourierUserId).toBe(farther.user.id);
+    const attempts = await lilyPrisma.lilyDeliveryAssignment.findMany({ where: { orderId: order.id } });
+    expect(attempts).toHaveLength(1);
+    expect(attempts[0]).toMatchObject({ courierUserId: nearer.user.id, status: "expired" });
+  });
+
+  it("exige decisão do restaurante, registra ETA de preparo e não declara reembolso concluído", async () => {
+    const admin = await register("67999908219", "admin", "127.0.0.250");
+    const acceptedOrder = await createDelivery({
+      operationStatus: "received",
+      deliveryStatus: "not_ready",
+      restaurantDecisionStatus: "pending",
+      dispatchChecked: false
+    });
+    const accepted = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/kitchen/orders/${acceptedOrder.id}/decision`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { action: "accept", prepEstimateMinutes: 25 }
+    });
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json().order).toMatchObject({
+      restaurantDecisionStatus: "accepted",
+      restaurantPrepEstimateMinutes: 25,
+      operationStatus: "received"
+    });
+
+    const rejectedOrder = await createDelivery({
+      operationStatus: "received",
+      deliveryStatus: "not_ready",
+      restaurantDecisionStatus: "pending",
+      dispatchChecked: false
+    });
+    const rejected = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/admin/kitchen/orders/${rejectedOrder.id}/decision`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { action: "reject", reason: "Item indisponível" }
+    });
+    expect(rejected.statusCode).toBe(200);
+    expect(rejected.json()).toMatchObject({ refundRequired: true });
+    const stored = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: rejectedOrder.id } });
+    expect(stored.status).toBe("paid");
+    expect(stored.operationStatus).toBe("cancelled");
+    expect(stored.refundStatus).toBe("pending_confirmation");
+  });
+
+  it("só abre o despacho após o checklist e deixa claro quando não há courier disponível", async () => {
+    const admin = await register("67999908223", "admin", "127.0.0.254");
+    const order = await createDelivery({ dispatchChecked: false });
+    const response = await app.inject({
+      method: "PUT",
+      url: `/api/v1/lily/admin/kitchen/orders/${order.id}/dispatch-checklist`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { itemsVerified: true, volumeCount: 2, packageSealed: true, thermalBag: true }
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ complete: true, offered: false });
+    expect(response.json().message).toContain("quando houver entregador disponível");
+    const stored = await lilyPrisma.lilyOrder.findUniqueOrThrow({ where: { id: order.id } });
+    expect(stored.dispatchCheckedAt).not.toBeNull();
+    expect(stored.dispatchCheckedBy).toBe(admin.user.id);
+  });
+
+  it("aceita avaliação após entrega, limita categorias à entrega e impede duplicidade", async () => {
+    const customer = await register("67999908220", "customer", "127.0.0.251");
+    const order = await createDelivery({ userId: customer.user.id, deliveryStatus: "delivered" });
+    const submitted = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/customer/orders/${order.id}/review`,
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      payload: { store: { rating: 5, comment: "Muito bom" }, delivery: { rating: 4 }, platform: { rating: 5 } }
+    });
+    expect(submitted.statusCode).toBe(201);
+    expect(submitted.json().review).toMatchObject({
+      store: { rating: 5, comment: "Muito bom" },
+      delivery: { rating: 4 },
+      platform: { rating: 5 }
+    });
+    const duplicate = await app.inject({
+      method: "POST",
+      url: `/api/v1/lily/customer/orders/${order.id}/review`,
+      headers: { origin, cookie: customer.cookie, "x-lily-csrf": customer.csrf },
+      payload: { store: { rating: 5 } }
+    });
+    expect(duplicate.statusCode).toBe(409);
+  });
+
   it("não expõe rua antes do aceite e revela endereço completo somente ao entregador responsável", async () => {
     const courier = await register("67999908202", "courier", "127.0.0.232");
     const order = await createDelivery();
+    await offerTo(order.id, courier.user.id);
 
     const queue = await app.inject({
       method: "GET",
@@ -242,6 +431,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     const first = await register("67999908203", "courier", "127.0.0.233");
     const second = await register("67999908204", "courier", "127.0.0.234");
     const order = await createDelivery();
+    await offerTo(order.id, first.user.id);
 
     const accepted = await app.inject({
       method: "POST",
@@ -256,7 +446,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
       headers: { origin, cookie: second.cookie, "x-lily-csrf": second.csrf }
     });
     expect(conflict.statusCode).toBe(409);
-    expect(conflict.json().details.code).toBe("LILY_DELIVERY_ALREADY_CLAIMED");
+    expect(conflict.json().details.code).toBe("LILY_COURIER_NOT_AVAILABLE");
 
     const stored = await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } });
     expect(stored?.courierUserId).toBe(first.user.id);
@@ -268,6 +458,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     try {
       const courier = await register("67999908215", "courier", ["127", "0", "0", "246"].join("."));
       const order = await createDelivery();
+      await offerTo(order.id, courier.user.id);
 
       const accepted = await app.inject({
         method: "POST",
@@ -301,6 +492,8 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     const first = await register("67999908206", "courier", "127.0.0.236");
     const second = await register("67999908207", "courier", "127.0.0.237");
     const order = await createDelivery();
+    await offerTo(order.id, first.user.id);
+    await makeCourierAvailable(second.user.id, 0.01);
 
     const rejected = await app.inject({
       method: "POST",
@@ -334,6 +527,8 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     const first = await register("67999908208", "courier", "127.0.0.238");
     const second = await register("67999908209", "courier", "127.0.0.239");
     const order = await createDelivery();
+    await offerTo(order.id, first.user.id);
+    await makeCourierAvailable(second.user.id, 0.01);
 
     const accepted = await app.inject({
       method: "POST",
@@ -400,6 +595,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     const courier = await register("67999908210", "courier", "127.0.0.240");
     const admin = await register("67999908211", "admin", "127.0.0.241");
     const order = await createDelivery();
+    await offerTo(order.id, courier.user.id);
 
     const accept = await app.inject({
       method: "POST",
@@ -449,6 +645,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
     const second = await register("67999908213", "courier", "127.0.0.243");
     const admin = await register("67999908214", "admin", "127.0.0.244");
     const order = await createDelivery();
+    await offerTo(order.id, first.user.id);
 
     const accepted = await app.inject({
       method: "POST",
@@ -510,6 +707,7 @@ describe("CookLily Entrega 11D — logística de entregadores", () => {
   it("executa coleta e entrega com códigos de 6 dígitos e registra todas as etapas", async () => {
     const courier = await register("67999908205", "courier", "127.0.0.235");
     const order = await createDelivery({ whatsappUpdatesOptIn: true });
+    await offerTo(order.id, courier.user.id);
 
     const accept = await app.inject({
       method: "POST",

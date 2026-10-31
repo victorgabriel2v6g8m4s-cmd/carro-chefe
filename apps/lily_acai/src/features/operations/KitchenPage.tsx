@@ -9,6 +9,7 @@ import {
 } from "./api";
 import { AllergenNotice } from "../allergens/AllergenNotice";
 import { LilyLoadingSpinner } from "../../loading-spinner";
+import { DispatchChecklistControls, RestaurantDecisionControls } from "./KitchenDeliveryControls";
 
 const COLUMNS: Array<{
   status: KitchenOperationStatus;
@@ -54,6 +55,7 @@ function paymentLabel(status: string) {
 
 function actionLabel(order: KitchenOrder) {
   if (order.operationStatus === "received") {
+    if (order.fulfillmentType === "delivery" && order.restaurantDecisionStatus !== "accepted") return "Aguardando decisão do restaurante";
     return order.financialStatus === "paid" ? "Receber e liberar montagem" : "Receber pedido";
   }
   if (order.operationStatus === "waiting_payment") {
@@ -67,6 +69,7 @@ function KitchenCard(props: {
   order: KitchenOrder;
   csrfToken: string;
   onUpdated: (order: KitchenOrder) => void;
+  onRefresh: () => Promise<void>;
   onError: (message: string) => void;
 }) {
   const { order } = props;
@@ -75,6 +78,9 @@ function KitchenCard(props: {
     order.operationStatus === "waiting_payment"
     && order.financialStatus !== "paid";
   const finalKitchenStage = order.operationStatus === "ready_for_dispatch";
+  const waitingRestaurantDecision = order.fulfillmentType === "delivery"
+    && order.operationStatus === "received"
+    && order.restaurantDecisionStatus === "pending";
   const printable = order.financialStatus === "paid" && ["preparing", "ready_for_dispatch"].includes(order.operationStatus);
 
   async function advance() {
@@ -138,6 +144,20 @@ function KitchenCard(props: {
       <strong>Observação do pedido:</strong> {order.customerNote}
     </p>}
 
+    {waitingRestaurantDecision && <RestaurantDecisionControls
+      order={order}
+      csrfToken={props.csrfToken}
+      onDone={props.onRefresh}
+      onError={props.onError}
+    />}
+
+    {order.fulfillmentType === "delivery" && finalKitchenStage && order.restaurantDecisionStatus === "accepted" && <DispatchChecklistControls
+      order={order}
+      csrfToken={props.csrfToken}
+      onDone={props.onRefresh}
+      onError={props.onError}
+    />}
+
     {finalKitchenStage && order.fulfillmentType === "delivery" && <div className="kitchen-pickup-code">
       <span>Código de coleta</span>
       {order.pickupCode
@@ -159,6 +179,7 @@ function KitchenCard(props: {
         className={finalKitchenStage ? "button ghost" : "button primary"}
         type="button"
         disabled={busy || blockedByPayment || finalKitchenStage}
+        hidden={waitingRestaurantDecision}
         onClick={() => void advance()}
       >
         {busy ? "Atualizando..." : actionLabel(order)}
@@ -273,6 +294,7 @@ export function KitchenPage() {
             csrfToken={session.csrfToken}
             onError={setError}
             onUpdated={updateOrder}
+            onRefresh={() => load()}
           />)}
           {(grouped[column.status] ?? []).length === 0 && <div className="kitchen-empty">
             Nenhum pedido nesta etapa.

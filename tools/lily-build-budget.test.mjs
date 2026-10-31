@@ -35,7 +35,7 @@ test("avalia build dentro e fora do budget", () => {
     js: { files: 1, rawBytes: 820_000, gzipBytes: 230_000 },
     initialJs: { files: 1, rawBytes: 820_000, gzipBytes: 120_000 },
     largestJsChunkBytes: 400_000,
-    css: { files: 1, rawBytes: 184_000, gzipBytes: 37_000 },
+    css: { files: 1, rawBytes: 190_000, gzipBytes: 37_000 },
     combinedGzipBytes: 270_000
   };
   const labels = evaluateLilyBuildBudget(over).map((item) => item.label);

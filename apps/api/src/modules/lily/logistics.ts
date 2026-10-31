@@ -4,6 +4,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyCourier } from "./admin-security";
 import { getLilyOperationalSettings } from "./fulfillment";
+import { offerCourierForOrder } from "./courier-dispatch";
 import {
   lilyLogisticsCodeConfiguration,
   verifyLilyOrderSecurityCode
@@ -140,6 +141,7 @@ function serializeDelivery(
     deliveryUpdatedAt: order.deliveryUpdatedAt,
     courierUserId: assignedToActor ? order.courierUserId : null,
     assignedToMe: assignedToActor,
+    offerExpiresAt: order.offeredCourierUserId === actorUserId ? order.courierOfferExpiresAt : null,
     isHomologation: order.isHomologation,
     itemCount: order.items.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0),
     createdAt: order.createdAt,
@@ -249,18 +251,8 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           status: "paid",
           deliveryStatus: "waiting_courier",
           courierUserId: null,
-          deliveryEvents: {
-            none: {
-              actor: `courier:${context.user.id}`,
-              note: { in: ["courier_rejected", "courier_abandoned"] }
-            }
-          },
-          deliveryAssignments: {
-            none: {
-              courierUserId: context.user.id,
-              status: { in: ["abandoned", "reassigned"] }
-            }
-          }
+          offeredCourierUserId: context.user.id,
+          courierOfferExpiresAt: { gt: new Date() }
         },
         include: deliveryInclude,
         orderBy: [{ deliveryUpdatedAt: "asc" }, { createdAt: "asc" }],
@@ -328,10 +320,26 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 30, timeWindow: "1 minute" } }
   }, async (request) => {
     const context = await requireLilyCourier(request, true);
+    if (context.user.role !== "courier") throw new ApiError(403, "Somente contas de entregador podem aceitar ofertas.", {
+      code: "LILY_COURIER_ROLE_REQUIRED"
+    });
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const now = new Date();
 
     const result = await lilyPrisma.$transaction(async (tx) => {
+      const eligible = await tx.lilyUser.findFirst({
+        where: {
+          id: context.user.id,
+          role: "courier",
+          status: "active",
+          courierAvailable: true,
+          courierLocationUpdatedAt: { gte: new Date(now.getTime() - 90_000) }
+        },
+        select: { id: true }
+      });
+      if (!eligible) throw new ApiError(409, "Fique disponível novamente antes de aceitar a oferta.", {
+        code: "LILY_COURIER_NOT_AVAILABLE"
+      });
       const claimed = await tx.lilyOrder.updateMany({
         where: {
           id,
@@ -339,12 +347,16 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           status: "paid",
           operationStatus: "ready_for_dispatch",
           deliveryStatus: "waiting_courier",
-          courierUserId: null
+          courierUserId: null,
+          offeredCourierUserId: context.user.id,
+          courierOfferExpiresAt: { gt: now }
         },
         data: {
           courierUserId: context.user.id,
           deliveryStatus: "courier_accepted",
-          deliveryUpdatedAt: now
+          deliveryUpdatedAt: now,
+          offeredCourierUserId: null,
+          courierOfferExpiresAt: null
         }
       });
 
@@ -361,6 +373,16 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           status: "active",
           assignedBy: `courier:${context.user.id}`,
           assignedAt: now
+        }
+      });
+
+      await tx.lilyUser.update({
+        where: { id: context.user.id },
+        data: {
+          courierAvailable: false,
+          courierLatitude: null,
+          courierLongitude: null,
+          courierLocationUpdatedAt: null
         }
       });
 
@@ -399,6 +421,9 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
     config: { rateLimit: { max: 12, timeWindow: "10 minutes" } }
   }, async (request) => {
     const context = await requireLilyCourier(request, true);
+    if (context.user.role !== "courier") throw new ApiError(403, "Somente contas de entregador podem recusar ofertas.", {
+      code: "LILY_COURIER_ROLE_REQUIRED"
+    });
     const { id } = z.object({ id: idSchema }).parse(request.params);
     const input = transitionSchema.parse(request.body);
     const current = await assignedOrder(id, context.user.id);
@@ -535,6 +560,8 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
       || current.status !== "paid"
       || current.operationStatus !== "ready_for_dispatch"
       || current.deliveryStatus !== "waiting_courier"
+      || current.offeredCourierUserId !== context.user.id
+      || !current.courierOfferExpiresAt || current.courierOfferExpiresAt <= new Date()
       || current.courierUserId) {
       throw new ApiError(409, "Esta entrega não está disponível para recusa.", {
         code: "LILY_DELIVERY_REJECT_INVALID"
@@ -550,10 +577,14 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           operationStatus: "ready_for_dispatch",
           deliveryStatus: "waiting_courier",
           courierUserId: null,
+          offeredCourierUserId: context.user.id,
+          courierOfferExpiresAt: { gt: new Date() },
           deliveryUpdatedAt: current.deliveryUpdatedAt
         },
         data: {
-          deliveryUpdatedAt: current.deliveryUpdatedAt
+          deliveryUpdatedAt: new Date(),
+          offeredCourierUserId: null,
+          courierOfferExpiresAt: null
         }
       });
       if (guarded.count !== 1) {
@@ -570,7 +601,21 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
           note: "courier_rejected"
         }
       });
+      await tx.lilyDeliveryAssignment.create({
+        data: {
+          orderId: id,
+          courierUserId: context.user.id,
+          status: "declined",
+          assignedBy: `courier:${context.user.id}`,
+          assignedAt: current.deliveryUpdatedAt ?? new Date(),
+          endedAt: new Date(),
+          endReason: input.reason,
+          endNote: input.note || null
+        }
+      });
     });
+
+    await offerCourierForOrder(id);
 
     await auditLilyAdmin(context.user.id, "delivery.reject", "order", id, {
       reason: input.reason,
@@ -647,6 +692,8 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
 
       return tx.lilyOrder.findUnique({ where: { id }, include: deliveryInclude });
     });
+
+    await offerCourierForOrder(id);
 
     await auditLilyAdmin(context.user.id, "delivery.abandon", "order", id, {
       fromStatus: current.deliveryStatus,
@@ -851,6 +898,8 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
 
       return tx.lilyOrder.findUnique({ where: { id }, include: deliveryInclude });
     });
+
+    if (!targetCourierUserId) await offerCourierForOrder(id);
 
     await auditLilyAdmin(context.user.id, "delivery.reassign", "order", id, {
       fromCourierUserId: oldCourierUserId,

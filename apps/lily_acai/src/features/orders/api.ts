@@ -100,7 +100,11 @@ export type LilyOrder = {
   orderNumber: string;
   fulfillmentType: "pickup" | "delivery";
   status: string;
+  refundStatus?: "not_required" | "pending_confirmation" | "confirmed";
   operationStatus: string;
+  restaurantDecisionStatus?: "pending" | "accepted" | "rejected";
+  restaurantDecisionAt?: string | null;
+  restaurantPrepEstimateMinutes?: number | null;
   operationUpdatedAt: string;
   deliveryStatus: string;
   deliveryUpdatedAt: string | null;

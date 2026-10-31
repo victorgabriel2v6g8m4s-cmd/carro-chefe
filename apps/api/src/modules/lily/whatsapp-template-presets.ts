@@ -35,6 +35,7 @@ export const LILY_WHATSAPP_STARTER_TEMPLATES: WhatsAppTemplatePreset[] = [
     ]
   },
   utility("awaiting_payment", "Pedido recebido", "Recebemos o pedido {{1}}. O total é {{2}} e estamos aguardando a confirmação do pagamento.", ["numero_do_pedido", "total"]),
+  utility("restaurant_accepted", "Pedido aceito pela loja", "A loja aceitou o pedido {{1}}. Situação: {{2}}.", ["numero_do_pedido", "etapa"]),
   utility("payment_confirmed", "Pagamento confirmado", "Pagamento confirmado para o pedido {{1}}. Seu pedido está {{2}}.", ["numero_do_pedido", "etapa"]),
   utility("order_modified", "Alteração do pedido", "A alteração do pedido {{1}} foi registrada. Situação atual: {{2}}.", ["numero_do_pedido", "alteracao"]),
   utility("preparing", "Pedido em preparo", "O pedido {{1}} está {{2}}. Avisaremos assim que houver uma nova atualização." , ["numero_do_pedido", "etapa"]),
