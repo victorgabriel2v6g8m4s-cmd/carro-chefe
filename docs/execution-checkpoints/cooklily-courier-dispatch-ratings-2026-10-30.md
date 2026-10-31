@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `1de11c66aad0762688479614b84d5c2df9e32efb` (última revisão CI do PR #300; uma expectativa do outbox após aceite ainda falhou e foi corrigida no working tree)
+- head_sha_verified: `dc99322053e451851c6467bf3b59819afab6c0fc` (última revisão CI do PR #300; teste funcional passou; orçamento gzip Linux excedeu por 0,11 KiB, correção CSS em andamento)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
@@ -40,7 +40,7 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI e CodeQL ainda pendentes.
-- CI run `41165951634` no head `1de11c6`: as expectativas de quantidade de templates, decisão e sequência de auditoria passaram; restou corrigir a expectativa do outbox para incluir a notificação `restaurant_accepted`, já ajustada no working tree. Tool Health Linux segue falhando em `app-lily`; build Vite e orçamento passam localmente, diferença Linux ainda requer investigação.
+- CI run `41165951634` no head `1de11c6`: testes seguiram falhando apenas por expectativa de outbox, corrigida no commit posterior. O run `41166140977` no head `dc99322` passou pelos testes funcionais observados e falhou no build CookLily porque a soma JS+CSS gzip foi 228,11 KiB / 228 KiB (excesso de 0,11 KiB) com Vite 8.2.1 no Linux. CSS da disponibilidade foi enxugado sem alterar o comportamento para criar margem; build Windows Vite 8.3.5 mede 227,69 KiB.
 - A suíte de integração local para os dois testes corrigidos não inicia neste Windows porque o binding nativo `better-sqlite3` está ausente; não executar `pnpm approve-builds` nem reconstruir o binding neste ambiente. Validar os ajustes no runner Linux do PR.
 
 ## Migrations
@@ -66,4 +66,4 @@
 
 ## Próxima ação exata
 
-Commitar e enviar a expectativa do outbox; então reexecutar CI, obter detalhe suficiente da falha Linux de `app-lily`, e só integrar PR #300 quando todos os gates obrigatórios passarem.
+Commitar e enviar a expectativa do outbox e a redução pequena de CSS; reexecutar CI e só integrar PR #300 quando gates de teste, build e Tool Health passarem.
