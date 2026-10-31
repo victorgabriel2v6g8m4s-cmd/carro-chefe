@@ -2,7 +2,7 @@
 
 ## Região
 
-Orquestra os produtos executáveis (`api`, `gestao`, `site` e `qr_manipulator`). Herda integralmente `REGRAS.md` e o `AGENTS.md` raiz.
+Orquestra os produtos executáveis ainda ativos (`api`, `site` e `lily_acai`). A antiga Central Operacional (`gestao`) foi descontinuada e não deve ser buildada/publicada. Herda integralmente `REGRAS.md` e o `AGENTS.md` raiz.
 
 ## Arquitetura e limites
 
@@ -23,7 +23,7 @@ UI → hooks/services → API versionada → módulos de domínio → persistên
 
 ## Pronto
 
-- [ ] Cadeia de política verificada com `npm run policy:preflight -- --scope apps/<app>`.
+- [ ] Regras aplicáveis revisadas; `policy:preflight` é opcional e local.
 - [ ] Fluxo ponta a ponta, estados de erro/vazio/loading, mobile e teclado avaliados.
-- [ ] `npm run check`, `npm test` e build da aplicação passam.
+- [ ] `npm run check`, testes pertinentes e build da aplicação passam.
 - [ ] Logs não expõem segredos/dados pessoais e documentação regional continua válida.

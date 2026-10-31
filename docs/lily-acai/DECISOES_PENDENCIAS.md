@@ -2,6 +2,19 @@
 
 **Última auditoria:** 30/10/2026
 **Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
+**Decisões confirmadas pelo proprietário:** 30/10/2026; revisadas após integrar PR #249.
+
+## Decisões do proprietário — 30/10/2026
+
+- Recuperação de senha: enviar código de verificação pelo WhatsApp ao número vinculado à conta. Implementação deve expirar e limitar tentativas/reenvios, não revelar se o telefone existe e invalidar códigos após uso ou troca de senha.
+- Responsável/controlador de privacidade informado: Victor Gabriel Martins de Sousa, CNPJ 64.600.997/0001-01. Contato: `cooklily.ofc@gmail.com`.
+- Retenção operacional informada: faixa de 180 a 365 dias. O prazo aplicável a cada classe de dados ainda precisa ser definido; não aplicar a faixa indiscriminadamente a dados sujeitos a obrigação legal ou preservação de auditoria.
+- LILY-PEND-009 (produção de fotografias adicionais): retirada do backlog por enquanto; fotos adicionais ficam sem prioridade aprovada.
+- Cancelamento com cupom/promoção/oferta: antes de confirmar, pedir ao cliente consentimento explícito de que o benefício já apurado não será restituído/disponibilizado novamente. Registrar a ciência e aplicar a regra de forma consistente no benefício efetivamente resgatado.
+- Totem: criar aplicação dedicada, integrada às fontes autoritativas de catálogo/disponibilidade e ao ERP próprio.
+- ERP: será desenvolvido pelo próprio projeto; seleção de fornecedor externo removida do roadmap.
+- Central Operacional do Carro Chefe: descontinuada; código e artefatos associados não devem compor bundles nem deploy da VPS. A remoção das dependências remanescentes está em andamento.
+- Ferramentas do repositório: ficam disponíveis para uso local dos agentes e não devem ser publicadas/copiadas para a VPS; scripts de infraestrutura de deploy em `deploy/` são exceção operacional.
 
 ## Atualização pontual — 08/10/2026
 
@@ -55,13 +68,13 @@
 | LILY-PEND-006 | Preços | **resolvida** para o cardápio inicial | — |
 | LILY-PEND-007 | Adicionais | **resolvida** para o cardápio inicial | — |
 | LILY-PEND-008 | Admin | painel staff implementado; criar/homologar primeira conta staff segura na publicação | deploy/homologação |
-| LILY-PEND-009 | Fotografia | morango/maracujá aprovados; produzir Café e demais gradualmente | mídia |
+| LILY-PEND-009 | Fotografia adicional | retirada do backlog por decisão do proprietário em 30/10/2026; sem trabalho de produção aprovado por enquanto | — |
 | LILY-PEND-010 | Horários/capacidade | configuração implementada; preencher/homologar valores reais na VPS | operação |
 | LILY-PEND-011 | Entrega | implementação concluída; configurar/homologar regiões, taxa e mínimo reais | Entrega 06 |
 | LILY-PEND-012 | Retirada | implementação concluída; configurar/homologar endereço e horários reais | Entrega 06 |
-| LILY-PEND-013 | Pagamento | **parcial:** infraestrutura financeira integrada; QR Pix próprio foi lido em outro celular e o valor da cobrança foi conferido. Nenhum pagamento foi concluído, portanto recebimento, confirmação financeira e atualização do pedido continuam pendentes. Crédito/débito Mercado Pago e coexistência com Pix próprio também dependem de disponibilidade real/credenciais/homologação | Entrega 07 / ADR-002 |
-| LILY-PEND-014 | Jurídico | controlador/contato de privacidade | publicação final |
-| LILY-PEND-015 | Retenção | prazos de PII/logs | política final |
+| LILY-PEND-013 | Pagamento | **parcial:** QR e valor conferidos, sem pagamento concluído no registro. Recebimento, confirmação, conciliação e transição do pedido continuam sem homologação real; métodos aprovados pelo ADR-002 dependem de credenciais/disponibilidade e habilitação autorizada | Entrega 07 / ADR-002 |
+| LILY-PEND-014 | Jurídico | controlador e contato informados: Victor Gabriel Martins de Sousa, CNPJ 64.600.997/0001-01; `cooklily.ofc@gmail.com`. Validar texto/adequação jurídica antes da publicação final | publicação final |
+| LILY-PEND-015 | Retenção | faixa aprovada de 180–365 dias; falta atribuir prazo por classe/finalidade e distinguir retenção legal, auditoria e exclusão/anonimização | política final |
 | LILY-PEND-016 | Marketing | regras operacionais de envio/CRM | CRM |
 | LILY-PEND-017 | Naming CookLily | resolvida | — |
 | LILY-PEND-018 | Foto morango | resolvida | — |
@@ -80,10 +93,10 @@
 | LILY-PEND-031 | Branch canônica | **resolvida para integração:** `cooklily/canonical`; `lily-acai` passa a ser base histórica | governança |
 | LILY-PEND-032 | Gate Entrega 07 | **resolvida tecnicamente:** correção validada no SHA `4b111c2e26b234d83111a58a9b20ef34f773a97a`; CI `36330633129` e CodeQL `36330633098` verdes | — |
 | LILY-PEND-033 | QA UX/mobile | P0 estruturais implementados e validados em CI; homologação visual em aparelhos reais continua necessária; P1/P2 permanecem no backlog detalhado | lançamento |
-| LILY-PEND-034 | Segurança de contas | **MFA staff/admin e revogação dedicada de outras sessões resolvidas tecnicamente**; recuperação de senha continua aberta por falta de canal de verificação aprovado | segurança |
+| LILY-PEND-034 | Segurança de contas | **MFA staff/admin e revogação dedicada de outras sessões resolvidas tecnicamente**; recuperação de senha aguarda implementação pelo canal WhatsApp decidido | segurança |
 | LILY-PEND-035 | Configurações da loja | **resolvida tecnicamente:** `/painel/configuracoes` e `/admin/store-settings` separam canais/endereço público/fidelidade de fulfillment | administração |
 | LILY-PEND-036 | Deep-link de produto | **resolvida tecnicamente:** `?produto=<slug>` abre o modal correto e preserva filtros | conversão |
-| LILY-PEND-037 | Recuperação de senha | definir canal confiável de verificação de titularidade antes de implementar “Esqueci minha senha” | segurança/suporte |
+| LILY-PEND-037 | Recuperação de senha | canal decidido: código de verificação via WhatsApp ao número vinculado. Falta implementar expiração, rate limit, uso único, resposta anti-enumeração e homologação do envio | segurança/suporte |
 | LILY-PEND-038 | Pix próprio | **homologação parcial:** adapter, BR Code, QR personalizado e Copia e Cola integrados; QR lido em segundo celular e valor conferido. Falta pagar uma cobrança e validar recebimento, conciliação/confirmação e transição do pedido para pago | Entrega 11A / ADR-002 |
 | LILY-PEND-039 | Conciliação Pix próprio | **resolvida tecnicamente pela 11I:** ledger, poller e adapter API Pix v2 integrados; falta banco/conta real, OAuth/mTLS/certificado, smoke e tarifas | Entrega 11I |
 | LILY-PEND-040 | Painel do cliente | **resolvido tecnicamente:** timeline, guest tracking, ETA/mapa sem coordenadas e WhatsApp operacional integrados; falta QA real/credenciais externas aplicáveis | Entregas 11C/11F/11G/11H |
@@ -95,14 +108,17 @@
 | LILY-PEND-046 | Reatribuição/cancelamento de entrega | **resolvida tecnicamente:** recusa, desistência pré-coleta, retorno à fila, reatribuição e histórico integrados; falta QA multiusuário real | Entrega 11E |
 | LILY-PEND-047 | Guest tracking | **resolvido tecnicamente:** capability token opaco/hash, página guest e polling integrados; falta QA navegador/mobile real | Entrega 11F |
 | LILY-PEND-048 | QA logística real | testar duas contas courier concorrentes, cozinha e cliente em celulares reais antes de abrir a operação | Entrega 11D |
-| LILY-PEND-049 | Matriz pública de pagamento | implementar decisão ADR-002: Pix próprio + cartão crédito/débito Mercado Pago simultaneamente selecionáveis; hoje débito não existe e o provider é global/exclusivo | ADR-002 / pagamentos |
-| LILY-PEND-050 | UX de alergênicos | implementar sanfona fechada por padrão e revelar aviso/conteúdo somente após ação do usuário, preservando acessibilidade e snapshots | ADR-002 / Entrega 12 |
+| LILY-PEND-049 | Matriz pública de pagamento | **roteamento implementado conforme ADR-002** para Pix próprio + crédito/débito Mercado Pago selecionáveis por método. Falta configuração/credenciais e homologação financeira real | ADR-002 / pagamentos |
+| LILY-PEND-050 | UX de alergênicos | **implementada tecnicamente conforme ADR-002** (sanfona fechada por padrão, aviso sob ação, acessibilidade e snapshot); QA visual/teclado real e revisão dos dados permanecem abertos | ADR-002 / Entrega 12 |
 | LILY-PEND-051 | Deploy da canonical | hotfix do deployer integrado no head `24bef161...`; executar novo deploy e comprovar health, backup, migrations e rollback antes de chamar a versão atual de homologada | deploy/homologação |
-| LILY-PEND-052 | UI definitiva do site | **próxima prioridade:** finalizar a experiência pública conforme kit de marca/ADR-002; revisar estrutura compartilhada, landing, catálogo, produto/carrinho, checkout/pagamento, acompanhamento, responsividade, acessibilidade e estados vazios/erro/carregamento. A leitura do QR está homologada; a liquidação do pagamento fica em etapa posterior | UI / QA real |
-| LILY-PEND-053 | Pix Sicredi alternativo | **implementado nesta branch:** chave cifrada, seleção de provider e QR/BR Code com valor e Copia e Cola; manter provider atual até seleção admin. QR estático não comprova liquidação. Falta integração autenticada/reconciliação bancária e homologação | pagamento / segurança |
-| LILY-PEND-054 | OTP no cadastro | template de autenticação preparado como rascunho; cadastro ainda não emite nem valida desafio telefônico. Implementar rate limit, expiração, uso único e recuperação segura | conta / segurança |
-| LILY-PEND-055 | Inbox e IA WhatsApp | templates preparados como rascunhos; webhook valida eventos, mas guarda apenas metadados/hash e não processa conversa inbound. Faltam inbox humana, opt-in conversacional, retenção, handoff e integração IA segura | atendimento / privacidade |
-| LILY-PEND-056 | Atribuição de origem | tracking atual suporta `la_qr`, `la_campaign`, `la_variant` e aliases `cc_*`; faltam UTM/referrer/click IDs com consentimento, minimização e retenção definida | analytics / LGPD |
+| LILY-PEND-052 | UI definitiva do site | **trabalho de UI segue aberto:** revisar landing, catálogo, produto/carrinho, checkout, acompanhamento, responsividade, acessibilidade e estados; sanfona já foi implementada tecnicamente, sujeita a QA real | UI / QA real |
+| LILY-PEND-053 | ERP próprio | desenvolver ERP do projeto; levantar domínios, requisitos, fontes oficiais, contratos e sequência de migração. Não selecionar fornecedor externo | roadmap ERP |
+| LILY-PEND-054 | Totem dedicado | decisão tomada: criar aplicação dedicada; detalhar sessão, privacidade, acessibilidade, impressão, pagamentos, contingência e hardware antes de implementação | roadmap totem |
+| LILY-PEND-055 | Cupons em cancelamento | exigir confirmação explícita de ciência antes do cancelamento; benefício aplicado/resgatado não retorna ao saldo/disponibilidade. Falta especificar UX, auditoria e comportamento por status de pedido | cupons / pedidos |
+| LILY-PEND-056 | Marketing/CRM | pendente decisão operacional: preferências de canal/frequência, calendário, segmentação, opt-in/opt-out e métricas aprovadas | CRM |
+| LILY-PEND-057 | Convites de indicação | definir validade, revogação e estados/regras de resgate antes de campanhas; ver proposta registrada no roadmap | indicação |
+| LILY-PEND-058 | Central Operacional | descontinuada; bundle e rota estática removidos do build/runtime. Endpoints, módulos administrativos e persistência legada ainda precisam inventário e remoção segura; rotas web antigas retornam 410 | deploy / manutenção |
+| LILY-PEND-059 | Ferramentas locais no deploy | build e gate de Tool Health retirados do deployer; confirmar em limpeza final de runtime que `tools/` não seja copiada para VPS e manter apenas helpers de infraestrutura instalados explicitamente | deploy |
 
 Não inventar dado operacional ausente. Valores configuráveis ficam no sistema, não hardcoded em documentação.
 
@@ -110,7 +126,7 @@ Não inventar dado operacional ausente. Valores configuráveis ficam no sistema,
 
 A lista canônica dos 40 achados de homologação/QA de 27/09/2026 é:
 
-`docs/lily-acai/PENDENCIAS_UX_SEGURANCA_2026-09-27.md`
+`docs/lily-acai/PENDENCIAS_UX_SEGURANCA_2026-09-27.md` (itens reconciliados com ADR-002 e atualizações posteriores em 30/10/2026)
 
 Itens que já possuem correção no código continuam marcados como **CANDIDATO / REVALIDAR** até prova em deploy real; não fechar pendência apenas com evidência documental ou CSS aparentemente correto.
 

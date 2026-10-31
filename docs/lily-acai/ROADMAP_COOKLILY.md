@@ -172,13 +172,13 @@ Referências: `docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md` e docu
 
 “Corrigir pendências” não autoriza uma rodada genérica de testes. Testes funcionais ocorrem quando solicitados; gates obrigatórios de engenharia/deploy continuam valendo.
 
-## Fase 2 — ERP: prioridade máxima após o site estar pronto para vender
+## Fase 2 — ERP próprio: prioridade máxima após o site estar pronto para vender
 
 Não iniciar a implantação como substituto de um checkout ainda incapaz de concluir pedido e pagamento.
 
 - [ ] Levantar requisitos e integrações necessários à operação CookLily.
-- [ ] Definir o ERP escolhido como fonte oficial dos domínios que efetivamente cobrir: produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro, conforme capacidades reais do fornecedor.
-- [ ] Confirmar API, webhooks, autenticação, limites, custos, permissões, disponibilidade e condições contratuais antes de integrar.
+- [ ] Projetar e desenvolver o ERP do próprio projeto como fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro, por domínio.
+- [ ] Definir APIs/webhooks, autenticação, limites, permissões, disponibilidade, operação, suporte e custo total de propriedade do ERP próprio.
 - [ ] Mapear IDs estáveis de produtos/modificadores e estratégia de sincronização.
 - [ ] Definir autoridade de cada dado; evitar dupla escrita sem reconciliação.
 - [ ] Implementar adaptadores isolados, idempotência, retries, observabilidade e reconciliação.
@@ -189,7 +189,7 @@ Não iniciar a implantação como substituto de um checkout ainda incapaz de con
 
 **Regra arquitetural:** não manter a aplicação como segunda fonte de verdade dos domínios transacionais assumidos pelo ERP. Respeitar `REGRAS.md` e o isolamento CookLily/Carro Chefe.
 
-**Critério de conclusão:** domínios contratados integrados, fontes oficiais documentadas, divergências tratadas e operação aprovada pelo proprietário. Não presumir funcionalidades do ERP antes de avaliar o fornecedor.
+**Critério de conclusão:** domínios implementados e integrados, fontes oficiais documentadas, divergências tratadas e operação aprovada pelo proprietário. Não presumir capacidades antes de especificar e validar o ERP próprio.
 
 ## Fase 3 — Preparação técnica para terceirização completa
 
@@ -207,13 +207,16 @@ Somente a preparação técnica entra neste roadmap; contratação e transferên
 
 Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item depende de escopo e requisitos aprovados.
 
+**Nota de arquitetura:** a Central Operacional do Carro Chefe foi descontinuada pelo proprietário em 30/10/2026. O ERP será desenvolvido pelo projeto. Não reutilizar a Central como painel/ERP nem publicar seus bundles; remover código exclusivo e dependências de runtime com inventário e validação próprios.
+
 ### Segurança de software
 - [ ] Priorizar identidade/acesso, hardening, logs, backups, recuperação e monitoramento.
 - [ ] Manter gates de produção fail-closed e verificações dos runbooks.
 - [ ] Segurança física (câmeras, alarmes, equipamentos) fica fora do escopo, salvo integração de software aprovada.
 
 ### Totem de autoatendimento
-- [ ] Decidir entre fluxo web existente e aplicação dedicada.
+- [x] Aplicação dedicada escolhida pelo proprietário em 30/10/2026.
+- [ ] Projetar e implementar aplicação dedicada.
 - [ ] Integrar a catálogo, disponibilidade e ERP como fontes autoritativas.
 - [ ] Definir sessão, privacidade, acessibilidade, impressão, pagamento e recuperação de falhas.
 - [ ] Usar modo kiosk e impedir acesso do cliente ao sistema operacional/navegador.
@@ -226,13 +229,28 @@ Executar após estabilizar o site e definir a arquitetura com o ERP. Cada item d
 - [ ] Começar por análise/assistência de baixo risco; não conceder autoridade transacional ampla por padrão.
 - [ ] Avaliar qualidade, custo, latência, falhas e mecanismo de desligamento.
 
-## Próximas entregas aprovadas pelo proprietário (2026-10-28)
+## Próximas entregas aprovadas pelo proprietário (2026-10-30)
+
+### Política de marketing e CRM — proposta para decisão
+
+Recomendação para aprovação antes de automações promocionais:
+- consentimento promocional separado de mensagens operacionais, WhatsApp e programa VIP; opt-in explícito por canal e retirada simples;
+- frequência inicial conservadora configurável, com limite sugerido de até 2 campanhas promocionais por semana por canal e supressão após opt-out, reclamação ou bloqueio;
+- segmentar apenas por preferências e comportamento próprio necessários à campanha; evitar perfilamento sensível e não compartilhar PII/eventos identificáveis com plataformas de anúncios;
+- registrar finalidade, versão do consentimento, canal, origem, instante e retirada; manter lista mínima de supressão para respeitar opt-out;
+- medir pedidos pagos, margem de contribuição e recompra por campanha, não apenas abertura/clique; definir janela de atribuição antes de comparar campanhas.
+
+Limite de frequência e janela de atribuição são sugestões, não decisões aprovadas. Envios promocionais aguardam aprovação das regras e homologação de canal/templates.
+
+### Indicações — proposta para decisão
+
+Recomendação: token aleatório com validade configurável; conceder crédito uma vez após novo cadastro elegível completar primeira compra paga e não cancelada; impedir autorreferência, duplicidade de identidade, contas de equipe/suspensas e autoindicação entre contas sob controle comum quando detectável; não revelar ao indicador se um contato específico converteu; permitir revogação/pausa administrativa auditada; definir prazo de contestação e reversão em fraude/estorno antes de campanha. Pontuação/benefício deve ser configurável e aprovado separadamente. A proposta não altera os 2.000 pontos já registrados para a entrega aprovada de 28/10.
 
 ### Critérios para links compartilháveis CookLily
 - Produto: slug público estável; o link pode abrir o produto para visitante, sem expor IDs internos ou dados de conta.
 - Pesquisa: token opaco aleatório, distinto do ID de banco; visitante vê somente título, texto introdutório, duração, quantidade de perguntas e recompensa quando visível/configurada; responder exige conta e o retorno de login/cadastro preserva o link. Pausa/cancelamento desativa o link.
-- Indicação: token aleatório único; crédito ocorre uma vez após novo cadastro elegível, sem autorreferência, contas suspensas ou de equipe; a configuração operacional define os pontos (2.000 nesta entrega). URL não leva telefone/nome/ID interno. Registro e crédito são server-side e idempotentes.
-- Não encaminhar token de indicação, conteúdo de respostas, telefone ou nome a analytics. Expiração/revogação manual de convites permanece decisão futura; pesquisa pode ser desativada pausando/cancelando.
+- Indicação: token aleatório único; crédito ocorre uma vez após novo cadastro elegível, sem autorreferência, contas suspensas ou de equipe; a configuração operacional define os pontos (2.000 nesta entrega). URL não leva telefone/nome/ID interno. Registro e crédito são server-side e idempotentes. Validade e revogação manual de convites ainda aguardam decisão.
+- Não encaminhar token de indicação, conteúdo de respostas, telefone ou nome a analytics. Pesquisa pode ser desativada pausando/cancelando.
 
 ### Em andamento: WhatsApp oficial e agente IA seguro
 - [*] Integração base WhatsApp Cloud API: envio/outbox, callback assinado, inbox, processamento inbound durável e agente estão implantados. A VPS tem configuração Meta, mas inbox/IA e consulta de cliente por embeddings permanecem desligadas; OpenAI secret, chave de criptografia e retenção ainda precisam ser provisionados/aprovados. O checklist protegido do painel não substitui um teste real de entrega.

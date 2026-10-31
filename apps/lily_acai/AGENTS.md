@@ -38,7 +38,7 @@ Aplicação temporária e independente da CookLily. Herda `REGRAS.md`, `AGENTS.m
 
 ## Pronto
 
-- [ ] Preflight do escopo Lily passa.
+- [ ] Regras aplicáveis revisadas; `policy:preflight` é opcional e local.
 - [ ] Nenhuma dependência visual/transacional do Carro Chefe foi introduzida.
 - [ ] Testes proporcionais, typecheck e build passam.
 - [ ] Mobile e teclado verificados.

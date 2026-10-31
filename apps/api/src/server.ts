@@ -24,7 +24,6 @@ app.addHook("onClose", async () => {
   stopLilyWhatsAppAIWorker();
 });
 const siteDist = path.join(config.projectRoot, "apps", "site", "dist");
-const managementDist = path.join(config.projectRoot, "apps", "gestao", "dist");
 const lilyDist = path.join(config.projectRoot, "apps", "lily_acai", "dist");
 
 function isMissingFile(error: unknown) {
@@ -64,13 +63,8 @@ app.get("/lilyacai/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute"
 });
 app.get("/lilyacai", async (_request, reply) => reply.redirect("/lilyacai/"));
 
-app.get("/gestao/*", { config: { rateLimit: { max: 240, timeWindow: "1 minute" } } }, async (request, reply) => {
-  const pathname = new URL(request.url, "http://local").pathname;
-  const relative = pathname.slice("/gestao/".length);
-  if (relative && path.extname(relative)) return sendFile(reply, managementDist, relative);
-  return sendFile(reply, managementDist, "index.html");
-});
-app.get("/gestao", async (_request, reply) => reply.redirect("/gestao/visao-geral"));
+app.get("/gestao", async (_request, reply) => reply.code(410).send({ error: "Central Operacional descontinuada." }));
+app.get("/gestao/*", async (_request, reply) => reply.code(410).send({ error: "Central Operacional descontinuada." }));
 app.get("/favicon.ico", async (_request, reply) => {
   return reply.code(204).header("Cache-Control", "public, max-age=86400").send();
 });

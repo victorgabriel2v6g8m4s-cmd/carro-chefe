@@ -15,12 +15,12 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 
 1. Leia integralmente `REGRAS.md`: ele define as diretrizes obrigatórias de arquitetura, segurança, dados, UX, testes e manutenção.
 2. Este `AGENTS.md` define as regras gerais do Carro Chefe; o `AGENTS.md` mais próximo do caminho trabalhado acrescenta regras locais sem enfraquecer `REGRAS.md`.
-3. Antes de alterar código, execute `npm run policy:preflight -- --agent AG-DEV --scope <região>`; outros agentes usam seu próprio ID e permanecem dentro da especialidade declarada.
+3. `npm run policy:preflight` é uma ferramenta local opcional para agentes; sua execução não é requisito para iniciar ou concluir trabalho. Siga as regras aplicáveis, verifique diffs e execute os gates de qualidade exigidos pelo escopo.
 4. `planejamento/data/plan.seed.json` é a origem versionada da primeira importação.
 5. Em execução, `.runtime/carro-chefe.db` (Prisma + SQLite) é a fonte operacional mutável do plano, histórico e coordenação dos agentes.
 6. `docs/` explica as decisões e a arquitetura em linguagem humana.
 7. `logos/`, `cardápio/` e `elementos gráficos/` são referências visuais; nunca sobrescreva os originais.
-8. O ERP escolhido será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro.
+8. O ERP desenvolvido pelo próprio projeto será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro.
 9. Se houver conflito entre documentação e dado transacional, sinalize a divergência; não invente uma conciliação.
 
 ## 3. Regras inegociáveis
@@ -32,10 +32,12 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 - Nunca registre senhas, tokens, documentos pessoais, dados de cartão ou segredos no repositório.
 - Colete apenas dados necessários, com finalidade definida, retenção e controle de acesso compatíveis com a LGPD.
 - Mudanças de cardápio devem preservar IDs estáveis de produto e modificador para não romper histórico, estoque ou relatórios.
-- Pedidos e pagamentos pertencem ao ERP. O site institucional não deve duplicar checkout nem guardar cartão.
-- A interface do ERP em `/cardapio` só pode ser embutida se o fornecedor permitir por contrato e cabeçalhos de segurança; caso contrário, use redirecionamento transparente.
+- O ERP será desenvolvido pelo próprio projeto e será a fonte oficial de produtos, preços, estoque, pedidos, pagamentos, fiscal e financeiro. O site institucional não deve duplicar checkout nem guardar cartão.
+- A Central Operacional antiga está descontinuada; o ERP próprio futuro terá interface e arquitetura próprias. Não reutilizar `/gestao` como ERP.
 - Segurança alimentar, alvarás, tributação, venda de bebidas alcoólicas e acessibilidade física exigem validação por profissionais e órgãos locais antes da abertura.
 - Arquivos originais de marca são imutáveis. Derivados devem indicar origem, data e finalidade.
+- A Central Operacional está descontinuada e não deve ser incluída em bundles nem releases da VPS. Remova da cadeia de deploy os artefatos, rotas e código exclusivo da Central; qualquer dependência remanescente deve ser identificada e retirada com segurança.
+- Ferramentas de repositório (incluindo `tools/`, scripts de agentes, utilitários e verificadores) ficam disponíveis para uso local dos agentes e não devem ser copiadas nem executadas como parte do runtime publicado na VPS, salvo scripts estritamente classificados como infraestrutura de deploy em `deploy/`.
 
 ## 3.1 Exceção estritamente isolada — CookLily (branch `lily-acai`)
 
@@ -186,7 +188,7 @@ Uma tarefa só passa para `done` quando:
 - o responsável e a data da mudança constam na auditoria;
 - não há segredo ou dado pessoal indevido no repositório.
 
-Para código, executar no mínimo `npm test`, `npm run check` e `npm run build` na raiz. Para interfaces, verificar desktop e celular, navegação por teclado, contraste, estados vazios/erro e ausência de informações inventadas.
+Para código ativo em produção, executar no mínimo `npm run test:runtime`, `npm run check` e `npm run build` na raiz. `npm test` e ferramentas auxiliares são úteis localmente, mas não são automaticamente gates de deploy. Para interfaces, verificar desktop e celular, navegação por teclado, contraste, estados vazios/erro e ausência de informações inventadas.
 
 ## 10. Pesquisa e compras
 
