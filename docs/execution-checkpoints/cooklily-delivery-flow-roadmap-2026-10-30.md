@@ -1,12 +1,12 @@
 # Roadmap do fluxo de pedido e entrega CookLily
 
-- status: validated
+- status: completed
 - owner: AG-DEV (documentação de implementação; decisões operacionais permanecem com o proprietário)
-- branch: `codex/cooklily-delivery-flow-roadmap`
+- branch: `cooklily/canonical`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `7a0bd73dee5dd1f639058ef9ab39c33579931d4a`
-- head_sha_verified: `31bde7ae3d955687cd7bfa16748e036e211d93a0`
-- pull_requests: PR #297 aberto; CI run `41160392805` aprovado em todos os jobs
+- head_sha_verified: merge squash `bd8b041522c9ce52a0203bf6848830643af337bf`
+- pull_requests: PR #297 merged; CI run `41160597170` aprovado em todos os jobs
 - last_verified_at: 2026-10-30
 - interruption_state: none
 
@@ -20,7 +20,7 @@
 ## Em andamento
 
 - Revisar diff e consistência das afirmações; validar links internos e `git diff --check`.
-- Atualizar o checkpoint com os resultados de CI e integrar PR #297 por squash.
+- Roadmap integrado à branch canônica; atualizar este checkpoint com estado final.
 
 ## Gates e testes
 
@@ -46,4 +46,4 @@
 
 ## Próxima ação exata
 
-Depois deste commit do checkpoint, aguardar novamente os gates do PR #297 e integrar por squash se permanecerem verdes; registrar SHA de merge e concluir o checkpoint.
+Roadmap e checkpoint integrados; nenhuma outra ação pendente para esta entrega documental.
