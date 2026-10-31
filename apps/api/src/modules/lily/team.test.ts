@@ -96,6 +96,44 @@ describe("CookLily gestão de equipe e RBAC", () => {
     expect(selfService.statusCode).toBe(403);
   });
 
+  it("preserva a flag de teste ao promover customer courier e permite marcar courier de teste", async () => {
+    const admin = await register("67999907141", "admin");
+    const customer = await register("67999907142");
+    const marked = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/team/${customer.user.id}`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf }, payload: { isTestAccount: true }
+    });
+    expect(marked.statusCode).toBe(200);
+
+    const promoted = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/team/promote",
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { phone: customer.user.phone, role: "courier" }
+    });
+    expect(promoted.statusCode).toBe(200);
+    expect(promoted.json()).toMatchObject({ role: "courier", isTestAccount: true, agentIdentity: false });
+
+    const changed = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/team/${customer.user.id}`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf }, payload: { isTestAccount: true }
+    });
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json().isTestAccount).toBe(true);
+  });
+
+  it("permite marcar teste no mesmo PATCH que promove para courier", async () => {
+    const admin = await register("67999907143", "admin");
+    const customer = await register("67999907144");
+    const updated = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/team/${customer.user.id}`,
+      headers: { origin, cookie: admin.cookie, "x-lily-csrf": admin.csrf },
+      payload: { role: "courier", isTestAccount: true }
+    });
+
+    expect(updated.statusCode).toBe(200);
+    expect(updated.json()).toMatchObject({ role: "courier", isTestAccount: true, agentIdentity: false });
+  });
+
   it("suspensão revoga sessão e admin não remove o próprio acesso", async () => {
     const admin = await register("67999907103", "admin");
     const member = await register("67999907104");

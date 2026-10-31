@@ -137,13 +137,14 @@ async function mfaState(userId: string, sessionId: string, role: string, agentKe
     })
   ]);
   if (!user || !session) throw new ApiError(401, "Sessão Lily inválida.", { code: "LILY_SESSION_INVALID" });
-  const required = isPrivileged(role);
+  const required = isPrivileged(role) && !agentKeyId;
   const agentVerified = Boolean(agentKeyId);
   return {
     required,
-    enabled: user.mfaEnabled || agentVerified,
-    verified: !required || Boolean(session.mfaVerifiedAt) || agentVerified,
+    enabled: user.mfaEnabled,
+    verified: agentVerified ? false : !required || Boolean(session.mfaVerifiedAt),
     setupRequired: required && !user.mfaEnabled && !agentVerified,
+    authenticationMethod: agentVerified ? "agent-key" : "password",
     recoveryCodesRemaining: recoveryHashes(user.mfaRecoveryCodesJson).length
   };
 }

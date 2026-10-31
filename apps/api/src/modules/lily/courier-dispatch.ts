@@ -49,7 +49,11 @@ async function offerNextCourier(tx: Prisma.TransactionClient, orderId: string, n
       courierAvailable: true,
       courierLatitude: { not: null },
       courierLongitude: { not: null },
-      courierLocationUpdatedAt: { gte: cutoff }
+      courierLocationUpdatedAt: { gte: cutoff },
+      OR: [
+        { agentIdentity: false, staffPasswordUpgradeRequired: false, mfaEnabled: true },
+        { agentIdentity: true, isTestAccount: true }
+      ]
     },
     select: { id: true, courierLatitude: true, courierLongitude: true, courierLocationUpdatedAt: true }
   });

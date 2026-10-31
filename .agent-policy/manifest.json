@@ -46,7 +46,7 @@
     {
       "path": "apps/api/src/modules/lily/AGENTS.md",
       "kind": "agents",
-      "sha256": "8f68dedffad0341cfc93a8d76bd17ff07d8cf62d115eb36fb89b2959c0d53c96"
+      "sha256": "965a064f8fcf1cd88d817e6d2e2e6a06292b7d197dd5d64df0fb4824741297dd"
     },
     {
       "path": "apps/api/src/workers/AGENTS.md",
@@ -714,5 +714,5 @@
       ]
     }
   },
-  "manifestHash": "b61512685057d39ff04cc5f0cf45af80d327579368981b13d25928a1d26cb336"
+  "manifestHash": "97d9898f1b4dc2e6a4358dae6e939f1f41cb78559fa8114965f9a613d503a879"
 }

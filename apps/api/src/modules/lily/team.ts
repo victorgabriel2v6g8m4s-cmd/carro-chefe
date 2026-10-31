@@ -47,6 +47,8 @@ function serializeMember(user: any) {
     isTestAccount: user.isTestAccount,
     staffPasswordUpgradeRequired: user.staffPasswordUpgradeRequired,
     mfaEnabled: user.mfaEnabled,
+    agentIdentity: user.agentIdentity,
+    agentKeyActive: user.agentKey?.status === "active",
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     activeSessions: Array.isArray(user.sessions) ? user.sessions.length : 0
@@ -73,7 +75,8 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     const members = await lilyPrisma.lilyUser.findMany({
       where,
       include: {
-        sessions: { where: { revokedAt: null }, select: { id: true } }
+        sessions: { where: { revokedAt: null }, select: { id: true } },
+        agentKey: { select: { status: true } }
       },
       orderBy: [{ role: "desc" }, { createdAt: "asc" }],
       take: 100
@@ -104,13 +107,15 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
         where: { id: target.id },
         data: {
           role: input.role,
-          isTestAccount: false,
+          isTestAccount: input.role === "courier" && target.isTestAccount,
+          ...(target.agentIdentity ? { agentIdentity: false } : {}),
           staffPasswordUpgradeRequired: target.role === input.role
             ? target.staffPasswordUpgradeRequired
             : true
         },
         include: {
-          sessions: { where: { revokedAt: null }, select: { id: true } }
+          sessions: { where: { revokedAt: null }, select: { id: true } },
+          agentKey: { select: { status: true } }
         }
       });
       if (target.role !== input.role) {
@@ -118,6 +123,12 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
           where: { userId: target.id, revokedAt: null },
           data: { revokedAt: new Date() }
         });
+        const key = await tx.lilyAgentKey.findUnique({ where: { userId: target.id }, select: { id: true } });
+        if (key) {
+          await tx.lilyAgentKey.update({ where: { id: key.id }, data: { status: "revoked", revokedAt: new Date() } });
+          await tx.lilyAgentAuthChallenge.deleteMany({ where: { agentKeyId: key.id } });
+          await tx.lilyAgentAuthHandoff.deleteMany({ where: { agentKeyId: key.id } });
+        }
       }
       return user;
     });
@@ -147,9 +158,9 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
 
     const nextRole = input.role ?? target.role;
     const nextStatus = input.status ?? target.status;
-    if (input.isTestAccount !== undefined && target.role !== "customer") {
-      throw new ApiError(409, "Somente uma conta cliente pode ser marcada como conta de teste.", {
-        code: "LILY_TEST_ACCOUNT_CUSTOMER_REQUIRED"
+    if (input.isTestAccount !== undefined && !["customer", "courier"].includes(nextRole)) {
+      throw new ApiError(409, "Somente contas cliente ou courier podem ser marcadas como contas de teste.", {
+        code: "LILY_TEST_ACCOUNT_ROLE_REQUIRED"
       });
     }
     if (target.role === "admin" && target.status === "active"
@@ -158,26 +169,42 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     }
 
     const roleChangedToPrivileged = target.role !== nextRole && ["staff", "courier", "admin"].includes(nextRole);
+    const nextIsTestAccount = ["customer", "courier"].includes(nextRole)
+      ? input.isTestAccount ?? target.isTestAccount
+      : false;
+    const roleChanged = target.role !== nextRole;
+    const keepAgentIdentity = target.agentIdentity && !roleChanged
+      && (nextRole === "admin" || (nextRole === "courier" && nextIsTestAccount));
     const updated = await lilyPrisma.$transaction(async (tx) => {
       const user = await tx.lilyUser.update({
         where: { id },
         data: {
           ...(input.role === undefined ? {} : { role: input.role }),
           ...(input.status === undefined ? {} : { status: input.status }),
-          ...(input.isTestAccount === undefined ? {} : { isTestAccount: input.isTestAccount }),
-          ...(input.role !== undefined && input.role !== "customer" ? { isTestAccount: false } : {}),
+          ...(input.isTestAccount === undefined && input.role === undefined ? {} : { isTestAccount: nextIsTestAccount }),
+          ...(target.agentIdentity && !keepAgentIdentity ? { agentIdentity: false } : {}),
           ...(input.role === "customer" ? { staffPasswordUpgradeRequired: false } : {}),
           ...(roleChangedToPrivileged ? { staffPasswordUpgradeRequired: true } : {})
         },
         include: {
-          sessions: { where: { revokedAt: null }, select: { id: true } }
+          sessions: { where: { revokedAt: null }, select: { id: true } },
+          agentKey: { select: { status: true } }
         }
       });
-      if (input.status === "suspended" || (input.role !== undefined && input.role === "customer")) {
+      if (input.status === "suspended" || roleChanged
+        || (input.isTestAccount === false && target.isTestAccount)) {
         await tx.lilySession.updateMany({
           where: { userId: id, revokedAt: null },
           data: { revokedAt: new Date() }
         });
+      }
+      if (target.agentIdentity && !keepAgentIdentity) {
+        const key = await tx.lilyAgentKey.findUnique({ where: { userId: id }, select: { id: true } });
+        if (key) {
+          await tx.lilyAgentKey.update({ where: { id: key.id }, data: { status: "revoked", revokedAt: new Date() } });
+          await tx.lilyAgentAuthChallenge.deleteMany({ where: { agentKeyId: key.id } });
+          await tx.lilyAgentAuthHandoff.deleteMany({ where: { agentKeyId: key.id } });
+        }
       }
       return user;
     });
@@ -185,7 +212,7 @@ export async function lilyTeamRoutes(app: FastifyInstance) {
     await auditLilyAdmin(context.user.id, "team.update", "user", id, {
       fromRole: target.role,
       toRole: nextRole,
-      isTestAccount: input.role !== undefined && input.role !== "customer" ? false : input.isTestAccount,
+      isTestAccount: nextIsTestAccount,
       fromStatus: target.status,
       toStatus: nextStatus
     });

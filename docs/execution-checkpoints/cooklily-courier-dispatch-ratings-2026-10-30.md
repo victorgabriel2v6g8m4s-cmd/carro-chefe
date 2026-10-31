@@ -31,7 +31,7 @@
 - A tela de gestão de entregas exibiu os estados vazios esperados (zero pedidos e zero vínculos auditados) em ambos os tamanhos.
 - O proprietário forneceu e validou um pin do Google Maps para o ponto de coleta. A configuração foi salva pelo painel `/lilyacai/painel/entrega` e persistiu após recarregar a página. Endereço e coordenadas exatas foram omitidos deste checkpoint por serem localização precisa.
 - Duas contas dedicadas de teste foram criadas pelo fluxo normal, com aceite autorizado dos Termos Operacionais/Aviso de Privacidade e sem consentimentos opcionais. Foram marcadas para teste e promovidas pelo painel para o papel `courier`; a UI confirmou `COURIER active` para ambas.
-- As duas contas aparecem com senha pendente e MFA pendente. O proprietário autorizou a promoção. Cada titular ainda precisa completar a troca da própria senha e configurar MFA; não inserir nem submeter credenciais em nome deles.
+- A observação anterior de senha/MFA pendentes foi supersedida pelo fluxo de identidade por chave em `cooklily-test-courier-agent-auth-2026-10-31.md`. Não solicitar senha nem MFA aos titulares das contas courier de teste.
 
 ## Gates e testes
 
@@ -62,17 +62,17 @@
 - ETA externo é opcional para operação; precisa da configuração existente de provider para ser mostrado.
 - Rejeição de pedido pago marca reembolso pendente, mas a equipe financeira ainda confirma o estorno no provedor.
 - Ainda falta o procedimento operacional completo para cliente ausente, devolução e reclamações; ver guia.
-- Homologação de UI desktop/mobile está concluída no navegador integrado. O teste real de despacho depende de os titulares concluírem a troca de senha e MFA para as duas contas courier e da criação de um pedido de teste sem cobrança real.
+- Homologação de UI desktop/mobile está concluída no navegador integrado. O teste real de despacho depende de concluir o provisionamento de identidade por chave descrito no checkpoint de autenticação e criar pedido de teste sem cobrança real.
 
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
 - Produção está no release `f0393930e45e03e18c2a8305cae1000e80172b4d`; migration confirmada, serviço ativo e smoke externo passou.
-- O pin validado está configurado em produção. Duas contas courier de teste já estão ativas, mas ambas exigem atualização de senha e MFA. Após a conclusão pelos titulares, comprovar prioridade, recusa e expiração em sequência com pedido de teste sem cobrança real.
+- O pin validado está configurado em produção. Duas contas courier de teste estão ativas. A versão atualizada usará autenticação por chave Ed25519, sem senha/MFA; marcar as contas como courier de teste e provisionar chaves públicas distintas após o deploy. Comprovar prioridade, recusa e expiração em sequência com pedido de teste sem cobrança real.
 - Usar exclusivamente navegador integrado Codex. As rotas de entrega foram observadas em desktop 1365×900 e mobile 390×844; não houve overflow horizontal nem erro no console.
-- Os termos e aviso de privacidade foram aceitos no cadastro conforme autorização do proprietário, sem consentimentos opcionais. Os titulares devem concluir troca de senha e MFA; não contornar esses gates nem inserir credenciais por eles.
+- Os termos e aviso de privacidade foram aceitos no cadastro conforme autorização do proprietário, sem consentimentos opcionais. Não pedir nem inserir credenciais humanas; usar o fluxo por chave de agente documentado.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Solicitar que os titulares das duas contas courier de teste concluam a atualização de senha e configurem MFA. Depois, retomar a homologação no navegador integrado usando as duas contas e um pedido de teste sem cobrança real para verificar disponibilidade, oferta sequencial, aceite, recusa, expiração, coleta, status/ETA e avaliação. O pin de coleta está validado e configurado. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
+Concluir o checkpoint `cooklily-test-courier-agent-auth-2026-10-31.md`; depois retomar a homologação no navegador integrado com duas identidades por chave e um pedido de teste sem cobrança real, verificando disponibilidade, oferta sequencial, aceite, recusa, expiração, coleta, status/ETA e avaliação. O pin de coleta está validado e configurado. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.

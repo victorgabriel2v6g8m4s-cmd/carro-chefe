@@ -3,7 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../lib/errors";
-import { createLilySession, getConsentSnapshot, publicLilyUser } from "./auth";
+import { createLilySession, getConsentSnapshot, isAllowedLilyAgentIdentity, publicLilyUser } from "./auth";
 import { LILY_AGENT_SIGNATURE_NAMESPACE, verifyLilyAgentSignature } from "./agent-auth-crypto";
 
 const challengeInput = z.object({ fingerprint: z.string().regex(/^SHA256:[A-Za-z0-9+/]{43}$/) }).strict();
@@ -37,8 +37,8 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
       where: { fingerprint },
       include: { user: true }
     });
-    if (!key || key.status !== "active" || key.revokedAt || !key.user.agentIdentity
-      || key.user.status !== "active" || key.user.role !== "admin") throw invalidAgentAuth();
+    if (!key || key.status !== "active" || key.revokedAt
+      || !isAllowedLilyAgentIdentity(key.user)) throw invalidAgentAuth();
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + CHALLENGE_TTL_MS);
@@ -70,8 +70,7 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
     const now = new Date();
     if (!challenge || challenge.consumedAt || challenge.expiresAt <= now || challenge.attempts >= 5
       || challenge.agentKey.status !== "active" || challenge.agentKey.revokedAt
-      || !challenge.agentKey.user.agentIdentity || challenge.agentKey.user.status !== "active"
-      || challenge.agentKey.user.role !== "admin"
+      || !isAllowedLilyAgentIdentity(challenge.agentKey.user)
       || !verifyLilyAgentSignature(challenge.agentKey.publicKey, signature, challenge.challenge)) {
       if (challenge && !challenge.consumedAt && challenge.expiresAt > now && challenge.attempts < 5) {
         await lilyPrisma.lilyAgentAuthChallenge.updateMany({
@@ -111,8 +110,7 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
     });
     if (!handoff || handoff.consumedAt || handoff.expiresAt <= now
       || handoff.agentKey.status !== "active" || handoff.agentKey.revokedAt
-      || !handoff.agentKey.user.agentIdentity || handoff.agentKey.user.status !== "active"
-      || handoff.agentKey.user.role !== "admin") throw invalidAgentAuth();
+      || !isAllowedLilyAgentIdentity(handoff.agentKey.user)) throw invalidAgentAuth();
 
     const claimed = await lilyPrisma.lilyAgentAuthHandoff.updateMany({
       where: { id: handoff.id, consumedAt: null, expiresAt: { gt: now } },
@@ -137,13 +135,13 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
         rankingOptIn: handoff.agentKey.user.rankingOptIn,
         isTestAccount: handoff.agentKey.user.isTestAccount,
         staffPasswordUpgradeRequired: false,
-        mfaEnabled: true,
+        mfaEnabled: handoff.agentKey.user.mfaEnabled,
         agentIdentity: true
       }),
       csrfToken: session.csrfToken,
       sessionExpiresAt: session.expiresAt,
       consents: await getConsentSnapshot(handoff.agentKey.userId),
-      mfa: { required: true, enabled: true, verified: true, setupRequired: false },
+      mfa: { required: false, enabled: handoff.agentKey.user.mfaEnabled, verified: false, setupRequired: false },
       authenticationMethod: "agent-key"
     };
   });

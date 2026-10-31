@@ -765,8 +765,10 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
       where: {
         role: { in: ["courier", "admin"] },
         status: "active",
-        staffPasswordUpgradeRequired: false,
-        mfaEnabled: true
+        OR: [
+          { agentIdentity: false, staffPasswordUpgradeRequired: false, mfaEnabled: true },
+          { role: "courier", agentIdentity: true, isTestAccount: true }
+        ]
       },
       select: { id: true, displayName: true, role: true },
       orderBy: [{ displayName: "asc" }, { createdAt: "asc" }]
@@ -815,8 +817,9 @@ export async function lilyLogisticsRoutes(app: FastifyInstance) {
       if (!target
         || !["courier", "admin"].includes(target.role)
         || target.status !== "active"
-        || target.staffPasswordUpgradeRequired
-        || !target.mfaEnabled) {
+        || (target.agentIdentity
+          ? target.role !== "courier" || !target.isTestAccount
+          : target.staffPasswordUpgradeRequired || !target.mfaEnabled)) {
         throw new ApiError(400, "O entregador de destino não está apto para receber entregas.", {
           code: "LILY_DELIVERY_TARGET_NOT_ELIGIBLE"
         });

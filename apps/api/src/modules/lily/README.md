@@ -151,4 +151,6 @@ Staff/admin exigem segundo fator TOTP antes de qualquer rota administrativa.
 - customer não exige MFA;
 - senha sem MFA não concede funções administrativas.
 
+A exceção por chave de agente não altera essa regra para usuários humanos: além da conta admin dedicada, somente um courier explicitamente marcado `isTestAccount=true` e provisionado como identidade de agente pode usar autenticação de agente sem senha/MFA. A flag de teste sozinha não altera login; contas de teste sem identidade de agente continuam com senha e MFA conforme o papel. A sessão agente é identificada como `agent-key`, não é reportada nem armazenada como TOTP/MFA verificado e fica limitada às rotas courier. Couriers reais continuam sujeitos à troca de senha privilegiada e MFA.
+
 Rotas de provisionamento/verificação ficam em `/api/v1/lily/customer/security/mfa/*`, permitindo que uma conta promovida configure o fator antes de obter acesso ao namespace admin.

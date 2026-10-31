@@ -341,6 +341,7 @@ export async function lilyRoutes(app: FastifyInstance) {
     const privileged = ["staff", "courier", "admin"].includes(user.role);
     return {
       user: publicLilyUser(user),
+      authenticationMethod: "password",
       csrfToken: session.csrfToken,
       sessionExpiresAt: session.expiresAt,
       consents: await getConsentSnapshot(user.id),
@@ -356,17 +357,19 @@ export async function lilyRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/auth/me", async (request) => {
     const context = await requireLilySession(request);
     const csrfToken = await currentLilyCsrfToken(request, context);
-    const privileged = ["staff", "courier", "admin"].includes(context.user.role);
+    const agentSession = Boolean(context.session.agentKeyId);
+    const privileged = ["staff", "courier", "admin"].includes(context.user.role) && !agentSession;
     return {
       user: publicLilyUser(context.user, Boolean(context.session.agentKeyId)),
+      authenticationMethod: agentSession ? "agent-key" : "password",
       csrfToken,
       sessionExpiresAt: context.session.expiresAt,
       consents: await getConsentSnapshot(context.user.id),
       mfa: {
         required: privileged,
-        enabled: Boolean(context.user.mfaEnabled || context.session.agentKeyId),
-        verified: !privileged || Boolean(context.session.mfaVerifiedAt || context.session.agentKeyId),
-        setupRequired: privileged && !context.user.mfaEnabled && !context.session.agentKeyId
+        enabled: context.user.mfaEnabled,
+        verified: agentSession ? false : !privileged || Boolean(context.session.mfaVerifiedAt),
+        setupRequired: privileged && !context.user.mfaEnabled
       }
     };
   });

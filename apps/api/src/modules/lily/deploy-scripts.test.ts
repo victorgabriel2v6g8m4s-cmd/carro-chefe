@@ -181,7 +181,8 @@ describe("scripts operacionais CookLily", () => {
     const deployer = readFileSync(path.join(root, "deploy/scripts/carro-chefe-deploy"), "utf8");
     const provisioner = readFileSync(path.join(root, "deploy/scripts/lily-agent-key"), "utf8");
     expect(deployer).toContain('install -m 0755 "${APP_DIR}/deploy/scripts/lily-agent-key" /usr/local/sbin/lily-agent-key');
-    expect(provisioner).toContain("role, status FROM LilyUser");
+    expect(provisioner).toContain("role, status, isTestAccount FROM LilyUser");
+    expect(provisioner).toContain('"${USER_ROLE}" == "courier" && "${USER_IS_TEST}" == "1"');
     expect(provisioner).toContain("agentIdentity=1");
     expect(provisioner).toContain("UPDATE LilySession SET revokedAt=CURRENT_TIMESTAMP WHERE userId=");
     expect(provisioner).toContain("security.agent_key.registered");
