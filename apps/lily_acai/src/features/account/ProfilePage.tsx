@@ -364,11 +364,9 @@ export function ProfilePage() {
         <button className="button primary" type="submit" disabled={busy}>{busy ? <LilyLoadingSpinner size="sm" label="Salvando perfil" /> : "Salvar perfil"}</button>
       </form>
 
-      {privileged && <section className="checkout-section security-mfa-section">
-        <h2>{agentAuthenticated ? "Autenticação do agente" : "Autenticação em dois fatores"}</h2>
-        {agentAuthenticated
-          ? <p>Esta identidade usa chave Ed25519 de agente, sem senha ou MFA/TOTP. A chave privada permanece protegida no ssh-agent; o acesso fica restrito ao papel {session.user.role}.</p>
-          : mfaStatus?.enabled
+      {privileged && !agentAuthenticated && <section className="checkout-section security-mfa-section">
+        <h2>Autenticação em dois fatores</h2>
+        {mfaStatus?.enabled
           ? <>
               <p>MFA está ativa. {mfaStatus.verified ? "Esta sessão já confirmou o segundo fator." : "Confirme o código para liberar o painel."}</p>
               {!mfaStatus.verified && <form onSubmit={verifyMfa}>
@@ -408,7 +406,7 @@ export function ProfilePage() {
           <p>Cada código funciona uma única vez.</p>
           <div>{recoveryCodes.map((code) => <code key={code}>{code}</code>)}</div>
         </div>}
-        {nextPath && (agentAuthenticated || mfaStatus?.verified) && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
+        {nextPath && mfaStatus?.verified && <Link className="button primary" to={nextPath}>Continuar para o painel</Link>}
       </section>}
 
       <section className="checkout-section account-sessions-section">
@@ -431,9 +429,7 @@ export function ProfilePage() {
         </button>
       </section>
 
-      {agentAuthenticated
-        ? <section className="checkout-section"><h2>Senha</h2><p>Esta identidade não aceita login por senha. Acesso por chave pode ser revogado pelo operador CookLily.</p></section>
-        : <form className="checkout-section" onSubmit={changePassword}>
+      {!agentAuthenticated && <form className="checkout-section" onSubmit={changePassword}>
         <h2>Segurança</h2>
         <p>Troque sua senha informando a atual. {passwordMinimum === 12 ? "Contas da equipe exigem pelo menos 12 caracteres." : "Clientes exigem pelo menos 8 caracteres."} Outras sessões serão encerradas.</p>
         <label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" required /></label>

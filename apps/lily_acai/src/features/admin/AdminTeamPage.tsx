@@ -42,8 +42,8 @@ export function AdminTeamPage() {
       }, session.csrfToken);
       form.reset();
       setMessage(member.role === "courier" && member.isTestAccount
-        ? `${member.phone} promovido a courier de teste. A flag de teste mantém o login normal; após provisionar uma chave e a identidade de agente, o acesso será por Ed25519, sem senha/MFA e limitado ao fluxo courier.`
-        : `${member.phone} promovido para ${member.role}. Couriers reais e equipe devem atualizar a senha e configurar MFA antes de usar funções operacionais.`);
+        ? `Courier de teste ${member.phone}: login normal até provisionar chave de agente.`
+        : `${member.phone} promovido. Atualize senha e MFA para usar funções operacionais.`);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível promover a conta.");
@@ -83,7 +83,7 @@ export function AdminTeamPage() {
       <div>
         <span className="eyebrow">Segurança e permissões</span>
         <h1>Equipe CookLily</h1>
-        <p>A flag de teste, sozinha, não muda a autenticação. Contas de teste sem identidade de agente continuam com senha e MFA exigido pelo papel. Apenas contas dedicadas e provisionadas como agente usam chave Ed25519 sem senha/MFA; couriers agentes precisam estar marcados como teste e ficam limitados às rotas de entregador.</p>
+        <p>Conta de teste mantém login normal. Só identidade com chave provisionada usa agent-key; courier agente exige flag de teste e acessa apenas rotas courier.</p>
       </div>
       <Link className="button ghost" to="/painel">Painel</Link>
     </div>

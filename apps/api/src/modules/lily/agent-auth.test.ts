@@ -167,6 +167,11 @@ describe("autenticação administrativa por chave de agente", () => {
       authenticationMethod: "password",
       mfa: { required: true, enabled: false, setupRequired: true }
     });
+    const courierApi = await app.inject({
+      method: "GET", url: "/api/v1/lily/courier/deliveries",
+      headers: { cookie: cookieFrom(login) }
+    });
+    expect(courierApi.statusCode).toBe(403);
     const agentChallenge = await app.inject({
       method: "POST", url: "/api/v1/lily/auth/agent/challenges", headers: { origin },
       payload: { fingerprint: parsedKey.fingerprint }
