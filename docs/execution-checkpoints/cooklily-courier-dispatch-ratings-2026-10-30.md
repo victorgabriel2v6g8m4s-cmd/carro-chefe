@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `fa33f16d9557a2f9d8891ee78820e421498dcdec`
-- pull_requests: nenhum
+- head_sha_verified: `1bba4ac0fd3b4e05612dbf238102cd31c7dd2bad` (revision aberta do PR #300)
+- pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — open, draft
 - last_verified_at: 2026-10-31
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
 
@@ -18,6 +18,7 @@
 - Migration aditiva `20261031000000_lily_dispatch_ratings` e testes para schema/distância/availability/reviews foram criados.
 - Guia de configuração do proprietário, ADR e relatório da entrega foram criados/atualizados.
 - Commit `fa33f16` persiste a implementação, migration, testes, roadmap e instruções.
+- Commit `1bba4ac` registra o checkpoint pós-commit; branch foi publicada e PR #300 draft aberto contra a base canônica verificada.
 
 ## Em andamento
 
@@ -39,6 +40,7 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI e CodeQL ainda pendentes.
+- CI run `41165261373`: Node 20, 22, 24, Linux/Windows e qualidade em andamento no último snapshot.
 
 ## Migrations
 
@@ -63,4 +65,4 @@
 
 ## Próxima ação exata
 
-Enviar a branch `codex/cooklily-courier-dispatch-ratings` e abrir PR draft contra `cooklily/canonical` para CI Linux validar a suíte de integração e a migration.
+Esperar o CI do PR #300, inspecionar diagnósticos das integrações/migration e corrigir falhas antes de pedir integração.
