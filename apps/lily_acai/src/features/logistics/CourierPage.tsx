@@ -93,7 +93,6 @@ function DeliveryCard(props: {
         action: action.action,
         ...(action.codeLabel ? { code } : {})
       }, props.csrfToken);
-      event.currentTarget.reset();
       await props.onChanged();
     } catch (cause) {
       props.onError(cause instanceof Error ? cause.message : "Não foi possível atualizar a entrega.");
