@@ -454,6 +454,7 @@ describe("CookLily Entrega 11B — fila da cozinha", () => {
     expect(stored?.deliveryStatus).toBe("waiting_courier");
     expect(stored?.operationEvents.map((event) => event.toStatus)).toEqual([
       "received",
+      "received",
       "waiting_payment",
       "preparing",
       "ready_for_dispatch"
