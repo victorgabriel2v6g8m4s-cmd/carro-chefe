@@ -12,7 +12,7 @@ Este roadmap cobre apenas desenvolvimento de software, integrações, infraestru
 
 ## Regras de execução
 
-1. **Prioridade principal:** primeiro deixar o site aceitando pagamentos e assegurar o fluxo pedido → confirmação autoritativa do pagamento → liberação correta para preparo. Assim que esse fluxo estiver pronto, o **ERP passa a ser a prioridade máxima**.
+1. **Prioridade principal:** primeiro comprovar o fluxo pedido → confirmação autoritativa do pagamento → preparo → despacho → coleta e entrega segura. Fechar os gaps operacionais prioritários do item 9 sem duplicar as bases já implementadas. Assim que pedido, pagamento, preparo e entrega estiverem prontos para operar, o **ERP passa a ser a prioridade máxima**.
 2. **Entrega incremental:** não executar uma bateria completa de testes a cada entrega por iniciativa própria.
 3. **Testes sob solicitação:** testes funcionais/homologação no site real serão executados quando o proprietário pedir. Isso não elimina gates técnicos/de segurança obrigatórios pelo repositório ou pelo deploy.
 4. **Deploy:** cada entrega relevante aprovada para publicação deve ser implantada na VPS e validada em `carrochefe.com/lilyacai/*`, dentro do escopo combinado. O deploy exige autorização explícita para o SHA exato.
@@ -127,12 +127,39 @@ Referências: `docs/lily-acai/entregas/HOMOLOGACAO_QR_PIX_2026-10-08.md`, `docs/
 Produção externa de modelos/arte 3D não é desenvolvimento de software e fica fora do escopo.
 
 ### 9. Gerenciamento próprio de entregas
-- [ ] Revisar o fluxo já implementado antes de criar componentes duplicados.
-- [ ] Fechar gaps concretos em atribuição, fila, coleta, entrega, códigos, reatribuição e histórico.
-- [ ] Manter estados de pagamento, preparo e logística separados.
-- [ ] Preservar acesso mínimo de entregadores e proteção de endereço/telefone.
-- [ ] Documentar configuração operacional e contingências.
-- [ ] Validar em dispositivos reais quando solicitado.
+
+#### Base já implementada — não duplicar
+- [x] Pedido e pagamento são domínios separados; a cozinha só libera produção após confirmação de pagamento. O caminho `received → preparing` não contém uma etapa explícita de aceite/rejeição do restaurante.
+- [x] Fila da cozinha, SLA configurável de preparo, comanda imprimível e transição para `ready_for_dispatch` existem; impressão usa o navegador/sistema, sem integração direta com hardware.
+- [x] Entrega própria possui fila de couriers, aceite atômico, chegada à coleta, confirmação de retirada por código, saída para rota, chegada ao endereço e confirmação da entrega por código. Os códigos atuais têm seis dígitos, são derivados por HMAC e não são armazenados em texto puro.
+- [x] Recusa, desistência e reatribuição administrativa são permitidas antes da retirada; depois de `picked_up`, a reatribuição automática é bloqueada para preservar a cadeia de custódia.
+- [x] Cliente autenticado/guest acompanha eventos por status e polling; há estimativa de rota e ETA após a saída da coleta, explicitamente sem GPS ao vivo. O mapa é auxiliar e indisponibilidade externa não deve bloquear a entrega.
+- [x] Há fundação de notificações transacionais pelo WhatsApp com outbox, consentimento e etapas do pedido; envio real permanece condicionado à configuração Meta, template aprovado e validação consentida descritas no item 3 e na Entrega 11H.
+
+#### Prioridade P0 — fechar antes de declarar a operação de entrega pronta
+- [ ] Definir e documentar o modelo operacional inicial: frota própria, operador contratado ou integração de logística externa; delimitar áreas atendidas, disponibilidade, contingência e responsável por cada transição. Não assumir algoritmo, raio fixo de 5 km, cobertura ou API de terceiros com base somente no exemplo do iFood.
+- [ ] Implementar aceite explícito do restaurante (aceitar/recusar) separado do início do preparo, com timeout, motivo auditável, capacidade de definir/confirmar previsão de preparo e comunicação ao cliente. Evitar que “começar preparo” seja o único sinal de aceite.
+- [ ] Criar conferência de expedição antes da retirada: pedido/itens/quantidades, quantidade de volumes, embalagem lacrada quando aplicável e entrega da bag térmica. Registrar quem conferiu e quando; não incluir dados pessoais desnecessários na comanda.
+- [ ] Especificar cenários de exceção ponta a ponta: falta de entregador, entregador ausente, endereço incorreto, cliente não localizado/ausente, recusa do pedido, falha de contato, cancelamento, retorno ao estabelecimento e reembolso; definir estados permitidos, responsável, prazo, comunicação e trilha de auditoria, sobretudo após a retirada.
+- [ ] Confirmar a política de pagamento. O código disponível lista Pix e cartão online; não foi localizada opção de dinheiro ou pagamento na entrega. Não anunciar nem habilitar pagamento na entrega antes de definir cobrança, conciliação, comprovante, fraude, cancelamento e autorização operacional.
+- [ ] Validar uma jornada autorizada de ponta a ponta (pedido pago → aceite → preparo → conferência → atribuição → coleta → confirmação de entrega) e registrar evidência/limites antes de marcar a operação pronta.
+
+#### Prioridade P1 — previsibilidade e experiência do cliente
+- [ ] Tornar clara a previsão para cada etapa: confirmação/recusa, tempo estimado de preparo, espera por entregador e ETA após saída. Informar quando um horário for estimativa e oferecer atualização em caso de atraso; não prometer minuto exato sem base operacional.
+- [ ] Configurar e homologar notificações de pagamento, aceite, preparo, atraso, pronto, atribuição/coleta, saída, chegada e entrega. Reutilizar a outbox/consentimento do item 3 e manter o fluxo funcional se WhatsApp estiver indisponível.
+- [ ] Decidir se status + ETA atendem ao lançamento ou se há necessidade real de localização ao vivo. Se aprovada, exigir finalidade/consentimento e acesso restrito, transmitir somente durante entrega ativa, não manter histórico de coordenadas, encerrar após conclusão e oferecer fallback sem localização. Não bloquear a entrega se geolocalização/provedor falhar.
+- [ ] Revisar a experiência móvel do cliente, cozinha, expedição e courier, incluindo acessibilidade, rede instável, atualização stale, estados vazios/erro e privacidade por papel.
+
+#### Prioridade P2 — qualidade após a entrega
+- [ ] Criar avaliação do cliente após entrega confirmada, vinculada ao pedido e disponível uma única vez; separar qualidade do produto, embalagem e entrega e coletar somente dados necessários.
+- [ ] Definir moderação, retenção, prevenção de abuso e tratamento de reclamações; não publicar avaliações automaticamente sem política definida.
+- [ ] Avaliar feedback recíproco do courier sobre o restaurante como recurso opcional, com acesso e retenção delimitados. Não confundir essa avaliação com a avaliação do cliente.
+
+#### Integração externa — condicional a contrato e acesso confirmados
+- [ ] Antes de integrar logística iFood ou outro operador, confirmar elegibilidade/contrato, documentação oficial, APIs, eventos, cobertura, tarifas, cancelamento, SLA, suporte e responsabilidades por incidente.
+- [ ] Projetar adapter isolado com idempotência, reconciliação de estados, observabilidade, timeout e fallback operacional; não duplicar status nem assumir disponibilidade/radius descritos em materiais de terceiros.
+
+**Ordem de execução:** P0 primeiro; P1 pode avançar em paralelo após decisões operacionais e sem bloquear fallback; P2 após primeira operação estável; integração externa somente após os gates contratuais. O exemplo de fluxo do iFood serve como referência de experiência, não como especificação de API ou garantia de comportamento para a CookLily.
 
 Referências: `docs/lily-acai/PIX_OPERACAO_PEDIDOS_ROADMAP_2026-09-27.md` e documentos das entregas 11A–11K.
 
