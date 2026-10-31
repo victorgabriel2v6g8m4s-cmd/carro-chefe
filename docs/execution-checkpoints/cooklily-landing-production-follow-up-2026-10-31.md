@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: AG-DEV
-- branch: `codex/fix-landing-public-location`
+- branch: `codex/fix-landing-public-location` (code); `codex/cooklily-landing-deploy-checkpoint` (checkpoint update)
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `126f070d653d6a142f75aa524afba5168aa8c055`
-- head_sha_verified: `3614695199f50d72f941fa4db8a38d262f3eb29a`
-- pull_requests: [#312](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/312) draft; CI pendente
+- head_sha_verified: `22d0e83dc784363d5c2ad9fcf251675cde8fda4a` (PR head; code already merged)
+- pull_requests: [#312](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/312) merged as `7e174f310d6d130991e959c5623b34d95d441db3`; checkpoint update PR pending
 - last_verified_at: 2026-10-31
 - interruption_state: none
 
@@ -17,6 +17,7 @@ Fechar o ciclo da landing CookLily já integrada: homologar a página pública e
 ## Marcos confirmados
 
 - A entrega principal foi integrada pelo PR #311 e publicada na VPS em `126f070d653d6a142f75aa524afba5168aa8c055`.
+- O acompanhamento foi integrado pelo PR #312, squash SHA `7e174f310d6d130991e959c5623b34d95d441db3`. CI run `41243831603` passou em todos os 8 jobs (Node 20/22/24, Windows Supervisor, Tool Health, Workbook Snapshot e Excel Recipe Linux/Windows).
 - `sudo cc status` confirmou `current_sha` e `canonical_sha` iguais a `126f070d653d6a142f75aa524afba5168aa8c055`, serviço ativo, Nginx saudável e gates de build, preflight, static checks e testes aprovados. Log: `/srv/carro-chefe/data/deploy-logs/deploy-20261031-211233-126f070d653d.log`.
 - Landing pública examinada no navegador integrado Codex: desktop `1280×720` e mobile `390×844`; sem overflow horizontal em mobile (`innerWidth=390`, `scrollWidth=390`). Não houve erro de console. Produto da semana, história, ranking lazy-loaded, Reels, login/cadastro sem pedir WhatsApp e localização foram conferidos.
 - Editor `/lilyacai/painel/landing` autenticado pela chave de agente administrativa, examinado em desktop e mobile. Banner, editor Markdown compartilhado, seleção de produto semanal/carrossel, colunas por dispositivo e toggles de ranking/Reels/localização foram conferidos sem salvar alterações.
@@ -37,7 +38,7 @@ Fechar o ciclo da landing CookLily já integrada: homologar a página pública e
 - Suíte completa anterior à correção: 85 arquivos, 444 testes passaram, 3 ignorados. CI do PR de acompanhamento deve validar novamente o estado final.
 - `npm run policy:check` e `git diff --check`: passaram.
 - Commit `3614695199f50d72f941fa4db8a38d262f3eb29a` publicado na branch; PR draft #312 aberto e anexado a esta tarefa.
-- CI/merge/deploy do acompanhamento e homologação final pendentes.
+- CI e merge do acompanhamento passaram; deploy do SHA `7e174f310d6d130991e959c5623b34d95d441db3` e homologação final pendentes.
 
 ## Migrations
 
@@ -51,4 +52,4 @@ Fechar o ciclo da landing CookLily já integrada: homologar a página pública e
 
 ## Próxima ação exata
 
-Verificar CI do PR #312; após sucesso, fazer squash merge, publicar `cooklily/canonical` e repetir a homologação da landing pública em desktop/mobile, incluindo a mensagem correta de endereço vazio. Se o proprietário confirmar endereço público, cadastrá-lo pelo painel e validar endereço/mapa sem usar o campo de retirada.
+Publicar o canonical com PR #312 (`7e174f310d6d130991e959c5623b34d95d441db3`) e repetir a homologação da landing pública em desktop/mobile, incluindo a mensagem correta de endereço vazio. Se o proprietário confirmar endereço público, cadastrá-lo pelo painel e validar endereço/mapa sem usar o campo de retirada.
