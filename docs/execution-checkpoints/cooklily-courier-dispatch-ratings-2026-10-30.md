@@ -1,13 +1,13 @@
 # Disponibilidade, despacho sequencial e avaliações CookLily
 
-- status: in_progress
+- status: partially_completed_deployed
 - owner: AG-DEV
 - branch: `codex/cooklily-courier-dispatch-ratings`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `6da73bcdb064786cef80f7dd1269c7c6790206d2`
-- head_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (squash merge de PR #300 na `cooklily/canonical`)
+- head_sha_verified: `f0393930e45e03e18c2a8305cae1000e80172b4d` (release canônica em produção; squash merge de PR #300)
 - pull_requests: [#300](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/300) — merged
-- last_verified_at: 2026-10-31
+- last_verified_at: 2026-10-31 04:12 UTC
 - interruption_state: retomada após pausa solicitada pelo proprietário; efeitos revistos no Git
 
 ## Concluído e persistido
@@ -23,7 +23,9 @@
 
 ## Em andamento
 
-- Deploy controlado com backup e migration no banco operacional; depois homologar no domínio em desktop/mobile.
+- Deploy em produção concluído no release `f0393930e45e03e18c2a8305cae1000e80172b4d`.
+- Homologação visual feita na aba integrada do Codex em largura móvel: `/lilyacai/entregas` e `/lilyacai/painel/entrega` carregaram; a área de courier mostrou disponibilidade, fila e histórico vazios sem erro após a sessão terminar de carregar; a tela admin apresentou o timeout configurável e os campos do ponto de coleta.
+- Homologação desktop e teste real de despacho continuam pendentes. O painel integrado disponível nesta execução está com largura móvel; não foi possível configurar viewport desktop por essa interface.
 
 ## Gates e testes
 
@@ -39,6 +41,8 @@
 - Teste de orçamento: 4/4 passou; limites agregados foram ajustados modestamente; entrypoint e maior chunk mantêm os limites anteriores.
 - Typecheck raiz/API, Prisma validate/generate e build TypeScript API: passaram.
 - CI run `41166571966`: todos os checks reportados passaram no head `24c719628b8dca770f1d9234218616437cb359de`.
+- Deploy VPS via `sudo carro-chefe-deploy f0393930e45e03e18c2a8305cae1000e80172b4d`: concluído em 2026-10-31. Backups verificados (core 643072 bytes; Lily 2842624 bytes); migration Lily `20261031000000_lily_dispatch_ratings` aplicada; Nginx validado; serviço ativo; readiness e smoke externo passaram. Evidência: `/srv/carro-chefe/data/deploy-logs/deploy-20261031-040740-f0393930e45e.evidence`; log correspondente `.log`.
+- A configuração `pickupLatitude`/`pickupLongitude` foi verificada após migration e está ausente no registro operacional; nenhum valor foi inventado ou gravado. A rota de logística no navegador inicialmente exibiu erro transitório durante carregamento/sessão, mas recarregada após estabilização carregou os estados vazios sem erro.
 
 ## Migrations
 
@@ -57,11 +61,11 @@
 ## Homologação/dependências externas
 
 - GPS em tempo real para cliente está fora da versão 1.
-- Deploy ainda não iniciado. VPS verificada: serviço ativo no release `73721de`; deploy helper, backup verifier, `COOKLILY_LOGISTICS_CODE_KEY` e rota Nginx `/api/v1/lily/courier/` presentes. A consulta não pôde ler as coordenadas porque a migration ainda não está aplicada; não iniciar dispatch sem coordenadas reais configuradas.
-- Após deploy, coordenadas do ponto de coleta e usuário courier de teste precisam ser confirmados no painel antes do teste de oferta sequencial.
-- Usar exclusivamente navegador integrado Codex; verificar desktop e mobile sem abrir Chrome/Edge externo.
+- Produção está no release `f0393930e45e03e18c2a8305cae1000e80172b4d`; migration confirmada, serviço ativo e smoke externo passou.
+- Coordenadas de coleta estão ausentes na produção; cadastrar/validar no painel antes de dispatch. Ainda é necessário um segundo courier de teste para comprovar priorização, recusa e expiração em sequência. Não iniciar pedido/cobrança real.
+- Usar exclusivamente navegador integrado Codex; mobile foi observado. Desktop ainda precisa homologação em viewport amplo, sem abrir Chrome/Edge externo.
 - Não usar pedidos reais ou cobrar pagamentos reais para homologar.
 
 ## Próxima ação exata
 
-Commitar este checkpoint pós-merge na branch de execução e executar `sudo carro-chefe-deploy f0393930e45e03e18c2a8305cae1000e80172b4d`; revisar a evidência de backup/migration/health, então iniciar homologação pelo navegador integrado Codex em desktop e mobile.
+Registrar o resultado do deploy e mobile na canonical por PR de documentação; obter coordenadas reais e duas contas courier de teste autorizadas, configurar as coordenadas no painel, então homologar o despacho sequencial de ponta a ponta e a visualização desktop em navegador integrado Codex. Manter GPS ao vivo fora de escopo até revisão de privacidade dedicada.
