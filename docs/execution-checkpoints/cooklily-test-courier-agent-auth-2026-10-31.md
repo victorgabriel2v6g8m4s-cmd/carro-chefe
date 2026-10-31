@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-courier-homologation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `dbab273eda00de6dfe203e58448faa225bd07274`
-- head_sha_verified: `8e0674201307794fe989bdb00366df52166765ed`
-- pull_requests: nenhuma
+- head_sha_verified: `650fa04d995cdbc93ec7b5a03771380f5731ce53`
+- pull_requests: [#305](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/305) — draft aberto contra `cooklily/canonical`; CI run `41176718321` enfileirado
 - last_verified_at: 2026-10-31 06:25 UTC
 - interruption_state: retomada após bloqueio do IAB; implementação local concluída, homologação de produção pendente
 
