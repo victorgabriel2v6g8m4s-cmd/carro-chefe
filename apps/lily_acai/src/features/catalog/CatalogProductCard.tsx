@@ -9,13 +9,15 @@ export type CatalogProductCardData = {
 export function CatalogProductCard({
   product,
   price,
-  onOpen
+  onOpen,
+  isSoldOut = false
 }: {
   product: CatalogProductCardData;
   price: ReactNode;
   onOpen: () => void;
+  isSoldOut?: boolean;
 }) {
-  return <article className="product-card">
+  return <article className={`product-card${isSoldOut ? " sold-out" : ""}`}>
     <div className="product-card-media">
       <button className="catalog-image-button" type="button" onClick={onOpen} aria-label={`Editar ${product.displayName}`}>
         <img src={product.cover?.url ?? `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`} alt={product.cover?.altText ?? product.displayName} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = `${import.meta.env.BASE_URL}brand/cooklily-logo-96.webp`; }} />
