@@ -5,8 +5,8 @@
 - branch: `codex/fix-landing-public-location`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `126f070d653d6a142f75aa524afba5168aa8c055`
-- head_sha_verified: `126f070d653d6a142f75aa524afba5168aa8c055` (correções locais ainda sem commit)
-- pull_requests: PR de acompanhamento pendente
+- head_sha_verified: `3614695199f50d72f941fa4db8a38d262f3eb29a`
+- pull_requests: [#312](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/312) draft; CI pendente
 - last_verified_at: 2026-10-31
 - interruption_state: none
 
@@ -36,7 +36,8 @@ Fechar o ciclo da landing CookLily já integrada: homologar a página pública e
 - `npm run build`: passou após a correção; bundle CookLily dentro do budget (`242.09 KiB` JS+CSS gzip, limite `245 KiB`).
 - Suíte completa anterior à correção: 85 arquivos, 444 testes passaram, 3 ignorados. CI do PR de acompanhamento deve validar novamente o estado final.
 - `npm run policy:check` e `git diff --check`: passaram.
-- PR/CI/merge/deploy do acompanhamento e homologação final pendentes.
+- Commit `3614695199f50d72f941fa4db8a38d262f3eb29a` publicado na branch; PR draft #312 aberto e anexado a esta tarefa.
+- CI/merge/deploy do acompanhamento e homologação final pendentes.
 
 ## Migrations
 
@@ -50,4 +51,4 @@ Fechar o ciclo da landing CookLily já integrada: homologar a página pública e
 
 ## Próxima ação exata
 
-Concluir revisão de diff, commit e PR draft; aguardar CI verde, fazer squash merge, publicar `cooklily/canonical` e repetir a homologação da landing pública em desktop/mobile, incluindo a mensagem correta de endereço vazio. Se o proprietário confirmar endereço público, cadastrá-lo pelo painel e validar endereço/mapa sem usar o campo de retirada.
+Verificar CI do PR #312; após sucesso, fazer squash merge, publicar `cooklily/canonical` e repetir a homologação da landing pública em desktop/mobile, incluindo a mensagem correta de endereço vazio. Se o proprietário confirmar endereço público, cadastrá-lo pelo painel e validar endereço/mapa sem usar o campo de retirada.
