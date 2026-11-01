@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `d9bb40aa0b35b73298db55fad681c17fbb2c8488`
-- head_sha_verified: `50345b00daf65d1360dfaae6552fafd5f3e0cfd4` (código; merge de sincronização `f5038f25` contém apenas checkpoint)
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) open, CI `41279447156` success no SHA de código `50345b00`; após sync para canonical `d9bb40aa`, execução `41279793939` está pendente no merge commit `f5038f25`
+- head_sha_verified: `bca50e86720ef7fea789e4c3253fd043807ff7d0` (PR #317 integrada por squash)
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) merged por squash em `bca50e86720ef7fea789e4c3253fd043807ff7d0`, CI `41279816196` success no head `f5471c30`
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -26,8 +26,9 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Em andamento
 
-- PR #317 foi sincronizada com a canonical atual `d9bb40aa`; a única resolução de conflito foi neste checkpoint. CI do merge commit `f5038f25` pendente. Depois do CI, integrar e fazer deploy.
-- Configurar o endereço público pelo painel autenticado e homologar o domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
+- PR #317 integrada na canonical em `bca50e86720ef7fea789e4c3253fd043807ff7d0` após CI completo `41279816196` passar.
+- Primeira tentativa de deploy em `2026-11-01 06:17 UTC` falhou no gate do budget no SHA `bca50e8`; build VPS mediu JS gzip `205,21/205 KiB` e combinado `246,13/246 KiB`. O deployer restaurou o release anterior `fc96a845`; migrations reais e troca do serviço não ocorreram. Ajustar margem no budget em PR corretiva antes de nova tentativa.
+- Após novo merge/deploy, configurar o endereço público pelo painel autenticado e homologar o domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
 
@@ -35,7 +36,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Typecheck `tsc --noEmit -p tsconfig.json`: passou.
 - Testes focados CookLily: 27 arquivos, 114 testes passaram; testes do orçamento: 4 passaram.
 - Build Vite de produção CookLily passou localmente; budget local: JS gzip 204,74 KiB, CSS gzip 40,87 KiB, combinado 245,61/246 KiB.
-- CI completo PR #317, run `41279447156`, passou em Node 20/22/24, builds, testes, Tool Health Linux, workbook, Excel Recipe e supervisor; SHA testado `50345b00`.
+- CI completo PR #317, run `41279816196`, passou em Node 20/22/24, builds, testes, Tool Health Linux, workbook, Excel Recipe e supervisor; head testado `f5471c30`.
 - Primeiro CI run `41279218937` reprovou só pelos limites brutos/combinados que não acomodavam Linux (`JS raw 648,01 KiB`, combinado 245,87 KiB). Os limites foram corrigidos e o run seguinte passou.
 - `git diff --check`: passou.
 - `npm` não está disponível neste ambiente. `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados; comandos equivalentes foram executados diretamente com Node do workspace. CI usou `npm ci` e passou integralmente.
@@ -46,7 +47,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Bloqueios/riscos
 
-- O merge PR/canonical precisa de um novo CI após sincronizar a base atualizada.
+- Deploy está bloqueado pela diferença de 0,21 KiB no limite de JS gzip e 0,13 KiB no limite combinado; PR de ajuste do budget está em andamento.
 - Nenhum segredo ou dado pessoal foi adicionado ao repositório.
 
 ## Homologação/dependências externas
@@ -57,4 +58,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Concluir CI run `41279793939` no merge commit `f5038f25`; se passar, integrar PR #317 por squash; depois executar `sudo cc deploy canonical`, confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
+Integrar a correção de margem de build, executar novamente `sudo cc deploy bca50e86720ef7fea789e4c3253fd043807ff7d0` (ou SHA atualizado da canonical), confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
