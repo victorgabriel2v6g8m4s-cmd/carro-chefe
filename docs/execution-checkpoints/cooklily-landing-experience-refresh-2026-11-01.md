@@ -2,11 +2,11 @@
 
 - status: `in_progress`
 - owner: `AG-DEV`
-- branch: `codex/cooklily-landing-refresh-checkpoint` (registro; implementação integrada)
+- branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `d233927ef8e6449cf4b55f70f71f867d9e04f86c`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged para `cooklily/canonical`, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged (checkpoint); [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para ajuste tipográfico, CI `41277233761` em andamento
+- head_sha_verified: `0e8013c19e9f8c9c650e5d9ba986b4b1b43f6177`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para tipografia, editor e carrossel; CI do SHA anterior `41277233761` success, novo SHA aguardando CI
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -24,22 +24,25 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Z-index global do header foi elevado acima das barras sticky do catálogo.
 - Correção do posicionamento vertical do banner e cobertura dirigida adicionadas após bugs reportados pelo proprietário.
 - Identidade tipográfica da landing atualizada com `COOK` estreito em caixa alta e `Lily` manuscrito itálico, usando os mesmos tokens tipográficos do logo e ajustes responsivos.
-- Roadmap recebeu o escopo aprovado desta atualização e seus dois bugs de homologação.
+- Editor alterna negrito, itálico, riscado, listas, citação e código onde a estrutura permite; controles mostram estado `aria-pressed` e realce visual. Citações e blocos de código alternam de volta ao parágrafo.
+- Carrossel da landing recebeu intervalo selecionável de 3–20 segundos com default de 7 segundos; configuração legada sem esse campo é preenchida pelo schema. Reutiliza controles, temporizador, estilo e animação do carrossel de combos, além de suportar cards sem elementos textuais ocupando toda a área com a imagem.
+- O orçamento foi ampliado em 1 KiB para JS gzip e 0,5 KiB no combinado por causa dessas funções; limites de entrypoint e chunk máximo foram mantidos.
+- Roadmap recebeu o escopo aprovado desta atualização, tipografia, carrossel e os bugs reportados.
 
 ## Em andamento
 
-- Deploy de `cooklily/canonical` após integração do PR #317 pendente.
+- PR #317 e CI do commit atual pendentes; deploy de `cooklily/canonical` após integração pendente.
 - Registrar o endereço público autorizado e homologar domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
 
 - Preflight de política executado para `AG-DEV`, escopo `apps/lily_acai/src/features/landing`; passou.
-- `npm test`: 87 arquivos, 448 passaram e 3 foram ignorados.
+- `npm test`: 88 arquivos, 450 passaram e 3 foram ignorados.
 - CI do PR #315: run `41276513343` success (Node 20/22/24, checks, workbook e supervisor).
 - `npm run check`: passou.
-- `npm run build`: passou; budget CookLily: JS gzip 203,91/204 KiB; JS+CSS gzip 244,75/245 KiB.
+- `npm run build`: passou; budget CookLily: JS gzip 204,52/205 KiB; JS+CSS gzip 245,33/245,5 KiB.
 - `git diff --check`: passou.
-- PR #315 e PR #316 integrados. PR #317 e seu CI estão em andamento; deploy e homologação desktop/mobile pendentes.
+- PR #315 e PR #316 integrados. PR #317 atualizado; CI do novo head, deploy e homologação desktop/mobile pendentes.
 
 ## Migrations
 
@@ -57,4 +60,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Executar `sudo cc deploy canonical` na VPS; confirmar SHA e saúde do serviço; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
+Consultar CI do novo head de PR #317; integrar quando todos os gates passarem; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
