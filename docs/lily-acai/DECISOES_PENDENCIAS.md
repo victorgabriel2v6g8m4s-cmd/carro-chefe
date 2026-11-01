@@ -4,6 +4,15 @@
 **Fonte:** `cooklily/canonical`, código/testes/documentos integrados + ADR-001/ADR-002.
 **Decisões confirmadas pelo proprietário:** 30/10/2026; revisadas após integrar PR #249.
 
+## Atualização de decisão — 01/11/2026
+
+- A parceria pública CookLily × Carro Chefe foi encerrada por decisão do proprietário. CookLily será uma operação e marca independente, com repositório exclusivo a ser criado.
+- Durante a transição, o público acessará `https://licalily.com`. A homologação CookLily continuará em `https://carrochefe.com/lilyacai/*`; a raiz e o site principal do Carro Chefe permanecem preservados.
+- Todo deploy vai primeiro ao ambiente de teste. Após testes, releases candidatas ficam disponíveis para revisão no painel. Só um administrador pode promover uma release aprovada para `licalily.com`.
+- A publicação atualiza a página pública de releases. O checkbox “Notificar usuários sobre a atualização” controla a notificação; consentimentos e preferências de contato continuam aplicáveis.
+- A relação de referências antigas (Meta/webhooks, redes sociais, documentação, links e configuração) é uma pendência urgente de migração. A lista de ocorrências e evidência de correção será mantida em `docs/governanca/COOKLILY_DOMINIOS_RELEASES_E_REPUTACAO_2026-11-01.md`.
+- A mudança de domínio está aprovada como direção, mas a publicação em `licalily.com` permanece pendente até resolver o HTTP 429, validar origem, DNS, TLS, callback e comportamento da aplicação. Ver o plano e critérios no documento acima.
+
 ## Decisões do proprietário — 30/10/2026
 
 - Recuperação de senha: enviar código de verificação pelo WhatsApp ao número vinculado à conta. Implementação deve expirar e limitar tentativas/reenvios, não revelar se o telefone existe e invalidar códigos após uso ou troca de senha.
@@ -48,7 +57,7 @@
 - tracking aceita la_* e cc_*;
 - QR físico atual permanece;
 - banco/autenticação/dados CookLily separados do Carro Chefe;
-- parceria pública permanece CookLily × Carro Chefe — parceria temporária;
+- parceria pública CookLily × Carro Chefe — decisão histórica superada em 01/11/2026; consultar a atualização acima;
 - fotos reais de morango e maracujá aprovadas;
 - base LilyShake: 10 g de Emustab, 30 g de liga neutra, 800 g creme de leite, 300 g açúcar, 750 ml leite, rendimento conservador 2,5 L;
 - processo LilyShake e validade operacional aproximada de 2 semanas documentados;
