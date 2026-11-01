@@ -4,9 +4,9 @@
 - owner: `AG-DEV`
 - branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `530aacd140786b4d97786d81bfac6d9ebe757361`
-- head_sha_verified: `70d8b5dcc2a7e4d4c3762500639edde07a79178a`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para tipografia, editor e carrossel; run `41279218937` evidenciou limites abaixo da variação Linux; run completo `41279410780` aguardando resultado no SHA acima
+- base_sha_verified: `d9bb40aa0b35b73298db55fad681c17fbb2c8488`
+- head_sha_verified: `50345b00daf65d1360dfaae6552fafd5f3e0cfd4`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) open, CI `41279447156` success on SHA `50345b00`; base canonical avançou para `d9bb40aa` e merge local em andamento
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -16,36 +16,29 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Concluído e persistido
 
-- Branch criada a partir da `cooklily/canonical` verificada em `0689a3cedd64663ac8e563623e0188dee0f61796`.
-- Implementação em andamento para o resumo público de fidelidade no header anônimo, incluindo imagem da LilyCoin e arte do nível inicial.
-- Ranking da landing e ranking completo reutilizam identidade do nível com o respectivo ícone.
-- Seção de experiência ganhou mapa do fluxo e prévias de interface exclusivamente ilustrativas; a Store aparece como prévia planejada.
-- Recuadro do banner compartilha cálculo de pan/zoom entre preview administrativo e banner público; update dos sliders usa estado funcional para não perder eventos rápidos.
-- Z-index global do header foi elevado acima das barras sticky do catálogo.
-- Correção do posicionamento vertical do banner e cobertura dirigida adicionadas após bugs reportados pelo proprietário.
-- Identidade tipográfica da landing atualizada com `COOK` estreito em caixa alta e `Lily` manuscrito itálico, usando os mesmos tokens tipográficos do logo e ajustes responsivos.
-- Editor alterna negrito, itálico, riscado, listas, citação e código onde a estrutura permite; controles mostram estado `aria-pressed` e realce visual. Citações e blocos de código alternam de volta ao parágrafo.
-- Carrossel da landing recebeu intervalo selecionável de 3–20 segundos com default de 7 segundos; configuração legada sem esse campo é preenchida pelo schema. Reutiliza controles, temporizador, estilo e animação do carrossel de combos, além de suportar cards sem elementos textuais ocupando toda a área com a imagem.
-- Ajuste complementar solicitado: carrossel de produtos agora usa a mesma estrutura visual e controles do carrossel de combos, com foco/contador por card, pausa em interação e tempo configurável entre trocas. As colunas desktop/mobile configuradas continuam respeitadas; imagem sem componentes de texto ocupa a área total do card.
-- O orçamento foi ampliado anteriormente em 1 KiB para JS gzip e 0,5 KiB no combinado; o suplemento do carrossel e a variação real entre Windows/Linux ajustaram o teto agregado para 246 KiB e o teto bruto JS para 649 KiB. O resultado local atual mede 204,74 KiB JS gzip + 40,87 KiB CSS gzip = 245,61 KiB; o CI Linux mediu 245,87 KiB.
-- Roadmap recebeu o escopo aprovado desta atualização, tipografia, carrossel e os bugs reportados.
+- Landing implementada: resumo de fidelidade no header anônimo; ranking da landing e ranking completo mostram nível e ícone; seção de experiência tem mapa do fluxo e prévias HTML.
+- Banner: preview/crop/zoom compartilham pan vertical/horizontal entre admin e página pública; ajuste do z-index do header evita sobreposição das barras do catálogo.
+- Tipografia: `COOK` estreito em caixa alta + `Lily` manuscrito itálico, responsivo, reutilizando fontes do kit.
+- Editor alterna negrito, itálico, riscado, listas, citação e código onde a estrutura permite; controles mostram estado `aria-pressed` e as citações/blocos de código voltam ao parágrafo.
+- Carrossel de produtos da landing reutiliza a estrutura visual, controles e timer de combos; contador/foco por card, pausa durante interação, intervalo configurável de 3–20s e colunas desktop/mobile. Sem elementos selecionados, a imagem ocupa o card inteiro.
+- Orçamento ajustado após diferenças medidas no build Windows/Linux: JS gzip máximo 205 KiB, JS bruto 650 KiB, CSS gzip 41 KiB e combinado 246 KiB; limites de entrypoint e chunk máximo permanecem.
+- Roadmap da landing e este checkpoint atualizados.
 
 ## Em andamento
 
-- PR #317 e CI do commit atual pendentes; deploy de `cooklily/canonical` após integração pendente.
-- Registrar o endereço público autorizado e homologar domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
+- PR #317 está sendo sincronizada com a canonical atual `d9bb40aa`; a atualização da base conflitou somente neste checkpoint e está sendo resolvida. Depois do push da resolução, rodar CI no novo head, integrar e fazer deploy.
+- Configurar o endereço público pelo painel autenticado e homologar o domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
 
-- Preflight de política executado para `AG-DEV`, escopo `apps/lily_acai/src/features/landing`; passou.
-- `npm test`: 88 arquivos, 450 passaram e 3 foram ignorados.
-- CI do PR #315: run `41276513343` success (Node 20/22/24, checks, workbook e supervisor).
-- `npm run check`: passou.
-- `npm run build`: passou; budget CookLily: JS gzip 204,52/205 KiB; JS+CSS gzip 245,33/245,5 KiB.
+- Preflight para `AG-DEV` e escopo `apps/lily_acai/src/features/landing`: passou via `node tools/agent-policy/cli.mjs preflight`.
+- Typecheck `tsc --noEmit -p tsconfig.json`: passou.
+- Testes focados CookLily: 27 arquivos, 114 testes passaram; testes do orçamento: 4 passaram.
+- Build Vite de produção CookLily passou localmente; budget local: JS gzip 204,74 KiB, CSS gzip 40,87 KiB, combinado 245,61/246 KiB.
+- CI completo PR #317, run `41279447156`, passou em Node 20/22/24, builds, testes, Tool Health Linux, workbook, Excel Recipe e supervisor; SHA testado `50345b00`.
+- Primeiro CI run `41279218937` reprovou só pelos limites brutos/combinados que não acomodavam Linux (`JS raw 648,01 KiB`, combinado 245,87 KiB). Os limites foram corrigidos e o run seguinte passou.
 - `git diff --check`: passou.
-- Suplemento do carrossel: preflight (`node tools/agent-policy/cli.mjs preflight`) passou; typecheck (`tsc --noEmit -p tsconfig.json`) passou; testes de `apps/lily_acai`: 27 arquivos/114 testes passaram; Vite build passou localmente. O CI inicial apontou budget cross-platform (245,87 KiB no Linux versus 245,61 KiB no Windows); teto ajustado para 650 KiB bruto JS/246 KiB combinado e CI run `41279410780` em execução. `npm` não está disponível; `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados, então os comandos equivalentes foram executados diretamente com o Node do workspace.
-- PR #315 e PR #316 integrados. PR #317 atualizado; CI do novo head, deploy e homologação desktop/mobile pendentes.
-- A alteração complementar do carrossel está em trabalho local no branch; check, build, CI, integração e homologação ainda pendentes.
+- `npm` não está disponível neste ambiente. `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados; comandos equivalentes foram executados diretamente com Node do workspace. CI usou `npm ci` e passou integralmente.
 
 ## Migrations
 
@@ -53,14 +46,15 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Bloqueios/riscos
 
-- Nenhum bloqueio local de runtime: Node LTS e npm encontrados em `C:\Program Files\nodejs`.
+- O merge PR/canonical precisa de um novo CI após sincronizar a base atualizada.
+- Nenhum segredo ou dado pessoal foi adicionado ao repositório.
 
 ## Homologação/dependências externas
 
 - Homologação deve usar exclusivamente a aba do navegador integrado do Codex.
 - Deploy VPS autorizado pelo proprietário no contexto persistente da tarefa.
-- Configuração do endereço público expressamente autorizada; texto confirmado: `Rua João Marcondes, 349 - Mata do Segredo, Campo Grande - MS, 79015-320`.
+- Configuração do endereço público expressamente autorizada: `Rua João Marcondes, 349 - Mata do Segredo, Campo Grande - MS, 79015-320`. Não alterar o ponto operacional de coleta.
 
 ## Próxima ação exata
 
-Concluir CI run `41279410780` no head `70d8b5d`; se passar, integrar PR #317; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
+Concluir a resolução de merge de `d9bb40aa` em `codex/cooklily-landing-wordmark-refresh`, push, rodar CI completo no novo SHA e integrar PR #317 por squash; depois executar `sudo cc deploy canonical`, confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
