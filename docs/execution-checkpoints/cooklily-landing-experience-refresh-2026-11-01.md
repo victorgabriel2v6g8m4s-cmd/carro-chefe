@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-landing-refresh-checkpoint` (registro; implementação integrada)
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `530aacd140786b4d97786d81bfac6d9ebe757361`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged para `cooklily/canonical`; CI `41276513343` success
+- head_sha_verified: `d233927ef8e6449cf4b55f70f71f867d9e04f86c`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged para `cooklily/canonical`, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged (checkpoint); [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para ajuste tipográfico, CI `41277233761` em andamento
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -23,22 +23,23 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Recuadro do banner compartilha cálculo de pan/zoom entre preview administrativo e banner público; update dos sliders usa estado funcional para não perder eventos rápidos.
 - Z-index global do header foi elevado acima das barras sticky do catálogo.
 - Correção do posicionamento vertical do banner e cobertura dirigida adicionadas após bugs reportados pelo proprietário.
+- Identidade tipográfica da landing atualizada com `COOK` estreito em caixa alta e `Lily` manuscrito itálico, usando os mesmos tokens tipográficos do logo e ajustes responsivos.
 - Roadmap recebeu o escopo aprovado desta atualização e seus dois bugs de homologação.
 
 ## Em andamento
 
-- Deploy de `530aacd140786b4d97786d81bfac6d9ebe757361` pendente.
+- Deploy de `cooklily/canonical` após integração do PR #317 pendente.
 - Registrar o endereço público autorizado e homologar domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
 
 - Preflight de política executado para `AG-DEV`, escopo `apps/lily_acai/src/features/landing`; passou.
-- `npm test`: 86 arquivos, 446 passaram e 3 foram ignorados; alterações finais verificadas com Vitest focado: 4 arquivos, 49 testes passaram.
+- `npm test`: 87 arquivos, 448 passaram e 3 foram ignorados.
 - CI do PR #315: run `41276513343` success (Node 20/22/24, checks, workbook e supervisor).
 - `npm run check`: passou.
-- `npm run build`: passou; budget CookLily: JS gzip 203,87/204 KiB; JS+CSS gzip 244,45/245 KiB.
+- `npm run build`: passou; budget CookLily: JS gzip 203,91/204 KiB; JS+CSS gzip 244,75/245 KiB.
 - `git diff --check`: passou.
-- Merge e CI concluídos. Deploy e homologação desktop/mobile pendentes.
+- PR #315 e PR #316 integrados. PR #317 e seu CI estão em andamento; deploy e homologação desktop/mobile pendentes.
 
 ## Migrations
 
