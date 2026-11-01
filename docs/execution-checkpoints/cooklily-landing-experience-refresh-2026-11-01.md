@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `d9bb40aa0b35b73298db55fad681c17fbb2c8488`
-- head_sha_verified: `50345b00daf65d1360dfaae6552fafd5f3e0cfd4`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) open, CI `41279447156` success on SHA `50345b00`; base canonical avançou para `d9bb40aa` e merge local em andamento
+- head_sha_verified: `50345b00daf65d1360dfaae6552fafd5f3e0cfd4` (código; merge de sincronização `f5038f25` contém apenas checkpoint)
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) open, CI `41279447156` success no SHA de código `50345b00`; após sync para canonical `d9bb40aa`, execução `41279793939` está pendente no merge commit `f5038f25`
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -26,7 +26,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Em andamento
 
-- PR #317 está sendo sincronizada com a canonical atual `d9bb40aa`; a atualização da base conflitou somente neste checkpoint e está sendo resolvida. Depois do push da resolução, rodar CI no novo head, integrar e fazer deploy.
+- PR #317 foi sincronizada com a canonical atual `d9bb40aa`; a única resolução de conflito foi neste checkpoint. CI do merge commit `f5038f25` pendente. Depois do CI, integrar e fazer deploy.
 - Configurar o endereço público pelo painel autenticado e homologar o domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
@@ -57,4 +57,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Concluir a resolução de merge de `d9bb40aa` em `codex/cooklily-landing-wordmark-refresh`, push, rodar CI completo no novo SHA e integrar PR #317 por squash; depois executar `sudo cc deploy canonical`, confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
+Concluir CI run `41279793939` no merge commit `f5038f25`; se passar, integrar PR #317 por squash; depois executar `sudo cc deploy canonical`, confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
