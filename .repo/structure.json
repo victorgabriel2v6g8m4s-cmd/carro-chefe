@@ -51,7 +51,7 @@
       "files": ["README.md"]
     },
     "docs": {
-      "directories": ["ferramentas", "financeiro", "fundacao", "governanca", "historico", "negocio", "operacao", "pre-lancamento", "referencias", "tecnologia"],
+      "directories": ["execution-checkpoints", "ferramentas", "financeiro", "fundacao", "governanca", "historico", "negocio", "operacao", "pre-lancamento", "referencias", "tecnologia"],
       "files": ["AGENTS.md", "README.md"]
     },
     "mídias": {
