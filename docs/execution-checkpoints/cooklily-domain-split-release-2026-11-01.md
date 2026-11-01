@@ -24,10 +24,11 @@ Publish the approved CookLily domain/release decision and incident/reputation hi
 - Started from `origin/main` SHA `cdf3d91258a4439d22afc0eda508c6ece0d2f325`.
 - Main did not contain CookLily-specific TLS checkpoint, deployment runbook or decision register at start. The cross-project decision memo is self-contained; deeper evidence links to `cooklily/canonical`.
 - No GitHub PR, deploy, repo creation, VPS/DNS edit, Meta change, or user-data migration has occurred in this main worktree.
+- PR #325 initially failed Quality / Node 20/24 and Tool Health because adding the required `docs/execution-checkpoints/` folder violated the older main branch's `.repo/structure.json`/repository map contract. Updated `.repo/structure.json`, regenerated `docs/governanca/MAPA_REPOSITORIO.md` and rebuilt the policy manifest; local repo-map and policy checks now pass. The CI rerun is pending.
 
 ## Gates / migrations
 
-- Documentation-only: `git diff --check` pending.
+- Documentation/structure metadata: `git diff --check`, `node tools/repo-map/generate.mjs --write`, `node tools/repo-map/generate.mjs`, and `node tools/agent-policy/cli.mjs check` passed locally.
 - No schema/migration changes in this documentation step.
 
 ## Risks and dependencies
