@@ -18,13 +18,14 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   // A folga adicional cobre os novos chunks públicos/admin da Landing CookLily;
   // os limites de entrypoint e chunk máximo permanecem inalterados.
   jsRawBytes: 663_552,
-  jsGzipBytes: 208_896,
+  // Margem de 1 KiB para o autoplay configurável do carrossel da landing.
+  jsGzipBytes: 209_920,
   initialJsGzipBytes: 112_640,
   largestJsChunkBytes: 286_720,
   cssRawBytes: 204_800,
   cssGzipBytes: 41_984,
   // O teto agregado é mais estrito que a soma dos limites individuais.
-  combinedGzipBytes: 250_880
+  combinedGzipBytes: 251_392
 });
 
 function emptyBucket() {
