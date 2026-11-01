@@ -139,6 +139,74 @@ function formatSelector(action: string) {
   return ({ bold: "strong, b", italic: "em, i", strikeThrough: "s, strike, del" } as Record<string, string>)[action];
 }
 
+function setSelection(range: Range, saved: React.MutableRefObject<Range | null>) {
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  saved.current = range.cloneRange();
+}
+
+function toggleInlineFormat(editor: HTMLElement, range: Range, saved: React.MutableRefObject<Range | null>, action: "bold" | "italic" | "strikeThrough") {
+  if (range.startContainer !== range.endContainer || range.startContainer.nodeType !== Node.TEXT_NODE) {
+    restoreEditorRange(editor, range);
+    document.execCommand(action);
+    return;
+  }
+
+  const text = range.startContainer as Text;
+  const start = range.startOffset;
+  const end = range.endOffset;
+  if (start === end) {
+    restoreEditorRange(editor, range);
+    document.execCommand(action);
+    return;
+  }
+
+  const tag = ({ bold: "strong", italic: "em", strikeThrough: "s" } as const)[action];
+  const selector = formatSelector(action)!;
+  const active = Boolean(text.parentElement?.closest(selector));
+  let selectedText: Text;
+
+  if (!active) {
+    const wrapper = document.createElement(tag);
+    range.surroundContents(wrapper);
+    selectedText = wrapper.firstChild as Text;
+  } else {
+    const formatParent = text.parentElement?.closest(selector);
+    if (!formatParent || formatParent !== text.parentElement) {
+      restoreEditorRange(editor, range);
+      document.execCommand(action);
+      return;
+    }
+
+    if (end < text.length) text.splitText(end);
+    selectedText = start > 0 ? text.splitText(start) : text;
+    const parent = selectedText.parentElement!;
+    const siblings = Array.from(parent.childNodes);
+    const selectedIndex = siblings.indexOf(selectedText);
+    const before = siblings.slice(0, selectedIndex);
+    const after = siblings.slice(selectedIndex + 1);
+    const replacement = document.createDocumentFragment();
+    if (before.length) {
+      const beforeFormat = parent.cloneNode(false) as HTMLElement;
+      beforeFormat.append(...before);
+      replacement.append(beforeFormat);
+    }
+    replacement.append(selectedText);
+    if (after.length) {
+      const afterFormat = parent.cloneNode(false) as HTMLElement;
+      afterFormat.append(...after);
+      replacement.append(afterFormat);
+    }
+    parent.replaceWith(replacement);
+  }
+
+  const nextRange = document.createRange();
+  nextRange.setStart(selectedText, 0);
+  nextRange.setEnd(selectedText, selectedText.length);
+  setSelection(nextRange, saved);
+}
+
 function insertToken(editor: HTMLElement, saved: React.MutableRefObject<Range | null>, number: number, name: string) {
   editor.focus();
   const range = currentRange(editor, saved);
@@ -208,11 +276,12 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
     const range = currentRange(editor, savedRange);
     restoreEditorRange(editor, range);
     const selection = window.getSelection();
-    // Native editing commands toggle inline marks across partial and mixed selections,
-    // while range.surroundContents only adds another wrapper and cannot remove a mark.
-    // Restore after focus as browsers may collapse or move the selection on focus().
-    const block = selection?.anchorNode?.parentElement?.closest("blockquote");
-    document.execCommand(action, false, action === "formatBlock" && block ? "P" : value);
+    if (action === "bold" || action === "italic" || action === "strikeThrough") toggleInlineFormat(editor, range, savedRange, action);
+    else {
+      // Restore after focus as browsers may collapse or move the selection on focus().
+      const block = selection?.anchorNode?.parentElement?.closest("blockquote");
+      document.execCommand(action, false, action === "formatBlock" && block ? "P" : value);
+    }
     emitChange();
     syncActiveFormats();
   }
