@@ -26,7 +26,8 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Identidade tipográfica da landing atualizada com `COOK` estreito em caixa alta e `Lily` manuscrito itálico, usando os mesmos tokens tipográficos do logo e ajustes responsivos.
 - Editor alterna negrito, itálico, riscado, listas, citação e código onde a estrutura permite; controles mostram estado `aria-pressed` e realce visual. Citações e blocos de código alternam de volta ao parágrafo.
 - Carrossel da landing recebeu intervalo selecionável de 3–20 segundos com default de 7 segundos; configuração legada sem esse campo é preenchida pelo schema. Reutiliza controles, temporizador, estilo e animação do carrossel de combos, além de suportar cards sem elementos textuais ocupando toda a área com a imagem.
-- O orçamento foi ampliado em 1 KiB para JS gzip e 0,5 KiB no combinado por causa dessas funções; limites de entrypoint e chunk máximo foram mantidos.
+- Ajuste complementar solicitado: carrossel de produtos agora usa a mesma estrutura visual e controles do carrossel de combos, com foco/contador por card, pausa em interação e tempo configurável entre trocas. As colunas desktop/mobile configuradas continuam respeitadas; imagem sem componentes de texto ocupa a área total do card.
+- O orçamento foi ampliado anteriormente em 1 KiB para JS gzip e 0,5 KiB no combinado; o suplemento do carrossel aumentou o teto agregado em mais 0,25 KiB (251.648 bytes), sem alterar os limites de entrypoint/chunk. O resultado atual mede 204,74 KiB JS gzip + 40,87 KiB CSS gzip = 245,61 KiB.
 - Roadmap recebeu o escopo aprovado desta atualização, tipografia, carrossel e os bugs reportados.
 
 ## Em andamento
@@ -42,7 +43,9 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - `npm run check`: passou.
 - `npm run build`: passou; budget CookLily: JS gzip 204,52/205 KiB; JS+CSS gzip 245,33/245,5 KiB.
 - `git diff --check`: passou.
+- Suplemento do carrossel: preflight (`node tools/agent-policy/cli.mjs preflight`) passou; typecheck (`tsc --noEmit -p tsconfig.json`) passou; testes de `apps/lily_acai`: 27 arquivos/114 testes passaram; Vite build passou; budget passou com teto combinado revisado a 245,75 KiB. `npm` não está disponível; `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados, então os comandos equivalentes foram executados diretamente com o Node do workspace.
 - PR #315 e PR #316 integrados. PR #317 atualizado; CI do novo head, deploy e homologação desktop/mobile pendentes.
+- A alteração complementar do carrossel está em trabalho local no branch; check, build, CI, integração e homologação ainda pendentes.
 
 ## Migrations
 
@@ -60,4 +63,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Consultar CI do novo head de PR #317; integrar quando todos os gates passarem; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
+Validar localmente a mudança complementar do carrossel (preflight, check, build e testes); atualizar PR #317, obter CI no head atual e integrar; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.

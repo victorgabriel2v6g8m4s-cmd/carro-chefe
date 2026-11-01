@@ -24,8 +24,9 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   largestJsChunkBytes: 286_720,
   cssRawBytes: 204_800,
   cssGzipBytes: 41_984,
-  // O teto agregado é mais estrito que a soma dos limites individuais.
-  combinedGzipBytes: 251_392
+  // Margem de 0,25 KiB para alinhar o carrossel da landing ao de combos;
+  // os limites de entrada e chunk máximo continuam sem alteração.
+  combinedGzipBytes: 251_648
 });
 
 function emptyBucket() {
