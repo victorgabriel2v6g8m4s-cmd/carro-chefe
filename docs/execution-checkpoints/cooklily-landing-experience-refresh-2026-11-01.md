@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-landing-experience-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `63aa5b89` (commit local; checkpoint atualizado após persistência)
-- pull_requests: nenhum
+- head_sha_verified: `c45c35428a43d5a8168d1d396e9ba82d22688f16`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) draft, aberto para `cooklily/canonical`; CI `41276443236` em andamento
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -55,4 +55,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Commit `63aa5b89` persistido localmente; criar PR draft para `cooklily/canonical`, registrar CI e seguir merge, deploy VPS e homologação no browser Codex integrado.
+Atualizar este checkpoint para o commit após registrar o PR #315; acompanhar todos os jobs do CI `41276443236`, colocar o PR pronto para revisão, integrar e seguir com deploy na VPS e homologação no navegador integrado Codex.
