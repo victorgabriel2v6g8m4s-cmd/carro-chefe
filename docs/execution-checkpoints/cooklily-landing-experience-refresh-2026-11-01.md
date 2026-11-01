@@ -2,11 +2,11 @@
 
 - status: `in_progress`
 - owner: `AG-DEV`
-- branch: `codex/cooklily-landing-wordmark-refresh`
+- branch: `codex/cooklily-mobile-product-carousel-fit`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `d9bb40aa0b35b73298db55fad681c17fbb2c8488`
-- head_sha_verified: `00771c5ea6e573065f1d5403f5938f05f3e4f261` (PR #318 integrada por squash)
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) e [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318) integradas; #318 squash SHA `00771c5e`, CI `41280526295` success
+- base_sha_verified: `00771c5ea6e573065f1d5403f5938f05f3e4f261`
+- head_sha_verified: `32c1b8beac8cb1649890e621787a6677a1459fd1`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317), [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318) integradas; #318 squash SHA `00771c5e`, CI `41280526295` success; PR #319 aberta, CI `41282452385` em andamento
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -30,7 +30,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - PR corretiva #318 ajustou o budget; deploy em `2026-11-01 06:46 UTC` concluiu no SHA `00771c5e`. Build VPS: JS gzip `205,21/207 KiB`, combinado `246,13/248 KiB`; health interno e smoke HTTPS passaram. Nenhuma migration pendente.
 - Endereço público autorizado foi salvo em Painel → Configurações e confirmado no texto e mapa da landing.
 - Homologação no IAB: desktop 1440x900 e mobile 390x844. A rotação avançou de 2/3 para 3/3 após 8 s; painel mostra timer configurado em 7 s, 3 colunas desktop e 2 mobile. Com os elementos desligados temporariamente, as imagens ocuparam o card todo; título, preço e rótulo foram restaurados e salvos.
-- A revisão encontrou preço cortado em cards mobile estreitos (2 colunas). Correção CSS por container query está em andamento no branch `codex/cooklily-mobile-product-carousel-fit`, base `00771c5e`.
+- A revisão encontrou preço cortado em cards mobile estreitos (2 colunas). Correção CSS por container query está no branch `codex/cooklily-mobile-product-carousel-fit`, base `00771c5e`; PR #319 aberta.
 
 ## Gates e testes
 
@@ -60,4 +60,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Abrir PR para `codex/cooklily-mobile-product-carousel-fit`; após CI passar, integrar por squash e executar `sudo cc deploy <sha canonical>`; retestar desktop/mobile no IAB, remover override de viewport e atualizar este checkpoint com o resultado final.
+CI completo da PR #319 `41282452385` concluir; se passar, marcar pronta, integrar por squash e executar `sudo cc deploy <sha canonical>`; retestar preço em mobile e layout no desktop no IAB, remover override de viewport e atualizar este checkpoint com o resultado final.
