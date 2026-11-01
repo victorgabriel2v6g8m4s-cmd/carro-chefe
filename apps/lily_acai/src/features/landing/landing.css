@@ -9,9 +9,10 @@
 
 /* O carrossel de produtos reutiliza estrutura, controles e timer de combos. */
 .landing-product-carousel{--landing-column-count:var(--landing-desktop-columns);--landing-slide-gap:10px}
-.landing-product-slide-wrap{display:flex;flex:0 0 calc((100% - 4px - (var(--landing-column-count) - 1)*var(--landing-slide-gap))/var(--landing-column-count));min-width:0}
+.landing-product-slide-wrap{display:flex;flex:0 0 calc((100% - 4px - (var(--landing-column-count) - 1)*var(--landing-slide-gap))/var(--landing-column-count));min-width:0;container-type:inline-size}
 .landing-product-slide{flex:1 1 auto;grid-template-columns:minmax(0,.82fr) minmax(0,1fr)}
 @media(max-width:760px){.landing-product-carousel{--landing-column-count:var(--landing-mobile-columns);--landing-slide-gap:7px}.landing-product-carousel .combo-carousel-track{gap:7px}.landing-product-slide{grid-template-columns:1fr;grid-template-rows:clamp(130px,40vw,178px) minmax(0,1fr);min-height:0}}
+@container (max-width:220px){.landing-product-slide-copy{gap:6px;padding:12px}.landing-product-slide-copy h3{font-size:clamp(1rem,10cqw,1.5rem);line-height:1}.landing-product-slide-copy .landing-product-price{flex-wrap:wrap;gap:3px 5px;font-size:.78rem;line-height:1.25}.landing-product-slide-copy .landing-product-price strong{font-size:1rem;white-space:normal}.landing-product-slide-copy .landing-product-badges span{padding:.2rem .4rem;font-size:.62rem}}
 
 /* Landing wordmark follows the approved Cook narrow / Lily script pairing. */
 .landing-brand-identity{max-width:900px;margin:clamp(1.75rem,4vw,3.5rem) auto 2.75rem}
