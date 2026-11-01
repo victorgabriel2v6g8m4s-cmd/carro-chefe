@@ -2,11 +2,11 @@
 
 - status: `in_progress`
 - owner: `AG-DEV`
-- branch: `codex/cooklily-css-budget-headroom`
+- branch: `codex/cooklily-carousel-desktop-fit`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `519661f9c89a1be5efa9c68bb6d14b09b9d54489`
-- head_sha_verified: `519661f9c89a1be5efa9c68bb6d14b09b9d54489` (base de trabalho para corrigir o budget CSS)
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317), [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318) e [#319](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/319) integradas; #319 squash SHA `519661f9`, CI `41282529154` success
+- base_sha_verified: `5d9d160be468f9984f8b170882bfa05c9f71f1b8`
+- head_sha_verified: `5d9d160be468f9984f8b170882bfa05c9f71f1b8` (correção desktop em andamento)
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317), [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318), [#319](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/319) e [#320](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/320) integradas
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -31,7 +31,9 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Endereço público autorizado foi salvo em Painel → Configurações e confirmado no texto e mapa da landing.
 - Homologação no IAB: desktop 1440x900 e mobile 390x844. A rotação avançou de 2/3 para 3/3 após 8 s; painel mostra timer configurado em 7 s, 3 colunas desktop e 2 mobile. Com os elementos desligados temporariamente, as imagens ocuparam o card todo; título, preço e rótulo foram restaurados e salvos.
 - A revisão encontrou preço cortado em cards mobile estreitos. PR #319 corrigiu o layout com container query e foi integrada em `519661f9` após CI `41282529154` passar.
-- Deploy de `519661f9` foi revertido pelo gate do budget CSS: JS gzip `205,20/207 KiB`, CSS gzip `41,02/41 KiB`, combinado `246,22/248 KiB`. O rollback restaurou `00771c5e`; migrations reais e troca do serviço não ocorreram. PR #320 aumenta o teto CSS gzip em 1 KiB.
+- PR #320 integrada pelo squash `5d9d160be468f9984f8b170882bfa05c9f71f1b8`, CI `41283048216` passou. Deploy em 2026-11-01 concluiu nesse SHA: JS gzip `205,20/207 KiB`, CSS gzip `41,02/42 KiB`, combinado `246,22/248 KiB`; migrations não pendentes, readiness e HTTPS smoke passaram.
+- Homologação visual pós-deploy achou que títulos/preços dos cards do carrossel ainda cortavam em desktop com três colunas. Correção local amplia a container query compacta para cards até 420px; requer PR, deploy e nova homologação.
+- Na nova homologação mobile do SHA `5d9d160b`, os dois cards mostram nome e preço legíveis. No desktop 1440px, os textos dos três cards aparentaram corte; a compactação responsiva foi ampliada a 420px. Teste de landing focado passou (1 teste), build Vite + budget local passou (JS gzip `204,74/207 KiB`, CSS gzip `40,98/42 KiB`, combinado `245,71/248 KiB`). `pnpm` tentou instalar dependências e parou por scripts de build bloqueados; os runners locais instalados foram invocados diretamente com sucesso.
 
 ## Gates e testes
 
@@ -50,7 +52,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Bloqueios/riscos
 
-- Deploy da correção mobile depende da margem de CSS gzip; a primeira tentativa não iniciou migrations reais nem trocou o serviço.
+- Mudança desktop compacta aguarda validação CI e deploy. Proteger limite CSS gzip de 42 KiB.
 - Nenhum segredo ou dado pessoal foi adicionado ao repositório.
 
 ## Homologação/dependências externas
@@ -61,4 +63,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Abrir PR para `codex/cooklily-css-budget-headroom`; após CI passar, integrar por squash e repetir `sudo cc deploy <sha canonical>`; retestar preço no mobile e o layout desktop no IAB, remover override de viewport e atualizar este checkpoint.
+Validar a compactação desktop em CI, abrir PR para `cooklily/canonical`, integrar por squash e executar `sudo cc deploy <sha canonical>`. No IAB, verificar card desktop e preços mobile; então repor configurações do carrossel, resetar viewport e registrar resultado neste checkpoint.
