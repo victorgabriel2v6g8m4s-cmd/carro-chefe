@@ -33,6 +33,7 @@ export const lilyLandingPageConfigSchema = z.object({
     productIds: z.array(z.string().min(1).max(120)).max(30),
     desktopColumns: z.number().int().min(1).max(4),
     mobileColumns: z.number().int().min(1).max(2),
+    intervalSeconds: z.number().int().min(3).max(20).default(7),
     elements: z.object({ title: z.boolean(), description: z.boolean(), price: z.boolean(), badges: z.boolean(), action: z.boolean() }).strict()
   }).strict(),
   sections: z.object({ rankingEnabled: z.boolean(), reelsEnabled: z.boolean(), reelsTitle: z.string().trim().min(1).max(100), locationEnabled: z.boolean() }).strict()
@@ -49,6 +50,6 @@ export const defaultLilyLandingPageConfig: LilyLandingPageConfig = {
     tagline: "Cremosidade, sabor e qualidade em cada garrafa.",
     description: "A CookLily reúne açaí, LilyShakes e doces em um cardápio feito para você escolher seus favoritos, conferir a disponibilidade e acompanhar seu pedido pelo site."
   },
-  showcase: { mode: "weekly", productIds: [], desktopColumns: 3, mobileColumns: 1, elements: { title: true, description: true, price: true, badges: true, action: true } },
+  showcase: { mode: "weekly", productIds: [], desktopColumns: 3, mobileColumns: 1, intervalSeconds: 7, elements: { title: true, description: true, price: true, badges: true, action: true } },
   sections: { rankingEnabled: true, reelsEnabled: true, reelsTitle: "Confira nossa experiência", locationEnabled: true }
 };

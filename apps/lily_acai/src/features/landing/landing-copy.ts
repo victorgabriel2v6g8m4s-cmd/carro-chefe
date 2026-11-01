@@ -67,6 +67,7 @@ export const landingAdminCopy = {
   products: "Produtos do carrossel",
   desktopColumns: "Produtos visíveis por vez no desktop",
   mobileColumns: "Produtos visíveis por vez no celular",
+  interval: "Tempo de destaque de cada produto",
   elements: "Informações exibidas",
   elementLabels: { title: "Título", description: "Descrição", price: "Preço", badges: "Rótulos", action: "Botão de ação" },
   ranking: "Mostrar ranking de clientes",

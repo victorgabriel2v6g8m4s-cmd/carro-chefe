@@ -128,6 +128,15 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
   const savedRange = useRef<Range | null>(null);
   const lastEmitted = useRef<string | null>(null);
 
+  function syncActiveFormats() {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection?.rangeCount || !editor.contains(selection.anchorNode)) return;
+    savedRange.current = selection.getRangeAt(0).cloneRange();
+    editor.previousElementSibling?.querySelectorAll<HTMLButtonElement>("[data-command]").forEach((button) => button.setAttribute("aria-pressed", String(document.queryCommandState(button.dataset.command!))));
+    editor.previousElementSibling?.querySelectorAll<HTMLButtonElement>("[data-tag]").forEach((button) => button.setAttribute("aria-pressed", String(Boolean(selection.anchorNode?.parentElement?.closest(button.dataset.tag!)))));
+  }
+
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -164,16 +173,12 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
     editor.focus();
     const range = currentRange(editor, savedRange); const selection = window.getSelection();
     selection?.removeAllRanges(); selection?.addRange(range);
-    const inlineTag = action === "bold" ? "strong" : action === "italic" ? "em" : action === "strikeThrough" ? "s" : null;
-    if (inlineTag && !range.collapsed) {
-      const wrapper = document.createElement(inlineTag);
-      try { range.surroundContents(wrapper); }
-      catch { wrapper.append(range.extractContents()); range.insertNode(wrapper); }
-      range.selectNodeContents(wrapper);
-      selection?.removeAllRanges(); selection?.addRange(range);
-      savedRange.current = range.cloneRange();
-    } else document.execCommand(action, false, value);
+    // Native editing commands toggle inline marks across partial and mixed selections,
+    // while range.surroundContents only adds another wrapper and cannot remove a mark.
+    const block = selection?.anchorNode?.parentElement?.closest("blockquote");
+    document.execCommand(action, false, action === "formatBlock" && block ? "P" : value);
     emitChange();
+    syncActiveFormats();
   }
 
   function applyCode(inline: boolean) {
@@ -181,7 +186,11 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
     if (!editor) return;
     editor.focus();
     const range = currentRange(editor, savedRange);
-    if (range.collapsed) {
+    const selection = window.getSelection();
+    const existing = selection?.anchorNode?.parentElement?.closest(inline ? "code" : "pre");
+    if (existing && inline) existing.replaceWith(...Array.from(existing.childNodes));
+    else if (existing) document.execCommand("formatBlock", false, "P");
+    else if (range.collapsed) {
       const marker = inline ? "`código`" : "```\ntexto\n```";
       document.execCommand("insertText", false, marker);
     } else {
@@ -189,6 +198,7 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
       try { range.surroundContents(element); } catch { element.append(range.extractContents()); range.insertNode(element); }
     }
     emitChange();
+    syncActiveFormats();
   }
 
   function handleDrop(event: DragEvent<HTMLDivElement>) {
@@ -271,17 +281,17 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
 
   return <div className="template-rich-editor">
     <div className="template-format-toolbar" role="toolbar" aria-label={`Formatação de ${label}`}>
-      <button type="button" aria-label="Negrito" title="Negrito" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("bold")}><strong>B</strong></button>
-      <button type="button" aria-label="Itálico" title="Itálico" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("italic")}><em>I</em></button>
-      <button type="button" aria-label="Riscado" title="Riscado" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("strikeThrough")}><s>S</s></button>
-      <button type="button" aria-label="Monoespaçado" title="Monoespaçado" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyCode(false)}>```</button>
-      <button type="button" aria-label="Código em linha" title="Código em linha" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyCode(true)}>`</button>
-      <button type="button" aria-label="Lista com marcadores" title="Lista com marcadores" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("insertUnorderedList")}>• Lista</button>
-      <button type="button" aria-label="Lista numerada" title="Lista numerada" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("insertOrderedList")}>1. Lista</button>
-      <button type="button" aria-label="Citação" title="Citação" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("formatBlock", "BLOCKQUOTE")}>❞</button>
+      <button type="button" data-command="bold" aria-label="Negrito" title="Negrito" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("bold")}><strong>B</strong></button>
+      <button type="button" data-command="italic" aria-label="Itálico" title="Itálico" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("italic")}><em>I</em></button>
+      <button type="button" data-command="strikeThrough" aria-label="Riscado" title="Riscado" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("strikeThrough")}><s>S</s></button>
+      <button type="button" data-tag="pre" aria-label="Monoespaçado" title="Monoespaçado" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyCode(false)}>```</button>
+      <button type="button" data-tag="code" aria-label="Código em linha" title="Código em linha" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyCode(true)}>`</button>
+      <button type="button" data-command="insertUnorderedList" aria-label="Lista com marcadores" title="Lista com marcadores" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("insertUnorderedList")}>• Lista</button>
+      <button type="button" data-command="insertOrderedList" aria-label="Lista numerada" title="Lista numerada" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("insertOrderedList")}>1. Lista</button>
+      <button type="button" data-tag="blockquote" aria-label="Citação" title="Citação" aria-pressed="false" disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={() => applyToolbar("formatBlock", "BLOCKQUOTE")}>❞</button>
     </div>
     <div ref={editorRef} className="template-rich-textarea" role="textbox" aria-label={label} aria-multiline="true" contentEditable={!disabled} suppressContentEditableWarning data-placeholder={placeholder} data-empty={value.length === 0} style={{ minHeight: `${rows * 25}px` }}
-      onFocus={activate} onClick={activate} onKeyDown={handleKeyDown} onKeyUp={() => { activate(); if (editorRef.current) currentRange(editorRef.current, savedRange); }} onInput={emitChange} onCopy={(event) => handleCopy(event, false)} onCut={(event) => handleCopy(event, true)} onPaste={handlePaste} onDragStart={(event) => {
+      onFocus={() => { activate(); syncActiveFormats(); }} onClick={() => { activate(); syncActiveFormats(); }} onMouseUp={syncActiveFormats} onKeyDown={handleKeyDown} onKeyUp={() => { activate(); syncActiveFormats(); }} onInput={emitChange} onCopy={(event) => handleCopy(event, false)} onCut={(event) => handleCopy(event, true)} onPaste={handlePaste} onDragStart={(event) => {
         const token = (event.target as HTMLElement).closest<HTMLElement>("[data-template-variable]");
         if (token) event.dataTransfer.setData(TOKEN_MIME, token.dataset.templateVariable || "");
       }} onDragOver={(event) => { if (event.dataTransfer.types.includes(TOKEN_MIME)) event.preventDefault(); }} onDrop={handleDrop} />
