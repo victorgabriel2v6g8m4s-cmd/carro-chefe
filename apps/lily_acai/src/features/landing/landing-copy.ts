@@ -7,9 +7,6 @@ export const landingCopy = {
   brandDescriptionLabel: "Nossa marca",
   memberGreeting: (name?: string) => name ? `Que bom ter você por aqui, ${name}.` : "Que bom ter você por aqui.",
   memberDashboard: "Abrir meu dashboard",
-  loginPrompt: "Já tem cadastro?",
-  login: "Entrar",
-  createAccount: "Criar conta",
   menu: "Conhecer o cardápio",
   weeklyTitle: "Produto da semana",
   weeklyEmpty: "O produto da semana será exibido assim que estiver configurado e disponível.",
@@ -19,13 +16,13 @@ export const landingCopy = {
   productAction: "Ver produto",
   priceFrom: "A partir de",
   soldOut: "Indisponível no momento",
-  storyTitle: "Uma experiência pensada em cada detalhe",
-  storyIntro: "Do cardápio ao acompanhamento, a CookLily organiza cada etapa para você escolher com clareza e ter uma experiência simples. Trabalhamos para equilibrar qualidade, preço e conveniência, com informações e disponibilidade visíveis antes do pedido.",
+  storyTitle: "Uma jornada que cresce com você",
+  storyIntro: "Na CookLily, participar também é avançar. Missões, pesquisas, níveis e recompensas se conectam para reconhecer cada etapa da sua jornada.",
   storyCards: [
-    { title: "Cardápio com informação", text: "Consulte descrições, opções, preços e disponibilidade para comparar e montar o pedido com segurança." },
-    { title: "Acompanhamento acessível", text: "Veja as atualizações do pedido no site ou fale com a equipe pelo WhatsApp oficial quando precisar." },
-    { title: "Pontos e LilyCoins", text: "O dashboard separa pontos de progresso e LilyCoins. Missões e campanhas elegíveis informam o que cada ação concede." },
-    { title: "Conteúdo e comunidade", text: "Conheça os produtos pelos Reels e acompanhe o ranking somente se escolher participar. Sua privacidade é respeitada." }
+    { title: "Missões rendem LilyCoins", text: "Conclua missões disponíveis — que podem incluir ações nas redes sociais — e receba LilyCoins conforme a recompensa definida para cada missão." },
+    { title: "Pesquisas rendem pontos", text: "Responder pesquisas ajuda a CookLily a entender suas preferências e soma pontos de progresso conforme a campanha." },
+    { title: "Pontos abrem novos níveis", text: "Ao acumular pontos, você avança pelos níveis. Cada nível pode liberar benefícios para resgate no dashboard, como produtos, cupons e LilyCoins." },
+    { title: "LilyCoins dão acesso à Store", text: "A Store reunirá itens escolhidos pela CookLily para resgate com LilyCoins, como cupons, produtos do cardápio e acessórios do mascote. Esta prévia ilustra a experiência planejada." }
   ],
   rankingTitle: "Comunidade CookLily",
   rankingLoading: "Carregando ranking…",
@@ -43,8 +40,8 @@ export const landingCopy = {
   leadSubmit: "Quero receber novidades",
   leadSuccess: "Cadastro recebido. Quando houver novidades CookLily, este WhatsApp poderá recebê-las.",
   orderTrackingTitle: "Já fez um pedido?",
-  orderTrackingText: "Acompanhe o andamento do seu pedido no site ou fale com a CookLily pelo WhatsApp.",
-  orderTrackingAction: "Acompanhar pelo WhatsApp",
+  orderTrackingText: "Acompanhe o andamento do seu pedido no site ou no WhatsApp.",
+  orderTrackingAction: "Abrir WhatsApp",
   error: "Não foi possível carregar esta seção agora. Tente novamente em instantes."
 } as const;
 

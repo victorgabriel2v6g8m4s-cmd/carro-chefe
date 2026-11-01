@@ -6,6 +6,7 @@ import { TemplateTextEditor } from "../template-studio/TemplateTextEditor";
 import "../template-studio/template-studio.css";
 import { WhatsAppText } from "../../rich-text/WhatsAppText";
 import { getAdminLandingPage, getLandingOptions, saveLandingPage, uploadLandingMedia } from "../../landing/landing-api";
+import { landingCropImageStyle } from "../../landing/landing-data";
 import { landingAdminCopy as copy } from "../../landing/landing-copy";
 import type { LandingMedia, LandingOption } from "../../landing/landing-types";
 import "./admin-landing.css";
@@ -72,7 +73,7 @@ function BannerPreview({ config, media, device }: { config: LilyLandingPageConfi
   const crop = isMobile ? config.banner.mobileCrop : config.banner.desktopCrop;
   return <div className={`landing-admin-banner-preview ${isMobile ? "is-mobile" : "is-desktop"}`} aria-label={isMobile ? copy.previewMobile : copy.previewDesktop}>
     {asset
-      ? <img src={asset.url} alt={config.banner.altText || asset.altText || asset.originalName || "Prévia da arte CookLily"} style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.zoom})` }} />
+      ? <img src={asset.url} alt={config.banner.altText || asset.altText || asset.originalName || "Prévia da arte CookLily"} style={landingCropImageStyle(crop)} />
       : <div className="landing-admin-banner-fallback"><strong>CookLily</strong><span>Prévia da arte do banner</span></div>}
     {config.banner.action.kind !== "none" && <span className="landing-admin-banner-action-hint">{copy.action}</span>}
   </div>;
@@ -125,9 +126,8 @@ export function AdminLandingPage({ session }: { session: AuthPayload }) {
   }, [config?.showcase.mode]);
 
   function updateCrop(device: "desktop" | "mobile", key: CropAxis, value: number) {
-    if (!config) return;
     const cropKey: CropKey = device === "desktop" ? "desktopCrop" : "mobileCrop";
-    setConfig({ ...config, banner: { ...config.banner, [cropKey]: { ...config.banner[cropKey], [key]: value } } });
+    setConfig((current) => current ? { ...current, banner: { ...current.banner, [cropKey]: { ...current.banner[cropKey], [key]: value } } } : current);
   }
 
   async function upload(file: File | undefined, device: "desktop" | "mobile") {

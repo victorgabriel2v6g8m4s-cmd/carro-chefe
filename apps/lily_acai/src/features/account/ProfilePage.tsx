@@ -21,6 +21,7 @@ import {
   type LilySessionRow
 } from "../../api";
 import { formatBrazilianPhone } from "./phone-format";
+import { LevelIdentity } from "../loyalty/LevelIdentity";
 import { openImageCropper } from "../../image-crop-editor";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 
@@ -518,7 +519,7 @@ export function RankingPage() {
         {ranking.map((row) => <Link className="ranking-user-card" to={`/ranking/${encodeURIComponent(row.userId)}`} key={row.userId} aria-label={`Ver estatísticas de ${row.displayName}`}>
           <strong className="ranking-position">#{row.rank}</strong>
           <ProfileAvatar name={row.displayName} url={row.avatarUrl} />
-          <div className="ranking-user-identity"><strong>{row.displayName}</strong><small>{row.currentLevel?.name ?? "Sem nível"}</small></div>
+          <div className="ranking-user-identity"><strong>{row.displayName}</strong><small><LevelIdentity level={row.currentLevel} /></small></div>
           <div className="ranking-kpis"><span><strong>{row.points.toLocaleString("pt-BR")}</strong><small>pontos</small></span><span><strong>{row.orderCount}</strong><small>pedidos</small></span><span><strong>{row.missionCount}</strong><small>missões</small></span><span><strong>{row.surveyCount}</strong><small>pesquisas</small></span><span><strong>{row.referralCount}</strong><small>indicações</small></span><span><strong>{row.activeDays}</strong><small>dias ativos</small></span></div>
         </Link>)}
         </div>{nextOffset !== null && <button className="button ghost" type="button" disabled={loadingMore} onClick={() => {

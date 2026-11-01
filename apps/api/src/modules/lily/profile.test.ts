@@ -331,6 +331,8 @@ describe("CookLily perfil e fidelidade", () => {
     const levels = await app.inject({ method: "GET", url: "/api/v1/lily/public/loyalty/levels" });
     expect(levels.statusCode).toBe(200);
     expect(levels.json()).toHaveProperty("levels");
+    expect(levels.json()).toHaveProperty("coinName");
+    expect(levels.json()).toHaveProperty("coinIconUrl");
   });
 
   it("lista somente as próprias sessões e permite encerrar as outras explicitamente", async () => {

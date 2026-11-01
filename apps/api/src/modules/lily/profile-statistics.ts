@@ -14,10 +14,17 @@ export async function lilyProfileStatisticsRoutes(app: FastifyInstance) {
     const viewer = await getOptionalLilySession(request);
     const points = viewer ? (await lilyPrisma.lilyLoyaltyEvent.aggregate({ where: { userId: viewer.user.id }, _sum: { points: true } }))._sum.points ?? 0 : 0;
     const levels = await lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, requiredPoints: true, lilyCoins: true, benefitsJson: true, iconMediaId: true } });
-    const mediaIds = levels.map((level) => level.iconMediaId).filter((id): id is string => Boolean(id));
+    const settings = await lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyCoinName: true, loyaltyCoinIconMediaId: true } });
+    const mediaIds = [...new Set([...levels.map((level) => level.iconMediaId), settings?.loyaltyCoinIconMediaId].filter((id): id is string => Boolean(id)))];
     const media = mediaIds.length ? await lilyPrisma.lilyMediaAsset.findMany({ where: { id: { in: mediaIds }, status: "active" }, select: { id: true } }) : [];
     const activeMedia = new Set(media.map((item) => item.id));
-    return { points, levels: levels.map((level) => ({ id: level.id, name: level.name, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins, benefits: parseLoyaltyBenefits(level.benefitsJson), iconUrl: activeMedia.has(level.iconMediaId ?? "") ? mediaUrl(level.iconMediaId) : null })) };
+    const coinIconId = settings?.loyaltyCoinIconMediaId ?? null;
+    return {
+      points,
+      coinName: settings?.loyaltyCoinName ?? "LilyCoins",
+      coinIconUrl: coinIconId && activeMedia.has(coinIconId) ? mediaUrl(coinIconId) : null,
+      levels: levels.map((level) => ({ id: level.id, name: level.name, requiredPoints: level.requiredPoints, lilyCoins: level.lilyCoins, benefits: parseLoyaltyBenefits(level.benefitsJson), iconUrl: activeMedia.has(level.iconMediaId ?? "") ? mediaUrl(level.iconMediaId) : null }))
+    };
   });
 
   app.get("/api/v1/lily/public/loyalty/stats", async (request) => {
