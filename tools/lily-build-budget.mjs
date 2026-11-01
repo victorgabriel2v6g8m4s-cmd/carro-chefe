@@ -23,7 +23,8 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   initialJsGzipBytes: 112_640,
   largestJsChunkBytes: 286_720,
   cssRawBytes: 204_800,
-  cssGzipBytes: 41_984,
+  // Margem de 1 KiB para variação de compressão CSS entre CI e VPS.
+  cssGzipBytes: 43_008,
   // Variações observadas entre CI e VPS, mais o carrossel alinhado a combos;
   // os limites de entrada e chunk máximo continuam sem alteração.
   combinedGzipBytes: 253_952
