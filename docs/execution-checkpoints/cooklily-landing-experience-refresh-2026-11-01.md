@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-landing-experience-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796` (alterações ainda não commitadas)
+- head_sha_verified: `63aa5b89` (commit local; checkpoint atualizado após persistência)
 - pull_requests: nenhum
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
@@ -55,4 +55,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Commits locais ainda pendentes; criar PR draft para `cooklily/canonical`, registrar SHA/CI e seguir merge, deploy VPS e homologação no browser Codex integrado.
+Commit `63aa5b89` persistido localmente; criar PR draft para `cooklily/canonical`, registrar CI e seguir merge, deploy VPS e homologação no browser Codex integrado.
