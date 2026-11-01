@@ -1,8 +1,11 @@
 import { Sparkles } from "lucide-react";
 import { Link } from "../../router";
 import type { LilyLoyaltyPayload } from "../../api";
+import type { HeaderLoyaltySummary } from "./header-loyalty-summary";
 
-export function HeaderLilyCoins({ loyalty }: { loyalty: LilyLoyaltyPayload | null }) {
+type HeaderLoyalty = HeaderLoyaltySummary | LilyLoyaltyPayload;
+
+export function HeaderLilyCoins({ loyalty }: { loyalty: HeaderLoyalty | null }) {
   const coinName = loyalty?.coinName ?? "LilyCoins";
   const coinBalance = loyalty?.lilyCoins ?? 0;
 
@@ -12,7 +15,7 @@ export function HeaderLilyCoins({ loyalty }: { loyalty: LilyLoyaltyPayload | nul
   </Link>;
 }
 
-export function HeaderLoyaltyProgress({ loyalty }: { loyalty: LilyLoyaltyPayload | null }) {
+export function HeaderLoyaltyProgress({ loyalty }: { loyalty: HeaderLoyalty | null }) {
   const points = loyalty?.points ?? 0;
   const progress = loyalty?.levelProgressPercent ?? 0;
   const currentLevel = loyalty?.currentLevel;

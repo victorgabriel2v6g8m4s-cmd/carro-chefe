@@ -7,3 +7,15 @@
 
 .customer-stats-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px}.customer-stats-toolbar h2{margin:4px 0;color:var(--cl-color-secondary)}.customer-stats-toolbar small{color:#755f68}.customer-stats-period{display:inline-flex;flex:none;gap:4px;padding:4px;border:1px solid #eadde2;border-radius:999px;background:#fff}.customer-stats-period button{min-height:38px;padding:7px 14px;border:0;border-radius:999px;background:transparent;color:#5e4650;font:inherit;font-weight:700;cursor:pointer}.customer-stats-period button[aria-pressed="true"]{background:#820023;color:white}.customer-stats-period button:focus-visible{outline:3px solid #b44b72;outline-offset:2px}
 @media(max-width:600px){.customer-stats-toolbar{align-items:flex-start}.customer-stats-period button{min-height:36px;padding:6px 10px;font-size:13px}}
+
+/* Header balance: the level bar grows vertically while both brand icons share one size. */
+.header-coins>svg,.header-coins>img,.header-level-icon,.header-level-icon-fallback{width:26px;height:26px;flex:none}
+.header-progress-segments i{height:19px}
+.header-level-icon,.header-level-icon-fallback{border-radius:50%;object-fit:contain}
+.ranking-level-identity{display:inline-flex;align-items:center;gap:5px;min-width:0;vertical-align:middle}
+.ranking-level-identity img{width:17px;height:17px;flex:none;object-fit:contain}
+.ranking-level-identity>span:not(.ranking-level-icon-fallback){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ranking-level-icon-fallback{display:grid;width:17px;height:17px;flex:none;place-items:center;border-radius:50%;background:#f6eaf0;color:var(--cl-color-primary);font-size:11px}
+.landing-ranking-level img{width:14px;height:14px}
+.landing-ranking-level .ranking-level-icon-fallback{width:14px;height:14px;font-size:9px}
+@media(max-width:760px){.header-coins>svg,.header-coins>img,.header-level-icon,.header-level-icon-fallback{width:25px;height:25px}.header-progress-segments i{height:17px}}

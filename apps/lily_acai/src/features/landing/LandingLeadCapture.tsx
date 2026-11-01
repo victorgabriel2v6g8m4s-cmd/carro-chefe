@@ -39,7 +39,7 @@ export function LandingLeadCapture({ config, user }: { config: LilyPublicConfig 
     }
   }
 
-  return <details className="landing-lead-capture"><summary>{copy.leadTitle}</summary><div><p>{copy.leadText}</p><p className="landing-login-reminder">{copy.loginPrompt} <Link to="/entrar">{copy.login}</Link> · <Link to="/cadastro">{copy.createAccount}</Link></p>
+  return <details className="landing-lead-capture"><summary>{copy.leadTitle}</summary><div><p>{copy.leadText}</p>
     <form onSubmit={submit}>
       <label>{copy.leadPhone}<input name="phone" inputMode="tel" autoComplete="tel" placeholder="(67) 99999-9999" required /></label>
       <label className="check lead-consent"><input name="marketingConsent" type="checkbox" /><span>{copy.leadConsent}</span></label>

@@ -1,11 +1,11 @@
 import type { LilyPublicConfig, CatalogProduct } from "../../api";
 import { Link } from "../../router";
 import type { PublicLandingPage } from "./landing-types";
-import { landingActionTarget } from "./landing-data";
+import { landingActionTarget, landingCropImageStyle } from "./landing-data";
 import { landingCopy as copy } from "./landing-copy";
 
 function BannerImage({ src, alt, crop, className }: { src: string; alt: string; crop: { x: number; y: number; zoom: number }; className: string }) {
-  return <img className={className} src={src} alt={alt} fetchPriority="high" style={{ objectPosition: `${crop.x}% ${crop.y}%`, transform: `scale(${crop.zoom})` }} />;
+  return <img className={className} src={src} alt={alt} fetchPriority="high" style={landingCropImageStyle(crop)} />;
 }
 
 export function LandingBanner({ landing, publicConfig, products }: { landing: PublicLandingPage; publicConfig: LilyPublicConfig | null; products: CatalogProduct[] }) {

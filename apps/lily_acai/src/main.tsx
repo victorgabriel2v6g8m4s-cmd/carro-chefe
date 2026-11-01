@@ -2,9 +2,10 @@ import { StrictMode, createContext, lazy, Suspense, useContext, useEffect, useRe
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "./router";
 import { Bell, BookOpen, House, LayoutDashboard, Menu, Play, ShoppingCart, Trophy, UserRound } from "lucide-react";
-import { getLilyAuthStatus, getLilyConfig, getLilyLoyalty, getLilyProfile, loginLily, postLilyVipAction, registerLily, type AuthPayload, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
+import { getLilyAuthStatus, getLilyConfig, getLilyLoyalty, getLilyProfile, getLilyPublicLevels, loginLily, postLilyVipAction, registerLily, type AuthPayload, type LilyLoyaltyPayload, type LilyPublicConfig } from "./api";
 import { CartProvider, useCart } from "./features/cart/CartContext";
 import { HeaderLilyCoins, HeaderLoyaltyProgress } from "./features/loyalty/HeaderLoyaltyControls";
+import { guestHeaderLoyaltySummary, type HeaderLoyaltySummary } from "./features/loyalty/header-loyalty-summary";
 const CatalogPage = lazy(() => import("./catalog").then((module) => ({ default: module.CatalogPage })));
 const LandingExperience = lazy(() => import("./features/landing/LandingExperience").then((module) => ({ default: module.LandingExperience })));
 const AdminHome = lazy(() => import("./admin").then((module) => ({ default: module.AdminHome })));
@@ -158,6 +159,7 @@ function Shell({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthPayload["user"] | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const [loyalty, setLoyalty] = useState<LilyLoyaltyPayload | null>(null);
+  const [guestLoyalty, setGuestLoyalty] = useState<HeaderLoyaltySummary | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const menuRef = useRef<HTMLElement | null>(null);
@@ -177,6 +179,18 @@ function Shell({ children }: { children: ReactNode }) {
     void getLilyLoyalty().then((value) => { if (active) setLoyalty(value); }).catch(() => { if (active) setLoyalty(null); });
     return () => { active = false; };
   }, [user?.id, location.pathname]);
+
+  useEffect(() => {
+    let active = true;
+    if (!authLoaded || user) {
+      setGuestLoyalty(null);
+      return () => { active = false; };
+    }
+    void getLilyPublicLevels().then((value) => {
+      if (active) setGuestLoyalty(guestHeaderLoyaltySummary(value));
+    }).catch(() => { if (active) setGuestLoyalty(null); });
+    return () => { active = false; };
+  }, [authLoaded, user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -238,6 +252,7 @@ function Shell({ children }: { children: ReactNode }) {
   const isStaff = user ? ["staff", "admin"].includes(user.role) : false;
   const isCourier = user ? ["courier", "admin"].includes(user.role) : false;
   const closeMenu = () => setMenuOpen(false);
+  const headerLoyalty = user ? loyalty : guestLoyalty;
 
   return <div className="lily-shell">
     <a className="skip-link" href="#lily-main-content">Pular para o conteúdo principal</a>
@@ -247,10 +262,10 @@ function Shell({ children }: { children: ReactNode }) {
           <Link className="brand" to="/cardapio" aria-label="CookLily — cardápio" onClick={closeMenu}>
             <img className="brand-logo" src={brandLogo} alt="" width="48" height="48" />
           </Link>
-          <HeaderLilyCoins loyalty={loyalty} />
+          <HeaderLilyCoins loyalty={headerLoyalty} />
         </div>
 
-        <HeaderLoyaltyProgress loyalty={loyalty} />
+        <HeaderLoyaltyProgress loyalty={headerLoyalty} />
         <div className="header-actions">
           <Link className="header-icon notifications-icon" to="/notificacoes" aria-label={unreadNotifications ? `Notificações, ${unreadNotifications} não lidas` : "Notificações"}><Bell size={22} strokeWidth={1.8} />{unreadNotifications > 0 && <span className="cart-badge notification-badge">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
           <Link className="header-icon cart-icon" to="/carrinho" aria-label={`Carrinho com ${cart.itemCount} item(ns)`}>

@@ -45,7 +45,7 @@ export function LandingExperience({ user, publicConfig, authLoaded }: { user: Au
   return <div className="landing-page">
     <LandingBanner landing={landing} publicConfig={publicConfig} products={products} />
     <div className="landing-content">
-      <LandingBrandIdentity landing={landing} user={user} config={publicConfig} />
+      <LandingBrandIdentity landing={landing} user={user} />
       <LandingProductShowcase config={landing.showcase} products={products} weeklyProduct={catalog?.weeklyProduct ?? null} />
       <div className="landing-community-grid"><LandingStory /><LandingCommunitySidebar enabled={landing.sections.rankingEnabled} /></div>
       <LandingReelsSection enabled={landing.sections.reelsEnabled} title={landing.sections.reelsTitle} products={products} />

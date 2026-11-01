@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "../../router";
 import { getLilyRanking, type LilyRankingRow } from "../../api";
 import { landingCopy as copy } from "./landing-copy";
+import { LevelIdentity } from "../loyalty/LevelIdentity";
 
 const RANKING_PAGE_SIZE = 20;
 
 function RankingRow({ row }: { row: LilyRankingRow }) {
-  return <li className="landing-ranking-row"><strong className="landing-ranking-position">#{row.rank}</strong>{row.avatarUrl ? <img src={row.avatarUrl} alt="" loading="lazy" /> : <span className="landing-ranking-avatar" aria-hidden="true">{row.displayName.trim().charAt(0).toUpperCase()}</span>}<div><strong>{row.displayName}</strong><small>{row.currentLevel?.name ?? "Sem nível"}</small></div><span className="landing-ranking-points">{row.points.toLocaleString("pt-BR")} <small>pts</small></span></li>;
+  return <li className="landing-ranking-row"><strong className="landing-ranking-position">#{row.rank}</strong>{row.avatarUrl ? <img src={row.avatarUrl} alt="" loading="lazy" /> : <span className="landing-ranking-avatar" aria-hidden="true">{row.displayName.trim().charAt(0).toUpperCase()}</span>}<div><strong>{row.displayName}</strong><small><LevelIdentity level={row.currentLevel} compact /></small></div><span className="landing-ranking-points">{row.points.toLocaleString("pt-BR")} <small>pts</small></span></li>;
 }
 
 export function LandingCommunitySidebar({ enabled }: { enabled: boolean }) {

@@ -1,9 +1,18 @@
-import type { LilyLandingPageId, LilyLandingSocialId } from "@carro-chefe/contracts";
+import type { LilyLandingPageConfig, LilyLandingPageId, LilyLandingSocialId } from "@carro-chefe/contracts";
 import type { CatalogProduct, LilyPublicConfig } from "../../api";
 
 const pagePaths: Record<LilyLandingPageId, string> = {
   cardapio: "/cardapio", ranking: "/ranking", reels: "/reels", dashboard: "/dashboard", niveis: "/niveis", pesquisas: "/pesquisas"
 };
+
+export function landingCropImageStyle(crop: LilyLandingPageConfig["banner"]["desktopCrop"]) {
+  const panX = (50 - crop.x) * (crop.zoom - 1);
+  const panY = (50 - crop.y) * (crop.zoom - 1);
+  return {
+    objectPosition: `${crop.x}% ${crop.y}%`,
+    transform: `translate(${panX}%, ${panY}%) scale(${crop.zoom})`
+  };
+}
 
 export function landingActionTarget(action: { kind: string; targetId?: string }, config: LilyPublicConfig | null, products: CatalogProduct[], linkedProductSlug?: string) {
   if (action.kind === "page" && action.targetId && action.targetId in pagePaths) return { href: pagePaths[action.targetId as LilyLandingPageId], external: false };

@@ -566,6 +566,7 @@ export type LilyRankingRow = {
 };
 
 export type LilyPublicLevel = { id: string; name: string; requiredPoints: number; lilyCoins: number; benefits: Array<{ id: string; label: string; kind?: string }>; iconUrl: string | null };
+export type LilyPublicLevelsPayload = { points: number; coinName: string; coinIconUrl: string | null; levels: LilyPublicLevel[] };
 export type LilyCustomerStats = {
   user: { displayName: string; avatarUrl: string | null };
   points: number;
@@ -626,7 +627,7 @@ export async function getLilyCustomerStats(userId?: string) {
 
 export async function getLilyPublicLevels() {
   const response = await fetch("/api/v1/lily/public/loyalty/levels", { credentials: "same-origin" });
-  return parseResponse<{ points: number; levels: LilyPublicLevel[] }>(response);
+  return parseResponse<LilyPublicLevelsPayload>(response);
 }
 
 

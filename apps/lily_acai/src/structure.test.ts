@@ -12,6 +12,8 @@ const catalogSource = readFileSync(resolve(sourceDirectory, "catalog.tsx"), "utf
 const profileSource = readFileSync(resolve(sourceDirectory, "features/account/ProfilePage.tsx"), "utf8");
 const dashboardSource = readFileSync(resolve(sourceDirectory, "features/dashboard/DashboardPage.tsx"), "utf8");
 const headerLoyaltySource = readFileSync(resolve(sourceDirectory, "features/loyalty/HeaderLoyaltyControls.tsx"), "utf8");
+const landingBrandSource = readFileSync(resolve(sourceDirectory, "features/landing/LandingBrandIdentity.tsx"), "utf8");
+const landingStorySource = readFileSync(resolve(sourceDirectory, "features/landing/LandingStory.tsx"), "utf8");
 const loyaltyAdminSource = readFileSync(resolve(sourceDirectory, "features/admin/AdminLoyaltyPage.tsx"), "utf8");
 const paymentSource = [
   "features/payments/PaymentPage.tsx",
@@ -111,8 +113,8 @@ describe("estrutura crítica de UX CookLily", () => {
   });
 
   it("mostra saldo e progresso em quatro segmentos antes dos ícones de navegação e reúne links no menu", () => {
-    expect(mainSource).toContain('<HeaderLilyCoins loyalty={loyalty} />');
-    expect(mainSource).toContain('<HeaderLoyaltyProgress loyalty={loyalty} />');
+    expect(mainSource).toContain('<HeaderLilyCoins loyalty={headerLoyalty} />');
+    expect(mainSource).toContain('<HeaderLoyaltyProgress loyalty={headerLoyalty} />');
     expect(headerLoyaltySource).toContain("loyalty?.lilyCoins ?? 0");
     expect(headerLoyaltySource).toContain("loyalty?.points ?? 0");
     expect(headerLoyaltySource).toContain('to="/dashboard"');
@@ -125,6 +127,22 @@ describe("estrutura crítica de UX CookLily", () => {
     expect(css).toContain(".header-progress-segments { width:clamp(72px,28vw,132px); gap:2px; }");
     expect(css).toContain(".topbar-inner > .header-brand-group { flex:0 0 auto; gap:5px; }");
     expect(css).toContain(".topbar-inner > .header-loyalty-progress { flex:1 1 auto; justify-content:center; min-width:0; }");
+  });
+
+  it("apresenta o fluxo de fidelidade na landing com prévias acessíveis e sem convite redundante de conta", () => {
+    expect(landingBrandSource).not.toContain("Já tem cadastro?");
+    expect(landingBrandSource).not.toContain('to="/cadastro"');
+    expect(landingBrandSource).not.toContain('to="/entrar"');
+    expect(landingBrandSource).toContain("combo-slide-cta landing-menu-cta");
+    expect(landingStorySource).toContain("landing-journey-map");
+    expect(landingStorySource).toContain("Prévia ilustrativa");
+    expect(landingStorySource).toContain("Prévia da Store");
+  });
+
+  it("mantém o menu do header acima da busca e das categorias sticky do cardápio", () => {
+    expect(css).toMatch(/\.topbar \{[^}]*z-index: 80;/);
+    expect(css).toContain(".catalog-toolbar.catalog-toolbar-top");
+    expect(css).toContain(".catalog-category-tabs");
   });
 
   it("mostra o convite para entrar no dashboard e mantém o destino depois da autenticação", () => {

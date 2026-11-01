@@ -24,7 +24,7 @@ button, input, select, textarea { font: inherit; }
 .skip-link:focus-visible { transform: translateY(0); }
 #lily-main-content:focus-visible { outline: 3px solid var(--cl-color-primary); outline-offset: 4px; }
 
-.topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(18px,5vw,72px); border-bottom: 1px solid rgb(130 0 35 / 14%); background: rgb(255 247 250 / 92%); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 10; }
+.topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px clamp(18px,5vw,72px); border-bottom: 1px solid rgb(130 0 35 / 14%); background: rgb(255 247 250 / 92%); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 80; }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
 .brand-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 50%; box-shadow: 0 8px 24px rgb(68 4 45 / 12%); }
 .brand-copy { display: grid; }
@@ -779,7 +779,7 @@ img, svg { max-width: 100%; }
 .mobile-menu-backdrop { display: none; }
 
 @media (max-width: 760px) {
-  .topbar { z-index: 70; justify-content: flex-start; width: 100%; }
+  .topbar { z-index: 80; justify-content: flex-start; width: 100%; }
   .topbar .desktop-nav { display: none; }
   .topbar .mobile-only { display: inline-grid; }
   .brand { flex: 1 1 auto; overflow: hidden; }
