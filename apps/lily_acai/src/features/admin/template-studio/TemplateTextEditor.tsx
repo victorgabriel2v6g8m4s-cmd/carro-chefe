@@ -109,6 +109,36 @@ function currentRange(editor: HTMLElement, saved: React.MutableRefObject<Range |
   return range;
 }
 
+function restoreEditorRange(editor: HTMLElement, range: Range) {
+  editor.focus();
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+function rangeHasFormat(editor: HTMLElement, range: Range, selector: string) {
+  if (range.collapsed) {
+    const selection = window.getSelection();
+    return Boolean(selection?.anchorNode && editor.contains(selection.anchorNode)
+      && selection.anchorNode.parentElement?.closest(selector));
+  }
+
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  let foundText = false;
+  let fullyFormatted = true;
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    if (!node.textContent?.trim() || !range.intersectsNode(node)) continue;
+    foundText = true;
+    if (!node.parentElement?.closest(selector)) fullyFormatted = false;
+  }
+  return foundText && fullyFormatted;
+}
+
+function formatSelector(action: string) {
+  return ({ bold: "strong, b", italic: "em, i", strikeThrough: "s, strike, del" } as Record<string, string>)[action];
+}
+
 function insertToken(editor: HTMLElement, saved: React.MutableRefObject<Range | null>, number: number, name: string) {
   editor.focus();
   const range = currentRange(editor, saved);
@@ -133,7 +163,12 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
     const selection = window.getSelection();
     if (!editor || !selection?.rangeCount || !editor.contains(selection.anchorNode)) return;
     savedRange.current = selection.getRangeAt(0).cloneRange();
-    editor.previousElementSibling?.querySelectorAll<HTMLButtonElement>("[data-command]").forEach((button) => button.setAttribute("aria-pressed", String(document.queryCommandState(button.dataset.command!))));
+    editor.previousElementSibling?.querySelectorAll<HTMLButtonElement>("[data-command]").forEach((button) => {
+      const action = button.dataset.command!;
+      const selector = formatSelector(action);
+      const active = selector ? rangeHasFormat(editor, selection.getRangeAt(0), selector) : document.queryCommandState(action);
+      button.setAttribute("aria-pressed", String(active));
+    });
     editor.previousElementSibling?.querySelectorAll<HTMLButtonElement>("[data-tag]").forEach((button) => button.setAttribute("aria-pressed", String(Boolean(selection.anchorNode?.parentElement?.closest(button.dataset.tag!)))));
   }
 
@@ -170,11 +205,12 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
   function applyToolbar(action: "bold" | "italic" | "strikeThrough" | "insertUnorderedList" | "insertOrderedList" | "formatBlock", value?: string) {
     const editor = editorRef.current;
     if (!editor) return;
-    editor.focus();
-    const range = currentRange(editor, savedRange); const selection = window.getSelection();
-    selection?.removeAllRanges(); selection?.addRange(range);
+    const range = currentRange(editor, savedRange);
+    restoreEditorRange(editor, range);
+    const selection = window.getSelection();
     // Native editing commands toggle inline marks across partial and mixed selections,
     // while range.surroundContents only adds another wrapper and cannot remove a mark.
+    // Restore after focus as browsers may collapse or move the selection on focus().
     const block = selection?.anchorNode?.parentElement?.closest("blockquote");
     document.execCommand(action, false, action === "formatBlock" && block ? "P" : value);
     emitChange();
@@ -184,8 +220,8 @@ export function TemplateTextEditor({ label, value, variableNames, onChange, onAc
   function applyCode(inline: boolean) {
     const editor = editorRef.current;
     if (!editor) return;
-    editor.focus();
     const range = currentRange(editor, savedRange);
+    restoreEditorRange(editor, range);
     const selection = window.getSelection();
     const existing = selection?.anchorNode?.parentElement?.closest(inline ? "code" : "pre");
     if (existing && inline) existing.replaceWith(...Array.from(existing.childNodes));
