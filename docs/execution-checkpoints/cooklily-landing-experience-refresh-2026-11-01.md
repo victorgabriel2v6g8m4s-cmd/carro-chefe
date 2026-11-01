@@ -2,11 +2,11 @@
 
 - status: `in_progress`
 - owner: `AG-DEV`
-- branch: `codex/cooklily-landing-experience-refresh`
+- branch: `codex/cooklily-landing-refresh-checkpoint` (registro; implementação integrada)
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `c45c35428a43d5a8168d1d396e9ba82d22688f16`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) draft, aberto para `cooklily/canonical`; CI `41276443236` em andamento
+- head_sha_verified: `530aacd140786b4d97786d81bfac6d9ebe757361`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged para `cooklily/canonical`; CI `41276513343` success
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -22,22 +22,23 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Seção de experiência ganhou mapa do fluxo e prévias de interface exclusivamente ilustrativas; a Store aparece como prévia planejada.
 - Recuadro do banner compartilha cálculo de pan/zoom entre preview administrativo e banner público; update dos sliders usa estado funcional para não perder eventos rápidos.
 - Z-index global do header foi elevado acima das barras sticky do catálogo.
+- Correção do posicionamento vertical do banner e cobertura dirigida adicionadas após bugs reportados pelo proprietário.
 - Roadmap recebeu o escopo aprovado desta atualização e seus dois bugs de homologação.
 
 ## Em andamento
 
-- Abrir e revisar PR para integração com a `cooklily/canonical`.
-- Registrar endereço público autorizado pelo usuário, homologar domínio no navegador integrado e corrigir defeitos.
+- Deploy de `530aacd140786b4d97786d81bfac6d9ebe757361` pendente.
+- Registrar o endereço público autorizado e homologar domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
 
 ## Gates e testes
 
 - Preflight de política executado para `AG-DEV`, escopo `apps/lily_acai/src/features/landing`; passou.
-- `npm test`: 86 arquivos, 446 passaram e 3 foram ignorados (executado antes das últimas alterações visuais; testes dirigidos executados depois).
-- Vitest focado (API de perfil, header visitante, recorte, estrutura/UX): 4 arquivos, 49 testes passaram.
+- `npm test`: 86 arquivos, 446 passaram e 3 foram ignorados; alterações finais verificadas com Vitest focado: 4 arquivos, 49 testes passaram.
+- CI do PR #315: run `41276513343` success (Node 20/22/24, checks, workbook e supervisor).
 - `npm run check`: passou.
 - `npm run build`: passou; budget CookLily: JS gzip 203,87/204 KiB; JS+CSS gzip 244,45/245 KiB.
 - `git diff --check`: passou.
-- Merge, CI, deploy e homologação desktop/mobile pendentes.
+- Merge e CI concluídos. Deploy e homologação desktop/mobile pendentes.
 
 ## Migrations
 
@@ -45,7 +46,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Bloqueios/riscos
 
-- `npm` global não foi encontrado no PowerShell no último levantamento; o runtime Node empacotado pelo Codex tem ABI incompatível com o binário local `better-sqlite3`. Verificar runtime Node LTS disponível e escolher os gates locais suportados sem reinstalar dependências desnecessariamente.
+- Nenhum bloqueio local de runtime: Node LTS e npm encontrados em `C:\Program Files\nodejs`.
 
 ## Homologação/dependências externas
 
@@ -55,4 +56,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Atualizar este checkpoint para o commit após registrar o PR #315; acompanhar todos os jobs do CI `41276443236`, colocar o PR pronto para revisão, integrar e seguir com deploy na VPS e homologação no navegador integrado Codex.
+Executar `sudo cc deploy canonical` na VPS; confirmar SHA e saúde do serviço; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
