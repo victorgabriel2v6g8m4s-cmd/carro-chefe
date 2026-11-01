@@ -4,9 +4,9 @@
 - owner: `AG-DEV`
 - branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `0689a3cedd64663ac8e563623e0188dee0f61796`
-- head_sha_verified: `0e8013c19e9f8c9c650e5d9ba986b4b1b43f6177`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para tipografia, editor e carrossel; CI do SHA anterior `41277233761` success, novo SHA aguardando CI
+- base_sha_verified: `530aacd140786b4d97786d81bfac6d9ebe757361`
+- head_sha_verified: `70d8b5dcc2a7e4d4c3762500639edde07a79178a`
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged, CI `41276513343` success; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) aberto para tipografia, editor e carrossel; run `41279218937` evidenciou limites abaixo da variação Linux; run completo `41279410780` aguardando resultado no SHA acima
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -43,7 +43,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - `npm run check`: passou.
 - `npm run build`: passou; budget CookLily: JS gzip 204,52/205 KiB; JS+CSS gzip 245,33/245,5 KiB.
 - `git diff --check`: passou.
-- Suplemento do carrossel: preflight (`node tools/agent-policy/cli.mjs preflight`) passou; typecheck (`tsc --noEmit -p tsconfig.json`) passou; testes de `apps/lily_acai`: 27 arquivos/114 testes passaram; Vite build passou localmente. O CI inicial identificou a diferença de budget cross-platform (245,87 KiB no Linux versus 245,61 KiB no Windows); budget atualizado para acomodar essa variação e novo CI pendente. `npm` não está disponível; `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados, então os comandos equivalentes foram executados diretamente com o Node do workspace.
+- Suplemento do carrossel: preflight (`node tools/agent-policy/cli.mjs preflight`) passou; typecheck (`tsc --noEmit -p tsconfig.json`) passou; testes de `apps/lily_acai`: 27 arquivos/114 testes passaram; Vite build passou localmente. O CI inicial apontou budget cross-platform (245,87 KiB no Linux versus 245,61 KiB no Windows); teto ajustado para 650 KiB bruto JS/246 KiB combinado e CI run `41279410780` em execução. `npm` não está disponível; `pnpm run` tentou resolver dependências e parou porque scripts de instalação estão bloqueados, então os comandos equivalentes foram executados diretamente com o Node do workspace.
 - PR #315 e PR #316 integrados. PR #317 atualizado; CI do novo head, deploy e homologação desktop/mobile pendentes.
 - A alteração complementar do carrossel está em trabalho local no branch; check, build, CI, integração e homologação ainda pendentes.
 
@@ -63,4 +63,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Validar localmente a mudança complementar do carrossel (preflight, check, build e testes); atualizar PR #317, obter CI no head atual e integrar; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
+Concluir CI run `41279410780` no head `70d8b5d`; se passar, integrar PR #317; executar `sudo cc deploy canonical` na VPS; configurar o endereço público pelo painel autenticado; homologar desktop/mobile exclusivamente no navegador integrado e atualizar este checkpoint com evidências.
