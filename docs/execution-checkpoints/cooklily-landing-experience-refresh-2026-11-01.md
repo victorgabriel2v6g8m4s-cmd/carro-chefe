@@ -2,12 +2,12 @@
 
 - status: `in_progress`
 - owner: `AG-DEV`
-- branch: `codex/cooklily-format-toggle-dom`
+- branch: `cooklily/canonical`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `1a7c17c3f576112fd5ca8fadaf160734490df3c6`
-- head_sha_verified: `6b09dda40f68180835fd70c42db14909893595d6`
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317), [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318), [#319](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/319), [#320](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/320), [#321](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/321) e [#322](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/322) integradas; [#323](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/323) aberta
-- last_verified_at: `2026-11-01 07:32 UTC`
+- head_sha_verified: `3239865631a1e40a0a32bc69b59e93e69cfa4f8b` (squash da PR #323; checkpoint atualizado antes do deploy)
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317), [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318), [#319](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/319), [#320](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/320), [#321](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/321), [#322](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/322) e [#323](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/323) integradas
+- last_verified_at: `2026-11-01 07:35 UTC`
 - interruption_state: `none`
 
 ## Entrega
@@ -32,7 +32,8 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 - Homologação no IAB: desktop 1440x900 e mobile 390x844. A rotação avançou de 2/3 para 3/3 após 8 s; painel mostra timer configurado em 7 s, 3 colunas desktop e 2 mobile. Com os elementos desligados temporariamente, as imagens ocuparam o card todo; título, preço e rótulo foram restaurados e salvos.
 - A revisão encontrou preço cortado em cards mobile estreitos. PR #319 corrigiu o layout com container query e foi integrada em `519661f9` após CI `41282529154` passar.
 - PR #320 integrada pelo squash `5d9d160be468f9984f8b170882bfa05c9f71f1b8`, CI `41283048216` passou. Deploy em 2026-11-01 concluiu nesse SHA: JS gzip `205,20/207 KiB`, CSS gzip `41,02/42 KiB`, combinado `246,22/248 KiB`; migrations não pendentes, readiness e HTTPS smoke passaram.
-- PR #321 integrada no canonical em `2396740a`; PR #322 integrada em `1a7c17c3`. Deploy do SHA `1a7c17c3` terminou em `2026-11-01 07:21 UTC`; readiness e smoke HTTPS passaram. Em teste IAB, a seleção de uma palavra em um trecho de texto que o markdown legado já renderizava como negrito produziu uma contagem temporária inesperada; nenhuma configuração da landing foi salva. A verificação adicional confirmou que uma palavra sem formatação pode ser aplicada e removida pelo comando nativo no mesmo editor, mas o caso inicialmente testado dependia da estrutura preexistente. PR #323 implementa alternância direta do intervalo e aguarda CI e homologação após deploy.
+- PR #321 integrada no canonical em `2396740a`; PR #322 integrada em `1a7c17c3`. Deploy do SHA `1a7c17c3` terminou em `2026-11-01 07:21 UTC`; readiness e smoke HTTPS passaram. Em teste IAB, a seleção de uma palavra em um trecho de texto que o markdown legado já renderizava como negrito produziu uma contagem temporária inesperada; nenhuma configuração da landing foi salva. A verificação adicional confirmou que uma palavra sem formatação pode ser aplicada e removida pelo comando nativo no mesmo editor, mas o caso inicialmente testado dependia da estrutura preexistente.
+- PR #323 integrada por squash no SHA `3239865631a1e40a0a32bc69b59e93e69cfa4f8b`; CI `41285239653` concluiu com sucesso em Node 20/22/24 e jobs auxiliares. A implementação troca/remove negrito, itálico e riscado manipulando o intervalo selecionado diretamente em texto simples, com fallback nativo para seleções mistas/complexas. Deploy ainda pendente.
 - Homologação visual pós-deploy achou que títulos/preços dos cards do carrossel ainda cortavam em desktop com três colunas. Correção local amplia a container query compacta para cards até 420px; requer PR, deploy e nova homologação.
 - Na nova homologação mobile do SHA `5d9d160b`, os dois cards mostram nome e preço legíveis. No desktop 1440px, os textos dos três cards aparentaram corte; a compactação responsiva foi ampliada a 420px. Teste de landing focado passou (1 teste), build Vite + budget local passou (JS gzip `204,74/207 KiB`, CSS gzip `40,98/42 KiB`, combinado `245,71/248 KiB`). `pnpm` tentou instalar dependências e parou por scripts de build bloqueados; os runners locais instalados foram invocados diretamente com sucesso.
 
@@ -64,4 +65,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Concluir CI da PR #323 (head `6b09dda4`), integrar por squash e atualizar o checkpoint antes de `sudo cc deploy <sha canonical>`. No IAB, homologar negrito/itálico/riscado ao aplicar e remover no mesmo texto em desktop e mobile; recarregar a página para descartar os rascunhos e confirmar que a descrição persistida não mudou. Registrar SHA, deploy e evidências antes de concluir.
+Executar `sudo cc deploy 3239865631a1e40a0a32bc69b59e93e69cfa4f8b`. No IAB, homologar negrito/itálico/riscado ao aplicar e remover no mesmo texto em desktop e mobile; recarregar a página para descartar os rascunhos e confirmar que a descrição persistida não mudou. Registrar SHA, deploy e evidências antes de concluir.
