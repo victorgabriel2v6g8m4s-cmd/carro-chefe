@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-landing-wordmark-refresh`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `d9bb40aa0b35b73298db55fad681c17fbb2c8488`
-- head_sha_verified: `bca50e86720ef7fea789e4c3253fd043807ff7d0` (PR #317 integrada por squash)
-- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315) merged; [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316) merged checkpoint; [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) merged por squash em `bca50e86720ef7fea789e4c3253fd043807ff7d0`, CI `41279816196` success no head `f5471c30`
+- head_sha_verified: `00771c5ea6e573065f1d5403f5938f05f3e4f261` (PR #318 integrada por squash)
+- pull_requests: [#315](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/315), [#316](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/316), [#317](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/317) e [#318](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/318) integradas; #318 squash SHA `00771c5e`, CI `41280526295` success
 - last_verified_at: `2026-11-01`
 - interruption_state: `none`
 
@@ -27,8 +27,10 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 ## Em andamento
 
 - PR #317 integrada na canonical em `bca50e86720ef7fea789e4c3253fd043807ff7d0` após CI completo `41279816196` passar.
-- Primeira tentativa de deploy em `2026-11-01 06:17 UTC` falhou no gate do budget no SHA `bca50e8`; build VPS mediu JS gzip `205,21/205 KiB` e combinado `246,13/246 KiB`. O deployer restaurou o release anterior `fc96a845`; migrations reais e troca do serviço não ocorreram. Ajustar margem no budget em PR corretiva antes de nova tentativa.
-- Após novo merge/deploy, configurar o endereço público pelo painel autenticado e homologar o domínio em desktop/mobile no navegador integrado; corrigir e repetir se necessário.
+- PR corretiva #318 ajustou o budget; deploy em `2026-11-01 06:46 UTC` concluiu no SHA `00771c5e`. Build VPS: JS gzip `205,21/207 KiB`, combinado `246,13/248 KiB`; health interno e smoke HTTPS passaram. Nenhuma migration pendente.
+- Endereço público autorizado foi salvo em Painel → Configurações e confirmado no texto e mapa da landing.
+- Homologação no IAB: desktop 1440x900 e mobile 390x844. A rotação avançou de 2/3 para 3/3 após 8 s; painel mostra timer configurado em 7 s, 3 colunas desktop e 2 mobile. Com os elementos desligados temporariamente, as imagens ocuparam o card todo; título, preço e rótulo foram restaurados e salvos.
+- A revisão encontrou preço cortado em cards mobile estreitos (2 colunas). Correção CSS por container query está em andamento no branch `codex/cooklily-mobile-product-carousel-fit`, base `00771c5e`.
 
 ## Gates e testes
 
@@ -47,7 +49,7 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Bloqueios/riscos
 
-- Deploy está bloqueado pela diferença de 0,21 KiB no limite de JS gzip e 0,13 KiB no limite combinado; PR de ajuste do budget está em andamento.
+- Falta integrar/deployar a correção de tipografia e preço em cards estreitos e retestar no IAB.
 - Nenhum segredo ou dado pessoal foi adicionado ao repositório.
 
 ## Homologação/dependências externas
@@ -58,4 +60,4 @@ Atualizar a landing pública e elementos compartilhados conforme decisões do pr
 
 ## Próxima ação exata
 
-Integrar a correção de margem de build, executar novamente `sudo cc deploy bca50e86720ef7fea789e4c3253fd043807ff7d0` (ou SHA atualizado da canonical), confirmar saúde e SHA, configurar o endereço público no painel e homologar desktop/mobile apenas no navegador integrado.
+Abrir PR para `codex/cooklily-mobile-product-carousel-fit`; após CI passar, integrar por squash e executar `sudo cc deploy <sha canonical>`; retestar desktop/mobile no IAB, remover override de viewport e atualizar este checkpoint com o resultado final.
