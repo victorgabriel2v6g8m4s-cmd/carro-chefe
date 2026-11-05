@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-payment-e2e-diagnostics`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `65b23dc3589c689fcd1bcc47d686b66da5aecb95`
-- head_sha_verified: `65b23dc3589c689fcd1bcc47d686b66da5aecb95` (alterações locais sem commit)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`
+- head_sha_verified: `bed6dc4c679c012d45c52caa592a5033ecb3fc38` (correção de diagnóstico; atualização documental subsequente)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 draft aberto contra `cooklily/canonical`, head inicial `bed6dc4c679c012d45c52caa592a5033ecb3fc38`
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
