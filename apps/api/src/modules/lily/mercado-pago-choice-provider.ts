@@ -1,5 +1,6 @@
 import { ApiError } from "../../lib/errors";
 import type { LilyCheckoutPaymentMethod } from "./payment-method-rules";
+import { mercadoPagoFailureDetails } from "./mercado-pago-diagnostics";
 
 const DEFAULT_API_BASE = "https://api.mercadopago.com";
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -63,41 +64,6 @@ function apiBase() {
 
 function amountString(cents: number) {
   return (cents / 100).toFixed(2);
-}
-
-function safeProviderCode(value: unknown) {
-  const code = typeof value === "number" ? String(value) : typeof value === "string" ? value : "";
-  return /^[A-Za-z0-9_.-]{1,80}$/.test(code) ? code : undefined;
-}
-
-function retryAfterSeconds(response: Response) {
-  const value = response.headers.get("retry-after")?.trim();
-  if (!value) return null;
-  if (/^\d{1,7}$/.test(value)) {
-    const seconds = Number(value);
-    return seconds <= 604_800 ? seconds : null;
-  }
-  const retryAt = Date.parse(value);
-  if (!Number.isFinite(retryAt)) return null;
-  const seconds = Math.max(0, Math.ceil((retryAt - Date.now()) / 1000));
-  return seconds <= 604_800 ? seconds : null;
-}
-
-function providerFailureDetails(response: Response, body: any) {
-  const providerRequestId = safeProviderCode(response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"));
-  const providerErrorCode = safeProviderCode(body?.error) ?? safeProviderCode(body?.code);
-  const retryDelay = retryAfterSeconds(response);
-  const providerCauseCodes = Array.isArray(body?.cause)
-    ? body.cause.map((cause: any) => safeProviderCode(cause?.code)).filter((code: string | undefined): code is string => Boolean(code)).slice(0, 5)
-    : [];
-  return {
-    provider: "mercado_pago",
-    providerStatus: response.status,
-    ...(providerRequestId ? { providerRequestId } : {}),
-    ...(providerErrorCode ? { providerErrorCode } : {}),
-    ...(retryDelay !== null ? { retryAfterSeconds: retryDelay } : {}),
-    ...(providerCauseCodes.length ? { providerCauseCodes } : {})
-  };
 }
 
 function firstPayment(order: any) {
@@ -180,7 +146,7 @@ export async function createMercadoPagoChoicePayment(input: ChoiceInput): Promis
 
   const order = await response.json().catch(() => null) as any;
   if (!response.ok) {
-    const diagnostic = providerFailureDetails(response, order);
+    const diagnostic = mercadoPagoFailureDetails(response, order);
     if (response.status === 429) {
       const retryDelay = typeof diagnostic.retryAfterSeconds === "number"
         ? ` Aguarde ${diagnostic.retryAfterSeconds} segundos antes de tentar novamente.`
@@ -205,7 +171,7 @@ export async function createMercadoPagoChoicePayment(input: ChoiceInput): Promis
   if (!order || typeof order !== "object") {
     throw new ApiError(502, "O Mercado Pago respondeu em um formato inesperado. A tentativa não foi confirmada; verifique o painel de testes antes de repetir.", {
       code: "LILY_PAYMENT_PROVIDER_INVALID_RESPONSE",
-      ...providerFailureDetails(response, null)
+      ...mercadoPagoFailureDetails(response, null)
     });
   }
 

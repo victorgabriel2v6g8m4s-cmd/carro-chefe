@@ -116,6 +116,36 @@ describe("Mercado Pago provider CookLily", () => {
     });
   });
 
+  it("retorna códigos sanitizados da Orders API também no fluxo legado de pagamentos", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      error: "UPSTREAM_PRIVATE_TEXT",
+      cause: [{ code: "card_token_invalid", description: "private card details" }]
+    }), { status: 400, headers: { "Content-Type": "application/json", "x-request-id": "mp-legacy-123" } })));
+
+    const attempt = createMercadoPagoPayment({
+      paymentId: "legacy-rejected-payment",
+      orderId: "legacy-rejected-order",
+      orderNumber: "CL-LEGACY-REJECTED",
+      amountCents: 1000,
+      currency: "BRL",
+      method: "credit_card",
+      idempotencyKey: "legacy-rejected-idempotency",
+      payer: { email: "cliente@example.com" },
+      card: { token: "card-token-test-value-1234", paymentMethodId: "visa", installments: 1 }
+    });
+    await expect(attempt).rejects.toMatchObject({
+      statusCode: 502,
+      details: {
+        code: "LILY_PAYMENT_PROVIDER_REJECTED",
+        providerStatus: 400,
+        providerRequestId: "mp-legacy-123",
+        providerErrorCode: "UPSTREAM_PRIVATE_TEXT",
+        providerCauseCodes: ["card_token_invalid"]
+      }
+    });
+    await expect(attempt).rejects.not.toThrow(/UPSTREAM_PRIVATE_TEXT|private card details/);
+  });
+
   it("usa a credencial _TEST também no fluxo de escolha de pagamento", async () => {
     process.env.MERCADO_PAGO_ENVIRONMENT = "test";
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "PRODUCTION-TOKEN-MUST-NOT-BE-USED";

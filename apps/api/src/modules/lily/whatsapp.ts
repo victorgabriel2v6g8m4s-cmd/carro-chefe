@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "./admin-security";
 import { LILY_WHATSAPP_STARTER_TEMPLATES } from "./whatsapp-template-presets";
 import { isSafeOperationalTemplateComponents, LILY_WHATSAPP_TEMPLATE_VARIABLES, renderOrderTemplateComponents, type WhatsAppOrderSnapshot } from "./whatsapp-template-renderer";
+import { lilyWhatsAppQueueAdminRoutes } from "./whatsapp-queue-admin";
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 
@@ -114,15 +115,22 @@ export function assertWhatsAppTemplateCanActivate(
   if (status === "active" && !metaTemplateName) {
     throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
   }
-  if (status === "active" && operational && (
-    !LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage)
-    || operational.category !== "utility"
-    || !isSafeOperationalTemplateComponents(operational.components as Array<Record<string, unknown>>)
-    || (variables !== undefined && operational.components.some((component) => component.type === "BODY"
-      && (typeof (component as { text?: unknown }).text !== "string"
-        || ((String((component as { text?: unknown }).text).match(/\{\{\d+\}\}/g) ?? []).length !== variables.length))))
-  )) {
-    throw new ApiError(400, "Use um template de utilidade para uma etapa de pedido, com corpo válido e botões somente de resposta rápida ou links CookLily.", { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" });
+  if (status === "active" && operational) {
+    const reasons = [
+      ...(!LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage) ? ["unsupported_order_stage"] : []),
+      ...(operational.category !== "utility" ? ["category_must_be_utility"] : []),
+      ...(!isSafeOperationalTemplateComponents(operational.components as Array<Record<string, unknown>>) ? ["components_not_supported"] : []),
+      ...(variables !== undefined && operational.components.some((component) => component.type === "BODY"
+        && (typeof (component as { text?: unknown }).text !== "string"
+          || ((String((component as { text?: unknown }).text).match(/\{\{\d+\}\}/g) ?? []).length !== variables.length)))
+        ? ["body_variable_count_mismatch"] : [])
+    ];
+    if (reasons.length) {
+      throw new ApiError(400, `Template não pode ser ativado: ${reasons.join(", ")}.`, {
+        code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL",
+        reasons
+      });
+    }
   }
 }
 
@@ -445,6 +453,7 @@ export function startLilyWhatsAppWorker(log?: {
 }
 
 export async function lilyWhatsAppRoutes(app: FastifyInstance) {
+  lilyWhatsAppQueueAdminRoutes(app);
   app.get("/api/v1/lily/admin/whatsapp/settings", async (request) => {
     await requireLilyStaff(request);
     const configuration = lilyWhatsAppConfiguration();
