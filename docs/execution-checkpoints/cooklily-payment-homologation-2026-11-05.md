@@ -5,8 +5,8 @@
 - branch: codex/cooklily-payment-provider-diagnostics
 - base_branch: cooklily/canonical
 - base_sha_verified: 8a8728b839836be162f6062a89ae28e1d4f1ac55
-- head_sha_verified: 8a8728b839836be162f6062a89ae28e1d4f1ac55 (alterações locais ainda sem commit)
-- pull_requests: nenhum
+- head_sha_verified: f44f0a61fdbb8d50acffc6f51abe9c4c79d475ae
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/336 (draft; CI Node 20 em andamento, demais jobs observados passaram)
 - last_verified_at: 2026-11-05
 - interruption_state: none
 
@@ -20,12 +20,14 @@
 - Pedido de staging `CL-2C89449B54DE` (R$ 15,00) permanece `awaiting_payment`; não há registro em `LilyPayment` para ele.
 - Uma tentativa de pagamento no checkout retornou HTTP 502 local com `providerStatus=429` do Mercado Pago; a API não devolveu `Retry-After`. O 429 corresponde a limite de requisições, confirmado na documentação oficial de Orders: https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/create-order/post.
 - Os cinco templates WhatsApp de pedidos (`cooklily_pedido_recebido`, `cooklily_pagamento_confirmado`, `cooklily_saiu_para_entrega`, `cooklily_entregador_chegou`, `cooklily_pedido_entregue`) estão com estado `Em análise` no WhatsApp Manager; não enviar até aprovação.
+- Configurações temporárias de staging foram restauradas no painel: pedidos online desligados, quinta-feira desligada com janela anterior `18:00–23:00`, processor `Pix manual`, pagamentos e todos os toggles Pix/cartão desligados.
+- Validação visual da página administrativa de pagamentos no viewport desktop padrão e em 390×844: sem overflow horizontal; viewport voltou ao tamanho padrão.
 - Inicialização local de testes aplicada pelas migrations versionadas; `npm run check` passou; `npm run test:runtime` passou com 86 arquivos, 467 testes passaram e 3 ignorados; `npm run build` passou com os limites de bundle atendidos; teste focal do provider passou com 12 testes.
 
 ## Em andamento
 
-- Commit local do adapter Mercado Pago para tratamento HTTP 429 e leitura de `Retry-After` numérico ou HTTP-date, sem corpo bruto de erro nas respostas; teste inclui referência de espera e redaction.
-- Criar commit isolado, abrir PR draft e integrar à canonical após CI.
+- Commit funcional do adapter Mercado Pago para tratamento HTTP 429 e leitura de `Retry-After` numérico ou HTTP-date, sem corpo bruto de erro nas respostas; teste inclui referência de espera e redaction.
+- PR draft #336 aberto com o commit `f44f0a61fdbb8d50acffc6f51abe9c4c79d475ae`; aguardar CI restante e integrar à canonical após gates verdes.
 - Publicar somente em staging; sem repetir chamadas ao MP até nova janela de cota/`Retry-After`.
 - Prosseguir a homologação da cadeia de pedido, cozinha, entrega, WhatsApp, cancelamento e estorno com registros de teste apropriados.
 
@@ -36,6 +38,7 @@
 - `npm run test:runtime`: 86 arquivos, 467 testes passaram, 3 ignorados após preparar o banco local; passou após a alteração.
 - `npm run build`: passou após a alteração; build budget passou.
 - `git diff --check`: passou.
+- CI do PR `41972485430`: Node 22/24, Tool Health, Windows Supervisor, Excel Recipe e Workbook Snapshot passaram; Node 20 ainda rodava na última consulta.
 
 ## Migrations
 
@@ -48,7 +51,7 @@
 - O sandbox Mercado Pago está limitando chamadas com HTTP 429 e não retornou `Retry-After`; reenviar repetidamente pode prolongar o bloqueio. Não houve cobrança nem criação remota confirmada.
 - A homologação não pode ser declarada completa enquanto um pagamento aprovado em sandbox e os fluxos subsequentes não forem verificados.
 - A homologação real do WhatsApp está bloqueada até os cinco templates saírem de `Em análise`.
-- Mudanças de configuração de staging feitas para habilitar checkout devem ser restauradas após os testes: reabrir a janela de pedidos somente para teste e depois deixar pedidos online desativados e horários anteriores restaurados; restaurar provider/toggles de pagamento ao estado original quando não houver mais testes.
+- Configurações temporárias já restauradas; pedidos online e pagamentos permanecem desativados no staging.
 - Publicação em `licalily.com/cook` não faz parte desta execução.
 
 ## Homologação/dependências externas
@@ -59,4 +62,4 @@
 
 ## Próxima ação exata
 
-Revisar o diff e commitar somente o adapter, teste focal e este checkpoint. Integrar por PR com gates verdes; fazer deploy em staging e verificar o aviso 429. Prosseguir em paralelo com os fluxos internos que não dependem de aprovação Meta ou de quota do Mercado Pago.
+Após gates verdes, integrar PR #336, atualizar o checkpoint com o SHA resultante e fazer deploy somente em staging; validar o aviso 429 sem reenviar cartão. Prosseguir em paralelo com os fluxos internos que não dependem de aprovação Meta ou de quota do Mercado Pago.
