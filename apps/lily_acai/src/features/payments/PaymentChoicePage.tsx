@@ -14,6 +14,7 @@ import { MercadoPagoCardChoiceBrick, type MercadoPagoCardPayload } from "./Merca
 import {
   createLilyPaymentChoice,
   getLilyPaymentOptions,
+  LilyPaymentChoiceRequestError,
   type LilyCheckoutPaymentMethod,
   type LilyChoicePayment,
   type LilyPaymentOptionsPayload
@@ -141,6 +142,9 @@ export function PaymentChoicePage() {
       trackLilyAnalytics("payment_start", { surface: "payment", paymentMethod: input.method });
       setPayment(created);
     } catch (cause) {
+      if (cause instanceof LilyPaymentChoiceRequestError && cause.code === "LILY_PAYMENT_PROVIDER_REJECTED") {
+        clearPaymentKeys(orderId);
+      }
       setError(cause instanceof Error ? cause.message : "Não foi possível iniciar o pagamento.");
       throw cause;
     } finally {

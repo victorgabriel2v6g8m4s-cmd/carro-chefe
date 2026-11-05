@@ -1,5 +1,35 @@
 import { parseResponse, type AuthPayload } from "../../api";
 
+export class LilyPaymentChoiceRequestError extends Error {
+  constructor(message: string, readonly code: string | null) {
+    super(message);
+    this.name = "LilyPaymentChoiceRequestError";
+  }
+}
+
+async function parsePaymentChoiceResponse<T>(response: Response): Promise<T> {
+  const rawBody = response.status === 204 ? "" : await response.text().catch(() => "");
+  let body: Record<string, unknown> | null = null;
+  try {
+    const parsed: unknown = rawBody ? JSON.parse(rawBody) : null;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) body = parsed as Record<string, unknown>;
+  } catch { /* respostas sem JSON usam a mensagem genérica */ }
+  if (!response.ok) {
+    const details = body?.details && typeof body.details === "object" && !Array.isArray(body.details)
+      ? body.details as Record<string, unknown>
+      : null;
+    const message = typeof body?.error === "string" ? body.error
+      : response.status >= 500 ? "O serviço de pagamento não confirmou a solicitação. O pedido permanece aguardando pagamento."
+      : "Não foi possível concluir a solicitação.";
+    const requestId = typeof body?.requestId === "string" ? body.requestId : response.headers.get("x-request-id");
+    throw new LilyPaymentChoiceRequestError(
+      requestId ? `${message} (referência ${requestId})` : message,
+      typeof details?.code === "string" ? details.code : null
+    );
+  }
+  return body as T;
+}
+
 export type LilyCheckoutPaymentMethod = "pix" | "credit_card" | "debit_card";
 export type LilyPaymentProviderId = "cooklily_pix" | "sicredi_pix" | "mercado_pago" | "manual" | "homologation_mock";
 
@@ -147,7 +177,7 @@ export async function createLilyPaymentChoice(input: {
       ...(input.card ? { card: input.card } : {})
     })
   });
-  return parseResponse<LilyChoicePayment>(response);
+  return parsePaymentChoiceResponse<LilyChoicePayment>(response);
 }
 
 export type AdminPaymentChoiceSettings = {
