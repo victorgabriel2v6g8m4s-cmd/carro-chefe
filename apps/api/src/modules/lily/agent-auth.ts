@@ -15,7 +15,7 @@ const handoffInput = z.object({ ticket: z.string().regex(/^[A-Za-z0-9_-]{40,60}$
 const CHALLENGE_TTL_MS = 2 * 60 * 1000;
 const HANDOFF_TTL_MS = 60 * 1000;
 const AGENT_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
-const AGENT_AUTH_ORIGIN = "https://carrochefe.com";
+const AGENT_AUTH_ORIGINS = new Set(["https://carrochefe.com", "https://licalily.com"]);
 
 function hashToken(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -25,6 +25,16 @@ function invalidAgentAuth() {
   return new ApiError(401, "Não foi possível autenticar esta identidade de agente.", {
     code: "LILY_AGENT_AUTH_INVALID"
   });
+}
+
+function agentAuthOrigin(origin: string | string[] | undefined) {
+  if (typeof origin !== "string") throw invalidAgentAuth();
+  let normalized: string;
+  try { normalized = new URL(origin).origin; } catch { throw invalidAgentAuth(); }
+  const localDevelopmentOrigin = process.env.NODE_ENV !== "production"
+    && /^(http:\/\/)(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(normalized);
+  if (!AGENT_AUTH_ORIGINS.has(normalized) && !localDevelopmentOrigin) throw invalidAgentAuth();
+  return normalized;
 }
 
 export async function lilyAgentAuthRoutes(app: FastifyInstance) {
@@ -44,9 +54,10 @@ export async function lilyAgentAuthRoutes(app: FastifyInstance) {
     const expiresAt = new Date(now.getTime() + CHALLENGE_TTL_MS);
     const id = crypto.randomUUID();
     const nonce = crypto.randomBytes(32).toString("base64url");
+    const origin = agentAuthOrigin(request.headers.origin);
     const challenge = [
       "CookLily agent authentication v1",
-      `origin=${AGENT_AUTH_ORIGIN}`,
+      `origin=${origin}`,
       `key=${key.fingerprint}`,
       `id=${id}`,
       `nonce=${nonce}`,

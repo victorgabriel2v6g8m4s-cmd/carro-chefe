@@ -91,6 +91,7 @@ describe("autenticação administrativa por chave de agente", () => {
     });
     expect(challengeResponse.statusCode).toBe(200);
     const challenge = challengeResponse.json() as { challengeId: string; challenge: string };
+    expect(challenge.challenge).toContain(`origin=${origin}`);
     const verified = await app.inject({
       method: "POST", url: "/api/v1/lily/auth/agent/verify", headers: { origin },
       payload: { challengeId: challenge.challengeId, signature: signChallenge(challenge.challenge) }

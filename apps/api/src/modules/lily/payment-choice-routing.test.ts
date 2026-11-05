@@ -66,4 +66,26 @@ describe("fallback Pix Mercado Pago", () => {
       details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", provider: "mercado_pago" }
     });
   });
+
+  it("não usa fallback Pix após HTTP 5xx do Mercado Pago", async () => {
+    process.env.MERCADO_PAGO_ACCESS_TOKEN = "TEST-access";
+    process.env.MERCADO_PAGO_API_BASE_URL = "http://mercado-pago.test";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "service_unavailable" }), {
+      status: 503,
+      headers: { "content-type": "application/json" }
+    })));
+
+    await expect(createLilyPixChoice({
+      paymentId: "payment-fallback-3",
+      order: { id: "order-fallback-3", orderNumber: "CL-FALLBACK-3" },
+      request: { payer: { email: "cliente@example.com" } },
+      quote,
+      idempotencyKey: "payment-fallback-idempotency-0003",
+      chain: ["mercado_pago", "manual"],
+      manualInstructions: "PIX MANUAL CONTINGÊNCIA"
+    })).rejects.toMatchObject({
+      statusCode: 502,
+      details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", providerStatus: 503 }
+    });
+  });
 });

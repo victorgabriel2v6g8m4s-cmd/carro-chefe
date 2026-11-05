@@ -161,10 +161,20 @@ export type CatalogPayload = {
 };
 
 export async function parseResponse<T>(response: Response): Promise<T> {
-  const body = response.status === 204 ? null : await response.json().catch(() => null);
+  const rawBody = response.status === 204 ? "" : await response.text().catch(() => "");
+  let body: Record<string, unknown> | null = null;
+  try {
+    const parsed: unknown = rawBody ? JSON.parse(rawBody) : null;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) body = parsed as Record<string, unknown>;
+  } catch { /* respostas sem JSON usam a mensagem segura por status */ }
   if (!response.ok) {
-    const message = body && typeof body.error === "string" ? body.error : "Não foi possível concluir a solicitação.";
-    throw new Error(message);
+    const message = typeof body?.error === "string" ? body.error
+      : typeof body?.message === "string" ? body.message
+      : response.status === 502 ? "O serviço de pagamento não confirmou a solicitação. O pedido permanece aguardando pagamento."
+      : response.status >= 500 ? "O serviço está temporariamente indisponível. Tente novamente mais tarde."
+      : "Não foi possível concluir a solicitação.";
+    const requestId = typeof body?.requestId === "string" ? body.requestId : response.headers.get("x-request-id");
+    throw new Error(requestId ? `${message} (referência ${requestId})` : message);
   }
   return body as T;
 }

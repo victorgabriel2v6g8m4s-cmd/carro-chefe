@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { createAgentBrowserRelay } from "./lily-agent-browser-relay.mjs";
+import { buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "./lily-agent-browser-relay.mjs";
 
 const args = process.argv.slice(2);
 const action = args.shift();
@@ -94,6 +94,7 @@ function openBrowser(url) {
 if (action !== "login" || (args.length !== 0 && !(args.length === 2 && args[0] === "--key" && args[1]))) usage();
 apiOrigin = checkedOrigin(origin, process.env.COOKLILY_AGENT_ALLOW_INSECURE_LOCAL === "1");
 if (!apiOrigin) fail("Origem inválida: use HTTPS em produção.", 64);
+if (!isSupportedAgentAuthOrigin(apiOrigin)) fail("Origem sem rota de handoff CookLily configurada.", 64);
 if (!keyPath || !existsSync(keyPath) || !existsSync(`${keyPath}.pub`)) fail("Chave do agente não encontrada; confira --key e o arquivo .pub.", 66);
 
 try {
@@ -107,7 +108,7 @@ try {
   if (typeof verified.ticket !== "string" || !/^[A-Za-z0-9_-]{40,60}$/.test(verified.ticket)) {
     throw new Error("O servidor não emitiu o ticket de navegador esperado.");
   }
-  const loginUrl = `${apiOrigin}/lilyacai/agent-auth.html#ticket=${encodeURIComponent(verified.ticket)}`;
+  const loginUrl = buildAgentHandoffUrl(apiOrigin, verified.ticket);
   if (process.env.COOKLILY_AGENT_BROWSER === "codex") {
     const relay = await createAgentBrowserRelay(loginUrl);
     console.log(`Abra esta aba temporária no navegador integrado do Codex: ${relay.browserUrl}`);

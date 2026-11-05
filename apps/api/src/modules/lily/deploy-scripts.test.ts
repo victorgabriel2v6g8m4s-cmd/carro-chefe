@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { createAgentBrowserRelay } from "../../../../../tools/lily-agent-browser-relay.mjs";
+import { buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "../../../../../tools/lily-agent-browser-relay.mjs";
 
 const root = path.resolve(process.cwd());
 
@@ -208,6 +208,25 @@ describe("scripts operacionais CookLily", () => {
     expect(implementation).not.toContain("console.log(loginUrl)");
   });
 
+  it("mapeia somente os domínios CookLily autorizados para suas rotas de handoff", () => {
+    const ticket = "A".repeat(48);
+    expect(buildAgentHandoffUrl("https://carrochefe.com", ticket))
+      .toBe(`https://carrochefe.com/lilyacai/agent-auth.html#ticket=${ticket}`);
+    expect(buildAgentHandoffUrl("https://licalily.com", ticket))
+      .toBe(`https://licalily.com/cook/agent-auth.html#ticket=${ticket}`);
+    expect(isSupportedAgentAuthOrigin("https://licalily.com")).toBe(true);
+    expect(isSupportedAgentAuthOrigin("https://example.com")).toBe(false);
+    expect(() => buildAgentHandoffUrl("https://licalily.com", "ticket-inválido"))
+      .toThrow("Origem ou ticket de handoff CookLily inválido.");
+  });
+
+  it("faz a página estática usar a rota de API comum e retornar ao prefixo atual", () => {
+    const page = readFileSync(path.join(root, "apps/lily_acai/public/agent-auth.html"), "utf8");
+    expect(page).toContain("/api/v1/lily/auth/agent/exchange");
+    expect(page).toContain('location.pathname.startsWith("/cook/")?"/cook"');
+    expect(page).toContain('location.pathname.startsWith("/lilyacai/")?"/lilyacai"');
+  });
+
   it("entrega ticket uma única vez por relay local sem mostrá-lo na página intermediária", async () => {
     const ticket = "A".repeat(48);
     const relay = await createAgentBrowserRelay(`https://carrochefe.com/lilyacai/agent-auth.html#ticket=${ticket}`);
@@ -226,6 +245,21 @@ describe("scripts operacionais CookLily", () => {
 
       const replay = await fetch(consumedUrl);
       expect(replay.status).toBe(410);
+    } finally {
+      relay.close();
+    }
+  });
+
+  it("entrega ticket pela rota pública licalily.com/cook e mantém o consumo único", async () => {
+    const ticket = "B".repeat(48);
+    const handoffUrl = buildAgentHandoffUrl("https://licalily.com", ticket);
+    const relay = await createAgentBrowserRelay(handoffUrl);
+    try {
+      const base = new URL(relay.browserUrl);
+      const response = await fetch(new URL(`${base.pathname}/consume`, base.origin));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ url: handoffUrl });
+      await expect(relay.consumed).resolves.toBe(true);
     } finally {
       relay.close();
     }

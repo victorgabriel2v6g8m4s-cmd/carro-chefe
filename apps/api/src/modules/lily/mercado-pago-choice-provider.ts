@@ -65,6 +65,26 @@ function amountString(cents: number) {
   return (cents / 100).toFixed(2);
 }
 
+function safeProviderCode(value: unknown) {
+  const code = typeof value === "number" ? String(value) : typeof value === "string" ? value : "";
+  return /^[A-Za-z0-9_.-]{1,80}$/.test(code) ? code : undefined;
+}
+
+function providerFailureDetails(response: Response, body: any) {
+  const providerRequestId = safeProviderCode(response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"));
+  const providerErrorCode = safeProviderCode(body?.error) ?? safeProviderCode(body?.code);
+  const providerCauseCodes = Array.isArray(body?.cause)
+    ? body.cause.map((cause: any) => safeProviderCode(cause?.code)).filter((code: string | undefined): code is string => Boolean(code)).slice(0, 5)
+    : [];
+  return {
+    provider: "mercado_pago",
+    providerStatus: response.status,
+    ...(providerRequestId ? { providerRequestId } : {}),
+    ...(providerErrorCode ? { providerErrorCode } : {}),
+    ...(providerCauseCodes.length ? { providerCauseCodes } : {})
+  };
+}
+
 function firstPayment(order: any) {
   return order?.transactions?.payments?.[0] ?? null;
 }
@@ -136,24 +156,32 @@ export async function createMercadoPagoChoicePayment(input: ChoiceInput): Promis
   } catch {
     // Não há fallback silencioso após uma tentativa externa: um timeout pode ter
     // criado a cobrança no provedor. A idempotência permite repetir com segurança.
-    throw new ApiError(502, "Não foi possível confirmar a criação no processador de pagamento.", {
+    throw new ApiError(502, "O Mercado Pago não confirmou esta tentativa. O pedido continua aguardando pagamento; verifique os pagamentos de teste antes de tentar novamente.", {
       code: "LILY_PAYMENT_PROVIDER_UNCERTAIN",
-      provider: "mercado_pago"
+      provider: "mercado_pago",
+      providerFailure: "transport"
     });
   }
 
   const order = await response.json().catch(() => null) as any;
   if (!response.ok) {
-    throw new ApiError(502, "O processador de pagamento recusou a operação.", {
-      code: "LILY_PAYMENT_PROVIDER_REJECTED",
-      provider: "mercado_pago",
-      providerStatus: response.status
+    const diagnostic = providerFailureDetails(response, order);
+    if (response.status >= 400 && response.status < 500) {
+      throw new ApiError(502, "O Mercado Pago recusou a tentativa de cartão. Confira os dados ou escolha outro meio de pagamento.", {
+        code: "LILY_PAYMENT_PROVIDER_REJECTED",
+        ...diagnostic
+      });
+    }
+    throw new ApiError(502, "O Mercado Pago ainda não confirmou esta tentativa. O pedido continua aguardando pagamento; verifique o painel de testes antes de repetir.", {
+      code: "LILY_PAYMENT_PROVIDER_UNCERTAIN",
+      providerFailure: "upstream",
+      ...diagnostic
     });
   }
   if (!order || typeof order !== "object") {
-    throw new ApiError(502, "Resposta inválida do processador de pagamento.", {
+    throw new ApiError(502, "O Mercado Pago respondeu em um formato inesperado. A tentativa não foi confirmada; verifique o painel de testes antes de repetir.", {
       code: "LILY_PAYMENT_PROVIDER_INVALID_RESPONSE",
-      provider: "mercado_pago"
+      ...providerFailureDetails(response, null)
     });
   }
 

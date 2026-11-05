@@ -139,6 +139,53 @@ describe("Mercado Pago provider CookLily", () => {
     expect(options.headers).toEqual(expect.objectContaining({ Authorization: "Bearer TEST-ACCESS-TOKEN" }));
   });
 
+  it("retorna apenas metadados allowlist quando a Orders API recusa uma tentativa", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      error: "DETAILS MUST NOT LEAK",
+      cause: [{ code: "CARD_TOKEN_INVALID", description: "private detail must not leak" }]
+    }), { status: 400, headers: { "Content-Type": "application/json", "x-request-id": "mp-req_123" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const attempt = createMercadoPagoChoicePayment({
+      paymentId: "choice-rejected-test",
+      orderId: "choice-rejected-order",
+      amountCents: 1000,
+      method: "pix",
+      idempotencyKey: "choice-rejected-idempotency",
+      payer: { email: "cliente@example.com" }
+    });
+
+    await expect(attempt).rejects.toMatchObject({
+      statusCode: 502,
+      message: "O Mercado Pago recusou a tentativa de cartão. Confira os dados ou escolha outro meio de pagamento.",
+      details: {
+        code: "LILY_PAYMENT_PROVIDER_REJECTED",
+        provider: "mercado_pago",
+        providerStatus: 400,
+        providerRequestId: "mp-req_123",
+        providerCauseCodes: ["CARD_TOKEN_INVALID"]
+      }
+    });
+    await expect(attempt).rejects.not.toThrow(/private detail|DETAILS MUST NOT LEAK/);
+  });
+
+  it("classifica erro HTTP 5xx do provedor como resultado ambíguo", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "service_unavailable" }), {
+      status: 503, headers: { "Content-Type": "application/json" }
+    })));
+    await expect(createMercadoPagoChoicePayment({
+      paymentId: "choice-ambiguous-test",
+      orderId: "choice-ambiguous-order",
+      amountCents: 1000,
+      method: "pix",
+      idempotencyKey: "choice-ambiguous-idempotency",
+      payer: { email: "cliente@example.com" }
+    })).rejects.toMatchObject({
+      statusCode: 502,
+      details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", providerStatus: 503, providerFailure: "upstream" }
+    });
+  });
+
   it("cria Pix pela Orders API com idempotência e expõe somente dados públicos do QR", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       id: "order-mp-1",
