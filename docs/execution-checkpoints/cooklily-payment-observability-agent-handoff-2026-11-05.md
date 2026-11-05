@@ -46,6 +46,13 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 - `npm run test:runtime`: passou (86 arquivos, 466 testes, 3 skips); `npm run check`, `npm run build` e teste focal passaram.
 - Próximo deploy deve ser exclusivamente ao `/srv/cooklily/staging/current` (porta 4175, DB isolado), pois `cc deploy` só publicou o release canonical em `/srv/carro-chefe/current`; esse deploy não atualizou a rota de teste.
 
+## Reconciliação de migrações do banco isolado de staging
+
+- Antes do swap foi comparado o ledger e a pasta de migrações do release `52de0f5` com a canonical atual. O staging tem 50 migrações aplicadas e uma linha histórica alternativa (`20261104120000_lily_mission_rewards_streaks`) que criou `LilyMission.actionUrl` e `LilyOffer.badgeColor`. Na sequência canonical, as migrações `20261104220000_lily_mission_authoring` e `20261105001000_lily_offer_badge` também adicionam essas colunas; um `migrate deploy` direto falharia por duplicidade.
+- Acrescentei ao reconciliador uma regra restrita a essa migration histórica conhecida. Ele só reconcilia quando o ID histórico está aplicado, a coluna que demonstra a colisão está presente, o destino ainda não consta aplicado/falhado e todas as instruções da migration estão na forma permitida `ALTER TABLE ... ADD COLUMN`. Aplica apenas colunas ausentes em transação e pede ao Prisma registrar a migration como aplicada; qualquer estado diferente aborta fechado.
+- Testes da reconciliação e deploy-validation: 10/10 aprovados. `npm run check` passou. O teste runtime completo (86 arquivos, 466 aprovações, 3 skips) já havia passado antes dessa extensão; CI será executado no PR seguinte.
+- Esta alteração ainda não foi commitada nem integrada; o banco staging permanece sem alterações e o release atual continua `52de0f5`.
+
 ## Testes e gates
 
 - Sem migration planejada pela correção de roteamento.
@@ -60,4 +67,4 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 
 ## Próxima ação exata
 
-Commitar e atualizar #333; aguardar CI e integrar; preparar artefato com SHA para a release staging `52de0f5`, fazer backup/integridade da DB staging e swap atômico usando apenas `cooklily-staging.service`; testar autenticação por chave e checkout no navegador integrado desktop e mobile. Antes de nova tentativa MP, consultar os pedidos pendentes `CL-550BE7D35DB1` e `CL-322C029A6AEB` e os pagamentos de teste correspondentes para não duplicar cobranças ambíguas.
+Comitar e enviar a reconciliação como novo PR; aguardar CI e integrar; preparar artefato com SHA da canonical, executar a reconciliação com backup/integridade e swap atômico usando apenas `cooklily-staging.service`; testar autenticação por chave e checkout no navegador integrado desktop e mobile. Antes de nova tentativa MP, consultar os pedidos pendentes `CL-550BE7D35DB1` e `CL-322C029A6AEB` e os pagamentos de teste correspondentes para não duplicar cobranças ambíguas.
