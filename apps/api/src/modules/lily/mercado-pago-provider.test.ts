@@ -186,6 +186,37 @@ describe("Mercado Pago provider CookLily", () => {
     });
   });
 
+  it("trata limite do provedor como temporário e respeita Retry-After sem expor o corpo bruto", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      message: "private upstream details"
+    }), {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        "Retry-After": "30",
+        "x-request-id": "mp-rate-limit-123"
+      }
+    })));
+
+    await expect(createMercadoPagoChoicePayment({
+      paymentId: "choice-rate-limit-test",
+      orderId: "choice-rate-limit-order",
+      amountCents: 1000,
+      method: "pix",
+      idempotencyKey: "choice-rate-limit-idempotency",
+      payer: { email: "cliente@example.com" }
+    })).rejects.toMatchObject({
+      statusCode: 502,
+      message: "O Mercado Pago limitou temporariamente as tentativas. Aguarde 30 segundos antes de tentar novamente.",
+      details: {
+        code: "LILY_PAYMENT_PROVIDER_RATE_LIMITED",
+        providerStatus: 429,
+        providerRequestId: "mp-rate-limit-123",
+        retryAfterSeconds: 30
+      }
+    });
+  });
+
   it("cria Pix pela Orders API com idempotência e expõe somente dados públicos do QR", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       id: "order-mp-1",
