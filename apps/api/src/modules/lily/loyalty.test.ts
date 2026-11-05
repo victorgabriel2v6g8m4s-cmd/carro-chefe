@@ -6,6 +6,7 @@ import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
 import { awardReachedLevelCoins, createLoyaltyConfigVersion, loyaltySnapshot, progressPointsForUser, recordPaidOrderPoints, redeemLoyaltyLevelBenefit, reversePaidOrderPoints, starterLevelRows } from "./loyalty/service";
+import { missionAudienceMatches } from "./loyalty/mission-audience";
 
 const suffix = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
 const phoneNormalized = `+5567999${suffix.slice(0, 8)}`;
@@ -74,6 +75,19 @@ afterEach(cleanup);
 afterAll(async () => { await cleanup(); await app?.close(); });
 
 describe("progressão de níveis e LilyCoins", () => {
+  it("avalia regras de público encadeadas com E, OU e EXCETO", () => {
+    const vipBronze = { userId: "customer-vip", isVip: true, levelId: "bronze" };
+    expect(missionAudienceMatches({ mode: "all", levels: [], users: [], rules: [
+      { operator: "and", field: "class", value: "vip" }, { operator: "or", field: "user", value: "customer-special" }, { operator: "except", field: "level", value: "blocked" }
+    ] }, vipBronze)).toBe(true);
+    expect(missionAudienceMatches({ mode: "all", levels: [], users: [], rules: [
+      { operator: "and", field: "class", value: "standard" }, { operator: "or", field: "user", value: "another-user" }
+    ] }, vipBronze)).toBe(false);
+    expect(missionAudienceMatches({ mode: "all", levels: [], users: [], rules: [
+      { operator: "and", field: "class", value: "vip" }, { operator: "except", field: "level", value: "bronze" }
+    ] }, vipBronze)).toBe(false);
+  });
+
   it("cria missão segmentada, notifica o público manual e impede auto-claim de missão manual", async () => {
     const { server, cookie, csrf } = await registerAdmin();
     const customerPhone = `679${Date.now().toString().slice(-8)}`;

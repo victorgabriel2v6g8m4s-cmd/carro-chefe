@@ -10,8 +10,8 @@ import type { LoyaltyAdminPayload, LoyaltyLevel } from "./loyalty-types";
 
 type Reward = LoyaltyAdminPayload["rewards"][number];
 type Mission = LoyaltyAdminPayload["missions"][number];
-type MissionDraft = { id: string; title: string; description: string; status: "draft" | "published" | "paused"; points: string; lilyCoins: string; prerequisites: string; audienceMode: "all" | "standard" | "vip" | "manual"; users: string; levels: string; instructions: string; rewards: string; actionUrl: string; approvalMode: "automatic" | "manual"; reviewHours: string; cadence: "daily" | "weekly" | "perpetual"; dailyLimit: string; weeklyLimit: string; monthlyLimit: string; showNextPeriod: boolean };
-const emptyMissionDraft: MissionDraft = { id: "", title: "", description: "", status: "draft", points: "0", lilyCoins: "0", prerequisites: "", audienceMode: "all", users: "", levels: "", instructions: "[]", rewards: "[]", actionUrl: "", approvalMode: "automatic", reviewHours: "24", cadence: "perpetual", dailyLimit: "", weeklyLimit: "", monthlyLimit: "", showNextPeriod: false };
+type MissionDraft = { id: string; title: string; description: string; status: "draft" | "published" | "paused"; points: string; lilyCoins: string; prerequisites: string; audienceMode: "all" | "standard" | "vip" | "manual"; users: string; levels: string; audienceRules: string; instructions: string; rewards: string; actionUrl: string; approvalMode: "automatic" | "manual"; reviewHours: string; cadence: "daily" | "weekly" | "perpetual"; dailyLimit: string; weeklyLimit: string; monthlyLimit: string; showNextPeriod: boolean };
+const emptyMissionDraft: MissionDraft = { id: "", title: "", description: "", status: "draft", points: "0", lilyCoins: "0", prerequisites: "", audienceMode: "all", users: "", levels: "", audienceRules: "[]", instructions: "[]", rewards: "[]", actionUrl: "", approvalMode: "automatic", reviewHours: "24", cadence: "perpetual", dailyLimit: "", weeklyLimit: "", monthlyLimit: "", showNextPeriod: false };
 type BenefitRedemption = { id: string; levelName: string; benefitLabel: string; benefitKind: string; redemptionCode: string; status: string; createdAt: string; fulfilledAt: string | null };
 const LoyaltyCurvePreview = lazy(() => import("./LoyaltyCurvePreview").then((module) => ({ default: module.LoyaltyCurvePreview })));
 
@@ -137,12 +137,13 @@ export function AdminLoyaltyPage() {
     try {
       const instructions = JSON.parse(missionDraft.instructions);
       const rewards = JSON.parse(missionDraft.rewards);
+      const audienceRules = JSON.parse(missionDraft.audienceRules);
       const payload = {
         title: missionDraft.title, description: missionDraft.description || null, status: missionDraft.status,
         points: Number(missionDraft.points), lilyCoins: Number(missionDraft.lilyCoins),
         prerequisites: missionDraft.prerequisites.split(",").map((value) => value.trim()).filter(Boolean),
         instructions, rewards,
-        audience: { mode: missionDraft.audienceMode, levels: missionDraft.levels.split(",").map((value) => value.trim()).filter(Boolean), users: missionDraft.users.split(",").map((value) => value.trim()).filter(Boolean) },
+        audience: { mode: missionDraft.audienceMode, levels: missionDraft.levels.split(",").map((value) => value.trim()).filter(Boolean), users: missionDraft.users.split(",").map((value) => value.trim()).filter(Boolean), rules: audienceRules },
         actionUrl: missionDraft.actionUrl || null, approvalMode: missionDraft.approvalMode,
         reviewHours: Number(missionDraft.reviewHours), cadence: missionDraft.cadence,
         dailyLimit: missionDraft.dailyLimit ? Number(missionDraft.dailyLimit) : null,
@@ -162,7 +163,7 @@ export function AdminLoyaltyPage() {
     setMissionDraft({
       ...emptyMissionDraft, id: mission.id, title: mission.title, description: mission.description ?? "", status: mission.status as MissionDraft["status"],
       points: String(mission.points), lilyCoins: String(mission.lilyCoins), prerequisites: (JSON.parse(mission.prerequisiteJson || "[]") as string[]).join(", "),
-      audienceMode: audience.mode ?? "all", users: (audience.users ?? []).join(", "), levels: (audience.levels ?? []).join(", "), instructions: JSON.stringify(JSON.parse(mission.instructionsJson || "[]"), null, 2),
+      audienceMode: audience.mode ?? "all", users: (audience.users ?? []).join(", "), levels: (audience.levels ?? []).join(", "), audienceRules: JSON.stringify(audience.rules ?? [], null, 2), instructions: JSON.stringify(JSON.parse(mission.instructionsJson || "[]"), null, 2),
       rewards: JSON.stringify(JSON.parse(mission.rewardsJson || "[]"), null, 2), actionUrl: mission.actionUrl ?? "", approvalMode: mission.approvalMode as MissionDraft["approvalMode"],
       reviewHours: String(mission.reviewHours), cadence: mission.cadence as MissionDraft["cadence"], dailyLimit: mission.dailyLimit ? String(mission.dailyLimit) : "",
       weeklyLimit: mission.weeklyLimit ? String(mission.weeklyLimit) : "", monthlyLimit: mission.monthlyLimit ? String(mission.monthlyLimit) : "", showNextPeriod: mission.showNextPeriod
@@ -220,6 +221,7 @@ export function AdminLoyaltyPage() {
         <label>Público<select value={missionDraft.audienceMode} onChange={(event) => setMissionDraft({ ...missionDraft, audienceMode: event.target.value as MissionDraft["audienceMode"] })}><option value="all">Todos</option><option value="standard">Padrão</option><option value="vip">VIP</option><option value="manual">Contas selecionadas</option></select></label>
         {missionDraft.audienceMode === "manual" && <label>IDs de usuários, separados por vírgula<input value={missionDraft.users} onChange={(event) => setMissionDraft({ ...missionDraft, users: event.target.value })} /></label>}
         <label>Níveis permitidos (IDs separados por vírgula)<input value={missionDraft.levels} onChange={(event) => setMissionDraft({ ...missionDraft, levels: event.target.value })} /></label>
+        <label>Regras extras de público (JSON; and, or, except)<textarea rows={4} value={missionDraft.audienceRules} onChange={(event) => setMissionDraft({ ...missionDraft, audienceRules: event.target.value })} placeholder={'[{"operator":"or","field":"class","value":"vip"}]'} /></label>
         <label>Missões pré-requisito (IDs separados por vírgula)<input value={missionDraft.prerequisites} onChange={(event) => setMissionDraft({ ...missionDraft, prerequisites: event.target.value })} /></label>
         <label>Link de ação<input type="url" value={missionDraft.actionUrl} onChange={(event) => setMissionDraft({ ...missionDraft, actionUrl: event.target.value })} placeholder="https://licalily.com/cook/..." /></label>
         <label>Aprovação<select value={missionDraft.approvalMode} onChange={(event) => setMissionDraft({ ...missionDraft, approvalMode: event.target.value as MissionDraft["approvalMode"] })}><option value="automatic">Automática</option><option value="manual">Manual pela equipe</option></select></label>

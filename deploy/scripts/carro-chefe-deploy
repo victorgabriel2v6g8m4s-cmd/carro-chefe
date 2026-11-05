@@ -222,8 +222,8 @@ node -e 'const value=process.env.COOKLILY_LOGISTICS_CODE_KEY||""; const key=Buff
   || fail "COOKLILY_LOGISTICS_CODE_KEY deve conter 32 bytes em base64url"
 
 [[ "${DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "DATABASE_URL fora do volume esperado"
-[[ "${LILY_DATABASE_URL}" == file:/srv/carro-chefe/data/* ]] || fail "LILY_DATABASE_URL fora do volume esperado"
-[[ "${LILY_UPLOAD_DIR}" == /srv/carro-chefe/data/* ]] || fail "LILY_UPLOAD_DIR fora do volume esperado"
+[[ "${LILY_DATABASE_URL}" == file:/srv/cooklily/data/* ]] || fail "LILY_DATABASE_URL fora do volume CookLily esperado"
+[[ "${LILY_UPLOAD_DIR}" == /srv/cooklily/data/* ]] || fail "LILY_UPLOAD_DIR fora do volume CookLily esperado"
 
 run_cached_gate() {
   local gate="$1"
