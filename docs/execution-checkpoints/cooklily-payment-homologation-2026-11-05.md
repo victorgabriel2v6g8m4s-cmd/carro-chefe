@@ -1,65 +1,60 @@
-# Homologação de pagamentos e autenticação de agente CookLily
+# Homologação de pagamento, chave de agente e operação CookLily
 
-- status: in_progress
+- status: interrupted_external_dependencies
 - owner: Codex / AG-DEV
-- branch: codex/cooklily-payment-provider-diagnostics
+- branch: codex/cooklily-payment-provider-diagnostics (implementação integrada)
 - base_branch: cooklily/canonical
 - base_sha_verified: 8a8728b839836be162f6062a89ae28e1d4f1ac55
-- head_sha_verified: f44f0a61fdbb8d50acffc6f51abe9c4c79d475ae
-- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/336 (draft; CI Node 20 em andamento, demais jobs observados passaram)
+- merged_sha_verified: 9f3219121362d1caafcaa3bcee263dd76585edd4
+- pull_requests: https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/pull/336 (merged por squash; CI verde)
+- staging_release: /srv/cooklily/staging/releases/9f321912
 - last_verified_at: 2026-11-05
-- interruption_state: none
+- interruption_state: aguardando cota Mercado Pago e aprovação Meta
 
 ## Concluído e persistido
 
-- O staging serve `8a8728b839836be162f6062a89ae28e1d4f1ac55` em `/srv/cooklily/staging/current`; serviço ativo e health check HTTP 200.
-- A rota `/lilyacai/agent-auth.html` e o cookie de roteamento `cooklily_staging=1` permitem concluir o handoff da chave de agente no domínio de staging. A sessão admin de teste abriu o painel CookLily.
-- O reverse proxy da VPS foi corrigido antes desta etapa para preservar o prefixo `/lilyacai/`; backup da configuração em `/var/backups/carrochefe.com-staging-prefix-20261105T044057Z.conf`.
-- Handoff da chave repetido via `tools/lily-agent-auth.mjs login` e navegador integrado; a página exibiu `Acesso confirmado` e redirecionou para `/lilyacai/painel` como admin de teste.
-- Credenciais de pagamento do staging estão explicitamente em modo `test`; o token de teste foi validado via perfil Mercado Pago. Não foram exibidos nem copiados segredos.
-- Pedido de staging `CL-2C89449B54DE` (R$ 15,00) permanece `awaiting_payment`; não há registro em `LilyPayment` para ele.
-- Uma tentativa de pagamento no checkout retornou HTTP 502 local com `providerStatus=429` do Mercado Pago; a API não devolveu `Retry-After`. O 429 corresponde a limite de requisições, confirmado na documentação oficial de Orders: https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/create-order/post.
-- Os cinco templates WhatsApp de pedidos (`cooklily_pedido_recebido`, `cooklily_pagamento_confirmado`, `cooklily_saiu_para_entrega`, `cooklily_entregador_chegou`, `cooklily_pedido_entregue`) estão com estado `Em análise` no WhatsApp Manager; não enviar até aprovação.
-- Configurações temporárias de staging foram restauradas no painel: pedidos online desligados, quinta-feira desligada com janela anterior `18:00–23:00`, processor `Pix manual`, pagamentos e todos os toggles Pix/cartão desligados.
-- Validação visual da página administrativa de pagamentos no viewport desktop padrão e em 390×844: sem overflow horizontal; viewport voltou ao tamanho padrão.
-- Inicialização local de testes aplicada pelas migrations versionadas; `npm run check` passou; `npm run test:runtime` passou com 86 arquivos, 467 testes passaram e 3 ignorados; `npm run build` passou com os limites de bundle atendidos; teste focal do provider passou com 12 testes.
-
-## Em andamento
-
-- Commit funcional do adapter Mercado Pago para tratamento HTTP 429 e leitura de `Retry-After` numérico ou HTTP-date, sem corpo bruto de erro nas respostas; teste inclui referência de espera e redaction.
-- PR draft #336 aberto com o commit `f44f0a61fdbb8d50acffc6f51abe9c4c79d475ae`; aguardar CI restante e integrar à canonical após gates verdes.
-- Publicar somente em staging; sem repetir chamadas ao MP até nova janela de cota/`Retry-After`.
-- Prosseguir a homologação da cadeia de pedido, cozinha, entrega, WhatsApp, cancelamento e estorno com registros de teste apropriados.
+- PR #336 foi integrado por squash no SHA `9f3219121362d1caafcaa3bcee263dd76585edd4` após todos os jobs do CI concluírem com sucesso (Node 20, 22, 24, Tool Health, Windows Supervisor, Excel Recipe e Workbook Snapshot).
+- O ajuste do adapter Mercado Pago trata HTTP 429 como limitação temporária, lê `Retry-After` numérico ou HTTP-date e não expõe o corpo bruto; teste cobre mensagem e redaction.
+- O staging isolado foi atualizado em `/srv/cooklily/staging/current` para release `9f321912`, sem migration e sem mexer nos domínios públicos. Somente `apps/api/src/modules/lily/mercado-pago-choice-provider.ts` foi substituído; o serviço `cooklily-staging.service` foi reiniciado.
+- Após a janela normal de inicialização, health check local do staging respondeu HTTP 200; `/lilyacai/agent-auth.html` respondeu HTTP 200 e o serviço permaneceu ativo.
+- Fluxo da chave repetido depois do deploy usando `tools/lily-agent-auth.mjs login` e exclusivamente o navegador integrado. A página exibiu `Acesso confirmado`, abriu `/lilyacai/painel` como a conta de teste administrativa e o handoff informou ticket consumido sem exibir ou salvar o ticket.
+- O painel financeiro no browser confirmou que a configuração de staging está restaurada/desativada: processador Pix manual, pagamentos e meios Pix/cartão desligados. Pedido `CL-2C89449B54DE` permanece aguardando pagamento; não há pagamento criado para ele.
+- No checkout de teste, a tentativa anterior voltou HTTP 502 na aplicação com `providerStatus=429` do Mercado Pago e request ID `21fe5261-3f3d-464f-99bb-ae127f8f0bf6`; sem `Retry-After`, sem cobrança e sem pagamento persistido. A API oficial define 429 como limite por Client ID/cota e recomenda respeitar `Retry-After` e usar backoff exponencial com jitter: https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/create-order/post.
+- O módulo atualizado e o erro 429 foram testados em código; nenhuma nova chamada de cobrança foi enviada após a detecção do limite.
+- No WhatsApp Manager, após consulta ao vivo em 2026-11-05, os cinco templates seguem `Em análise`: `cooklily_pedido_recebido`, `cooklily_pagamento_confirmado`, `cooklily_saiu_para_entrega`, `cooklily_entregador_chegou` e `cooklily_pedido_entregue`. Nenhuma mensagem foi disparada.
+- Estados operacionais de teste já disponíveis: um pedido pago e pronto para retirada, um pago recebido na cozinha, e um pedido mock cancelado/estornado. Não foram avançados nesta rodada para evitar efeitos de notificação WhatsApp enquanto os templates permanecem não aprovados.
+- Validação visual da tela administrativa financeira em desktop e viewport 390×844 passou sem overflow horizontal; viewport foi restaurado ao padrão.
 
 ## Gates e testes
 
 - Teste focal `apps/api/src/modules/lily/mercado-pago-provider.test.ts`: 12 passaram.
-- `npm run check`: passou após a alteração.
-- `npm run test:runtime`: 86 arquivos, 467 testes passaram, 3 ignorados após preparar o banco local; passou após a alteração.
-- `npm run build`: passou após a alteração; build budget passou.
-- `git diff --check`: passou.
-- CI do PR `41972485430`: Node 22/24, Tool Health, Windows Supervisor, Excel Recipe e Workbook Snapshot passaram; Node 20 ainda rodava na última consulta.
+- `npm run check`: passou.
+- `npm run test:runtime`: 86 arquivos, 467 passaram, 3 ignorados.
+- `npm run build`: passou; orçamento do bundle aprovado.
+- `git diff --check`: passou no PR funcional.
+- CI do PR #336, run `41972882976`: todos os jobs concluídos com sucesso.
+- Health check remoto após deploy: `GET http://127.0.0.1:4175/api/v1/health` HTTP 200.
+- Rota de autenticação após deploy: `GET /lilyacai/agent-auth.html` HTTP 200 e login por chave confirmado via IAB.
 
-## Migrations
+## Migrations e dados
 
 - Nenhuma migration nova.
-- A worktree usa banco de teste separado em `.runtime/`; as migrations versionadas foram aplicadas por `tools/prepare-local-lily-test-db.mjs`.
-- Staging recebeu, no deploy anterior, as migrations até 56 com backup em `/srv/cooklily/staging/data/backups/staging-before-8a8728b-20261105T043617Z.db`.
+- Dados do staging permanecem no SQLite isolado `/srv/cooklily/staging/data/staging.db`.
+- Não houve cobrança, pagamento sandbox criado, estorno novo, alteração de dados produtivos ou deploy nos domínios de produção.
+- Backup anterior do banco de staging: `/srv/cooklily/staging/data/backups/staging-before-8a8728b-20261105T043617Z.db`.
 
-## Bloqueios/riscos
+## Bloqueios/riscos externos
 
-- O sandbox Mercado Pago está limitando chamadas com HTTP 429 e não retornou `Retry-After`; reenviar repetidamente pode prolongar o bloqueio. Não houve cobrança nem criação remota confirmada.
-- A homologação não pode ser declarada completa enquanto um pagamento aprovado em sandbox e os fluxos subsequentes não forem verificados.
-- A homologação real do WhatsApp está bloqueada até os cinco templates saírem de `Em análise`.
-- Configurações temporárias já restauradas; pedidos online e pagamentos permanecem desativados no staging.
-- Publicação em `licalily.com/cook` não faz parte desta execução.
+- O Mercado Pago devolveu 429 sem `Retry-After`; isso bloqueia a criação de pagamento no teste real do provedor. O ajuste melhora mensagem/telemetria e espera, mas não libera a cota externa.
+- A homologação real ponta a ponta segue incompleta até o Mercado Pago aceitar uma única tentativa sandbox e a confirmação de pagamento ser observada no webhook e no pedido.
+- Os cinco templates continuam em análise na Meta. A homologação de WhatsApp real e notificações acopladas a cozinha/entrega só pode ocorrer após aprovação; não enviar via texto livre como substituto.
+- As configurações de pagamento e pedidos do staging foram deixadas desligadas após o teste.
+- A publicação em `licalily.com/cook` não faz parte desta execução.
 
-## Homologação/dependências externas
+## Próximas ações exatas
 
-- Dependência externa: liberação da cota de requisições da aplicação/test credentials no Mercado Pago ou instrução `Retry-After`.
-- Meta templates precisam ser aprovados antes de qualquer envio real ao destinatário com opt-in.
-- Usar exclusivamente o navegador integrado do Codex para homologação visual; avaliar desktop e viewport mobile.
-
-## Próxima ação exata
-
-Após gates verdes, integrar PR #336, atualizar o checkpoint com o SHA resultante e fazer deploy somente em staging; validar o aviso 429 sem reenviar cartão. Prosseguir em paralelo com os fluxos internos que não dependem de aprovação Meta ou de quota do Mercado Pago.
+1. Aguardar reset/liberação da cota da aplicação de testes do Mercado Pago ou abrir suporte à Meta/Mercado Pago com o request ID acima; não repetir pagamentos enquanto não houver janela de cota/`Retry-After`.
+2. Aguardar a aprovação dos cinco templates no WhatsApp Manager.
+3. Com ambos liberados, reativar temporariamente o checkout apenas no staging, criar uma tentativa sandbox única no pedido de teste existente, verificar pagamento/webhook e continuar cozinha, entrega, cancelamento e estorno sem afetar produção.
+4. Enviar mensagens reais somente depois de confirmar aprovação de cada template e usar o destino de teste com opt-in registrado.
+5. Repetir homologação visual desktop/mobile no navegador integrado e restaurar novamente as configurações de staging.
