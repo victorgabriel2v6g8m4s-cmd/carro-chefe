@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "./lily-agent-browser-relay.mjs";
+import { buildAgentApiHeaders, buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "./lily-agent-browser-relay.mjs";
 
 const args = process.argv.slice(2);
 const action = args.shift();
@@ -37,7 +37,7 @@ function checkedOrigin(value, allowLocalhost) {
 async function api(route, body) {
   const response = await fetch(`${apiOrigin}/api/v1/lily/auth/agent/${route}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Origin: apiOrigin },
+    headers: buildAgentApiHeaders(apiOrigin),
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(10_000)
   });

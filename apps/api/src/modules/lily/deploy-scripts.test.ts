@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "../../../../../tools/lily-agent-browser-relay.mjs";
+import { buildAgentApiHeaders, buildAgentHandoffUrl, createAgentBrowserRelay, isSupportedAgentAuthOrigin } from "../../../../../tools/lily-agent-browser-relay.mjs";
 
 const root = path.resolve(process.cwd());
 
@@ -199,7 +199,7 @@ describe("scripts operacionais CookLily", () => {
     const implementation = readFileSync(script, "utf8");
     expect(implementation).toContain('"-Y", "sign"');
     expect(implementation).toContain('"-U"');
-    expect(implementation).toContain('Origin: apiOrigin');
+    expect(implementation).toContain('headers: buildAgentApiHeaders(apiOrigin)');
     expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "edge"');
     expect(implementation).toContain('COOKLILY_AGENT_BROWSER === "codex"');
     expect(implementation).toContain('Start-Process -FilePath $env:COOKLILY_AGENT_EDGE_PATH');
@@ -218,6 +218,19 @@ describe("scripts operacionais CookLily", () => {
     expect(isSupportedAgentAuthOrigin("https://example.com")).toBe(false);
     expect(() => buildAgentHandoffUrl("https://licalily.com", "ticket-inválido"))
       .toThrow("Origem ou ticket de handoff CookLily inválido.");
+  });
+
+  it("mantém as chamadas CLI e do navegador no ambiente roteado correto", () => {
+    expect(buildAgentApiHeaders("https://carrochefe.com")).toEqual({
+      "Content-Type": "application/json",
+      Origin: "https://carrochefe.com",
+      Cookie: "cooklily_staging=1"
+    });
+    expect(buildAgentApiHeaders("https://licalily.com")).toEqual({
+      "Content-Type": "application/json",
+      Origin: "https://licalily.com"
+    });
+    expect(() => buildAgentApiHeaders("https://example.com")).toThrow("Origem de autenticação CookLily inválida.");
   });
 
   it("faz a página estática usar a rota de API comum e retornar ao prefixo atual", () => {
