@@ -5,7 +5,7 @@
 - branch: `codex/cooklily-payment-agent-handoff-fix`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `c42c69af89034076d50f47dd5b0c973a07692451`
-- head_sha_verified: `c42c69af89034076d50f47dd5b0c973a07692451` (implementação local não commitada)
+- head_sha_verified: `37a2837358138b07b5ec868f5e3aa23fe73a1e61` (implementação commitada localmente)
 - pull_requests: nenhum
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
