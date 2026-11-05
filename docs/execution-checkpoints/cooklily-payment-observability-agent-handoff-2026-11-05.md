@@ -49,4 +49,4 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 
 ## Próxima ação exata
 
-Atualizar este checkpoint após o commit de registro, aguardar e verificar os checks finais do PR #332, integrar por squash conforme o fluxo do repositório, executar deploy somente na rota de teste e homologar com o navegador integrado. Antes de tentar outro pagamento, conferir os dois pedidos de teste pendentes no painel MP; não criar pedidos duplicados enquanto a tentativa anterior continuar ambígua.
+Deploy canônico de teste do SHA `0c82e7b2867db06a8072d27bee6b5a46673a7ebf` e homologação com o navegador integrado desktop/mobile; conferir pedidos pendentes e verificar agente-key `/exchange`. Antes de tentar outro pagamento, conferir os dois pedidos de teste pendentes no painel MP; não criar pedidos duplicados enquanto a tentativa anterior continuar ambígua.
