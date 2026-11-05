@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-payment-whatsapp-followup-v2`
+- branch: `codex/cooklily-template-patch-default-fix`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `11c105317b170c5fa17f7efa312d8a262d13dbea`
-- head_sha_verified: `65fad890` (após rebase sobre a canonical atual; checkpoint ainda será commitado)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado por divergência de base; sucessor será aberto nesta branch
+- base_sha_verified: `5722156df70dd8fef8ec310e52b29a6216218eb7`
+- head_sha_verified: `5722156df70dd8fef8ec310e52b29a6216218eb7` (patch e2e local, ainda sem commit)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged por squash em `5722156df70dd8fef8ec310e52b29a6216218eb7`
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -17,7 +17,7 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 
 ## Evidências confirmadas
 
-- O serviço `cooklily-staging.service` está ativo no release `/srv/cooklily/staging/releases/9f321912`, porta local 4175 e banco isolado `/srv/cooklily/staging/data/staging.db`.
+- O serviço `cooklily-staging.service` está ativo no release `/srv/cooklily/staging/releases/5722156d`, porta local 4175 e banco isolado `/srv/cooklily/staging/data/staging.db`.
 - `/etc/cooklily/staging.env` seleciona `MERCADO_PAGO_ENVIRONMENT=test`; as credenciais de teste do Mercado Pago já estavam configuradas. Um restart inicial do staging após a inclusão de variáveis WhatsApp foi confirmado ativo e `/health` retornou HTTP 200.
 - `staging.env` não tinha variáveis de envio Meta. Foram adicionadas, sem imprimir valores, `COOKLILY_WHATSAPP_ACCESS_TOKEN`, `COOKLILY_WHATSAPP_PHONE_NUMBER_ID` e `COOKLILY_WHATSAPP_GRAPH_VERSION` a partir das credenciais CookLily configuradas na VPS para permitir somente o teste autorizado pelo proprietário ao número de homologação consentido. Não copiar valores para Git ou logs.
 - A sessão administrativa de agente foi renovada via `node tools/lily-agent-auth.mjs login --key <chave dedicada>` e handoff concluído em aba integrada do Codex.
@@ -36,15 +36,19 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 - O checkout usa o adaptador legado `mercado-pago-provider.ts`, que descartava causas da Orders API. Um adaptador compartilhado agora registra/exibe somente códigos allowlisted, status e request ID, sem descrições ou corpo bruto.
 - Foi implementada ação administrativa auditada para marcar somente uma notificação ainda `pending` como `skipped`; ela preserva `whatsappUpdatesOptIn`. Teste cobre autenticação, concorrência/idempotência, auditoria e preservação do consentimento.
 - Gates locais após essas mudanças: testes direcionados 28/28; `npm run check` passou; `npm run test:runtime` passou com 86 arquivos, 471 testes aprovados e 3 ignorados; `npm run build` passou, orçamento `build_budget=ok` (JS gzip 211.47 KiB; JS+CSS gzip 252.61 KiB). Sem migration ou alteração de schema.
+- PR #340 passou os oito jobs de CI (Node 20/22/24, Windows Supervisor, Tool Health Linux, Excel Recipe Ubuntu/Windows e Workbook Snapshot) e foi integrado por squash em `5722156d`.
+- Reconferência da VPS: `cooklily-staging.service` está ativo e `GET /api/v1/lily/public/health` retorna 200. `COOKLILY_WHATSAPP_PROVIDER=disabled`; o envio continua desligado.
+- As duas notificações antigas (`CL-104492A004F7` e `CL-2C89449B54DE`) foram marcadas `skipped` via ação administrativa auditada; a fila filtrada por `pending` está vazia e o consentimento permaneceu inalterado.
+- O proprietário esclareceu em 2026-11-05 que todas as ocorrências de pagamento anteriores foram testes, sem pagamento real e sem acompanhamento WhatsApp; portanto não são evidência de homologação real nem motivo para conciliar cobranças reais. Não repetir nem reutilizar essas tentativas; a homologação ainda precisa de um pedido novo em ambiente controlado.
+- Rebuild do SHA `5722156d` concluído com `build_budget=ok`: JS gzip 211.47 KiB e JS+CSS gzip 252.61 KiB.
+- A ativação de template segue falhando porque Zod materializa defaults em `templateInputSchema.partial()` e injeta `variables: []` num PATCH `{status:"active"}`. O banco salvo tem três variáveis e três placeholders; a validação isolada passa. Corrigi o schema para defaults serem aplicados apenas no POST e acrescentei teste de regressão.
 
 ## Trabalho em andamento
 
-- Abrir PR draft baseado na canonical para a branch `codex/cooklily-payment-whatsapp-followup-v2`; aguardar CI.
-- Publicar frontend e módulos API alterados somente no serviço isolado `/srv/cooklily/staging`; confirmar SHA, saúde e ausência de migration.
-- Descartar por ação administrativa auditada as duas notificações pendentes incompatíveis com o destinatário; confirmar fila vazia antes de habilitar qualquer envio.
-- Repetir ativação do template aprovado e registrar o motivo específico se ainda falhar.
-- Consultar pagamento/pedido existentes no painel e na base de staging antes de criar tentativa nova. Usar exclusivamente credenciais/cartão sandbox; não enviar mensagem até haver um pedido com opt-in correspondente ao número autorizado.
+- A correção de validação está local, o teste focal (6/6) passou e os gates completos passaram; integrar por PR e atualizar o staging sem migration.
+- Repetir ativação do template aprovado após o novo release; configurar envio Meta apenas no ambiente autorizado e manter o envio desligado até existir pedido novo com opt-in do número autorizado.
+- Depois, criar um pedido novo, testar o pagamento no sandbox e confirmar sequência real de notificações/recepção no WhatsApp e estados da cozinha/entrega.
 
 ## Próxima ação exata
 
-Checkpoint corrigido em resposta à descoberta de que a branch anterior e a canonical tinham commits paralelos para a ativação de templates. PR #339 foi fechado sem merge; os commits da implementação foram reaplicados sobre `11c10531` em nova branch, sem force push. Próxima ação: abrir o PR sucessor e aguardar CI; após merge, preparar release staging derivado do release ativo `11c10531`, substituindo somente `apps/lily_acai/dist` e os arquivos de API explicitamente alterados; preservar o banco e não aplicar migrations. Fazer swap atômico, restart/health e rollback imediato se falhar. Só então usar a ação administrativa para descartar as duas notificações pendentes alheias ao número de teste e repetir a ativação com diagnósticos.
+Correção local de PATCH parcial passa no teste focal e nos gates completos. Próxima ação exata: abrir PR contra `cooklily/canonical`, aguardar CI e integrar; reconstruir o SHA integrado e atualizar apenas o release isolado `/srv/cooklily/staging`, sem migration; confirmar health e reproduzir ativação do template pelo painel. Depois, continuar com pedido novo, sandbox Mercado Pago, notificação real ao número autorizado, resposta pelo WhatsApp integrado, transições de cozinha/entrega e cancelamento/estorno de teste.

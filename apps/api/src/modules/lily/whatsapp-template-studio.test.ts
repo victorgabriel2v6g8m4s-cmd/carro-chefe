@@ -62,6 +62,41 @@ afterEach(async () => {
 afterAll(async () => app.close());
 
 describe("CookLily WhatsApp template studio API", () => {
+  it("ativa template com PATCH parcial sem substituir variáveis, categoria ou idioma pelos padrões de criação", async () => {
+    const auth = await registerAdmin();
+    const key = "awaiting_payment";
+    createdTemplateKeys.push(key);
+    const components = [
+      { type: "BODY", text: "Pedido {{1}} recebido. {{2}} Total {{3}}." },
+      { type: "FOOTER", text: "CookLily" },
+      { type: "BUTTONS", buttons: [{ type: "URL", text: "Acompanhar", url: "https://licalily.com/cook/pagamento/{{1}}" }] }
+    ];
+    const created = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/whatsapp/templates",
+      headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
+      payload: {
+        key, displayName: "Pedido recebido", category: "utility", language: "pt_BR",
+        bodyTemplate: "Pedido {{1}} recebido. {{2}} Total {{3}}.",
+        variables: ["orderNumber", "itemsSummary", "totalAmount"],
+        variableNames: ["numero_do_pedido", "resumo_dos_itens", "total"],
+        components, metaTemplateName: "cooklily_pedido_recebido", status: "draft"
+      }
+    });
+    expect(created.statusCode, JSON.stringify(created.json())).toBe(201);
+
+    const activated = await app.inject({
+      method: "PATCH", url: `/api/v1/lily/admin/whatsapp/templates/${created.json().template.id}`,
+      headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
+      payload: { status: "active" }
+    });
+
+    expect(activated.statusCode, JSON.stringify(activated.json())).toBe(200);
+    expect(activated.json().template).toMatchObject({
+      status: "active", category: "utility", language: "pt_BR",
+      variables: ["orderNumber", "itemsSummary", "totalAmount"], components
+    });
+  });
+
   it("persists, returns and edits complete Meta component arrays", async () => {
     const auth = await registerAdmin();
     const key = `test_template_studio_${Date.now()}`;
