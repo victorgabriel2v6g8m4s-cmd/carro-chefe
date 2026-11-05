@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-payment-whatsapp-followup`
+- branch: `codex/cooklily-payment-whatsapp-followup-v2`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `11c105317b170c5fa17f7efa312d8a262d13dbea`
-- head_sha_verified: `d5bfc4da96fa611a1d54d93cbbad9c4ab7a37902` (commit da implementação; a atualização deste checkpoint é o commit seguinte)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; follow-up PR ainda não aberto
+- head_sha_verified: `65fad890` (após rebase sobre a canonical atual; checkpoint ainda será commitado)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado por divergência de base; sucessor será aberto nesta branch
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -39,7 +39,7 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 
 ## Trabalho em andamento
 
-- Abrir PR e aguardar CI para o commit `d5bfc4da`.
+- Abrir PR draft baseado na canonical para a branch `codex/cooklily-payment-whatsapp-followup-v2`; aguardar CI.
 - Publicar frontend e módulos API alterados somente no serviço isolado `/srv/cooklily/staging`; confirmar SHA, saúde e ausência de migration.
 - Descartar por ação administrativa auditada as duas notificações pendentes incompatíveis com o destinatário; confirmar fila vazia antes de habilitar qualquer envio.
 - Repetir ativação do template aprovado e registrar o motivo específico se ainda falhar.
@@ -47,4 +47,4 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 
 ## Próxima ação exata
 
-Enviar o commit `d5bfc4da` para `origin`, abrir PR draft contra `cooklily/canonical` e aguardar os gates. Depois do merge, preparar release staging derivado do release ativo `11c10531`, substituindo somente `apps/lily_acai/dist` e os arquivos de API explicitamente alterados; preservar o banco e não aplicar migrations. Fazer swap atômico, restart/health e rollback imediato se falhar. Só então usar a ação administrativa para descartar as duas notificações pendentes alheias ao número de teste e repetir a ativação com diagnósticos.
+Checkpoint corrigido em resposta à descoberta de que a branch anterior e a canonical tinham commits paralelos para a ativação de templates. PR #339 foi fechado sem merge; os commits da implementação foram reaplicados sobre `11c10531` em nova branch, sem force push. Próxima ação: abrir o PR sucessor e aguardar CI; após merge, preparar release staging derivado do release ativo `11c10531`, substituindo somente `apps/lily_acai/dist` e os arquivos de API explicitamente alterados; preservar o banco e não aplicar migrations. Fazer swap atômico, restart/health e rollback imediato se falhar. Só então usar a ação administrativa para descartar as duas notificações pendentes alheias ao número de teste e repetir a ativação com diagnósticos.
