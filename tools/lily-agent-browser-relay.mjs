@@ -18,6 +18,15 @@ export function buildAgentHandoffUrl(origin, ticket) {
   return `${origin}${pathname}#ticket=${encodeURIComponent(ticket)}`;
 }
 
+export function buildAgentApiHeaders(origin) {
+  if (!handoffRoutes.has(origin)) throw new Error("Origem de autenticação CookLily inválida.");
+  return {
+    "Content-Type": "application/json",
+    Origin: origin,
+    ...(origin === "https://carrochefe.com" ? { Cookie: "cooklily_staging=1" } : {})
+  };
+}
+
 function isAgentHandoff(value) {
   try {
     const url = new URL(value);
