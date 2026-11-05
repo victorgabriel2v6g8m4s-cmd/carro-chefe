@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-template-patch-default-fix`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `5722156df70dd8fef8ec310e52b29a6216218eb7`
-- head_sha_verified: `5722156df70dd8fef8ec310e52b29a6216218eb7` (patch e2e local, ainda sem commit)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged por squash em `5722156df70dd8fef8ec310e52b29a6216218eb7`
+- head_sha_verified: `ef71d37f39f6dcb86cb1b8246c3f34084c225077`
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -42,13 +42,14 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 - O proprietário esclareceu em 2026-11-05 que todas as ocorrências de pagamento anteriores foram testes, sem pagamento real e sem acompanhamento WhatsApp; portanto não são evidência de homologação real nem motivo para conciliar cobranças reais. Não repetir nem reutilizar essas tentativas; a homologação ainda precisa de um pedido novo em ambiente controlado.
 - Rebuild do SHA `5722156d` concluído com `build_budget=ok`: JS gzip 211.47 KiB e JS+CSS gzip 252.61 KiB.
 - A ativação de template segue falhando porque Zod materializa defaults em `templateInputSchema.partial()` e injeta `variables: []` num PATCH `{status:"active"}`. O banco salvo tem três variáveis e três placeholders; a validação isolada passa. Corrigi o schema para defaults serem aplicados apenas no POST e acrescentei teste de regressão.
+- Correção integrada em `ef71d37f`: defaults de criação passaram a ser normalizados apenas no POST; PATCH preserva campos omitidos. Teste focal 6/6; `npm run check` passou; `npm run test:runtime` passou (86 arquivos, 472 aprovados, 3 ignorados); `npm run build` passou com `build_budget=ok` (JS gzip 211.47 KiB, JS+CSS gzip 252.61 KiB); CI do PR #341 passou nos oito jobs.
 
 ## Trabalho em andamento
 
-- A correção de validação está local, o teste focal (6/6) passou e os gates completos passaram; integrar por PR e atualizar o staging sem migration.
+- Publicar o SHA `ef71d37f` no release isolado de staging, sem migration; validar health e reproduzir pelo navegador a ativação do template aprovado.
 - Repetir ativação do template aprovado após o novo release; configurar envio Meta apenas no ambiente autorizado e manter o envio desligado até existir pedido novo com opt-in do número autorizado.
 - Depois, criar um pedido novo, testar o pagamento no sandbox e confirmar sequência real de notificações/recepção no WhatsApp e estados da cozinha/entrega.
 
 ## Próxima ação exata
 
-Correção local de PATCH parcial passa no teste focal e nos gates completos. Próxima ação exata: abrir PR contra `cooklily/canonical`, aguardar CI e integrar; reconstruir o SHA integrado e atualizar apenas o release isolado `/srv/cooklily/staging`, sem migration; confirmar health e reproduzir ativação do template pelo painel. Depois, continuar com pedido novo, sandbox Mercado Pago, notificação real ao número autorizado, resposta pelo WhatsApp integrado, transições de cozinha/entrega e cancelamento/estorno de teste.
+PR #341 integrado em `ef71d37f`; gates locais e CI passaram. Próxima ação exata: copiar o módulo API atualizado para release novo derivado de `/srv/cooklily/staging/releases/5722156d`, trocar symlink e reiniciar somente `cooklily-staging.service`; validar health e ativar `awaiting_payment` pelo painel. Depois, continuar com pedido novo, sandbox Mercado Pago, notificação real ao número autorizado, resposta pelo WhatsApp integrado, transições de cozinha/entrega e cancelamento/estorno de teste.
