@@ -84,12 +84,14 @@ As evidências staging acima são históricas e não representam o teste solicit
 - Ao clicar `Finalizar pagamento`, o link abre `licalily.com/cook/pagamento/...` e a página retorna **“Pedido não encontrado”**. Causa confirmada: o link público aponta para a base de produção, enquanto o pedido está na base staging. Não clicar em pagar nem tentar transações nesse link.
 - A tela de pagamento do staging mostra todos os métodos desabilitados. O pedido segue sem linhas em `LilyPayment`; configuração da base indica pagamentos/pedido/retirada/cartão habilitados e a API pública de configuração informa cartões disponíveis, mas o endpoint específico do pedido ainda não foi diagnosticado. Nenhuma cobrança foi criada.
 - Ambiente público confirmado separadamente: `MERCADO_PAGO_ENVIRONMENT` ausente (o código assume produção) e credenciais produtivas presentes. Não foi iniciado pagamento no domínio público para evitar uma cobrança real. O ambiente público também aponta ao telefone de teste Meta; permanece sem alteração.
+- Continuação no navegador integrado: o cartão de crédito selecionado revelou formulário do Mercado Pago abaixo da dobra; cartão de crédito não está desativado. Pix aparece desativado. O formulário foi preenchido com cartão/documento/e-mail de teste publicados pelo Mercado Pago, nome `APRO` (aprovado), parcela única e total R$ 15,00. O botão `Pagar` está visível e pronto; nenhuma submissão ocorreu. A confirmação final da transação no navegador requer ação do proprietário (handoff obrigatório), mesmo em sandbox.
+- Tentativa read-only ao host existente `cook-origin.licalily.com` encontrou DNS Cloudflare e HTTP 403 no caminho CookLily; não há rota staging pública comprovada nesse host. Não se alterou DNS, proxy Cloudflare nem exposição de staging.
 
 ## Trabalho pendente
 
 - Corrigir o acesso do cliente aos pedidos isolados: configurar uma rota de homologação publicamente alcançável e isolada para que o CTA do WhatsApp leve à mesma base staging, ou usar um fluxo equivalente que não exponha a base de testes nem dependa de cookie local.
-- Diagnosticar por que a página do pedido desabilita os métodos mesmo com a configuração geral indicando cartões disponíveis; confirmar o payload do endpoint específico sem exibir guest token ou dados pessoais.
-- Depois dos dois itens acima, pagar somente com cartão sandbox no staging, confirmar o webhook/status no site e verificar a notificação automática de pagamento confirmado no WhatsApp.
+- Aguardar o proprietário concluir o clique final em `Pagar` no checkout sandbox preparado no navegador integrado; depois confirmar webhook/status no staging e verificar a notificação automática de pagamento confirmado no WhatsApp.
+- Configurar uma rota pública isolada para staging após resolver proteção/roteamento de domínio; o host de origem existente respondeu 403 e o CTA atual cai na base pública sem o pedido de teste.
 - Depois de pagamento sandbox aprovado e WhatsApp automático recebido, validar tracking, cozinha, courier, cancelamento e estorno conforme os estados permitidos no staging. O checkout público permanece sem uso para pagamentos nesta fase.
 
 ## Trabalho em andamento
@@ -100,4 +102,4 @@ As evidências staging acima são históricas e não representam o teste solicit
 
 ## Próxima ação exata
 
-Próxima ação: resolver o isolamento do link de pedido para staging sem habilitar o checkout público; depois corrigir a desabilitação dos métodos na página de pagamento, pagar o pedido sandbox e validar o status e a mensagem automática correspondente. Resultado parcial: SSH e staging saudáveis; token Meta válido; notificação automática `awaiting_payment` recebida no WhatsApp real; CTA aponta para a base errada e nenhum pagamento ocorreu.
+Próxima ação exata: o checkout sandbox preparado no navegador integrado está pronto em `http://127.0.0.1:43175/lilyacai/pagamento/cmw3xhels0000izlpkg4ph99p`, pedido `CL-F4225B997C4B`, botão `Pagar` visível. O proprietário deve acionar esse botão; então verificar webhook e mensagem WhatsApp automática. Resultado parcial: mensagem automática `awaiting_payment` comprovada; formulário de cartão disponível e pronto; pagamento ainda não submetido; CTA recebido no WhatsApp ainda abre base pública sem o pedido staging.
