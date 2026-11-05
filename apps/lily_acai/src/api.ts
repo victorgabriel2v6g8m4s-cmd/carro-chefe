@@ -111,6 +111,8 @@ export type CatalogProduct = {
     regularPriceCents: number;
     offerPriceCents: number;
     savingsCents: number;
+    badgeLabel: string;
+    badgeColor: string;
     startsAt: string | null;
     endsAt: string | null;
   }>;
@@ -525,6 +527,16 @@ export async function redeemLilyLevelBenefit(levelId: string, benefitId: string,
 export async function claimLilyMission(missionId: string, csrfToken: string) {
   return parseResponse<{ claimed: boolean; pointsAwarded: number; lilyCoinsAwarded: number; loyalty: LilyLoyaltyPayload }>(await fetch(`/api/v1/lily/customer/missions/${encodeURIComponent(missionId)}/claim`, {
     method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-Lily-CSRF": csrfToken }, body: "{}"
+  }));
+}
+
+export async function submitLilyMissionProof(missionId: string, input: { username: string; evidenceText: string; file: File }, csrfToken: string) {
+  const form = new FormData();
+  if (input.username.trim()) form.append("username", input.username.trim());
+  if (input.evidenceText.trim()) form.append("evidenceText", input.evidenceText.trim());
+  form.append("file", input.file);
+  return parseResponse<{ submission: { id: string; status: string; submittedAt: string } }>(await fetch(`/api/v1/lily/customer/missions/${encodeURIComponent(missionId)}/submissions`, {
+    method: "POST", credentials: "same-origin", headers: { "X-Lily-CSRF": csrfToken }, body: form
   }));
 }
 

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { getLilySession, parseResponse, type AuthPayload, type LilyBenefit } from "../../api";
 import { LoyaltyBrandingEditor } from "./LoyaltyBrandingEditor";
 import { LoyaltyLevelEditor } from "./LoyaltyLevelEditor";
+import { MissionSubmissionReviewPanel } from "./MissionSubmissionReviewPanel";
 import { readAdminApiError } from "./admin-api-error";
 import { toLoyaltyLevelInput } from "./loyalty-level-payload";
 import { loyaltyLevelThresholdError } from "./loyalty-level-validation";
@@ -234,6 +235,7 @@ export function AdminLoyaltyPage() {
       </form>
       <div className="loyalty-reward-grid">{data?.missions.map((mission) => <article className="loyalty-reward-card" key={mission.id}><span>{mission.status}</span><h3>{mission.title}</h3><p>{mission.points} pontos · {mission.lilyCoins} {data.branding.coinName}</p><button className="button ghost" type="button" onClick={() => editMission(mission)}>Editar missão</button></article>)}</div>
     </section>
+    <MissionSubmissionReviewPanel />
     <section className="loyalty-admin-section"><span className="eyebrow">Atendimento dos benefícios</span><h2>Resgates dos clientes</h2><div className="loyalty-admin-redemptions">{benefitRedemptions.map((redemption) => <article key={redemption.id}><span><strong>{redemption.benefitLabel}</strong><small>{redemption.levelName} · {new Date(redemption.createdAt).toLocaleString("pt-BR")}</small></span><code>{redemption.redemptionCode}</code><strong>{redemption.status === "fulfilled" ? "Atendido" : "Pendente"}</strong>{redemption.status === "claimed" && <button className="button ghost" type="button" disabled={busy} onClick={() => void fulfillBenefitRedemption(redemption)}>Marcar atendido</button>}</article>)}</div>{!benefitRedemptions.length && <p>Nenhum cliente resgatou benefícios ainda.</p>}</section>
   </section>;
 }

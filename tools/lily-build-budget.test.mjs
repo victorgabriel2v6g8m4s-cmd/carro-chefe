@@ -10,15 +10,21 @@ import {
   measureLilyBuildAssets
 } from "./lily-build-budget.mjs";
 
-test("budget registra redução do entrypoint e limita regressão dos assets totais", () => {
+test("budget admite o aumento autorizado de 10% sem elevar além disso cada teto", () => {
+  const previousBudget = {
+    jsRawBytes: 650 * 1024,
+    jsGzipBytes: 207 * 1024,
+    initialJsGzipBytes: 110 * 1024,
+    largestJsChunkBytes: 280 * 1024,
+    cssRawBytes: 200 * 1024,
+    cssGzipBytes: 42 * 1024,
+    combinedGzipBytes: 248 * 1024
+  };
+  for (const key of Object.keys(previousBudget)) {
+    assert.ok(LILY_BUILD_BUDGET[key] <= Math.ceil(previousBudget[key] * 1.1), `${key} excede o aumento autorizado de 10%`);
+  }
   assert.ok(LILY_BUILD_BUDGET.jsRawBytes < LILY_BUILD_BASELINE.jsRawBytes);
-  assert.ok(LILY_BUILD_BUDGET.jsGzipBytes < LILY_BUILD_BASELINE.jsGzipBytes);
-  assert.ok(LILY_BUILD_BUDGET.initialJsGzipBytes < LILY_BUILD_BASELINE.initialJsGzipBytes * 0.8);
-  assert.ok(LILY_BUILD_BUDGET.largestJsChunkBytes < LILY_BUILD_BASELINE.largestJsChunkBytes * 0.5);
-  assert.ok(LILY_BUILD_BUDGET.cssRawBytes > LILY_BUILD_BASELINE.cssRawBytes);
-  assert.ok(LILY_BUILD_BUDGET.cssGzipBytes > LILY_BUILD_BASELINE.cssGzipBytes);
-  assert.ok(LILY_BUILD_BUDGET.cssRawBytes < LILY_BUILD_BASELINE.cssRawBytes * 1.6);
-  assert.ok(LILY_BUILD_BUDGET.combinedGzipBytes < (LILY_BUILD_BASELINE.jsGzipBytes + LILY_BUILD_BASELINE.cssGzipBytes) * 1.41);
+  assert.ok(LILY_BUILD_BUDGET.largestJsChunkBytes < LILY_BUILD_BASELINE.largestJsChunkBytes * 0.6);
 });
 
 test("avalia build dentro e fora do budget", () => {
@@ -32,11 +38,11 @@ test("avalia build dentro e fora do budget", () => {
   assert.deepEqual(evaluateLilyBuildBudget(within), []);
 
   const over = {
-    js: { files: 1, rawBytes: 820_000, gzipBytes: 230_000 },
-    initialJs: { files: 1, rawBytes: 820_000, gzipBytes: 120_000 },
+    js: { files: 1, rawBytes: 820_000, gzipBytes: 250_000 },
+    initialJs: { files: 1, rawBytes: 820_000, gzipBytes: 130_000 },
     largestJsChunkBytes: 400_000,
-    css: { files: 1, rawBytes: 210_000, gzipBytes: 45_000 },
-    combinedGzipBytes: 270_000
+    css: { files: 1, rawBytes: 230_000, gzipBytes: 48_000 },
+    combinedGzipBytes: 298_000
   };
   const labels = evaluateLilyBuildBudget(over).map((item) => item.label);
   assert.deepEqual(labels, [

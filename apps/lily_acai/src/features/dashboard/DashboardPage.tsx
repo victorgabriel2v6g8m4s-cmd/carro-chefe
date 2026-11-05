@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "../../router";
-import { claimLilyMission, getLilyAuthStatus, getLilySession, getLilyLoyalty, getLilyProfile, redeemLilyReward, redeemLilyLevelBenefit, type AuthPayload, type LilyLoyaltyPayload, type LilyProfilePayload } from "../../api";
+import { claimLilyMission, getLilyAuthStatus, getLilySession, getLilyLoyalty, getLilyProfile, redeemLilyReward, redeemLilyLevelBenefit, submitLilyMissionProof, type AuthPayload, type LilyLoyaltyPayload, type LilyProfilePayload } from "../../api";
 import { getCustomerOrders } from "../orders/api";
 import { surveyJson } from "../surveys/api";
 import { CustomerStatsPanel } from "../loyalty/CustomerStatsPanel";
 
-type Mission = { id: string; title: string; description: string | null; points: number; lilyCoins: number; actionUrl?: string | null; claimed: boolean };
+type Mission = { id: string; title: string; description: string | null; points: number; lilyCoins: number; actionUrl?: string | null; approvalMode?: "automatic" | "manual"; instructions?: Array<{ title: string; body: string; required: boolean; mediaId: string | null }>; reviewHours?: number; submissionStatus?: string | null; claimed: boolean };
 type Order = { id: string; orderNumber: string; status: string; grandTotalCents: number; createdAt?: string };
 const currency = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
@@ -69,6 +69,22 @@ export function DashboardPage() {
     finally { setBusyMission(""); }
   }
 
+  async function submitMissionProof(event: FormEvent<HTMLFormElement>, missionId: string) {
+    event.preventDefault();
+    if (!session?.csrfToken) { setError("Atualize sua sessão para enviar a comprovação."); return; }
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const file = form.get("file");
+    if (!(file instanceof File) || file.size === 0) { setError("Anexe uma imagem para comprovar a missão."); return; }
+    setBusyMission(missionId); setError("");
+    try {
+      await submitLilyMissionProof(missionId, { username: String(form.get("username") ?? ""), evidenceText: String(form.get("evidenceText") ?? ""), file }, session.csrfToken);
+      setMissions((current) => current.map((mission) => mission.id === missionId ? { ...mission, submissionStatus: "pending" } : mission));
+      formElement.reset();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível enviar a comprovação."); }
+    finally { setBusyMission(""); }
+  }
+
   async function claimBenefit(levelId: string, benefitId: string) {
     if (!session?.csrfToken) { setError("Atualize sua sessão para resgatar o benefício."); return; }
     const busyKey = `${levelId}:${benefitId}`;
@@ -109,7 +125,7 @@ export function DashboardPage() {
       <div className="loyalty-benefit-redemption-grid">{loyalty?.unlockedLevels.flatMap((level) => level.benefits.map((benefit) => <article className="loyalty-benefit-redemption-card" key={`${level.id}:${benefit.id}`}><span className="eyebrow">{level.name}</span><h3>{benefit.label}</h3><p>{benefit.selectionMode === "preset" ? "A combinação foi definida pela CookLily." : "As opções serão definidas com a equipe no atendimento."}</p><small>{benefit.remainingRedemptions} de {benefit.maxRedemptionsPerUser} resgate(s) disponíveis para você</small>{benefit.canRedeem ? <button className="button primary" type="button" disabled={Boolean(busyBenefit)} onClick={() => void claimBenefit(level.id, benefit.id)}>{busyBenefit === `${level.id}:${benefit.id}` ? "Gerando resgate…" : "Resgatar benefício"}</button> : <strong className="loyalty-benefit-limit-reached">Limite utilizado</strong>}{benefit.redemptions.map((redemption) => <div className="loyalty-redemption-code" key={redemption.id}><span>{redemption.status === "fulfilled" ? "Atendido" : "Código para apresentar"}</span><strong>{redemption.redemptionCode}</strong></div>)}</article>))}</div>{!loyalty?.unlockedLevels.some((level) => level.benefits.length) && <p>Os benefícios aparecem aqui quando você alcançar um nível que tenha benefícios configurados.</p>}
     </section>
     <section className="loyalty-section"><div className="section-heading"><div><span className="eyebrow">Troque ou acumule</span><h2>Recompensas</h2></div></div><div className="loyalty-reward-grid">{loyalty?.rewards.map((reward) => <article className="loyalty-reward-card" key={reward.id}><h3>{reward.title}</h3>{reward.description && <p>{reward.description}</p>}<strong>{reward.lilyCoinCost.toLocaleString("pt-BR")} LilyCoins</strong><button className="button primary" type="button" disabled={!reward.canRedeem || Boolean(busyReward)} onClick={() => void claim(reward.id)}>{busyReward === reward.id ? "Reivindicando…" : reward.canRedeem ? "Reivindicar" : "Continuar acumulando"}</button></article>)}</div>{!loyalty?.rewards.length && <p>Nenhuma recompensa disponível no momento.</p>}</section>
-    <section className="loyalty-section" id="missions"><div className="section-heading"><div><span className="eyebrow">Continue avançando</span><h2>Missões disponíveis</h2></div><Link to="/pesquisas">Ver pesquisas</Link></div><div className="loyalty-reward-grid">{missions.map((mission) => <article className="loyalty-reward-card" key={mission.id}><h3>{mission.title}</h3>{mission.description && <p>{mission.description}</p>}<strong>{mission.points.toLocaleString("pt-BR")} pontos{mission.lilyCoins ? ` · ${mission.lilyCoins.toLocaleString("pt-BR")} LilyCoins` : ""}</strong>{mission.actionUrl && <a className="button ghost" href={mission.actionUrl}>Ir para a missão</a>}<button className="button primary" type="button" disabled={mission.claimed || Boolean(busyMission)} onClick={() => void claimMission(mission.id)}>{busyMission === mission.id ? "Reivindicando…" : mission.claimed ? "Missão concluída" : "Concluir missão"}</button></article>)}</div>{!missions.length && <p>Novas missões aparecerão quando forem liberadas para você.</p>}</section>
+    <section className="loyalty-section" id="missions"><div className="section-heading"><div><span className="eyebrow">Continue avançando</span><h2>Missões disponíveis</h2></div><Link to="/pesquisas">Ver pesquisas</Link></div><div className="loyalty-reward-grid">{missions.map((mission) => <article className="loyalty-reward-card" key={mission.id}><h3>{mission.title}</h3>{mission.description && <p>{mission.description}</p>}<strong>{mission.points.toLocaleString("pt-BR")} pontos{mission.lilyCoins ? ` · ${mission.lilyCoins.toLocaleString("pt-BR")} LilyCoins` : ""}</strong>{mission.instructions?.length ? <ol>{mission.instructions.map((step, index) => <li key={`${mission.id}-step-${index}`}><strong>{step.title}</strong>{step.body && <p>{step.body}</p>}{step.required && <small>Etapa obrigatória</small>}</li>)}</ol> : null}{mission.actionUrl && <a className="button ghost" href={mission.actionUrl}>Ir para a missão</a>}{mission.approvalMode === "manual" && !mission.claimed ? mission.submissionStatus === "pending" ? <p role="status">Comprovação enviada. A equipe vai analisar em até {mission.reviewHours ?? 24} horas.</p> : <form className="mission-proof-form" onSubmit={(event) => void submitMissionProof(event, mission.id)}><label>Seu usuário (por exemplo, Instagram)<input name="username" maxLength={80} /></label><label>Como verificar a publicação<textarea name="evidenceText" maxLength={1000} rows={2} /></label><label>Anexe o comprovante<input name="file" type="file" accept="image/jpeg,image/png,image/webp" required /></label><small>Imagem JPEG, PNG ou WebP de até 5 MB. A equipe analisa em até {mission.reviewHours ?? 24} horas.</small><button className="button primary" disabled={Boolean(busyMission)}>{busyMission === mission.id ? "Enviando…" : "Enviar para análise"}</button></form> : <button className="button primary" type="button" disabled={mission.claimed || Boolean(busyMission)} onClick={() => void claimMission(mission.id)}>{busyMission === mission.id ? "Reivindicando…" : mission.claimed ? "Missão concluída" : "Concluir missão"}</button>}</article>)}</div>{!missions.length && <p>Novas missões aparecerão quando forem liberadas para você.</p>}</section>
     <section className="loyalty-section"><div className="section-heading"><div><span className="eyebrow">Seus pedidos</span><h2>Pedidos recentes</h2></div><Link to="/pedidos">Ver todos</Link></div><div className="order-history-carousel">{orders.map((order) => <article key={order.id}><strong>Pedido {order.orderNumber}</strong><span>{order.status}</span><small>{currency(order.grandTotalCents)}</small><Link className="button ghost" to={`/pedidos/${encodeURIComponent(order.id)}`}>Acompanhar</Link></article>)}</div>{!orders.length && <p>Seus pedidos aparecerão aqui quando você fizer o primeiro.</p>}</section>
     <nav className="loyalty-shortcuts" aria-label="Atalhos"><Link className="button primary" to="/pesquisas">Responder pesquisas</Link><Link className="button ghost" to="/ranking">Ranking</Link><Link className="button ghost" to="/perfil">Meu perfil</Link></nav>
   </section>;

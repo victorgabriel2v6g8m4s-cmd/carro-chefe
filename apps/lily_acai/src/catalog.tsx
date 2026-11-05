@@ -726,7 +726,7 @@ function ProductCard({ product, onOpen }: { product: CatalogProduct; onOpen: () 
     <div className={`product-card-media${product.vipLocked ? " vip-locked-media" : ""}`}>
       <ProductImage product={product} onOpen={product.vipLocked ? undefined : onOpen} />
       {product.vipEarlyAccess && <span className="vip-product-badge">VIP</span>}
-      {bestOffer && <span className="offer-badge">{money(bestOffer.savingsCents)} OFF</span>}
+      {bestOffer && <span className="offer-badge" style={{ backgroundColor: bestOffer.badgeColor }}>{bestOffer.badgeLabel || `${Math.round(bestOffer.savingsCents / Math.max(1, bestOffer.regularPriceCents) * 100)}% OFF`}</span>}
       {product.featured && <span className="featured-badge">Mais pedido</span>}
       {product.soldOut && !product.vipLocked && <span className="soldout-badge">Esgotado</span>}
     </div>

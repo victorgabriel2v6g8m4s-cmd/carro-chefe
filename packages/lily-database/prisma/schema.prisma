@@ -39,6 +39,7 @@ model LilyUser {
   reelSaves       LilyReelSave[]
   reelComments    LilyReelComment[]
   orderReviews    LilyOrderReview[]
+  missionSubmissions LilyMissionSubmission[]
   courierAvailable Boolean @default(false)
   courierLatitude Float?
   courierLongitude Float?
@@ -666,6 +667,8 @@ model LilyOffer {
   regularPriceCents     Int
   offerPriceCents       Int
   savingsCents          Int
+  badgeLabel            String              @default("")
+  badgeColor            String              @default("#C49558")
   startsAt              DateTime?
   endsAt                DateTime?
   status                String              @default("draft")
@@ -1435,8 +1438,33 @@ model LilyMission {
   showNextPeriod   Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  submissions      LilyMissionSubmission[]
 
   @@index([status, createdAt])
+}
+
+model LilyMissionSubmission {
+  id              String   @id @default(cuid())
+  missionId       String
+  userId          String
+  status          String   @default("pending")
+  periodKey       String
+  username        String?
+  evidenceText    String?
+  storageName     String
+  originalName    String
+  mime            String
+  size            Int
+  reviewNote      String?
+  reviewedByUserId String?
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  mission         LilyMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user            LilyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, submittedAt])
+  @@index([userId, missionId, periodKey, status])
+  @@index([missionId, submittedAt])
 }
 
 model LilySurveyUpload {

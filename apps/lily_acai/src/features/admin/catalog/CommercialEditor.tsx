@@ -81,6 +81,8 @@ export function CommercialEditor({ data, csrf, refresh, setError }: any) {
         offerPriceCents: parseMoney(String(form.get("offer"))),
         status: String(form.get("status") || "draft"),
         campaignId: String(form.get("campaignId") || "") || null,
+        badgeLabel: String(form.get("badgeLabel") || ""),
+        badgeColor: String(form.get("badgeColor") || "#C49558"),
         minProjectedMarginBps: 1000
       });
       formElement.reset();
@@ -101,7 +103,9 @@ export function CommercialEditor({ data, csrf, refresh, setError }: any) {
         regularPriceCents: parseMoney(String(form.get("regular"))),
         offerPriceCents: parseMoney(String(form.get("offer"))),
         status: String(form.get("status")),
-        campaignId: String(form.get("campaignId") || "") || null
+        campaignId: String(form.get("campaignId") || "") || null,
+        badgeLabel: String(form.get("badgeLabel") || ""),
+        badgeColor: String(form.get("badgeColor") || "#C49558")
       }, true);
       setFormAutosaveStatus(formElement, "Alterações salvas", "saved");
     } catch (cause) {
@@ -217,6 +221,8 @@ export function CommercialEditor({ data, csrf, refresh, setError }: any) {
             <input name="regular" defaultValue={moneyInput(offer.regularPriceCents)} aria-label="Preço regular" />
             <input name="offer" defaultValue={moneyInput(offer.offerPriceCents)} aria-label="Preço oferta" />
             <input name="campaignId" defaultValue={offer.campaignId ?? ""} placeholder="campanha" />
+            <input name="badgeLabel" defaultValue={offer.badgeLabel ?? ""} maxLength={32} placeholder="50% OFF" aria-label="Texto do selo" />
+            <label>Cor do selo<input name="badgeColor" type="color" defaultValue={offer.badgeColor ?? "#C49558"} aria-label="Cor do selo da oferta" /></label>
             <select name="status" defaultValue={offer.status}><option value="draft">Rascunho</option><option value="published">Publicado</option><option value="paused">Pausado</option></select>
             <small className="admin-autosave-status" data-autosave-status role="status">Alterações salvas</small>
           </form>)}
@@ -236,6 +242,8 @@ export function CommercialEditor({ data, csrf, refresh, setError }: any) {
           <label>Preço regular<input name="regular" inputMode="decimal" required /></label>
           <label>Preço oferta<input name="offer" inputMode="decimal" required /></label>
           <label>Campanha<input name="campaignId" placeholder="lancamento" /></label>
+          <label>Texto do selo<input name="badgeLabel" maxLength={32} placeholder="50% OFF" /></label>
+          <label>Cor do selo<input name="badgeColor" type="color" defaultValue="#C49558" /></label>
           <label>Status<select name="status" defaultValue="draft"><option value="draft">Rascunho</option><option value="published">Publicado</option></select></label>
           <button className="button primary" type="submit">Criar oferta</button>
         </form>

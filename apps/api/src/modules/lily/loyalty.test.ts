@@ -1,4 +1,6 @@
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
@@ -101,6 +103,55 @@ describe("progressão de níveis e LilyCoins", () => {
     const claim = await server.inject({ method: "POST", url: `/api/v1/lily/customer/missions/${missionId}/claim`, headers: { origin, cookie: customerCookie, "x-lily-csrf": customerMe.json().csrfToken }, payload: {} });
     expect(claim.statusCode).toBe(409);
     expect(claim.json().details.code).toBe("LILY_MISSION_REQUIRES_REVIEW");
+  });
+
+  it("recebe comprovante privado e credita pontos e LilyCoins somente após aprovação staff", async () => {
+    const { server, cookie, csrf } = await registerAdmin();
+    const customerResponse = await server.inject({ method: "POST", url: "/api/v1/lily/auth/register", headers: { origin }, payload: {
+      phone: `679${Date.now().toString().slice(-8)}`, password: "cliente-missao-prova-2026", termsAccepted: true,
+      termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION,
+      consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false }
+    } });
+    expect(customerResponse.statusCode).toBe(201);
+    missionUserId = customerResponse.json().user.id;
+    const customerCookie = cookieFrom(customerResponse);
+    const customerMe = await server.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie: customerCookie } });
+    const mission = await lilyPrisma.lilyMission.create({ data: {
+      id: crypto.randomUUID(), title: `Missão de prova ${suffix}`, status: "published", points: 12, lilyCoins: 7,
+      approvalMode: "manual", cadence: "perpetual", audienceJson: JSON.stringify({ mode: "all", levels: [], users: [] })
+    } });
+    missionId = mission.id;
+    const boundary = `cooklily-${crypto.randomUUID()}`;
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    const parts = [
+      `--${boundary}\r\nContent-Disposition: form-data; name="username"\r\n\r\ncliente_teste`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="evidenceText"\r\n\r\nStory publicado com a CookLily marcada.`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="prova.png"\r\nContent-Type: image/png\r\n\r\n`
+    ];
+    const body = Buffer.concat([Buffer.from(`${parts[0]}\r\n${parts[1]}\r\n${parts[2]}`), png, Buffer.from(`\r\n--${boundary}--\r\n`)]);
+    const uploaded = await server.inject({ method: "POST", url: `/api/v1/lily/customer/missions/${mission.id}/submissions`, headers: {
+      origin, cookie: customerCookie, "x-lily-csrf": customerMe.json().csrfToken, "content-type": `multipart/form-data; boundary=${boundary}`
+    }, payload: body });
+    expect(uploaded.statusCode, JSON.stringify(uploaded.json())).toBe(201);
+    const submissionId = uploaded.json().submission.id as string;
+    const stored = await lilyPrisma.lilyMissionSubmission.findUniqueOrThrow({ where: { id: submissionId } });
+    const storagePath = path.join(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "mission-evidence", stored.storageName);
+    try {
+      expect(await fs.readFile(storagePath)).toEqual(png);
+      const pending = await server.inject({ method: "GET", url: "/api/v1/lily/admin/missions/submissions?status=pending", headers: { cookie } });
+      expect(pending.statusCode).toBe(200);
+      expect(pending.json().submissions).toEqual(expect.arrayContaining([expect.objectContaining({ id: submissionId, username: "cliente_teste" })]));
+      const evidence = await server.inject({ method: "GET", url: `/api/v1/lily/admin/missions/submissions/${submissionId}/evidence`, headers: { cookie } });
+      expect(evidence.statusCode).toBe(200);
+      const approved = await server.inject({ method: "PATCH", url: `/api/v1/lily/admin/missions/submissions/${submissionId}`, headers: { origin, cookie, "x-lily-csrf": csrf }, payload: { decision: "approved" } });
+      expect(approved.statusCode, JSON.stringify(approved.json())).toBe(200);
+      expect(await lilyPrisma.lilyLoyaltyEvent.findUnique({ where: { sourceKey: `mission:${mission.id}:user:${missionUserId}:period:once` } })).toMatchObject({ points: 12 });
+      expect(await lilyPrisma.lilyCoinEvent.findUnique({ where: { sourceKey: `mission:${mission.id}:user:${missionUserId}:period:once` } })).toMatchObject({ amount: 7 });
+      const repeated = await server.inject({ method: "PATCH", url: `/api/v1/lily/admin/missions/submissions/${submissionId}`, headers: { origin, cookie, "x-lily-csrf": csrf }, payload: { decision: "approved" } });
+      expect(repeated.statusCode).toBe(409);
+    } finally {
+      await fs.unlink(storagePath).catch(() => undefined);
+    }
   });
 
   it("fornece a sequência editável de 21 níveis com a curva inicial documentada", () => {

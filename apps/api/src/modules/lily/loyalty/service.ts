@@ -63,7 +63,7 @@ async function notifyMissionAudience(mission: { id: string; title: string; audie
   }
 }
 
-function missionPeriodKey(cadence: string, now = new Date()) {
+export function lilyMissionPeriodKey(cadence: string, now = new Date()) {
   if (cadence === "perpetual") return "once";
   const local = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Campo_Grande", year: "numeric", month: "2-digit", day: "2-digit" })
     .formatToParts(now).reduce<Record<string, string>>((parts, part) => (parts[part.type] = part.value, parts), {});
@@ -532,15 +532,15 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
       return match ? [match[1]] : [];
     }));
     if (!unlockedBySurvey && !prerequisites.every((prerequisiteId) => completed.some(({ surveyId }) => surveyId === prerequisiteId) || claimedMissionIds.has(prerequisiteId))) throw new ApiError(403, "Conclua os requisitos desta missão primeiro.");
-    const periodKey = missionPeriodKey(mission.cadence);
+    const periodKey = lilyMissionPeriodKey(mission.cadence);
     const claimedKeys = new Set([...priorMissionClaims, ...priorCoinClaims].flatMap(({ sourceKey }) => sourceKey ? [sourceKey] : []));
     const matchingClaims = [...claimedKeys].filter((key) => key.startsWith(missionPrefix));
     if (mission.cadence === "perpetual" && matchingClaims.length) throw new ApiError(409, "Esta missão já foi concluída.", { code: "LILY_MISSION_ALREADY_CLAIMED" });
     const periodSourceKey = `${missionPrefix}period:${periodKey}`;
     if (claimedKeys.has(periodSourceKey)) throw new ApiError(409, "Esta missão já foi concluída neste período.", { code: "LILY_MISSION_ALREADY_CLAIMED" });
-    const dayPrefix = `${missionPrefix}period:${missionPeriodKey("daily")}`;
-    const weekPrefix = `${missionPrefix}period:${missionPeriodKey("weekly").slice(0, 4)}-W`;
-    const monthPrefix = `${missionPrefix}period:${missionPeriodKey("daily").slice(0, 7)}`;
+    const dayPrefix = `${missionPrefix}period:${lilyMissionPeriodKey("daily")}`;
+    const weekPrefix = `${missionPrefix}period:${lilyMissionPeriodKey("weekly").slice(0, 4)}-W`;
+    const monthPrefix = `${missionPrefix}period:${lilyMissionPeriodKey("daily").slice(0, 7)}`;
     const countPrefix = (prefix: string) => [...claimedKeys].filter((key) => key.startsWith(prefix)).length;
     if (mission.dailyLimit != null && countPrefix(dayPrefix) >= mission.dailyLimit
       || mission.weeklyLimit != null && countPrefix(weekPrefix) >= mission.weeklyLimit
