@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-payment-e2e-diagnostics`
+- branch: `codex/cooklily-payment-staging-evidence`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `65b23dc3589c689fcd1bcc47d686b66da5aecb95`
-- head_sha_verified: `bed6dc4c679c012d45c52caa592a5033ecb3fc38` (correção de diagnóstico; atualização documental subsequente)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 draft aberto contra `cooklily/canonical`, head inicial `bed6dc4c679c012d45c52caa592a5033ecb3fc38`
+- base_sha_verified: `a7a61d2b0046a87c528d80fa63405141504c6e15`
+- head_sha_verified: `a7a61d2b0046a87c528d80fa63405141504c6e15` (antes da atualização deste checkpoint)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 merged por squash em `a7a61d2b0046a87c528d80fa63405141504c6e15` após todos os jobs do CI run `42088476232` passarem
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -71,12 +71,12 @@ As evidências staging acima são históricas e não representam o teste solicit
 - No Meta Business Settings, `Agent` recebeu acesso total ao app CookLily (`1108622408209440`) e à conta WhatsApp CookLily (`28928731436819905`), associada à conta de mensagens de templates e faturamento (`27155682270740448`). Após recarregar, a tela confirmou os dois ativos como acesso total.
 - Depois da autorização explícita, foi gerado token sem expiração para o app CookLily com apenas `whatsapp_business_management` e `whatsapp_business_messaging`. O token foi copiado sem ser lido ou exibido.
 - A revisão automática bloqueou antes de iniciar o processo a transferência da área de transferência por SSH; não houve conexão nem escrita remota. O token ainda não está salvo no staging. O arquivo `/etc/cooklily/staging.env` permanece `root:root`, modo `640`, e a chave alvo é `COOKLILY_WHATSAPP_ACCESS_TOKEN`; o serviço de staging estava ativo e o health retornava HTTP 200 antes da tentativa.
-- Correção local em andamento no sanitizador de diagnósticos do Mercado Pago: captura códigos allowlisted também em estruturas aninhadas (`error`, `errors`, `cause`, `details`), sem registrar descrições. Teste focal 14/14; `npm run check` e `npm run build` passaram; budget JS gzip 211,47 KiB e JS+CSS gzip 252,61 KiB; `npm run test:runtime` passou com 86 arquivos, 473 testes aprovados e 3 ignorados. Sem migration.
+- Correção de diagnóstico integrada em `a7a61d2b`: captura códigos allowlisted também em estruturas aninhadas (`error`, `errors`, `cause`, `details`), sem registrar descrições. Teste focal 14/14; `npm run check` e `npm run build` passaram; budget JS gzip 211,47 KiB e JS+CSS gzip 252,61 KiB; `npm run test:runtime` passou com 86 arquivos, 473 testes aprovados e 3 ignorados. CI #342 passou em Node 20/22/24 e todos os demais jobs. Sem migration.
 
 ## Trabalho pendente
 
 - O proprietário deve inserir o token diretamente no servidor por um prompt sem eco, atualizando apenas `COOKLILY_WHATSAPP_ACCESS_TOKEN` em `/etc/cooklily/staging.env`; depois reiniciar apenas `cooklily-staging.service` e validar health e envio automático ao destinatário de teste autorizado. Não enviar o token pelo chat.
-- Integrar a correção do diagnóstico via PR e deploy staging; fazer uma nova tentativa sandbox somente depois de entender o 400 e conferir o pedido no banco e no Mercado Pago.
+- Publicar a correção integrada somente no release staging, sem migrations; fazer uma nova tentativa sandbox apenas depois de inspecionar o novo código de erro e conferir o pedido no banco e no Mercado Pago.
 - Depois de pagamento sandbox aprovado e WhatsApp automático recebido, validar tracking, cozinha, courier, cancelamento e estorno conforme os estados permitidos no staging. O checkout público permanece sem uso para pagamentos nesta fase.
 
 ## Trabalho em andamento
@@ -87,4 +87,4 @@ As evidências staging acima são históricas e não representam o teste solicit
 
 ## Próxima ação exata
 
-Próxima ação: abrir PR com a correção do parser aninhado e gates já aprovados, e aguardar que o proprietário insira o token diretamente no staging. Após merge e configuração, publicar somente no staging, reiniciar o serviço, validar a outbox automática e capturar o código seguro do novo erro Mercado Pago antes de repetir cobrança sandbox. Resultado parcial: pedido staging criado; pagamento sandbox recusado sem registro; WhatsApp automático falhou com erro 190; envio manual público anterior não comprova automação.
+Próxima ação: criar backup do arquivo de diagnóstico em `/srv/cooklily/staging/releases/ef71d37f`, copiar atomicamente apenas o módulo integrado em `a7a61d2b`, reiniciar somente `cooklily-staging.service` e validar hash/readiness/health. Não tocar em banco, variáveis ou outros serviços. O token Meta foi criado e permanece no clipboard, mas ainda não foi gravado; o proprietário deve inseri-lo no staging por prompt sem eco antes do teste de envio automático. Resultado parcial: pedido staging criado; pagamento sandbox recusado sem registro; WhatsApp automático falhou com erro 190; envio manual público anterior não comprova automação.
