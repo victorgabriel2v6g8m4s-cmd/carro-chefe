@@ -6,6 +6,8 @@ import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
 const createdTemplateKeys: string[] = [];
+const createdNotificationIds: string[] = [];
+const createdOrderIds: string[] = [];
 let createdUserId = "";
 
 function cookieFrom(response: { headers: Record<string, unknown> }) {
@@ -34,6 +36,15 @@ async function registerAdmin() {
 }
 
 afterEach(async () => {
+  if (createdNotificationIds.length) {
+    await lilyPrisma.lilyAdminAudit.deleteMany({ where: { entityId: { in: [...createdNotificationIds] } } });
+    await lilyPrisma.lilyWhatsAppNotification.deleteMany({ where: { id: { in: [...createdNotificationIds] } } });
+    createdNotificationIds.length = 0;
+  }
+  if (createdOrderIds.length) {
+    await lilyPrisma.lilyOrder.deleteMany({ where: { id: { in: [...createdOrderIds] } } });
+    createdOrderIds.length = 0;
+  }
   if (createdTemplateKeys.length) {
     await lilyPrisma.lilyAdminAudit.deleteMany({ where: { entityId: { in: createdTemplateKeys } } });
     await lilyPrisma.lilyWhatsAppMessageTemplate.deleteMany({ where: { key: { in: createdTemplateKeys } } });
@@ -97,6 +108,74 @@ describe("CookLily WhatsApp template studio API", () => {
     expect(updated.statusCode).toBe(200);
     expect(updated.json().template.components).toEqual(updatedComponents);
     expect(updated.json().template.variableNames).toEqual(["codigo_de_rastreio"]);
+  });
+
+  it("descarta pendência WhatsApp com auditoria sem modificar o consentimento do pedido", async () => {
+    const auth = await registerAdmin();
+    const suffix = Date.now().toString();
+    const order = await lilyPrisma.lilyOrder.create({
+      data: {
+        orderNumber: `CL-WA-SKIP-${suffix}`,
+        idempotencyKey: `wa-skip-${suffix}`,
+        requestFingerprint: `wa-skip-fingerprint-${suffix}`,
+        userId: createdUserId,
+        phoneNormalized: "+5567999999999",
+        fulfillmentType: "pickup",
+        status: "awaiting_payment",
+        operationStatus: "received",
+        deliveryStatus: "not_applicable",
+        subtotalCents: 100,
+        deliveryFeeCents: 0,
+        discountTotalCents: 0,
+        grandTotalCents: 100,
+        whatsappUpdatesOptIn: true,
+        whatsappConsentAt: new Date(),
+        whatsappConsentVersion: "test"
+      }
+    });
+    createdOrderIds.push(order.id);
+    const notification = await lilyPrisma.lilyWhatsAppNotification.create({
+      data: { orderId: order.id, stage: "awaiting_payment", status: "pending" }
+    });
+    createdNotificationIds.push(notification.id);
+
+    const unauthorized = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/whatsapp/skip", headers: { origin },
+      payload: { notificationId: notification.id }
+    });
+    expect(unauthorized.statusCode).toBe(401);
+
+    const response = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/whatsapp/skip",
+      headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
+      payload: { notificationId: notification.id }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ skipped: 1, consentChanged: false });
+    expect(await lilyPrisma.lilyWhatsAppNotification.findUnique({ where: { id: notification.id } })).toMatchObject({
+      status: "skipped", lastErrorCode: "ADMIN_SKIPPED"
+    });
+    expect(await lilyPrisma.lilyOrder.findUnique({ where: { id: order.id } })).toMatchObject({ whatsappUpdatesOptIn: true });
+    expect(await lilyPrisma.lilyAdminAudit.findFirst({ where: { action: "whatsapp.notification.skip", entityId: notification.id } })).not.toBeNull();
+    const repeated = await app.inject({
+      method: "POST", url: "/api/v1/lily/admin/whatsapp/skip",
+      headers: { cookie: auth.cookie, origin, "x-lily-csrf": auth.csrf },
+      payload: { notificationId: notification.id }
+    });
+    expect(repeated.statusCode).toBe(409);
+  });
+
+  it("explica qual regra rejeita um template operacional sem expor conteúdo do template", async () => {
+    const { assertWhatsAppTemplateCanActivate } = await import("./whatsapp");
+    expect(() => assertWhatsAppTemplateCanActivate("active", "approved_template", {
+      key: "awaiting_payment", category: "utility", components: [
+        { type: "BODY", text: "{{1}}" },
+        { type: "BUTTONS", buttons: [{ type: "URL", text: "Pagar", url: "https://example.org/{{1}}" }] }
+      ]
+    }, ["orderNumber"])).toThrowError(expect.objectContaining({
+      details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL", reasons: ["components_not_supported"] }
+    }));
   });
 
   it("rejects malformed or oversized advanced components", async () => {
