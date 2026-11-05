@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-wa-template-activation`
+- branch: `codex/cooklily-payment-whatsapp-followup`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `11c105317b170c5fa17f7efa312d8a262d13dbea`
-- head_sha_verified: `4b40c274901c81f70266ccad3f5ed5df1c1d3a34`
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; CI run `42050537937` concluído com todos os jobs em sucesso
+- head_sha_verified: `d5bfc4da96fa611a1d54d93cbbad9c4ab7a37902` (commit da implementação; a atualização deste checkpoint é o commit seguinte)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; follow-up PR ainda não aberto
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -31,14 +31,20 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 - CI do PR #338 passou nos jobs de Node 20/22/24, Tool Health, Windows Supervisor, Excel Recipe e Workbook Snapshot; PR foi integrado por squash.
 - Reconsulta segura da outbox encontrou duas notificações pendentes (`CL-2C89449B54DE` e `CL-104492A004F7`), ambas com opt-in ligado, mas nenhuma ligada ao telefone de teste autorizado. O worker permanece fail-closed; não habilitar até essas linhas serem desativadas pelo fluxo de opt-out e existir apenas notificação do destinatário autorizado.
 - O erro 400 do Mercado Pago foi localizado pelo request ID; os logs mantêm apenas status e ID, sem causa sanitizada. O endpoint /v1/orders da integração pode retornar códigos `required_properties`, `unsupported_properties` ou `property_value` entre outros; conferir a compatibilidade do payload com a documentação oficial antes de nova tentativa. Fonte: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-management/integration-errors/api.
+- Atualização desta tentativa: a API de negócios WhatsApp foi consultada novamente e os cinco templates do fluxo seguem `APPROVED`, categoria `UTILITY`, idioma `pt_BR`.
+- No painel integrado, a ativação de `awaiting_payment` voltou a retornar HTTP 400 (`req-30`). A linha exata do banco staging foi consultada sem PII; a validação do release, executada com o próprio registro, passou. O backend agora devolve códigos de regra que falhar, sem conteúdo do template.
+- O checkout usa o adaptador legado `mercado-pago-provider.ts`, que descartava causas da Orders API. Um adaptador compartilhado agora registra/exibe somente códigos allowlisted, status e request ID, sem descrições ou corpo bruto.
+- Foi implementada ação administrativa auditada para marcar somente uma notificação ainda `pending` como `skipped`; ela preserva `whatsappUpdatesOptIn`. Teste cobre autenticação, concorrência/idempotência, auditoria e preservação do consentimento.
+- Gates locais após essas mudanças: testes direcionados 28/28; `npm run check` passou; `npm run test:runtime` passou com 86 arquivos, 471 testes aprovados e 3 ignorados; `npm run build` passou, orçamento `build_budget=ok` (JS gzip 211.47 KiB; JS+CSS gzip 252.61 KiB). Sem migration ou alteração de schema.
 
 ## Trabalho em andamento
 
-- Publicar a correção visual integrada somente no serviço isolado `/srv/cooklily/staging`; confirmar o SHA e a saúde sem migration.
-- Usar o fluxo de opt-out autenticado de cada pedido pendente incompatível com o destinatário autorizado, confirmando estado `skipped` antes de ativar o worker.
-- Associar os templates aprovados às etapas compatíveis no painel; manter envio desligado até validar o destinatário do único pedido com opt-in de teste.
-- Diagnosticar o HTTP 400 do sandbox comparando payload e contrato oficial. Não repetir pagamento até identificar o código de causa e conferir no painel de pagamentos de teste que não existe cobrança ambígua.
+- Abrir PR e aguardar CI para o commit `d5bfc4da`.
+- Publicar frontend e módulos API alterados somente no serviço isolado `/srv/cooklily/staging`; confirmar SHA, saúde e ausência de migration.
+- Descartar por ação administrativa auditada as duas notificações pendentes incompatíveis com o destinatário; confirmar fila vazia antes de habilitar qualquer envio.
+- Repetir ativação do template aprovado e registrar o motivo específico se ainda falhar.
+- Consultar pagamento/pedido existentes no painel e na base de staging antes de criar tentativa nova. Usar exclusivamente credenciais/cartão sandbox; não enviar mensagem até haver um pedido com opt-in correspondente ao número autorizado.
 
 ## Próxima ação exata
 
-Com PR #338 integrado e CI verde, preparar um release staging derivado do release ativo `9f321912` contendo somente o `apps/lily_acai/dist` atualizado pelo build aprovado; manter migrations e banco isolado sem alterações. Fazer swap atômico em `/srv/cooklily/staging/current`, restart/health e rollback imediato se falhar. Em seguida, tratar notificações pendentes por opt-out autenticado e diagnosticar a recusa MP sem repetir tentativa.
+Enviar o commit `d5bfc4da` para `origin`, abrir PR draft contra `cooklily/canonical` e aguardar os gates. Depois do merge, preparar release staging derivado do release ativo `11c10531`, substituindo somente `apps/lily_acai/dist` e os arquivos de API explicitamente alterados; preservar o banco e não aplicar migrations. Fazer swap atômico, restart/health e rollback imediato se falhar. Só então usar a ação administrativa para descartar as duas notificações pendentes alheias ao número de teste e repetir a ativação com diagnósticos.
