@@ -6,6 +6,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { runGate } from './deploy-validation.mjs';
 
+test('deploy interrompe e restaura os serviços que compartilham o SQLite CookLily', () => {
+  const script = readFileSync(new URL('./carro-chefe-deploy', import.meta.url), 'utf8');
+  assert.match(script, /CARRO_CHEFE_SHARED_DB_SERVICES:-cooklily/);
+  assert.match(script, /systemctl stop "\$\{shared_service\}"/);
+  assert.match(script, /SHARED_DB_SERVICES_STOPPED\+=\("\$\{shared_service\}"\)/);
+  assert.match(script, /for shared_service in "\$\{SHARED_DB_SERVICES_STOPPED\[@\]\}"; do\s+systemctl start "\$\{shared_service\}"/);
+  assert.match(script, /SHARED_DB_SERVICES_STOPPED=\(\)/);
+});
+
 function git(root, ...args) {
   execFileSync('git', args, { cwd: root, stdio: 'ignore' });
 }

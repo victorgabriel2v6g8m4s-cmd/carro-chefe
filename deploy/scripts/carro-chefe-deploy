@@ -6,6 +6,7 @@ DATA_DIR="${CARRO_CHEFE_DATA_DIR:-/srv/carro-chefe/data}"
 ENV_FILE="${CARRO_CHEFE_ENV_FILE:-/etc/carro-chefe/carro-chefe.env}"
 NGINX_CONF="${CARRO_CHEFE_NGINX_CONF:-/etc/nginx/sites-available/carrochefe.com}"
 SERVICE="${CARRO_CHEFE_SERVICE:-carro-chefe}"
+SHARED_DB_SERVICES_RAW="${CARRO_CHEFE_SHARED_DB_SERVICES:-cooklily}"
 SERVICE_USER="${CARRO_CHEFE_SERVICE_USER:-carrochefe}"
 SERVICE_GROUP="${CARRO_CHEFE_SERVICE_GROUP:-carrochefe}"
 BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-${DATA_DIR}/backups}"
@@ -41,6 +42,11 @@ early_die() {
 [[ "${READINESS_ATTEMPTS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_ATTEMPTS deve ser inteiro positivo"
 [[ "${READINESS_DELAY_SECONDS}" =~ ^[1-9][0-9]*$ ]] || early_die "CARRO_CHEFE_READINESS_DELAY_SECONDS deve ser inteiro positivo"
 [[ ${EUID} -eq 0 ]] || early_die "execute como root/sudo"
+read -r -a SHARED_DB_SERVICES <<< "${SHARED_DB_SERVICES_RAW}"
+for shared_service in "${SHARED_DB_SERVICES[@]}"; do
+  [[ "${shared_service}" =~ ^[A-Za-z0-9_.@:-]+$ ]] || early_die "nome de serviço inválido em CARRO_CHEFE_SHARED_DB_SERVICES"
+  [[ "${shared_service}" != "${SERVICE}" ]] || early_die "serviço compartilhado não pode repetir CARRO_CHEFE_SERVICE"
+done
 
 RELEASE_SHA=""
 FULL_VALIDATION=0
@@ -87,6 +93,7 @@ cd "${APP_DIR}"
 PREVIOUS_SHA="$(git rev-parse HEAD)"
 PHASE="init"
 SERVICE_STOPPED=0
+SHARED_DB_SERVICES_STOPPED=()
 MIGRATION_STARTED=0
 
 cleanup_on_error() {
@@ -108,6 +115,9 @@ cleanup_on_error() {
     if [[ "${SERVICE_STOPPED}" -eq 1 ]]; then
       systemctl start "${SERVICE}" || true
     fi
+    for shared_service in "${SHARED_DB_SERVICES_STOPPED[@]}"; do
+      systemctl start "${shared_service}" || true
+    done
   else
     echo "Migration real já foi iniciada. Rollback de banco NÃO será automatizado."
     echo "Consulte os backups em ${BACKUP_DIR} e o runbook antes de qualquer restauração."
@@ -304,9 +314,18 @@ else
 fi
 
 PHASE="stop-service"
-systemctl stop "${SERVICE}"
 SERVICE_STOPPED=1
+systemctl stop "${SERVICE}"
 [[ "$(systemctl is-active "${SERVICE}" || true)" == "inactive" ]] || fail "serviço não ficou inativo"
+
+for shared_service in "${SHARED_DB_SERVICES[@]}"; do
+  if systemctl is-active --quiet "${shared_service}"; then
+    echo "Parando ${shared_service}, que compartilha o banco CookLily..."
+    SHARED_DB_SERVICES_STOPPED+=("${shared_service}")
+    systemctl stop "${shared_service}"
+    [[ "$(systemctl is-active "${shared_service}" || true)" == "inactive" ]] || fail "serviço compartilhado ${shared_service} não ficou inativo"
+  fi
+done
 
 if command -v fuser >/dev/null 2>&1; then
   if fuser "${CORE_DB}" >/dev/null 2>&1; then
@@ -342,6 +361,10 @@ systemctl reload nginx
 PHASE="restart-service"
 systemctl start "${SERVICE}"
 SERVICE_STOPPED=0
+for shared_service in "${SHARED_DB_SERVICES_STOPPED[@]}"; do
+  systemctl start "${shared_service}"
+done
+SHARED_DB_SERVICES_STOPPED=()
 
 wait_for_internal_health() {
   local attempt
