@@ -629,6 +629,17 @@ MERCADO_PAGO_ACCESS_TOKEN=<access-token-produtivo>
 MERCADO_PAGO_WEBHOOK_SECRET=<secret-do-webhook>
 ```
 
+Para homologação isolada, use o arquivo protegido `/etc/cooklily/staging.env`. Configure `MERCADO_PAGO_ENVIRONMENT=test` e credenciais distintas do modo produtivo:
+
+```env
+MERCADO_PAGO_ENVIRONMENT=test
+MERCADO_PAGO_PUBLIC_KEY_TEST=<public-key-de-teste>
+MERCADO_PAGO_ACCESS_TOKEN_TEST=<access-token-de-teste>
+MERCADO_PAGO_WEBHOOK_SECRET_TEST=<secret-do-webhook-de-teste>
+```
+
+O modo `test` lê somente as variáveis `_TEST` e falha fechado quando alguma estiver ausente; não copiar credenciais produtivas para staging. No ambiente produtivo, omitir o seletor ou usar `MERCADO_PAGO_ENVIRONMENT=production` mantém a leitura das variáveis sem sufixo.
+
 8. manter o arquivo com permissões restritas;
 9. fazer novo deploy/restart para o processo receber as variáveis;
 10. acessar `/lilyacai/painel/pagamentos` e confirmar que o painel mostra as três credenciais como configuradas;
@@ -638,6 +649,7 @@ MERCADO_PAGO_WEBHOOK_SECRET=<secret-do-webhook>
 ### Segurança operacional
 
 - `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` nunca podem entrar em Git, logs, bundle Vite ou navegador;
+- credenciais de teste usam apenas o sufixo `_TEST` e permanecem no arquivo protegido de staging;
 - somente `MERCADO_PAGO_PUBLIC_KEY` pode ser enviada ao frontend;
 - o endpoint de webhook fica coberto pelo namespace Nginx `/api/v1/lily/payments/`;
 - o backend valida `x-signature` + `x-request-id` + `data.id` e consulta a Order diretamente no Mercado Pago antes de alterar o banco;

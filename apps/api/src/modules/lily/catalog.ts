@@ -128,6 +128,8 @@ const offerCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   regularPriceCents: moneySchema,
   offerPriceCents: moneySchema,
+  badgeLabel: z.string().trim().max(32).default(""),
+  badgeColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#C49558"),
   startsAt: z.coerce.date().nullable().optional(),
   endsAt: z.coerce.date().nullable().optional(),
   status: statusSchema.default("draft"),
@@ -237,6 +239,8 @@ function serializeProduct(product: NonNullable<ProductWithRelations>) {
       regularPriceCents: offer.regularPriceCents,
       offerPriceCents: offer.offerPriceCents,
       savingsCents: offer.savingsCents,
+      badgeLabel: offer.badgeLabel,
+      badgeColor: offer.badgeColor,
       startsAt: offer.startsAt,
       endsAt: offer.endsAt
     }));

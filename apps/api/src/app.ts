@@ -63,7 +63,7 @@ export async function buildApp() {
   await configureSqlite();
   await configureLilySqlite();
   await app.register(cors, { origin: corsOrigin, credentials: false });
-  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 8 } });
+  await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024, files: 1, fields: 8 } });
   await app.register(rateLimit, {
     global: true,
     max: process.env.NODE_ENV === "test" ? 100_000 : 600,

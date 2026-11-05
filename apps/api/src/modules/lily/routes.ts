@@ -27,6 +27,7 @@ import { lilyPixReconciliationRoutes } from "./pix-reconciliation";
 import { lilyAnalyticsRoutes } from "./analytics";
 import { lilyObservabilityRoutes } from "./observability";
 import { lilyVipRoutes } from "./vip";
+import { lilyMissionSubmissionRoutes } from "./loyalty/mission-submissions";
 import { awardReachedLevelCoins, lilyLevelRoutes, progressPointsForUser } from "./loyalty/service";
 import { lilyAgentAuthRoutes } from "./agent-auth";
 import { parseSocialLinks } from "./social-links";
@@ -413,4 +414,5 @@ export async function lilyRoutes(app: FastifyInstance) {
   await app.register(lilyObservabilityRoutes);
   await app.register(lilyVipRoutes);
   await app.register(lilyLevelRoutes);
+  await app.register(lilyMissionSubmissionRoutes);
 }

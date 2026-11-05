@@ -10,7 +10,7 @@ import { requireLilyCsrf, requireLilySession } from "../auth";
 import { getLilyOperationalSettings } from "../fulfillment";
 import { questionAnswerIsPresent, normalizeDefinition, surveyDefinitionSchema, validateSurveyAnswers, visibleSurveyQuestions, type SurveyDefinition } from "./contracts";
 import { MAX_QUESTION_TIME_MS, mergeQuestionTimes, questionMetricKey, questionAnswered, selectedSurveyOptions } from "./analytics";
-import { awardReachedLevelCoins, progressPointsForUser } from "../loyalty/service";
+import { awardReachedLevelCoins, lilyMissionPeriodKey, progressPointsForUser } from "../loyalty/service";
 
 const idSchema = z.string().trim().min(1).max(80);
 const pageSchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50), offset: z.coerce.number().int().min(0).default(0) });
@@ -478,10 +478,44 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     ]);
     const surveys = completed.size ? await lilyPrisma.lilySurvey.findMany({ where: { id: { in: [...completed] } }, select: { unlocksMissionsJson: true } }) : [];
     const unlockedBySurvey = new Set(surveys.flatMap((survey) => parseJson<string[]>(survey.unlocksMissionsJson, [])));
-    const claimed = new Set([...pointClaims, ...coinClaims].flatMap(({ sourceKey }) => {
+    const claimedEver = new Set([...pointClaims, ...coinClaims].flatMap(({ sourceKey }) => {
       const match = sourceKey?.match(/^mission:([^:]+):user:/);
       return match ? [match[1]] : [];
     }));
-    return { missions: rows.filter((mission) => unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id))).map(({ id, title, description, points, lilyCoins }) => ({ id, title, description, points, lilyCoins, claimed: claimed.has(id) })) };
+    const claimedKeys = new Set([...pointClaims, ...coinClaims].flatMap(({ sourceKey }) => sourceKey ? [sourceKey] : []));
+    const claimedCurrent = new Set<string>();
+    for (const mission of rows) {
+      const sourceKey = `mission:${mission.id}:user:${context.user.id}:period:${lilyMissionPeriodKey(mission.cadence)}`;
+      if (claimedKeys.has(sourceKey) || mission.cadence === "perpetual" && claimedKeys.has(`mission:${mission.id}:user:${context.user.id}`)) claimedCurrent.add(mission.id);
+    }
+    const submissions = rows.length ? await lilyPrisma.lilyMissionSubmission.findMany({ where: { userId: context.user.id, missionId: { in: rows.map(({ id }) => id) } }, orderBy: { submittedAt: "desc" }, select: { missionId: true, periodKey: true, status: true } }) : [];
+    const submissionStatus = new Map<string, string>();
+    const approvedSubmissions = new Set<string>();
+    for (const submission of submissions) {
+      const mission = rows.find(({ id }) => id === submission.missionId);
+      if (!mission || submission.periodKey !== lilyMissionPeriodKey(mission.cadence)) continue;
+      if (!submissionStatus.has(submission.missionId)) submissionStatus.set(submission.missionId, submission.status);
+      if (submission.status === "approved") approvedSubmissions.add(submission.missionId);
+    }
+    const [membership, loyaltyEvents] = await Promise.all([
+      lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } }),
+      lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: context.user.id }, select: { points: true } })
+    ]);
+    const isVip = membership?.status === "active";
+    const points = loyaltyEvents.reduce((sum, event) => sum + event.points, 0);
+    const levels = await lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true, requiredPoints: true } });
+    const currentLevelId = [...levels].reverse().find((level) => points >= level.requiredPoints)?.id ?? null;
+    const available = rows.filter((mission) => {
+      const audience = parseJson<{ mode?: string; levels?: string[]; users?: string[] }>(mission.audienceJson, {});
+      if (audience.mode === "manual" && !audience.users?.includes(context.user.id)) return false;
+      if (audience.mode === "vip" && !isVip) return false;
+      if (audience.mode === "standard" && isVip) return false;
+      if (audience.levels?.length && (!currentLevelId || !audience.levels.includes(currentLevelId))) return false;
+      return unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id) || claimedEver.has(id));
+    });
+    return { missions: available.map(({ id, title, description, points, lilyCoins, actionUrl, approvalMode, instructionsJson, reviewHours }) => ({
+      id, title, description, points, lilyCoins, actionUrl, approvalMode, instructions: parseJson(instructionsJson, []), reviewHours,
+      claimed: claimedCurrent.has(id) || approvedSubmissions.has(id), submissionStatus: submissionStatus.get(id) ?? null
+    })) };
   });
 }

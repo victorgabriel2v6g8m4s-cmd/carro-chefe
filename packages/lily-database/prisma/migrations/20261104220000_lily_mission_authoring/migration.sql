@@ -1,0 +1,11 @@
+ALTER TABLE "LilyMission" ADD COLUMN "instructionsJson" TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE "LilyMission" ADD COLUMN "audienceJson" TEXT NOT NULL DEFAULT '{"mode":"all","levels":[],"users":[]}';
+ALTER TABLE "LilyMission" ADD COLUMN "rewardsJson" TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE "LilyMission" ADD COLUMN "actionUrl" TEXT;
+ALTER TABLE "LilyMission" ADD COLUMN "approvalMode" TEXT NOT NULL DEFAULT 'automatic';
+ALTER TABLE "LilyMission" ADD COLUMN "reviewHours" INTEGER NOT NULL DEFAULT 24;
+ALTER TABLE "LilyMission" ADD COLUMN "cadence" TEXT NOT NULL DEFAULT 'perpetual';
+ALTER TABLE "LilyMission" ADD COLUMN "dailyLimit" INTEGER;
+ALTER TABLE "LilyMission" ADD COLUMN "weeklyLimit" INTEGER;
+ALTER TABLE "LilyMission" ADD COLUMN "monthlyLimit" INTEGER;
+ALTER TABLE "LilyMission" ADD COLUMN "showNextPeriod" BOOLEAN NOT NULL DEFAULT false;

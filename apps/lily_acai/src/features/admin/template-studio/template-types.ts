@@ -9,7 +9,7 @@ export type TemplateDraft = {
   category: TemplateCategory;
   language: string;
   bodyTemplate: string;
-  variables: Array<"orderNumber" | "stageLabel">;
+  variables: Array<"orderNumber" | "stageLabel" | "itemsSummary" | "totalAmount" | "deliveryEta">;
   variableNames: string[];
   flow: SimulationNode[];
   metaTemplateName: string;

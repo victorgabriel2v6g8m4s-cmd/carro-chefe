@@ -4,7 +4,7 @@ import { getLilySession, parseResponse, type AuthPayload } from "../../api";
 import { attributionForApi, readStoredCookLilyAttribution } from "../../tracking";
 import { trackLilyAnalytics } from "../../analytics";
 import { useCart } from "../cart/CartContext";
-import { storeGuestOrderToken } from "../orders/guest-token";
+import { clearOrderEdit, readOrderEdit, storeGuestOrderToken } from "../orders/guest-token";
 import { PriceDisplay } from "../pricing/PriceDisplay";
 import {
   createOrder,
@@ -55,6 +55,7 @@ export function CheckoutPage() {
   const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [replaceOrder] = useState(() => readOrderEdit());
 
   useEffect(() => {
     getFulfillmentSettings().then((value) => {
@@ -162,7 +163,8 @@ export function CheckoutPage() {
         attribution: attributionForApi(readStoredCookLilyAttribution()),
         session,
         idempotencyKey: key,
-        homologation
+        homologation,
+        replaceOrder
       });
       if (order.guestAccessToken) storeGuestOrderToken(order.id, order.guestAccessToken);
       trackLilyAnalytics("order_created", {
@@ -182,6 +184,7 @@ export function CheckoutPage() {
       }
 
       cart.clear();
+      if (replaceOrder) clearOrderEdit();
       navigate(`/pagamento/${order.id}${homologation ? "?homologacao=1" : ""}`, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível criar o pedido.");

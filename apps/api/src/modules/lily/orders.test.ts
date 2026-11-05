@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { lilyPrisma } from "@lily-acai/database";
 import { buildApp } from "../../app";
 import { LILY_PRIVACY_VERSION, LILY_TERMS_VERSION } from "./auth";
+import { createLilyOrderAccessLink } from "./order-access-link";
 
 const app = await buildApp();
 const origin = "http://127.0.0.1:4173";
@@ -175,7 +176,9 @@ beforeEach(async () => {
       pickupAddressText: null,
       pickupInstructions: null,
       businessHoursJson: "[]",
-      timezone: "America/Campo_Grande"
+      timezone: "America/Campo_Grande",
+      customerCancellationEnabled: false,
+      customerCancellationWindowMinutes: 15
     },
     create: { id: "default" }
   });
@@ -648,6 +651,97 @@ describe("CookLily Entrega 06", () => {
     expect(delivered.json().deliveryCode).toBeUndefined();
   });
 
+  it("cancela pedido guest não pago dentro do prazo configurado e recusa fora dele", async () => {
+    await enableFlatOperation();
+    await lilyPrisma.lilyOperationalSettings.update({ where: { id: "default" }, data: {
+      customerCancellationEnabled: true, customerCancellationWindowMinutes: 15
+    } });
+    const quoteResponse = await quoteSol();
+    const payload = await createPayloadFromQuote(quoteResponse.json());
+    const created = await app.inject({ method: "POST", url: "/api/v1/lily/orders", remoteAddress: "127.0.0.251", headers: {
+      origin, "idempotency-key": "cooklily:test:cancel:guest:01"
+    }, payload });
+    expect(created.statusCode).toBe(201);
+    const orderId = created.json().id as string;
+    const token = created.json().guestAccessToken as string;
+
+    const cancelled = await app.inject({ method: "POST", url: `/api/v1/lily/orders/${orderId}/cancel`, headers: {
+      "x-lily-order-token": token
+    } });
+    expect(cancelled.statusCode).toBe(200);
+    expect(cancelled.json()).toMatchObject({ status: "cancelled", refundStatus: "not_required", cancellationStatus: "confirmed" });
+    expect(await lilyPrisma.lilyOrder.findUnique({ where: { id: orderId } })).toMatchObject({
+      status: "cancelled", operationStatus: "cancelled", customerCancellationStatus: "confirmed"
+    });
+
+    const expired = await app.inject({ method: "POST", url: `/api/v1/lily/orders/${orderId}/cancel`, headers: {
+      "x-lily-order-token": token
+    } });
+    expect(expired.statusCode).toBe(200); // Repetir a mesma ação é idempotente.
+  });
+
+  it("edita pedido pendente via link assinado, substitui sem manter duplicidade e bloqueia pagamento já iniciado", async () => {
+    await enableFlatOperation();
+    await lilyPrisma.lilyOperationalSettings.update({ where: { id: "default" }, data: {
+      customerCancellationEnabled: true, customerCancellationWindowMinutes: 15
+    } });
+    const quote = await quoteSol();
+    const payload = await createPayloadFromQuote(quote.json(), "67999991112");
+    const original = await app.inject({ method: "POST", url: "/api/v1/lily/orders", remoteAddress: "127.0.0.78", headers: {
+      origin, "idempotency-key": "cooklily:test:edit:original:01"
+    }, payload });
+    expect(original.statusCode).toBe(201);
+    const originalId = original.json().id as string;
+    const access = createLilyOrderAccessLink(originalId);
+    const context = await app.inject({ method: "GET", url: `/api/v1/lily/public/orders/${originalId}/edit-context`, headers: {
+      "x-lily-order-token": access
+    } });
+    expect(context.statusCode).toBe(200);
+
+    const replacement = await app.inject({ method: "POST", url: "/api/v1/lily/orders", remoteAddress: "127.0.0.79", headers: {
+      origin, "x-lily-order-token": access, "idempotency-key": "cooklily:test:edit:replacement:01"
+    }, payload: { ...payload, replaceOrderId: originalId } });
+    expect(replacement.statusCode).toBe(201);
+    expect(replacement.json().id).not.toBe(originalId);
+    expect(await lilyPrisma.lilyOrder.findUnique({ where: { id: originalId } })).toMatchObject({
+      status: "cancelled", customerCancellationStatus: "confirmed"
+    });
+    const secondEditContext = await app.inject({ method: "GET", url: `/api/v1/lily/public/orders/${originalId}/edit-context`, headers: {
+      "x-lily-order-token": access
+    } });
+    expect(secondEditContext.statusCode).toBe(409);
+  });
+
+  it("bloqueia cancelamento quando desativado ou fora da janela", async () => {
+    await enableFlatOperation();
+    const quoteResponse = await quoteSol();
+    const payload = await createPayloadFromQuote(quoteResponse.json());
+    const created = await app.inject({ method: "POST", url: "/api/v1/lily/orders", remoteAddress: "127.0.0.252", headers: {
+      origin, "idempotency-key": "cooklily:test:cancel:disabled:01"
+    }, payload });
+    expect(created.statusCode).toBe(201);
+    const orderId = created.json().id as string;
+    const token = created.json().guestAccessToken as string;
+    const disabled = await app.inject({ method: "POST", url: `/api/v1/lily/orders/${orderId}/cancel`, headers: {
+      "x-lily-order-token": token
+    } });
+    expect(disabled.statusCode).toBe(409);
+    expect(disabled.json().details.code).toBe("LILY_CUSTOMER_CANCEL_DISABLED");
+
+    await lilyPrisma.lilyOperationalSettings.update({ where: { id: "default" }, data: {
+      customerCancellationEnabled: true, customerCancellationWindowMinutes: 1
+    } });
+    await lilyPrisma.lilyOrder.update({ where: { id: orderId }, data: {
+      createdAt: new Date(Date.now() - 2 * 60_000)
+    } });
+    const expired = await app.inject({ method: "POST", url: `/api/v1/lily/orders/${orderId}/cancel`, headers: {
+      "x-lily-order-token": token
+    } });
+    expect(expired.statusCode).toBe(409);
+    expect(expired.json().details.code).toBe("LILY_CUSTOMER_CANCEL_WINDOW_CLOSED");
+    expect((await lilyPrisma.lilyOrder.findUnique({ where: { id: orderId } }))?.status).toBe("awaiting_payment");
+  });
+
   it("rejeita reutilização da chave idempotente com pedido diferente", async () => {
     await enableFlatOperation();
     const quoteResponse = await quoteSol();
@@ -863,5 +957,31 @@ describe("CookLily Entrega 06", () => {
       headers: { cookie: b.cookie }
     });
     expect(denied.statusCode).toBe(404);
+  });
+
+  it("permite abrir tracking por link assinado do pedido autenticado sem expor o histórico da conta", async () => {
+    await enableFlatOperation();
+    const owner = await register("67999994003");
+    const quote = await quoteSol();
+    const payload = await createPayloadFromQuote(quote.json(), owner.user.phone);
+    const created = await app.inject({
+      method: "POST", url: "/api/v1/lily/orders",
+      remoteAddress: "127.0.0.77",
+      headers: { origin, cookie: owner.cookie, "x-lily-csrf": owner.csrf, "idempotency-key": "cooklily:test:signed:001" },
+      payload
+    });
+    expect(created.statusCode).toBe(201);
+    const token = createLilyOrderAccessLink(created.json().id);
+    const tracking = await app.inject({
+      method: "GET", url: `/api/v1/lily/public/orders/${created.json().id}/tracking`,
+      headers: { "x-lily-order-token": token }
+    });
+    expect(tracking.statusCode).toBe(200);
+    expect(tracking.json().id).toBe(created.json().id);
+    const wrongOrder = await app.inject({
+      method: "GET", url: `/api/v1/lily/public/orders/${created.json().id}/tracking`,
+      headers: { "x-lily-order-token": createLilyOrderAccessLink("another-order") }
+    });
+    expect(wrongOrder.statusCode).toBe(404);
   });
 });

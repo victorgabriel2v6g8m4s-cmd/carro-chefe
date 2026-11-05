@@ -34,6 +34,10 @@ const settingsPatchSchema = z.object({
   timezone: z.literal("America/Campo_Grande").optional(),
   kitchenPreparationSlaMinutes: z.number().int().min(1).max(720).nullable().optional(),
   courierOfferTimeoutSeconds: z.number().int().min(15).max(300).optional(),
+  cancel: z.object({
+    enabled: z.boolean(),
+    windowMinutes: z.number().int().min(1).max(1440)
+  }).optional(),
   pickupLatitude: z.number().min(-90).max(90).nullable().optional(),
   pickupLongitude: z.number().min(-180).max(180).nullable().optional()
 }).strict().superRefine((value, context) => {
@@ -163,6 +167,10 @@ function serializeFulfillmentSettings(settings: Awaited<ReturnType<typeof getLil
     timezone: settings.timezone,
     kitchenPreparationSlaMinutes: settings.kitchenPreparationSlaMinutes,
     courierOfferTimeoutSeconds: settings.courierOfferTimeoutSeconds,
+    cancel: {
+      enabled: settings.customerCancellationEnabled,
+      windowMinutes: settings.customerCancellationWindowMinutes
+    },
     pickupLatitude: settings.pickupLatitude,
     pickupLongitude: settings.pickupLongitude
   };
@@ -355,6 +363,10 @@ export async function lilyFulfillmentRoutes(app: FastifyInstance) {
           ? {}
           : { kitchenPreparationSlaMinutes: input.kitchenPreparationSlaMinutes }),
         ...(input.courierOfferTimeoutSeconds === undefined ? {} : { courierOfferTimeoutSeconds: input.courierOfferTimeoutSeconds }),
+        ...(input.cancel === undefined ? {} : {
+          customerCancellationEnabled: input.cancel.enabled,
+          customerCancellationWindowMinutes: input.cancel.windowMinutes
+        }),
         ...(input.pickupLatitude === undefined ? {} : { pickupLatitude: input.pickupLatitude }),
         ...(input.pickupLongitude === undefined ? {} : { pickupLongitude: input.pickupLongitude })
       }

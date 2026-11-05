@@ -193,6 +193,7 @@ Para homologar Mercado Pago será necessário:
    - `MERCADO_PAGO_PUBLIC_KEY`;
    - `MERCADO_PAGO_ACCESS_TOKEN`;
    - `MERCADO_PAGO_WEBHOOK_SECRET`;
+   - para sandbox, definir `MERCADO_PAGO_ENVIRONMENT=test` e usar `MERCADO_PAGO_PUBLIC_KEY_TEST`, `MERCADO_PAGO_ACCESS_TOKEN_TEST` e `MERCADO_PAGO_WEBHOOK_SECRET_TEST` no arquivo isolado de staging; nunca reutilizar o trio produtivo;
 9. executar testes controlados;
 10. só então selecionar `mercado_pago` no painel e habilitar Pix/cartão;
 11. manter `paymentsEnabled=false` até a homologação comercial terminar.

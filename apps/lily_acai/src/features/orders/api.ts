@@ -160,6 +160,7 @@ export type LilyGuestTrackingOrder = {
   orderNumber: string;
   fulfillmentType: "pickup" | "delivery";
   status: string;
+  refundStatus?: string;
   operationStatus: string;
   operationUpdatedAt: string;
   deliveryStatus: string;
@@ -169,6 +170,8 @@ export type LilyGuestTrackingOrder = {
   isHomologation: boolean;
   grandTotalCents: number;
   whatsappUpdatesOptIn: boolean;
+  customerCancellationStatus: string;
+  customerCanCancel: boolean;
   createdAt: string;
   items: Array<{
     id: string;
@@ -262,6 +265,7 @@ export async function createOrder(input: {
   session?: AuthPayload | null;
   idempotencyKey: string;
   homologation?: boolean;
+  replaceOrder?: { orderId: string; token: string } | null;
 }) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -269,12 +273,14 @@ export async function createOrder(input: {
     ...(input.homologation ? { "X-Lily-Homologation": "1" } : {})
   };
   if (input.session) headers["X-Lily-CSRF"] = input.session.csrfToken;
+  if (input.replaceOrder) headers["X-Lily-Order-Token"] = input.replaceOrder.token;
 
   const response = await fetch("/api/v1/lily/orders", {
     method: "POST",
     credentials: "same-origin",
     headers,
     body: JSON.stringify({
+      ...(input.replaceOrder ? { replaceOrderId: input.replaceOrder.orderId } : {}),
       phone: input.phone,
       fulfillmentType: input.fulfillmentType,
       ...(input.address ? { address: input.address } : {}),
@@ -348,4 +354,38 @@ export async function optOutOrderWhatsApp(
     }
   );
   return parseResponse<{ enabled: false }>(response);
+}
+
+export async function cancelCustomerOrder(orderId: string, guestAccessToken: string) {
+  const response = await fetch(`/api/v1/lily/orders/${encodeURIComponent(orderId)}/cancel`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "X-Lily-Order-Token": guestAccessToken }
+  });
+  return parseResponse<{ status: string; refundStatus: string; cancellationStatus: string }>(response);
+}
+
+export type LilyOrderEditItem = {
+  productId: string;
+  productName: string;
+  variantId: string;
+  variantName: string;
+  sizeMl: number;
+  configurationHash: string;
+  configuration: any;
+  flavors: Array<{ id: string; name: string }>;
+  allergens: LilyAllergenSummary;
+  unitPriceCents: number;
+  quantity: number;
+  note: string | null;
+  addons: Array<{ addonId: string; name: string; unitPriceCents: number; quantity: number }>;
+};
+
+export async function getOrderEditContext(orderId: string, guestAccessToken: string) {
+  const response = await fetch(`/api/v1/lily/public/orders/${encodeURIComponent(orderId)}/edit-context`, {
+    credentials: "same-origin",
+    headers: { "X-Lily-Order-Token": guestAccessToken },
+    cache: "no-store"
+  });
+  return parseResponse<{ orderId: string; orderNumber: string; items: LilyOrderEditItem[] }>(response);
 }

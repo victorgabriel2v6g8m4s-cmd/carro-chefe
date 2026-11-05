@@ -6,6 +6,8 @@ import {
   lilyWhatsAppConfiguration,
   processLilyWhatsAppQueue
 } from "./whatsapp";
+import { renderOrderTemplateComponents } from "./whatsapp-template-renderer";
+import { verifyLilyOrderAccessLink } from "./order-access-link";
 
 const envNames = [
   "COOKLILY_WHATSAPP_PROVIDER",
@@ -19,6 +21,7 @@ const envNames = [
 const originalEnv = Object.fromEntries(envNames.map((name) => [name, process.env[name]]));
 const createdOrderIds: string[] = [];
 const createdUserIds: string[] = [];
+const createdTemplateKeys: string[] = [];
 
 function configureMeta() {
   process.env.COOKLILY_WHATSAPP_PROVIDER = "meta_cloud";
@@ -56,6 +59,36 @@ async function createOrder(optedIn = true, userId?: string) {
   return order;
 }
 
+async function createOperationalTemplate(input: {
+  key: string;
+  name: string;
+  variables: string[];
+  body: string;
+  buttons?: Array<{ type: "URL"; text: string; url: string }>;
+}) {
+  const components = [
+    { type: "BODY", text: input.body },
+    { type: "FOOTER", text: "CookLily" },
+    ...(input.buttons ? [{ type: "BUTTONS", buttons: input.buttons }] : [])
+  ];
+  await lilyPrisma.lilyWhatsAppMessageTemplate.create({
+    data: {
+      key: input.key,
+      displayName: input.key,
+      category: "utility",
+      language: "pt_BR",
+      bodyTemplate: input.body,
+      variablesJson: JSON.stringify(input.variables),
+      variableNamesJson: JSON.stringify(input.variables),
+      flowJson: "[]",
+      componentsJson: JSON.stringify(components),
+      metaTemplateName: input.name,
+      status: "active"
+    }
+  });
+  createdTemplateKeys.push(input.key);
+}
+
 afterEach(async () => {
   vi.unstubAllGlobals();
   for (const name of envNames) {
@@ -77,6 +110,10 @@ afterEach(async () => {
     await lilyPrisma.lilyUser.deleteMany({ where: { id: { in: [...createdUserIds] } } });
     createdUserIds.length = 0;
   }
+  if (createdTemplateKeys.length) {
+    await lilyPrisma.lilyWhatsAppMessageTemplate.deleteMany({ where: { key: { in: [...createdTemplateKeys] } } });
+    createdTemplateKeys.length = 0;
+  }
 });
 
 describe("CookLily Entrega 11H WhatsApp", () => {
@@ -89,15 +126,28 @@ describe("CookLily Entrega 11H WhatsApp", () => {
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_pedido_pronto")).not.toThrow();
   });
 
-  it("impede usar templates de campanha ou componentes avançados no envio automático de pedidos", () => {
+  it("permite botões URL da CookLily e bloqueia links externos em templates operacionais", () => {
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_oferta", {
       key: "campanha_verao", category: "marketing", components: [{ type: "BODY" }]
     })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
-      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY" }, { type: "HEADER" }]
+      key: "awaiting_payment", category: "utility", components: [
+        { type: "BODY", text: "Pedido {{1}} recebido: {{2}} ({{3}})" },
+        { type: "FOOTER", text: "CookLily" },
+        { type: "BUTTONS", buttons: [{ type: "URL", text: "Finalizar pagamento", url: "https://licalily.com/cook/pagamento/{{1}}" }] }
+      ]
+    }, ["orderNumber", "itemsSummary", "totalAmount"])).not.toThrow();
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
+      key: "awaiting_payment", category: "utility", components: [
+        { type: "BODY", text: "Pedido {{1}} recebido" },
+        { type: "BUTTONS", buttons: [{ type: "URL", text: "Finalizar pagamento", url: "https://evil.example/pay/{{1}}" }] }
+      ]
+    }, ["orderNumber"])).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
+      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY", text: "Pronto {{1}}" }, { type: "HEADER" }]
     })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
-      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY" }, { type: "FOOTER" }]
+      key: "ready_for_pickup", category: "utility", components: [{ type: "BODY", text: "Pronto {{1}}" }, { type: "FOOTER" }]
     })).not.toThrow();
   });
 
@@ -237,6 +287,95 @@ describe("CookLily Entrega 11H WhatsApp", () => {
 
     const persisted = JSON.stringify(stored);
     expect(persisted).not.toContain("meta-secret-test-token");
+  });
+
+  it("renderiza pedido recebido com itens, total e parâmetros dos botões dinâmicos", async () => {
+    configureMeta();
+    const order = await createOrder(true);
+    await createOperationalTemplate({
+      key: "awaiting_payment",
+      name: "cooklily_pedido_recebido",
+      variables: ["orderNumber", "itemsSummary", "totalAmount"],
+      body: "Olá {{1}}. {{2}} Total {{3}}.",
+      buttons: [
+        { type: "URL", text: "Finalizar pagamento", url: "https://licalily.com/cook/pagamento/{{1}}" },
+        { type: "URL", text: "Editar pedido", url: "https://licalily.com/cook/carrinho?editar={{1}}" }
+      ]
+    });
+    const notification = await enqueueLilyWhatsAppStage(lilyPrisma, { orderId: order.id, optedIn: true, stage: "awaiting_payment" });
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    vi.stubGlobal("fetch", vi.fn(async (input: URL | RequestInfo, init?: RequestInit) => {
+      calls.push({ url: String(input), init });
+      return new Response(JSON.stringify({ messages: [{ id: "wamid.order-received" }] }), { status: 200 });
+    }));
+
+    const result = await processLilyWhatsAppQueue(10);
+    expect(result.sent).toBeGreaterThanOrEqual(1);
+    expect((await lilyPrisma.lilyWhatsAppNotification.findUnique({ where: { id: notification!.id } }))?.status).toBe("sent");
+    const sent = JSON.parse(String(calls[0]!.init?.body)).template;
+    expect(sent.name).toBe("cooklily_pedido_recebido");
+    expect(sent.components[0].parameters.map((parameter: { text: string }) => parameter.text)).toEqual([
+      order.orderNumber,
+      "Itens do pedido CookLily",
+      expect.stringContaining("25,00")
+    ]);
+    const links = sent.components.slice(1) as Array<{ parameters: Array<{ text: string }> }>;
+    expect(links).toHaveLength(2);
+    for (const link of links) expect(verifyLilyOrderAccessLink(link.parameters[0]!.text)?.orderId).toBe(order.id);
+  });
+
+  it("usa ETA da rota no template de saída para entrega", () => {
+    const rendered = renderOrderTemplateComponents({
+      order: {
+        id: "order-eta-test",
+        orderNumber: "CL-ETA-001",
+        subtotalCents: 2500,
+        deliveryFeeCents: 500,
+        discountTotalCents: 0,
+        grandTotalCents: 3000,
+        restaurantPrepEstimateMinutes: 20,
+        routeEstimate: { durationSeconds: 1020, calculatedAt: new Date() },
+        items: []
+      },
+      stage: "out_for_delivery",
+      stageLabel: "pedido saiu para entrega",
+      variables: ["orderNumber", "deliveryEta"],
+      components: [{ type: "BODY", text: "Pedido {{1}}. Previsão: {{2}}" }]
+    });
+    expect((rendered[0]!.parameters as Array<{ text: string }>).map((parameter) => parameter.text)).toEqual([
+      "CL-ETA-001",
+      "aproximadamente 17 min"
+    ]);
+  });
+
+  it("monta o resumo da compra com variação e adicionais no corpo do template", () => {
+    const rendered = renderOrderTemplateComponents({
+      order: {
+        id: "order-items-test",
+        orderNumber: "CL-ITEMS-001",
+        subtotalCents: 3000,
+        deliveryFeeCents: 0,
+        discountTotalCents: 0,
+        grandTotalCents: 3000,
+        restaurantPrepEstimateMinutes: null,
+        routeEstimate: null,
+        items: [{
+          productNameSnapshot: "Açaí",
+          variantNameSnapshot: "500 ml",
+          quantity: 2,
+          addons: [{ addonNameSnapshot: "Banana", quantity: 1 }]
+        }]
+      },
+      stage: "awaiting_payment",
+      stageLabel: "pedido recebido",
+      variables: ["orderNumber", "itemsSummary", "totalAmount"],
+      components: [{ type: "BODY", text: "{{1}} {{2}} {{3}}" }]
+    });
+    expect((rendered[0]!.parameters as Array<{ text: string }>).map((parameter) => parameter.text)).toEqual([
+      "CL-ITEMS-001",
+      "2x Açaí (500 ml) com Banana",
+      expect.stringContaining("30,00")
+    ]);
   });
 
   it("falha de provider agenda retry sem alterar estado do pedido", async () => {

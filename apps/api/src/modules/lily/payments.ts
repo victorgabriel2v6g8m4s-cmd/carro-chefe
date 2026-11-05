@@ -19,6 +19,7 @@ import { cookLilyPixConfiguration } from "./cooklily-pix-provider";
 import { lilyPixAutoReconciliationConfiguration } from "./pix-reconciliation";
 import { enqueueLilyWhatsAppStage } from "./whatsapp";
 import { awardReachedLevelCoins, progressPointsForUser, recordPaidOrderPoints, reversePaidOrderPoints } from "./loyalty/service";
+import { verifyLilyOrderAccessLink } from "./order-access-link";
 
 const idSchema = z.string().trim().min(1).max(120);
 const moneySchema = z.number().int().min(0).max(10_000_000);
@@ -126,19 +127,20 @@ async function requireOrderPaymentAccess(request: FastifyRequest, orderId: strin
 
   const context = await getOptionalLilySession(request);
   if (order.userId) {
-    if (!context || context.user.id !== order.userId) {
-      throw new ApiError(404, "Pedido não encontrado.");
+    if (context?.user.id === order.userId) {
+      if (mutate) requireLilyCsrf(request, context);
+      return { order, context };
     }
-    if (mutate) requireLilyCsrf(request, context);
-    return { order, context };
   }
 
   const supplied = request.headers["x-lily-order-token"];
-  if (typeof supplied !== "string" || !order.guestAccessTokenHash) {
+  if (typeof supplied !== "string") {
     throw new ApiError(401, "Token do pedido necessário.", { code: "LILY_ORDER_TOKEN_REQUIRED" });
   }
-  const actual = hashToken(supplied);
-  if (!timingSafeStringEqual(actual, order.guestAccessTokenHash)) {
+  const guestValid = !order.userId && Boolean(order.guestAccessTokenHash)
+    && timingSafeStringEqual(hashToken(supplied), order.guestAccessTokenHash!);
+  const linkValid = verifyLilyOrderAccessLink(supplied)?.orderId === order.id;
+  if (!guestValid && !linkValid) {
     throw new ApiError(401, "Token do pedido inválido.", { code: "LILY_ORDER_TOKEN_INVALID" });
   }
   return { order, context: null };

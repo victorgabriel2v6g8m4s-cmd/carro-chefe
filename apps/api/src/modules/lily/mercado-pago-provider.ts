@@ -9,6 +9,21 @@ import type {
 
 const DEFAULT_API_BASE = "https://api.mercadopago.com";
 const REQUEST_TIMEOUT_MS = 10_000;
+type MercadoPagoMode = "test" | "production" | null;
+
+function mercadoPagoMode(): MercadoPagoMode {
+  const configured = process.env.MERCADO_PAGO_ENVIRONMENT?.trim().toLowerCase();
+  if (!configured || configured === "production") return "production";
+  if (configured === "test") return "test";
+  return null;
+}
+
+function mercadoPagoCredential(name: "ACCESS_TOKEN" | "PUBLIC_KEY" | "WEBHOOK_SECRET") {
+  const mode = mercadoPagoMode();
+  if (!mode) return null;
+  const suffix = mode === "test" ? "_TEST" : "";
+  return process.env[`MERCADO_PAGO_${name}${suffix}`]?.trim() || null;
+}
 
 type MercadoPagoPaymentMethod = {
   id?: string;
@@ -60,7 +75,7 @@ function apiBase() {
 }
 
 function accessToken() {
-  const token = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
+  const token = mercadoPagoCredential("ACCESS_TOKEN");
   if (!token) {
     throw new ApiError(503, "Mercado Pago ainda não está configurado.", {
       code: "LILY_MERCADO_PAGO_NOT_CONFIGURED"
@@ -70,7 +85,7 @@ function accessToken() {
 }
 
 function webhookSecret() {
-  const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET?.trim();
+  const secret = mercadoPagoCredential("WEBHOOK_SECRET");
   if (!secret) {
     throw new ApiError(503, "Webhook do Mercado Pago ainda não está configurado.", {
       code: "LILY_MERCADO_PAGO_WEBHOOK_NOT_CONFIGURED"
@@ -80,9 +95,9 @@ function webhookSecret() {
 }
 
 export function mercadoPagoConfiguration(): MercadoPagoConfiguration {
-  const accessTokenConfigured = Boolean(process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim());
-  const publicKey = process.env.MERCADO_PAGO_PUBLIC_KEY?.trim() || null;
-  const webhookSecretConfigured = Boolean(process.env.MERCADO_PAGO_WEBHOOK_SECRET?.trim());
+  const accessTokenConfigured = Boolean(mercadoPagoCredential("ACCESS_TOKEN"));
+  const publicKey = mercadoPagoCredential("PUBLIC_KEY");
+  const webhookSecretConfigured = Boolean(mercadoPagoCredential("WEBHOOK_SECRET"));
   return {
     accessTokenConfigured,
     publicKey,

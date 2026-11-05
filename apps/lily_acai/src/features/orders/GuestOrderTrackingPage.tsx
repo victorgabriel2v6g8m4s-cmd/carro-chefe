@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "../../router";
-import { getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
-import { readGuestOrderToken } from "./guest-token";
+import { cancelCustomerOrder, getGuestOrderTracking, optOutOrderWhatsApp, type LilyGuestTrackingOrder } from "./api";
+import { consumeOrderAccessLink, parseOrderAccessLink, readGuestOrderToken } from "./guest-token";
 import { LilyLoadingSpinner } from "../../loading-spinner";
 import { customerOrderStatus } from "./status";
 
@@ -73,15 +73,20 @@ function GuestTimeline({ order }: { order: LilyGuestTrackingOrder }) {
 }
 
 export function GuestOrderTrackingPage() {
-  const { id = "" } = useParams();
+  const { id: routeId = "" } = useParams();
+  const accessLink = useMemo(() => parseOrderAccessLink(routeId), [routeId]);
+  const id = accessLink?.orderId ?? routeId;
   const [order, setOrder] = useState<LilyGuestTrackingOrder | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
   const [whatsappBusy, setWhatsappBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const token = id ? readGuestOrderToken(id) : null;
+    const token = accessLink?.token ?? (id ? readGuestOrderToken(id) : null);
+
+    if (accessLink) consumeOrderAccessLink(id, accessLink.token);
 
     if (!id || !token) {
       setError("Este navegador não possui a chave de acompanhamento deste pedido.");
@@ -106,23 +111,30 @@ export function GuestOrderTrackingPage() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [id]);
+  }, [id, accessLink?.token]);
 
-  async function stopWhatsAppUpdates() {
-    if (!id || whatsappBusy) return;
+  async function orderAction(action: "cancel" | "opt-out") {
+    const busy = action === "cancel" ? cancelBusy : whatsappBusy;
+    if (!id || busy) return;
     const token = readGuestOrderToken(id);
-    if (!token) {
-      setError("A chave de acompanhamento deste pedido não está disponível.");
-      return;
-    }
-    setWhatsappBusy(true);
+    if (!token) return setError("Chave de acompanhamento indisponível.");
+    (action === "cancel" ? setCancelBusy : setWhatsappBusy)(true);
     try {
-      await optOutOrderWhatsApp(id, { guestAccessToken: token });
-      setOrder((current) => current ? { ...current, whatsappUpdatesOptIn: false } : current);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível desativar as mensagens.");
+      if (action === "cancel") {
+        const result = await cancelCustomerOrder(id, token);
+        setOrder((current) => current ? {
+          ...current, status: result.status, operationStatus: "cancelled",
+          deliveryStatus: current.fulfillmentType === "delivery" ? "cancelled" : current.deliveryStatus,
+          refundStatus: result.refundStatus, customerCancellationStatus: result.cancellationStatus, customerCanCancel: false
+        } : current);
+      } else {
+        await optOutOrderWhatsApp(id, { guestAccessToken: token });
+        setOrder((current) => current ? { ...current, whatsappUpdatesOptIn: false } : current);
+      }
+    } catch {
+      setError(action === "cancel" ? "Não foi possível cancelar o pedido." : "Não foi possível desativar as mensagens.");
     } finally {
-      setWhatsappBusy(false);
+      (action === "cancel" ? setCancelBusy : setWhatsappBusy)(false);
     }
   }
 
@@ -189,14 +201,25 @@ export function GuestOrderTrackingPage() {
       <Link className="button primary" to={`/pagamento/${order.id}`}>Ir para pagamento</Link>
     </div>}
 
+    {order.customerCancellationStatus !== "not_requested" && <p role="status" className="guest-tracking-security-note">
+      {order.customerCancellationStatus === "confirmed"
+        ? order.refundStatus === "confirmed" ? "Pedido cancelado e estorno confirmado." : "Pedido cancelado."
+        : "Cancelamento aguardando confirmação; atualize para consultar."}
+    </p>}
+    {(order.customerCanCancel || order.customerCancellationStatus === "pending_confirmation") && <button
+      className="button ghost" type="button" disabled={cancelBusy} onClick={() => void orderAction("cancel")}>
+      {cancelBusy ? "Cancelando…" : order.customerCancellationStatus === "pending_confirmation" ? "Verificar cancelamento" : "Cancelar pedido"}
+    </button>}
+
     {order.whatsappUpdatesOptIn && <div className="guest-tracking-security-note">
       <strong>Atualizações no WhatsApp</strong>
       <p>Você autorizou mensagens operacionais deste pedido. Isso não habilita promoções.</p>
       <button className="button ghost" type="button" disabled={whatsappBusy}
-        onClick={() => void stopWhatsAppUpdates()}>
+        onClick={() => void orderAction("opt-out")}>
         {whatsappBusy ? "Desativando..." : "Parar atualizações no WhatsApp"}
       </button>
     </div>}
+    {error && <p role="alert">{error}</p>}
 
     <div className="guest-tracking-security-note">
       <strong>Privacidade</strong>

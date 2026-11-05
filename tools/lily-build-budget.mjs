@@ -17,17 +17,18 @@ export const LILY_BUILD_BUDGET = Object.freeze({
   // o teto combinado continua impondo o limite global de JS + CSS.
   // A folga adicional cobre os novos chunks públicos/admin da Landing CookLily;
   // os limites de entrypoint e chunk máximo permanecem inalterados.
-  jsRawBytes: 665_600,
+  // Teto revisado em 10% em todas as métricas após autorização do proprietário.
+  jsRawBytes: 732_160,
   // Margem de 3 KiB para variações de gzip entre CI e VPS no bundle CookLily.
-  jsGzipBytes: 211_968,
-  initialJsGzipBytes: 112_640,
-  largestJsChunkBytes: 286_720,
-  cssRawBytes: 204_800,
+  jsGzipBytes: 233_165,
+  initialJsGzipBytes: 123_904,
+  largestJsChunkBytes: 315_392,
+  cssRawBytes: 225_280,
   // Margem de 1 KiB para variação de compressão CSS entre CI e VPS.
-  cssGzipBytes: 43_008,
+  cssGzipBytes: 47_309,
   // Variações observadas entre CI e VPS, mais o carrossel alinhado a combos;
   // os limites de entrada e chunk máximo continuam sem alteração.
-  combinedGzipBytes: 253_952
+  combinedGzipBytes: 279_348
 });
 
 function emptyBucket() {
