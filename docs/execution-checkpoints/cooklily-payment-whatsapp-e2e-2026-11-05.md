@@ -5,8 +5,8 @@
 - branch: `codex/cooklily-payment-staging-evidence`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `a7a61d2b0046a87c528d80fa63405141504c6e15`
-- head_sha_verified: `a7a61d2b0046a87c528d80fa63405141504c6e15` (antes da atualização deste checkpoint)
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 merged por squash em `a7a61d2b0046a87c528d80fa63405141504c6e15` após todos os jobs do CI run `42088476232` passarem
+- head_sha_verified: `558001ea987046246baaad4634287842b103bedf` (antes da atualização deste checkpoint)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 merged por squash em `a7a61d2b0046a87c528d80fa63405141504c6e15` após todos os jobs do CI run `42088476232` passarem; PR #343 aberto draft com novo checkpoint, CI run `42094949321` em andamento
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
