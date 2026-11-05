@@ -4,6 +4,23 @@ import type { LilyCheckoutPaymentMethod } from "./payment-method-rules";
 const DEFAULT_API_BASE = "https://api.mercadopago.com";
 const REQUEST_TIMEOUT_MS = 10_000;
 
+function accessToken() {
+  const environment = process.env.MERCADO_PAGO_ENVIRONMENT?.trim().toLowerCase();
+  if (environment && environment !== "test" && environment !== "production") {
+    throw new ApiError(503, "Ambiente do Mercado Pago inválido.", {
+      code: "LILY_MERCADO_PAGO_ENVIRONMENT_INVALID"
+    });
+  }
+  const suffix = environment === "test" ? "_TEST" : "";
+  const token = process.env[`MERCADO_PAGO_ACCESS_TOKEN${suffix}`]?.trim();
+  if (!token) {
+    throw new ApiError(503, "Mercado Pago ainda não está configurado.", {
+      code: "LILY_MERCADO_PAGO_NOT_CONFIGURED"
+    });
+  }
+  return token;
+}
+
 type ChoiceInput = {
   paymentId: string;
   orderId: string;
@@ -42,16 +59,6 @@ function apiBase() {
   const override = process.env.MERCADO_PAGO_API_BASE_URL?.trim();
   if (override && process.env.NODE_ENV !== "production") return override.replace(/\/$/, "");
   return DEFAULT_API_BASE;
-}
-
-function accessToken() {
-  const token = process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim();
-  if (!token) {
-    throw new ApiError(503, "Mercado Pago ainda não está configurado.", {
-      code: "LILY_MERCADO_PAGO_NOT_CONFIGURED"
-    });
-  }
-  return token;
 }
 
 function amountString(cents: number) {

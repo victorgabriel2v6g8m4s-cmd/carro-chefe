@@ -12,6 +12,8 @@ let levelId = "";
 let rewardId = "";
 let orderId = "";
 let adminUserId = "";
+let missionId = "";
+let missionUserId = "";
 let app: Awaited<ReturnType<typeof buildApp>> | null = null;
 const origin = "http://127.0.0.1:4173";
 
@@ -38,7 +40,17 @@ async function registerAdmin() {
 }
 
 async function cleanup() {
+  if (missionId) {
+    await lilyPrisma.lilyCustomerNotification.deleteMany({ where: { sourceKey: `mission:${missionId}:published` } });
+    await lilyPrisma.lilyMission.deleteMany({ where: { id: missionId } });
+  }
   if (userId) await lilyPrisma.lilyUser.deleteMany({ where: { id: userId } });
+  if (missionUserId) {
+    await lilyPrisma.lilyCustomerNotification.deleteMany({ where: { userId: missionUserId } });
+    await lilyPrisma.lilySession.deleteMany({ where: { userId: missionUserId } });
+    await lilyPrisma.lilyConsentRecord.deleteMany({ where: { userId: missionUserId } });
+    await lilyPrisma.lilyUser.deleteMany({ where: { id: missionUserId } });
+  }
   if (rewardId) await lilyPrisma.lilyReward.deleteMany({ where: { id: rewardId } });
   if (orderId) await lilyPrisma.lilyOrder.deleteMany({ where: { id: orderId } });
   if (levelId) await lilyPrisma.lilyLevel.deleteMany({ where: { id: levelId } });
@@ -52,12 +64,45 @@ async function cleanup() {
   rewardId = "";
   orderId = "";
   adminUserId = "";
+  missionId = "";
+  missionUserId = "";
 }
 
 afterEach(cleanup);
 afterAll(async () => { await cleanup(); await app?.close(); });
 
 describe("progressão de níveis e LilyCoins", () => {
+  it("cria missão segmentada, notifica o público manual e impede auto-claim de missão manual", async () => {
+    const { server, cookie, csrf } = await registerAdmin();
+    const customerPhone = `679${Date.now().toString().slice(-8)}`;
+    const customerResponse = await server.inject({
+      method: "POST", url: "/api/v1/lily/auth/register", headers: { origin },
+      payload: { phone: customerPhone, password: "cliente-missao-2026", termsAccepted: true, termsVersion: LILY_TERMS_VERSION, privacyPolicyVersion: LILY_PRIVACY_VERSION, consents: { lilyMarketing: false, shareWithCarroChefe: false, analyticsOptional: false } }
+    });
+    expect(customerResponse.statusCode).toBe(201);
+    missionUserId = customerResponse.json().user.id;
+    const customerCookie = cookieFrom(customerResponse);
+    const customerMe = await server.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie: customerCookie } });
+    const create = await server.inject({
+      method: "POST", url: "/api/v1/lily/admin/loyalty/missions", headers: { origin, cookie, "x-lily-csrf": csrf },
+      payload: {
+        title: "Story de teste", description: "Publique e envie a prova.", status: "published", points: 10, lilyCoins: 5,
+        prerequisites: [], instructions: [{ title: "Publique", body: "Marque a CookLily", required: true, mediaId: null }],
+        audience: { mode: "manual", levels: [], users: [missionUserId] }, rewards: [], actionUrl: "https://licalily.com/cook/cardapio",
+        approvalMode: "manual", reviewHours: 24, cadence: "perpetual", dailyLimit: null, weeklyLimit: null, monthlyLimit: null, showNextPeriod: false
+      }
+    });
+    expect(create.statusCode, JSON.stringify(create.json())).toBe(200);
+    missionId = create.json().mission.id;
+    expect(await lilyPrisma.lilyCustomerNotification.findUnique({ where: { userId_sourceKey: { userId: missionUserId, sourceKey: `mission:${missionId}:published` } } })).not.toBeNull();
+    const list = await server.inject({ method: "GET", url: "/api/v1/lily/missions", headers: { cookie: customerCookie } });
+    expect(list.statusCode).toBe(200);
+    expect(list.json().missions.some((mission: { id: string }) => mission.id === missionId)).toBe(true);
+    const claim = await server.inject({ method: "POST", url: `/api/v1/lily/customer/missions/${missionId}/claim`, headers: { origin, cookie: customerCookie, "x-lily-csrf": customerMe.json().csrfToken }, payload: {} });
+    expect(claim.statusCode).toBe(409);
+    expect(claim.json().details.code).toBe("LILY_MISSION_REQUIRES_REVIEW");
+  });
+
   it("fornece a sequência editável de 21 níveis com a curva inicial documentada", () => {
     const levels = starterLevelRows();
     expect(levels).toHaveLength(21);

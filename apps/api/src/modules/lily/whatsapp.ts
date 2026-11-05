@@ -6,6 +6,7 @@ import { ApiError } from "../../lib/errors";
 import { z } from "zod";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "./admin-security";
 import { LILY_WHATSAPP_STARTER_TEMPLATES } from "./whatsapp-template-presets";
+import { isSafeOperationalTemplateComponents, LILY_WHATSAPP_TEMPLATE_VARIABLES, renderOrderTemplateComponents, type WhatsAppOrderSnapshot } from "./whatsapp-template-renderer";
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 
@@ -107,7 +108,8 @@ export function lilyWhatsAppConfiguration() {
 export function assertWhatsAppTemplateCanActivate(
   status: string,
   metaTemplateName: string | null | undefined,
-  operational?: { key: string; category: string; components: Array<{ type?: unknown }> }
+  operational?: { key: string; category: string; components: Array<Record<string, unknown>> },
+  variables?: string[]
 ) {
   if (status === "active" && !metaTemplateName) {
     throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
@@ -115,9 +117,12 @@ export function assertWhatsAppTemplateCanActivate(
   if (status === "active" && operational && (
     !LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage)
     || operational.category !== "utility"
-    || operational.components.some((component) => !["BODY", "FOOTER"].includes(String(component.type)))
+    || !isSafeOperationalTemplateComponents(operational.components as Array<Record<string, unknown>>)
+    || (variables !== undefined && operational.components.some((component) => component.type === "BODY"
+      && (typeof (component as { text?: unknown }).text !== "string"
+        || ((String((component as { text?: unknown }).text).match(/\{\{\d+\}\}/g) ?? []).length !== variables.length))))
   )) {
-    throw new ApiError(400, "Somente templates de utilidade vinculados a uma etapa do pedido e com corpo/rodapé podem ser ativados para notificações operacionais.", { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" });
+    throw new ApiError(400, "Use um template de utilidade para uma etapa de pedido, com corpo válido e botões somente de resposta rápida ou links CookLily.", { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" });
   }
 }
 
@@ -151,7 +156,7 @@ export async function enqueueLilyWhatsAppStage(
 
 async function sendMetaTemplate(input: {
   phoneNormalized: string;
-  orderNumber: string;
+  order: WhatsAppOrderSnapshot;
   stage: LilyWhatsAppStage;
   fetchImpl?: typeof fetch;
 }) {
@@ -170,6 +175,20 @@ async function sendMetaTemplate(input: {
   const templateName = registeredTemplate?.metaTemplateName || env("COOKLILY_WHATSAPP_TEMPLATE_NAME");
   const language = registeredTemplate?.language || env("COOKLILY_WHATSAPP_TEMPLATE_LANGUAGE") || "pt_BR";
   const templateVariables = registeredTemplate ? JSON.parse(registeredTemplate.variablesJson) as string[] : ["orderNumber", "stageLabel"];
+  if (!templateName) throw Object.assign(new Error("Template operacional não configurado para esta etapa."), { code: "TEMPLATE_NOT_CONFIGURED" });
+  const templateComponents = registeredTemplate
+    ? JSON.parse(registeredTemplate.componentsJson) as Array<Record<string, unknown>>
+    : [{ type: "BODY", text: "{{1}} — {{2}}" }];
+  if (templateVariables.some((variable) => !LILY_WHATSAPP_TEMPLATE_VARIABLES.includes(variable as typeof LILY_WHATSAPP_TEMPLATE_VARIABLES[number]))) {
+    throw Object.assign(new Error("O template operacional contém variável não suportada."), { code: "TEMPLATE_VARIABLE_UNSUPPORTED" });
+  }
+  const components = renderOrderTemplateComponents({
+    order: input.order,
+    stage: input.stage,
+    stageLabel: STAGE_LABELS[input.stage],
+    variables: templateVariables,
+    components: templateComponents
+  });
   const timeoutRaw = Number(process.env.COOKLILY_WHATSAPP_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
   const timeoutMs = Number.isFinite(timeoutRaw)
     ? Math.min(15_000, Math.max(1_000, Math.round(timeoutRaw)))
@@ -188,18 +207,7 @@ async function sendMetaTemplate(input: {
         recipient_type: "individual",
         to: input.phoneNormalized.replace(/\D/g, ""),
         type: "template",
-        template: {
-          name: templateName,
-          language: { code: language },
-          components: [{
-            type: "body",
-            parameters: templateVariables.map((variable) => {
-              if (variable === "orderNumber") return { type: "text", text: input.orderNumber };
-              if (variable === "stageLabel") return { type: "text", text: STAGE_LABELS[input.stage] };
-              throw new Error(`Variável WhatsApp não suportada: ${variable}`);
-            })
-          }]
-        }
+        template: { name: templateName, language: { code: language }, components }
       }),
       signal: AbortSignal.timeout(timeoutMs)
     }
@@ -274,7 +282,19 @@ export async function processLilyWhatsAppQueue(limit = 20) {
           orderNumber: true,
           phoneNormalized: true,
           userId: true,
-          whatsappUpdatesOptIn: true
+          whatsappUpdatesOptIn: true,
+          subtotalCents: true,
+          deliveryFeeCents: true,
+          discountTotalCents: true,
+          grandTotalCents: true,
+          restaurantPrepEstimateMinutes: true,
+          items: { select: {
+            productNameSnapshot: true,
+            variantNameSnapshot: true,
+            quantity: true,
+            addons: { select: { addonNameSnapshot: true, quantity: true } }
+          } },
+          routeEstimate: { select: { durationSeconds: true, calculatedAt: true } }
         }
       }
     }
@@ -334,7 +354,7 @@ export async function processLilyWhatsAppQueue(limit = 20) {
     try {
       const result = await sendMetaTemplate({
         phoneNormalized: candidate.order.phoneNormalized,
-        orderNumber: candidate.order.orderNumber,
+        order: candidate.order,
         stage: candidate.stage as LilyWhatsAppStage
       });
       await lilyPrisma.lilyWhatsAppNotification.update({
@@ -540,7 +560,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     category: z.enum(["utility", "marketing", "authentication"]).default("utility"),
     language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
     bodyTemplate: z.string().trim().min(1).max(4000),
-    variables: z.array(z.enum(["orderNumber", "stageLabel"])).max(20).default([]),
+    variables: z.array(z.enum(LILY_WHATSAPP_TEMPLATE_VARIABLES)).max(20).default([]),
     variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).default([]),
     flow: z.array(flowNodeSchema).max(100).default([]),
     components: metaComponentsSchema.optional(),
@@ -664,7 +684,7 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     const input = templateInputSchema.parse(request.body);
     await validateTemplateFlow(input.flow, input.key);
     const components = input.components ?? [{ type: "BODY", text: input.bodyTemplate }];
-    assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components });
+    assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components }, input.variables);
     const created = await lilyPrisma.lilyWhatsAppMessageTemplate.create({
       data: {
         key: input.key,
@@ -712,7 +732,8 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
     const nextKey = input.key ?? current.key;
     const nextCategory = input.category ?? current.category;
     const nextComponents = input.components ?? JSON.parse(current.componentsJson) as Array<{ type?: unknown }>;
-    assertWhatsAppTemplateCanActivate(nextStatus, nextMetaName, { key: nextKey, category: nextCategory, components: nextComponents });
+    const nextVariables = input.variables ?? JSON.parse(current.variablesJson) as string[];
+    assertWhatsAppTemplateCanActivate(nextStatus, nextMetaName, { key: nextKey, category: nextCategory, components: nextComponents }, nextVariables);
     const updated = await lilyPrisma.lilyWhatsAppMessageTemplate.update({
       where: { id },
       data: {

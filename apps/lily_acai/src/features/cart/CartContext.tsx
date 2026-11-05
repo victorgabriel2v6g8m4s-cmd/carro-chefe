@@ -12,6 +12,7 @@ type CartContextValue = {
   removeItem: (id: string) => void;
   setQuantity: (id: string, quantity: number) => void;
   setNote: (id: string, note: string) => void;
+  replaceItems: (items: CartItem[]) => void;
   clear: () => void;
 };
 
@@ -111,6 +112,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((current) => current.map((item) =>
         item.id === id ? { ...item, note: note.slice(0, 300) } : item
       ));
+    },
+    replaceItems(nextItems) {
+      setItems(nextItems.slice(0, 30));
     },
     clear() {
       setItems([]);

@@ -482,6 +482,22 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
       const match = sourceKey?.match(/^mission:([^:]+):user:/);
       return match ? [match[1]] : [];
     }));
-    return { missions: rows.filter((mission) => unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id))).map(({ id, title, description, points, lilyCoins }) => ({ id, title, description, points, lilyCoins, claimed: claimed.has(id) })) };
+    const [membership, loyaltyEvents] = await Promise.all([
+      lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } }),
+      lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: context.user.id }, select: { points: true } })
+    ]);
+    const isVip = membership?.status === "active";
+    const points = loyaltyEvents.reduce((sum, event) => sum + event.points, 0);
+    const levels = await lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true, requiredPoints: true } });
+    const currentLevelId = [...levels].reverse().find((level) => points >= level.requiredPoints)?.id ?? null;
+    const available = rows.filter((mission) => {
+      const audience = parseJson<{ mode?: string; levels?: string[]; users?: string[] }>(mission.audienceJson, {});
+      if (audience.mode === "manual" && !audience.users?.includes(context.user.id)) return false;
+      if (audience.mode === "vip" && !isVip) return false;
+      if (audience.mode === "standard" && isVip) return false;
+      if (audience.levels?.length && (!currentLevelId || !audience.levels.includes(currentLevelId))) return false;
+      return unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id));
+    });
+    return { missions: available.map(({ id, title, description, points, lilyCoins, actionUrl }) => ({ id, title, description, points, lilyCoins, actionUrl, claimed: claimed.has(id) })) };
   });
 }

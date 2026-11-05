@@ -19,6 +19,10 @@ export function encryptLilySecret(secret: string, purpose: string) {
   return ["v2", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), ciphertext.toString("base64url")].join(".");
 }
 
+export function deriveLilyPurposeKey(purpose: string) {
+  return Buffer.from(crypto.hkdfSync("sha256", encryptionKey(), "cooklily-v1", `purpose:${purpose}`, 32));
+}
+
 export function decryptLilySecret(encoded: string, purpose: string) {
   const [version, ivEncoded, tagEncoded, ciphertextEncoded] = encoded.split(".");
   if (!ivEncoded || !tagEncoded || !ciphertextEncoded || !["v1", "v2"].includes(version)) throw new Error("Segredo CookLily cifrado inválido.");

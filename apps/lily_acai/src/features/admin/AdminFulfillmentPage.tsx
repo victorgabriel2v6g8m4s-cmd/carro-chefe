@@ -28,6 +28,7 @@ type AdminFulfillmentPayload = {
     businessHours: BusinessHour[];
     kitchenPreparationSlaMinutes: number | null;
     courierOfferTimeoutSeconds: number;
+    cancel: { enabled: boolean; windowMinutes: number };
     pickupLatitude: number | null;
     pickupLongitude: number | null;
   };
@@ -118,6 +119,10 @@ export function AdminFulfillmentPage() {
         timezone: "America/Campo_Grande",
         kitchenPreparationSlaMinutes: parseOptionalNumber(form.get("kitchenPreparationSlaMinutes")),
         courierOfferTimeoutSeconds: Number(form.get("courierOfferTimeoutSeconds")),
+        cancel: {
+          enabled: form.get("cancel") === "on",
+          windowMinutes: Number(form.get("minutes"))
+        },
         pickupLatitude: parseOptionalNumber(form.get("pickupLatitude")),
         pickupLongitude: parseOptionalNumber(form.get("pickupLongitude"))
       });
@@ -183,10 +188,14 @@ export function AdminFulfillmentPage() {
               defaultValue={settings.kitchenPreparationSlaMinutes ?? ""}
               placeholder="Desativado"
             />
-            <small>Campo vazio desativa alertas. Defina o tempo somente após aprovação operacional.</small>
+            <small>Vazio desativa alertas.</small>
           </label>
           <label>Prazo para entregador aceitar ou recusar (segundos)
             <input name="courierOfferTimeoutSeconds" type="number" min="15" max="300" required defaultValue={settings.courierOfferTimeoutSeconds} />
+          </label>
+          <label className="check"><input name="cancel" type="checkbox" defaultChecked={settings.cancel.enabled} /> <span>Cancelamento ativo</span></label>
+          <label>Prazo (min)
+            <input name="minutes" type="number" min="1" max="1440" required defaultValue={settings.cancel.windowMinutes} />
           </label>
           <label>Latitude do ponto de coleta
             <input name="pickupLatitude" type="number" min="-90" max="90" step="any" defaultValue={settings.pickupLatitude ?? ""} />
@@ -194,7 +203,7 @@ export function AdminFulfillmentPage() {
           <label>Longitude do ponto de coleta
             <input name="pickupLongitude" type="number" min="-180" max="180" step="any" defaultValue={settings.pickupLongitude ?? ""} />
           </label>
-          <p className="admin-span">O despacho próprio não usa raio fixo. Informe as coordenadas do ponto de coleta; entregadores disponíveis serão chamados um por vez, da menor distância para a maior.</p>
+          <p className="admin-span">Sem raio fixo; entregadores disponíveis são chamados um por vez, por proximidade.</p>
         </div>
       </section>
 

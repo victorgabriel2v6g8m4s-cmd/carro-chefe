@@ -805,6 +805,8 @@ model LilyOperationalSettings {
   mercadoPagoCardEnabled    Boolean  @default(false)
   kitchenPreparationSlaMinutes Int?
   courierOfferTimeoutSeconds Int @default(60)
+  customerCancellationEnabled Boolean @default(false)
+  customerCancellationWindowMinutes Int @default(15)
   pickupLatitude Float?
   pickupLongitude Float?
   createdAt                 DateTime @default(now())
@@ -848,6 +850,8 @@ model LilyOrder {
   restaurantDecisionReason String?
   restaurantPrepEstimateMinutes Int?
   refundStatus String @default("not_required")
+  customerCancellationStatus String @default("not_requested")
+  customerCancellationRequestedAt DateTime?
   dispatchChecklistJson String @default("{}")
   dispatchCheckedAt DateTime?
   dispatchCheckedBy String?
@@ -1418,6 +1422,17 @@ model LilyMission {
   points           Int      @default(0)
   lilyCoins         Int      @default(0)
   prerequisiteJson String   @default("[]")
+  instructionsJson String   @default("[]")
+  audienceJson     String   @default("{\"mode\":\"all\",\"levels\":[],\"users\":[]}")
+  rewardsJson      String   @default("[]")
+  actionUrl        String?
+  approvalMode     String   @default("automatic")
+  reviewHours      Int      @default(24)
+  cadence          String   @default("perpetual")
+  dailyLimit       Int?
+  weeklyLimit      Int?
+  monthlyLimit     Int?
+  showNextPeriod   Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

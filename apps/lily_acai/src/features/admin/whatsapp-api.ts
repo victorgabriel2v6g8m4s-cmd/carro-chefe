@@ -19,7 +19,7 @@ export type WhatsAppTemplate = {
   category: TemplateCategory;
   language: string;
   bodyTemplate: string;
-  variables: Array<"orderNumber" | "stageLabel">;
+  variables: Array<"orderNumber" | "stageLabel" | "itemsSummary" | "totalAmount" | "deliveryEta">;
   variableNames: string[];
   flow: import("./template-studio/template-types").SimulationNode[];
   components: MetaTemplateComponent[];

@@ -33,6 +33,50 @@ export function roundLoyaltyPoints(value: number, mode: string) {
   return mode === "ceil" ? Math.ceil(value) : mode === "nearest" ? Math.round(value) : Math.floor(value);
 }
 
+async function notifyMissionAudience(mission: { id: string; title: string; audienceJson: string; actionUrl: string | null }) {
+  const audience = z.object({ mode: z.string().default("all"), levels: z.array(z.string()).default([]), users: z.array(z.string()).default([]) }).passthrough().parse(JSON.parse(mission.audienceJson));
+  const vipIds = audience.mode === "vip" || audience.mode === "standard"
+    ? (await lilyPrisma.lilyVipMembership.findMany({ where: { status: "active" }, select: { userId: true } })).map(({ userId }) => userId)
+    : null;
+  const candidates = await lilyPrisma.lilyUser.findMany({
+    where: { role: "customer", status: "active", ...(audience.mode === "manual" ? { id: { in: audience.users } } : {}), ...(audience.mode === "vip" && vipIds ? { id: { in: vipIds } } : {}) },
+    select: { id: true }
+  });
+  const levelMatches = new Set<string>();
+  if (audience.levels.length) {
+    const levels = await lilyPrisma.lilyLevel.findMany({ where: { id: { in: audience.levels }, active: true }, select: { id: true, requiredPoints: true } });
+    for (const user of candidates) {
+      const events = await lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: user.id }, select: { points: true } });
+      const points = events.reduce((sum, event) => sum + event.points, 0);
+      const current = [...levels].filter((level) => points >= level.requiredPoints).sort((a, b) => b.requiredPoints - a.requiredPoints)[0];
+      if (current) levelMatches.add(user.id);
+    }
+  }
+  const recipients = candidates.filter(({ id }) => (audience.mode !== "standard" || !vipIds?.includes(id))
+    && (!audience.levels.length || levelMatches.has(id)));
+  for (const { id: userId } of recipients) {
+    await lilyPrisma.lilyCustomerNotification.upsert({
+      where: { userId_sourceKey: { userId, sourceKey: `mission:${mission.id}:published` } },
+      update: {},
+      create: { userId, sourceKey: `mission:${mission.id}:published`, type: "mission", title: "Nova missão", body: mission.title, metadataJson: JSON.stringify({ missionId: mission.id, actionUrl: mission.actionUrl }) }
+    });
+  }
+}
+
+function missionPeriodKey(cadence: string, now = new Date()) {
+  if (cadence === "perpetual") return "once";
+  const local = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Campo_Grande", year: "numeric", month: "2-digit", day: "2-digit" })
+    .formatToParts(now).reduce<Record<string, string>>((parts, part) => (parts[part.type] = part.value, parts), {});
+  const dayKey = `${local.year}-${local.month}-${local.day}`;
+  if (cadence === "daily") return dayKey;
+  const date = new Date(`${dayKey}T12:00:00Z`);
+  const weekday = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - weekday);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
 type LoyaltyLedgerDb = Pick<typeof lilyPrisma, "lilyLoyaltyEvent" | "lilyOrder" | "lilyOperationalSettings" | "lilyLoyaltyConfigVersion" | "lilyLevel" | "lilyReward" | "lilyMission">;
 
 export async function progressPointsForUser(userId: string, db: Pick<typeof lilyPrisma, "lilyLoyaltyEvent"> = lilyPrisma) {
@@ -264,6 +308,31 @@ const loyaltyLevelInputSchema = z.object({
 
 export async function lilyLevelRoutes(app: FastifyInstance) {
   const levelsSchema = z.object({ levels: z.array(loyaltyLevelInputSchema).max(100), roundingMode: z.enum(["floor", "ceil", "nearest"]) }).strict();
+  const missionInputSchema = z.object({
+    title: z.string().trim().min(2).max(120),
+    description: z.string().trim().max(1000).nullable().optional(),
+    status: z.enum(["draft", "published", "paused"]),
+    points: z.number().int().min(0).max(1_000_000),
+    lilyCoins: z.number().int().min(0).max(1_000_000),
+    prerequisites: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
+    instructions: z.array(z.object({ title: z.string().trim().min(1).max(120), body: z.string().trim().max(1000), required: z.boolean().default(false), mediaId: z.string().max(80).nullable().default(null) }).strict()).max(20).default([]),
+    audience: z.object({ mode: z.enum(["all", "standard", "vip", "manual"]), levels: z.array(z.string().max(80)).max(100), users: z.array(z.string().max(80)).max(500) }).strict().default({ mode: "all", levels: [], users: [] }),
+    rewards: z.array(z.object({ kind: z.enum(["product", "coupon", "offer", "vip"]), id: z.string().trim().min(1).max(80), quantity: z.number().int().min(1).max(20).default(1) }).strict()).max(20).default([]),
+    actionUrl: z.string().url().max(500).nullable().optional(),
+    approvalMode: z.enum(["automatic", "manual"]),
+    reviewHours: z.number().int().min(1).max(720).default(24),
+    cadence: z.enum(["daily", "weekly", "perpetual"]),
+    dailyLimit: z.number().int().min(1).max(100).nullable().optional(),
+    weeklyLimit: z.number().int().min(1).max(500).nullable().optional(),
+    monthlyLimit: z.number().int().min(1).max(1000).nullable().optional(),
+    showNextPeriod: z.boolean().default(false)
+  }).strict().superRefine((mission, ctx) => {
+    if (mission.audience.mode === "manual" && !mission.audience.users.length) ctx.addIssue({ code: "custom", path: ["audience", "users"], message: "Selecione pelo menos uma conta para o público manual." });
+    if (mission.actionUrl) {
+      const url = new URL(mission.actionUrl);
+      if (url.protocol !== "https:" || !["licalily.com", "www.licalily.com", "carrochefe.com"].includes(url.hostname)) ctx.addIssue({ code: "custom", path: ["actionUrl"], message: "Use um link HTTPS do site CookLily." });
+    }
+  });
   app.get("/api/v1/lily/admin/loyalty", async (request) => {
     await requireLilyStaff(request);
     const [levels, settings, rewards, missions, config, products, categories, offers, combos, coupons] = await Promise.all([
@@ -273,7 +342,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
       }),
       lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } }),
       lilyPrisma.lilyReward.findMany({ orderBy: { createdAt: "desc" } }),
-      lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" }, select: { id: true, title: true, status: true, points: true, lilyCoins: true } }),
+      lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" } }),
       lilyPrisma.lilyLoyaltyConfigVersion.findFirst({ orderBy: { version: "desc" }, select: { version: true } }),
       lilyPrisma.lilyProduct.findMany({ where: { status: "published" }, select: { id: true, displayName: true, slug: true, categoryId: true, category: { select: { name: true } }, minimumAddonUnits: true, maximumAddonUnits: true, variants: { where: { status: "published" }, select: { id: true, name: true, sizeMl: true } }, flavorLinks: { where: { flavor: { status: "published" } }, select: { flavor: { select: { id: true, name: true } } } }, addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addon: { select: { id: true, name: true } } } } }, orderBy: { displayName: "asc" } }),
       lilyPrisma.lilyCategory.findMany({ where: { status: "published" }, select: { id: true, name: true, parentId: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
@@ -377,11 +446,57 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
   app.patch("/api/v1/lily/admin/loyalty/missions/:id", async (request) => {
     const actor = await requireLilyStaff(request, true);
     const id = (request.params as { id: string }).id;
-    const input = z.object({ lilyCoins: z.number().int().min(0).max(1000000) }).strict().parse(request.body);
-    const mission = await lilyPrisma.lilyMission.update({ where: { id }, data: input });
+    const current = await lilyPrisma.lilyMission.findUnique({ where: { id } });
+    if (!current) throw new ApiError(404, "Missão não encontrada.");
+    const input = missionInputSchema.partial().strict().parse({
+      title: current.title, description: current.description, status: current.status, points: current.points, lilyCoins: current.lilyCoins,
+      prerequisites: JSON.parse(current.prerequisiteJson), instructions: JSON.parse(current.instructionsJson),
+      audience: JSON.parse(current.audienceJson), rewards: JSON.parse(current.rewardsJson), actionUrl: current.actionUrl,
+      approvalMode: current.approvalMode, reviewHours: current.reviewHours, cadence: current.cadence,
+      dailyLimit: current.dailyLimit, weeklyLimit: current.weeklyLimit, monthlyLimit: current.monthlyLimit,
+      showNextPeriod: current.showNextPeriod, ...(request.body as object)
+    });
+    if (input.instructions?.some((step) => step.mediaId)) {
+      const ids = input.instructions.flatMap((step) => step.mediaId ? [step.mediaId] : []);
+      const found = await lilyPrisma.lilyMediaAsset.count({ where: { id: { in: ids }, status: "active" } });
+      if (found !== new Set(ids).size) throw new ApiError(400, "Uma mídia da missão não está ativa ou não existe.");
+    }
+    const mission = await lilyPrisma.lilyMission.update({ where: { id }, data: {
+      ...input,
+      ...(input.prerequisites ? { prerequisiteJson: JSON.stringify(input.prerequisites) } : {}),
+      ...(input.instructions ? { instructionsJson: JSON.stringify(input.instructions) } : {}),
+      ...(input.audience ? { audienceJson: JSON.stringify(input.audience) } : {}),
+      ...(input.rewards ? { rewardsJson: JSON.stringify(input.rewards) } : {})
+    } });
     const version = await createLoyaltyConfigVersion(actor.user.id);
+    if (current.status !== "published" && mission.status === "published") await notifyMissionAudience(mission);
     await auditLilyAdmin(actor.user.id, "update", "mission", mission.id, { ...input, configVersion: version.version });
     return { mission: { id: mission.id, title: mission.title, lilyCoins: mission.lilyCoins } };
+  });
+  app.post("/api/v1/lily/admin/loyalty/missions", async (request) => {
+    const actor = await requireLilyStaff(request, true);
+    const input = missionInputSchema.parse(request.body);
+    if (input.instructions.some((step) => step.mediaId)) {
+      const ids = input.instructions.flatMap((step) => step.mediaId ? [step.mediaId] : []);
+      const found = await lilyPrisma.lilyMediaAsset.count({ where: { id: { in: ids }, status: "active" } });
+      if (found !== new Set(ids).size) throw new ApiError(400, "Uma mídia da missão não está ativa ou não existe.");
+    }
+    if (input.audience.mode === "manual") {
+      const users = await lilyPrisma.lilyUser.count({ where: { id: { in: input.audience.users }, role: "customer", status: "active" } });
+      if (users !== new Set(input.audience.users).size) throw new ApiError(400, "O público manual contém conta inexistente ou inelegível.");
+    }
+    const mission = await lilyPrisma.lilyMission.create({ data: {
+      title: input.title, description: input.description ?? null, status: input.status,
+      points: input.points, lilyCoins: input.lilyCoins, prerequisiteJson: JSON.stringify(input.prerequisites),
+      instructionsJson: JSON.stringify(input.instructions), audienceJson: JSON.stringify(input.audience), rewardsJson: JSON.stringify(input.rewards),
+      actionUrl: input.actionUrl ?? null, approvalMode: input.approvalMode, reviewHours: input.reviewHours,
+      cadence: input.cadence, dailyLimit: input.dailyLimit ?? null, weeklyLimit: input.weeklyLimit ?? null,
+      monthlyLimit: input.monthlyLimit ?? null, showNextPeriod: input.showNextPeriod
+    } });
+    const version = await createLoyaltyConfigVersion(actor.user.id);
+    if (mission.status === "published") await notifyMissionAudience(mission);
+    await auditLilyAdmin(actor.user.id, "create", "mission", mission.id, { configVersion: version.version, status: mission.status });
+    return { mission };
   });
   app.post("/api/v1/lily/customer/missions/:id/claim", async (request) => {
     const context = await requireLilySession(request);
@@ -389,15 +504,53 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const id = (request.params as { id: string }).id;
     const mission = await lilyPrisma.lilyMission.findFirst({ where: { id, status: "published" } });
     if (!mission) throw new ApiError(404, "Missão não encontrada.");
+    if (mission.approvalMode === "manual") throw new ApiError(409, "Esta missão exige envio de comprovação e análise da equipe; ela ainda não pode ser reivindicada automaticamente.", { code: "LILY_MISSION_REQUIRES_REVIEW" });
+    const audience = z.object({ mode: z.string().optional(), levels: z.array(z.string()).optional(), users: z.array(z.string()).optional() }).passthrough().parse(JSON.parse(mission.audienceJson));
+    const membership = audience.mode === "vip" || audience.mode === "standard"
+      ? await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } })
+      : null;
+    if (audience.mode === "manual" && !audience.users?.includes(context.user.id)
+      || audience.mode === "vip" && membership?.status !== "active"
+      || audience.mode === "standard" && membership?.status === "active") {
+      throw new ApiError(404, "Missão não encontrada.");
+    }
+    if (audience.levels?.length) {
+      const points = await progressPointsForUser(context.user.id);
+      const current = await lilyPrisma.lilyLevel.findFirst({ where: { active: true, requiredPoints: { lte: points } }, orderBy: { requiredPoints: "desc" }, select: { id: true } });
+      if (!current || !audience.levels.includes(current.id)) throw new ApiError(404, "Missão não encontrada.");
+    }
     const completed = await lilyPrisma.lilySurveyParticipation.findMany({ where: { userId: context.user.id, status: "completed" }, select: { surveyId: true } });
     const surveyRows = completed.length ? await lilyPrisma.lilySurvey.findMany({ where: { id: { in: completed.map(({ surveyId }) => surveyId) } }, select: { unlocksMissionsJson: true } }) : [];
     const unlockedBySurvey = surveyRows.some((row) => (JSON.parse(row.unlocksMissionsJson) as string[]).includes(id));
     const prerequisites = JSON.parse(mission.prerequisiteJson) as string[];
-    if (!unlockedBySurvey && !prerequisites.every((prerequisiteId) => completed.some(({ surveyId }) => surveyId === prerequisiteId))) throw new ApiError(403, "Conclua os requisitos desta missão primeiro.");
+    const missionPrefix = `mission:${id}:user:${context.user.id}:`;
+    const priorMissionClaims = await lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: context.user.id, sourceKey: { startsWith: "mission:" } }, select: { sourceKey: true } });
+    const priorCoinClaims = await lilyPrisma.lilyCoinEvent.findMany({ where: { userId: context.user.id, kind: "mission", sourceKey: { startsWith: "mission:" } }, select: { sourceKey: true } });
+    const claimedMissionIds = new Set([...priorMissionClaims, ...priorCoinClaims].flatMap(({ sourceKey }) => {
+      if (!sourceKey) return [];
+      const match = sourceKey.match(/^mission:([^:]+):user:/);
+      return match ? [match[1]] : [];
+    }));
+    if (!unlockedBySurvey && !prerequisites.every((prerequisiteId) => completed.some(({ surveyId }) => surveyId === prerequisiteId) || claimedMissionIds.has(prerequisiteId))) throw new ApiError(403, "Conclua os requisitos desta missão primeiro.");
+    const periodKey = missionPeriodKey(mission.cadence);
+    const claimedKeys = new Set([...priorMissionClaims, ...priorCoinClaims].flatMap(({ sourceKey }) => sourceKey ? [sourceKey] : []));
+    const matchingClaims = [...claimedKeys].filter((key) => key.startsWith(missionPrefix));
+    if (mission.cadence === "perpetual" && matchingClaims.length) throw new ApiError(409, "Esta missão já foi concluída.", { code: "LILY_MISSION_ALREADY_CLAIMED" });
+    const periodSourceKey = `${missionPrefix}period:${periodKey}`;
+    if (claimedKeys.has(periodSourceKey)) throw new ApiError(409, "Esta missão já foi concluída neste período.", { code: "LILY_MISSION_ALREADY_CLAIMED" });
+    const dayPrefix = `${missionPrefix}period:${missionPeriodKey("daily")}`;
+    const weekPrefix = `${missionPrefix}period:${missionPeriodKey("weekly").slice(0, 4)}-W`;
+    const monthPrefix = `${missionPrefix}period:${missionPeriodKey("daily").slice(0, 7)}`;
+    const countPrefix = (prefix: string) => [...claimedKeys].filter((key) => key.startsWith(prefix)).length;
+    if (mission.dailyLimit != null && countPrefix(dayPrefix) >= mission.dailyLimit
+      || mission.weeklyLimit != null && countPrefix(weekPrefix) >= mission.weeklyLimit
+      || mission.monthlyLimit != null && countPrefix(monthPrefix) >= mission.monthlyLimit) {
+      throw new ApiError(409, "O limite de conclusões desta missão no período foi atingido.", { code: "LILY_MISSION_PERIOD_LIMIT" });
+    }
     const priorPoints = mission.points > 0 ? await progressPointsForUser(context.user.id) : 0;
     await lilyPrisma.$transaction(async (tx) => {
-      if (mission.points > 0) await tx.lilyLoyaltyEvent.upsert({ where: { sourceKey: `mission:${mission.id}:user:${context.user.id}` }, update: {}, create: { userId: context.user.id, type: "mission_reward", points: mission.points, sourceKey: `mission:${mission.id}:user:${context.user.id}`, metadataJson: JSON.stringify({ missionId: mission.id }) } });
-      if (mission.lilyCoins > 0) await tx.lilyCoinEvent.upsert({ where: { sourceKey: `mission:${mission.id}:user:${context.user.id}` }, update: {}, create: { id: crypto.randomUUID(), userId: context.user.id, amount: mission.lilyCoins, kind: "mission", sourceKey: `mission:${mission.id}:user:${context.user.id}`, metadataJson: JSON.stringify({ missionId: mission.id }) } });
+      if (mission.points > 0) await tx.lilyLoyaltyEvent.upsert({ where: { sourceKey: periodSourceKey }, update: {}, create: { userId: context.user.id, type: "mission_reward", points: mission.points, sourceKey: periodSourceKey, metadataJson: JSON.stringify({ missionId: mission.id, periodKey }) } });
+      if (mission.lilyCoins > 0) await tx.lilyCoinEvent.upsert({ where: { sourceKey: periodSourceKey }, update: {}, create: { id: crypto.randomUUID(), userId: context.user.id, amount: mission.lilyCoins, kind: "mission", sourceKey: periodSourceKey, metadataJson: JSON.stringify({ missionId: mission.id, periodKey }) } });
       if (mission.points > 0) await awardReachedLevelCoins(context.user.id, priorPoints, priorPoints + mission.points, tx);
     });
     return { claimed: true, pointsAwarded: mission.points, lilyCoinsAwarded: mission.lilyCoins, loyalty: await loyaltySnapshot(context.user.id) };

@@ -50,7 +50,7 @@ export type LoyaltyAdminPayload = {
   roundingMode: "floor" | "ceil" | "nearest";
   configVersion: number;
   rewards: Array<{ id: string; title: string; description: string | null; type: string; lilyCoinCost: number; couponId: string | null; productId: string | null; active: boolean; maxRedemptions: number | null }>;
-  missions: Array<{ id: string; title: string; status: string; points: number; lilyCoins: number }>;
+  missions: Array<{ id: string; title: string; description: string | null; status: string; points: number; lilyCoins: number; prerequisiteJson: string; instructionsJson: string; audienceJson: string; rewardsJson: string; actionUrl: string | null; approvalMode: string; reviewHours: number; cadence: string; dailyLimit: number | null; weeklyLimit: number | null; monthlyLimit: number | null; showNextPeriod: boolean }>;
   coupons: Array<{ id: string; title: string; code: string }>;
   products: Array<{ id: string; displayName: string; slug: string }>;
   branding: LoyaltyBranding;

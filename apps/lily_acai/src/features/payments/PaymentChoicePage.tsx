@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "../../router";
 import { getLilyAuthStatus, getLilySession, type AuthPayload } from "../../api";
 import { trackLilyAnalytics } from "../../analytics";
-import { readGuestOrderToken } from "../orders/guest-token";
+import { consumeOrderAccessLink, parseOrderAccessLink, readGuestOrderToken } from "../orders/guest-token";
 import { getLilyPayment } from "./api";
 import {
   PaymentChoiceResult,
@@ -41,10 +41,12 @@ function clearPaymentKeys(orderId: string) {
 }
 
 export function PaymentChoicePage() {
-  const { orderId = "" } = useParams();
+  const { orderId: routeOrderId = "" } = useParams();
+  const accessLink = useMemo(() => parseOrderAccessLink(routeOrderId), [routeOrderId]);
+  const orderId = accessLink?.orderId ?? routeOrderId;
   const [searchParams] = useSearchParams();
   const homologation = searchParams.get("homologacao") === "1";
-  const guestAccessToken = useMemo(() => orderId ? readGuestOrderToken(orderId) : null, [orderId]);
+  const guestAccessToken = useMemo(() => accessLink?.token ?? (orderId ? readGuestOrderToken(orderId) : null), [orderId, accessLink?.token]);
   const [session, setSession] = useState<AuthPayload | null>(null);
   const [data, setData] = useState<LilyPaymentOptionsPayload | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<LilyCheckoutPaymentMethod | null>(null);
@@ -57,6 +59,7 @@ export function PaymentChoicePage() {
 
   useEffect(() => {
     let cancelled = false;
+    if (accessLink) consumeOrderAccessLink(orderId, accessLink.token);
     void (async () => {
       let current: AuthPayload | null = null;
       try {
@@ -78,7 +81,7 @@ export function PaymentChoicePage() {
       if (!cancelled) setLoaded(true);
     });
     return () => { cancelled = true; };
-  }, [orderId, guestAccessToken, homologation]);
+  }, [orderId, guestAccessToken, homologation, accessLink?.token]);
 
   useEffect(() => {
     if (!payment || payment.status !== "pending") return;
