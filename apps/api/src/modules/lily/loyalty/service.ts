@@ -34,8 +34,8 @@ export function roundLoyaltyPoints(value: number, mode: string) {
   return mode === "ceil" ? Math.ceil(value) : mode === "nearest" ? Math.round(value) : Math.floor(value);
 }
 
-async function notifyMissionAudience(mission: { id: string; title: string; audienceJson: string; actionUrl: string | null }) {
-  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
+async function notifyMissionAudience(mission: { id: string; title: string; audienceV2Json: string; actionUrl: string | null }) {
+  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceV2Json));
   const [candidates, activeVip, levels, events] = await Promise.all([
     lilyPrisma.lilyUser.findMany({ where: { role: "customer", status: "active" }, select: { id: true } }),
     lilyPrisma.lilyVipMembership.findMany({ where: { status: "active" }, select: { userId: true } }),
@@ -313,7 +313,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     prerequisites: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
     instructions: z.array(z.object({ title: z.string().trim().min(1).max(120), body: z.string().trim().max(1000), required: z.boolean().default(false), mediaId: z.string().max(80).nullable().default(null) }).strict()).max(20).default([]),
     audience: missionAudienceSchema.default({ mode: "all", levels: [], users: [], rules: [] }),
-    rewards: z.array(z.object({ kind: z.enum(["product", "coupon", "offer", "vip"]), id: z.string().trim().min(1).max(80), quantity: z.number().int().min(1).max(20).default(1) }).strict()).max(20).default([]),
+    rewards: z.array(z.object({ kind: z.enum(["product", "combo", "coupon", "offer", "vip"]), id: z.string().trim().min(1).max(80), quantity: z.number().int().min(1).max(20).default(1) }).strict()).max(20).default([]),
     actionUrl: z.string().url().max(500).nullable().optional(),
     approvalMode: z.enum(["automatic", "manual"]),
     reviewHours: z.number().int().min(1).max(720).default(24),
@@ -329,6 +329,17 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
       if (url.protocol !== "https:" || !["licalily.com", "www.licalily.com", "carrochefe.com"].includes(url.hostname)) ctx.addIssue({ code: "custom", path: ["actionUrl"], message: "Use um link HTTPS do site CookLily." });
     }
   });
+  async function validateMissionRewardReferences(rewards: Array<{ kind: "product" | "combo" | "coupon" | "offer" | "vip"; id: string }>) {
+    const idsFor = (kind: "product" | "combo" | "coupon" | "offer" | "vip") => [...new Set(rewards.filter((reward) => reward.kind === kind).map(({ id }) => id))];
+    const [products, combos, coupons, offers] = await Promise.all([
+      lilyPrisma.lilyProduct.findMany({ where: { id: { in: idsFor("product") }, status: "published" }, select: { id: true } }),
+      lilyPrisma.lilyCombo.findMany({ where: { id: { in: idsFor("combo") }, status: "published" }, select: { id: true } }),
+      lilyPrisma.lilyCoupon.findMany({ where: { id: { in: idsFor("coupon") }, status: "active", assignedUserId: null }, select: { id: true } }),
+      lilyPrisma.lilyOffer.findMany({ where: { id: { in: idsFor("offer") }, status: "published" }, select: { id: true } })
+    ]);
+    const valid = new Map<string, Set<string>>([["product", new Set(products.map(({ id }) => id))], ["combo", new Set(combos.map(({ id }) => id))], ["coupon", new Set(coupons.map(({ id }) => id))], ["offer", new Set(offers.map(({ id }) => id))], ["vip", new Set(["vip"])] ]);
+    if (rewards.some(({ kind, id }) => !valid.get(kind)?.has(id))) throw new ApiError(400, "Uma recompensa da missão está indisponível ou não existe mais no catálogo.");
+  }
   app.get("/api/v1/lily/admin/loyalty", async (request) => {
     await requireLilyStaff(request);
     const [levels, settings, rewards, missions, config, products, categories, offers, combos, coupons] = await Promise.all([
@@ -338,7 +349,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
       }),
       lilyPrisma.lilyOperationalSettings.findUnique({ where: { id: "default" }, select: { loyaltyRoundingMode: true, loyaltyCoinName: true, loyaltyCoinIconMediaId: true } }),
       lilyPrisma.lilyReward.findMany({ orderBy: { createdAt: "desc" } }),
-      lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" } }),
+      lilyPrisma.lilyMission.findMany({ where: { workflowGeneration: "modern" }, orderBy: { createdAt: "desc" } }),
       lilyPrisma.lilyLoyaltyConfigVersion.findFirst({ orderBy: { version: "desc" }, select: { version: true } }),
       lilyPrisma.lilyProduct.findMany({ where: { status: "published" }, select: { id: true, displayName: true, slug: true, categoryId: true, category: { select: { name: true } }, minimumAddonUnits: true, maximumAddonUnits: true, variants: { where: { status: "published" }, select: { id: true, name: true, sizeMl: true } }, flavorLinks: { where: { flavor: { status: "published" } }, select: { flavor: { select: { id: true, name: true } } } }, addonLinks: { where: { allowed: true, addon: { status: "published" } }, select: { addon: { select: { id: true, name: true } } } } }, orderBy: { displayName: "asc" } }),
       lilyPrisma.lilyCategory.findMany({ where: { status: "published" }, select: { id: true, name: true, parentId: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
@@ -443,15 +454,16 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const actor = await requireLilyStaff(request, true);
     const id = (request.params as { id: string }).id;
     const current = await lilyPrisma.lilyMission.findUnique({ where: { id } });
-    if (!current) throw new ApiError(404, "Missão não encontrada.");
+    if (!current || current.workflowGeneration !== "modern") throw new ApiError(404, "Missão não encontrada.");
     const input = missionInputSchema.partial().strict().parse({
       title: current.title, description: current.description, status: current.status, points: current.points, lilyCoins: current.lilyCoins,
       prerequisites: JSON.parse(current.prerequisiteJson), instructions: JSON.parse(current.instructionsJson),
-      audience: JSON.parse(current.audienceJson), rewards: JSON.parse(current.rewardsJson), actionUrl: current.actionUrl,
+      audience: JSON.parse(current.audienceV2Json), rewards: JSON.parse(current.rewardsJson), actionUrl: current.actionUrl,
       approvalMode: current.approvalMode, reviewHours: current.reviewHours, cadence: current.cadence,
       dailyLimit: current.dailyLimit, weeklyLimit: current.weeklyLimit, monthlyLimit: current.monthlyLimit,
       showNextPeriod: current.showNextPeriod, ...(request.body as object)
     });
+    await validateMissionRewardReferences(input.rewards ?? []);
     if (input.instructions?.some((step) => step.mediaId)) {
       const ids = input.instructions.flatMap((step) => step.mediaId ? [step.mediaId] : []);
       const found = await lilyPrisma.lilyMediaAsset.count({ where: { id: { in: ids }, status: "active" } });
@@ -461,7 +473,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
       ...input,
       ...(input.prerequisites ? { prerequisiteJson: JSON.stringify(input.prerequisites) } : {}),
       ...(input.instructions ? { instructionsJson: JSON.stringify(input.instructions) } : {}),
-      ...(input.audience ? { audienceJson: JSON.stringify(input.audience) } : {}),
+      ...(input.audience ? { audienceV2Json: JSON.stringify(input.audience) } : {}),
       ...(input.rewards ? { rewardsJson: JSON.stringify(input.rewards) } : {})
     } });
     const version = await createLoyaltyConfigVersion(actor.user.id);
@@ -472,6 +484,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
   app.post("/api/v1/lily/admin/loyalty/missions", async (request) => {
     const actor = await requireLilyStaff(request, true);
     const input = missionInputSchema.parse(request.body);
+    await validateMissionRewardReferences(input.rewards);
     if (input.instructions.some((step) => step.mediaId)) {
       const ids = input.instructions.flatMap((step) => step.mediaId ? [step.mediaId] : []);
       const found = await lilyPrisma.lilyMediaAsset.count({ where: { id: { in: ids }, status: "active" } });
@@ -484,7 +497,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const mission = await lilyPrisma.lilyMission.create({ data: {
       title: input.title, description: input.description ?? null, status: input.status,
       points: input.points, lilyCoins: input.lilyCoins, prerequisiteJson: JSON.stringify(input.prerequisites),
-      instructionsJson: JSON.stringify(input.instructions), audienceJson: JSON.stringify(input.audience), rewardsJson: JSON.stringify(input.rewards),
+      instructionsJson: JSON.stringify(input.instructions), audienceV2Json: JSON.stringify(input.audience), workflowGeneration: "modern", rewardsJson: JSON.stringify(input.rewards),
       actionUrl: input.actionUrl ?? null, approvalMode: input.approvalMode, reviewHours: input.reviewHours,
       cadence: input.cadence, dailyLimit: input.dailyLimit ?? null, weeklyLimit: input.weeklyLimit ?? null,
       monthlyLimit: input.monthlyLimit ?? null, showNextPeriod: input.showNextPeriod
@@ -498,10 +511,10 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
     const id = (request.params as { id: string }).id;
-    const mission = await lilyPrisma.lilyMission.findFirst({ where: { id, status: "published" } });
+    const mission = await lilyPrisma.lilyMission.findFirst({ where: { id, status: "published", workflowGeneration: "modern" } });
     if (!mission) throw new ApiError(404, "Missão não encontrada.");
     if (mission.approvalMode === "manual") throw new ApiError(409, "Esta missão exige envio de comprovação e análise da equipe; ela ainda não pode ser reivindicada automaticamente.", { code: "LILY_MISSION_REQUIRES_REVIEW" });
-    const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
+    const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceV2Json));
     const membership = audience.mode === "vip" || audience.mode === "standard"
       ? await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } })
       : null;

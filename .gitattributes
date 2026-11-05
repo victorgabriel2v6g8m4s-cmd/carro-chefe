@@ -1,1 +1,2 @@
 anexos/financeiro/snapshot/** text eol=lf
+packages/lily-database/prisma/migrations/20261103100000_lily_customer_cancellation_window/migration.sql text eol=crlf

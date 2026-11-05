@@ -1426,7 +1426,9 @@ model LilyMission {
   lilyCoins         Int      @default(0)
   prerequisiteJson String   @default("[]")
   instructionsJson String   @default("[]")
-  audienceJson     String   @default("{\"mode\":\"all\",\"levels\":[],\"users\":[]}")
+  audienceJson     String   @default("{\"operator\":\"AND\",\"rules\":[{\"type\":\"category\",\"value\":\"all\"}]}")
+  audienceV2Json   String   @default("{\"mode\":\"all\",\"levels\":[],\"users\":[]}")
+  workflowGeneration String @default("legacy")
   rewardsJson      String   @default("[]")
   actionUrl        String?
   approvalMode     String   @default("automatic")

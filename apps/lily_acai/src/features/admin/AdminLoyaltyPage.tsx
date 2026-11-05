@@ -4,14 +4,18 @@ import { LoyaltyBrandingEditor } from "./LoyaltyBrandingEditor";
 import { LoyaltyLevelEditor } from "./LoyaltyLevelEditor";
 import { MissionSubmissionReviewPanel } from "./MissionSubmissionReviewPanel";
 import { readAdminApiError } from "./admin-api-error";
+import { MissionAudienceRulesEditor } from "./mission-authoring/MissionAudienceRulesEditor";
+import { MissionInstructionsEditor } from "./mission-authoring/MissionInstructionsEditor";
+import { MissionRewardsEditor } from "./mission-authoring/MissionRewardsEditor";
+import { parseMissionRows, type MissionAudienceRuleDraft, type MissionInstructionDraft, type MissionRewardDraft } from "./mission-authoring/types";
 import { toLoyaltyLevelInput } from "./loyalty-level-payload";
 import { loyaltyLevelThresholdError } from "./loyalty-level-validation";
 import type { LoyaltyAdminPayload, LoyaltyLevel } from "./loyalty-types";
 
 type Reward = LoyaltyAdminPayload["rewards"][number];
 type Mission = LoyaltyAdminPayload["missions"][number];
-type MissionDraft = { id: string; title: string; description: string; status: "draft" | "published" | "paused"; points: string; lilyCoins: string; prerequisites: string; audienceMode: "all" | "standard" | "vip" | "manual"; users: string; levels: string; audienceRules: string; instructions: string; rewards: string; actionUrl: string; approvalMode: "automatic" | "manual"; reviewHours: string; cadence: "daily" | "weekly" | "perpetual"; dailyLimit: string; weeklyLimit: string; monthlyLimit: string; showNextPeriod: boolean };
-const emptyMissionDraft: MissionDraft = { id: "", title: "", description: "", status: "draft", points: "0", lilyCoins: "0", prerequisites: "", audienceMode: "all", users: "", levels: "", audienceRules: "[]", instructions: "[]", rewards: "[]", actionUrl: "", approvalMode: "automatic", reviewHours: "24", cadence: "perpetual", dailyLimit: "", weeklyLimit: "", monthlyLimit: "", showNextPeriod: false };
+type MissionDraft = { id: string; title: string; description: string; status: "draft" | "published" | "paused"; points: string; lilyCoins: string; prerequisites: string; audienceMode: "all" | "standard" | "vip" | "manual"; users: string; levels: string; audienceRules: MissionAudienceRuleDraft[]; instructions: MissionInstructionDraft[]; rewards: MissionRewardDraft[]; actionUrl: string; approvalMode: "automatic" | "manual"; reviewHours: string; cadence: "daily" | "weekly" | "perpetual"; dailyLimit: string; weeklyLimit: string; monthlyLimit: string; showNextPeriod: boolean };
+const emptyMissionDraft: MissionDraft = { id: "", title: "", description: "", status: "draft", points: "0", lilyCoins: "0", prerequisites: "", audienceMode: "all", users: "", levels: "", audienceRules: [], instructions: [], rewards: [], actionUrl: "", approvalMode: "automatic", reviewHours: "24", cadence: "perpetual", dailyLimit: "", weeklyLimit: "", monthlyLimit: "", showNextPeriod: false };
 type BenefitRedemption = { id: string; levelName: string; benefitLabel: string; benefitKind: string; redemptionCode: string; status: string; createdAt: string; fulfilledAt: string | null };
 const LoyaltyCurvePreview = lazy(() => import("./LoyaltyCurvePreview").then((module) => ({ default: module.LoyaltyCurvePreview })));
 
@@ -135,15 +139,12 @@ export function AdminLoyaltyPage() {
     if (!session) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      const instructions = JSON.parse(missionDraft.instructions);
-      const rewards = JSON.parse(missionDraft.rewards);
-      const audienceRules = JSON.parse(missionDraft.audienceRules);
       const payload = {
         title: missionDraft.title, description: missionDraft.description || null, status: missionDraft.status,
         points: Number(missionDraft.points), lilyCoins: Number(missionDraft.lilyCoins),
         prerequisites: missionDraft.prerequisites.split(",").map((value) => value.trim()).filter(Boolean),
-        instructions, rewards,
-        audience: { mode: missionDraft.audienceMode, levels: missionDraft.levels.split(",").map((value) => value.trim()).filter(Boolean), users: missionDraft.users.split(",").map((value) => value.trim()).filter(Boolean), rules: audienceRules },
+        instructions: missionDraft.instructions, rewards: missionDraft.rewards,
+        audience: { mode: missionDraft.audienceMode, levels: missionDraft.levels.split(",").map((value) => value.trim()).filter(Boolean), users: missionDraft.users.split(",").map((value) => value.trim()).filter(Boolean), rules: missionDraft.audienceRules },
         actionUrl: missionDraft.actionUrl || null, approvalMode: missionDraft.approvalMode,
         reviewHours: Number(missionDraft.reviewHours), cadence: missionDraft.cadence,
         dailyLimit: missionDraft.dailyLimit ? Number(missionDraft.dailyLimit) : null,
@@ -154,7 +155,7 @@ export function AdminLoyaltyPage() {
       const url = missionDraft.id ? `/api/v1/lily/admin/loyalty/missions/${encodeURIComponent(missionDraft.id)}` : "/api/v1/lily/admin/loyalty/missions";
       await parseResponse(await fetch(url, { method: missionDraft.id ? "PATCH" : "POST", credentials: "same-origin", headers: { "X-Lily-CSRF": session.csrfToken, "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
       setMissionDraft(emptyMissionDraft); await load(); setMessage("Missão salva. Se publicada, os usuários do público selecionado foram notificados.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Revise os campos JSON e tente novamente."); }
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Revise os campos e tente novamente."); }
     finally { setBusy(false); }
   }
 
@@ -163,8 +164,8 @@ export function AdminLoyaltyPage() {
     setMissionDraft({
       ...emptyMissionDraft, id: mission.id, title: mission.title, description: mission.description ?? "", status: mission.status as MissionDraft["status"],
       points: String(mission.points), lilyCoins: String(mission.lilyCoins), prerequisites: (JSON.parse(mission.prerequisiteJson || "[]") as string[]).join(", "),
-      audienceMode: audience.mode ?? "all", users: (audience.users ?? []).join(", "), levels: (audience.levels ?? []).join(", "), audienceRules: JSON.stringify(audience.rules ?? [], null, 2), instructions: JSON.stringify(JSON.parse(mission.instructionsJson || "[]"), null, 2),
-      rewards: JSON.stringify(JSON.parse(mission.rewardsJson || "[]"), null, 2), actionUrl: mission.actionUrl ?? "", approvalMode: mission.approvalMode as MissionDraft["approvalMode"],
+      audienceMode: audience.mode ?? "all", users: (audience.users ?? []).join(", "), levels: (audience.levels ?? []).join(", "), audienceRules: parseMissionRows<MissionAudienceRuleDraft>(JSON.stringify(audience.rules ?? []), []), instructions: parseMissionRows<MissionInstructionDraft>(mission.instructionsJson, []),
+      rewards: parseMissionRows<MissionRewardDraft>(mission.rewardsJson, []), actionUrl: mission.actionUrl ?? "", approvalMode: mission.approvalMode as MissionDraft["approvalMode"],
       reviewHours: String(mission.reviewHours), cadence: mission.cadence as MissionDraft["cadence"], dailyLimit: mission.dailyLimit ? String(mission.dailyLimit) : "",
       weeklyLimit: mission.weeklyLimit ? String(mission.weeklyLimit) : "", monthlyLimit: mission.monthlyLimit ? String(mission.monthlyLimit) : "", showNextPeriod: mission.showNextPeriod
     });
@@ -221,7 +222,7 @@ export function AdminLoyaltyPage() {
         <label>Público<select value={missionDraft.audienceMode} onChange={(event) => setMissionDraft({ ...missionDraft, audienceMode: event.target.value as MissionDraft["audienceMode"] })}><option value="all">Todos</option><option value="standard">Padrão</option><option value="vip">VIP</option><option value="manual">Contas selecionadas</option></select></label>
         {missionDraft.audienceMode === "manual" && <label>IDs de usuários, separados por vírgula<input value={missionDraft.users} onChange={(event) => setMissionDraft({ ...missionDraft, users: event.target.value })} /></label>}
         <label>Níveis permitidos (IDs separados por vírgula)<input value={missionDraft.levels} onChange={(event) => setMissionDraft({ ...missionDraft, levels: event.target.value })} /></label>
-        <label>Regras extras de público (JSON; and, or, except)<textarea rows={4} value={missionDraft.audienceRules} onChange={(event) => setMissionDraft({ ...missionDraft, audienceRules: event.target.value })} placeholder={'[{"operator":"or","field":"class","value":"vip"}]'} /></label>
+        <fieldset className="mission-authoring-fieldset"><legend>Regras adicionais de público</legend><MissionAudienceRulesEditor rules={missionDraft.audienceRules} levels={data?.levels ?? []} onChange={(audienceRules) => setMissionDraft({ ...missionDraft, audienceRules })} /></fieldset>
         <label>Missões pré-requisito (IDs separados por vírgula)<input value={missionDraft.prerequisites} onChange={(event) => setMissionDraft({ ...missionDraft, prerequisites: event.target.value })} /></label>
         <label>Link de ação<input type="url" value={missionDraft.actionUrl} onChange={(event) => setMissionDraft({ ...missionDraft, actionUrl: event.target.value })} placeholder="https://licalily.com/cook/..." /></label>
         <label>Aprovação<select value={missionDraft.approvalMode} onChange={(event) => setMissionDraft({ ...missionDraft, approvalMode: event.target.value as MissionDraft["approvalMode"] })}><option value="automatic">Automática</option><option value="manual">Manual pela equipe</option></select></label>
@@ -231,8 +232,8 @@ export function AdminLoyaltyPage() {
         <label>Limite semanal<input type="number" min="1" value={missionDraft.weeklyLimit} onChange={(event) => setMissionDraft({ ...missionDraft, weeklyLimit: event.target.value })} /></label>
         <label>Limite mensal<input type="number" min="1" value={missionDraft.monthlyLimit} onChange={(event) => setMissionDraft({ ...missionDraft, monthlyLimit: event.target.value })} /></label>
         <label className="checkbox-label"><input type="checkbox" checked={missionDraft.showNextPeriod} onChange={(event) => setMissionDraft({ ...missionDraft, showNextPeriod: event.target.checked })} /> Mostrar missões do próximo período</label>
-        <label>Etapas (JSON: título, instruções, obrigatório, mediaId)<textarea rows={5} value={missionDraft.instructions} onChange={(event) => setMissionDraft({ ...missionDraft, instructions: event.target.value })} /></label>
-        <label>Recompensas adicionais (JSON: kind, id, quantity)<textarea rows={4} value={missionDraft.rewards} onChange={(event) => setMissionDraft({ ...missionDraft, rewards: event.target.value })} /></label>
+        <fieldset className="mission-authoring-fieldset"><legend>Instruções e mídias</legend><MissionInstructionsEditor instructions={missionDraft.instructions} csrfToken={session?.csrfToken ?? ""} onChange={(instructions) => setMissionDraft({ ...missionDraft, instructions })} onError={setError} /></fieldset>
+        <fieldset className="mission-authoring-fieldset"><legend>Recompensas adicionais</legend><MissionRewardsEditor rewards={missionDraft.rewards} catalog={data?.benefitCatalog ?? { categories: [], products: [], coupons: [], discounts: [], offers: [], combos: [], userClasses: [] }} onChange={(rewards) => setMissionDraft({ ...missionDraft, rewards })} /></fieldset>
         <button className="button primary" disabled={busy}>{busy ? "Salvando…" : missionDraft.id ? "Salvar edição" : "Criar missão"}</button>{missionDraft.id && <button className="button ghost" type="button" onClick={() => setMissionDraft(emptyMissionDraft)}>Cancelar edição</button>}
       </form>
       <div className="loyalty-reward-grid">{data?.missions.map((mission) => <article className="loyalty-reward-card" key={mission.id}><span>{mission.status}</span><h3>{mission.title}</h3><p>{mission.points} pontos · {mission.lilyCoins} {data.branding.coinName}</p><button className="button ghost" type="button" onClick={() => editMission(mission)}>Editar missão</button></article>)}</div>

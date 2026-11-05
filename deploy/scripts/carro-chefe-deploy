@@ -341,6 +341,7 @@ fi
 PHASE="production-migrations"
 MIGRATION_STARTED=1
 npm run db:deploy:core
+node deploy/scripts/reconcile-lily-migration.mjs
 npm run db:deploy:lily
 
 PHASE="permissions"

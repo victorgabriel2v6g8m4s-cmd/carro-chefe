@@ -1,5 +1,4 @@
 ALTER TABLE "LilyMission" ADD COLUMN "instructionsJson" TEXT NOT NULL DEFAULT '[]';
-ALTER TABLE "LilyMission" ADD COLUMN "audienceJson" TEXT NOT NULL DEFAULT '{"mode":"all","levels":[],"users":[]}';
 ALTER TABLE "LilyMission" ADD COLUMN "rewardsJson" TEXT NOT NULL DEFAULT '[]';
 ALTER TABLE "LilyMission" ADD COLUMN "actionUrl" TEXT;
 ALTER TABLE "LilyMission" ADD COLUMN "approvalMode" TEXT NOT NULL DEFAULT 'automatic';

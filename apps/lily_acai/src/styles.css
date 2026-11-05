@@ -4989,3 +4989,18 @@ img, svg { max-width: 100%; }
   .loyalty-dashboard-auth-actions { display:grid; grid-template-columns:1fr; }
   .loyalty-dashboard-auth-actions .button { width:100%; }
 }
+
+.mission-authoring-fieldset { display:grid; grid-column:1/-1; min-width:0; gap:12px; margin:0; padding:16px; border:1px solid var(--cl-color-border); border-radius:16px; }
+.mission-authoring-fieldset>legend,.mission-authoring-card>legend { padding:0 6px; color:var(--cl-color-secondary); font-weight:900; }
+.mission-authoring-list { display:grid; gap:12px; }
+.mission-authoring-list small { color:var(--cl-color-muted); }
+.mission-authoring-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) auto; align-items:end; gap:10px; padding:12px; border:1px solid var(--cl-color-border); border-radius:12px; background:#fffdfa; }
+.mission-authoring-row label,.mission-authoring-card label { display:grid; min-width:0; gap:5px; font-size:12px; font-weight:800; }
+.mission-authoring-row .button,.mission-authoring-card .button { white-space:nowrap; }
+.mission-authoring-card { display:grid; min-width:0; gap:10px; margin:0; padding:12px; border:1px solid var(--cl-color-border); border-radius:12px; background:#fffdfa; }
+.mission-authoring-card .checkbox-label { display:flex; align-items:center; gap:8px; }
+.mission-authoring-card .checkbox-label input { width:auto; }
+@media(max-width:700px) {
+  .mission-authoring-row { grid-template-columns:1fr; }
+  .mission-authoring-fieldset { padding:12px; }
+}
