@@ -566,15 +566,15 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   const templateInputSchema = z.object({
     key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/),
     displayName: z.string().trim().min(2).max(120),
-    category: z.enum(["utility", "marketing", "authentication"]).default("utility"),
-    language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
+    category: z.enum(["utility", "marketing", "authentication"]).optional(),
+    language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).optional(),
     bodyTemplate: z.string().trim().min(1).max(4000),
-    variables: z.array(z.enum(LILY_WHATSAPP_TEMPLATE_VARIABLES)).max(20).default([]),
-    variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).default([]),
-    flow: z.array(flowNodeSchema).max(100).default([]),
+    variables: z.array(z.enum(LILY_WHATSAPP_TEMPLATE_VARIABLES)).max(20).optional(),
+    variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).optional(),
+    flow: z.array(flowNodeSchema).max(100).optional(),
     components: metaComponentsSchema.optional(),
     metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
-    status: z.enum(["draft", "active", "archived"]).default("draft")
+    status: z.enum(["draft", "active", "archived"]).optional()
   }).strict();
   async function validateTemplateFlow(nodes: Array<z.infer<typeof flowNodeSchema>>, ownKey?: string) {
     const ids = new Set(nodes.map((node) => node.id));
@@ -690,7 +690,16 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
 
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
     const context = await requireLilyAdmin(request, true);
-    const input = templateInputSchema.parse(request.body);
+    const parsed = templateInputSchema.parse(request.body);
+    const input = {
+      ...parsed,
+      category: parsed.category ?? "utility",
+      language: parsed.language ?? "pt_BR",
+      variables: parsed.variables ?? [],
+      variableNames: parsed.variableNames ?? [],
+      flow: parsed.flow ?? [],
+      status: parsed.status ?? "draft"
+    };
     await validateTemplateFlow(input.flow, input.key);
     const components = input.components ?? [{ type: "BODY", text: input.bodyTemplate }];
     assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components }, input.variables);
