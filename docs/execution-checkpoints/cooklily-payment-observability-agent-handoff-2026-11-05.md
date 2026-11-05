@@ -38,7 +38,8 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 ## Testes e gates
 
 - Sem migration planejada.
-- PR, merge e deploy ainda pendentes; HEAD permanece na base canônica verificada até registrar o commit local.
+- PR draft #332 aberto contra `cooklily/canonical`, head `210107b56924e22dec56056aacbfe9844f9eaf6d`; checks Node 22/24, ferramentas, workbook e Windows passaram na verificação de `2026-11-05 00:35 America/Sao_Paulo`, Node 20 ainda estava em execução.
+- Nenhum merge ou deploy até aqui.
 
 ## Bloqueios e riscos
 
@@ -48,4 +49,4 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 
 ## Próxima ação exata
 
-Comitar somente os arquivos desta entrega, abrir PR draft contra `cooklily/canonical`, aguardar e verificar os checks, integrar por squash conforme o fluxo do repositório, executar deploy somente na rota de teste e homologar com o navegador integrado. Antes de tentar outro pagamento, conferir os dois pedidos de teste pendentes no painel MP; não criar pedidos duplicados enquanto a tentativa anterior continuar ambígua.
+Atualizar este checkpoint após o commit de registro, aguardar e verificar os checks finais do PR #332, integrar por squash conforme o fluxo do repositório, executar deploy somente na rota de teste e homologar com o navegador integrado. Antes de tentar outro pagamento, conferir os dois pedidos de teste pendentes no painel MP; não criar pedidos duplicados enquanto a tentativa anterior continuar ambígua.
