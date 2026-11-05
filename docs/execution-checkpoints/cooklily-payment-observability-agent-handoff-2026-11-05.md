@@ -2,11 +2,11 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-payment-agent-handoff-fix`
+- branch: `codex/cooklily-payment-homologation`
 - base_branch: `cooklily/canonical`
 - base_sha_verified: `c42c69af89034076d50f47dd5b0c973a07692451`
-- head_sha_verified: `37a2837358138b07b5ec868f5e3aa23fe73a1e61` (implementação commitada localmente)
-- pull_requests: nenhum
+- head_sha_verified: `b354de2cf8e6b5d46dce3ba05391af3691f4f451` (atualização documental pré-homologação)
+- pull_requests: #332 merged em `0c82e7b2867db06a8072d27bee6b5a46673a7ebf`; #333 open para registro do checkpoint
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
 
@@ -33,7 +33,9 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 - `npm run build`: passou. Budget CookLily: JS 670.80/715 KiB; gzip JS 211.08/227.70 KiB; JS+CSS gzip 252.21/272.80 KiB.
 - `git diff --check`: passou.
 - As migrations de teste foram aplicadas apenas no `.runtime/lily-acai.db` ignorado do checkout isolado; nenhuma base compartilhada/produção foi usada.
-- Nenhum merge, deploy ou homologação de browser nesta etapa ainda.
+- PR #332 integrado via squash em `0c82e7b2867db06a8072d27bee6b5a46673a7ebf`.
+- Deploy canônico de teste concluído em `0c82e7b2867db06a8072d27bee6b5a46673a7ebf` (log `/srv/carro-chefe/data/deploy-logs/deploy-20261105-033947-0c82e7b2867d.log`; evidência `/srv/carro-chefe/data/deploy-logs/deploy-20261105-033947-0c82e7b2867d.evidence`). Preflight aplicou 12 migrations core e 51 Lily em bancos descartáveis; migrations de produção não tinham pendências. Backups core/Lily verificados antes do stop; Nginx `ok`; readiness e external smoke `ok`.
+- PR #333 contém o registro documental pós-merge; atualização do checkpoint de deploy e homologação permanece em andamento.
 
 ## Testes e gates
 
@@ -49,4 +51,4 @@ Explicar e corrigir a mensagem genérica do checkout sem registrar dados de cart
 
 ## Próxima ação exata
 
-Deploy canônico de teste do SHA `0c82e7b2867db06a8072d27bee6b5a46673a7ebf` e homologação com o navegador integrado desktop/mobile; conferir pedidos pendentes e verificar agente-key `/exchange`. Antes de tentar outro pagamento, conferir os dois pedidos de teste pendentes no painel MP; não criar pedidos duplicados enquanto a tentativa anterior continuar ambígua.
+Testar agente-key e `/exchange` no domínio de teste; homologar checkout/erro em viewport desktop e mobile no navegador integrado. Antes de nova tentativa MP, consultar pedidos pendentes via painel admin da CookLily e evitar duplicar cobranças ambíguas.
