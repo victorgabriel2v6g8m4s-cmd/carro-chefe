@@ -8,7 +8,8 @@ A arquitetura P0 mantém o processo Fastify em `127.0.0.1:4173` e usa Nginx como
 
 ```text
 /srv/carro-chefe/current/          checkout/release atual
-/srv/carro-chefe/data/             SQLite persistente e backups locais
+/srv/carro-chefe/data/             SQLite e backups do Carro Chefe
+/srv/cooklily/data/                banco, uploads e dados persistentes CookLily
 /etc/carro-chefe/carro-chefe.env   configuração fora do Git
 /etc/systemd/system/carro-chefe.service
 /etc/nginx/sites-available/carrochefe.com
@@ -22,7 +23,8 @@ Exemplo mínimo em `/etc/carro-chefe/carro-chefe.env`:
 
 ```env
 DATABASE_URL=file:/srv/carro-chefe/data/carro-chefe.db
-LILY_DATABASE_URL=file:/srv/carro-chefe/data/lily-acai.db
+LILY_DATABASE_URL=file:/srv/cooklily/data/cooklily.db
+LILY_UPLOAD_DIR=/srv/cooklily/data/uploads
 LILY_MFA_ENCRYPTION_KEY=<32-bytes-aleatorios-em-base64url>
 COOKLILY_LOGISTICS_CODE_KEY=<32-bytes-aleatorios-em-base64url>
 COOKLILY_PIX_KEY=<chave-pix-quando-homologada>

@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { lilyPrisma } from "@lily-acai/database";
 import { ApiError } from "../../../lib/errors";
+import { missionAudienceMatches, missionAudienceSchema } from "./mission-audience";
 import { requireLilyCsrf, requireLilySession } from "../auth";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "../admin-security";
 import { loyaltyBenefitSchema, parseLoyaltyBenefits } from "./benefits";
@@ -34,26 +35,21 @@ export function roundLoyaltyPoints(value: number, mode: string) {
 }
 
 async function notifyMissionAudience(mission: { id: string; title: string; audienceJson: string; actionUrl: string | null }) {
-  const audience = z.object({ mode: z.string().default("all"), levels: z.array(z.string()).default([]), users: z.array(z.string()).default([]) }).passthrough().parse(JSON.parse(mission.audienceJson));
-  const vipIds = audience.mode === "vip" || audience.mode === "standard"
-    ? (await lilyPrisma.lilyVipMembership.findMany({ where: { status: "active" }, select: { userId: true } })).map(({ userId }) => userId)
-    : null;
-  const candidates = await lilyPrisma.lilyUser.findMany({
-    where: { role: "customer", status: "active", ...(audience.mode === "manual" ? { id: { in: audience.users } } : {}), ...(audience.mode === "vip" && vipIds ? { id: { in: vipIds } } : {}) },
-    select: { id: true }
+  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
+  const [candidates, activeVip, levels, events] = await Promise.all([
+    lilyPrisma.lilyUser.findMany({ where: { role: "customer", status: "active" }, select: { id: true } }),
+    lilyPrisma.lilyVipMembership.findMany({ where: { status: "active" }, select: { userId: true } }),
+    lilyPrisma.lilyLevel.findMany({ where: { active: true }, select: { id: true, requiredPoints: true } }),
+    lilyPrisma.lilyLoyaltyEvent.findMany({ select: { userId: true, points: true } })
+  ]);
+  const vipIds = new Set(activeVip.map(({ userId }) => userId));
+  const pointsByUser = new Map<string, number>();
+  for (const event of events) pointsByUser.set(event.userId, (pointsByUser.get(event.userId) ?? 0) + event.points);
+  const recipients = candidates.filter(({ id }) => {
+    const points = pointsByUser.get(id) ?? 0;
+    const currentLevel = [...levels].filter((level) => points >= level.requiredPoints).sort((a, b) => b.requiredPoints - a.requiredPoints)[0];
+    return missionAudienceMatches(audience, { userId: id, isVip: vipIds.has(id), levelId: currentLevel?.id ?? null });
   });
-  const levelMatches = new Set<string>();
-  if (audience.levels.length) {
-    const levels = await lilyPrisma.lilyLevel.findMany({ where: { id: { in: audience.levels }, active: true }, select: { id: true, requiredPoints: true } });
-    for (const user of candidates) {
-      const events = await lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: user.id }, select: { points: true } });
-      const points = events.reduce((sum, event) => sum + event.points, 0);
-      const current = [...levels].filter((level) => points >= level.requiredPoints).sort((a, b) => b.requiredPoints - a.requiredPoints)[0];
-      if (current) levelMatches.add(user.id);
-    }
-  }
-  const recipients = candidates.filter(({ id }) => (audience.mode !== "standard" || !vipIds?.includes(id))
-    && (!audience.levels.length || levelMatches.has(id)));
   for (const { id: userId } of recipients) {
     await lilyPrisma.lilyCustomerNotification.upsert({
       where: { userId_sourceKey: { userId, sourceKey: `mission:${mission.id}:published` } },
@@ -316,7 +312,7 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     lilyCoins: z.number().int().min(0).max(1_000_000),
     prerequisites: z.array(z.string().trim().min(1).max(80)).max(100).default([]),
     instructions: z.array(z.object({ title: z.string().trim().min(1).max(120), body: z.string().trim().max(1000), required: z.boolean().default(false), mediaId: z.string().max(80).nullable().default(null) }).strict()).max(20).default([]),
-    audience: z.object({ mode: z.enum(["all", "standard", "vip", "manual"]), levels: z.array(z.string().max(80)).max(100), users: z.array(z.string().max(80)).max(500) }).strict().default({ mode: "all", levels: [], users: [] }),
+    audience: missionAudienceSchema.default({ mode: "all", levels: [], users: [], rules: [] }),
     rewards: z.array(z.object({ kind: z.enum(["product", "coupon", "offer", "vip"]), id: z.string().trim().min(1).max(80), quantity: z.number().int().min(1).max(20).default(1) }).strict()).max(20).default([]),
     actionUrl: z.string().url().max(500).nullable().optional(),
     approvalMode: z.enum(["automatic", "manual"]),
@@ -505,20 +501,21 @@ export async function lilyLevelRoutes(app: FastifyInstance) {
     const mission = await lilyPrisma.lilyMission.findFirst({ where: { id, status: "published" } });
     if (!mission) throw new ApiError(404, "Missão não encontrada.");
     if (mission.approvalMode === "manual") throw new ApiError(409, "Esta missão exige envio de comprovação e análise da equipe; ela ainda não pode ser reivindicada automaticamente.", { code: "LILY_MISSION_REQUIRES_REVIEW" });
-    const audience = z.object({ mode: z.string().optional(), levels: z.array(z.string()).optional(), users: z.array(z.string()).optional() }).passthrough().parse(JSON.parse(mission.audienceJson));
+    const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
     const membership = audience.mode === "vip" || audience.mode === "standard"
       ? await lilyPrisma.lilyVipMembership.findUnique({ where: { userId: context.user.id }, select: { status: true } })
       : null;
-    if (audience.mode === "manual" && !audience.users?.includes(context.user.id)
+    if (audience.mode === "manual" && !audience.users.includes(context.user.id)
       || audience.mode === "vip" && membership?.status !== "active"
-      || audience.mode === "standard" && membership?.status === "active") {
-      throw new ApiError(404, "Missão não encontrada.");
-    }
+      || audience.mode === "standard" && membership?.status === "active") throw new ApiError(404, "Missão não encontrada.");
     if (audience.levels?.length) {
       const points = await progressPointsForUser(context.user.id);
       const current = await lilyPrisma.lilyLevel.findFirst({ where: { active: true, requiredPoints: { lte: points } }, orderBy: { requiredPoints: "desc" }, select: { id: true } });
       if (!current || !audience.levels.includes(current.id)) throw new ApiError(404, "Missão não encontrada.");
     }
+    const currentPoints = await progressPointsForUser(context.user.id);
+    const currentLevel = await lilyPrisma.lilyLevel.findFirst({ where: { active: true, requiredPoints: { lte: currentPoints } }, orderBy: { requiredPoints: "desc" }, select: { id: true } });
+    if (!missionAudienceMatches(audience, { userId: context.user.id, isVip: membership?.status === "active", levelId: currentLevel?.id ?? null })) throw new ApiError(404, "Missão não encontrada.");
     const completed = await lilyPrisma.lilySurveyParticipation.findMany({ where: { userId: context.user.id, status: "completed" }, select: { surveyId: true } });
     const surveyRows = completed.length ? await lilyPrisma.lilySurvey.findMany({ where: { id: { in: completed.map(({ surveyId }) => surveyId) } }, select: { unlocksMissionsJson: true } }) : [];
     const unlockedBySurvey = surveyRows.some((row) => (JSON.parse(row.unlocksMissionsJson) as string[]).includes(id));

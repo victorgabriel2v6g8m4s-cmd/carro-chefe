@@ -8,21 +8,20 @@ import { ApiError } from "../../../lib/errors";
 import { auditLilyAdmin, requireLilyStaff } from "../admin-security";
 import { requireLilyCsrf, requireLilySession } from "../auth";
 import { awardReachedLevelCoins, lilyMissionPeriodKey, loyaltySnapshot, progressPointsForUser } from "./service";
+import { missionAudienceMatches, missionAudienceSchema } from "./mission-audience";
 
 const uploadRoot = () => path.resolve(process.env.LILY_UPLOAD_DIR ?? path.resolve(process.cwd(), ".runtime/lily-acai/uploads"), "mission-evidence");
 const imageExtensions: Record<string, string> = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" };
 const reviewSchema = z.object({ decision: z.enum(["approved", "rejected"]), note: z.string().trim().max(1000).nullable().optional() }).strict();
 const fieldValue = (field: unknown) => typeof field === "object" && field !== null && "value" in field && typeof field.value === "string" ? field.value : "";
-const currentMissionWindow = (cadence: string, now = new Date()) => {
-  if (cadence === "daily") return `day:${now.toISOString().slice(0, 10)}`;
-  if (cadence === "weekly") {
-    const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7));
-    return `week:${day.toISOString().slice(0, 10)}`;
-  }
-  if (cadence === "monthly") return `month:${now.toISOString().slice(0, 7)}`;
-  return "once";
-};
+function localMissionWindowStart(window: "daily" | "weekly" | "monthly", now = new Date()) {
+  const local = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Campo_Grande", year: "numeric", month: "2-digit", day: "2-digit" })
+    .formatToParts(now).reduce<Record<string, number>>((parts, part) => { if (part.type !== "literal") parts[part.type] = Number(part.value); return parts; }, {});
+  const day = new Date(Date.UTC(local.year, local.month - 1, local.day, 4));
+  if (window === "monthly") day.setUTCDate(1);
+  if (window === "weekly") day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7));
+  return day;
+}
 
 function hasImageSignature(mime: string, bytes: Buffer) {
   if (mime === "image/jpeg") return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
@@ -32,17 +31,13 @@ function hasImageSignature(mime: string, bytes: Buffer) {
 }
 
 async function requireMissionAudience(mission: { audienceJson: string }, userId: string) {
-  const audience = z.object({ mode: z.string().default("all"), levels: z.array(z.string()).default([]), users: z.array(z.string()).default([]) }).passthrough().parse(JSON.parse(mission.audienceJson));
-  if (audience.mode === "manual" && !audience.users.includes(userId)) throw new ApiError(404, "Missão não encontrada.");
-  const membership = audience.mode === "vip" || audience.mode === "standard"
-    ? await lilyPrisma.lilyVipMembership.findUnique({ where: { userId }, select: { status: true } })
-    : null;
-  if (audience.mode === "vip" && membership?.status !== "active" || audience.mode === "standard" && membership?.status === "active") throw new ApiError(404, "Missão não encontrada.");
-  if (audience.levels.length) {
-    const points = await progressPointsForUser(userId);
-    const level = await lilyPrisma.lilyLevel.findFirst({ where: { active: true, requiredPoints: { lte: points } }, orderBy: { requiredPoints: "desc" }, select: { id: true } });
-    if (!level || !audience.levels.includes(level.id)) throw new ApiError(404, "Missão não encontrada.");
-  }
+  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
+  const [membership, points] = await Promise.all([
+    lilyPrisma.lilyVipMembership.findUnique({ where: { userId }, select: { status: true } }),
+    progressPointsForUser(userId)
+  ]);
+  const level = await lilyPrisma.lilyLevel.findFirst({ where: { active: true, requiredPoints: { lte: points } }, orderBy: { requiredPoints: "desc" }, select: { id: true } });
+  if (!missionAudienceMatches(audience, { userId, isVip: membership?.status === "active", levelId: level?.id ?? null })) throw new ApiError(404, "Missão não encontrada.");
 }
 
 export async function lilyMissionSubmissionRoutes(app: FastifyInstance) {
@@ -77,9 +72,9 @@ export async function lilyMissionSubmissionRoutes(app: FastifyInstance) {
     const [periodCount, allTimeCount, dayCount, weekCount, monthCount] = await Promise.all([
       lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, periodKey, status: { in: ["pending", "approved"] } } }),
       mission.cadence === "perpetual" ? lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, status: { in: ["pending", "approved"] } } }) : Promise.resolve(0),
-      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, periodKey: currentMissionWindow("daily"), status: { in: ["pending", "approved"] } } }),
-      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, periodKey: currentMissionWindow("weekly"), status: { in: ["pending", "approved"] } } }),
-      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, periodKey: currentMissionWindow("monthly"), status: { in: ["pending", "approved"] } } })
+      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, submittedAt: { gte: localMissionWindowStart("daily") }, status: { in: ["pending", "approved"] } } }),
+      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, submittedAt: { gte: localMissionWindowStart("weekly") }, status: { in: ["pending", "approved"] } } }),
+      lilyPrisma.lilyMissionSubmission.count({ where: { missionId, userId: context.user.id, submittedAt: { gte: localMissionWindowStart("monthly") }, status: { in: ["pending", "approved"] } } })
     ]);
     if (mission.cadence === "perpetual" && allTimeCount || mission.cadence !== "perpetual" && periodCount) throw new ApiError(409, "Esta missão já foi enviada neste período.", { code: "LILY_MISSION_SUBMISSION_EXISTS" });
     if (mission.dailyLimit != null && dayCount >= mission.dailyLimit || mission.weeklyLimit != null && weekCount >= mission.weeklyLimit || mission.monthlyLimit != null && monthCount >= mission.monthlyLimit) throw new ApiError(429, "Você atingiu o limite de envios desta missão neste período.", { code: "LILY_MISSION_SUBMISSION_LIMIT" });
