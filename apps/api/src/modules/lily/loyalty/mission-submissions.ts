@@ -30,8 +30,8 @@ function hasImageSignature(mime: string, bytes: Buffer) {
   return false;
 }
 
-async function requireMissionAudience(mission: { audienceJson: string }, userId: string) {
-  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceJson));
+async function requireMissionAudience(mission: { audienceV2Json: string }, userId: string) {
+  const audience = missionAudienceSchema.parse(JSON.parse(mission.audienceV2Json));
   const [membership, points] = await Promise.all([
     lilyPrisma.lilyVipMembership.findUnique({ where: { userId }, select: { status: true } }),
     progressPointsForUser(userId)
@@ -45,7 +45,7 @@ export async function lilyMissionSubmissionRoutes(app: FastifyInstance) {
     const context = await requireLilySession(request);
     requireLilyCsrf(request, context);
     const missionId = z.string().trim().min(1).max(80).parse((request.params as { id: string }).id);
-    const mission = await lilyPrisma.lilyMission.findFirst({ where: { id: missionId, status: "published", approvalMode: "manual" } });
+    const mission = await lilyPrisma.lilyMission.findFirst({ where: { id: missionId, status: "published", approvalMode: "manual", workflowGeneration: "modern" } });
     if (!mission) throw new ApiError(404, "Missão manual não encontrada.");
     await requireMissionAudience(mission, context.user.id);
     const prerequisites = z.array(z.string().trim().min(1).max(120)).default([]).parse(JSON.parse(mission.prerequisiteJson));

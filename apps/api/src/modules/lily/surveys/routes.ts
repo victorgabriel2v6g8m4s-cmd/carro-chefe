@@ -448,7 +448,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
   app.get("/api/v1/lily/admin/missions", async (request) => {
     await requireLilyStaff(request);
     const { limit, offset } = pageSchema.parse(request.query);
-    const [missions, total] = await Promise.all([lilyPrisma.lilyMission.findMany({ orderBy: { createdAt: "desc" }, take: limit, skip: offset }), lilyPrisma.lilyMission.count()]);
+    const [missions, total] = await Promise.all([lilyPrisma.lilyMission.findMany({ where: { workflowGeneration: "legacy" }, orderBy: { createdAt: "desc" }, take: limit, skip: offset }), lilyPrisma.lilyMission.count({ where: { workflowGeneration: "legacy" } })]);
     return { missions: missions.map((mission) => ({ ...mission, prerequisites: parseJson(mission.prerequisiteJson, []) })), total };
   });
 
@@ -473,7 +473,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const context = await requireLilySession(request);
     const completed = await completedSurveyIds(context.user.id);
     const [rows, pointClaims, coinClaims] = await Promise.all([
-      lilyPrisma.lilyMission.findMany({ where: { status: "published" }, orderBy: { createdAt: "desc" }, take: 100 }),
+      lilyPrisma.lilyMission.findMany({ where: { status: "published", workflowGeneration: "modern" }, orderBy: { createdAt: "desc" }, take: 100 }),
       lilyPrisma.lilyLoyaltyEvent.findMany({ where: { userId: context.user.id, sourceKey: { startsWith: "mission:" } }, select: { sourceKey: true } }),
       lilyPrisma.lilyCoinEvent.findMany({ where: { userId: context.user.id, kind: "mission" }, select: { sourceKey: true } })
     ]);
@@ -507,7 +507,7 @@ export async function lilySurveyRoutes(app: FastifyInstance) {
     const levels = await lilyPrisma.lilyLevel.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true, requiredPoints: true } });
     const currentLevelId = [...levels].reverse().find((level) => points >= level.requiredPoints)?.id ?? null;
     const available = rows.filter((mission) => {
-      const audience = missionAudienceSchema.parse(parseJson(mission.audienceJson, {}));
+      const audience = mission.workflowGeneration === "modern" ? missionAudienceSchema.parse(parseJson(mission.audienceV2Json, {})) : missionAudienceSchema.parse({ mode: "all", levels: [], users: [] });
       if (!missionAudienceMatches(audience, { userId: context.user.id, isVip, levelId: currentLevelId })) return false;
       return unlockedBySurvey.has(mission.id) || parseJson<string[]>(mission.prerequisiteJson, []).every((id) => completed.has(id) || claimedEver.has(id));
     });

@@ -1,5 +1,3 @@
-ALTER TABLE "LilyOperationalSettings"
-ADD COLUMN "customerCancellationEnabled" BOOLEAN NOT NULL DEFAULT false;
-
-ALTER TABLE "LilyOperationalSettings"
-ADD COLUMN "customerCancellationWindowMinutes" INTEGER NOT NULL DEFAULT 15;
+-- The canonical historical migration 20261103100000_lily_customer_cancellation_window
+-- already creates these columns. Kept as a no-op because this identifier was
+-- shipped in an interrupted release and exists as a failed entry in some DBs.

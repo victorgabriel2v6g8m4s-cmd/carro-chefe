@@ -132,7 +132,7 @@ describe("progressão de níveis e LilyCoins", () => {
     const customerMe = await server.inject({ method: "GET", url: "/api/v1/lily/auth/me", headers: { cookie: customerCookie } });
     const mission = await lilyPrisma.lilyMission.create({ data: {
       id: crypto.randomUUID(), title: `Missão de prova ${suffix}`, status: "published", points: 12, lilyCoins: 7,
-      approvalMode: "manual", cadence: "perpetual", audienceJson: JSON.stringify({ mode: "all", levels: [], users: [] })
+      approvalMode: "manual", cadence: "perpetual", workflowGeneration: "modern", audienceV2Json: JSON.stringify({ mode: "all", levels: [], users: [] })
     } });
     missionId = mission.id;
     const boundary = `cooklily-${crypto.randomUUID()}`;
