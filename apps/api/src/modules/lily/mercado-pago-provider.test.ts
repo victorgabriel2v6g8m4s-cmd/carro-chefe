@@ -199,6 +199,34 @@ describe("Mercado Pago provider CookLily", () => {
     await expect(attempt).rejects.not.toThrow(/private detail|DETAILS MUST NOT LEAK/);
   });
 
+  it("extrai códigos de erro aninhados da Orders API sem registrar descrições", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      error: { code: "bad_request", message: "private top-level message" },
+      errors: [{ code: "property_value", description: "private card detail" }],
+      cause: [{ details: [{ code: "payer_email_invalid", message: "private email detail" }] }]
+    }), { status: 400, headers: { "Content-Type": "application/json", "x-request-id": "mp-nested-123" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const attempt = createMercadoPagoChoicePayment({
+      paymentId: "choice-nested-rejection-test",
+      orderId: "choice-nested-rejection-order",
+      amountCents: 50,
+      method: "credit_card",
+      idempotencyKey: "choice-nested-rejection-idempotency",
+      payer: { email: "test_payer@example.com" },
+      card: { token: "test-card-token", paymentMethodId: "master", installments: 1 }
+    });
+
+    await expect(attempt).rejects.toMatchObject({
+      details: {
+        providerRequestId: "mp-nested-123",
+        providerErrorCode: "bad_request",
+        providerCauseCodes: expect.arrayContaining(["property_value", "payer_email_invalid"])
+      }
+    });
+    await expect(attempt).rejects.not.toThrow(/private/);
+  });
+
   it("classifica erro HTTP 5xx do provedor como resultado ambíguo", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "service_unavailable" }), {
       status: 503, headers: { "Content-Type": "application/json" }

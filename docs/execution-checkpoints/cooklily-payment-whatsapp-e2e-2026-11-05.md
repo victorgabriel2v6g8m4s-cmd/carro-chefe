@@ -2,18 +2,18 @@
 
 - status: in_progress
 - owner: Codex
-- branch: `codex/cooklily-template-patch-default-fix`
+- branch: `codex/cooklily-payment-e2e-diagnostics`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `5722156df70dd8fef8ec310e52b29a6216218eb7`
-- head_sha_verified: `ef71d37f39f6dcb86cb1b8246c3f34084c225077`
-- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`
+- base_sha_verified: `65b23dc3589c689fcd1bcc47d686b66da5aecb95`
+- head_sha_verified: `bed6dc4c679c012d45c52caa592a5033ecb3fc38` (correção de diagnóstico; atualização documental subsequente)
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; PR #339 fechado sem merge por divergência de base; PR #340 merged em `5722156df70dd8fef8ec310e52b29a6216218eb7`; PR #341 merged em `ef71d37f39f6dcb86cb1b8246c3f34084c225077`; PR #342 draft aberto contra `cooklily/canonical`, head inicial `bed6dc4c679c012d45c52caa592a5033ecb3fc38`
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
 
 ## Entrega
 
-Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em ambiente de teste, notificações WhatsApp da Meta e transições operacionais. Não publicar esta execução em `licalily.com/cook` nem alterar configurações de produção.
+Homologar um pedido novo no domínio público CookLily, pagamento em ambiente explicitamente de teste, notificação WhatsApp real e acompanhamento operacional. Registrar todas as limitações na documentação. A autorização posterior do proprietário para testar em `licalily.com/cook` substitui a restrição anterior de não publicar/testar no público; qualquer resultado continua identificado como teste e não como venda real.
 
 ## Evidências confirmadas
 
@@ -44,12 +44,47 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 - A ativação de template segue falhando porque Zod materializa defaults em `templateInputSchema.partial()` e injeta `variables: []` num PATCH `{status:"active"}`. O banco salvo tem três variáveis e três placeholders; a validação isolada passa. Corrigi o schema para defaults serem aplicados apenas no POST e acrescentei teste de regressão.
 - Correção integrada em `ef71d37f`: defaults de criação passaram a ser normalizados apenas no POST; PATCH preserva campos omitidos. Teste focal 6/6; `npm run check` passou; `npm run test:runtime` passou (86 arquivos, 472 aprovados, 3 ignorados); `npm run build` passou com `build_budget=ok` (JS gzip 211.47 KiB, JS+CSS gzip 252.61 KiB); CI do PR #341 passou nos oito jobs.
 
+## Retomada em domínio público — 2026-11-05
+
+As evidências staging acima são históricas e não representam o teste solicitado agora. O proprietário instruiu a criação de um pedido novo no domínio público e esclareceu que as tentativas anteriores não foram pagamento real nem acompanhamento WhatsApp.
+
+- Release público observado no browser integrado: `https://licalily.com/cook`; o serviço público e o painel são os que foram usados. Nenhum deploy foi feito nesta retomada.
+- Produto público de teste `teste1`, preço promocional R$ 0,50, foi adicionado pelo catálogo; retirada selecionada. O checkout estava fora do horário e exibiu o modo “Homologação — pedido e pagamento simulados, sem cobrança”.
+- Opt-in operacional do WhatsApp foi marcado no checkout conforme consentimento prévio do proprietário para o número de teste autorizado.
+- Pedido recém-criado: `CL-5B6FD8DB956D`, ID interno `cmw3t28gm0006cxlpsrlcpzzj`, total R$ 0,50, retirada, marcado como HOMOLOGAÇÃO. O pagamento foi concluído pelo botão “Simular · R$ 0,50”; a página confirmou “PAGAMENTO CONFIRMADO”. Não houve chamada nem pagamento Mercado Pago, nem cobrança real.
+- Pedido foi liberado manualmente no painel da cozinha para a etapa “Montando pedido”. Nenhum alimento foi produzido ou retirado. A tela pública de acompanhamento mostrou a linha do tempo recebimento → aguardando pagamento → pagamento confirmado → montando pedido, com opt-in de WhatsApp ativo.
+- O painel público de WhatsApp mostrou 0 notificações pendentes, 0 recuperáveis e 16 falhas finais; os templates locais de `awaiting_payment`/`payment_confirmed` aparecem `draft` e “Meta: ainda não associado”. Portanto, o site não disparou automaticamente nenhuma mensagem para este pedido.
+- A API WhatsApp da Meta foi reconsultada usando a conta CookLily previamente escolhida. Os cinco templates operacionais (`cooklily_pedido_recebido`, `cooklily_pagamento_confirmado`, `cooklily_saiu_para_entrega`, `cooklily_entregador_chegou`, `cooklily_pedido_entregue`) retornaram `APPROVED`, categoria `UTILITY`, idioma `pt_BR`.
+- Para verificar entrega Cloud API, com confirmação explícita do proprietário, foi enviado manualmente o template aprovado `cooklily_pedido_recebido` do número comercial CookLily ao número de teste optado. Meta respondeu `accepted`, `deliverable=true`, message id `wamid.HBgMNTU2Njk5ODY0ODUxFQIAERgUQ0U1NDhBNUJDMEI5NTdDOTc3M0EA`. A conversa do WhatsApp Web mostrou o corpo, rodapé e os botões “Finalizar pagamento” e “Editar pedido”. Isto comprova envio Cloud API manual e recepção no WhatsApp, mas NÃO comprova disparo automático pelo outbox do aplicativo.
+- O botão “Finalizar pagamento” do teste manual abriu `https://licalily.com/cook/pagamento/CL-5B6FD8DB956D` e a página respondeu “Pedido não encontrado”. Diagnóstico: o teste manual preencheu o sufixo URL com o número público do pedido. O renderer canônico `apps/api/src/modules/lily/whatsapp-template-renderer.ts` usa `createLilyOrderAccessLink(order.id)` para preencher CTAs, ou seja, um link de acesso assinado derivado do ID interno. Portanto este teste manual não reproduziu o parâmetro emitido pela aplicação; ainda é pendente verificar o link assinado emitido pelo outbox público quando a automação estiver ativa.
+- O pedido permaneceu marcado HOMOLOGAÇÃO e em montagem; nenhuma retirada ocorreu. Não cancelar ou marcar como entregue sem decisão explícita, para preservar evidência do fluxo observado.
+- Conta de envio confirmada na Meta: `+55 67 9928-9187`; destinatário consentido: `+55 66 9986-4851`. Não registrar tokens/segredos.
+
+## Nova tentativa em staging — 2026-11-05
+
+- O usuário pediu repetir pedido, pagamento sandbox e envio automático. Para evitar cobrança real, a repetição foi no staging isolado, não em `licalily.com/cook`.
+- O primeiro login por chave abriu o Chrome externo por engano. Esse caminho foi interrompido; a autenticação subsequente ocorreu via relay na aba integrada do Codex. Não usar Chrome externo nesta execução.
+- Staging verificado ativo no release `/srv/cooklily/staging/releases/ef71d37f`, `MERCADO_PAGO_ENVIRONMENT=test`, health 200; banco `/srv/cooklily/staging/data/staging.db`.
+- Produto temporário de teste foi ajustado para R$ 0,50 após a API de métodos informar mínimo de R$ 0,50 para cartão. Pedido novo criado no checkout do staging: `CL-B0FE0AEAC942`, ID `cmw3v9daj000g64lp3agoci7c`, total R$ 0,50, `awaiting_payment`, sem linha em `LilyPayment`, `isHomologation=0`, opt-in WhatsApp ligado para o destinatário autorizado. Não houve pagamento registrado.
+- A tentativa de cartão sandbox chegou a `POST /v1/orders` e o provedor respondeu HTTP 400; log seguro: `req-8d`, request ID `521bd0e8-6c19-45a3-8859-3602c7809197`. Não repetir enquanto a resposta não puder ser diagnosticada. O navegador permanece em mensagem genérica de recusa.
+- A outbox automática para `awaiting_payment` falhou cinco tentativas: `LilyWhatsAppNotification` com `lastErrorCode=190`, `Authentication Error`, sem message ID. Os templates Meta continuam aprovados, mas o token configurado no staging foi recusado.
+- No Meta Business Settings, `Agent` recebeu acesso total ao app CookLily (`1108622408209440`) e à conta WhatsApp CookLily (`28928731436819905`), associada à conta de mensagens de templates e faturamento (`27155682270740448`). Após recarregar, a tela confirmou os dois ativos como acesso total.
+- Depois da autorização explícita, foi gerado token sem expiração para o app CookLily com apenas `whatsapp_business_management` e `whatsapp_business_messaging`. O token foi copiado sem ser lido ou exibido.
+- A revisão automática bloqueou antes de iniciar o processo a transferência da área de transferência por SSH; não houve conexão nem escrita remota. O token ainda não está salvo no staging. O arquivo `/etc/cooklily/staging.env` permanece `root:root`, modo `640`, e a chave alvo é `COOKLILY_WHATSAPP_ACCESS_TOKEN`; o serviço de staging estava ativo e o health retornava HTTP 200 antes da tentativa.
+- Correção local em andamento no sanitizador de diagnósticos do Mercado Pago: captura códigos allowlisted também em estruturas aninhadas (`error`, `errors`, `cause`, `details`), sem registrar descrições. Teste focal 14/14; `npm run check` e `npm run build` passaram; budget JS gzip 211,47 KiB e JS+CSS gzip 252,61 KiB; `npm run test:runtime` passou com 86 arquivos, 473 testes aprovados e 3 ignorados. Sem migration.
+
+## Trabalho pendente
+
+- O proprietário deve inserir o token diretamente no servidor por um prompt sem eco, atualizando apenas `COOKLILY_WHATSAPP_ACCESS_TOKEN` em `/etc/cooklily/staging.env`; depois reiniciar apenas `cooklily-staging.service` e validar health e envio automático ao destinatário de teste autorizado. Não enviar o token pelo chat.
+- Integrar a correção do diagnóstico via PR e deploy staging; fazer uma nova tentativa sandbox somente depois de entender o 400 e conferir o pedido no banco e no Mercado Pago.
+- Depois de pagamento sandbox aprovado e WhatsApp automático recebido, validar tracking, cozinha, courier, cancelamento e estorno conforme os estados permitidos no staging. O checkout público permanece sem uso para pagamentos nesta fase.
+
 ## Trabalho em andamento
 
-- Publicar o SHA `ef71d37f` no release isolado de staging, sem migration; validar health e reproduzir pelo navegador a ativação do template aprovado.
-- Repetir ativação do template aprovado após o novo release; configurar envio Meta apenas no ambiente autorizado e manter o envio desligado até existir pedido novo com opt-in do número autorizado.
-- Depois, criar um pedido novo, testar o pagamento no sandbox e confirmar sequência real de notificações/recepção no WhatsApp e estados da cozinha/entrega.
+- Investigar e corrigir por que o release público não associa/ativa os templates aprovados e não cria notificações de saída para pedido opt-in.
+- Criar uma homologação separada com Mercado Pago efetivamente em sandbox (modo explícito `test`) e fluxo de cartão de teste; o checkout público usado nesta tentativa só ofereceu simulação sem cobrança.
+- Depois das correções/deploy autorizado, criar outro pedido de baixo valor de teste, confirmar pagamento sandbox e validar envio automático do aplicativo, recebimento no WhatsApp, links assinados de CTA e atualizações posteriores.
 
 ## Próxima ação exata
 
-PR #341 integrado em `ef71d37f`; gates locais e CI passaram. Próxima ação exata: copiar o módulo API atualizado para release novo derivado de `/srv/cooklily/staging/releases/5722156d`, trocar symlink e reiniciar somente `cooklily-staging.service`; validar health e ativar `awaiting_payment` pelo painel. Depois, continuar com pedido novo, sandbox Mercado Pago, notificação real ao número autorizado, resposta pelo WhatsApp integrado, transições de cozinha/entrega e cancelamento/estorno de teste.
+Próxima ação: abrir PR com a correção do parser aninhado e gates já aprovados, e aguardar que o proprietário insira o token diretamente no staging. Após merge e configuração, publicar somente no staging, reiniciar o serviço, validar a outbox automática e capturar o código seguro do novo erro Mercado Pago antes de repetir cobrança sandbox. Resultado parcial: pedido staging criado; pagamento sandbox recusado sem registro; WhatsApp automático falhou com erro 190; envio manual público anterior não comprova automação.

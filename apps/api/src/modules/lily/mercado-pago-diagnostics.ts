@@ -16,15 +16,30 @@ function retryAfterSeconds(response: Response) {
   return seconds <= 604_800 ? seconds : null;
 }
 
+function errorCodeFrom(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  return safeProviderCode((value as Record<string, unknown>).code);
+}
+
+function nestedCauseCodes(value: unknown, depth = 0): string[] {
+  if (depth > 3 || !value || typeof value !== "object") return [];
+  if (Array.isArray(value)) return value.flatMap((entry) => nestedCauseCodes(entry, depth + 1)).slice(0, 5);
+
+  const record = value as Record<string, unknown>;
+  const ownCode = safeProviderCode(record.code);
+  const nested = [record.cause, record.causes, record.errors, record.details]
+    .flatMap((entry) => nestedCauseCodes(entry, depth + 1));
+  return [...(ownCode ? [ownCode] : []), ...nested].slice(0, 5);
+}
+
 /** Retorna somente códigos allowlisted; nunca inclui descrição ou corpo bruto do provedor. */
 export function mercadoPagoFailureDetails(response: Response, body: unknown) {
   const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const error = payload.error;
   const providerRequestId = safeProviderCode(response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"));
-  const providerErrorCode = safeProviderCode(payload.error) ?? safeProviderCode(payload.code);
-  const causes = Array.isArray(payload.cause) ? payload.cause : [];
-  const providerCauseCodes = causes
-    .map((cause) => cause && typeof cause === "object" ? safeProviderCode((cause as Record<string, unknown>).code) : undefined)
-    .filter((code): code is string => Boolean(code))
+  const providerErrorCode = safeProviderCode(error) ?? safeProviderCode(payload.code) ?? errorCodeFrom(error);
+  const providerCauseCodes = [payload.cause, payload.causes, payload.errors, payload.details]
+    .flatMap((entry) => nestedCauseCodes(entry))
     .slice(0, 5);
   const retryDelay = retryAfterSeconds(response);
 
