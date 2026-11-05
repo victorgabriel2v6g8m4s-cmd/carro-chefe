@@ -1,5 +1,25 @@
 export const FAILED_CANCELLATION_MIGRATION = "20261104190000_lily_customer_cancellation";
 export const PRIOR_CANCELLATION_MIGRATION = "20261103100000_lily_customer_cancellation_window";
+export const PRIOR_LEGACY_MISSIONS_MIGRATION = "20261104120000_lily_mission_rewards_streaks";
+
+export const LEGACY_COLUMN_MIGRATIONS = [
+  { migration: "20261104220000_lily_mission_authoring", table: "LilyMission", collisionColumn: "actionUrl" },
+  { migration: "20261105001000_lily_offer_badge", table: "LilyOffer", collisionColumn: "badgeColor" }
+];
+
+export function planLegacyColumnReconciliation({ priorApplied, migrationState, columns, statements, collisionColumn }) {
+  if (!priorApplied || migrationState === "applied") return null;
+  if (migrationState === "failed") throw new Error("Migration alvo já falhou; reconciliação automática recusada.");
+  if (!columns.has(collisionColumn)) return null;
+
+  const operations = [];
+  for (const statement of statements) {
+    const match = /^ALTER TABLE \"(LilyMission|LilyOffer)\" ADD COLUMN \"([A-Za-z][A-Za-z0-9]*)\" (.+);$/.exec(statement.trim());
+    if (!match) throw new Error("SQL fora da forma de reconciliação de colunas permitida.");
+    if (!columns.has(match[2])) operations.push(statement.trim());
+  }
+  return operations;
+}
 
 export function shouldResolveFailedCancellationMigration(db) {
   const table = db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='_prisma_migrations'").get();
