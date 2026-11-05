@@ -9,6 +9,7 @@ SERVICE="${CARRO_CHEFE_SERVICE:-carro-chefe}"
 SHARED_DB_SERVICES_RAW="${CARRO_CHEFE_SHARED_DB_SERVICES:-cooklily}"
 SERVICE_USER="${CARRO_CHEFE_SERVICE_USER:-carrochefe}"
 SERVICE_GROUP="${CARRO_CHEFE_SERVICE_GROUP:-carrochefe}"
+LILY_DATA_GROUP="${CARRO_CHEFE_LILY_DATA_GROUP:-cooklily-data}"
 BACKUP_DIR="${CARRO_CHEFE_BACKUP_DIR:-${DATA_DIR}/backups}"
 LOG_DIR="${CARRO_CHEFE_DEPLOY_LOG_DIR:-${DATA_DIR}/deploy-logs}"
 LOCK_FILE="${CARRO_CHEFE_DEPLOY_LOCK:-/run/lock/carro-chefe-deploy.lock}"
@@ -346,14 +347,23 @@ npm run db:deploy:lily
 
 PHASE="permissions"
 chown "${SERVICE_USER}:${SERVICE_GROUP}" "${CORE_DB}" || true
-[[ -f "${LILY_DB}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${LILY_DB}"
+LILY_DATA_DIR="$(dirname "${LILY_UPLOAD_DIR}")"
+[[ "${LILY_DATA_DIR}" == /srv/cooklily/data ]] || fail "LILY_UPLOAD_DIR deve usar o volume CookLily compartilhado esperado"
+getent group "${LILY_DATA_GROUP}" >/dev/null || fail "grupo compartilhado CookLily ausente: ${LILY_DATA_GROUP}"
+install -d -o "${SERVICE_USER}" -g "${LILY_DATA_GROUP}" -m 2770 "${LILY_DATA_DIR}" "${LILY_UPLOAD_DIR}"
+chgrp "${LILY_DATA_GROUP}" "${LILY_DATA_DIR}"
+chmod 2770 "${LILY_DATA_DIR}"
+[[ -f "${LILY_DB}" ]] && chgrp "${LILY_DATA_GROUP}" "${LILY_DB}"
 for suffix in -wal -shm; do
   [[ -f "${CORE_DB}${suffix}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${CORE_DB}${suffix}"
-  [[ -f "${LILY_DB}${suffix}" ]] && chown "${SERVICE_USER}:${SERVICE_GROUP}" "${LILY_DB}${suffix}"
+  [[ -f "${LILY_DB}${suffix}" ]] && chgrp "${LILY_DATA_GROUP}" "${LILY_DB}${suffix}"
 done
-mkdir -p "${LILY_UPLOAD_DIR}"
-chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "$(dirname "${LILY_UPLOAD_DIR}")"
-chmod 750 "$(dirname "${LILY_UPLOAD_DIR}")" "${LILY_UPLOAD_DIR}"
+[[ -f "${LILY_DB}" ]] && chmod 660 "${LILY_DB}"
+for suffix in -wal -shm; do
+  [[ -f "${LILY_DB}${suffix}" ]] && chmod 660 "${LILY_DB}${suffix}"
+done
+find "${LILY_UPLOAD_DIR}" -type d -exec chgrp "${LILY_DATA_GROUP}" {} + -exec chmod 2770 {} +
+find "${LILY_UPLOAD_DIR}" -type f -exec chgrp "${LILY_DATA_GROUP}" {} + -exec chmod 660 {} +
 
 PHASE="nginx"
 nginx -t

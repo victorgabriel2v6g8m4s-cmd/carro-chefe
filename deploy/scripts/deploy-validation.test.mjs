@@ -15,6 +15,17 @@ test('deploy interrompe e restaura os serviços que compartilham o SQLite CookLi
   assert.match(script, /SHARED_DB_SERVICES_STOPPED=\(\)/);
 });
 
+test('permissões de deploy preservam o grupo compartilhado do banco e dos uploads Lily', () => {
+  const script = readFileSync(new URL('./carro-chefe-deploy', import.meta.url), 'utf8');
+  assert.match(script, /CARRO_CHEFE_LILY_DATA_GROUP:-cooklily-data/);
+  assert.match(script, /install -d -o "\$\{SERVICE_USER\}" -g "\$\{LILY_DATA_GROUP\}" -m 2770 "\$\{LILY_DATA_DIR\}"/);
+  assert.match(script, /chgrp "\$\{LILY_DATA_GROUP\}" "\$\{LILY_DB\}"/);
+  assert.match(script, /chmod 660 "\$\{LILY_DB\}"/);
+  assert.match(script, /find "\$\{LILY_UPLOAD_DIR\}" -type d -exec chgrp "\$\{LILY_DATA_GROUP\}"/);
+  assert.doesNotMatch(script, /chown -R "\$\{SERVICE_USER\}:\$\{SERVICE_GROUP\}" "\$\(dirname "\$\{LILY_UPLOAD_DIR\}"\)"/);
+  assert.doesNotMatch(script, /chmod 750 "\$\(dirname "\$\{LILY_UPLOAD_DIR\}"\)"/);
+});
+
 function git(root, ...args) {
   execFileSync('git', args, { cwd: root, stdio: 'ignore' });
 }
