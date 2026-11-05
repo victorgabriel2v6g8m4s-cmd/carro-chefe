@@ -81,6 +81,40 @@ export function bodyTemplateFrom(components: MetaTemplateComponent[]) {
   return componentText(components, "BODY");
 }
 
+export function supportsOperationalNotificationTemplate(
+  key: string,
+  category: TemplateDraft["category"],
+  components: MetaTemplateComponent[],
+  operationalStages: string[]
+) {
+  if (!operationalStages.includes(key) || category !== "utility") return false;
+  if (components.filter((component) => component.type === "BODY").length !== 1) return false;
+  if (components.some((component) => !["BODY", "FOOTER", "BUTTONS"].includes(component.type))) return false;
+  const buttonComponents = components.filter((component) => component.type === "BUTTONS");
+  if (buttonComponents.length > 1) return false;
+  const buttons = buttonComponents[0]?.buttons;
+  if (!buttonComponents.length) return true;
+  if (!Array.isArray(buttons) || buttons.length < 1 || buttons.length > 3) return false;
+
+  return buttons.every((candidate) => {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return false;
+    const button = candidate as Record<string, unknown>;
+    if (typeof button.text !== "string" || !button.text.trim() || button.text.length > 25) return false;
+    if (button.type === "QUICK_REPLY") return true;
+    if (button.type !== "URL" || typeof button.url !== "string" || button.url.length > 2000) return false;
+    if (/\{\{(?!1\}\})\d+\}\}/.test(button.url) || (button.url.match(/\{\{1\}\}/g)?.length ?? 0) > 1) return false;
+
+    try {
+      const url = new URL(button.url.replace("{{1}}", "ORDER"));
+      return url.protocol === "https:"
+        && ((url.hostname === "licalily.com" && url.pathname.startsWith("/cook/"))
+          || (url.hostname === "carrochefe.com" && url.pathname.startsWith("/lilyacai/")));
+    } catch {
+      return false;
+    }
+  });
+}
+
 export function validateComponents(value: unknown): MetaTemplateComponent[] | null {
   if (!Array.isArray(value) || value.length > 10 || !isJsonValue(value)) return null;
   if (!value.every((item) => item && typeof item === "object" && !Array.isArray(item) && "type" in item && typeof item.type === "string" && /^[A-Z_]{2,40}$/.test(item.type))) return null;
