@@ -77,6 +77,24 @@ async function createProviderPayment(input: {
   });
 }
 
+function safePaymentProviderDiagnostic(error: unknown) {
+  if (!(error instanceof ApiError) || !error.details || typeof error.details !== "object") return null;
+  const details = error.details as Record<string, unknown>;
+  if (details.provider !== "mercado_pago" || typeof details.code !== "string"
+    || !details.code.startsWith("LILY_PAYMENT_PROVIDER_")) return null;
+  return {
+    provider: "mercado_pago",
+    code: details.code,
+    ...(typeof details.providerStatus === "number" ? { providerStatus: details.providerStatus } : {}),
+    ...(typeof details.providerFailure === "string" ? { providerFailure: details.providerFailure } : {}),
+    ...(typeof details.providerRequestId === "string" ? { providerRequestId: details.providerRequestId } : {}),
+    ...(typeof details.providerErrorCode === "string" ? { providerErrorCode: details.providerErrorCode } : {}),
+    ...(Array.isArray(details.providerCauseCodes)
+      ? { providerCauseCodes: details.providerCauseCodes.filter((code): code is string => typeof code === "string") }
+      : {})
+  };
+}
+
 async function homologationMethods(order: { grandTotalCents: number; deliveryFeeCents: number; couponShippingDiscountCents?: number; subtotalCents?: number; couponDiscountCents?: number }) {
   const rule = (await getLilyPaymentMethodSettings()).find((row) => row.method === "pix");
   if (!rule) throw new ApiError(503, "Método Pix indisponível para homologação.", { code: "LILY_HOMOLOGATION_PIX_UNAVAILABLE" });
@@ -370,7 +388,9 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
     }
 
     const paymentId = crypto.randomUUID();
-    const providerPayment = homologation
+    let providerPayment: Awaited<ReturnType<typeof createProviderPayment>>;
+    try {
+      providerPayment = homologation
       ? {
           provider: "homologation_mock" as const,
           attemptedProviders: ["homologation_mock" as const],
@@ -392,6 +412,11 @@ export async function lilyPaymentChoiceRoutes(app: FastifyInstance) {
           idempotencyKey,
           providers: availability.providers
         });
+    } catch (error) {
+      const diagnostic = safePaymentProviderDiagnostic(error);
+      if (diagnostic) request.log.warn({ ...diagnostic, method: body.method }, "Falha segura na criação de pagamento CookLily");
+      throw error;
+    }
     const created = await persistChoicePayment({
       paymentId,
       order: access.order,

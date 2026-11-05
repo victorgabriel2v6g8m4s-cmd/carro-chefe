@@ -1,13 +1,27 @@
 import { createServer } from "node:http";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
-const handoffPath = "/lilyacai/agent-auth.html";
+const handoffRoutes = new Map([
+  ["https://carrochefe.com", "/lilyacai/agent-auth.html"],
+  ["https://licalily.com", "/cook/agent-auth.html"]
+]);
+
+export function isSupportedAgentAuthOrigin(origin) {
+  return handoffRoutes.has(origin);
+}
+
+export function buildAgentHandoffUrl(origin, ticket) {
+  const pathname = handoffRoutes.get(origin);
+  if (!pathname || !/^[A-Za-z0-9_-]{40,60}$/.test(ticket)) {
+    throw new Error("Origem ou ticket de handoff CookLily inválido.");
+  }
+  return `${origin}${pathname}#ticket=${encodeURIComponent(ticket)}`;
+}
 
 function isAgentHandoff(value) {
   try {
     const url = new URL(value);
-    return url.origin === "https://carrochefe.com"
-      && url.pathname === handoffPath
+    return handoffRoutes.get(url.origin) === url.pathname
       && url.search === ""
       && /^#ticket=[A-Za-z0-9_-]{40,60}$/.test(url.hash);
   } catch {
