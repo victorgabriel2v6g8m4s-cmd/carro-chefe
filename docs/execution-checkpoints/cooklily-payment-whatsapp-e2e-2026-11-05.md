@@ -4,9 +4,9 @@
 - owner: Codex
 - branch: `codex/cooklily-wa-template-activation`
 - base_branch: `cooklily/canonical`
-- base_sha_verified: `77a2d74797b40f73520914d3062ec6094e8d0fe8`
-- head_sha_verified: `77a2d74797b40f73520914d3062ec6094e8d0fe8` (alterações locais ainda não commitadas)
-- pull_requests: none
+- base_sha_verified: `11c105317b170c5fa17f7efa312d8a262d13dbea`
+- head_sha_verified: `4b40c274901c81f70266ccad3f5ed5df1c1d3a34`
+- pull_requests: PR #338 merged por squash em `11c105317b170c5fa17f7efa312d8a262d13dbea`; CI run `42050537937` concluído com todos os jobs em sucesso
 - migrations: none planned
 - last_verified_at: 2026-11-05 America/Sao_Paulo
 - interruption_state: none
@@ -28,13 +28,17 @@ Homologar no staging isolado a criação do pedido, pagamento Mercado Pago em am
 - No WhatsApp Manager, cinco templates relevantes estão `APPROVED` / `UTILITY` em `pt_BR`: `cooklily_pedido_recebido`, `cooklily_pagamento_confirmado`, `cooklily_saiu_para_entrega`, `cooklily_entregador_chegou`, `cooklily_pedido_entregue`. O template de pedido recebido foi conferido na Meta; corpo, rodapé e dois botões correspondem aos rascunhos do pacote inicial, com links sob `licalily.com/cook`.
 - Descoberto bloqueio de UI: o backend valida e aceita botões `BUTTONS` de resposta rápida/URL da CookLily, mas o frontend só habilitava “Ativar nas notificações” quando não havia componente `BUTTONS`. A tela de WhatsApp ainda mostra fail-closed e template fallback/idioma pendentes; nenhum rascunho está ativo.
 - Correção local no estúdio: habilitação agora reutiliza critérios compatíveis com o backend (template utility operacional, body único, botões URL de domínios CookLily permitidos ou quick replies; até três botões). Testes focados: 5 passaram. `npm run check` passou. `npm run test:runtime`: 86 arquivos, 468 testes passaram, 3 ignorados. `npm run build` passou e `build_budget=ok` (JS gzip 211.37 KiB, total JS+CSS gzip 252.50 KiB).
+- CI do PR #338 passou nos jobs de Node 20/22/24, Tool Health, Windows Supervisor, Excel Recipe e Workbook Snapshot; PR foi integrado por squash.
+- Reconsulta segura da outbox encontrou duas notificações pendentes (`CL-2C89449B54DE` e `CL-104492A004F7`), ambas com opt-in ligado, mas nenhuma ligada ao telefone de teste autorizado. O worker permanece fail-closed; não habilitar até essas linhas serem desativadas pelo fluxo de opt-out e existir apenas notificação do destinatário autorizado.
+- O erro 400 do Mercado Pago foi localizado pelo request ID; os logs mantêm apenas status e ID, sem causa sanitizada. O endpoint /v1/orders da integração pode retornar códigos `required_properties`, `unsupported_properties` ou `property_value` entre outros; conferir a compatibilidade do payload com a documentação oficial antes de nova tentativa. Fonte: https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-management/integration-errors/api.
 
 ## Trabalho em andamento
 
-- Corrigir a condição do estúdio para ativar apenas templates de utilidade com um corpo e botões seguros (URL CookLily ou resposta rápida), alinhada à validação backend.
-- Depois de CI e integração, publicar o SHA aprovado somente no staging, ativar os cinco mapeamentos correspondentes aos templates aprovados e validar o envio da fila ao destinatário de teste já autorizado.
-- Diagnosticar o HTTP 400 do sandbox sem expor token, dados de cartão ou corpo bruto do provedor; consultar pagamentos de teste antes de qualquer retry.
+- Publicar a correção visual integrada somente no serviço isolado `/srv/cooklily/staging`; confirmar o SHA e a saúde sem migration.
+- Usar o fluxo de opt-out autenticado de cada pedido pendente incompatível com o destinatário autorizado, confirmando estado `skipped` antes de ativar o worker.
+- Associar os templates aprovados às etapas compatíveis no painel; manter envio desligado até validar o destinatário do único pedido com opt-in de teste.
+- Diagnosticar o HTTP 400 do sandbox comparando payload e contrato oficial. Não repetir pagamento até identificar o código de causa e conferir no painel de pagamentos de teste que não existe cobrança ambígua.
 
 ## Próxima ação exata
 
-`git diff --check` passou. Criar commit e PR draft para `cooklily/canonical`, aguardar CI, integrar por squash e publicar somente no staging. Depois, associar/ativar templates e continuar a homologação.
+Com PR #338 integrado e CI verde, preparar um release staging derivado do release ativo `9f321912` contendo somente o `apps/lily_acai/dist` atualizado pelo build aprovado; manter migrations e banco isolado sem alterações. Fazer swap atômico em `/srv/cooklily/staging/current`, restart/health e rollback imediato se falhar. Em seguida, tratar notificações pendentes por opt-out autenticado e diagnosticar a recusa MP sem repetir tentativa.
