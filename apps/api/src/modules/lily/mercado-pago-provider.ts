@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { ApiError } from "../../lib/errors";
+import { mercadoPagoFailureDetails } from "./mercado-pago-diagnostics";
 import type {
   LilyPaymentProviderCreateInput,
   LilyPaymentProviderCreateResult,
@@ -145,8 +146,7 @@ async function mercadoPagoRequest(
   if (!response.ok) {
     throw new ApiError(502, "O processador de pagamento recusou a operação.", {
       code: "LILY_PAYMENT_PROVIDER_REJECTED",
-      provider: "mercado_pago",
-      providerStatus: response.status
+      ...mercadoPagoFailureDetails(response, body)
     });
   }
   if (!body || typeof body !== "object") {

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auditLilyAdmin, requireLilyAdmin, requireLilyStaff } from "./admin-security";
 import { LILY_WHATSAPP_STARTER_TEMPLATES } from "./whatsapp-template-presets";
 import { isSafeOperationalTemplateComponents, LILY_WHATSAPP_TEMPLATE_VARIABLES, renderOrderTemplateComponents, type WhatsAppOrderSnapshot } from "./whatsapp-template-renderer";
+import { lilyWhatsAppQueueAdminRoutes } from "./whatsapp-queue-admin";
 
 type DbClient = Prisma.TransactionClient | PrismaClient;
 
@@ -114,15 +115,22 @@ export function assertWhatsAppTemplateCanActivate(
   if (status === "active" && !metaTemplateName) {
     throw new ApiError(400, "Para ativar uma mensagem, informe o nome do template aprovado na Meta.", { code: "WHATSAPP_TEMPLATE_META_NAME_REQUIRED" });
   }
-  if (status === "active" && operational && (
-    !LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage)
-    || operational.category !== "utility"
-    || !isSafeOperationalTemplateComponents(operational.components as Array<Record<string, unknown>>)
-    || (variables !== undefined && operational.components.some((component) => component.type === "BODY"
-      && (typeof (component as { text?: unknown }).text !== "string"
-        || ((String((component as { text?: unknown }).text).match(/\{\{\d+\}\}/g) ?? []).length !== variables.length))))
-  )) {
-    throw new ApiError(400, "Use um template de utilidade para uma etapa de pedido, com corpo válido e botões somente de resposta rápida ou links CookLily.", { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" });
+  if (status === "active" && operational) {
+    const reasons = [
+      ...(!LILY_WHATSAPP_STAGES.includes(operational.key as LilyWhatsAppStage) ? ["unsupported_order_stage"] : []),
+      ...(operational.category !== "utility" ? ["category_must_be_utility"] : []),
+      ...(!isSafeOperationalTemplateComponents(operational.components as Array<Record<string, unknown>>) ? ["components_not_supported"] : []),
+      ...(variables !== undefined && operational.components.some((component) => component.type === "BODY"
+        && (typeof (component as { text?: unknown }).text !== "string"
+          || ((String((component as { text?: unknown }).text).match(/\{\{\d+\}\}/g) ?? []).length !== variables.length)))
+        ? ["body_variable_count_mismatch"] : [])
+    ];
+    if (reasons.length) {
+      throw new ApiError(400, `Template não pode ser ativado: ${reasons.join(", ")}.`, {
+        code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL",
+        reasons
+      });
+    }
   }
 }
 
@@ -445,6 +453,7 @@ export function startLilyWhatsAppWorker(log?: {
 }
 
 export async function lilyWhatsAppRoutes(app: FastifyInstance) {
+  lilyWhatsAppQueueAdminRoutes(app);
   app.get("/api/v1/lily/admin/whatsapp/settings", async (request) => {
     await requireLilyStaff(request);
     const configuration = lilyWhatsAppConfiguration();
@@ -557,15 +566,15 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
   const templateInputSchema = z.object({
     key: z.string().trim().min(2).max(80).regex(/^[a-z0-9][a-z0-9_]*$/),
     displayName: z.string().trim().min(2).max(120),
-    category: z.enum(["utility", "marketing", "authentication"]).default("utility"),
-    language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).default("pt_BR"),
+    category: z.enum(["utility", "marketing", "authentication"]).optional(),
+    language: z.string().regex(/^[a-z]{2}_[A-Z]{2}$/).optional(),
     bodyTemplate: z.string().trim().min(1).max(4000),
-    variables: z.array(z.enum(LILY_WHATSAPP_TEMPLATE_VARIABLES)).max(20).default([]),
-    variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).default([]),
-    flow: z.array(flowNodeSchema).max(100).default([]),
+    variables: z.array(z.enum(LILY_WHATSAPP_TEMPLATE_VARIABLES)).max(20).optional(),
+    variableNames: z.array(z.string().trim().min(1).max(60).regex(/^[a-z][a-z0-9_]*$/)).max(50).optional(),
+    flow: z.array(flowNodeSchema).max(100).optional(),
     components: metaComponentsSchema.optional(),
     metaTemplateName: z.string().trim().min(1).max(512).regex(/^[a-z0-9_]+$/).optional().nullable(),
-    status: z.enum(["draft", "active", "archived"]).default("draft")
+    status: z.enum(["draft", "active", "archived"]).optional()
   }).strict();
   async function validateTemplateFlow(nodes: Array<z.infer<typeof flowNodeSchema>>, ownKey?: string) {
     const ids = new Set(nodes.map((node) => node.id));
@@ -681,7 +690,16 @@ export async function lilyWhatsAppRoutes(app: FastifyInstance) {
 
   app.post("/api/v1/lily/admin/whatsapp/templates", async (request, reply) => {
     const context = await requireLilyAdmin(request, true);
-    const input = templateInputSchema.parse(request.body);
+    const parsed = templateInputSchema.parse(request.body);
+    const input = {
+      ...parsed,
+      category: parsed.category ?? "utility",
+      language: parsed.language ?? "pt_BR",
+      variables: parsed.variables ?? [],
+      variableNames: parsed.variableNames ?? [],
+      flow: parsed.flow ?? [],
+      status: parsed.status ?? "draft"
+    };
     await validateTemplateFlow(input.flow, input.key);
     const components = input.components ?? [{ type: "BODY", text: input.bodyTemplate }];
     assertWhatsAppTemplateCanActivate(input.status, input.metaTemplateName, { key: input.key, category: input.category, components }, input.variables);

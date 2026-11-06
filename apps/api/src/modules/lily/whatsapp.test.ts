@@ -129,7 +129,7 @@ describe("CookLily Entrega 11H WhatsApp", () => {
   it("permite botões URL da CookLily e bloqueia links externos em templates operacionais", () => {
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_oferta", {
       key: "campanha_verao", category: "marketing", components: [{ type: "BODY" }]
-    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL", reasons: ["unsupported_order_stage", "category_must_be_utility"] } }));
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
       key: "awaiting_payment", category: "utility", components: [
         { type: "BODY", text: "Pedido {{1}} recebido: {{2}} ({{3}})" },
@@ -142,10 +142,10 @@ describe("CookLily Entrega 11H WhatsApp", () => {
         { type: "BODY", text: "Pedido {{1}} recebido" },
         { type: "BUTTONS", buttons: [{ type: "URL", text: "Finalizar pagamento", url: "https://evil.example/pay/{{1}}" }] }
       ]
-    }, ["orderNumber"])).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    }, ["orderNumber"])).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL", reasons: ["components_not_supported"] } }));
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
       key: "ready_for_pickup", category: "utility", components: [{ type: "BODY", text: "Pronto {{1}}" }, { type: "HEADER" }]
-    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL" } }));
+    })).toThrowError(expect.objectContaining({ details: { code: "WHATSAPP_TEMPLATE_NOT_OPERATIONAL", reasons: ["components_not_supported"] } }));
     expect(() => assertWhatsAppTemplateCanActivate("active", "cooklily_order_ready", {
       key: "ready_for_pickup", category: "utility", components: [{ type: "BODY", text: "Pronto {{1}}" }, { type: "FOOTER" }]
     })).not.toThrow();

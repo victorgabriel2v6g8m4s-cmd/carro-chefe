@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyTemplate, makeMetaPayload, renderTemplateMessage, textVariables, validateComponents } from "./template-utils";
+import { emptyTemplate, makeMetaPayload, renderTemplateMessage, supportsOperationalNotificationTemplate, textVariables, validateComponents } from "./template-utils";
 import type { MetaTemplateComponent } from "./template-types";
 import { createAuthenticationComponents, setAuthenticationExpiration, setAuthenticationSecurityRecommendation, setOtpType } from "./authentication-template";
 
@@ -39,6 +39,23 @@ describe("WhatsApp Meta template studio utilities", () => {
     for (let level = 0; level < 10; level += 1) nested = { value: nested };
     expect(validateComponents([{ type: "BODY", nested }])).toBeNull();
     expect(validateComponents([{ type: "BODY", text: "válido" }])).toEqual([{ type: "BODY", text: "válido" }]);
+  });
+
+  it("permite ativar templates operacionais com botões URL CookLily aprovados", () => {
+    const components: MetaTemplateComponent[] = [
+      { type: "BODY", text: "Pedido {{1}} recebido. Itens: {{2}}. Total {{3}}." },
+      { type: "FOOTER", text: "CookLily" },
+      { type: "BUTTONS", buttons: [
+        { type: "URL", text: "Finalizar pagamento", url: "https://licalily.com/cook/pagamento/{{1}}" },
+        { type: "URL", text: "Editar pedido", url: "https://licalily.com/cook/carrinho?editar={{1}}" }
+      ] }
+    ];
+    expect(supportsOperationalNotificationTemplate("awaiting_payment", "utility", components, ["awaiting_payment"])).toBe(true);
+    expect(supportsOperationalNotificationTemplate("awaiting_payment", "marketing", components, ["awaiting_payment"])).toBe(false);
+    expect(supportsOperationalNotificationTemplate("awaiting_payment", "utility", [
+      ...components.slice(0, 2),
+      { type: "BUTTONS", buttons: [{ type: "URL", text: "Site", url: "https://example.com/" }] }
+    ], ["awaiting_payment"])).toBe(false);
   });
 
   it("monta componentes Meta próprios para autenticação e simula o código local", () => {

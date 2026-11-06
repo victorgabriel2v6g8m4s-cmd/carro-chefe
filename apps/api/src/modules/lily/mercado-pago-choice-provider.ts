@@ -1,5 +1,6 @@
 import { ApiError } from "../../lib/errors";
 import type { LilyCheckoutPaymentMethod } from "./payment-method-rules";
+import { mercadoPagoFailureDetails } from "./mercado-pago-diagnostics";
 
 const DEFAULT_API_BASE = "https://api.mercadopago.com";
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -63,26 +64,6 @@ function apiBase() {
 
 function amountString(cents: number) {
   return (cents / 100).toFixed(2);
-}
-
-function safeProviderCode(value: unknown) {
-  const code = typeof value === "number" ? String(value) : typeof value === "string" ? value : "";
-  return /^[A-Za-z0-9_.-]{1,80}$/.test(code) ? code : undefined;
-}
-
-function providerFailureDetails(response: Response, body: any) {
-  const providerRequestId = safeProviderCode(response.headers.get("x-request-id") ?? response.headers.get("x-correlation-id"));
-  const providerErrorCode = safeProviderCode(body?.error) ?? safeProviderCode(body?.code);
-  const providerCauseCodes = Array.isArray(body?.cause)
-    ? body.cause.map((cause: any) => safeProviderCode(cause?.code)).filter((code: string | undefined): code is string => Boolean(code)).slice(0, 5)
-    : [];
-  return {
-    provider: "mercado_pago",
-    providerStatus: response.status,
-    ...(providerRequestId ? { providerRequestId } : {}),
-    ...(providerErrorCode ? { providerErrorCode } : {}),
-    ...(providerCauseCodes.length ? { providerCauseCodes } : {})
-  };
 }
 
 function firstPayment(order: any) {
@@ -165,7 +146,16 @@ export async function createMercadoPagoChoicePayment(input: ChoiceInput): Promis
 
   const order = await response.json().catch(() => null) as any;
   if (!response.ok) {
-    const diagnostic = providerFailureDetails(response, order);
+    const diagnostic = mercadoPagoFailureDetails(response, order);
+    if (response.status === 429) {
+      const retryDelay = typeof diagnostic.retryAfterSeconds === "number"
+        ? ` Aguarde ${diagnostic.retryAfterSeconds} segundos antes de tentar novamente.`
+        : " Aguarde alguns minutos antes de tentar novamente.";
+      throw new ApiError(502, `O Mercado Pago limitou temporariamente as tentativas.${retryDelay}`, {
+        code: "LILY_PAYMENT_PROVIDER_RATE_LIMITED",
+        ...diagnostic
+      });
+    }
     if (response.status >= 400 && response.status < 500) {
       throw new ApiError(502, "O Mercado Pago recusou a tentativa de cartão. Confira os dados ou escolha outro meio de pagamento.", {
         code: "LILY_PAYMENT_PROVIDER_REJECTED",
@@ -181,7 +171,7 @@ export async function createMercadoPagoChoicePayment(input: ChoiceInput): Promis
   if (!order || typeof order !== "object") {
     throw new ApiError(502, "O Mercado Pago respondeu em um formato inesperado. A tentativa não foi confirmada; verifique o painel de testes antes de repetir.", {
       code: "LILY_PAYMENT_PROVIDER_INVALID_RESPONSE",
-      ...providerFailureDetails(response, null)
+      ...mercadoPagoFailureDetails(response, null)
     });
   }
 

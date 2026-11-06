@@ -116,6 +116,36 @@ describe("Mercado Pago provider CookLily", () => {
     });
   });
 
+  it("retorna códigos sanitizados da Orders API também no fluxo legado de pagamentos", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      error: "UPSTREAM_PRIVATE_TEXT",
+      cause: [{ code: "card_token_invalid", description: "private card details" }]
+    }), { status: 400, headers: { "Content-Type": "application/json", "x-request-id": "mp-legacy-123" } })));
+
+    const attempt = createMercadoPagoPayment({
+      paymentId: "legacy-rejected-payment",
+      orderId: "legacy-rejected-order",
+      orderNumber: "CL-LEGACY-REJECTED",
+      amountCents: 1000,
+      currency: "BRL",
+      method: "credit_card",
+      idempotencyKey: "legacy-rejected-idempotency",
+      payer: { email: "cliente@example.com" },
+      card: { token: "card-token-test-value-1234", paymentMethodId: "visa", installments: 1 }
+    });
+    await expect(attempt).rejects.toMatchObject({
+      statusCode: 502,
+      details: {
+        code: "LILY_PAYMENT_PROVIDER_REJECTED",
+        providerStatus: 400,
+        providerRequestId: "mp-legacy-123",
+        providerErrorCode: "UPSTREAM_PRIVATE_TEXT",
+        providerCauseCodes: ["card_token_invalid"]
+      }
+    });
+    await expect(attempt).rejects.not.toThrow(/UPSTREAM_PRIVATE_TEXT|private card details/);
+  });
+
   it("usa a credencial _TEST também no fluxo de escolha de pagamento", async () => {
     process.env.MERCADO_PAGO_ENVIRONMENT = "test";
     process.env.MERCADO_PAGO_ACCESS_TOKEN = "PRODUCTION-TOKEN-MUST-NOT-BE-USED";
@@ -169,6 +199,34 @@ describe("Mercado Pago provider CookLily", () => {
     await expect(attempt).rejects.not.toThrow(/private detail|DETAILS MUST NOT LEAK/);
   });
 
+  it("extrai códigos de erro aninhados da Orders API sem registrar descrições", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      error: { code: "bad_request", message: "private top-level message" },
+      errors: [{ code: "property_value", description: "private card detail" }],
+      cause: [{ details: [{ code: "payer_email_invalid", message: "private email detail" }] }]
+    }), { status: 400, headers: { "Content-Type": "application/json", "x-request-id": "mp-nested-123" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const attempt = createMercadoPagoChoicePayment({
+      paymentId: "choice-nested-rejection-test",
+      orderId: "choice-nested-rejection-order",
+      amountCents: 50,
+      method: "credit_card",
+      idempotencyKey: "choice-nested-rejection-idempotency",
+      payer: { email: "test_payer@example.com" },
+      card: { token: "test-card-token", paymentMethodId: "master", installments: 1 }
+    });
+
+    await expect(attempt).rejects.toMatchObject({
+      details: {
+        providerRequestId: "mp-nested-123",
+        providerErrorCode: "bad_request",
+        providerCauseCodes: expect.arrayContaining(["property_value", "payer_email_invalid"])
+      }
+    });
+    await expect(attempt).rejects.not.toThrow(/private/);
+  });
+
   it("classifica erro HTTP 5xx do provedor como resultado ambíguo", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "service_unavailable" }), {
       status: 503, headers: { "Content-Type": "application/json" }
@@ -183,6 +241,37 @@ describe("Mercado Pago provider CookLily", () => {
     })).rejects.toMatchObject({
       statusCode: 502,
       details: { code: "LILY_PAYMENT_PROVIDER_UNCERTAIN", providerStatus: 503, providerFailure: "upstream" }
+    });
+  });
+
+  it("trata limite do provedor como temporário e respeita Retry-After sem expor o corpo bruto", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      message: "private upstream details"
+    }), {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        "Retry-After": "30",
+        "x-request-id": "mp-rate-limit-123"
+      }
+    })));
+
+    await expect(createMercadoPagoChoicePayment({
+      paymentId: "choice-rate-limit-test",
+      orderId: "choice-rate-limit-order",
+      amountCents: 1000,
+      method: "pix",
+      idempotencyKey: "choice-rate-limit-idempotency",
+      payer: { email: "cliente@example.com" }
+    })).rejects.toMatchObject({
+      statusCode: 502,
+      message: "O Mercado Pago limitou temporariamente as tentativas. Aguarde 30 segundos antes de tentar novamente.",
+      details: {
+        code: "LILY_PAYMENT_PROVIDER_RATE_LIMITED",
+        providerStatus: 429,
+        providerRequestId: "mp-rate-limit-123",
+        retryAfterSeconds: 30
+      }
     });
   });
 

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useState, type FormEvent } from "react";
 import { TemplateBuilder } from "./TemplateBuilder";
 const TemplateSimulator = lazy(() => import("./TemplateSimulator").then((module) => ({ default: module.TemplateSimulator })));
-import { emptyTemplate, makeMetaPayload } from "./template-utils";
+import { emptyTemplate, makeMetaPayload, supportsOperationalNotificationTemplate } from "./template-utils";
 import type { TemplateDraft } from "./template-types";
 import type { WhatsAppTemplate } from "../whatsapp-api";
 import "./template-studio.css";
@@ -39,9 +39,7 @@ function TemplateCard({ item, canEdit, operationalStages, busy, onEdit, onStatus
   onEdit: () => void;
   onStatusChange: (status: WhatsAppTemplate["status"]) => void;
 }) {
-  const supportsOrderUpdates = operationalStages.includes(item.key)
-    && item.category === "utility"
-    && item.components.every((component) => ["BODY", "FOOTER"].includes(component.type));
+  const supportsOrderUpdates = supportsOperationalNotificationTemplate(item.key, item.category, item.components, operationalStages);
   return <article className="whatsapp-template-card">
     <div><strong>{item.displayName}</strong><small>{item.key} · {item.category} · {item.language} · {item.status}</small><p>{item.bodyTemplate}</p><small>Meta: {item.metaTemplateName || "ainda não associado"}</small></div>
     <div className="admin-actions">

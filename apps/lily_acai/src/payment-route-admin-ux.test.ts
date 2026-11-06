@@ -50,6 +50,16 @@ describe("CookLily — pagamento e UX administrativa", () => {
     expect(page).toContain("current = await getLilySession()");
   });
 
+  it("renova a idempotência apenas após recusa definitiva do provedor", () => {
+    const page = source("apps/lily_acai/src/features/payments/PaymentChoicePage.tsx");
+    const client = source("apps/lily_acai/src/features/payments/payment-choice-api.ts");
+    expect(client).toContain("class LilyPaymentChoiceRequestError");
+    expect(client).toContain("details?.code");
+    expect(page).toContain('cause.code === "LILY_PAYMENT_PROVIDER_REJECTED"');
+    expect(page).toContain("clearPaymentKeys(orderId)");
+    expect(page).toContain("paymentIdempotencyKey(orderId, input.method)");
+  });
+
   it("renderiza o Pix com o QR Lab e o visual da marca CookLily", () => {
     const qr = source("apps/lily_acai/src/features/payments/CookLilyPixQrCode.tsx");
     const result = source("apps/lily_acai/src/features/payments/PaymentChoiceComponents.tsx");
