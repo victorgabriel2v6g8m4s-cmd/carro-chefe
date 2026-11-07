@@ -110,7 +110,7 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 
 ## Política de branches
 
-- Canônicas: `main`, `cooklily/canonical`.
+- Canônica deste repositório: `main`. CookLily deixou de ser mantida aqui; seu código e sua branch canônica estão no [repositório independente CookLily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily).
 - Evidências históricas: `history/evidence`.
 - Prefixos temporários aceitos: `feature/`, `feat/`, `fix/`, `chore/`, `docs/`, `gate/`, `dependabot/`.
 - Branches temporárias existem apenas enquanto houver trabalho/PR ativo.

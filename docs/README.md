@@ -1,5 +1,7 @@
 # Documentação do Carro Chefe
 
+> CookLily é mantida no repositório independente [`victorgabriel2v6g8m4s-cmd/cooklily`](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily); este índice cobre apenas o Carro Chefe.
+
 Este diretório concentra a documentação humana do projeto. Os documentos são organizados por **assunto**, mantendo poucos níveis para facilitar navegação, busca e referências estáveis.
 
 ## Comece por aqui
