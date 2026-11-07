@@ -1,15 +1,17 @@
 # CookLily: domínios, reputação e releases
 
 - Data da decisão: 01/11/2026.
-- Estado: decisão aprovada; documentação iniciada; separação técnica, provisionamento e homologação ainda pendentes.
+- Estado da fotografia de 01/11/2026: decisão aprovada; separação e provisionamento pendentes naquele momento. A atualização factual do repositório ativo está em [COOKLILY_REPOSITORIO_ATIVO_2026-11-07.md](./COOKLILY_REPOSITORIO_ATIVO_2026-11-07.md).
+- Nota de vigência: este documento preserva a investigação e as decisões registradas em 01/11/2026. A arquitetura de domínio e a separação do código foram atualizadas depois: a aplicação pública está sob `/cook/`, a homologação sob `/lilyacai/`, e o repositório exclusivo CookLily é a fonte ativa. Use a nota de repositório ativo para o estado atual; não execute planos antigos deste snapshot sem reconciliação.
+- Runbooks e checkpoints apontados para `cooklily/canonical` neste snapshot são fontes históricas daquele repositório/branch; instruções operacionais vigentes ficam na branch `main` do repositório exclusivo CookLily.
 - Owner de implementação: AG-DEV. Publicação da release: administrador CookLily.
 
 ## Decisões aprovadas
 
-1. Durante a transição, `https://licalily.com` será o endereço público da CookLily.
-2. `https://carrochefe.com/lilyacai/*` e suas APIs Lily continuam como ambiente de teste/homologação. O site principal Carro Chefe em `https://carrochefe.com/` permanece preservado; a classificação de teste se aplica somente ao namespace CookLily, não ao domínio inteiro.
-3. Todo deploy de desenvolvimento/homologação publica primeiro no ambiente CookLily de teste. A versão só é candidata a público depois de testada e adicionada à lista de releases.
-4. Um administrador revisa a lista e dispara, por ação explícita no painel, a publicação da release aprovada em `licalily.com`. Um deploy de teste nunca deve publicar automaticamente no domínio público.
+1. Decisão registrada em 01/11: `https://licalily.com` seria o endereço público. **Superada posteriormente:** a CookLily pública agora está em `https://licalily.com/cook/`; a raiz do domínio é um hub das empresas e `/cosmetics` está reservada à futura loja de cosméticos.
+2. Decisão registrada em 01/11: `https://carrochefe.com/lilyacai/*` serviria como ambiente de teste/homologação. O namespace continua sendo o ambiente de teste, mas o código ativo não vem deste repositório histórico: consulte o repositório exclusivo CookLily. O site principal Carro Chefe em `https://carrochefe.com/` permanece preservado.
+3. A decisão de homologar antes de publicar permanece válida. O fluxo atual, a classificação das releases e os controles de promoção devem ser verificados no repositório e no serviço CookLily ativos; este repositório não é autoridade para executar deploy.
+4. Publicação pública ocorre em `licalily.com/cook/` após o processo de release aprovado. Um deploy de teste nunca deve publicar automaticamente no domínio público.
 5. A cada publicação pública, a página pública de releases é atualizada automaticamente. Cada release terá identificador imutável (SHA/versão), data, resumo e estado. O painel terá a opção **“Notificar usuários sobre a atualização”**, desligada por padrão até o administrador marcá-la. A preferência de marketing/contato do usuário e os canais consentidos continuam obrigatórios.
 6. CookLily deixa de ser parceria pública com Carro Chefe e terá repositório exclusivo, contendo somente seu site, API, banco e infraestrutura necessária. Ferramentas individuais de uso local (incluindo `excel-recipe`) serão removidas do fluxo/runtime CookLily; a decisão de distribuí-las em repositórios próprios não implica publicá-las na VPS.
 7. As referências antigas que apresentam CookLily como Carro Chefe, parceria ou usam o endereço antigo serão inventariadas e atualizadas com prioridade urgente: webhooks e configurações da Meta, redes sociais, documentação, links, e-mail/transacionais e configuração da aplicação. Antes de trocar qualquer callback externo, validar domínio, TLS e callback de destino e manter plano de retorno.
@@ -47,7 +49,7 @@ commit CookLily -> CI seletivo + gates completos de release
   -> QA desktop/mobile, acessibilidade, smoke, API, migrations Lily
   -> release candidata aparece na lista do painel
   -> aprovação explícita do administrador
-  -> promoção do mesmo artefato (sem rebuild) para licalily.com
+  -> promoção do mesmo artefato (sem rebuild) para licalily.com/cook/
   -> smoke público e registro da release
   -> atualização da página de releases
   -> notificação somente se checkbox marcado e consentimentos permitirem
@@ -60,14 +62,14 @@ O painel não deve executar shell nem aceitar SHA/URL arbitrário. A publicaçã
 | Prioridade | Trabalho | Aceite / dependência |
 |---|---|---|
 | P0 urgente | Inventariar e corrigir URLs e identidade CookLily antiga em Meta webhooks, redes, repositórios e conteúdo/configuração | Lista de ocorrências, responsável, estado, teste dos callbacks; não alterar callback sem credenciais e domínio validado |
-| P0 | Entender o `429` de `licalily.com`, verificar DNS authoritative/proxy, regras de WAF/rate-limit, origem, certificados para apex e `www`, redirects e saúde pública | Acesso anônimo normal retorna conteúdo correto; TLS válido; nenhum bloqueio falso em testes regionais básicos |
+| P0 | Entender o `429` observado no domínio durante a investigação de 01/11; verificar DNS authoritative/proxy, WAF/rate-limit, origem, certificados, redirects e saúde do hub atual | Acesso anônimo normal ao hub e a `/cook/` retorna conteúdo correto; TLS válido; nenhum bloqueio falso em testes regionais básicos |
 | P0 | Reconciliar reputação dos dois domínios e varrer os artefatos | Relatórios datados, hashes e achados corrigidos/contestados com evidência |
-| P1 | Criar repositório exclusivo CookLily, preservar histórico/licenças e segredos fora do Git; retirar código Carro Chefe e ferramentas locais | Build/testes/build budget independentes, inventário de dependências e plano de arquivamento do monorepo antigo |
+| Concluído em 07/11/2026 | Criar repositório exclusivo CookLily, preservar histórico/licenças e segredos fora do Git; retirar código Carro Chefe e ferramentas locais do runtime | Repositório ativo: [victorgabriel2v6g8m4s-cmd/cooklily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily); evidência e limites em [COOKLILY_REPOSITORIO_ATIVO_2026-11-07.md](./COOKLILY_REPOSITORIO_ATIVO_2026-11-07.md) |
 | P1 | Separar ferramentas em repositórios próprios apenas quando necessário; impedir ferramentas locais no pacote/release da VPS | Manifesto de artefatos e inspeção do pacote confirmam somente runtime CookLily/deploy necessário |
 | P1 | Eliminar do pipeline CookLily builds, migrations e testes exclusivos do Carro Chefe; manter testes de contrato/segurança compartilhados que protegem integração real | Matriz caminho alterado → gates; testes seletivos por diff + execução integral agendada/antes de release, sem ignorar lockfile, config ou dependências compartilhadas |
 | P1 | Corrigir deploy single-line e implementar promoção por painel de release | Teste idempotente de deploy; homologação primeiro; botão de promoção com confirmação, auditoria, rollback e proteção contra concorrência |
 | P2 | Migrar webhooks, links sociais/transacionais e referências externas | Todos os callbacks confirmados no painel Meta e smoke de ponta a ponta; prazo de convivência/redirect documentado |
-| P2 | Publicar em `licalily.com`, testar mobile/desktop e monitorar migração | Testes em navegadores/rede usuais, analytics minimizados, erros e contato de suporte acompanhados |
+| P2 | Publicar em `licalily.com/cook/`, testar mobile/desktop e monitorar migração | Testes em navegadores/rede usuais, analytics minimizados, erros e contato de suporte acompanhados |
 
 ## Regras de segurança da migração
 
@@ -79,7 +81,7 @@ O painel não deve executar shell nem aceitar SHA/URL arbitrário. A publicaçã
 
 ## Evidências e fontes de trabalho
 
-- Investigação detalhada de handshake/AdGuard e runbooks de deploy estão documentados na branch `cooklily/canonical`: [checkpoint TLS](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/blob/cooklily/canonical/docs/execution-checkpoints/carrochefe-ssl-handshake-2026-10-28.md), [runbook VPS](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/blob/cooklily/canonical/docs/lily-acai/DEPLOY_VPS.md) e [deploy incremental](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/blob/cooklily/canonical/docs/lily-acai/DEPLOY_INCREMENTAL_CLI.md).
+- Investigação histórica de handshake/AdGuard: [checkpoint TLS](https://github.com/victorgabriel2v6g8m4s-cmd/carro-chefe/blob/cooklily/canonical/docs/execution-checkpoints/carrochefe-ssl-handshake-2026-10-28.md). Para deploy e acesso atuais, consulte [release management](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily/blob/main/docs/operations/deploy/release-management.md) e [runbook VPS](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily/blob/main/docs/operations/access/vps-site-and-test-accounts.md) no repositório ativo.
 - Relatório público consultado em 01/11/2026 para idade/HTTPS/DNS do domínio: [ScamAdviser](https://www.scamadviser.com/check-website/licalily.com). Fonte secundária; não é uma auditoria de segurança.
 - Modelo VirusTotal para relatórios agregados: [Domains object](https://docs.virustotal.com/reference/domains-object). Ausência de relatório acessível ou resultado indexado não equivale a domínio limpo.
 

@@ -84,11 +84,12 @@
     {"path": ".github/", "category": "Governança GitHub", "purpose": "CI, templates e automações do repositório."}
   ],
   "branchPolicy": {
-    "canonical": ["main", "cooklily/canonical"],
+    "canonical": ["main"],
     "archive": "history/evidence",
     "temporaryPrefixes": ["feature/", "feat/", "fix/", "chore/", "docs/", "gate/", "dependabot/"],
     "rules": [
       "Branches temporárias existem apenas enquanto houver trabalho/PR ativo.",
+      "CookLily é mantida no repositório exclusivo victorgabriel2v6g8m4s-cmd/cooklily, branch main; cooklily/canonical neste repositório é apenas histórica.",
       "Branches concluídas ou substituídas devem ter a evidência preservada em history/evidence antes de serem removidas.",
       "Gate branches nunca substituem uma branch canônica.",
       "Não criar nova branch histórica por assunto; usar history/evidence."

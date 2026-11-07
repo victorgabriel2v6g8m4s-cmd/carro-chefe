@@ -68,6 +68,6 @@ Quando surgir um novo tipo estável de mídia que não caiba nessas categorias, 
 
 ## Branches
 
-Existem somente duas linhas canônicas de produto: `main` e `cooklily/canonical`. Trabalho em andamento usa branch temporária e PR. Evidência histórica consolidada usa apenas `history/evidence`; não criar múltiplas branches de arquivo morto. Gates temporários devem ser fechados sem merge quando a validação termina, salvo se o PR declarar explicitamente outro destino.
+Neste repositório histórico do Carro Chefe, `main` é a única linha de integração ativa. Trabalho em andamento usa branch temporária e PR. CookLily não é mais desenvolvido nem implantado daqui: sua fonte ativa é o repositório exclusivo [victorgabriel2v6g8m4s-cmd/cooklily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily), branch `main`. A antiga branch `cooklily/canonical` deste repositório é apenas referência histórica e não deve receber código novo. Evidência histórica consolidada usa apenas `history/evidence`; não criar múltiplas branches de arquivo morto. Gates temporários devem ser fechados sem merge quando a validação termina, salvo se o PR declarar explicitamente outro destino.
 
 Antes de remover uma branch concluída/superseded, confirme que seu head está alcançável pela branch `history/evidence` ou por uma branch canônica. A exclusão da ref não deve apagar evidência única.
