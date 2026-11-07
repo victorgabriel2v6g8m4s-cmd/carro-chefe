@@ -110,7 +110,7 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 
 ## Política de branches
 
-- Canônicas: `main`, `cooklily/canonical`.
+- Canônicas: `main`.
 - Evidências históricas: `history/evidence`.
 - Prefixos temporários aceitos: `feature/`, `feat/`, `fix/`, `chore/`, `docs/`, `gate/`, `dependabot/`.
 - Branches temporárias existem apenas enquanto houver trabalho/PR ativo.
