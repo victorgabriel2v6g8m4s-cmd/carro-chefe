@@ -84,7 +84,7 @@
     {"path": ".github/", "category": "Governança GitHub", "purpose": "CI, templates e automações do repositório."}
   ],
   "branchPolicy": {
-    "canonical": ["main", "cooklily/canonical"],
+    "canonical": ["main"],
     "archive": "history/evidence",
     "temporaryPrefixes": ["feature/", "feat/", "fix/", "chore/", "docs/", "gate/", "dependabot/"],
     "rules": [
