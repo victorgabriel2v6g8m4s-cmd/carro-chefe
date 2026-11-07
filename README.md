@@ -1,5 +1,7 @@
 # Carro Chefe
 
+> **Aviso de escopo (2026-11-07):** o desenvolvimento ativo, código, documentação e releases da CookLily ficam no repositório independente [`victorgabriel2v6g8m4s-cmd/cooklily`](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). Este repositório é a referência histórica do Carro Chefe e não deve ser usado para atualizar ou publicar a aplicação CookLily.
+
 Base estratégica, operacional e digital da lanchonete **Carro Chefe — Sabor que lidera**.
 
 ## CookLily: repositório ativo
