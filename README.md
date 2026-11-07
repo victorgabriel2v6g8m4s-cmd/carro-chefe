@@ -4,6 +4,10 @@
 
 Base estratégica, operacional e digital da lanchonete **Carro Chefe — Sabor que lidera**.
 
+## CookLily: repositório ativo
+
+O código e a operação de desenvolvimento da CookLily continuam no [repositório exclusivo da CookLily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). Este repositório do Carro Chefe conserva contexto e registros históricos; não é a fonte atual do código, das releases nem da operação CookLily. Antes de trabalhar na CookLily, siga as instruções e o estado mais recente documentados no repositório exclusivo. Consulte [a atualização da separação](docs/governanca/COOKLILY_REPOSITORIO_ATIVO_2026-11-07.md).
+
 Este repositório reúne os ativos de marca existentes, a arquitetura do negócio, o plano de execução e uma Central Operacional para que pessoas e agentes proponham e aprovem mudanças sem editar os arquivos de planejamento manualmente.
 
 ## Comece por aqui
@@ -59,7 +63,7 @@ site/                  Placeholder legado; código ativo está em apps/site
 
 ## Acessos CookLily
 
-O runbook resumido de acesso SSH à VPS, contas de teste e identidade administrativa de agentes está em [Acessos CookLily](./docs/governanca/ACESSOS_COOKLILY.md). A operação CookLily é mantida isolada na branch `cooklily/canonical`; os comandos descritos só existem quando a release canônica correspondente estiver implantada. Nunca inclua segredos no repositório.
+O runbook histórico de acesso CookLily foi retirado de uso. A operação está no repositório exclusivo CookLily, cuja branch de integração é `main`; consulte as instruções atuais em [Acessos CookLily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily/blob/main/docs/operations/access/vps-site-and-test-accounts.md). Nunca inclua segredos no repositório.
 
 A árvore detalhada e as subpastas permitidas ficam no [mapa do repositório](./docs/governanca/MAPA_REPOSITORIO.md).
 

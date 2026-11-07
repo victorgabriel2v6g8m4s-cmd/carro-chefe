@@ -41,3 +41,4 @@ Publish the approved CookLily domain/release decision and incident/reputation hi
 
 Run `git diff --check`, commit and push this documentation branch, open a draft PR to `main`, then verify and merge it only after its checks pass. Continue runtime/DNS work only after documenting current access and release gates.
 
+- Historical snapshot from 2026-11-01. The CookLily project continues in the separate [CookLily repository](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily), branch `main`; this checkpoint is evidence, not an operational runbook.

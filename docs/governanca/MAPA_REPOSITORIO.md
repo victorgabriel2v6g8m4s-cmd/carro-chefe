@@ -114,6 +114,7 @@ Este mapa é parte do contrato de organização do Carro Chefe. Qualquer criaç�
 - Evidências históricas: `history/evidence`.
 - Prefixos temporários aceitos: `feature/`, `feat/`, `fix/`, `chore/`, `docs/`, `gate/`, `dependabot/`.
 - Branches temporárias existem apenas enquanto houver trabalho/PR ativo.
+- CookLily é mantida no repositório exclusivo victorgabriel2v6g8m4s-cmd/cooklily, branch main; cooklily/canonical neste repositório é apenas histórica.
 - Branches concluídas ou substituídas devem ter a evidência preservada em history/evidence antes de serem removidas.
 - Gate branches nunca substituem uma branch canônica.
 - Não criar nova branch histórica por assunto; usar history/evidence.
