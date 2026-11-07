@@ -1,12 +1,14 @@
 # CookLily — documentação canônica
 
-Este é o ponto de entrada documental da **CookLily**.
+> **Índice histórico:** a documentação canônica atual foi migrada para o repositório [`victorgabriel2v6g8m4s-cmd/cooklily`](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). Os links abaixo ajudam a localizar registros preservados neste arquivo, mas não são fonte operacional atual.
 
-## Compatibilidade de caminhos
+Este é o ponto de entrada histórico da documentação **CookLily** neste repositório do Carro Chefe.
 
-O nome público definitivo é **CookLily**, porém o caminho histórico `docs/lily-acai/` é preservado por compatibilidade com links, branches, automações e registros anteriores. Ele continua sendo o repositório físico dos documentos CookLily até uma migração de caminhos ser aprovada e executada de forma transacional.
+## Compatibilidade de caminhos arquivados
 
-Não criar uma segunda cópia dos mesmos documentos em `docs/cooklily/`. Este diretório funciona como **índice de navegação e fronteira de escopo**.
+O nome público definitivo é **CookLily**. O caminho histórico `docs/lily-acai/` é preservado neste repositório somente para consulta e compatibilidade com links antigos. Desenvolvimento e documentação ativos são mantidos no repositório próprio CookLily.
+
+Não atualizar estes registros como cópias da documentação ativa. Consulte o repositório CookLily para o estado vigente.
 
 ## Fontes canônicas
 

@@ -39,24 +39,9 @@ Fuso operacional: `America/Campo_Grande` (confirmar antes de automatizar horári
 - A Central Operacional está descontinuada e não deve ser incluída em bundles nem releases da VPS. Remova da cadeia de deploy os artefatos, rotas e código exclusivo da Central; qualquer dependência remanescente deve ser identificada e retirada com segurança.
 - Ferramentas de repositório (incluindo `tools/`, scripts de agentes, utilitários e verificadores) ficam disponíveis para uso local dos agentes e não devem ser copiadas nem executadas como parte do runtime publicado na VPS, salvo scripts estritamente classificados como infraestrutura de deploy em `deploy/`.
 
-## 3.1 Exceção estritamente isolada — CookLily (branch `lily-acai`)
+## 3.1 CookLily — projeto externo e arquivado neste checkout
 
-Esta seção existe **somente na branch `lily-acai`** e não altera a arquitetura transacional do Carro Chefe.
-
-O proprietário aprovou uma operação temporária e independente chamada **CookLily**, hospedada sob o mesmo domínio/VPS apenas para reduzir custo antes da inauguração. Para essa operação:
-
-- o namespace público é `/lilyacai/*`;
-- o namespace de API é `/api/v1/lily/*`;
-- o frontend pertence a `apps/lily_acai/*`;
-- o backend pertence a `apps/api/src/modules/lily/*`;
-- a persistência transacional pertence a `packages/lily-database/*` e a um banco dedicado;
-- pedidos e pagamentos da Lily podem ser implementados nesse domínio isolado e integrados a provedor de pagamento aprovado;
-- a regra de que pedidos e pagamentos pertencem ao ERP **continua integralmente válida para o Carro Chefe** e para `apps/site`, `/cardapio`, dados e fluxos da marca Carro Chefe;
-- contas, sessões, endereços, catálogo, pedidos, pagamentos, tracking e mídia Lily não podem ser gravados nas tabelas transacionais/operacionais do Carro Chefe;
-- consentimento para compartilhamento com o Carro Chefe não autoriza mistura de bases: qualquer transferência futura deve usar ponte/exportação explícita, minimizada e auditável;
-- identidade visual, conteúdo e documentação Lily permanecem separados e não transformam Lily em submarca ou proposta permanente do Carro Chefe.
-
-As regras globais de segurança, LGPD, testes, acessibilidade, segredos, autorização server-side e qualidade permanecem obrigatórias.
+O desenvolvimento ativo, operações, decisões, documentação e releases da CookLily pertencem ao repositório independente [`victorgabriel2v6g8m4s-cmd/cooklily`](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). Este checkout do Carro Chefe pode conter código e registros históricos CookLily, mas não deve ser usado para implementar, integrar ou publicar mudanças dessa aplicação. Preserve esses registros como histórico e consulte o repositório CookLily para qualquer estado atual.
 
 ## 4. Identidade e experiência
 

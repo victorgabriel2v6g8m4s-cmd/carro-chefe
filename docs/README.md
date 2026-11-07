@@ -7,7 +7,7 @@ Este diretório concentra a documentação humana do projeto. Os documentos são
 A documentação possui duas operações distintas e elas não devem compartilhar decisões comerciais por acidente:
 
 - **Carro Chefe:** navegação canônica em [docs/carro-chefe/README.md](./carro-chefe/README.md).
-- **CookLily:** navegação canônica em [docs/cooklily/README.md](./cooklily/README.md); os documentos físicos permanecem em `docs/lily-acai/` por compatibilidade histórica/técnica.
+- **CookLily:** projeto ativo e documentação canônica no [repositório independente CookLily](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). [docs/cooklily/README.md](./cooklily/README.md) e `docs/lily-acai/` neste checkout são apenas referências históricas.
 - **Compartilhado:** ferramentas, governança de repositório e componentes de infraestrutura só são compartilhados quando o documento declara esse escopo.
 
 Uma decisão de CookLily não altera cardápio, marca ou operação do Carro Chefe automaticamente, e vice-versa.

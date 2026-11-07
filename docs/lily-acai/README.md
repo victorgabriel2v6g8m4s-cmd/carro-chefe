@@ -1,5 +1,7 @@
 # CookLily — operação temporária
 
+> **Arquivo histórico:** a CookLily não é mais desenvolvida neste repositório. O projeto ativo e suas releases ficam em [`victorgabriel2v6g8m4s-cmd/cooklily`](https://github.com/victorgabriel2v6g8m4s-cmd/cooklily). Preserve este diretório como registro histórico; caminhos, domínios e decisões abaixo podem estar obsoletos e não orientam deploy nem mudanças atuais.
+
 > **Organização documental:** este caminho é preservado como namespace técnico legado. O índice público/canônico de navegação da marca está em [../cooklily/README.md](../cooklily/README.md). Decisões CookLily não devem ser misturadas aos documentos de produto do Carro Chefe.
 
 ## Nome público e compatibilidade técnica
